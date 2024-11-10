@@ -1,14 +1,14 @@
 {
   "name": "mpd-concursos-app-frontend",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "./electron/main.js",
   "author": {
     "name": "Semper Evincere"
   },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "electron": "electron .",
     "test": "ng test"
@@ -23,6 +23,8 @@
     "@angular/platform-browser": "^18.2.0",
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
+    "http-proxy-middleware": "^3.0.3",
+    "iconate": "^0.2.4",
     "mpd-concursos-app-frontend": "file:",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

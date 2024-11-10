@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# H2 Database files
+src/main/resources/concursosH2bd/*.db
+src/main/resources/concursosH2bd/*.mv.db
+src/main/resources/concursosH2bd/*.trace.db
