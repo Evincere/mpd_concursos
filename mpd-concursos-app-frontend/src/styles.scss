@@ -1,1 +1,175 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'sass:map';
+@use '@angular/material' as mat;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+// Note: Color palettes are generated from primary: #8e6f6e, secondary: #f0f8ff, tertiary: #cce4ff, neutral: #f5f5f5
+$_palettes: (
+  primary: (
+    0: #000000,
+    10: #2b1616,
+    20: #422a2a,
+    25: #4e3534,
+    30: #5a403f,
+    35: #674c4b,
+    40: #745756,
+    50: #8f706f,
+    60: #aa8988,
+    70: #c6a3a2,
+    80: #e3bebc,
+    90: #ffdad8,
+    95: #ffedeb,
+    98: #fff8f7,
+    99: #fffbff,
+    100: #ffffff,
+  ),
+  secondary: (
+    0: #000000,
+    10: #151d22,
+    20: #293137,
+    25: #343c42,
+    30: #40484d,
+    35: #4b5359,
+    40: #575f65,
+    50: #70787e,
+    60: #8a9298,
+    70: #a4acb3,
+    80: #bfc8ce,
+    90: #dbe4ea,
+    95: #eaf2f9,
+    98: #f5faff,
+    99: #fbfcff,
+    100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000,
+    10: #031d31,
+    20: #1b3247,
+    25: #263d53,
+    30: #32495f,
+    35: #3e556b,
+    40: #4a6177,
+    50: #627991,
+    60: #7c93ac,
+    70: #96aec7,
+    80: #b1c9e3,
+    90: #cee5ff,
+    95: #e8f2ff,
+    98: #f7f9ff,
+    99: #fcfcff,
+    100: #ffffff,
+  ),
+  neutral: (
+    0: #000000,
+    4: #0a0b0b,
+    6: #101111,
+    10: #1a1c1c,
+    12: #1e2020,
+    17: #292b2b,
+    20: #2f3131,
+    22: #333535,
+    24: #383a3a,
+    25: #3a3c3c,
+    30: #454747,
+    35: #515353,
+    40: #5d5f5f,
+    50: #767777,
+    60: #909191,
+    70: #aaabab,
+    80: #c6c6c7,
+    87: #dadada,
+    90: #e2e2e2,
+    92: #e8e8e8,
+    94: #eeeeee,
+    95: #f1f1f1,
+    96: #f4f4f4,
+    98: #f9f9f9,
+    99: #fcfcfc,
+    100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000,
+    10: #221919,
+    20: #382e2e,
+    25: #443938,
+    30: #4f4444,
+    35: #5b504f,
+    40: #685b5b,
+    50: #817473,
+    60: #9c8d8d,
+    70: #b7a8a7,
+    80: #d3c3c2,
+    90: #f0dfdd,
+    95: #ffedec,
+    98: #fff8f7,
+    99: #fffbff,
+    100: #ffffff,
+  ),
+  error: (
+    0: #000000,
+    10: #410002,
+    20: #690005,
+    25: #7e0007,
+    30: #93000a,
+    35: #a80710,
+    40: #ba1a1a,
+    50: #de3730,
+    60: #ff5449,
+    70: #ff897d,
+    80: #ffb4ab,
+    90: #ffdad6,
+    95: #ffedea,
+    98: #fff8f7,
+    99: #fffbff,
+    100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes,  neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+$light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: $_primary,
+    tertiary: $_tertiary,
+    use-system-variables: true,
+  ),
+  typography: (
+    use-system-variables: true,
+  ),
+));
+$dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: $_primary,
+    tertiary: $_tertiary,
+    use-system-variables: true,
+  ),
+  typography: (
+    use-system-variables: true,
+  ),
+));
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body {
+    min-height: 100vh;
+   
+}
+
+body.dark-mode {
+    background: #1a1a1a;
+}

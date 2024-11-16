@@ -1,0 +1,33 @@
+<div class="login-box">
+  <p>Iniciar Sesión</p>
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div class="user-box">
+      <input matInput type="text" formControlName="username" placeholder=" " required>
+      <label>Username</label>
+      <mat-error *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.errors?.['required']">
+        El username es requerido
+      </mat-error>
+      <mat-error *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.errors?.['minlength']">
+        El email debe tener al menos 3 caracteres
+      </mat-error>
+    </div>
+    <div class="user-box">
+      <input matInput type="password" formControlName="password" placeholder=" " required>
+      <label>Password</label>
+      <mat-error *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
+        La contraseña es requerida
+      </mat-error>
+      <mat-error *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['minlength']">
+        La contraseña debe tener al menos 6 caracteres
+      </mat-error>
+    </div>
+    <button type="submit" [disabled]="!loginForm.valid" class="submit-button">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      Ingresar
+    </button>
+  </form>
+  <p>¿No tienes una cuenta? <button class="a2" (click)="goToRegister()">Registrarse</button></p>
+</div>

@@ -22,18 +22,18 @@ public class UserMapper {
         entity.setId(user.getId().value());
         entity.setUsername(user.getUsername().value());
         entity.setEmail(user.getEmail().value());
-        entity.setPassword(user.getPassword().value());
+        entity.setPassword(user.getPassword().getValue());
         entity.setCreatedAt(user.getCreatedAt().value());
 
         if (user.getRoles() != null) {
             entity.setRoles(user.getRoles().stream()
-                .map(rol -> {
-                    RoleEntity roleEntity = new RoleEntity();
-                    roleEntity.setId(rol.getId());
-                    roleEntity.setRole(rol.getRole());
-                    return roleEntity;
-                })
-                .collect(Collectors.toSet()));
+                    .map(rol -> {
+                        RoleEntity roleEntity = new RoleEntity();
+                        roleEntity.setId(rol.getId());
+                        roleEntity.setRole(rol.getRole());
+                        return roleEntity;
+                    })
+                    .collect(Collectors.toSet()));
         }
 
         return entity;

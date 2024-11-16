@@ -1,0 +1,112 @@
+.sidebar {
+    border: 1px solid black;
+    padding: 1.5rem 0;
+    border-radius: 0 12px 12px 0;
+    background: #2d2d2d;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.3);
+    height: 100%; /* Asegura que el sidebar ocupe toda la altura del contenedor */
+    display: flex;
+    flex-direction: column;
+   
+}
+
+.menu-section {
+    margin-bottom: 2.5rem;
+    position: relative;
+}
+
+.menu-section::after {
+    content: '';
+    position: absolute;
+    bottom: -1.25rem;
+    left: 10%;
+    width: 80%;
+    height: 1px;
+    background: rgba(0,0,0,0.1);
+}
+
+.menu-title {
+    padding: 0.75rem 1.5rem;
+    color: #bbb;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.menu-item {
+    padding: 0.9rem 1.5rem;
+    color: #666;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    position: relative;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin: 0.2rem 0;
+}
+
+
+.menu-item:hover {
+    background: linear-gradient(90deg, rgba(255,107,74,0.2) 0%, rgba(255,107,74,0) 100%);
+    color: #ff6b4a;
+}
+
+
+.menu-item.active {
+    background: linear-gradient(90deg, #ff6b4a 0%, rgba(255,107,74,0) 100%);
+    color: white;
+    font-weight: 600;
+}
+
+.menu-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: #ff6b4a;
+    border-radius: 0 2px 2px 0;
+}
+
+.submenu {
+    padding-left: 1rem;
+    margin-left: 1.5rem;
+    border-left: 2px solid rgba(255,255,255,0.1);
+    display: none;
+    animation: slideDown 0.3s ease-out;
+    flex-shrink: 0;
+}
+
+.submenu .menu-item {
+    background: transparent; 
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.submenu.show {
+    display: inline-block;
+}
+
+.has-submenu::after {
+    content: '▼';
+    float: right;
+    font-size: 0.7em;
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.has-submenu.active::after {
+    transform: rotate(180deg);
+}

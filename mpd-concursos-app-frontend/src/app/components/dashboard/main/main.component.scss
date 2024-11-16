@@ -1,0 +1,11 @@
+.main-content {
+    flex-grow: 1;
+    background: #2d2d2d;
+    margin: 0.5rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    width: 100%;
+    max-height: calc(100vh - 92px); 
+    overflow-y: auto;
+}

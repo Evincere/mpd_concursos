@@ -1,5 +1,6 @@
 package ar.gov.mpd.concursobackend.auth.domain.valueObject.user;
 
+import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidEmailException;
 import lombok.Data;
 
 @Data
@@ -14,11 +15,11 @@ public class UserEmail {
 
     private void ensureIsValid() {
         if (email == null || email.isEmpty()) {
-            throw new IllegalArgumentException("Email cannot be null or empty");
+            throw new InvalidEmailException("El email no puede estar vacío");
         }
 
         if (!email.contains("@") || !email.contains(".")) {
-            throw new IllegalArgumentException("Format email not valid");
+            throw new InvalidEmailException("El formato del email no es válido");
         }
     }
 

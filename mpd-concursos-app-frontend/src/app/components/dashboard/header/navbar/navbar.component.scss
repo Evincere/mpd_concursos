@@ -1,0 +1,22 @@
+
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%; 
+    background: #2d2d2d;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    height: 100%;
+    padding: 0 2rem;
+}
+
+img {
+    height: 50px; 
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column; // Alinea el nombre y el CUIT verticalmente
+    align-items: flex-end; // Alinea a la derecha
+    color: #fff;
+}
