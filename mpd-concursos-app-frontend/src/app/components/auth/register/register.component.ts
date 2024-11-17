@@ -51,8 +51,8 @@ export class RegisterComponent {
       apellido: ['', {
         validators: [Validators.required]
       }],
-      dni: ['', {
-        validators: [Validators.required, Validators.pattern('^[0-9]{8}$')]
+      cuit: ['', {
+        validators: [Validators.required, Validators.pattern('^(\\d{2}-\\d{8}-\\d{1}|\\d{11})$')]
       }]
     }, {
       validators: RegisterComponent.passwordMatchValidator
@@ -90,5 +90,25 @@ export class RegisterComponent {
 
   goToLogin(): void {
     this.router.navigate(['/login']);
+  }
+
+  formatCuit(event: any) {
+    let input = event.target.value.replace(/\D/g, ''); 
+    let formattedCuit = '';
+
+    if (input.length > 2) {
+        formattedCuit += input.slice(0, 2) + '-'; 
+        input = input.slice(2);
+    }
+
+    if (input.length > 8) {
+        formattedCuit += input.slice(0, 8) + '-'; 
+        input = input.slice(8);
+    }
+
+    formattedCuit += input; 
+    event.target.value = formattedCuit;
+
+    this.registerForm.get('cuit')?.setValue(formattedCuit);
   }
 }

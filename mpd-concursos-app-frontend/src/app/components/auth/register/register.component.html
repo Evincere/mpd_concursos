@@ -1,113 +1,3 @@
-<!-- <mat-card class="register-card">
-    <h2 class="register-title">Registro de Usuario</h2>
-  
-    <mat-error *ngIf="registerError" class="register-error-message">
-      {{ registerError }}
-    </mat-error>
-  
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Nombre</mat-label>
-        <input matInput formControlName="nombre" placeholder="Ingrese su nombre">
-        <mat-error *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.errors?.['required']">
-          El nombre es requerido
-        </mat-error>
-      </mat-form-field>
-  
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Apellido</mat-label>
-        <input matInput formControlName="apellido" placeholder="Ingrese su apellido">
-        <mat-error *ngIf="registerForm.get('apellido')?.touched && registerForm.get('apellido')?.errors?.['required']">
-          El apellido es requerido
-        </mat-error>
-      </mat-form-field>
-  
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>DNI</mat-label>
-        <input matInput formControlName="dni" placeholder="Ingrese su DNI">
-        <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['required']">
-          El DNI es requerido
-        </mat-error>
-        <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['pattern']">
-          El DNI debe tener 8 dígitos
-        </mat-error>
-      </mat-form-field>
-  
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Username</mat-label>
-        <input matInput formControlName="username" placeholder="Elija un username">
-        <mat-error *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['required']">
-          El username es requerido
-        </mat-error>
-        <mat-error *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['minlength']">
-          El username debe tener al menos 4 caracteres
-        </mat-error>
-      </mat-form-field>
-  
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Email</mat-label>
-        <input matInput type="email" formControlName="email" placeholder="Ingrese su email">
-        <mat-error *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['required']">
-          El email es requerido
-        </mat-error>
-        <mat-error *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['email']">
-          Por favor ingrese un email válido
-        </mat-error>
-      </mat-form-field>
-  
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Contraseña</mat-label>
-        <input matInput type="password" formControlName="password" placeholder="Ingrese su contraseña">
-        <mat-error *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['required']">
-          La contraseña es requerida
-        </mat-error>
-        <mat-error *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']">
-          La contraseña debe tener al menos 6 caracteres
-        </mat-error>
-      </mat-form-field>
-  
-      <mat-form-field appearance="fill" class="form-field">
-        <mat-label>Confirmar Contraseña</mat-label>
-        <input matInput type="password" formControlName="confirmPassword" placeholder="Confirme su contraseña">
-        <mat-error *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['required']">
-          Debe confirmar la contraseña
-        </mat-error>
-        <mat-error *ngIf="registerForm.errors?.['mismatch']">
-          Las contraseñas no coinciden
-        </mat-error>
-      </mat-form-field>
-  
-      <button mat-raised-button color="primary" type="submit" [disabled]="!registerForm.valid" class="register-button">
-        Registrarse
-      </button>
-    </form>
-  
-    <div class="login-section">
-      <p class="login-text">¿Ya tienes una cuenta?</p>
-      <button mat-button color="primary" class="login-button" (click)="goToLogin()">
-        Iniciar Sesión
-      </button>
-    </div>
-  </mat-card>
- -->
-
-<!-- <div class="w-80 rounded-2xl bg-slate-900">
-  <div class="flex flex-col gap-2 p-8">
-    <p class="text-center text-3xl text-gray-300 mb-4">Register</p>
-    <input class="bg-slate-900 w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 focus:ring-offset-gray-800" placeholder="Email">
-    <input class="bg-slate-900 w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 focus:ring-offset-gray-800" placeholder="Password">
-    <input class="bg-slate-900 w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 focus:ring-offset-gray-800" placeholder="Confirm password">
-    <label class="flex cursor-pointer items-center justify-between p-1 text-slate-400">
-      Accept terms of use
-      <div class="relative inline-block">
-        <input class="peer h-6 w-12 cursor-pointer appearance-none rounded-full border border-gray-300 bg-gary-400 checked:border-green-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2" type="checkbox">
-        <span class="pointer-events-none absolute left-1 top-1 block h-4 w-4 rounded-full bg-slate-600 transition-all duration-200 peer-checked:left-7 peer-checked:bg-green-300"></span>
-      </div>
-    </label>
-    <button class="inline-block cursor-pointer rounded-md bg-gray-700 px-4 py-3.5 text-center text-sm font-semibold uppercase text-white transition duration-200 ease-in-out hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-700 focus-visible:ring-offset-2 active:scale-95">Register</button>
-  </div>
-</div> -->
-
 <div class="register-box">
   <p>Registro de Usuario</p>
   <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
@@ -126,13 +16,13 @@
       </mat-error>
     </div>
     <div class="user-box">
-      <input matInput formControlName="dni" placeholder=" " required>
-      <label>DNI</label>
-      <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['required']">
-        El DNI es requerido
+      <input matInput formControlName="cuit" placeholder=" " required (input)="formatCuit($event)" maxlength="13">
+      <label>CUIT</label>
+      <mat-error *ngIf="registerForm.get('cuit')?.touched && registerForm.get('cuit')?.errors?.['required']">
+        El CUIT es requerido
       </mat-error>
-      <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['pattern']">
-        El DNI debe tener 8 dígitos
+      <mat-error *ngIf="registerForm.get('cuit')?.touched && registerForm.get('cuit')?.errors?.['pattern']">
+        El CUIT debe tener 11 dígitos
       </mat-error>
     </div>
     <div class="user-box">

@@ -9,6 +9,7 @@ export class TokenService {
   private tokenKey: string = 'auth_token';
   private usernameKey: string = 'auth_username';
   private authoritiesKey: string = 'auth_authorities';
+  private cuit: string = 'auth_cuit';
 
   constructor() {}
 
@@ -17,6 +18,7 @@ export class TokenService {
     this.setSessionItem(this.tokenKey, jwtDto.token);
     this.setSessionItem(this.usernameKey, jwtDto.username);
     this.setSessionItem(this.authoritiesKey, JSON.stringify(jwtDto.authorities));
+    this.setSessionItem(this.cuit, JSON.stringify(jwtDto.cuit));
 }
 
   private setSessionItem(key: string, value: string): void {
@@ -48,11 +50,16 @@ export class TokenService {
     return authorities ? JSON.parse(authorities) : [];
 }
 
+  public getCuit(): string | null {
+    return this.getSessionItem(this.cuit);
+  }
+
   // Método para eliminar el token y los datos de usuario de sessionStorage
   public removeToken(): void {
     this.removeSessionItem(this.tokenKey);
     this.removeSessionItem(this.usernameKey);
     this.removeSessionItem(this.authoritiesKey);
+    this.removeSessionItem(this.cuit);
 }
 
   // Método para verificar si el usuario está autenticado
@@ -65,9 +72,10 @@ export class TokenService {
     const token = this.getToken();
     const username = this.getUsername();
     const authorities = this.getAuthorities();
+    const cuit = this.getCuit();
 
-    if (token && username) {
-      const jwtDto = new JwtDto(token, "Bearer", username, authorities);
+    if (token && username && cuit) {
+      const jwtDto = new JwtDto(token, "", username, authorities, cuit);
       return new User(username, '', '', '', '', undefined, '', jwtDto);
     }
     return null;
