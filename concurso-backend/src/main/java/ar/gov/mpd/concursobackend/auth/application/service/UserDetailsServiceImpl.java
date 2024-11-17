@@ -31,7 +31,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // Construir UserDetails con la contraseña sin procesar
         return org.springframework.security.core.userdetails.User
             .withUsername(username)
-            .password(user.getPassword().getValue()) // Usar el valor directo de la contraseña
+            .password(user.getPassword().value()) // Usar el valor directo de la contraseña
             .authorities(user.getRoles().stream()
                 .map(rol -> new SimpleGrantedAuthority(rol.getRole().name()))
                 .collect(Collectors.toList()))

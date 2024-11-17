@@ -41,6 +41,10 @@ public class UserCreateDto {
     @Pattern(regexp = "\\d{8}", message = "El DNI debe tener 8 dígitos")
     private String dni;
     
+    @NotBlank(message = "El CUIT es obligatorio")
+    @Pattern(regexp = "\\d{11}", message = "El CUIT debe tener 11 dígitos")
+    private String cuit;
+    
     private Set<String> roles = new HashSet<>();
 
     

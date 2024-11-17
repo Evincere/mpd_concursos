@@ -33,6 +33,12 @@ public class UserEntity {
     @NotNull
     @Column(unique=true)
     private String email;
+    @Column(unique=true)
+    @NotNull
+    private String dni;
+    @Column(unique = true)
+    @NotNull
+    private String cuit;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_rol", joinColumns = @JoinColumn(name = "user_id"), 
     inverseJoinColumns = @JoinColumn(name =  "rol_id"))
@@ -43,9 +49,11 @@ public class UserEntity {
 
     public UserEntity() {}
 
-    public UserEntity(String username, String password, String email) {
+    public UserEntity(String username, String password, String email, String dni, String cuit) {
         this.username = username;
         this.password = password;
         this.email = email;
+        this.dni = dni;
+        this.cuit = cuit;
     }
 }

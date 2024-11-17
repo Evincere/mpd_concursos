@@ -12,5 +12,5 @@ public interface IUserSpringRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByUsername(String userName);
     boolean existsByUsername(String userName);
     boolean existsByEmail(String email);
-
+    boolean existsByDni(String dni);
 }

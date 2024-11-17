@@ -12,6 +12,8 @@ import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.exception.EmailAlreadyExistsException;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserPassword;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
@@ -70,8 +72,10 @@ public class UserService implements IUserService {
         // Construir usuario
         User user = new User(
             new UserUsername(dto.getUsername()),
-            new UserPassword(encodedPassword), // Usar la contraseña codificada
-            new UserEmail(dto.getEmail())
+            new UserPassword(encodedPassword),
+            new UserEmail(dto.getEmail()),
+            new UserDni(dto.getDni()),
+            new UserCuit(dto.getCuit(), dto.getDni())
         );
 
          // Obtener y asignar roles
@@ -83,7 +87,7 @@ public class UserService implements IUserService {
         roles.add(userRole);
         
         // Si se solicita rol admin
-        if (dto.getRoles() != null && dto.getRoles().contains("admin")) {
+        if (dto.getRoles() != null && dto.getRoles().contains("ROLE_ADMIN")) {
             Rol adminRole = rolService.findByRole(RoleEnum.ROLE_ADMIN)
                 .orElseThrow(() -> new RuntimeException("Error: Rol de administrador no encontrado"));
             roles.add(adminRole);
@@ -98,6 +102,7 @@ public class UserService implements IUserService {
     private void validateNewUserCredentials(UserCreateDto dto) {
         validateUsername(dto.getUsername());
         validateEmail(dto.getEmail());
+        validateDni(dto.getDni());
         validatePassword(dto.getPassword());
     }
 
@@ -121,6 +126,12 @@ public class UserService implements IUserService {
         }
     }
 
+    private void validateDni(String dni) {
+        if (existsByDni(new UserDni(dni))) {
+            throw new UserAlreadyExistsException("El usuario con dni " + dni + " ya está registrado");
+        }
+    }
+
     @Override
     public Optional<User> getByUsername(UserUsername username) {
         return getByUsername.run(username);
@@ -136,6 +147,10 @@ public class UserService implements IUserService {
         return userExists.runByEmail(email);
     }
 
+    @Override
+    public boolean existsByDni(UserDni dni) {
+        return userExists.runByDni(dni);
+    }
 
     @Override
     public JwtDto login(UserLogin userLogin) {
@@ -153,13 +168,17 @@ public class UserService implements IUserService {
             logger.info("token: {}", jwt);
             // Obtener los detalles del usuario autenticado
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = getByUsername(new UserUsername(userDetails.getUsername()))
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             
             logger.info("Autenticación exitosa para el usuario: {}", userDetails.getUsername());
-            return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities());
+            return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities(), user.getCuit().value());
         } catch (Exception e) {
             logger.error("Error al autenticar al usuario: {}", e.getMessage());
             throw new InvalidCredentialsException("Credenciales inválidas. Por favor, verifica tu nombre de usuario y contraseña.");
         }
     }
+
+    
 
 }

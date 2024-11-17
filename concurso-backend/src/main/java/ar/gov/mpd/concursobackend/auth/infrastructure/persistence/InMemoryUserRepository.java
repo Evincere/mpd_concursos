@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.auth.infrastructure.persistence;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
@@ -39,5 +40,10 @@ public class InMemoryUserRepository implements IUserRepository {
     @Override
     public boolean existsByEmail(UserEmail email) {
         return userSpringRepository.existsByEmail(email.value());
+    }
+
+    @Override
+    public boolean existsByDni(UserDni dni) {
+        return userSpringRepository.existsByDni(dni.value());
     }
 }

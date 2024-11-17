@@ -36,3 +36,4 @@ build/
 src/main/resources/concursosH2bd/*.db
 src/main/resources/concursosH2bd/*.mv.db
 src/main/resources/concursosH2bd/*.trace.db
+src/main/resources/static/concursosH2bd/

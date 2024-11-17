@@ -14,6 +14,7 @@ import ar.gov.mpd.concursobackend.auth.domain.exception.UserAlreadyExistsExcepti
 import ar.gov.mpd.concursobackend.auth.domain.exception.NombreObligatorioException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.ApellidoObligatorioException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.DniInvalidoException;
+import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCuitException;
 
 @RestControllerAdvice
 public class AuthExceptionHandler {
@@ -63,6 +64,12 @@ public class AuthExceptionHandler {
     @ExceptionHandler(DniInvalidoException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> handleDniInvalido(DniInvalidoException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidCuitException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleInvalidCuit(InvalidCuitException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

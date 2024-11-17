@@ -13,13 +13,16 @@ public class JwtDto {
     private String bearer = "Bearer";
     private String username;
     private Collection<? extends GrantedAuthority> authorities;
+    private String cuit;
 
     public JwtDto() {}
     
-    public JwtDto(String token, String username, Collection<? extends GrantedAuthority> authorities) {
+    public JwtDto(String token, String username, Collection<? extends GrantedAuthority> authorities, String cuit) {
         this.token = token;
         this.username = username;
         this.authorities = authorities;
+        this.cuit = cuit;
+
     }
 
 }

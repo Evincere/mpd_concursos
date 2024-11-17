@@ -6,10 +6,12 @@ import java.util.UUID;
 import java.time.LocalDateTime;
 
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCreatedAt;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserId;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserPassword;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import lombok.Data;
 
 @Data
@@ -18,6 +20,8 @@ public class User {
     private UserUsername username;
     private UserPassword password;
     private UserEmail email;
+	private UserDni dni;
+	private UserCuit cuit;
     private Set<Rol> roles = new HashSet<>();
     private UserCreatedAt createdAt;
 
@@ -26,66 +30,19 @@ public class User {
         this.createdAt = new UserCreatedAt(LocalDateTime.now());
     }
 
-    public User(UserUsername username, UserPassword password, UserEmail email) {
+    public User(UserUsername username, UserPassword password, UserEmail email, UserDni dni, UserCuit cuit) {
         this.id = new UserId(UUID.randomUUID());
         this.username = username;
         this.password = password;
         this.email = email;
+		this.dni = dni;
+		this.cuit = cuit;
         this.roles = new HashSet<>();
         this.createdAt = new UserCreatedAt(LocalDateTime.now());
     }
 
-    public static User create(UserUsername username, UserPassword password, UserEmail email) {
-        return new User(username, password, email);
+    public static User create(UserUsername username, UserPassword password, UserEmail email, UserDni dni, UserCuit cuit) {
+        return new User(username, password, email, dni, cuit);
     }
-
-	public Set<Rol> getRoles() {
-		return roles;
-	}
-
-	public void setRoles(Set<Rol> roles) {
-		this.roles = roles != null ? roles : new HashSet<>();
-	}
-
-	public UserUsername getUsername() {
-		return username;
-	}
-
-	public void setUsername(UserUsername username) {
-		this.username = username;
-	}
-
-	public UserPassword getPassword() {
-		return password;
-	}
-
-	public void setPassword(UserPassword password) {
-		this.password = password;
-	}
-
-	public UserEmail getEmail() {
-		return email;
-	}
-
-	public void setEmail(UserEmail email) {
-		this.email = email;
-	}
-
-	public UserId getId() {
-		return id;
-	}
-
-	public void setId(UserId id) {
-		this.id = id;
-	}
-
-	public UserCreatedAt getCreatedAt() {
-		return createdAt;
-	}
-
-	public void setCreatedAt(UserCreatedAt createdAt) {
-		this.createdAt = createdAt;
-	}
-
     
 }

@@ -22,9 +22,10 @@ public class UserMapper {
         entity.setId(user.getId().value());
         entity.setUsername(user.getUsername().value());
         entity.setEmail(user.getEmail().value());
-        entity.setPassword(user.getPassword().getValue());
+        entity.setPassword(user.getPassword().value());
         entity.setCreatedAt(user.getCreatedAt().value());
-
+        entity.setDni(user.getDni().value());
+        entity.setCuit(user.getCuit().value());
         if (user.getRoles() != null) {
             entity.setRoles(user.getRoles().stream()
                     .map(rol -> {
@@ -46,7 +47,6 @@ public class UserMapper {
 
         User user = new User();
 
-        // Convertir los valores primitivos a objetos de valor
         if (entity.getUsername() != null) {
             user.setUsername(new UserUsername(entity.getUsername()));
         }
@@ -61,6 +61,12 @@ public class UserMapper {
         }
         if (entity.getCreatedAt() != null) {
             user.setCreatedAt(new UserCreatedAt(entity.getCreatedAt()));
+        }
+        if (entity.getDni() != null) {
+            user.setDni(new UserDni(entity.getDni()));
+        }
+        if (entity.getCuit() != null) {
+            user.setCuit(new UserCuit(entity.getCuit(), entity.getDni()));
         }
 
         // Convertir los roles
