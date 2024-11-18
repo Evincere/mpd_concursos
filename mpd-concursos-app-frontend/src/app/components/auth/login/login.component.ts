@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { CommonModule } from '@angular/common';
@@ -27,10 +27,11 @@ import { HeaderComponent } from '../../dashboard/header/header.component';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   loginError: string | null = null;
   hide: boolean = true;
+  isFlipped: boolean = false;
 
   constructor(
     private fb: FormBuilder, 
@@ -40,6 +41,16 @@ export class LoginComponent {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
+    });
+  }
+
+  ngOnInit() {
+  
+    // Suscribirse a cambios en cualquier campo del formulario
+    this.loginForm.valueChanges.subscribe(() => {
+      if (this.loginError) {
+        this.loginError = null;
+      }
     });
   }
 
@@ -59,6 +70,10 @@ export class LoginComponent {
             } else {
               this.loginError = 'Error al intentar iniciar sesión';
             }
+            setTimeout(() => {
+              this.loginForm.reset();
+              this.isFlipped = true;
+            }, 2000);
           }
         });
     }
@@ -66,5 +81,11 @@ export class LoginComponent {
 
   goToRegister(): void {
     this.router.navigate(['/register']);
+  }
+
+  onCardClick(): void {
+    if (!this.isFlipped) {
+      this.isFlipped = true;
+    }
   }
 }

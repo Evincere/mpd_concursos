@@ -1,0 +1,46 @@
+@use 'variables' as *;
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    .card {
+        background: $color-background;
+        padding: 1.5rem;
+        border-radius: $border-radius;
+        box-shadow: $box-shadow;
+
+        .card-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .card-info {
+                h3 {
+                    margin: 0;
+                    font-size: 1.1rem;
+                    color: $color-text-muted;
+                }
+
+                .count {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    color: $color-text-primary;
+                }
+            }
+
+            .card-icon {
+                font-size: 2.5rem;
+                opacity: 0.8;
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+}

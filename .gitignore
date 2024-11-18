@@ -1,2 +1,6 @@
 .aider*
 .env
+node_modules/
+concursosH2bd/concursosbd.mv.db
+concursosH2bd/concursosbd.trace.db
+concurso-backend/src/main/resources/static/concursosH2bd/concursosbd.trace.db

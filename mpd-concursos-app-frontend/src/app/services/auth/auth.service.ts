@@ -15,16 +15,11 @@ export class AuthService {
   // Método para manejar el inicio de sesión
   public handleLogin(loginUser: LoginUser): Observable<JwtDto> {
     return this.loginService.login(loginUser).pipe(
-      tap({
-        next: jwtDto => {
-          if (jwtDto) {
-            this.tokenService.saveToken(jwtDto);
-          } else {
-            throw new Error('Respuesta vacía');
-          }
-        },
-        error: err => {
-          console.error('Error en el inicio de sesión', err);
+      tap(jwtDto => {
+        if (jwtDto) {
+          this.tokenService.saveToken(jwtDto);
+        } else {
+          throw new Error('Respuesta vacía');
         }
       })
     );
@@ -56,5 +51,16 @@ export class AuthService {
     }
 
     return false;
+  }
+
+  public getCuit(): string | null {
+    return this.tokenService.getCuit();
+  }
+
+  public getUserInfo(): { username: string, cuit: string } {
+    return {
+      username: this.getUser()?.username || '',
+      cuit: this.getCuit() || ''
+    };
   }
 }

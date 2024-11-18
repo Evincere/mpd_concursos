@@ -1,17 +1,65 @@
+@use 'variables' as *;
 
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%; 
-    background: #2d2d2d;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    background: $color-background;
     height: 100%;
     padding: 0 2rem;
-}
 
-img {
-    height: 50px; 
+    .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .logout-btn {
+        padding: 0.8rem;
+        background-color: $color-secondary;
+        color: $color-text-secondary;
+        border: none;
+        border-radius: $border-radius;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: $transition-default;
+        
+        i {
+            font-size: 1.2rem;
+        }
+
+        .logout-text {
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            transition: $transition-default;
+            opacity: 0;
+        }
+
+        &:hover {
+            background-color: $color-primary;
+            padding: 0.8rem 1.2rem;
+
+            .logout-text {
+                max-width: 200px;
+                opacity: 1;
+            }
+        }
+    }
+
+    img {
+        height: 60px;
+        padding: 0.5rem;
+        border-radius: $border-radius;
+        transition: $transition-default;
+
+        &:hover {
+            background: $color-secondary;
+        }
+    }
 }
 
 .user-info {

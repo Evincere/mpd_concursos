@@ -1,9 +1,9 @@
 package ar.gov.mpd.concursobackend.auth.domain.exception;
 
-public class InvalidPasswordException extends RuntimeException {
+public class UserDniAlreadyExistsException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     
-    public InvalidPasswordException(String message) {
+    public UserDniAlreadyExistsException(String message) {
         super(message);
     }
 } 

@@ -1,28 +1,31 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../../services/auth/auth.service';
+import { SidebarService } from '../../../services/sidebar.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss']
+  styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent {
-  ngOnInit() {
-    this.setupSubmenuToggle();
+  isCollapsed = false;
+
+  constructor(private authService: AuthService, private sidebarService: SidebarService) {
+    this.sidebarService.isCollapsed$.subscribe(
+      collapsed => this.isCollapsed = collapsed
+    );
   }
 
-  setupSubmenuToggle() {
-    const submenuTriggers = document.querySelectorAll('.has-submenu');
-    
-    submenuTriggers.forEach(trigger => {
-        trigger.addEventListener('click', (e) => {
-            e.preventDefault();
-            trigger.classList.toggle('active');
-            const submenu = trigger.nextElementSibling as HTMLElement | null;
-            if (submenu) {
-                submenu.classList.toggle('show');
-            }
-        });
-    });
+  logout() {
+    this.authService.logout();
+    window.location.href = '/login';
+  }
+
+  toggleSidebar() {
+    this.sidebarService.toggleSidebar();
   }
 }

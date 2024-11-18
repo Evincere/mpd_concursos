@@ -39,7 +39,6 @@ public class CreateRoles implements CommandLineRunner {
             user.setPassword("123456");
             user.setDni("26598410");
             user.setCuit("20265984100");
-            user.getRoles().add("user");
             userService.createUser(user);
         }
     }

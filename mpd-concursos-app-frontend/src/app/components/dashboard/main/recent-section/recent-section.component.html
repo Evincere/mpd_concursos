@@ -1,0 +1,21 @@
+<section class="recent-section">
+    <h2>Concursos Recientes</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let concurso of recentConcursos">
+                    <td>{{concurso.titulo}}</td>
+                    <td>{{concurso.fecha | date:'dd/MM/yyyy'}}</td>
+                    <td><span class="status" [class.active]="concurso.estado === 'Activo'">{{concurso.estado}}</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>

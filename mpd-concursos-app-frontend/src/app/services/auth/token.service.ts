@@ -18,11 +18,12 @@ export class TokenService {
     this.setSessionItem(this.tokenKey, jwtDto.token);
     this.setSessionItem(this.usernameKey, jwtDto.username);
     this.setSessionItem(this.authoritiesKey, JSON.stringify(jwtDto.authorities));
-    this.setSessionItem(this.cuit, JSON.stringify(jwtDto.cuit));
+    this.setSessionItem(this.cuit, jwtDto.cuit);
 }
 
-  private setSessionItem(key: string, value: string): void {
-    sessionStorage.setItem(key, value);
+  private setSessionItem(key: string, value: any): void {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    sessionStorage.setItem(key, stringValue);
   }
 
   private getSessionItem(key: string): string | null {
@@ -51,7 +52,8 @@ export class TokenService {
 }
 
   public getCuit(): string | null {
-    return this.getSessionItem(this.cuit);
+    const cuit = this.getSessionItem(this.cuit);
+    return cuit ? cuit : null; 
   }
 
   // Método para eliminar el token y los datos de usuario de sessionStorage

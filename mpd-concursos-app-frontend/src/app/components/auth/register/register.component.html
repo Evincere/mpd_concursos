@@ -1,22 +1,42 @@
 <div class="register-box">
-  <p>Registro de Usuario</p>
-  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+  <h2>Registro de Usuario</h2>
+  <div class="floating-messages">
+    <div *ngFor="let error of activeErrors" 
+         class="message" 
+         [ngClass]="error.type">
+      <div class="message-content">
+        <strong>{{ error.title }}</strong>
+        <p>{{ error.message }}</p>
+      </div>
+    </div>
+  </div>
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" autocomplete="off">
     <div class="user-box">
-      <input matInput formControlName="nombre" placeholder=" " required>
+      <input matInput formControlName="nombre" placeholder=" " required (focus)="onInputFocus($event)">
       <label>Nombre</label>
       <mat-error *ngIf="registerForm.get('nombre')?.touched && registerForm.get('nombre')?.errors?.['required']">
         El nombre es requerido
       </mat-error>
     </div>
     <div class="user-box">
-      <input matInput formControlName="apellido" placeholder=" " required>
+      <input matInput formControlName="apellido" placeholder=" " required (focus)="onInputFocus($event)">
       <label>Apellido</label>
       <mat-error *ngIf="registerForm.get('apellido')?.touched && registerForm.get('apellido')?.errors?.['required']">
         El apellido es requerido
       </mat-error>
     </div>
     <div class="user-box">
-      <input matInput formControlName="cuit" placeholder=" " required (input)="formatCuit($event)" maxlength="13">
+      <input matInput formControlName="dni" placeholder=" " required maxlength="8" (focus)="onInputFocus($event)">
+      <label>DNI</label>
+      <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['required']">
+        El DNI es requerido
+      </mat-error>
+      <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['pattern']">
+        El DNI debe tener 8 dígitos
+      </mat-error>
+    </div>
+    <div class="user-box">
+      <input matInput formControlName="cuit" placeholder=" " required (input)="formatCuit($event)" maxlength="13" (focus)="onInputFocus($event)">
       <label>CUIT</label>
       <mat-error *ngIf="registerForm.get('cuit')?.touched && registerForm.get('cuit')?.errors?.['required']">
         El CUIT es requerido
@@ -26,7 +46,7 @@
       </mat-error>
     </div>
     <div class="user-box">
-      <input matInput formControlName="username" placeholder=" " required>
+      <input matInput formControlName="username" placeholder=" " required (focus)="onInputFocus($event)">
       <label>Username</label>
       <mat-error *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['required']">
         El username es requerido
@@ -35,18 +55,31 @@
         El username debe tener al menos 4 caracteres
       </mat-error>
     </div>
-    <div class="user-box">
-      <input matInput type="email" formControlName="email" placeholder=" " required>
+    <div class="user-box" [class.error-field]="hasFieldError('email')">
+      <input matInput 
+             type="email" 
+             formControlName="email" 
+             placeholder=" " 
+             required 
+             (focus)="onInputFocus($event)"
+             [class.error-input]="hasFieldError('email')">
       <label>Email</label>
-      <mat-error *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['required']">
-        El email es requerido
-      </mat-error>
-      <mat-error *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['email']">
-        Por favor ingrese un email válido
-      </mat-error>
+      <div class="error-message" 
+           *ngIf="registerForm.get('email')?.touched && 
+                  (registerForm.get('email')?.errors || hasFieldError('email'))">
+        <ng-container *ngIf="registerForm.get('email')?.errors?.['required']">
+          El email es requerido
+        </ng-container>
+        <ng-container *ngIf="registerForm.get('email')?.errors?.['email']">
+          Por favor ingrese un email válido
+        </ng-container>
+        <ng-container *ngIf="hasFieldError('email')">
+          {{ getFieldError('email') }}
+        </ng-container>
+      </div>
     </div>
     <div class="user-box">
-      <input matInput type="password" formControlName="password" placeholder=" " required>
+      <input matInput type="password" formControlName="password" placeholder=" " required (focus)="onInputFocus($event)">
       <label>Contraseña</label>
       <mat-error *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['required']">
         La contraseña es requerida
@@ -56,7 +89,7 @@
       </mat-error>
     </div>
     <div class="user-box">
-      <input matInput type="password" formControlName="confirmPassword" placeholder=" " required>
+      <input matInput type="password" formControlName="confirmPassword" placeholder=" " required (focus)="onInputFocus($event)">
       <label>Confirmar Contraseña</label>
       <mat-error *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.errors?.['required']">
         Debe confirmar la contraseña
@@ -72,9 +105,28 @@
         <span class="pointer-events-none absolute left-1 top-1 block h-4 w-4 rounded-full bg-slate-600 transition-all duration-200 peer-checked:left-7 peer-checked:bg-green-300"></span>
       </div>
     </label>
-    <button type="submit" [disabled]="!registerForm.valid" class="submit-button">
-      Registrarse
-    </button>
+    <div class="action-container">
+      <button type="submit" 
+              [disabled]="!registerForm.valid" 
+              class="submit-button"
+              [class.fade-out]="isLoading || showMessage"
+              *ngIf="!isLoading && !showMessage">
+        Registrarse
+      </button>
+      <div class="loader-container" *ngIf="isLoading">
+        <div class="loader"></div>
+      </div>
+      <div class="message-container" 
+           *ngIf="showMessage"
+           [class.success]="isSuccess"
+           [class.error]="!isSuccess"
+           [@messageAnimation]>
+        <i class="material-icons icon">
+          {{ isSuccess ? 'check_circle' : 'error' }}
+        </i>
+        <span class="message-text">{{ responseMessage }}</span>
+      </div>
+    </div>
   </form>
   <p>¿Ya tienes una cuenta? <button class="a2" (click)="goToLogin()">Iniciar Sesión</button></p>
 </div>

@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { UserInfoComponent } from './user-info/user-info.component';
+import { AuthService } from '../../../../services/auth/auth.service';
+
 
 @Component({
   selector: 'app-navbar',
@@ -10,7 +12,19 @@ import { UserInfoComponent } from './user-info/user-info.component';
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
 })
-export class NavbarComponent {
-  username = 'Usuario Ejemplo';
-  cuit = '20-12345678-9';  
+export class NavbarComponent implements OnInit {
+  userInfo: { username: string, cuit: string };
+
+  constructor(private authService: AuthService) {
+    this.userInfo = { username: '', cuit: '' };
+  }
+
+  ngOnInit(): void {
+    this.userInfo = this.authService.getUserInfo();
+  }
+
+  onLogout(): void {
+    this.authService.logout();
+    window.location.href = '/login';
+  }
 }

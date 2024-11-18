@@ -1,9 +1,10 @@
 import { Component, Input } from '@angular/core';
+import { CuitFormatPipe } from '../../../../../pipes/cuit-format.pipe';
 
 @Component({
   selector: 'app-user-info',
   standalone: true,
-  imports: [],
+  imports: [CuitFormatPipe],
   templateUrl: './user-info.component.html',
   styleUrl: './user-info.component.scss'
 })

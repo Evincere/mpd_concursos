@@ -7,6 +7,7 @@ import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserCreate;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserExists;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserGetByUsername;
 import ar.gov.mpd.concursobackend.auth.domain.exception.UserAlreadyExistsException;
+import ar.gov.mpd.concursobackend.auth.domain.exception.UserDniAlreadyExistsException;
 import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtProvider;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.exception.EmailAlreadyExistsException;
@@ -65,11 +66,8 @@ public class UserService implements IUserService {
     public User createUser(UserCreateDto dto) {
         validateNewUserCredentials(dto);
         
-        // Codificar la contraseña con BCrypt
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
-        System.out.println("Contraseña codificada: " + encodedPassword); // Para debug
 
-        // Construir usuario
         User user = new User(
             new UserUsername(dto.getUsername()),
             new UserPassword(encodedPassword),
@@ -78,24 +76,12 @@ public class UserService implements IUserService {
             new UserCuit(dto.getCuit(), dto.getDni())
         );
 
-         // Obtener y asignar roles
         Set<Rol> roles = new HashSet<>();
-    
-        // Siempre agregar ROLE_USER
         Rol userRole = rolService.findByRole(RoleEnum.ROLE_USER)
             .orElseThrow(() -> new RuntimeException("Error: Rol de usuario no encontrado"));
         roles.add(userRole);
-        
-        // Si se solicita rol admin
-        if (dto.getRoles() != null && dto.getRoles().contains("ROLE_ADMIN")) {
-            Rol adminRole = rolService.findByRole(RoleEnum.ROLE_ADMIN)
-                .orElseThrow(() -> new RuntimeException("Error: Rol de administrador no encontrado"));
-            roles.add(adminRole);
-        }
-
         user.setRoles(roles);
 
-        // Guardar usuario
         return userCreate.run(user);
     }
 
@@ -128,7 +114,7 @@ public class UserService implements IUserService {
 
     private void validateDni(String dni) {
         if (existsByDni(new UserDni(dni))) {
-            throw new UserAlreadyExistsException("El usuario con dni " + dni + " ya está registrado");
+            throw new UserDniAlreadyExistsException("El usuario con dni " + dni + " ya está registrado");
         }
     }
 

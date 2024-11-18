@@ -1,0 +1,11 @@
+<div class="dashboard-cards">
+    <div class="card" *ngFor="let card of cards" [style.border-top]="'3px solid ' + card.color">
+        <div class="card-content">
+            <div class="card-info">
+                <h3>{{card.title}}</h3>
+                <span class="count">{{card.count}}</span>
+            </div>
+            <i class="fas {{card.icon}} card-icon" [style.color]="card.color"></i>
+        </div>
+    </div>
+</div>

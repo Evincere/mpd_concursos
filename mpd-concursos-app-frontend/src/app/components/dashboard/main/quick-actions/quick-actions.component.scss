@@ -1,0 +1,27 @@
+@use 'variables' as *;
+
+.actions-grid {
+    display: grid;
+    gap: 1rem;
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: $color-secondary;
+        border: none;
+        border-radius: $border-radius;
+        color: $color-text-primary;
+        cursor: pointer;
+        transition: $transition-default;
+
+        i {
+            font-size: 1.2rem;
+        }
+
+        &:hover {
+            background: $color-primary;
+        }
+    }
+}

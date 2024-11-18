@@ -1,4 +1,32 @@
+@use 'variables' as *;
+
 .user-info {
-    color: whitesmoke;
+    background: $color-secondary;
+    padding: 0.8rem 1.2rem;
+    border-radius: $border-radius;
+    color: $color-text-secondary;
     text-align: right;
+    transition: $transition-default;
+
+    h3 {
+        font-size: 1.1rem;
+        margin: 0;
+        margin-bottom: 0.3rem;
+        color: $color-text-primary;
+
+        .user-icon {
+            color: $color-primary;
+            margin-right: 0.5rem;
+        }
+    }
+
+    p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: $color-text-muted;
+    }
+
+    &:hover {
+        background: $color-hover;
+    }
 }

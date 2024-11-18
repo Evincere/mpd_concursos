@@ -1,19 +1,54 @@
-<aside class="sidebar">
-    <div class="menu-section">
-        <div class="menu-title">Personal</div>
-        <a href="/curriculum" class="menu-item">Curriculum Vitae</a>
-        <a href="/inscripciones" class="menu-item">Mis Inscripciones</a>
+<div class="sidebar" [class.collapsed]="isCollapsed">
+  <nav class="nav-menu">
+    <div class="nav-item">
+      <a routerLink="/dashboard" routerLinkActive="active">
+        <i class="fas fa-home"></i>
+        <span *ngIf="!isCollapsed">Dashboard</span>
+      </a>
     </div>
-    
-    <div class="menu-section">
-        <div class="menu-title">Gestión</div>
-        <a href="/concursos" class="menu-item">Concursos</a>
-        <a href="#" class="menu-item has-submenu">Exámenes</a>
-        <div class="submenu">
-            <a href="/examenes/tecnico-juridico" class="menu-item">Técnico Jurídico</a>
-            <a href="/examenes/tecnico-administrativo" class="menu-item">Técnico Administrativo</a>
-            <a href="/examenes/servicios-auxiliares" class="menu-item">Servicios Auxiliares</a>
-        </div>
-        <a href="/otros" class="menu-item">Otros</a>
+    <div class="nav-item">
+      <a routerLink="/concursos" routerLinkActive="active">
+        <i class="fas fa-gavel"></i>
+        <span *ngIf="!isCollapsed">Concursos</span>
+      </a>
     </div>
-</aside>
+    <div class="nav-item">
+      <a routerLink="/postulaciones" routerLinkActive="active">
+        <i class="fas fa-file-alt"></i>
+        <span *ngIf="!isCollapsed">Mis Postulaciones</span>
+      </a>
+    </div>
+    <div class="nav-item">
+      <a routerLink="/perfil" routerLinkActive="active">
+        <i class="fas fa-user-circle"></i>
+        <span *ngIf="!isCollapsed">Mi Perfil</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="section-divider"></div>
+  <button class="collapse-btn" (click)="toggleSidebar()">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+
+  <nav class="nav-menu">
+    <div class="nav-item">
+      <a routerLink="/configuracion" routerLinkActive="active">
+        <i class="fas fa-cog"></i>
+        <span *ngIf="!isCollapsed">Configuración</span>
+      </a>
+    </div>
+    <div class="nav-item">
+      <a routerLink="/ayuda" routerLinkActive="active">
+        <i class="fas fa-question-circle"></i>
+        <span *ngIf="!isCollapsed">Ayuda</span>
+      </a>
+    </div>
+    <div class="nav-item">
+      <a href="#" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span *ngIf="!isCollapsed">Cerrar Sesión</span>
+      </a>
+    </div>
+  </nav>
+</div>

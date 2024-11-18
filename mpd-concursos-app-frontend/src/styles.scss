@@ -3,6 +3,7 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+@import './styles/variables';
 // Note: Color palettes are generated from primary: #8e6f6e, secondary: #f0f8ff, tertiary: #cce4ff, neutral: #f5f5f5
 $_palettes: (
   primary: (
@@ -172,4 +173,23 @@ body {
 
 body.dark-mode {
     background: #1a1a1a;
+}
+
+// Agregar estos estilos globalmente
+.success-snackbar {
+  background: #4CAF50;
+  color: white;
+  
+  .mat-simple-snackbar-action {
+    color: white;
+  }
+}
+
+.error-snackbar {
+  background: #F44336;
+  color: white;
+  
+  .mat-simple-snackbar-action {
+    color: white;
+  }
 }

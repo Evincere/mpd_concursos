@@ -5,6 +5,7 @@ import ar.gov.mpd.concursobackend.auth.application.validation.PasswordMatches;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Arrays;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -45,7 +46,5 @@ public class UserCreateDto {
     @Pattern(regexp = "\\d{11}", message = "El CUIT debe tener 11 dígitos")
     private String cuit;
     
-    private Set<String> roles = new HashSet<>();
-
-    
+    // Eliminamos el campo roles ya que se manejará en el servicio
 }
