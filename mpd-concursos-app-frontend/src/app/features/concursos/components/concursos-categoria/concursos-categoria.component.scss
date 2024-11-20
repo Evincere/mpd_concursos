@@ -1,0 +1,132 @@
+@use 'variables' as *;
+
+.categoria-card {
+    background: $color-background;
+    border-radius: $border-radius;
+    box-shadow: $box-shadow;
+    overflow: hidden;
+    height: 100%;
+
+    .categoria-header {
+        background: darken($color-background, 3%);
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba($color-text-secondary, 0.1);
+
+        h2 {
+            color: $color-text-primary;
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+           
+        }
+    }
+
+    .concursos-list {
+        padding: 1.25rem;
+
+        .concurso-item {
+            background: darken($color-background, 2%);
+            border-radius: $border-radius;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            &:hover {
+                border-color: rgba($color-primary, 0.3);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .concurso-info {
+                h3 {
+                    color: $color-text-primary;
+                    margin: 0 0 0.75rem 0;
+                    font-size: 1rem;
+                    font-weight: 500;
+                    line-height: 1.4;
+                }
+
+                .cargo {
+                    color: $color-primary;
+                    margin: 0 0 0.5rem 0;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                }
+
+                .dependencia {
+                    color: $color-text-secondary;
+                    margin: 0 0 1rem 0;
+                    font-size: 0.875rem;
+                }
+
+                .meta-info {
+                    display: flex;
+                    gap: 1.5rem;
+                    margin-top: 1rem;
+                    padding-top: 1rem;
+                    border-top: 1px solid rgba($color-text-secondary, 0.1);
+
+                    span {
+                        display: flex;
+                        align-items: center;
+                        color: $color-text-secondary;
+                        font-size: 0.875rem;
+
+                        i {
+                            color: $color-text-secondary;
+                            margin-right: 0.5rem;
+                            font-size: 0.875rem;
+                        }
+                    }
+                }
+            }
+
+            .ver-mas-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.625rem 1.25rem;
+                margin-top: 1.25rem;
+                background: transparent;
+                border: 1px solid $color-primary;
+                border-radius: $border-radius;
+                color: $color-primary;
+                font-size: 0.875rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background: $color-primary;
+                    color: white;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .categoria-card {
+        .concursos-list {
+            padding: 1rem;
+
+            .concurso-item {
+                padding: 1rem;
+
+                .meta-info {
+                    flex-direction: column;
+                    gap: 0.75rem;
+                }
+            }
+        }
+    }
+}

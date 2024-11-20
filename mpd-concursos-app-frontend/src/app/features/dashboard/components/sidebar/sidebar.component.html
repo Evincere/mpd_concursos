@@ -1,0 +1,57 @@
+<div class="sidebar" [class.collapsed]="isCollapsed">
+    <button class="collapse-btn" (click)="toggleSidebar()">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <a routerLink="/dashboard" 
+               routerLinkActive="active"
+               [routerLinkActiveOptions]="{exact: true}">
+                <i class="fas fa-home"></i>
+                <span *ngIf="!isCollapsed">Dashboard</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a routerLink="/dashboard/concursos" routerLinkActive="active">
+                <i class="fas fa-gavel"></i>
+                <span *ngIf="!isCollapsed">Concursos</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a routerLink="/dashboard/postulaciones" routerLinkActive="active">
+                <i class="fas fa-file-alt"></i>
+                <span *ngIf="!isCollapsed">Mis Postulaciones</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a routerLink="/perfil" routerLinkActive="active">
+                <i class="fas fa-user-circle"></i>
+                <span *ngIf="!isCollapsed">Mi Perfil</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="section-divider"></div>  
+
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <a routerLink="/configuracion" routerLinkActive="active">
+                <i class="fas fa-cog"></i>
+                <span *ngIf="!isCollapsed">Configuración</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a routerLink="/ayuda" routerLinkActive="active">
+                <i class="fas fa-question-circle"></i>
+                <span *ngIf="!isCollapsed">Ayuda</span>
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="#" (click)="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span *ngIf="!isCollapsed">Cerrar Sesión</span>
+            </a>
+        </div>
+    </nav>
+</div>

@@ -1,0 +1,13 @@
+<div class="navbar">
+    <a href="https://defensamendoza.gob.ar/" target="_blank" rel="noopener noreferrer">
+        <img src="icons/favicon.png" alt="Logo Ministerio Público de la Defensa">
+    </a>
+    <h1 class="navbar-title">RRHH - MPD - CONCURSOS</h1>
+    <div class="nav-right">
+        <app-user-info [username]="userInfo.username" [cuit]="userInfo.cuit"></app-user-info>
+        <button class="logout-btn" (click)="onLogout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="logout-text">Cerrar sesión</span>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,164 @@
+@use 'variables' as *;
+
+.concursos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    background: $color-background;
+    padding: 1.25rem 1.5rem;
+    border-radius: $border-radius;
+    box-shadow: $box-shadow;
+    
+    h2 {
+        display: flex;
+        align-items: center;
+        color: $color-text-primary;
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+        
+        i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.125rem;
+            margin-right: 1rem;
+            color: $color-primary;
+        }
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        height: 44px;
+        
+        .search-form {
+            width: 320px;
+            
+            mat-form-field.mat-mdc-form-field {
+                width: 100%;
+                font-size: 0.875rem;
+                
+                ::ng-deep {
+                    .mat-mdc-form-field-flex {
+                        background: rgba($color-primary, 0.05);
+                        border-radius: $border-radius;
+                        min-height: 44px;
+                        padding: 0 12px;
+                    }
+
+                    .mat-mdc-form-field-infix {
+                        padding: 8px 0;
+                        min-height: unset;
+                    }
+
+                    .mat-mdc-text-field-wrapper {
+                        padding: 0;
+                    }
+
+                    .mat-mdc-form-field-subscript-wrapper {
+                        display: none;
+                    }
+
+                    .mdc-notched-outline {
+                        display: none;
+                    }
+
+                    .mat-mdc-input-element {
+                        color: $color-text-primary;
+                    }
+
+                    .mat-mdc-form-field-icon-suffix {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        
+                        i.fa-search {
+                            margin-right: 4px;
+                            font-size: 1rem;
+                            color: $color-text-secondary;
+                        }
+                    }
+
+                    .clear-button {
+                        width: 24px;
+                        height: 24px;
+                        line-height: 24px;
+                        margin-right: 4px;
+                        color: $color-text-secondary;
+                        transition: all 0.2s ease;
+
+                        i {
+                            font-size: 0.875rem;
+                        }
+
+                        &:hover {
+                            color: $color-primary;
+                            background: rgba($color-primary, 0.1);
+                        }
+                    }
+                }
+            }
+        }
+
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 44px;
+            padding: 0 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: $border-radius;
+            transition: all 0.2s ease;
+
+            i {
+                font-size: 0.875rem;
+            }
+
+            &[mat-stroked-button] {
+                color: $color-text-secondary;
+                border-color: rgba($color-text-secondary, 0.2);
+
+                &:hover {
+                    color: $color-primary;
+                    border-color: $color-primary;
+                    background: rgba($color-primary, 0.1);
+                }
+            }
+
+            &[mat-flat-button] {
+                background: $color-primary;
+                color: white;
+
+                &:hover {
+                    background: darken($color-primary, 5%);
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .concursos-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        
+        .header-actions {
+            width: 100%;
+            flex-direction: column;
+            height: auto;
+            
+            .search-form {
+                width: 100%;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    }
+}

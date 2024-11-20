@@ -1,0 +1,96 @@
+<div class="filtros-panel-wrapper">
+    <div class="filtros-panel">
+        <div class="filtros-header">
+            <h2>
+                <i class="fas fa-filter"></i>
+                Filtros de Búsqueda
+            </h2>
+            <button mat-icon-button (click)="cerrar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form [formGroup]="filtrosForm" class="filtros-content">
+            <!-- Estado -->
+            <div class="filtro-grupo">
+                <div class="grupo-titulo">
+                    <i class="fas fa-check-circle"></i>
+                    Estado
+                </div>
+                <div class="grupo-contenido">
+                    <mat-radio-group formControlName="estado">
+                        <mat-radio-button value="todos">Todos</mat-radio-button>
+                        <mat-radio-button value="activo">Activo</mat-radio-button>
+                        <mat-radio-button value="proximo">Próximo</mat-radio-button>
+                        <mat-radio-button value="finalizado">Finalizado</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+            </div>
+
+            <!-- Período -->
+            <div class="filtro-grupo">
+                <div class="grupo-titulo">
+                    <i class="fas fa-calendar"></i>
+                    Período
+                </div>
+                <div class="grupo-contenido">
+                    <mat-radio-group formControlName="periodo">
+                        <mat-radio-button value="todos">Todos</mat-radio-button>
+                        <mat-radio-button value="hoy">Hoy</mat-radio-button>
+                        <mat-radio-button value="semana">Última semana</mat-radio-button>
+                        <mat-radio-button value="mes">Último mes</mat-radio-button>
+                        <mat-radio-button value="trimestre">Último trimestre</mat-radio-button>
+                        <mat-radio-button value="anio">Último año</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+            </div>
+
+            <!-- Dependencia -->
+            <div class="filtro-grupo">
+                <div class="grupo-titulo">
+                    <i class="fas fa-building"></i>
+                    Dependencia
+                </div>
+                <div class="grupo-contenido">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Seleccione dependencia</mat-label>
+                        <mat-select formControlName="dependencia">
+                            <mat-option value="todos">Todas</mat-option>
+                            <mat-option value="dependencia1">Dependencia 1</mat-option>
+                            <mat-option value="dependencia2">Dependencia 2</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Cargo -->
+            <div class="filtro-grupo">
+                <div class="grupo-titulo">
+                    <i class="fas fa-briefcase"></i>
+                    Cargo
+                </div>
+                <div class="grupo-contenido">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Seleccione cargo</mat-label>
+                        <mat-select formControlName="cargo">
+                            <mat-option value="todos">Todos</mat-option>
+                            <mat-option value="cargo1">Cargo 1</mat-option>
+                            <mat-option value="cargo2">Cargo 2</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+        </form>
+
+        <div class="filtros-actions">
+            <button mat-stroked-button (click)="limpiarFiltros()">
+                <i class="fas fa-eraser"></i>
+                Limpiar
+            </button>
+            <button mat-flat-button color="primary" (click)="aplicarFiltros()">
+                <i class="fas fa-check"></i>
+                Aplicar
+            </button>
+        </div>
+    </div>
+</div>

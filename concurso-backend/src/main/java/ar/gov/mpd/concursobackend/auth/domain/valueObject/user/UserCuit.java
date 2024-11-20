@@ -4,6 +4,7 @@ import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCuitException;
 
 public class UserCuit {
     private final String cuit;
+    @SuppressWarnings("unused")
     private final String dni;
 
     public UserCuit(String cuit, String dni) {

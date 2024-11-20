@@ -1,0 +1,137 @@
+@use 'variables' as *;
+
+.concursos-container {
+    position: relative;
+    min-height: 100vh;
+    padding: 1.5rem;
+    color: $color-text-secondary;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+
+    .concursos-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+
+        h1 {
+            color: $color-text-primary;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+
+            .action-btn {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.8rem 1.2rem;
+                background: $color-secondary;
+                border: none;
+                border-radius: $border-radius;
+                color: $color-text-primary;
+                cursor: pointer;
+                transition: $transition-default;
+
+                &:hover {
+                    background: $color-primary;
+                }
+
+                i {
+                    font-size: 1.1rem;
+                }
+            }
+        }
+    }
+
+    .categorias-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        min-height: 200px;
+        will-change: transform, opacity;
+    }
+}
+
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+}
+
+.no-resultados {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 2rem auto;
+    padding: 3rem 2rem;
+    background: $color-background;
+    border-radius: $border-radius;
+    box-shadow: $box-shadow;
+    max-width: 600px;
+    text-align: center;
+    will-change: transform, opacity;
+
+    i {
+        font-size: 3rem;
+        color: $color-primary;
+        margin-bottom: 1.5rem;
+        opacity: 0.8;
+    }
+
+    p {
+        color: $color-text-primary;
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        height: 44px;
+        padding: 0 1.5rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: $border-radius;
+        transition: all 0.2s ease;
+        background: rgba($color-primary, 0.1);
+        color: $color-primary;
+        border: none;
+
+        &:hover {
+            background: rgba($color-primary, 0.2);
+            transform: translateY(-1px);
+        }
+
+        &:active {
+            transform: translateY(0);
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .no-resultados {
+        margin: 1rem;
+        padding: 2rem 1rem;
+
+        i {
+            font-size: 2.5rem;
+        }
+
+        p {
+            font-size: 0.875rem;
+        }
+    }
+}

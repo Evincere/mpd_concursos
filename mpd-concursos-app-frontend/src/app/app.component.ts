@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { LoginComponent } from './components/auth/login/login.component';
+import { LoginComponent } from './features/auth/components/login/login.component';
 import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
@@ -12,7 +12,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
     trigger('fadeAnimation', [
       transition('* => *', [
         style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('500ms ease-out', 
+        animate('500ms ease-out',
           style({ opacity: 1, transform: 'translateY(0)' })
         )
       ])

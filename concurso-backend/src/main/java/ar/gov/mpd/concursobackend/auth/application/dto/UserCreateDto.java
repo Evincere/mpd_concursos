@@ -3,10 +3,6 @@ package ar.gov.mpd.concursobackend.auth.application.dto;
 import lombok.Data;
 import ar.gov.mpd.concursobackend.auth.application.validation.PasswordMatches;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

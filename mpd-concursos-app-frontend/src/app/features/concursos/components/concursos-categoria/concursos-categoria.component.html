@@ -1,0 +1,26 @@
+<div class="categoria-card">
+    <div class="categoria-header">
+        <h2>{{categoria}} ({{concursos.length}})</h2>
+    </div>
+    
+    <div class="concursos-list">
+        <div *ngFor="let concurso of concursos" class="concurso-item">
+            <div class="concurso-info">
+                <h3>{{concurso.titulo}}</h3>
+                <p class="cargo">{{concurso.cargo}}</p>
+                <p class="dependencia">{{concurso.dependencia}}</p>
+                <div class="meta-info">
+                    <span class="vacantes">
+                        <i class="fas fa-users"></i> {{concurso.vacantes}} vacante(s)
+                    </span>
+                    <span class="fecha">
+                        <i class="fas fa-calendar"></i> Hasta: {{concurso.fechaFin | date:'dd/MM/yyyy'}}
+                    </span>
+                </div>
+            </div>
+            <button class="ver-mas-btn" [routerLink]="['/concursos', concurso.id]">
+                Ver más
+            </button>
+        </div>
+    </div>
+</div>

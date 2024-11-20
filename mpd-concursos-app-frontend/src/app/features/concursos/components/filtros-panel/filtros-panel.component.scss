@@ -1,0 +1,299 @@
+@use '@angular/material' as mat;
+@use 'variables' as *;
+
+// El ancho original era 250px, aumentamos un 15%
+$panel-width: 288px; // 250px + 15% = 287.5px, redondeado a 288px
+
+.filtros-panel {
+    background: $color-background;
+    padding: 1.5rem 1rem;
+    box-shadow: $box-shadow;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    width: $panel-width;
+    position: relative;
+}
+
+.filtros-panel-wrapper {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: $panel-width;
+    z-index: 1000;
+}
+
+.filtros-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+
+    h2 {
+        display: flex;
+        align-items: center;
+        color: $color-text-primary;
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 500;
+        
+        i {
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+            margin-right: 1rem;
+            color: $color-primary;
+        }
+    }
+
+    button {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        color: $color-text-secondary;
+        transition: all 0.2s ease;
+        
+        &:hover {
+            color: $color-primary;
+            background: rgba($color-primary, 0.1);
+        }
+    }
+}
+
+.filtros-content {
+    .filtro-grupo {
+        margin-bottom: 1.5rem;
+
+        .grupo-titulo {
+            display: flex;
+            align-items: center;
+            color: $color-text-secondary;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+
+            i {
+                width: 20px;
+                text-align: center;
+                font-size: 1rem;
+                margin-right: 1rem;
+                color: $color-primary;
+            }
+        }
+
+        .grupo-contenido {
+            padding-left: 2.25rem;
+
+            mat-radio-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+
+                mat-radio-button {
+                    color: $color-text-secondary;
+                    font-size: 0.875rem;
+                    
+                    ::ng-deep {
+                        .mdc-form-field {
+                            color: inherit;
+                        }
+                        .mdc-radio {
+                            .mdc-radio__background {
+                                border-color: $color-text-secondary;
+                            }
+                        }
+                        .mdc-radio--selected {
+                            .mdc-radio__background {
+                                border-color: $color-primary;
+                            }
+                        }
+                    }
+                }
+            }
+
+            mat-form-field.mat-mdc-form-field {
+                width: 100%;
+                font-size: 0.875rem;
+
+                ::ng-deep {
+                    .mat-mdc-form-field-flex {
+                        background: rgba($color-primary, 0.05);
+                        border-radius: $border-radius;
+                        min-height: 40px;
+                        padding: 0 8px;
+                    }
+
+                    .mat-mdc-form-field-infix {
+                        padding: 8px 0;
+                        min-height: unset;
+                    }
+
+                    .mat-mdc-floating-label {
+                        font-size: 0.875rem;
+                        top: 16px;
+                    }
+
+                    .mat-mdc-select-arrow {
+                        margin: 0 4px;
+                    }
+
+                    .mdc-line-ripple {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.filtros-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+
+    button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: $border-radius;
+        transition: all 0.2s ease;
+
+        i {
+            font-size: 0.875rem;
+        }
+
+        &[mat-stroked-button] {
+            color: $color-text-secondary;
+            border-color: rgba($color-text-secondary, 0.2);
+
+            &:hover {
+                color: $color-primary;
+                border-color: $color-primary;
+                background: rgba($color-primary, 0.1);
+            }
+        }
+
+        &[mat-flat-button] {
+            background: $color-primary;
+            color: white;
+
+            &:hover {
+                background: darken($color-primary, 5%);
+            }
+        }
+    }
+}
+
+.backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 990;
+}
+
+@media (max-width: 768px) {
+    .filtros-panel {
+        padding: 1rem 0.75rem;
+    }
+    
+    .filtros-content {
+        .filtro-grupo {
+            margin-bottom: 1rem;
+        }
+    }
+}
+
+::ng-deep {
+    .mat-datepicker-content {
+        background: $color-background;
+        border-radius: $border-radius;
+        box-shadow: $box-shadow;
+
+        .mat-calendar {
+            width: 280px;
+            padding: 0.5rem;
+        }
+    }
+
+    .mat-datepicker-content .mat-calendar-header {
+        padding: 0.5rem 0.5rem 0;
+        color: $color-text-primary;
+        
+        .mat-calendar-controls {
+            margin: 0;
+            
+            .mat-calendar-period-button {
+                color: $color-text-primary;
+                font-weight: 500;
+            }
+
+            .mat-calendar-arrow {
+                fill: $color-text-secondary;
+            }
+
+            .mat-calendar-previous-button,
+            .mat-calendar-next-button {
+                color: $color-text-secondary;
+
+                &:hover {
+                    color: $color-primary;
+                }
+            }
+        }
+    }
+
+    .mat-mdc-select-panel.mat-mdc-select-panel {
+        background: $color-background;
+        border-radius: $border-radius;
+        box-shadow: $box-shadow;
+        
+        .mat-mdc-option {
+            font-size: 0.875rem;
+            min-height: 36px;
+            padding: 0 8px;
+            
+            &:hover:not(.mdc-list-item--disabled) {
+                background: rgba($color-primary, 0.05);
+            }
+            
+            &.mat-mdc-option-active {
+                background: rgba($color-primary, 0.1);
+            }
+            
+            &.mat-mdc-selected:not(.mdc-list-item--disabled) {
+                background: $color-primary;
+                color: white;
+            }
+        }
+    }
+}
+
+.mat-mdc-radio-group {
+    .mat-mdc-radio-button.mat-mdc-radio-button {
+        .mdc-form-field {
+            color: $color-text-secondary;
+        }
+
+        .mdc-radio {
+            .mdc-radio__background {
+                border-color: $color-text-secondary;
+            }
+        }
+
+        &.mat-mdc-radio-checked {
+            .mdc-radio__background {
+                border-color: $color-primary;
+            }
+        }
+    }
+}

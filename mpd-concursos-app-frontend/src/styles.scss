@@ -1,9 +1,10 @@
 @use 'sass:map';
 @use '@angular/material' as mat;
+@import './styles/variables';
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-@import './styles/variables';
+
 // Note: Color palettes are generated from primary: #8e6f6e, secondary: #f0f8ff, tertiary: #cce4ff, neutral: #f5f5f5
 $_palettes: (
   primary: (
@@ -135,17 +136,6 @@ $_rest: (
 $_primary: map.merge(map.get($_palettes, primary), $_rest);
 $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
 
-$light-theme: mat.define-theme((
-  color: (
-    theme-type: light,
-    primary: $_primary,
-    tertiary: $_tertiary,
-    use-system-variables: true,
-  ),
-  typography: (
-    use-system-variables: true,
-  ),
-));
 $dark-theme: mat.define-theme((
   color: (
     theme-type: dark,
@@ -158,6 +148,90 @@ $dark-theme: mat.define-theme((
   ),
 ));
 
+// Aplicar el tema dentro de un selector
+.mat-app-background {
+  @include mat.all-component-themes($dark-theme);
+
+  // Estilos para el contenedor del datepicker
+  .mat-datepicker-content {
+    background-color: $color-background !important;
+    color: $color-text-primary !important;
+    position: fixed !important; // Asegura posicionamiento correcto
+    z-index: 1000 !important; // Asegura que aparezca sobre otros elementos
+
+    .mat-calendar {
+      background-color: transparent;
+      padding: 0.5rem;
+      width: 280px !important; // Ancho fijo para mejor presentación
+
+      .mat-calendar-header {
+        padding: 0.5rem 0.5rem 0;
+        color: $color-text-primary;
+      }
+
+      .mat-calendar-table-header {
+        color: $color-text-secondary;
+      }
+
+      .mat-calendar-body-cell {
+        height: 32px;
+        width: 32px;
+
+        .mat-calendar-body-cell-content {
+          color: $color-text-primary;
+          height: 28px;
+          width: 28px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          &:hover {
+            background-color: rgba($color-primary, 0.1);
+          }
+        }
+
+        &.mat-calendar-body-selected {
+          .mat-calendar-body-cell-content {
+            background-color: $color-primary;
+            color: white;
+          }
+        }
+
+        &.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+          .mat-calendar-body-cell-content {
+            border: 1px solid $color-primary;
+          }
+        }
+      }
+
+      .mat-calendar-controls {
+        margin: 0 0 0.5rem;
+
+        .mat-calendar-arrow,
+        .mat-calendar-previous-button,
+        .mat-calendar-next-button {
+          color: $color-text-secondary;
+
+          &:hover {
+            color: $color-text-primary;
+          }
+        }
+      }
+    }
+  }
+
+  // Ajuste para el overlay del datepicker
+  .cdk-overlay-container {
+    z-index: 1000;
+
+    .cdk-overlay-connected-position-bounding-box {
+      // Asegura que el calendario se posicione correctamente
+      position: absolute !important;
+    }
+  }
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -168,12 +242,14 @@ $dark-theme: mat.define-theme((
 
 body {
     min-height: 100vh;
-   
+    margin: 0;
+    padding: 0;
+    &.dark-mode {
+        opacity: 0.9;
+        background: #1a1a1a;
+    }
 }
 
-body.dark-mode {
-    background: #1a1a1a;
-}
 
 // Agregar estos estilos globalmente
 .success-snackbar {
@@ -191,5 +267,156 @@ body.dark-mode {
   
   .mat-simple-snackbar-action {
     color: white;
+  }
+}
+
+// Estilos globales para el diálogo
+.filtros-dialog {
+  .mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+      background-color: $color-background !important;
+      color: $color-text-primary !important;
+    }
+  }
+}
+
+// Estilo para el backdrop
+.dialog-backdrop {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(3px);
+}
+
+// Asegurar que el overlay container esté por encima de todo
+.cdk-overlay-container {
+  z-index: 1000;
+}
+
+.cdk-global-overlay-wrapper {
+  z-index: 1000;
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none;
+  
+  .cdk-overlay-pane {
+    pointer-events: auto;
+    margin-top: 10vh;
+  }
+}
+
+/* Estilos para scrollbar - Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba($color-background, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba($color-primary, 0.3);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.2s ease-in-out;
+    
+    &:hover {
+        background: rgba($color-primary, 0.5);
+    }
+
+    &:active {
+        background: rgba($color-primary, 0.7);
+    }
+}
+
+/* Estilos para scrollbar - Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba($color-primary, 0.3) transparent;
+
+    &:hover {
+        scrollbar-color: rgba($color-primary, 0.5) transparent;
+    }
+}
+
+/* Ocultar scrollbar pero mantener funcionalidad */
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+// Añade estos estilos específicos para el datepicker
+.mat-datepicker-content {
+  background-color: $color-background !important;
+  color: $color-text-primary !important;
+
+  .mat-calendar {
+    background-color: transparent;
+
+    .mat-calendar-body-cell-content {
+      color: $color-text-primary;
+    }
+
+    .mat-calendar-body-selected {
+      background-color: $color-primary;
+      color: white;
+    }
+
+    .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+      border-color: $color-primary;
+    }
+
+    .mat-calendar-arrow,
+    .mat-calendar-previous-button,
+    .mat-calendar-next-button {
+      color: $color-text-secondary;
+    }
+  }
+}
+
+// Estilos para los form fields
+.mat-mdc-form-field {
+  .mat-mdc-form-field-flex {
+    background-color: darken($color-background, 3%) !important;
+  }
+
+  .mat-mdc-text-field-wrapper {
+    background-color: transparent !important;
+  }
+
+  .mat-mdc-form-field-label {
+    color: $color-text-secondary !important;
+  }
+
+  .mat-mdc-input-element {
+    color: $color-text-primary !important;
+  }
+}
+
+// Estilos para los selects
+.mat-mdc-select-panel {
+  background-color: darken($color-background, 3%) !important;
+
+  .mat-mdc-option {
+    color: $color-text-primary !important;
+
+    &:hover:not(.mat-mdc-option-disabled) {
+      background-color: rgba($color-primary, 0.1) !important;
+    }
+
+    &.mat-mdc-option-selected {
+      background-color: rgba($color-primary, 0.2) !important;
+    }
   }
 }

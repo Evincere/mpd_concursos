@@ -20,6 +20,7 @@ import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCuitException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.UserDniAlreadyExistsException;
 
 @RestControllerAdvice
+@SuppressWarnings("unused")
 public class AuthExceptionHandler {
     
     private static class ErrorResponse {

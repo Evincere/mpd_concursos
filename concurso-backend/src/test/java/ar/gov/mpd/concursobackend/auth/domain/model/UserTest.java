@@ -21,7 +21,7 @@ public class UserTest {
         UserEmail email = new UserEmail("test@example.com");
 
         // Act
-        User user = new User(username, password, email);
+        User user = new User(username, password, email, null, null);
 
         // Assert
         assertNotNull(user);
@@ -36,7 +36,9 @@ public class UserTest {
         User user = new User(
             new UserUsername("testUser"),
             new UserPassword("password123"),
-            new UserEmail("test@example.com")
+            new UserEmail("test@example.com"),
+            null,
+            null
         );
         Set<Rol> roles = new HashSet<>();
         roles.add(new Rol()); 

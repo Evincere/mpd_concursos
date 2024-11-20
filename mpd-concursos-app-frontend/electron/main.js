@@ -29,7 +29,7 @@ function createWindow() {
 
   win.loadURL(`file://${path.join(__dirname, '../dist/browser/index.html')}`); 
 
-  // win.setMenu(null);
+  win.setMenu(null);
 
   // win.webContents.openDevTools();
 
