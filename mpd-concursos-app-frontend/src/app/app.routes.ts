@@ -5,6 +5,7 @@ import { DashboardComponent } from '@features/dashboard/components/dashboard.com
 import { ConcursosComponent } from '@features/concursos/components/concursos.component';
 import { MainComponent } from '@features/dashboard/components/main/main.component';
 import { PostulacionesComponent } from '@features/postulaciones/postulaciones.component';
+import { PerfilComponent } from '@features/perfil/components/perfil.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 
@@ -19,7 +20,8 @@ export const routes: Routes = [
     children: [
       { path: '', component: MainComponent },
       { path: 'concursos', component: ConcursosComponent },
-      { path: 'postulaciones', component: PostulacionesComponent }
+      { path: 'postulaciones', component: PostulacionesComponent },
+      { path: 'perfil', component: PerfilComponent }
     ]
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },

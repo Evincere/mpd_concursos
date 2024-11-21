@@ -1,0 +1,109 @@
+<div class="perfil-container">
+    <header class="perfil-header">
+        <h2>
+            <i class="fas fa-user-circle"></i>
+            Mi Perfil
+        </h2>
+    </header>
+
+    <mat-tab-group class="perfil-tabs">
+        <!-- Tab Información Personal -->
+        <mat-tab label="Información Personal">
+            <div class="tab-content">
+                <div class="perfil-foto">
+                    <div class="foto-container">
+                        <img src="assets/default-avatar.png" alt="Foto de perfil">
+                        <button mat-mini-fab color="primary" class="cambiar-foto-btn">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" hidden #fileInput (change)="onFileSelected($event)">
+                    </div>
+                </div>
+
+                <form [formGroup]="perfilForm" class="perfil-form">
+                    <div class="form-grid">
+                        <mat-form-field>
+                            <mat-label>Nombre</mat-label>
+                            <input matInput formControlName="nombre">
+                        </mat-form-field>
+
+                        <mat-form-field>
+                            <mat-label>Apellido</mat-label>
+                            <input matInput formControlName="apellido">
+                        </mat-form-field>
+
+                        <mat-form-field>
+                            <mat-label>Email</mat-label>
+                            <input matInput formControlName="email" type="email">
+                        </mat-form-field>
+
+                        <mat-form-field>
+                            <mat-label>Teléfono</mat-label>
+                            <input matInput formControlName="telefono">
+                        </mat-form-field>
+
+                        <mat-form-field>
+                            <mat-label>CUIT</mat-label>
+                            <input matInput formControlName="cuit">
+                        </mat-form-field>
+
+                        <mat-form-field>
+                            <mat-label>Usuario</mat-label>
+                            <input matInput formControlName="usuario">
+                        </mat-form-field>
+
+                        <mat-form-field class="full-width">
+                            <mat-label>Dirección</mat-label>
+                            <input matInput formControlName="direccion">
+                        </mat-form-field>
+                    </div>
+
+                    <div class="form-actions">
+                        <button mat-raised-button color="primary" (click)="guardarPerfil()">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </mat-tab>
+
+        <!-- Tab Redes Sociales -->
+        <mat-tab label="Redes Sociales">
+            <div class="tab-content">
+                <div class="social-card">
+                    <div class="social-header">
+                        <i class="fab fa-linkedin"></i>
+                        <h3>LinkedIn</h3>
+                    </div>
+                    <p>Conecta tu cuenta de LinkedIn para compartir tus logros y actividades</p>
+                    <button mat-raised-button 
+                            [color]="linkedInConectado ? 'warn' : 'primary'"
+                            (click)="conectarLinkedIn()">
+                        {{ linkedInConectado ? 'Desconectar' : 'Conectar' }}
+                    </button>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- Tab Currículum -->
+        <mat-tab label="Currículum">
+            <div class="tab-content">
+                <!-- Experiencia Laboral -->
+                <section class="cv-section">
+                    <h3>Experiencia Laboral</h3>
+                    <form [formGroup]="experienciaForm" class="cv-form">
+                        <!-- Campos de experiencia -->
+                    </form>
+                </section>
+
+                <!-- Educación -->
+                <section class="cv-section">
+                    <h3>Educación</h3>
+                    <form [formGroup]="educacionForm" class="cv-form">
+                        <!-- Campos de educación -->
+                    </form>
+                </section>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div> 
