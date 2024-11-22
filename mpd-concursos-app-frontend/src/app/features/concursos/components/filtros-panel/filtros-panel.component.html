@@ -17,13 +17,19 @@
                     <i class="fas fa-check-circle"></i>
                     Estado
                 </div>
-                <div class="grupo-contenido">
-                    <mat-radio-group formControlName="estado">
-                        <mat-radio-button value="todos">Todos</mat-radio-button>
-                        <mat-radio-button value="activo">Activo</mat-radio-button>
-                        <mat-radio-button value="proximo">Próximo</mat-radio-button>
-                        <mat-radio-button value="finalizado">Finalizado</mat-radio-button>
-                    </mat-radio-group>
+                <div class="grupo-contenido radio-button-container">
+                    <div class="radio-button" *ngFor="let option of estadoOptions">
+                        <input type="radio" 
+                               [id]="'estado-' + option.value"
+                               [value]="option.value"
+                               [name]="'estado'"
+                               formControlName="estado"
+                               class="radio-button__input">
+                        <label [for]="'estado-' + option.value" class="radio-button__label">
+                            {{option.label}}
+                            <span class="radio-button__custom"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -33,15 +39,19 @@
                     <i class="fas fa-calendar"></i>
                     Período
                 </div>
-                <div class="grupo-contenido">
-                    <mat-radio-group formControlName="periodo">
-                        <mat-radio-button value="todos">Todos</mat-radio-button>
-                        <mat-radio-button value="hoy">Hoy</mat-radio-button>
-                        <mat-radio-button value="semana">Última semana</mat-radio-button>
-                        <mat-radio-button value="mes">Último mes</mat-radio-button>
-                        <mat-radio-button value="trimestre">Último trimestre</mat-radio-button>
-                        <mat-radio-button value="anio">Último año</mat-radio-button>
-                    </mat-radio-group>
+                <div class="grupo-contenido radio-button-container">
+                    <div class="radio-button" *ngFor="let option of periodoOptions">
+                        <input type="radio" 
+                               [id]="'periodo-' + option.value"
+                               [value]="option.value"
+                               [name]="'periodo'"
+                               formControlName="periodo"
+                               class="radio-button__input">
+                        <label [for]="'periodo-' + option.value" class="radio-button__label">
+                            {{option.label}}
+                            <span class="radio-button__custom"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -52,14 +62,16 @@
                     Dependencia
                 </div>
                 <div class="grupo-contenido">
-                    <mat-form-field appearance="outline">
-                        <mat-label>Seleccione dependencia</mat-label>
-                        <mat-select formControlName="dependencia">
-                            <mat-option value="todos">Todas</mat-option>
-                            <mat-option value="dependencia1">Dependencia 1</mat-option>
-                            <mat-option value="dependencia2">Dependencia 2</mat-option>
-                        </mat-select>
-                    </mat-form-field>
+                    <div class="select-container">
+                        <mat-form-field>
+                            <mat-select formControlName="dependencia" panelClass="custom-select-panel">
+                                <mat-option *ngFor="let option of dependenciaOptions" 
+                                          [value]="option.value">
+                                    {{option.label}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
                 </div>
             </div>
 
@@ -70,14 +82,16 @@
                     Cargo
                 </div>
                 <div class="grupo-contenido">
-                    <mat-form-field appearance="outline">
-                        <mat-label>Seleccione cargo</mat-label>
-                        <mat-select formControlName="cargo">
-                            <mat-option value="todos">Todos</mat-option>
-                            <mat-option value="cargo1">Cargo 1</mat-option>
-                            <mat-option value="cargo2">Cargo 2</mat-option>
-                        </mat-select>
-                    </mat-form-field>
+                    <div class="select-container">
+                        <mat-form-field>
+                            <mat-select formControlName="cargo" panelClass="custom-select-panel">
+                                <mat-option *ngFor="let option of cargoOptions" 
+                                          [value]="option.value">
+                                    {{option.label}}
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
                 </div>
             </div>
         </form>

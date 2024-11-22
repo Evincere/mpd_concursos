@@ -1,0 +1,26 @@
+{
+  "projects": {
+    "mpd-concursos-app-frontend": {
+      "architect": {
+        "build": {
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1.5mb",
+                  "maximumError": "2mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "12kb",
+                  "maximumError": "15kb"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+} 

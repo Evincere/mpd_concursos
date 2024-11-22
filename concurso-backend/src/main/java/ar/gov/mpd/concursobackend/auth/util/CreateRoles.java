@@ -21,25 +21,30 @@ public class CreateRoles implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Verificar si ya existen roles para evitar duplicados
-        if (!rolService.existsByRole(RoleEnum.ROLE_ADMIN)) {
-            Rol rolAdmin = new Rol(RoleEnum.ROLE_ADMIN);
-            rolService.create(rolAdmin);
-        }
-        
-        if (!rolService.existsByRole(RoleEnum.ROLE_USER)) {
-            Rol rolUser = new Rol(RoleEnum.ROLE_USER);
-            rolService.create(rolUser);
-        }
+        try {
+            // Verificar si ya existen roles para evitar duplicados
+            if (!rolService.existsByRole(RoleEnum.ROLE_ADMIN)) {
+                Rol rolAdmin = new Rol(RoleEnum.ROLE_ADMIN);
+                rolService.create(rolAdmin);
+            }
+            
+            if (!rolService.existsByRole(RoleEnum.ROLE_USER)) {
+                Rol rolUser = new Rol(RoleEnum.ROLE_USER);
+                rolService.create(rolUser);
+            }
 
-        if (!userService.existsByUsername(new UserUsername("semper"))) {
-            UserCreateDto user = new UserCreateDto();
-            user.setEmail("spereyra@gmail.com");
-            user.setUsername("semper");
-            user.setPassword("123456");
-            user.setDni("26598410");
-            user.setCuit("20265984100");
-            userService.createUser(user);
+            if (!userService.existsByUsername(new UserUsername("semper"))) {
+                UserCreateDto user = new UserCreateDto();
+                user.setEmail("spereyra@gmail.com");
+                user.setUsername("semper");
+                user.setPassword("123456");
+                user.setDni("26598410");
+                user.setCuit("20265984100");
+                userService.createUser(user);
+            }
+        } catch (Exception e) {
+           
+            e.printStackTrace();
         }
     }
 }

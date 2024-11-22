@@ -58,14 +58,19 @@
         }
     }
 
-    img {
-        height: 60px;
+    .logo-container {
+        position: relative;
         padding: 0.5rem;
         border-radius: $border-radius;
         transition: $transition-default;
 
+        img {
+            height: 60px;
+            transition: $transition-default;
+        }
+
         &:hover {
-            background: $color-secondary;
+            background: rgba($color-primary, 0.1);
         }
     }
 }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
@@ -41,19 +41,58 @@ import { FiltrosConcurso } from '../../../../shared/interfaces/filters/filtros.i
     ])
   ]
 })
-export class FiltrosPanelComponent {
+export class FiltrosPanelComponent implements OnInit {
   @Output() filtrosChange = new EventEmitter<FiltrosConcurso>();
   @Output() cerrarPanel = new EventEmitter<void>();
 
-  filtrosForm: FormGroup;
+  filtrosForm!: FormGroup;
+
+  estadoOptions = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'activo', label: 'Activo' },
+    { value: 'proximo', label: 'Próximo' },
+    { value: 'finalizado', label: 'Finalizado' }
+  ];
+
+  periodoOptions = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'hoy', label: 'Hoy' },
+    { value: 'semana', label: 'Última semana' },
+    { value: 'mes', label: 'Último mes' },
+    { value: 'trimestre', label: 'Último trimestre' },
+    { value: 'anio', label: 'Último año' }
+  ];
+
+  dependenciaOptions = [
+    { value: 'todos', label: 'Todas' },
+    { value: 'defensoria1', label: 'Defensoría Civil Nº 1' },
+    { value: 'defensoria2', label: 'Defensoría Civil Nº 2' },
+    { value: 'defensoria3', label: 'Defensoría Penal Nº 1' },
+    { value: 'defensoria4', label: 'Defensoría Penal Nº 2' },
+    { value: 'asesoria1', label: 'Asesoría de Menores Nº 1' },
+    { value: 'asesoria2', label: 'Asesoría de Menores Nº 2' }
+  ];
+
+  cargoOptions = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'defensor', label: 'Defensor/a' },
+    { value: 'asesor', label: 'Asesor/a' },
+    { value: 'secretario', label: 'Secretario/a' },
+    { value: 'prosecretario', label: 'Prosecretario/a' },
+    { value: 'administrativo', label: 'Administrativo/a' },
+    { value: 'auxiliar', label: 'Auxiliar' }
+  ];
 
   constructor(private fb: FormBuilder) {
+    this.initForm();
+  }
+
+  private initForm(): void {
     this.filtrosForm = this.fb.group({
-      estado: [''],
-      fechaDesde: [null],
-      fechaHasta: [null],
-      dependencia: [''],
-      cargo: ['']
+      estado: ['todos'],
+      periodo: ['todos'],
+      dependencia: ['todos'],
+      cargo: ['todos']
     });
   }
 
@@ -65,10 +104,19 @@ export class FiltrosPanelComponent {
   }
 
   limpiarFiltros(): void {
-    this.filtrosForm.reset();
+    this.filtrosForm.patchValue({
+      estado: 'todos',
+      periodo: 'todos',
+      dependencia: 'todos',
+      cargo: 'todos'
+    });
   }
 
   cerrar(): void {
     this.cerrarPanel.emit();
+  }
+
+  ngOnInit(): void {
+    this.initForm();
   }
 } 

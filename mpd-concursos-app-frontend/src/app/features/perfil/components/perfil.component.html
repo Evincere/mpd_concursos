@@ -12,54 +12,145 @@
             <div class="tab-content">
                 <div class="perfil-foto">
                     <div class="foto-container">
-                        <img src="assets/default-avatar.png" alt="Foto de perfil">
-                        <button mat-mini-fab color="primary" class="cambiar-foto-btn">
+                        <ng-container *ngIf="fotoPerfil && fotoPerfil !== 'assets/images/default-avatar.png'; else defaultAvatar">
+                            <img [src]="fotoPerfil" alt="Foto de perfil">
+                        </ng-container>
+                        <ng-template #defaultAvatar>
+                            <div class="default-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </ng-template>
+                        <button mat-mini-fab 
+                                class="cambiar-foto-btn"
+                                (click)="abrirSelectorArchivo()">
                             <i class="fas fa-camera"></i>
                         </button>
-                        <input type="file" hidden #fileInput (change)="onFileSelected($event)">
+                        <input type="file" 
+                               hidden 
+                               #fileInput 
+                               (change)="onFileSelected($event)"
+                               accept="image/*">
                     </div>
                 </div>
 
                 <form [formGroup]="perfilForm" class="perfil-form">
-                    <div class="form-grid">
-                        <mat-form-field>
-                            <mat-label>Nombre</mat-label>
-                            <input matInput formControlName="nombre">
-                        </mat-form-field>
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="fas fa-user"></i>
+                            <h3>Datos Personales</h3>
+                        </div>
+                        <div class="form-grid">
+                            <mat-form-field>
+                                <input matInput formControlName="nombre" required>
+                                <mat-label>
+                                    <span *ngFor="let item of splitLabel('Nombre')"
+                                          [style.transition-delay]="item.delay">
+                                        {{item.char}}
+                                    </span>
+                                </mat-label>
+                                <mat-error *ngIf="perfilForm.get('nombre')?.hasError('required')">
+                                    El nombre es requerido
+                                </mat-error>
+                            </mat-form-field>
 
-                        <mat-form-field>
-                            <mat-label>Apellido</mat-label>
-                            <input matInput formControlName="apellido">
-                        </mat-form-field>
+                            <mat-form-field>
+                                <input matInput formControlName="apellido" required>
+                                <mat-label>
+                                    <span *ngFor="let item of splitLabel('Apellido')"
+                                          [style.transition-delay]="item.delay">
+                                        {{item.char}}
+                                    </span>
+                                </mat-label>
+                                <mat-error *ngIf="perfilForm.get('apellido')?.hasError('required')">
+                                    El apellido es requerido
+                                </mat-error>
+                            </mat-form-field>
 
-                        <mat-form-field>
-                            <mat-label>Email</mat-label>
-                            <input matInput formControlName="email" type="email">
-                        </mat-form-field>
+                            <mat-form-field>
+                                <input matInput formControlName="cuit" required>
+                                <mat-label>
+                                    <span *ngFor="let item of splitLabel('CUIT')"
+                                          [style.transition-delay]="item.delay">
+                                        {{item.char}}
+                                    </span>
+                                </mat-label>
+                                <mat-error *ngIf="perfilForm.get('cuit')?.hasError('required')">
+                                    El CUIT es requerido
+                                </mat-error>
+                            </mat-form-field>
 
-                        <mat-form-field>
-                            <mat-label>Teléfono</mat-label>
-                            <input matInput formControlName="telefono">
-                        </mat-form-field>
+                            <mat-form-field>
+                                <input matInput formControlName="usuario" required>
+                                <mat-label>
+                                    <span *ngFor="let item of splitLabel('Usuario')"
+                                          [style.transition-delay]="item.delay">
+                                        {{item.char}}
+                                    </span>
+                                </mat-label>
+                                <mat-error *ngIf="perfilForm.get('usuario')?.hasError('required')">
+                                    El usuario es requerido
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+                    </div>
 
-                        <mat-form-field>
-                            <mat-label>CUIT</mat-label>
-                            <input matInput formControlName="cuit">
-                        </mat-form-field>
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="fas fa-address-card"></i>
+                            <h3>Información de Contacto</h3>
+                        </div>
+                        <div class="form-grid">
+                            <mat-form-field>
+                                <input matInput formControlName="email" type="email" required>
+                                <mat-label>
+                                    <span *ngFor="let item of splitLabel('Email')"
+                                          [style.transition-delay]="item.delay">
+                                        {{item.char}}
+                                    </span>
+                                </mat-label>
+                                <mat-error *ngIf="perfilForm.get('email')?.hasError('required')">
+                                    El email es requerido
+                                </mat-error>
+                            </mat-form-field>
 
-                        <mat-form-field>
-                            <mat-label>Usuario</mat-label>
-                            <input matInput formControlName="usuario">
-                        </mat-form-field>
+                            <mat-form-field>
+                                <input matInput formControlName="telefono" required>
+                                <mat-label>
+                                    <span *ngFor="let item of splitLabel('Teléfono')"
+                                          [style.transition-delay]="item.delay">
+                                        {{item.char}}
+                                    </span>
+                                </mat-label>
+                                <mat-error *ngIf="perfilForm.get('telefono')?.hasError('required')">
+                                    El teléfono es requerido
+                                </mat-error>
+                            </mat-form-field>
 
-                        <mat-form-field class="full-width">
-                            <mat-label>Dirección</mat-label>
-                            <input matInput formControlName="direccion">
-                        </mat-form-field>
+                            <mat-form-field class="full-width">
+                                <input matInput formControlName="direccion" required>
+                                <mat-label>
+                                    <span *ngFor="let item of splitLabel('Dirección')"
+                                          [style.transition-delay]="item.delay">
+                                        {{item.char}}
+                                    </span>
+                                </mat-label>
+                                <mat-error *ngIf="perfilForm.get('direccion')?.hasError('required')">
+                                    La dirección es requerida
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
                     </div>
 
                     <div class="form-actions">
-                        <button mat-raised-button color="primary" (click)="guardarPerfil()">
+                        <button mat-stroked-button type="button" (click)="resetForm()">
+                            <i class="fas fa-undo"></i>
+                            Restaurar
+                        </button>
+                        <button mat-flat-button 
+                                color="primary" 
+                                (click)="guardarPerfil()"
+                                [disabled]="!perfilForm.valid || !perfilForm.dirty">
+                            <i class="fas fa-save"></i>
                             Guardar Cambios
                         </button>
                     </div>
@@ -87,21 +178,125 @@
 
         <!-- Tab Currículum -->
         <mat-tab label="Currículum">
-            <div class="tab-content">
+            <div class="tab-content" [formGroup]="perfilForm">
                 <!-- Experiencia Laboral -->
                 <section class="cv-section">
-                    <h3>Experiencia Laboral</h3>
-                    <form [formGroup]="experienciaForm" class="cv-form">
-                        <!-- Campos de experiencia -->
-                    </form>
+                    <div class="section-header">
+                        <i class="fas fa-briefcase"></i>
+                        <h3>Experiencia Laboral</h3>
+                        <button mat-stroked-button (click)="agregarExperiencia()" class="add-button">
+                            <i class="fas fa-plus"></i>
+                            Agregar Experiencia
+                        </button>
+                    </div>
+                    
+                    <div class="cv-items" formArrayName="experiencias">
+                        <div class="cv-item" *ngFor="let exp of experiencias.controls; let i = index" [formGroupName]="i">
+                            <div class="item-header">
+                                <div class="item-title">
+                                    <mat-form-field>
+                                        <input matInput formControlName="puesto" placeholder="Cargo o Puesto">
+                                    </mat-form-field>
+                                    <mat-form-field>
+                                        <input matInput formControlName="empresa" placeholder="Empresa u Organización">
+                                    </mat-form-field>
+                                </div>
+                                <button mat-icon-button color="warn" (click)="eliminarExperiencia(i)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="item-dates">
+                                <mat-form-field>
+                                    <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" placeholder="Fecha de Inicio">
+                                    <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                                    <mat-datepicker #pickerInicio></mat-datepicker>
+                                </mat-form-field>
+                                
+                                <mat-form-field>
+                                    <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" placeholder="Fecha de Fin">
+                                    <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+                                    <mat-datepicker #pickerFin></mat-datepicker>
+                                </mat-form-field>
+                            </div>
+                            
+                            <mat-form-field class="full-width">
+                                <textarea matInput formControlName="descripcion" 
+                                          placeholder="Descripción de responsabilidades y logros"
+                                          rows="3"></textarea>
+                            </mat-form-field>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- Educación -->
                 <section class="cv-section">
-                    <h3>Educación</h3>
-                    <form [formGroup]="educacionForm" class="cv-form">
-                        <!-- Campos de educación -->
-                    </form>
+                    <div class="section-header">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Educación</h3>
+                        <button mat-stroked-button (click)="agregarEducacion()" class="add-button">
+                            <i class="fas fa-plus"></i>
+                            Agregar Educación
+                        </button>
+                    </div>
+                    
+                    <div class="cv-items" formArrayName="educacion">
+                        <div class="cv-item" *ngFor="let edu of educacion.controls; let i = index" [formGroupName]="i">
+                            <div class="item-header">
+                                <div class="item-title">
+                                    <mat-form-field>
+                                        <input matInput formControlName="titulo" placeholder="Título o Certificación">
+                                    </mat-form-field>
+                                    <mat-form-field>
+                                        <input matInput formControlName="institucion" placeholder="Institución">
+                                    </mat-form-field>
+                                </div>
+                                <button mat-icon-button color="warn" (click)="eliminarEducacion(i)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="item-dates">
+                                <mat-form-field>
+                                    <input matInput [matDatepicker]="pickerInicioEdu" formControlName="fechaInicio" placeholder="Fecha de Inicio">
+                                    <mat-datepicker-toggle matSuffix [for]="pickerInicioEdu"></mat-datepicker-toggle>
+                                    <mat-datepicker #pickerInicioEdu></mat-datepicker>
+                                </mat-form-field>
+                                
+                                <mat-form-field>
+                                    <input matInput [matDatepicker]="pickerFinEdu" formControlName="fechaFin" placeholder="Fecha de Fin">
+                                    <mat-datepicker-toggle matSuffix [for]="pickerFinEdu"></mat-datepicker-toggle>
+                                    <mat-datepicker #pickerFinEdu></mat-datepicker>
+                                </mat-form-field>
+                            </div>
+                            
+                            <mat-form-field class="full-width">
+                                <textarea matInput formControlName="descripcion" 
+                                          placeholder="Descripción de estudios y logros"
+                                          rows="3"></textarea>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Habilidades -->
+                <section class="cv-section">
+                    <div class="section-header">
+                        <i class="fas fa-star"></i>
+                        <h3>Habilidades</h3>
+                        <button mat-stroked-button (click)="agregarHabilidad()" class="add-button">
+                            <i class="fas fa-plus"></i>
+                            Agregar Habilidad
+                        </button>
+                    </div>
+                    
+                    <div class="cv-items" formArrayName="habilidades">
+                        <div class="habilidades-grid">
+                            <div class="habilidad-item" *ngFor="let hab of habilidades.controls; let i = index" [formGroupName]="i">
+                                <!-- ... resto del contenido de habilidades ... -->
+                            </div>
+                        </div>
+                    </div>
                 </section>
             </div>
         </mat-tab>

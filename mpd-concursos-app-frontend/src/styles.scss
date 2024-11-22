@@ -387,32 +387,91 @@ body {
 
 // Estilos para los form fields
 .mat-mdc-form-field {
-  .mat-mdc-form-field-flex {
-    background-color: darken($color-background, 3%) !important;
-  }
+    margin: 20px 0;
+    
+    .mat-mdc-form-field-flex {
+        background-color: $color-surface-light !important;
+        padding: 0.5rem 1rem !important;
+    }
 
-  .mat-mdc-text-field-wrapper {
-    background-color: transparent !important;
-  }
+    .mat-mdc-text-field-wrapper {
+        background-color: transparent !important;
+        padding: 0;
+    }
 
-  .mat-mdc-form-field-label {
-    color: $color-text-secondary !important;
-  }
+    // Eliminar el outline por defecto de Material
+    .mdc-notched-outline {
+        display: none !important;
+    }
 
-  .mat-mdc-input-element {
-    color: $color-text-primary !important;
-  }
+    // Agregar línea inferior personalizada
+    &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: rgba($color-text-secondary, 0.3);
+        transition: background-color 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    // Estilo del input
+    .mat-mdc-input-element {
+        color: $color-text-primary !important;
+        font-size: 0.875rem;
+        padding: 15px 0;
+        background: transparent;
+        border: none;
+    }
+
+    // Estilo del label
+    .mat-mdc-form-field-label {
+        position: absolute;
+        left: 0;
+        color: $color-text-secondary !important;
+        pointer-events: none;
+        font-size: 0.875rem;
+
+        span {
+            display: inline-block;
+            min-width: 5px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+    }
+
+    // Estados focus y con contenido
+    &.mat-focused,
+    &.mat-form-field-should-float {
+        &::after {
+            background-color: $color-primary;
+        }
+
+        .mat-mdc-form-field-label {
+            color: $color-primary !important;
+            
+            span {
+                transform: translateY(-25px);
+                @for $i from 0 through 20 {
+                    &:nth-child(#{$i}) {
+                        transition-delay: #{$i * 50}ms;
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Estilos para los selects
 .mat-mdc-select-panel {
-  background-color: darken($color-background, 3%) !important;
+  background-color: $color-surface !important;
+  border: 1px solid rgba($color-text-secondary, 0.15);
 
   .mat-mdc-option {
     color: $color-text-primary !important;
 
     &:hover:not(.mat-mdc-option-disabled) {
-      background-color: rgba($color-primary, 0.1) !important;
+      background-color: $color-surface-light !important;
     }
 
     &.mat-mdc-option-selected {
