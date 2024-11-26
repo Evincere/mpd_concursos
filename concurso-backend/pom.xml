@@ -115,6 +115,19 @@
 			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>1.5.3.Final</version> <!-- Check for the latest version -->
+		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-processor</artifactId>
+			<version>1.5.3.Final</version> <!-- Check for the latest version -->
+			<scope>provided</scope>
+		</dependency>
+		
 	</dependencies>
 
 	<build>
