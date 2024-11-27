@@ -13,8 +13,13 @@ export class LoginService {
 
   constructor(private http: HttpClient) { }
 
-  // Método para iniciar sesión utilizando un objeto LoginUser
   public login(loginUser: LoginUser): Observable<JwtDto> {
-    return this.http.post<JwtDto>(`${this.apiUrl}/login`, loginUser);
+    return this.http.post<JwtDto>(`${this.apiUrl}/login`, loginUser, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
   }
 }

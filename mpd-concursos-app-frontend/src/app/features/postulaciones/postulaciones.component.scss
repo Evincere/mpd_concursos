@@ -92,17 +92,17 @@
             font-size: 0.875rem;
             font-weight: 500;
             
-            &.pendiente {
+            &.pending {
                 background: rgba($color-primary, 0.1);
                 color: $color-primary;
             }
 
-            &.aprobada {
+            &.accepted {
                 background: rgba(#4caf50, 0.1);
                 color: #4caf50;
             }
 
-            &.rechazada {
+            &.rejected {
                 background: rgba(#f44336, 0.1);
                 color: #f44336;
             }

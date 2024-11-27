@@ -13,23 +13,31 @@
     </header>
 
     <div class="postulaciones-content">
-        <table mat-table [dataSource]="dataSource" class="postulaciones-table">
+        <div *ngIf="isLoading" class="loading-spinner">
+            <mat-spinner diameter="40"></mat-spinner>
+        </div>
+
+        <div *ngIf="error" class="error-message">
+            {{ error }}
+        </div>
+
+        <table mat-table [dataSource]="dataSource" class="postulaciones-table" *ngIf="!isLoading && !error">
             <!-- Columna Concurso -->
             <ng-container matColumnDef="concurso">
                 <th mat-header-cell *matHeaderCellDef>Concurso</th>
-                <td mat-cell *matCellDef="let postulacion">{{postulacion.concurso}}</td>
+                <td mat-cell *matCellDef="let postulacion">{{postulacion.concurso?.titulo}}</td>
             </ng-container>
 
             <!-- Columna Cargo -->
             <ng-container matColumnDef="cargo">
                 <th mat-header-cell *matHeaderCellDef>Cargo</th>
-                <td mat-cell *matCellDef="let postulacion">{{postulacion.cargo}}</td>
+                <td mat-cell *matCellDef="let postulacion">{{postulacion.concurso?.cargo}}</td>
             </ng-container>
 
             <!-- Columna Dependencia -->
             <ng-container matColumnDef="dependencia">
                 <th mat-header-cell *matHeaderCellDef>Dependencia</th>
-                <td mat-cell *matCellDef="let postulacion">{{postulacion.dependencia}}</td>
+                <td mat-cell *matCellDef="let postulacion">{{postulacion.concurso?.dependencia}}</td>
             </ng-container>
 
             <!-- Columna Fecha de Postulación -->
@@ -65,8 +73,12 @@
         </table>
 
         <mat-paginator 
-            [pageSize]="10" 
+            [length]="totalElements"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
             [hidePageSize]="true"
+            (page)="cargarPostulaciones($event)"
+            *ngIf="!isLoading && !error"
             aria-label="Seleccionar página de postulaciones">
         </mat-paginator>
     </div>

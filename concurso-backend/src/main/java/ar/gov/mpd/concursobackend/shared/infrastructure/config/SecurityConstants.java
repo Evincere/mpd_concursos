@@ -7,12 +7,12 @@ public final class SecurityConstants {
     }
 
     public static final String[] PUBLIC_PATHS = {
-        "/api/auth/**",
+        "/auth/login",
+        "/auth/register",
+        "/h2-console/**",
         "/v3/api-docs/**",
         "/swagger-ui/**",
-        "/h2-console/**",
-        "/api/contests/search/**",
-        "/api/inscriptions/**"
+        "/api/contests/search/**"
     };
 
     // Podemos agregar más constantes relacionadas con seguridad aquí
