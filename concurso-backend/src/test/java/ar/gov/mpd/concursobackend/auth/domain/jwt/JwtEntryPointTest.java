@@ -1,34 +1,39 @@
 package ar.gov.mpd.concursobackend.auth.domain.jwt;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
-import org.springframework.security.core.AuthenticationException;
-
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import org.springframework.mock.web.MockHttpServletRequest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.AuthenticationException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
-public class JwtEntryPointTest {
+@ExtendWith(MockitoExtension.class)
+class JwtEntryPointTest {
 
-    private JwtEntryPoint jwtEntryPoint;
-    private MockHttpServletRequest request;
-    private MockHttpServletResponse response;
+    @InjectMocks
+    JwtEntryPoint jwtEntryPoint;
 
-    @BeforeEach
-    public void setup(){
-        jwtEntryPoint = new JwtEntryPoint();
-        request = new MockHttpServletRequest();
-        response = new MockHttpServletResponse();
-    }
-        
     @Test
-    public void testCommence() throws Exception {
-        AuthenticationException authException = new AuthenticationException("Autenticación fallida") {};
+    void testCommence() throws Exception {
+        // Arrange
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AuthenticationException authException = mock(AuthenticationException.class);
+
+        // Act
         jwtEntryPoint.commence(request, response, authException);
+
+        // Assert
+        ObjectMapper mapper = new ObjectMapper();
+        var responseBody = mapper.readTree(response.getContentAsString());
+        assertEquals("** No autorizado **", responseBody.get("message").asText());
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, response.getStatus());
-        assertEquals("** No autorizado **", response.getErrorMessage());
+        assertEquals("application/json", response.getContentType());
     }
 }

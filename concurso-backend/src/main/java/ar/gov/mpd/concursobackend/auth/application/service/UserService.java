@@ -41,12 +41,12 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 public class UserService implements IUserService {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class); 
 
     private final UserCreate userCreate;
     private final UserGetByUsername getByUsername;
     private final UserExists userExists;
     private final PasswordEncoder passwordEncoder;
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class); 
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired

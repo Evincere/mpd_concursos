@@ -21,6 +21,8 @@ import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtAccessDeniedHandler;
 
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
+import ar.gov.mpd.concursobackend.shared.infrastructure.config.SecurityConstants;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -47,13 +49,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> 
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .cors(cors -> cors.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> 
-                auth
-                    .requestMatchers("/auth/**").permitAll()
-                    .requestMatchers("/h2-console/**").permitAll()
-                    .requestMatchers("/api/contests/search/**").permitAll()
+                auth.requestMatchers(SecurityConstants.PUBLIC_PATHS).permitAll()
                     .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())

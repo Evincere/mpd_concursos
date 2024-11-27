@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.auth.domain.jwt;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
+import org.springframework.util.AntPathMatcher;
+
+import ar.gov.mpd.concursobackend.shared.infrastructure.config.SecurityConstants;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -34,18 +38,23 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
-     @Override
+    @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, 
                                   @NonNull HttpServletResponse response, 
                                   @NonNull FilterChain filterChain)
             throws ServletException, IOException {
+        
+        String path = request.getServletPath();
+        
+        // Verificar si la ruta está en whitelist
+        if (isWhitelistedPath(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String token = getToken(request);
-            String path = request.getServletPath();
-            if ("/auth/register".equals(path) || "/auth/login".equals(path)) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+            
             if (token != null && jwtProvider.validateToken(token)) {
                 String username = jwtProvider.getUsernameFromToken(token);
                 List<String> roles = jwtProvider.getRolesFromToken(token);
@@ -53,23 +62,54 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                     userDetails, null, roles.stream()
-                        .map(role -> new SimpleGrantedAuthority(role))
+                        .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList())
                 );
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
+                filterChain.doFilter(request, response);
+            } else {
+                // Solo enviar respuesta 401 si no es una ruta pública y no hay token válido
+                if (!isPublicPath(path)) {
+                    sendUnauthorizedError(response, "Token no válido o no proporcionado");
+                    return;
+                }
+                filterChain.doFilter(request, response);
             }
-        } catch (JwtException | IllegalArgumentException e) {
-            logger.error("Error en el método doFilter " + e.getMessage());
+        } catch (JwtException e) {
+            logger.error("Error en la validación del token JWT: {}", e.getMessage());
+            sendUnauthorizedError(response, "Error en la validación del token");
+        } catch (Exception e) {
+            logger.error("Error no relacionado con JWT: {}", e.getMessage());
+            filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);
+    }
+
+    private boolean isWhitelistedPath(String path) {
+        return Arrays.stream(SecurityConstants.PUBLIC_PATHS)
+            .anyMatch(pattern -> 
+                new AntPathMatcher().match(pattern, path)
+            );
+    }
+
+    private boolean isPublicPath(String path) {
+        return isWhitelistedPath(path);
+    }
+
+    private void sendUnauthorizedError(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write(String.format(
+            "{\"error\": \"No autorizado\", \"message\": \"%s\", \"status\": 401}", 
+            message
+        ));
     }
 
     private String getToken(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            return header.substring(7);
+        String header = request.getHeader(SecurityConstants.HEADER_STRING);
+        if (header != null && header.startsWith(SecurityConstants.TOKEN_PREFIX)) {
+            return header.substring(SecurityConstants.TOKEN_PREFIX.length());
         }
         return null;
     }

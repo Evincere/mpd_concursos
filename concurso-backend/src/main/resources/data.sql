@@ -18,4 +18,25 @@ INSERT INTO CONTESTS (ID, STATUS, DEPARTMENT, POSITION, START_DATE, END_DATE) VA
 -- Concursos Cancelados
 INSERT INTO CONTESTS (ID, STATUS, DEPARTMENT, POSITION, START_DATE, END_DATE) VALUES
 (9, 'CANCELLED', 'RRHH', 'Asistente RRHH', '2023-11-01', '2024-01-31'),
-(10, 'CANCELLED', 'IT', 'QA Engineer', '2023-10-15', '2023-12-15'); 
+(10, 'CANCELLED', 'IT', 'QA Engineer', '2023-10-15', '2023-12-15');
+
+-- Inscripciones para diferentes concursos
+INSERT INTO INSCRIPTIONS (CONTEST_ID, USER_ID, STATUS, INSCRIPTION_DATE) VALUES
+-- Inscripciones para concursos activos
+(1, 1, 'PENDING', '2024-01-05 10:00:00'),
+(1, 2, 'ACCEPTED', '2024-01-06 11:30:00'),
+(1, 3, 'REJECTED', '2024-01-07 09:15:00'),
+(2, 1, 'PENDING', '2024-01-16 14:20:00'),
+(2, 4, 'ACCEPTED', '2024-01-17 16:45:00'),
+(3, 2, 'PENDING', '2024-02-02 08:30:00'),
+
+-- Inscripciones para concursos en progreso
+(4, 5, 'ACCEPTED', '2023-12-05 13:00:00'),
+(4, 6, 'REJECTED', '2023-12-06 15:20:00'),
+(5, 7, 'ACCEPTED', '2023-11-20 10:45:00'),
+(5, 8, 'PENDING', '2023-11-21 11:10:00'),
+
+-- Inscripciones para concursos cerrados
+(6, 9, 'ACCEPTED', '2023-10-10 09:00:00'),
+(7, 10, 'REJECTED', '2023-09-15 14:30:00'),
+(8, 11, 'ACCEPTED', '2023-08-20 16:15:00'); 
