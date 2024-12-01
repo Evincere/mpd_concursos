@@ -6,16 +6,21 @@ public final class SecurityConstants {
         // Constructor privado para evitar instanciación
     }
 
-    public static final String[] PUBLIC_PATHS = {
-        "/auth/login",
-        "/auth/register",
-        "/h2-console/**",
-        "/v3/api-docs/**",
-        "/swagger-ui/**",
-        "/api/contests/search/**"
+    // Rutas que usan AntPathRequestMatcher
+    public static final String[] ANT_MATCHER_PATHS = {
+        "/h2-console/**"
     };
 
-    // Podemos agregar más constantes relacionadas con seguridad aquí
+    // Rutas que usan MvcRequestMatcher
+    public static final String[] MVC_MATCHER_PATHS = {
+        "/api/auth/login",
+        "/api/auth/register",
+        "/v3/api-docs/**",
+        "/swagger-ui/**",
+        "/api/concursos/**"
+    };
+
+    // Constantes de autenticación
     public static final String TOKEN_PREFIX = "Bearer ";
     public static final String HEADER_STRING = "Authorization";
-} 
+}

@@ -1,4 +1,13 @@
 {
   "java.compile.nullAnalysis.mode": "automatic",
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "terminal.integrated.accessibleViewFocusOnCommandExecution": true,
+  "terminal.integrated.automationProfile.windows": {},
+  "terminal.explorerKind": "both",
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.defaultLocation": "editor",
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.ignoreBracketedPasteMode": true,
+  "terminal.integrated.tabs.defaultColor": "terminal.ansiGreen",
+  "terminal.integrated.confirmOnKill": "editor"
 }

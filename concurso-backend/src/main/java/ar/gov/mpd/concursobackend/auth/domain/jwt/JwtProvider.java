@@ -13,10 +13,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.annotation.PostConstruct;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.Claims;
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
 
 @Component
 public class JwtProvider {
@@ -33,14 +33,13 @@ public class JwtProvider {
 
     @PostConstruct
     public void init() {
-        // Generar una clave segura usando Keys.secretKeyFor
-        this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        logger.info("Clave JWT inicializada");
     }
 
-    public String generateToken(Authentication authentication) {
+    public String generateToken(Authentication authentication, User user) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         
-        // Obtener los roles/authorities y convertirlos a una lista de strings
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(authority -> authority.getAuthority())
                 .collect(Collectors.toList());
@@ -50,7 +49,8 @@ public class JwtProvider {
 
         String token = Jwts.builder()
             .setSubject(userDetails.getUsername())
-            .claim("roles", roles)  // Agregar roles como claim
+            .claim("roles", roles)
+            .claim("userId", user.getId().value().toString())
             .setIssuedAt(new Date())
             .setExpiration(new Date(new Date().getTime() + expiration * 1000))
             .signWith(key)
@@ -72,6 +72,18 @@ public class JwtProvider {
         return username;
     }
 
+    public String getUserIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+        
+        String userId = claims.get("userId", String.class);
+        logger.info("ID de usuario extraído del token: {}", userId);
+        return userId;
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -87,7 +99,6 @@ public class JwtProvider {
         return false;
     }
 
-    // Agregar método para obtener roles del token
     public List<String> getRolesFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
             .setSigningKey(key)

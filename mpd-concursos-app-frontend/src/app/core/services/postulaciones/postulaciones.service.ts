@@ -10,30 +10,28 @@ import { Postulacion, PostulacionRequest, PostulacionResponse } from '../../../s
 })
 export class PostulacionesService {
     private apiUrl = `${environment.apiUrl}/api/inscriptions`;
-
+  
     constructor(private http: HttpClient) { }
-
+  
     getPostulaciones(page: number = 0, size: number = 10, sortBy: string = 'inscriptionDate', sortDirection: string = 'desc'): Observable<PostulacionResponse> {
-        let params = new HttpParams()
-            .set('page', page.toString())
-            .set('size', size.toString())
-            .set('sortBy', sortBy)
-            .set('sortDirection', sortDirection);
-
-        return this.http.get<PostulacionResponse>(this.apiUrl, {
-            params,
-            headers: {
-                'Accept': 'application/json'
-            }
-        }).pipe(
-            map(response => {
-                console.log('response', response);
-                return this.transformResponse(response);
-            }),
-            catchError(this.handleError)
-        );
+      let params = new HttpParams()
+          .set('page', page.toString())
+          .set('size', size.toString())
+          .set('sortBy', sortBy)
+          .set('sortDirection', sortDirection);
+  
+      return this.http.get<PostulacionResponse>(this.apiUrl, {
+          params,
+          withCredentials: true
+      }).pipe(
+          map(response => {
+              console.log('response', response);
+              return this.transformResponse(response);
+          }),
+          catchError(this.handleError)
+      );
     }
-
+    
     private transformResponse(response: any): PostulacionResponse {
         return {
             content: response.content.map((item: any) => ({

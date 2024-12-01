@@ -2,15 +2,25 @@ package ar.gov.mpd.concursobackend.inscription.application.dto;
 
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Data
+@Value
 @Builder
 public class InscriptionResponse {
-    private Long id;
-    private Long contestId;
-    private Long userId;
-    private InscriptionStatus status;
-    private LocalDateTime inscriptionDate;
-} 
+    Long id;
+    Long contestId;
+    UUID userId;
+    InscriptionStatus status;
+    LocalDateTime inscriptionDate;
+    ContestDTO contest;
+
+    @Value
+    @Builder
+    public static class ContestDTO {
+        String title;
+        String position;
+        String department;
+    }
+}

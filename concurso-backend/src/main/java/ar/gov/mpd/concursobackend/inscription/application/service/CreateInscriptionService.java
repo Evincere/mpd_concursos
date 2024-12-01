@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.inscription.application.service;
 
+import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
-import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
 import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapper;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
@@ -22,7 +22,7 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
     private final InscriptionMapper inscriptionMapper;
 
     @Override
-    public InscriptionResponse createInscription(InscriptionRequest request) {
+    public InscriptionDetailResponse createInscription(InscriptionRequest request) {
         Inscription inscription = Inscription.builder()
                 .contestId(new ContestId(request.getContestId()))
                 .userId(new UserId(request.getUserId()))
@@ -32,6 +32,6 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
         
         Inscription savedInscription = saveInscriptionPort.save(inscription);
         
-        return inscriptionMapper.toResponse(savedInscription);
+        return inscriptionMapper.toDetailResponse(savedInscription, null);
     }
 } 

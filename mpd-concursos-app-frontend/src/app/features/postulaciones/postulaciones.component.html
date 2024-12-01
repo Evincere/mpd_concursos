@@ -1,85 +1,51 @@
 <div class="postulaciones-container">
-    <header class="postulaciones-header">
-        <h2>
-            <i class="fas fa-file-alt"></i>
-            Mis Postulaciones
-        </h2>
-        <div class="header-actions">
-            <button mat-raised-button class="primary-button" [routerLink]="['/dashboard/concursos']">
-                <i class="fas fa-plus"></i>
-                Nueva Postulación
-            </button>
+  <app-search-header
+    title="Mis Postulaciones"
+    icon="file-alt"
+    placeholder="Ingrese término de búsqueda"
+    (search)="onSearch($event)"
+    (filter)="onFilter()">
+  </app-search-header>
+
+  <div class="content">
+    <mat-progress-spinner 
+      *ngIf="loading"
+      mode="indeterminate"
+      diameter="40"
+      class="loading-spinner">
+    </mat-progress-spinner>
+
+    <div class="postulaciones-list" *ngIf="!loading && postulaciones.length > 0">
+      <div class="postulacion-item" *ngFor="let postulacion of postulaciones">
+        <div class="postulacion-info">
+          <h3>{{ postulacion.contest?.title || 'Sin título' }}</h3>
+          <p class="cargo">{{ postulacion.contest?.position || 'Cargo no especificado' }}</p>
+          <p class="dependencia">{{ postulacion.contest?.department || 'Dependencia no especificada' }}</p>
+          <div class="meta-info">
+            <span>
+              <i class="fas fa-calendar-alt"></i>
+              Postulado el: {{ postulacion.inscriptionDate | date:'dd/MM/yyyy' }}
+            </span>
+            <span>
+              <i class="fas fa-clock"></i>
+              Estado: {{ getEstadoPostulacionLabel(postulacion.status) }}
+            </span>
+          </div>
         </div>
-    </header>
-
-    <div class="postulaciones-content">
-        <div *ngIf="isLoading" class="loading-spinner">
-            <mat-spinner diameter="40"></mat-spinner>
-        </div>
-
-        <div *ngIf="error" class="error-message">
-            {{ error }}
-        </div>
-
-        <table mat-table [dataSource]="dataSource" class="postulaciones-table" *ngIf="!isLoading && !error">
-            <!-- Columna Concurso -->
-            <ng-container matColumnDef="concurso">
-                <th mat-header-cell *matHeaderCellDef>Concurso</th>
-                <td mat-cell *matCellDef="let postulacion">{{postulacion.concurso?.titulo}}</td>
-            </ng-container>
-
-            <!-- Columna Cargo -->
-            <ng-container matColumnDef="cargo">
-                <th mat-header-cell *matHeaderCellDef>Cargo</th>
-                <td mat-cell *matCellDef="let postulacion">{{postulacion.concurso?.cargo}}</td>
-            </ng-container>
-
-            <!-- Columna Dependencia -->
-            <ng-container matColumnDef="dependencia">
-                <th mat-header-cell *matHeaderCellDef>Dependencia</th>
-                <td mat-cell *matCellDef="let postulacion">{{postulacion.concurso?.dependencia}}</td>
-            </ng-container>
-
-            <!-- Columna Fecha de Postulación -->
-            <ng-container matColumnDef="fechaPostulacion">
-                <th mat-header-cell *matHeaderCellDef>Fecha de Postulación</th>
-                <td mat-cell *matCellDef="let postulacion">
-                    {{postulacion.fechaPostulacion | date:'dd/MM/yyyy'}}
-                </td>
-            </ng-container>
-
-            <!-- Columna Estado -->
-            <ng-container matColumnDef="estado">
-                <th mat-header-cell *matHeaderCellDef>Estado</th>
-                <td mat-cell *matCellDef="let postulacion">
-                    <span class="estado-chip" [ngClass]="postulacion.estado.toLowerCase()">
-                        {{postulacion.estado}}
-                    </span>
-                </td>
-            </ng-container>
-
-            <!-- Columna Acciones -->
-            <ng-container matColumnDef="acciones">
-                <th mat-header-cell *matHeaderCellDef>Acciones</th>
-                <td mat-cell *matCellDef="let postulacion">
-                    <button mat-button color="primary" (click)="verDetalle(postulacion.id)">
-                        Ver detalle
-                    </button>
-                </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <mat-paginator 
-            [length]="totalElements"
-            [pageSize]="pageSize"
-            [pageIndex]="pageIndex"
-            [hidePageSize]="true"
-            (page)="cargarPostulaciones($event)"
-            *ngIf="!isLoading && !error"
-            aria-label="Seleccionar página de postulaciones">
-        </mat-paginator>
+        <button mat-stroked-button color="primary" [routerLink]="['/postulaciones', postulacion.id]">
+          Ver detalles
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
     </div>
+
+    <div class="no-postulaciones" *ngIf="!loading && postulaciones.length === 0">
+      <i class="fas fa-folder-open"></i>
+      <p>No tienes postulaciones activas en este momento</p>
+      <button mat-raised-button color="primary" routerLink="/concursos">
+        <i class="fas fa-search"></i>
+        Explorar Concursos
+      </button>
+    </div>
+  </div>
 </div>

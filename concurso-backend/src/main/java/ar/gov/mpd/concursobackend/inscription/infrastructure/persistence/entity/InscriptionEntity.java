@@ -4,6 +4,7 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStat
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "inscriptions")
@@ -17,7 +18,7 @@ public class InscriptionEntity {
     private Long contestId;
     
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private UUID userId;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -25,4 +26,4 @@ public class InscriptionEntity {
     
     @Column(name = "inscription_date", nullable = false)
     private LocalDateTime inscriptionDate;
-} 
+}

@@ -18,8 +18,8 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
-@RequestMapping("/auth")
-@CrossOrigin
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -40,13 +40,22 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UserLogin userLogin, BindingResult bindingResult) {
+        logger.info("Intento de login para usuario: {}", userLogin.getUsername());
+        
         if (validateBindingResult(bindingResult)) {
+            logger.error("Errores de validación en el login");
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
         }
-        JwtDto jwtDto = userService.login(userLogin);
-        logger.info("Usuario logueado: {}", userLogin.getUsername());
-        logger.info("jwtDto: {}", jwtDto.getBearer());
-        return new ResponseEntity<>(jwtDto, HttpStatus.OK);
+
+        try {
+            JwtDto jwtDto = userService.login(userLogin);
+            logger.info("Login exitoso para usuario: {}", userLogin.getUsername());
+            return ResponseEntity.ok(jwtDto);
+        } catch (Exception e) {
+            logger.error("Error en el login para usuario {}: {}", userLogin.getUsername(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse("Error de autenticación", e.getMessage()));
+        }
     }
 
     private boolean validateBindingResult(BindingResult bindingResult) {
@@ -57,4 +66,18 @@ public class AuthController {
         return false;
     }
 
+    private static class ErrorResponse {
+        private final String error;
+        private final String message;
+
+        public ErrorResponse(String error, String message) {
+            this.error = error;
+            this.message = message;
+        }
+
+        @SuppressWarnings("unused")
+        public String getError() { return error; }
+        @SuppressWarnings("unused")
+        public String getMessage() { return message; }
+    }
 } 

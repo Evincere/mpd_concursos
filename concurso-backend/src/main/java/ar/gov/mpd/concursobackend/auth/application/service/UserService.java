@@ -150,12 +150,14 @@ public class UserService implements IUserService {
             );
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = jwtProvider.generateToken(authentication);
-            logger.info("token: {}", jwt);
+            
             // Obtener los detalles del usuario autenticado
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             User user = getByUsername(new UserUsername(userDetails.getUsername()))
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            
+            String jwt = jwtProvider.generateToken(authentication, user);
+            logger.info("token: {}", jwt);
             
             logger.info("Autenticación exitosa para el usuario: {}", userDetails.getUsername());
             return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities(), user.getCuit().value());

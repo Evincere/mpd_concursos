@@ -14,14 +14,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtEntryPoint;
 import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtTokenFilter;
 import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtAccessDeniedHandler;
+import ar.gov.mpd.concursobackend.shared.infrastructure.config.SecurityConstants;
 
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
-import ar.gov.mpd.concursobackend.shared.infrastructure.config.SecurityConstants;
+import java.util.Arrays;
+import org.springframework.web.cors.CorsConfiguration;
 
 @Configuration
 @EnableWebSecurity
@@ -46,21 +51,46 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
+        return new MvcRequestMatcher.Builder(introspector);
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
+        // Configurar los matchers MVC
+        var mvcMatchers = Arrays.stream(SecurityConstants.MVC_MATCHER_PATHS)
+            .map(mvc::pattern)
+            .toArray(MvcRequestMatcher[]::new);
+
+        // Configurar los matchers ANT
+        var antMatchers = Arrays.stream(SecurityConstants.ANT_MATCHER_PATHS)
+            .map(AntPathRequestMatcher::new)
+            .toArray(AntPathRequestMatcher[]::new);
+
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configure(http))
+            .cors(cors -> cors.configurationSource(request -> {
+                var corsConfiguration = new CorsConfiguration();
+                corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+                corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                corsConfiguration.setAllowedHeaders(Arrays.asList("*"));
+                corsConfiguration.setAllowCredentials(true);
+                return corsConfiguration;
+            }))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> 
-                auth.requestMatchers(SecurityConstants.PUBLIC_PATHS).permitAll()
-                    .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(auth -> {
+                auth
+                    .requestMatchers(antMatchers).permitAll()
+                    .requestMatchers(mvcMatchers).permitAll()
+                    .anyRequest().authenticated();
+            })
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(exc -> exc
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(jwtAccessDeniedHandler)
             );
+
         // Habilitar h2-console
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
@@ -79,4 +109,4 @@ public class SecurityConfig {
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-} 
+}
