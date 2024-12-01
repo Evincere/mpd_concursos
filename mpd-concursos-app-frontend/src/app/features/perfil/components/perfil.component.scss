@@ -1,630 +1,791 @@
 @use 'variables' as *;
 
+// Mixin para los iconos de encabezado
+@mixin header-icon {
+  font-size: 24px;
+  padding: 0.75rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  background: rgba(33, 150, 243, 0.1);
+  color: #2196f3;
+
+  @media (max-width: 768px) {
+    font-size: 20px;
+    padding: 0.5rem;
+  }
+}
+
 .perfil-container {
-    padding: 1.5rem;
+  padding: 1rem;
+  height: 100%;
+  overflow-y: auto;
 
-    .perfil-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        background: $color-surface;
-        padding: 1.25rem 1.5rem;
-        border-radius: $border-radius;
-        box-shadow: $box-shadow;
+  .perfil-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: rgba(49, 49, 49, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-        h2 {
-            display: flex;
-            align-items: center;
-            color: $color-text-primary;
-            margin: 0;
-            font-size: 1.125rem;
+    h2 {
+      display: flex;
+      align-items: center;
+      color: #fff;
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+
+      i {
+        margin-right: 0.75rem;
+        color: #2196f3;
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  .perfil-tabs {
+    background: rgba(49, 49, 49, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: calc(100% - 80px);
+
+    ::ng-deep {
+      .mat-mdc-tab-header {
+        background: rgba(255, 255, 255, 0.05);
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+        .mat-mdc-tab {
+          height: 48px;
+          opacity: 0.7;
+          transition: all 0.3s ease;
+
+          &.mdc-tab--active {
+            opacity: 1;
+            
+            .mdc-tab__text-label {
+              color: #2196f3;
+            }
+          }
+
+          .mdc-tab__text-label {
+            color: rgba(255, 255, 255, 0.87);
             font-weight: 500;
-
-            i {
-                margin-right: 1rem;
-                color: $color-primary;
-                font-size: 1.25rem;
-            }
+          }
         }
+
+        .mdc-tab-indicator--active {
+          .mdc-tab-indicator__content {
+            border-color: #2196f3;
+          }
+        }
+      }
+
+      .mat-mdc-tab-body-wrapper {
+        height: calc(100% - 49px);
+        
+        .mat-mdc-tab-body-content {
+          padding: 1.5rem;
+          overflow-y: auto;
+        }
+      }
     }
+  }
 
-    .perfil-tabs {
-        background: $color-surface;
-        border-radius: $border-radius;
-        box-shadow: $box-shadow;
-
-        ::ng-deep {
-            // Contenedor de las pestañas
-            .mat-mdc-tab-header {
-                background: $color-surface-light;
-                border-top-left-radius: $border-radius;
-                border-top-right-radius: $border-radius;
-                border-bottom: 1px solid rgba($color-text-secondary, 0.1);
-                padding: 0 1rem;
-
-                .mat-mdc-tab {
-                    height: 48px;
-                    padding: 0 1.5rem;
-                    opacity: 1;
-                    
-                    .mdc-tab__text-label {
-                        color: $color-text-secondary;
-                        font-size: 0.875rem;
-                        font-weight: 500;
-                        transition: $transition-default;
-                    }
-
-                    .mdc-tab-indicator {
-                        .mdc-tab-indicator__content--underline {
-                            border-color: $color-primary;
-                        }
-                    }
-
-                    &.mdc-tab--active {
-                        .mdc-tab__text-label {
-                            color: $color-primary;
-                        }
-                    }
-
-                    &:hover:not(.mdc-tab--active) {
-                        background: rgba($color-primary, 0.05);
-                        
-                        .mdc-tab__text-label {
-                            color: lighten($color-text-secondary, 10%);
-                        }
-                    }
-                }
-            }
-
-            // Contenido de las pestañas
-            .mat-mdc-tab-body-wrapper {
-                background: $color-surface;
-                border-bottom-left-radius: $border-radius;
-                border-bottom-right-radius: $border-radius;
-                
-                .mat-mdc-tab-body-content {
-                    padding: 1.5rem;
-                }
-            }
-        }
-
-        // Estilos para la pestaña de Redes Sociales
-        .social-card {
-            background: $color-surface-light;
-            padding: 1.5rem;
-            border-radius: $border-radius;
-            margin-bottom: 1rem;
-
-            .social-header {
-                display: flex;
-                align-items: center;
-                margin-bottom: 1rem;
-
-                i {
-                    font-size: 1.5rem;
-                    color: #0077B5; // Color de LinkedIn
-                    margin-right: 1rem;
-                }
-
-                h3 {
-                    color: $color-text-primary;
-                    margin: 0;
-                    font-size: 1.125rem;
-                    font-weight: 500;
-                }
-            }
-
-            p {
-                color: $color-text-secondary;
-                margin-bottom: 1.5rem;
-            }
-        }
-
-        // Estilos para la pestaña de Currículum
-        .cv-section {
-            background: $color-surface-light;
-            padding: 1.5rem;
-            border-radius: $border-radius;
-            margin-bottom: 1.5rem;
-            box-shadow: $box-shadow;
-
-            .section-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 1.5rem;
-                padding-bottom: 0.75rem;
-                border-bottom: 1px solid rgba($color-text-secondary, 0.1);
-
-                i {
-                    font-size: 1.25rem;
-                    color: $color-primary;
-                    margin-right: 0.75rem;
-                }
-
-                h3 {
-                    margin: 0;
-                    font-size: 1rem;
-                    font-weight: 500;
-                    color: $color-text-primary;
-                    flex-grow: 1;
-                    display: flex;
-                    align-items: center;
-                }
-
-                .add-button {
-                    height: 32px;
-                    padding: 0 1rem;
-                    font-size: 0.875rem;
-                    
-                    i {
-                        font-size: 0.875rem;
-                        margin-right: 0.5rem;
-                        color: inherit;
-                    }
-                }
-            }
-
-            .cv-items {
-                .cv-item {
-                    background: $color-surface;
-                    border-radius: $border-radius;
-                    padding: 1.25rem;
-                    margin-bottom: 1rem;
-                    border: 1px solid rgba($color-text-secondary, 0.1);
-                    transition: all 0.3s ease;
-
-                    &:hover {
-                        border-color: rgba($color-primary, 0.3);
-                        box-shadow: 0 2px 8px rgba($color-primary, 0.1);
-                    }
-
-                    .item-header {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
-                        gap: 1rem;
-
-                        .item-title {
-                            flex-grow: 1;
-                            display: grid;
-                            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                            gap: 1rem;
-                        }
-                    }
-
-                    .item-dates {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                        gap: 1rem;
-                        margin: 1rem 0;
-                    }
-
-                    mat-form-field {
-                        width: 100%;
-                    }
-
-                    .full-width {
-                        grid-column: 1 / -1;
-                    }
-                }
-            }
-
-            // Estilos específicos para la sección de habilidades
-            .habilidades-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 1rem;
-
-                .habilidad-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                    background: $color-surface;
-                    padding: 1rem;
-                    border-radius: $border-radius;
-                    border: 1px solid rgba($color-text-secondary, 0.1);
-                    transition: all 0.3s ease;
-
-                    &:hover {
-                        border-color: rgba($color-primary, 0.3);
-                        box-shadow: 0 2px 8px rgba($color-primary, 0.1);
-                    }
-
-                    mat-form-field {
-                        flex-grow: 1;
-                    }
-
-                    button {
-                        flex-shrink: 0;
-                    }
-                }
-            }
-        }
-    }
+  .tab-content {
+    height: 100%;
+    overflow-y: auto;
+  }
 }
 
 .perfil-form {
-    .form-section {
-        background: $color-surface-light;
-        border-radius: $border-radius;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+  .form-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    transition: all 0.3s ease;
 
-        .section-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid rgba($color-text-secondary, 0.1);
-
-            i {
-                font-size: 1.25rem;
-                color: $color-primary;
-                margin-right: 0.75rem;
-            }
-
-            h3 {
-                margin: 0;
-                font-size: 1rem;
-                font-weight: 500;
-                color: $color-text-primary;
-            }
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-
-            mat-form-field {
-                position: relative;
-                width: 100%;
-                margin: 20px 0 40px;
-
-                ::ng-deep {
-                    // Eliminar todos los estilos por defecto de Material
-                    .mdc-text-field--filled {
-                        &::before, &::after {
-                            content: none !important;
-                        }
-                    }
-
-                    .mat-mdc-form-field-flex {
-                        display: block !important;
-                        padding: 0 !important;
-                        background-color: transparent !important;
-                    }
-
-                    .mat-mdc-form-field-infix {
-                        padding: 0 !important;
-                        border: none !important;
-                    }
-
-                    .mdc-line-ripple {
-                        display: none !important;
-                    }
-
-                    .mdc-notched-outline {
-                        display: none !important;
-                    }
-
-                    // Estilo del input
-                    .mat-mdc-input-element {
-                        display: block;
-                        width: 100%;
-                        padding: 15px 0;
-                        font-size: 16px;
-                        border: 0;
-                        border-bottom: 2px solid rgba($color-text-secondary, 0.3);
-                        background-color: transparent;
-                        color: $color-text-primary;
-                        transition: border-color 0.3s ease;
-
-                        &:focus {
-                            outline: none;
-                            border-bottom-color: $color-primary;
-                        }
-                    }
-
-                    // Estilo del label
-                    .mat-mdc-form-field-label:not(.mdc-floating-label--float-above) {
-                        top: 15px !important;
-                        left: 0 !important;
-                        transform: none !important;
-                        pointer-events: none;
-                        color: $color-text-secondary;
-
-                        span {
-                            display: inline-block;
-                            min-width: 5px;
-                            font-size: 16px;
-                            transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-                        }
-                    }
-
-                    // Estado focus y con contenido
-                    .mdc-floating-label--float-above {
-                        transform: translateY(-30px) !important;
-                        
-                        span {
-                            color: $color-primary;
-                            transform: translateY(-30px);
-                        }
-                    }
-
-                    // Estilo de error
-                    .mat-mdc-form-field-error-wrapper {
-                        padding: 0;
-                        position: absolute;
-                        top: 100%;
-                        left: 0;
-                    }
-
-                    .mat-mdc-form-field-error {
-                        font-size: 12px;
-                        margin-top: 3px;
-                        color: $color-warning;
-                    }
-
-                    // Eliminar espacios adicionales
-                    .mat-mdc-form-field-subscript-wrapper {
-                        display: none;
-                    }
-                }
-
-                &.mat-focused {
-                    ::ng-deep {
-                        .mat-mdc-input-element {
-                            border-bottom-color: $color-primary;
-                        }
-
-                        .mat-mdc-form-field-label {
-                            color: $color-primary !important;
-                            
-                            span {
-                                transform: translateY(-30px);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
     }
 
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-        margin-top: 2rem;
+    .section-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-        button {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0 1.5rem;
-            height: 44px;
+      i {
+        @include header-icon;
+      }
 
-            i {
-                font-size: 1rem;
-            }
-
-            &[mat-stroked-button] {
-                border-color: rgba($color-text-secondary, 0.3);
-                color: $color-text-secondary;
-
-                &:hover {
-                    background: rgba($color-primary, 0.1);
-                    border-color: $color-primary;
-                    color: $color-primary;
-                }
-            }
-
-            &[mat-flat-button] {
-                background: $color-primary;
-                
-                &:hover {
-                    background: lighten($color-primary, 5%);
-                }
-
-                &:disabled {
-                    background: rgba($color-text-secondary, 0.1);
-                    color: rgba($color-text-secondary, 0.5);
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 768px) {
-    .perfil-container {
-        padding: 1rem;
-
-        .perfil-tabs {
-            ::ng-deep {
-                .mat-mdc-tab-header {
-                    padding: 0;
-
-                    .mat-mdc-tab {
-                        padding: 0 1rem;
-                    }
-                }
-
-                .mat-mdc-tab-body-content {
-                    padding: 1rem;
-                }
-            }
-        }
+      h3 {
+        color: rgba(255, 255, 255, 0.87);
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
     }
 
-    .cv-section {
-        padding: 1rem;
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.25rem;
 
-        .cv-items {
-            .cv-item {
-                padding: 1rem;
+      mat-form-field {
+        width: 100%;
 
-                .item-header {
-                    flex-direction: column;
+        ::ng-deep {
+          .mat-mdc-text-field-wrapper {
+            background: transparent;
+          }
 
-                    .item-title {
-                        grid-template-columns: 1fr;
-                    }
-                }
+          .mat-mdc-form-field-flex {
+            background: rgba(49, 49, 49, 0.9);
+            border-radius: 4px;
+            padding: 0 12px;
+            min-height: 45px;
+          }
 
-                .item-dates {
-                    grid-template-columns: 1fr;
-                }
+          .mat-mdc-form-field-infix {
+            padding: 12px 0;
+            min-height: 45px;
+          }
+
+          .mdc-floating-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            top: 22px;
+          }
+
+          .mdc-floating-label--float-above {
+            transform: translateY(-25px) scale(0.75);
+            transform-origin: left top;
+            transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+          }
+
+          .mat-mdc-input-element {
+            color: rgba(255, 255, 255, 0.87);
+            font-size: 14px;
+            line-height: 20px;
+            padding: 8px 0 0;
+            margin-top: 4px;
+          }
+
+          .mdc-line-ripple {
+            &::before {
+              border-bottom-color: rgba(255, 255, 255, 0.1);
             }
-        }
+            &::after {
+              border-bottom-color: #2196f3;
+            }
+          }
 
-        .habilidades-grid {
-            grid-template-columns: 1fr;
+          // Estilo para el campo activo
+          &.mat-focused {
+            .mdc-floating-label {
+              color: #2196f3;
+            }
+            .mat-mdc-form-field-flex {
+              background: rgba(49, 49, 49, 1);
+            }
+          }
+
+          // Estilo para campos con error
+          &.mat-form-field-invalid {
+            .mdc-floating-label {
+              color: #ff4081;
+            }
+            .mat-mdc-form-field-flex {
+              background: rgba(49, 49, 49, 0.9);
+            }
+            .mdc-line-ripple::after {
+              border-bottom-color: #ff4081;
+            }
+          }
+
+          .mat-mdc-form-field-error-wrapper {
+            padding: 0;
+            position: relative;
+          }
+
+          .mat-mdc-form-field-error {
+            color: #ff4081;
+            font-size: 12px;
+            margin-top: 4px;
+            font-weight: 400;
+          }
         }
+      }
     }
+  }
 }
 
 .perfil-foto {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
 
-    .foto-container {
-        position: relative;
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        overflow: visible;
-        background: $color-surface-light;
-        border: 2px solid $color-primary;
-        box-shadow: 0px 0px 30px rgba($color-primary, 0.2),
-                   inset 0px 0px 10px rgba($color-primary, 0.1);
-        transition: all 0.3s ease;
+  .foto-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: visible;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid #2196f3;
+    box-shadow: 0px 0px 30px rgba(33, 150, 243, 0.2),
+               inset 0px 0px 10px rgba(33, 150, 243, 0.1);
+    transition: all 0.3s ease;
 
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-        }
-
-        // Avatar por defecto
-        .default-avatar {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: $color-surface-light;
-            color: $color-text-secondary;
-            border-radius: 50%;
-            animation: avatarFlicker 4s linear infinite;
-
-            i {
-                font-size: 4rem;
-                color: $color-primary;
-                animation: iconFlicker 4s linear infinite;
-            }
-        }
-
-        .cambiar-foto-btn {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            background: $color-primary;
-            width: 36px;
-            height: 36px;
-            min-height: unset;
-            padding: 0;
-            border: 2px solid $color-surface;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-
-            i {
-                font-size: 0.9rem;
-                color: $color-white;
-            }
-
-            &:hover {
-                background: lighten($color-primary, 5%);
-                transform: scale(1.05);
-            }
-        }
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
+
+    .default-avatar {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      animation: avatarFlicker 4s linear infinite;
+
+      i {
+        font-size: 4rem;
+        color: #2196f3;
+        animation: iconFlicker 4s linear infinite;
+      }
+    }
+
+    .cambiar-foto-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: #2196f3;
+      width: 36px;
+      height: 36px;
+      min-height: unset;
+      padding: 0;
+      border: 2px solid rgba(49, 49, 49, 0.9);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+
+      i {
+        font-size: 0.9rem;
+        color: white;
+      }
+
+      &:hover {
+        background: lighten(#2196f3, 10%);
+        transform: scale(1.05);
+      }
+    }
+  }
 }
 
 @keyframes avatarFlicker {
-    0% {
-        box-shadow: 0px 0px 60px rgba($color-primary, 0.3),
-                   inset 0px 0px 10px rgba($color-primary, 0.2);
-    }
-    5% {
-        box-shadow: 0px 0px 30px rgba($color-primary, 0.1),
-                   inset 0px 0px 5px rgba($color-primary, 0.1);
-    }
-    10% {
-        box-shadow: 0px 0px 60px rgba($color-primary, 0.3),
-                   inset 0px 0px 10px rgba($color-primary, 0.2);
-    }
-    25% {
-        box-shadow: 0px 0px 30px rgba($color-primary, 0.1),
-                   inset 0px 0px 5px rgba($color-primary, 0.1);
-    }
-    30% {
-        box-shadow: 0px 0px 60px rgba($color-primary, 0.3),
-                   inset 0px 0px 10px rgba($color-primary, 0.2);
-    }
-    100% {
-        box-shadow: 0px 0px 60px rgba($color-primary, 0.3),
-                   inset 0px 0px 10px rgba($color-primary, 0.2);
-    }
+  0%, 100% {
+    box-shadow: 0px 0px 60px rgba(33, 150, 243, 0.3),
+               inset 0px 0px 10px rgba(33, 150, 243, 0.2);
+  }
+  50% {
+    box-shadow: 0px 0px 30px rgba(33, 150, 243, 0.1),
+               inset 0px 0px 5px rgba(33, 150, 243, 0.1);
+  }
 }
 
 @keyframes iconFlicker {
-    0% {
-        opacity: 1;
-    }
-    5% {
-        opacity: 0.3;
-    }
-    10% {
-        opacity: 1;
-    }
-    25% {
-        opacity: 0.3;
-    }
-    30% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 1;
-    }
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-@keyframes buttonFlicker {
-    0% {
-        opacity: 1;
-        box-shadow: 0 2px 4px rgba($color-primary, 0.4);
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1.25rem;
+  background: rgba(49, 49, 49, 0.9);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  ::ng-deep {
+    .action-button {
+      min-width: 140px !important;
+      height: 42px !important;
+      padding: 0 16px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.3px !important;
+      line-height: 36px !important;
+      transition: all 0.3s ease !important;
+
+      i {
+        font-size: 16px;
+        transition: transform 0.3s ease;
+      }
+
+      // Estilos para el botón de restaurar
+      &.mdc-button--outlined {
+        background-color: transparent !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        color: rgba(255, 255, 255, 0.87) !important;
+
+        .mdc-button__ripple {
+          background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        &:hover {
+          border-color: rgba(255, 255, 255, 0.3) !important;
+          background-color: rgba(255, 255, 255, 0.05) !important;
+
+          i {
+            transform: rotate(-45deg);
+          }
+        }
+
+        &:active {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+
+      // Estilos para el botón de guardar
+      &.mdc-button--unelevated {
+        background-color: #2196f3 !important;
+        color: white !important;
+        border: none !important;
+        position: relative !important;
+        overflow: hidden !important;
+
+        .mdc-button__ripple {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 120%;
+          height: 120%;
+          background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+          transform: translate(-50%, -50%) scale(0);
+          transition: transform 0.5s ease-out;
+          pointer-events: none;
+        }
+
+        &:hover:not(:disabled) {
+          background-color: #1976d2 !important;
+
+          &::before {
+            transform: translate(-50%, -50%) scale(1);
+          }
+
+          i {
+            transform: translateX(3px);
+          }
+        }
+
+        &:active:not(:disabled) {
+          background-color: #1565c0 !important;
+          transform: scale(0.98);
+        }
+
+        &:disabled {
+          background-color: rgba(33, 150, 243, 0.5) !important;
+          cursor: not-allowed !important;
+          opacity: 0.7 !important;
+
+          i {
+            transform: none;
+          }
+        }
+      }
     }
-    5% {
-        opacity: 0.8;
-        box-shadow: none;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+    padding: 1rem;
+    
+    .action-button {
+      width: 100%;
     }
-    10% {
-        opacity: 1;
-        box-shadow: 0 2px 4px rgba($color-primary, 0.4);
+  }
+}
+
+@media (max-width: 768px) {
+  .perfil-container {
+    padding: 0.75rem;
+
+    .perfil-header {
+      padding: 0.75rem;
     }
-    25% {
-        opacity: 0.8;
-        box-shadow: none;
+
+    .perfil-tabs {
+      height: calc(100% - 70px);
     }
-    30% {
-        opacity: 1;
-        box-shadow: 0 2px 4px rgba($color-primary, 0.4);
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    
+    .action-button {
+      width: 100%;
     }
-    100% {
-        opacity: 1;
-        box-shadow: 0 2px 4px rgba($color-primary, 0.4);
+  }
+}
+
+// Estilos para la pestaña de redes sociales
+.social-card {
+  background: rgba(49, 49, 49, 0.9);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .social-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    i {
+      @include header-icon;
+      color: #0077B5;
+      background: rgba(0, 119, 181, 0.1);
     }
-} 
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.87);
+    }
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 1.5rem;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  ::ng-deep {
+    button.mat-mdc-raised-button {
+      min-width: 140px !important;
+      height: 42px !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      letter-spacing: 0.3px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      transition: all 0.3s ease !important;
+      position: relative !important;
+      overflow: hidden !important;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 120%;
+        height: 120%;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.5s ease-out;
+        pointer-events: none;
+      }
+
+      &:not(.mat-warn) {
+        background-color: #0077B5 !important;
+        color: white !important;
+
+        &:hover {
+          background-color: #006396 !important;
+
+          &::before {
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+
+        &:active {
+          transform: scale(0.98);
+          background-color: #005279 !important;
+        }
+      }
+
+      &.mat-warn {
+        background-color: #dc3545 !important;
+        color: white !important;
+
+        &:hover {
+          background-color: #c82333 !important;
+
+          &::before {
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+
+        &:active {
+          transform: scale(0.98);
+          background-color: #bd2130 !important;
+        }
+      }
+
+      &:disabled {
+        background-color: rgba(255, 255, 255, 0.12) !important;
+        color: rgba(255, 255, 255, 0.3) !important;
+        cursor: not-allowed !important;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .social-header {
+      i {
+        font-size: 20px;
+        padding: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1.1rem;
+      }
+    }
+  }
+}
+
+// Estilos para la pestaña de Currículum
+.cv-section {
+  background: rgba(49, 49, 49, 0.9);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    i {
+      @include header-icon;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.87);
+      flex-grow: 1;
+    }
+
+    .add-button {
+      ::ng-deep.mdc-button {
+        background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: rgba(255, 255, 255, 0.87) !important;
+        padding: 0 1.25rem !important;
+        height: 36px !important;
+        transition: all 0.3s ease !important;
+
+        i {
+          font-size: 14px;
+          padding: 0;
+          margin-right: 8px;
+          background: none;
+          color: inherit;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05) !important;
+          border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        &:active {
+          transform: scale(0.98);
+        }
+      }
+    }
+  }
+
+  .cv-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .cv-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .item-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .item-title {
+        flex-grow: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      button {
+        color: #ff4081 !important;
+        transition: all 0.3s ease !important;
+
+        &:hover {
+          background: rgba(255, 64, 129, 0.1) !important;
+          transform: scale(1.1);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+
+        i {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .item-dates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    ::ng-deep {
+      .mat-mdc-form-field {
+        .mat-mdc-text-field-wrapper {
+          background: rgba(0, 0, 0, 0.2);
+        }
+
+        .mat-mdc-form-field-flex {
+          padding: 0 12px;
+        }
+
+        .mdc-floating-label {
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .mat-mdc-input-element {
+          color: rgba(255, 255, 255, 0.87);
+        }
+
+        .mat-datepicker-toggle {
+          color: rgba(255, 255, 255, 0.6);
+          
+          &:hover {
+            color: #2196f3;
+          }
+        }
+
+        &.mat-focused {
+          .mdc-floating-label {
+            color: #2196f3;
+          }
+        }
+      }
+
+      textarea.mat-mdc-input-element {
+        min-height: 80px;
+        resize: vertical;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      i {
+        font-size: 20px;
+        padding: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1.1rem;
+      }
+
+      .add-button {
+        width: 100%;
+      }
+    }
+
+    .cv-item {
+      padding: 1rem;
+
+      .item-header {
+        .item-title {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .item-dates {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

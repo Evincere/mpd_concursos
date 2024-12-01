@@ -32,9 +32,15 @@
             </span>
           </div>
         </div>
-        <button mat-stroked-button color="primary" [routerLink]="['/postulaciones', postulacion.id]">
-          Ver detalles
-          <i class="fas fa-chevron-right"></i>
+        <button mat-stroked-button color="primary" [routerLink]="['/postulaciones', postulacion.id]" class="details-button mat-mdc-outlined-button">
+          <span class="mdc-button__ripple"></span>
+          <span class="mat-mdc-focus-indicator"></span>
+          <span class="mat-ripple mat-mdc-button-ripple"></span>
+          <span class="mat-mdc-button-touch-target"></span>
+          <span class="mdc-button__label">
+            <i class="fas fa-search-plus"></i>
+            Ver detalles
+          </span>
         </button>
       </div>
     </div>

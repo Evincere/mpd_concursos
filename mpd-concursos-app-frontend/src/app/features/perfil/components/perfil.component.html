@@ -142,14 +142,20 @@
                     </div>
 
                     <div class="form-actions">
-                        <button mat-stroked-button type="button" (click)="resetForm()">
+                        <button mat-stroked-button 
+                                type="button"
+                                class="action-button"
+                                [ngClass]="{'accent-button': true}"
+                                (click)="resetForm()">
                             <i class="fas fa-undo"></i>
                             Restaurar
                         </button>
                         <button mat-flat-button 
-                                color="primary" 
-                                (click)="guardarPerfil()"
-                                [disabled]="!perfilForm.valid || !perfilForm.dirty">
+                                type="button"
+                                class="action-button"
+                                [ngClass]="{'primary-button': true}"
+                                [disabled]="!perfilForm.valid || !perfilForm.dirty"
+                                (click)="guardarPerfil()">
                             <i class="fas fa-save"></i>
                             Guardar Cambios
                         </button>
