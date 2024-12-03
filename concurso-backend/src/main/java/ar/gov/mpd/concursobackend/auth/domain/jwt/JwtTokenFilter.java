@@ -105,12 +105,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
 
     private boolean isWhitelistedPath(String path) {
+        // Verificar primero las rutas de H2 Console explícitamente
+        if (path.startsWith("/h2-console")) {
+            logger.debug("Path {} is H2 Console path, allowing access", path);
+            return true;
+        }
+
         // Combinar ambos arrays de rutas públicas
         List<String> whitelistedPaths = new ArrayList<>();
         whitelistedPaths.addAll(Arrays.asList(SecurityConstants.ANT_MATCHER_PATHS));
         whitelistedPaths.addAll(Arrays.asList(SecurityConstants.MVC_MATCHER_PATHS));
 
-        return whitelistedPaths.stream()
+        boolean isWhitelisted = whitelistedPaths.stream()
                 .anyMatch(pattern -> {
                     // Si el patrón termina en /**, hacemos una coincidencia de prefijo
                     if (pattern.endsWith("/**")) {
@@ -120,6 +126,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                     // Si no, hacemos una coincidencia exacta
                     return path.equals(pattern);
                 });
+
+        if (isWhitelisted) {
+            logger.debug("Path {} is whitelisted", path);
+        }
+        
+        return isWhitelisted;
     }
 
     private boolean isPublicPath(String path) {

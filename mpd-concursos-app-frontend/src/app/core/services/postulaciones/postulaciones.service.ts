@@ -3,7 +3,7 @@ import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { Postulacion, PostulacionRequest, PostulacionResponse } from '../../../shared/interfaces/postulacion/postulacion.interface';
+import { ContestStatus, Postulacion, PostulacionRequest, PostulacionResponse } from '../../../shared/interfaces/postulacion/postulacion.interface';
 
 @Injectable({
     providedIn: 'root'
@@ -33,21 +33,48 @@ export class PostulacionesService {
     }
     
     private transformResponse(response: any): PostulacionResponse {
-        return {
-            content: response.content.map((item: any) => ({
-                id: item.id,
-                concursoId: item.contestId,
-                userId: item.userId,
-                estado: item.status,
-                fechaPostulacion: item.inscriptionDate,
-                concurso: null
-            })),
+        const transformedResponse = {
+            content: response.content.map((item: any) => {
+                console.log('Item de postulación:', {
+                    id: item.id,
+                    contestId: item.contestId,
+                    userId: item.userId,
+                    estado: item.estado,
+                    fechaPostulacion: item.fechaPostulacion
+                });
+
+                return {
+                    id: item.id,
+                    contestId: item.contestId,
+                    userId: item.userId,
+                    estado: item.estado,
+                    fechaPostulacion: item.fechaPostulacion,
+                    concurso: {
+                        id: item.concurso.id,
+                        titulo: item.concurso.titulo,
+                        cargo: item.concurso.cargo,
+                        dependencia: item.concurso.dependencia,
+                        estado: item.concurso.estado,
+                        fechaInicio: item.concurso.fechaInicio,
+                        fechaFin: item.concurso.fechaFin,
+                        results: item.concurso.results,
+                        resolution: item.concurso.resolution,
+                        requirements: item.concurso.requirements,
+                        category: item.concurso.category,
+                        class: item.concurso.class,
+                        status: item.concurso.status as ContestStatus
+                    }
+                };
+            }),
             pageNumber: response.pageNumber || 0,
             pageSize: response.pageSize || 10,
             totalElements: response.totalElements,
             totalPages: response.totalPages,
             last: response.last
         };
+
+        console.log('Transformed Response:', transformedResponse);
+        return transformedResponse;
     }
 
     private handleError(error: HttpErrorResponse) {
@@ -76,6 +103,65 @@ export class PostulacionesService {
 
     // Obtener una postulación específica
     getPostulacion(id: number): Observable<Postulacion> {
-        return this.http.get<Postulacion>(`${this.apiUrl}/${id}`);
+        console.log(`Intentando obtener postulación con ID: ${id}`);
+        
+        return this.http.get<Postulacion>(`${this.apiUrl}/${id}`, {
+            withCredentials: true,
+            observe: 'response'  // Obtener toda la respuesta HTTP
+        }).pipe(
+            map(response => {
+                console.log('Respuesta completa:', response);
+                console.log('Código de estado:', response.status);
+                console.log('Headers:', response.headers.keys());
+                
+                if (response.status === 200) {
+                    const postulacion = this.transformSingleResponse(response.body);
+                    console.log('Detalles de postulación transformados:', postulacion);
+                    return postulacion;
+                } else {
+                    throw new Error(`Error inesperado: ${response.status}`);
+                }
+            }),
+            catchError(error => {
+                console.error('Error al obtener postulación:', error);
+                
+                if (error instanceof HttpErrorResponse) {
+                    console.error('Detalles del error HTTP:', {
+                        status: error.status,
+                        message: error.message,
+                        url: error.url
+                    });
+                }
+                
+                return throwError(() => error);
+            })
+        );
     }
-} 
+
+    // Método para transformar una única respuesta de postulación
+    private transformSingleResponse(item: any): Postulacion {
+        return {
+            id: item.id,
+            contestId: item.contestId,
+            userId: item.userId,
+            estado: item.estado,
+            fechaPostulacion: item.fechaPostulacion,
+            concurso: {
+                id: item.concurso.id,
+                titulo: item.concurso.titulo,
+                cargo: item.concurso.cargo,
+                dependencia: item.concurso.dependencia,
+                estado: item.concurso.estado,
+                fechaInicio: item.concurso.fechaInicio,
+                fechaFin: item.concurso.fechaFin,
+                results: item.concurso.results,
+                resolution: item.concurso.resolution,
+                requirements: item.concurso.requirements,
+                category: item.concurso.category,
+                class: item.concurso.class,
+                status: item.concurso.status
+            },
+            attachedDocuments: item.attachedDocuments || []
+        };
+    }
+}

@@ -77,6 +77,9 @@ public class SecurityConfig {
                 corsConfiguration.setAllowCredentials(true);
                 return corsConfiguration;
             }))
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.sameOrigin())
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> {
                 auth
@@ -90,9 +93,6 @@ public class SecurityConfig {
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(jwtAccessDeniedHandler)
             );
-
-        // Habilitar h2-console
-        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
     }

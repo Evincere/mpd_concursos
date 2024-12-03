@@ -1,13 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
-import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.component';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { fadeInOut, fadeSlide, listAnimation, slideInOut } from '@shared/animations/animations';
 import { ConcursosService } from '@core/services/concursos/concursos.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { LoaderComponent } from '@shared/components/loader/loader.component';
+import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.component';
 
 @Component({
   selector: 'app-concursos',
@@ -16,10 +19,12 @@ import { ConcursosService } from '@core/services/concursos/concursos.service';
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     RouterModule,
     MatButtonModule,
-    MatProgressSpinnerModule,
     SearchHeaderComponent,
+    MatProgressSpinnerModule,
+    LoaderComponent,
     FiltrosPanelComponent
   ],
   animations: [fadeInOut, fadeSlide, listAnimation, slideInOut]
@@ -28,9 +33,10 @@ export class ConcursosComponent implements OnInit {
   loading = false;
   concursos: Concurso[] = [];
   showFilters = false;
-  searchTerm = '';
+  searchTerm: string = '';
+  error: HttpErrorResponse | null = null;
 
-  constructor(private concursosService: ConcursosService) {}
+  constructor(private concursosService: ConcursosService, private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
     this.cargarConcursos();
@@ -43,8 +49,12 @@ export class ConcursosComponent implements OnInit {
         this.concursos = concursos;
         this.loading = false;
       },
-      error: (error: unknown) => {
-        console.error('Error al cargar concursos:', error);
+      error: (error: HttpErrorResponse) => {
+        console.error('Error al cargar los concursos:', error);
+        this.snackBar.open('Error al cargar los concursos', 'Cerrar', {
+          duration: 3000
+        });
+        this.error = error;
         this.loading = false;
       }
     });
@@ -82,5 +92,11 @@ export class ConcursosComponent implements OnInit {
       'FINALIZADO': 'Finalizado'
     };
     return estados[status] || status;
+  }
+
+  retryLoad() {
+    this.error = null;
+    this.loading = true;
+    this.cargarConcursos();
   }
 }

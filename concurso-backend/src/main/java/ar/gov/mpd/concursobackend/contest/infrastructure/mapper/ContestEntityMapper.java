@@ -19,7 +19,7 @@ public interface ContestEntityMapper {
     @Mapping(target = "position", source = "position")
     @Mapping(target = "startDate", source = "startDate")
     @Mapping(target = "endDate", source = "endDate")
-    @Mapping(target = "title", ignore = true)
+    @Mapping(target = "title", source = "position")
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "vacancies", ignore = true)
     Contest toDomain(ContestEntity entity);

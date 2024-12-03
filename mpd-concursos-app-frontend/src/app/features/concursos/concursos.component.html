@@ -8,14 +8,25 @@
   </app-search-header>
 
   <div class="content">
-    <mat-progress-spinner 
+    <app-loader 
       *ngIf="loading"
-      mode="indeterminate"
-      diameter="40"
-      class="loading-spinner">
-    </mat-progress-spinner>
+      [overlay]="true"
+      message="Cargando concursos...">
+    </app-loader>
 
-    <div class="concursos-grid" *ngIf="!loading && concursos.length > 0" [@listAnimation]="concursos.length">
+    <div class="error-message" *ngIf="error">
+      <i class="fas fa-exclamation-circle"></i>
+      <div class="error-content">
+        <h4>Error al cargar los concursos</h4>
+        <p>{{ error.status === 0 ? 'No se pudo conectar con el servidor' : error.error?.message || 'Ocurrió un error inesperado' }}</p>
+      </div>
+      <button mat-button (click)="retryLoad()">
+        <i class="fas fa-redo"></i>
+        Reintentar
+      </button>
+    </div>
+
+    <div class="concursos-grid" *ngIf="!loading && !error && concursos.length > 0" [@listAnimation]="concursos.length">
       <div class="concurso-card" *ngFor="let concurso of concursos" [@fadeSlide]>
         <div class="card-header">
           <div class="estado" [ngClass]="concurso.estado">
@@ -53,33 +64,25 @@
       </div>
     </div>
 
-    <div class="no-concursos" *ngIf="!loading && (!concursos.length || (concursos.length === 0 && searchTerm))" [@fadeSlide]>
-      <i class="fas fa-search" *ngIf="searchTerm; else defaultIcon"></i>
-      <ng-template #defaultIcon>
-        <i class="fas fa-gavel"></i>
-      </ng-template>
-      <p *ngIf="searchTerm; else defaultMessage">
-        No se encontraron concursos que coincidan con "{{searchTerm}}"
-      </p>
-      <ng-template #defaultMessage>
-        <p>No hay concursos disponibles en este momento</p>
-        <p class="subtitle">Vuelve a consultar más tarde</p>
-      </ng-template>
-      <button *ngIf="searchTerm" mat-button color="primary" (click)="clearSearch()">
-        Limpiar búsqueda
+    <div class="no-concursos" *ngIf="!loading && !error && concursos.length === 0">
+      <i class="fas fa-gavel"></i>
+      <p>No hay concursos disponibles en este momento.<br>Te notificaremos cuando se publiquen nuevos concursos.</p>
+      <button mat-raised-button routerLink="/dashboard">
+        Volver al Inicio
+        <i class="fas fa-home"></i>
       </button>
     </div>
-  </div>
 
-  <app-filtros-panel
-    *ngIf="showFilters"
-    (close)="onFilter()"
-    [@slideInOut]>
-  </app-filtros-panel>
-  
-  <div class="backdrop" 
-    *ngIf="showFilters"
-    (click)="onFilter()"
-    [@fadeInOut]>
+    <app-filtros-panel
+      *ngIf="showFilters"
+      (close)="onFilter()"
+      [@slideInOut]>
+    </app-filtros-panel>
+    
+    <div class="backdrop" 
+      *ngIf="showFilters"
+      (click)="onFilter()"
+      [@fadeInOut]>
+    </div>
   </div>
 </div>

@@ -1,0 +1,20 @@
+<div class="postulacion-detalle-pagina">
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Postulación details -->
+  <app-postulacion-detalle
+    *ngIf="!loading && !error && postulacion"
+    [postulacion]="postulacion"
+    [concurso]="postulacion.concurso"
+    (cerrar)="onCerrar()">
+  </app-postulacion-detalle>
+</div>

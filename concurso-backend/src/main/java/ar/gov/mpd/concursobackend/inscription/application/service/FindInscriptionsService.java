@@ -2,7 +2,6 @@ package ar.gov.mpd.concursobackend.inscription.application.service;
 
 import java.util.stream.Collectors;
 import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +32,10 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
             .map(inscription -> {
                 Contest contest = contestRepository.findById(inscription.getContestId().getValue())
                     .orElse(null);
+                
+                // Log para ver el status de cada inscripción
+                System.out.println("Inscription Status: " + inscription.getStatus());
+                
                 return inscriptionMapper.toDetailResponse(inscription, contest);
             })
             .collect(Collectors.toList());
@@ -45,5 +48,17 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
             inscriptions.getTotalPages(),
             inscriptions.isLast()
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public InscriptionDetailResponse findById(Long id) {
+        Inscription inscription = loadInscriptionPort.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Inscription not found with id: " + id));
+        
+        Contest contest = contestRepository.findById(inscription.getContestId().getValue())
+            .orElse(null);
+        
+        return inscriptionMapper.toDetailResponse(inscription, contest);
     }
 }

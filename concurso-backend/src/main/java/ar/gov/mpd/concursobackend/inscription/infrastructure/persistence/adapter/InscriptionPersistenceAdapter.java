@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,6 +42,12 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
         var entity = mapper.toEntity(inscription);
         var savedEntity = repository.save(entity);
         return mapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<Inscription> findById(Long id) {
+        return repository.findById(id)
+            .map(mapper::toDomain);
     }
 
     private Pageable createPageable(PageRequest pageRequest) {

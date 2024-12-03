@@ -8,7 +8,8 @@ public final class SecurityConstants {
 
     // Rutas que usan AntPathRequestMatcher
     public static final String[] ANT_MATCHER_PATHS = {
-        "/h2-console/**"
+        "/h2-console/**",
+        "/favicon.ico"
     };
 
     // Rutas que usan MvcRequestMatcher

@@ -2,10 +2,26 @@ export interface Postulacion {
     id?: number;
     contestId: number;
     userId?: string;
-    status: PostulationStatus;
-    inscriptionDate: string;
-    contest?: Contest;
+    estado: PostulationStatus;
+    fechaPostulacion: string;
+    concurso?: Concurso;
     attachedDocuments?: AttachedDocument[];
+}
+
+export interface Concurso {
+    id: number;
+    titulo: string;
+    cargo: string;
+    dependencia: string;
+    estado: string;
+    fechaInicio: string;
+    fechaFin: string;
+    results?: ContestResults;
+    resolution?: Resolution;
+    requirements?: Requirements;
+    category: string;
+    class: string;
+    status: ContestStatus;
 }
 
 export interface Contest {
@@ -58,7 +74,8 @@ export interface AttachedDocument {
 export enum PostulationStatus {
     PENDING = 'PENDING',
     ACCEPTED = 'ACCEPTED',
-    REJECTED = 'REJECTED'
+    REJECTED = 'REJECTED',
+    CANCELLED = 'CANCELLED'
 }
 
 export enum ContestType {

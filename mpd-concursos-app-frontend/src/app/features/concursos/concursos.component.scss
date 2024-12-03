@@ -185,31 +185,159 @@
     }
 
     .no-concursos {
-      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
-      padding: 3rem;
+      padding: 48px 24px;
       text-align: center;
-      color: rgba(255, 255, 255, 0.6);
-      background: rgb(49, 49, 49);
-      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      margin: 24px;
+      transition: all 0.3s ease;
 
       i {
-        font-size: 3rem;
+        font-size: 48px;
         color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 24px;
+        transition: all 0.3s ease;
       }
 
       p {
-        margin: 0;
-        font-size: 1rem;
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
 
-        &.subtitle {
-          font-size: 0.875rem;
-          color: rgba(255, 255, 255, 0.5);
+      button {
+        min-width: 180px;
+        height: 48px;
+        padding: 0 24px;
+        font-size: 16px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        background: linear-gradient(135deg, #2c5282 0%, #1a365d 100%);
+        border: none;
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+        i {
+          font-size: 18px;
+          margin: 0;
+          transition: transform 0.3s ease;
         }
+
+        &:hover {
+          transform: translateY(-2px);
+          background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+
+          i {
+            transform: translateX(4px);
+          }
+        }
+
+        &:active {
+          transform: translateY(1px);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(255, 255, 255, 0.15);
+
+        i {
+          color: rgba(255, 255, 255, 0.6);
+        }
+      }
+    }
+
+    .error-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      margin: 24px;
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.3s ease;
+
+      i {
+        font-size: 48px;
+        color: #dc2626;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+      }
+
+      .error-content {
+        margin-bottom: 24px;
+
+        h4 {
+          font-size: 18px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 8px;
+        }
+
+        p {
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.5;
+        }
+      }
+
+      button {
+        min-width: 140px;
+        height: 40px;
+        padding: 0 20px;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        background: rgba(220, 38, 38, 0.2);
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        border-radius: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+
+        i {
+          font-size: 16px;
+          margin: 0;
+          transition: transform 0.3s ease;
+        }
+
+        &:hover {
+          background: rgba(220, 38, 38, 0.3);
+          transform: translateY(-2px);
+
+          i {
+            transform: rotate(180deg);
+          }
+        }
+
+        &:active {
+          transform: translateY(1px);
+        }
+      }
+
+      &:hover {
+        background: rgba(220, 38, 38, 0.15);
+        border-color: rgba(220, 38, 38, 0.25);
       }
     }
   }

@@ -14,7 +14,7 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         
-        // Permitir peticiones desde el frontend
+        // Permitir peticiones desde el frontend y h2-console
         config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedOrigin("http://localhost:8080");
         
@@ -22,10 +22,10 @@ public class CorsConfig {
         config.setAllowCredentials(true);
         
         // Permitir métodos HTTP
-        config.addAllowedMethod("*");  // Simplificado para permitir todos los métodos
+        config.addAllowedMethod("*");  
         
         // Permitir headers
-        config.addAllowedHeader("*");  // Simplificado para permitir todos los headers
+        config.addAllowedHeader("*");  
         
         // Exponer headers necesarios
         config.addExposedHeader("Authorization");
@@ -36,6 +36,7 @@ public class CorsConfig {
         config.setMaxAge(3600L);
         
         source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/h2-console/**", config);
         return new CorsFilter(source);
     }
 } 

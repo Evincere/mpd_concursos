@@ -8,50 +8,63 @@
   </app-search-header>
 
   <div class="content">
-    <mat-progress-spinner 
+    <app-loader 
       *ngIf="loading"
-      mode="indeterminate"
-      diameter="40"
-      class="loading-spinner">
-    </mat-progress-spinner>
+      [overlay]="true"
+      message="Cargando postulaciones...">
+    </app-loader>
 
-    <div class="postulaciones-list" *ngIf="!loading && postulaciones.length > 0">
-      <div class="postulacion-item" *ngFor="let postulacion of postulaciones">
+    <div class="error-message" *ngIf="error">
+      <i class="fas fa-exclamation-circle"></i>
+      <div class="error-content">
+        <h4>Error al cargar las postulaciones</h4>
+        <p>{{ error.status === 0 ? 'No se pudo conectar con el servidor' : error.error?.message || 'Ocurrió un error inesperado' }}</p>
+      </div>
+      <button mat-button (click)="retryLoad()">
+        <i class="fas fa-redo"></i>
+        Reintentar
+      </button>
+    </div>
+
+    <div class="postulaciones-list" *ngIf="!loading && !error && postulaciones.length > 0">
+      <div class="postulacion-item" *ngFor="let postulacion of postulaciones" (click)="verDetalle(postulacion)">
         <div class="postulacion-info">
-          <h3>{{ postulacion.contest?.title || 'Sin título' }}</h3>
-          <p class="cargo">{{ postulacion.contest?.position || 'Cargo no especificado' }}</p>
-          <p class="dependencia">{{ postulacion.contest?.department || 'Dependencia no especificada' }}</p>
+          <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
+          <p class="cargo">{{ postulacion.concurso?.cargo || 'Cargo no especificado' }}</p>
+          <p class="dependencia">{{ postulacion.concurso?.dependencia || 'Dependencia no especificada' }}</p>
           <div class="meta-info">
             <span>
               <i class="fas fa-calendar-alt"></i>
-              Postulado el: {{ postulacion.inscriptionDate | date:'dd/MM/yyyy' }}
+              Postulado el: {{ postulacion.concurso?.fechaInicio | date:'dd/MM/yyyy' }}
             </span>
             <span>
               <i class="fas fa-clock"></i>
-              Estado: {{ getEstadoPostulacionLabel(postulacion.status) }}
+              Estado: {{ getEstadoPostulacionLabel(postulacion.estado) }}
             </span>
           </div>
         </div>
-        <button mat-stroked-button color="primary" [routerLink]="['/postulaciones', postulacion.id]" class="details-button mat-mdc-outlined-button">
-          <span class="mdc-button__ripple"></span>
-          <span class="mat-mdc-focus-indicator"></span>
-          <span class="mat-ripple mat-mdc-button-ripple"></span>
-          <span class="mat-mdc-button-touch-target"></span>
-          <span class="mdc-button__label">
-            <i class="fas fa-search-plus"></i>
-            Ver detalles
-          </span>
+        <button mat-stroked-button class="details-button" (click)="verDetalle(postulacion, $event)">
+          <i class="fas fa-search-plus"></i>
+          Ver detalles
         </button>
       </div>
     </div>
 
-    <div class="no-postulaciones" *ngIf="!loading && postulaciones.length === 0">
+    <div class="no-postulaciones" *ngIf="!loading && !error && postulaciones.length === 0">
       <i class="fas fa-folder-open"></i>
-      <p>No tienes postulaciones activas en este momento</p>
-      <button mat-raised-button color="primary" routerLink="/concursos">
-        <i class="fas fa-search"></i>
+      <p>No tienes postulaciones activas en este momento.<br>¿Te gustaría explorar los concursos disponibles?</p>
+      <button mat-raised-button routerLink="/dashboard/concursos">
         Explorar Concursos
+        <i class="fas fa-arrow-right"></i>
       </button>
+    </div>
+
+    <!-- Vista de detalle -->
+    <div class="detalle-container" *ngIf="postulacionSeleccionada">
+      <app-postulacion-detalle
+        [postulacion]="postulacionSeleccionada"
+        (cerrarDetalle)="cerrarDetalle()"
+      ></app-postulacion-detalle>
     </div>
   </div>
 </div>

@@ -32,4 +32,9 @@ public class InscriptionController {
         return ResponseEntity.ok(findInscriptionsUseCase.findAll(
                 new PageRequest(page, size, sortBy, sortDirection)));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<InscriptionDetailResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(findInscriptionsUseCase.findById(id));
+    }
 }

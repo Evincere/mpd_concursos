@@ -27,4 +27,5 @@ public class ContestEntity {
     private String position;
     private LocalDate startDate;
     private LocalDate endDate;
+    // todo: agregar campo de titulo del concurso actualmente se esta utilizando position
 }

@@ -17,9 +17,10 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { HttpErrorResponse } from '@angular/common/http';
 import { PostulacionDetalleComponent } from './postulacion-detalle/postulacion-detalle.component';
 import { ContestStatus, PostulationStatus, Postulacion } from '@shared/interfaces/postulacion/postulacion.interface';
-import { HttpErrorResponse } from '@angular/common/http';
+import { LoaderComponent } from '@shared/components/loader/loader.component';
 
 @Component({
   selector: 'app-postulaciones',
@@ -43,6 +44,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatTooltipModule,
     MatSnackBarModule,
     SearchHeaderComponent,
+    LoaderComponent,
     PostulacionDetalleComponent
   ]
 })
@@ -60,8 +62,10 @@ export class PostulacionesComponent implements OnInit {
   searchForm: FormGroup;
   postulaciones: Postulacion[] = [];
   loading = false;
+  error: HttpErrorResponse | null = null;
   pageSize = 10;
   pageIndex = 0;
+  postulacionSeleccionada: any = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -93,13 +97,24 @@ export class PostulacionesComponent implements OnInit {
       next: (response) => {
         this.postulaciones = response.content;
         this.dataSource.data = response.content;
+        console.log('Postulaciones cargadas:', this.postulaciones);
+        
+        // Nuevo log para ver los estados específicamente
+        this.postulaciones.forEach((postulacion, index) => {
+          console.log(`Postulacion ${index}:`, {
+            estado: postulacion.estado, 
+            concursoEstado: postulacion.concurso?.estado
+          });
+        });
+        
         this.loading = false;
       },
       error: (error: HttpErrorResponse) => {
-        console.error('Error al cargar postulaciones:', error);
+        console.error('Error al cargar las postulaciones:', error);
         this.snackBar.open('Error al cargar las postulaciones', 'Cerrar', {
           duration: 3000
         });
+        this.error = error;
         this.loading = false;
       }
     });
@@ -120,27 +135,35 @@ export class PostulacionesComponent implements OnInit {
     this.cargarPostulaciones();
   }
 
-  getEstadoConcursoLabel(status: ContestStatus): string {
-    const labels: Record<ContestStatus, string> = {
-      OPEN: 'Abierto',
-      CLOSED: 'Cerrado',
-      IN_PROCESS: 'En Proceso',
-      FAILED: 'Fallido',
-      FINISHED: 'Finalizado'
+  getEstadoConcursoLabel(estado?: string | ContestStatus): string {
+    if (!estado) return 'Desconocido';
+
+    const labels: Record<string, string> = {
+      'OPEN': 'Abierto',
+      'CLOSED': 'Cerrado',
+      'IN_PROCESS': 'En Proceso',
+      'FAILED': 'Fallido',
+      'FINISHED': 'Finalizado',
+      'DRAFT': 'Borrador',
+      'PUBLISHED': 'Publicado',
+      'CANCELLED': 'Cancelado'
     };
-    return labels[status] || 'Desconocido';
+    return labels[estado] || 'Desconocido';
   }
 
-  getEstadoPostulacionLabel(status: PostulationStatus): string {
+  getEstadoPostulacionLabel(estado?: PostulationStatus): string {
+    if (!estado) return 'Desconocido';
+
     const labels: Record<PostulationStatus, string> = {
       PENDING: 'Pendiente',
       ACCEPTED: 'Aceptada',
-      REJECTED: 'Rechazada'
+      REJECTED: 'Rechazada',
+      CANCELLED: 'Cancelada'
     };
-    return labels[status] || 'Desconocido';
+    return labels[estado] || 'Desconocido';
   }
 
-  getEstadoConcursoClass(status: ContestStatus): string {
+  getEstadoConcursoClass(estado: ContestStatus): string {
     const classes: Record<ContestStatus, string> = {
       OPEN: 'estado-abierto',
       CLOSED: 'estado-cerrado',
@@ -148,15 +171,33 @@ export class PostulacionesComponent implements OnInit {
       FAILED: 'estado-fallido',
       FINISHED: 'estado-finalizado'
     };
-    return classes[status] || '';
+    return classes[estado] || '';
   }
 
-  getEstadoPostulacionClass(status: PostulationStatus): string {
+  getEstadoPostulacionClass(estado: PostulationStatus): string {
     const classes: Record<PostulationStatus, string> = {
       PENDING: 'estado-pendiente',
       ACCEPTED: 'estado-aceptado',
-      REJECTED: 'estado-rechazado'
+      REJECTED: 'estado-rechazado',
+      CANCELLED: 'estado-cancelado'
     };
-    return classes[status] || '';
+    return classes[estado] || '';
+  }
+
+  verDetalle(postulacion: any, event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.postulacionSeleccionada = postulacion;
+  }
+
+  cerrarDetalle() {
+    this.postulacionSeleccionada = null;
+  }
+
+  retryLoad() {
+    this.error = null;
+    this.loading = true;
+    this.cargarPostulaciones();
   }
 }

@@ -385,6 +385,124 @@ body {
   }
 }
 
+// Estilos para el detalle de postulación
+.postulacion-detalle {
+  padding: $spacing-xl;
+  background-color: $color-surface;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+
+  .seccion {
+    margin-bottom: $spacing-xl;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h2 {
+      color: $color-primary;
+      font-size: $font-size-lg;
+      font-weight: 500;
+      margin-bottom: $spacing-lg;
+      padding-bottom: $spacing-sm;
+      border-bottom: 2px solid rgba($color-primary, 0.1);
+    }
+  }
+
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-xl;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .campo {
+    margin-bottom: $spacing-lg;
+
+    .etiqueta {
+      color: $color-text-secondary;
+      font-size: $font-size-sm;
+      margin-bottom: $spacing-xs;
+    }
+
+    .valor {
+      color: $color-text-primary;
+      font-size: $font-size-md;
+      font-weight: 500;
+    }
+  }
+
+  .estado-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: $spacing-sm $spacing-md;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-sm;
+    font-weight: 500;
+
+    &.pendiente {
+      background-color: $color-warning-bg;
+      color: $color-warning;
+    }
+
+    &.aprobado {
+      background-color: $color-success-bg;
+      color: $color-success;
+    }
+
+    &.rechazado {
+      background-color: $color-error-bg;
+      color: $color-error;
+    }
+  }
+
+  .documentos {
+    .documento {
+      display: flex;
+      align-items: center;
+      padding: $spacing-md;
+      background-color: $color-surface-light;
+      border-radius: $border-radius-sm;
+      margin-bottom: $spacing-sm;
+
+      .icono {
+        margin-right: $spacing-md;
+        color: $color-primary;
+      }
+
+      .nombre {
+        flex: 1;
+        color: $color-text-primary;
+      }
+
+      .acciones {
+        display: flex;
+        gap: $spacing-sm;
+      }
+    }
+  }
+}
+
+// Estilos para el botón de cerrar
+.cerrar-btn {
+  position: absolute;
+  top: $spacing-md;
+  right: $spacing-md;
+  padding: $spacing-sm;
+  background: none;
+  border: none;
+  color: $color-text-secondary;
+  cursor: pointer;
+  transition: $transition-fast;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
 // Estilos para los form fields
 .mat-mdc-form-field {
     margin: 20px 0;

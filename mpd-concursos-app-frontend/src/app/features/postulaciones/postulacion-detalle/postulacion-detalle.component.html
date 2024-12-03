@@ -1,126 +1,79 @@
-<div class="detalle-container">
-  <h2 mat-dialog-title>Detalle de Postulación</h2>
-  
-  <mat-dialog-content>
-    <!-- Información del Concurso -->
-    <section class="seccion">
-      <h3>Información del Concurso</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="label">Título:</span>
-          <span class="value">{{postulacion.contest?.title}}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Cargo:</span>
-          <span class="value">{{postulacion.contest?.position}}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Categoría:</span>
-          <span class="value">{{postulacion.contest?.category}} - Clase {{postulacion.contest?.class}}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Departamento:</span>
-          <span class="value">{{postulacion.contest?.department}}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Estado del Concurso:</span>
-          <mat-chip [ngClass]="getEstadoConcursoClass(postulacion.contest?.status)">
-            {{getEstadoConcursoLabel(postulacion.contest?.status)}}
-          </mat-chip>
+<button mat-icon-button class="cerrar-btn" (click)="onCerrar()">
+  <mat-icon>close</mat-icon>
+</button>
+
+<div class="postulacion-detalle">
+  <!-- Información del Concurso -->
+  <section class="seccion">
+    <h2>Información del Concurso</h2>
+    <div class="grid-container">
+      <div class="campo">
+        <div class="etiqueta">Título</div>
+        <div class="valor">{{ concurso?.titulo }}</div>
+      </div>
+      <div class="campo">
+        <div class="etiqueta">Cargo</div>
+        <div class="valor">{{ concurso?.cargo }}</div>
+      </div>
+      <div class="campo">
+        <div class="etiqueta">Categoría</div>
+        <div class="valor">{{ concurso?.categoria }}</div>
+      </div>
+      <div class="campo">
+        <div class="etiqueta">Departamento</div>
+        <div class="valor">{{ concurso?.departamento }}</div>
+      </div>
+      <div class="campo">
+        <div class="etiqueta">Estado del Concurso</div>
+        <div class="valor">
+          <span class="estado-badge" [ngClass]="concurso?.estado?.toLowerCase()">
+            {{ concurso?.estado }}
+          </span>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Información de la Postulación -->
-    <section class="seccion">
-      <h3>Información de la Postulación</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="label">Fecha de Inscripción:</span>
-          <span class="value">{{postulacion.inscriptionDate | date:'dd/MM/yyyy HH:mm'}}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Estado:</span>
-          <mat-chip [ngClass]="getEstadoPostulacionClass(postulacion.status)">
-            {{getEstadoPostulacionLabel(postulacion.status)}}
-          </mat-chip>
+  <!-- Información de la Postulación -->
+  <section class="seccion">
+    <h2>Información de la Postulación</h2>
+    <div class="grid-container">
+      <div class="campo">
+        <div class="etiqueta">Fecha de Inscripción</div>
+        <div class="valor">{{ postulacion?.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}</div>
+      </div>
+      <div class="campo">
+        <div class="etiqueta">Estado</div>
+        <div class="valor">
+          <span class="estado-badge" [ngClass]="postulacion?.estado?.toLowerCase()">
+            {{ postulacion?.estado }}
+          </span>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Documentos -->
-    <section class="seccion">
-      <h3>Documentos</h3>
-      <div class="documentos-grid">
-        <!-- Resolución -->
-        <div class="documento-item" *ngIf="hasResolutionFile()">
-          <button mat-stroked-button
-                  (click)="descargarDocumento(getResolutionFile(), 'Resolución')">
-            <mat-icon>description</mat-icon>
-            <span>Resolución {{getResolutionNumber()}}</span>
+  <!-- Documentos -->
+  <section class="seccion">
+    <h2>Documentos</h2>
+    <div class="documentos">
+      <div class="documento" *ngFor="let doc of postulacion?.documentos">
+        <mat-icon class="icono">description</mat-icon>
+        <div class="nombre">{{ doc.nombre }}</div>
+        <div class="acciones">
+          <button mat-icon-button color="primary" (click)="descargarDocumento(doc)">
+            <mat-icon>download</mat-icon>
           </button>
-        </div>
-
-        <!-- Requisitos -->
-        <div class="documento-item" *ngIf="hasRequirementsFile()">
-          <button mat-stroked-button
-                  (click)="descargarDocumento(getRequirementsFile(), 'Requisitos')">
-            <mat-icon>assignment</mat-icon>
-            <span>Requisitos</span>
-          </button>
-        </div>
-
-        <!-- Documentos adjuntos -->
-        <div class="documento-item" *ngFor="let doc of postulacion.attachedDocuments">
-          <button mat-stroked-button
-                  *ngIf="doc.url"
-                  (click)="descargarDocumento(doc.url, doc.name)">
-            <mat-icon>attach_file</mat-icon>
-            <span>{{doc.name}}</span>
+          <button mat-icon-button color="warn" (click)="eliminarDocumento(doc)">
+            <mat-icon>delete</mat-icon>
           </button>
         </div>
       </div>
-    </section>
-
-    <!-- Resultados (si el concurso está finalizado) -->
-    <section class="seccion" *ngIf="postulacion.contest?.results">
-      <h3>Resultados</h3>
-      <div class="resultados-container">
-        <!-- Etapas -->
-        <div class="etapas-grid">
-          <div class="etapa-item" *ngFor="let etapa of postulacion.contest?.results?.stages">
-            <div class="etapa-header">
-              <span class="etapa-nombre">{{etapa?.name}}</span>
-              <mat-chip [ngClass]="'status-' + etapa?.status?.toLowerCase()">
-                {{etapa?.status === 'COMPLETED' ? 'Completada' : 
-                  etapa?.status === 'PENDING' ? 'Pendiente' : 'No Requerida'}}
-              </mat-chip>
-            </div>
-            <div class="etapa-puntaje" *ngIf="etapa?.score !== undefined">
-              <span class="label">Puntaje:</span>
-              <span class="value">{{etapa?.score}} / {{etapa?.maxScore}}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Resultado Final -->
-        <div class="resultado-final" *ngIf="getFinalPosition(postulacion)">
-          <div class="info-item">
-            <span class="label">Posición Final:</span>
-            <span class="value">{{getFinalPosition(postulacion)}}</span>
-          </div>
-          <div class="info-item" *ngIf="isResultadoVisible(postulacion)">
-            <span class="label">Resultado:</span>
-            <mat-chip [ngClass]="postulacion.contest?.results?.selected ? 'status-accepted' : 'status-rejected'">
-              {{getResultadoSeleccion(postulacion)}}
-            </mat-chip>
-          </div>
-        </div>
+      
+      <!-- Mensaje cuando no hay documentos -->
+      <div *ngIf="!postulacion?.documentos?.length" class="campo">
+        <div class="valor">No hay documentos adjuntos</div>
       </div>
-    </section>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button mat-button (click)="cerrar()">Cerrar</button>
-  </mat-dialog-actions>
+    </div>
+  </section>
 </div>

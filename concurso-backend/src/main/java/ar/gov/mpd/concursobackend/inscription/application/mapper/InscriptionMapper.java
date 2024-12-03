@@ -2,7 +2,6 @@ package ar.gov.mpd.concursobackend.inscription.application.mapper;
 
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import org.springframework.stereotype.Component;
 
@@ -10,35 +9,32 @@ import org.springframework.stereotype.Component;
 public class InscriptionMapper {
     
     public InscriptionDetailResponse toDetailResponse(Inscription inscription, Contest contest) {
+        // Log para ver el status de la inscripción
+        System.out.println("Mapping Inscription Status: " + inscription.getStatus());
+        
         return InscriptionDetailResponse.builder()
-                .id(inscription.getId().getValue())
-                .contestId(inscription.getContestId().getValue())
-                .userId(inscription.getUserId().getValue().toString())
-                .estado(mapStatus(inscription.getStatus()))
-                .fechaPostulacion(inscription.getInscriptionDate())
-                .concurso(mapContest(contest))
-                .build();
+            .id(inscription.getId() != null ? inscription.getId().getValue() : null)
+            .contestId(inscription.getContestId().getValue())
+            .userId(inscription.getUserId().getValue().toString())
+            .estado(inscription.getStatus().toString())
+            .fechaPostulacion(inscription.getInscriptionDate())
+            .concurso(contest != null ? toContestResponse(contest) : null)
+            .build();
     }
 
-    private InscriptionDetailResponse.ConcursoDTO mapContest(Contest contest) {
-        if (contest == null) return null;
+    private InscriptionDetailResponse.ConcursoDTO toContestResponse(Contest contest) {
+        if (contest == null) return InscriptionDetailResponse.ConcursoDTO.builder()
+                .estado("DESCONOCIDO")
+                .build();
         
         return InscriptionDetailResponse.ConcursoDTO.builder()
                 .id(contest.getId())
                 .titulo(contest.getTitle())
                 .cargo(contest.getPosition())
                 .dependencia(contest.getDependency())
-                .estado(contest.getStatus().toString())
+                .estado(contest.getStatus() != null ? contest.getStatus().toString() : "DESCONOCIDO")
                 .fechaInicio(contest.getStartDate().atStartOfDay())
                 .fechaFin(contest.getEndDate().atTime(23, 59, 59))
                 .build();
-    }
-
-    private String mapStatus(InscriptionStatus status) {
-        return switch (status) {
-            case PENDING -> "PENDIENTE";
-            case ACCEPTED -> "ACEPTADA";
-            case REJECTED -> "RECHAZADA";
-        };
     }
 } 
