@@ -98,7 +98,7 @@ export class PostulacionesService {
 
     // Crear una nueva postulación
     crearPostulacion(postulacion: PostulacionRequest): Observable<Postulacion> {
-        return this.http.post<Postulacion>(this.apiUrl, postulacion);
+        return this.http.post<Postulacion>(this.apiUrl, postulacion, { withCredentials: true });
     }
 
     // Obtener una postulación específica

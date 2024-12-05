@@ -2,6 +2,9 @@ package ar.gov.mpd.concursobackend.inscription.application.service;
 
 import java.util.stream.Collectors;
 import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +17,9 @@ import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscripti
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageRequest;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
+import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,20 +28,26 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
     private final LoadInscriptionPort loadInscriptionPort;
     private final ContestRepository contestRepository;
     private final InscriptionMapper inscriptionMapper;
+    private final IUserService userService;
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<InscriptionDetailResponse> findAll(PageRequest pageRequest) {
-        PageResponse<Inscription> inscriptions = loadInscriptionPort.findAll(pageRequest);
+        // Obtener el usuario autenticado
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        
+        // Obtener el UUID del usuario
+        User user = userService.getByUsername(new UserUsername(username))
+            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+        
+        // Buscar las inscripciones del usuario
+        PageResponse<Inscription> inscriptions = loadInscriptionPort.findAllByUserId(user.getId().value(), pageRequest);
         
         List<InscriptionDetailResponse> detailResponses = inscriptions.getContent().stream()
             .map(inscription -> {
                 Contest contest = contestRepository.findById(inscription.getContestId().getValue())
                     .orElse(null);
-                
-                // Log para ver el status de cada inscripción
-                System.out.println("Inscription Status: " + inscription.getStatus());
-                
                 return inscriptionMapper.toDetailResponse(inscription, contest);
             })
             .collect(Collectors.toList());

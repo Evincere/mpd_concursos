@@ -8,6 +8,13 @@ import { AuthService } from '../services/auth/auth.service';
 export const TOKEN_PREFIX = 'Bearer ';
 export const HEADER_STRING = 'Authorization';
 
+// Rutas públicas que no requieren token
+const PUBLIC_ROUTES = [
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh-token'
+];
+
 export const authInterceptor: HttpInterceptorFn = (
   request: HttpRequest<unknown>,
   next: HttpHandlerFn
@@ -19,9 +26,10 @@ export const authInterceptor: HttpInterceptorFn = (
   console.log(`[AuthInterceptor] URL: ${request.url}`);
   console.log(`[AuthInterceptor] Método: ${request.method}`);
 
-  // Omitir interceptor para solicitudes de login y refresh token
-  if (request.url.includes('/login') || request.url.includes('/refresh-token')) {
-    console.log('[AuthInterceptor] Omitiendo interceptor para:', request.url);
+  // Verificar si la ruta actual está en la lista de rutas públicas
+  const isPublicRoute = PUBLIC_ROUTES.some(route => request.url.includes(route));
+  if (isPublicRoute) {
+    console.log('[AuthInterceptor] Omitiendo interceptor para ruta pública:', request.url);
     return next(request);
   }
 

@@ -2,15 +2,12 @@ import { CategoriaEnum } from "../../constants/enums/categoria-enum";
 
 export interface Concurso {
   id: number;
-  titulo: string;
-  descripcion?: string;
-  fechaInicio: string;
-  fechaFin: string;
-  estado: string;
-  requisitos?: string[];
-  area?: string;
-  cargo: string;
-  categoria: CategoriaEnum;
+  title: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  position: string;
+  category: CategoriaEnum;
   dependencia: string;
-  vacantes: number;
 }
