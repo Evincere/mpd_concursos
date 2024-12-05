@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { NewUser } from '../../../shared/interfaces/auth/new-user.interface';
+import { environment } from 'src/environments/environment';
 
 interface ValidationError {
   field: string;
@@ -13,13 +14,13 @@ interface ValidationError {
   providedIn: 'root'
 })
 export class RegisterService {
-  private apiUrl = 'http://localhost:8080/auth';
+  private apiUrl = environment.apiUrl + '/api/auth/register';
 
   constructor(private http: HttpClient) { }
 
   register(userData: NewUser): Observable<any> {
     console.log('Datos enviados al servidor:', userData);
-    return this.http.post(`${this.apiUrl}/register`, userData)
+    return this.http.post(`${this.apiUrl}`, userData)
       .pipe(
         catchError(this.handleError)
       );

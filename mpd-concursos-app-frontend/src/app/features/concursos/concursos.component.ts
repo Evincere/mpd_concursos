@@ -11,6 +11,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.component';
+import { InscriptionButtonComponent } from './components/inscription-button/inscription-button.component';
+import { InscriptionService } from './services/inscription.service';
+import { ConcursoDetalleComponent } from './components/concurso-detalle/concurso-detalle.component';
 
 @Component({
   selector: 'app-concursos',
@@ -25,7 +28,9 @@ import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.
     SearchHeaderComponent,
     MatProgressSpinnerModule,
     LoaderComponent,
-    FiltrosPanelComponent
+    FiltrosPanelComponent,
+    InscriptionButtonComponent,
+    ConcursoDetalleComponent
   ],
   animations: [fadeInOut, fadeSlide, listAnimation, slideInOut]
 })
@@ -35,8 +40,13 @@ export class ConcursosComponent implements OnInit {
   showFilters = false;
   searchTerm: string = '';
   error: HttpErrorResponse | null = null;
+  concursoSeleccionado: Concurso | null = null;
 
-  constructor(private concursosService: ConcursosService, private snackBar: MatSnackBar) {}
+  constructor(
+    private concursosService: ConcursosService,
+    private inscriptionService: InscriptionService,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.cargarConcursos();
@@ -44,18 +54,21 @@ export class ConcursosComponent implements OnInit {
 
   cargarConcursos(): void {
     this.loading = true;
+    this.error = null;
+    
     this.concursosService.getConcursos().subscribe({
       next: (concursos: Concurso[]) => {
+        console.log('Concursos recibidos:', concursos);
         this.concursos = concursos;
         this.loading = false;
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error al cargar los concursos:', error);
+        this.error = error;
+        this.loading = false;
         this.snackBar.open('Error al cargar los concursos', 'Cerrar', {
           duration: 3000
         });
-        this.error = error;
-        this.loading = false;
       }
     });
   }
@@ -69,10 +82,10 @@ export class ConcursosComponent implements OnInit {
     
     const searchTermLower = term.toLowerCase();
     this.concursos = this.concursos.filter(concurso => 
-      concurso.titulo.toLowerCase().includes(searchTermLower) ||
-      concurso.cargo.toLowerCase().includes(searchTermLower) ||
+      concurso.title.toLowerCase().includes(searchTermLower) ||
+      concurso.position.toLowerCase().includes(searchTermLower) ||
       (concurso.dependencia && concurso.dependencia.toLowerCase().includes(searchTermLower)) ||
-      (concurso.descripcion && concurso.descripcion.toLowerCase().includes(searchTermLower))
+      (concurso.description && concurso.description.toLowerCase().includes(searchTermLower))
     );
   }
 
@@ -87,9 +100,9 @@ export class ConcursosComponent implements OnInit {
 
   getEstadoConcursoLabel(status: string): string {
     const estados: { [key: string]: string } = {
-      'ACTIVO': 'Activo',
-      'PROXIMO': 'Próximo',
-      'FINALIZADO': 'Finalizado'
+      'PUBLISHED': 'Publicado',
+      'DRAFT': 'Borrador',
+      'CLOSED': 'Cerrado'
     };
     return estados[status] || status;
   }
@@ -98,5 +111,29 @@ export class ConcursosComponent implements OnInit {
     this.error = null;
     this.loading = true;
     this.cargarConcursos();
+  }
+
+  onInscriptionComplete(concursoId: number): void {
+    const concurso = this.concursos.find(c => c.id === concursoId);
+    if (concurso) {
+      this.snackBar.open(
+        `Te has inscrito exitosamente al concurso "${concurso.title}"`,
+        'Cerrar',
+        { duration: 5000 }
+      );
+      // Recargar la lista de concursos para actualizar estados
+      this.cargarConcursos();
+    }
+  }
+
+  verDetalle(concurso: Concurso, event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.concursoSeleccionado = concurso;
+  }
+
+  cerrarDetalle() {
+    this.concursoSeleccionado = null;
   }
 }
