@@ -10,9 +10,12 @@
   height: 100vh;
   background-color: $color-background;
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  animation: slideIn $transition-normal forwards;
+  z-index: 1001;
   overflow-y: auto;
+  backface-visibility: hidden;
+  transform-origin: right center;
+  will-change: transform;
+  animation: slideIn $transition-normal forwards;
 }
 
 .detalle-container {
@@ -21,6 +24,12 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-lg;
+  opacity: 1;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.closing {
+    opacity: 0;
+  }
 
   .detalle-header {
     display: flex;
@@ -145,57 +154,120 @@
   }
 
   .detalle-actions {
+    padding: $spacing-lg;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     gap: $spacing-md;
-    padding-top: $spacing-lg;
     border-top: 1px solid $color-border;
 
     button {
       min-width: 120px;
-      height: 40px;
-      display: inline-flex;
+      display: flex;
       align-items: center;
       justify-content: center;
       gap: $spacing-xs;
-      font-size: $font-size-sm;
       font-weight: 500;
-      border-radius: $border-radius-sm;
-      transition: all $transition-fast;
-
-      &[mat-stroked-button] {
-        border: 1px solid $color-border-light;
-        color: $color-text-primary;
-        background: transparent;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: $color-text-secondary;
-        }
-      }
-
-      &[mat-flat-button] {
-        background: linear-gradient(135deg, $color-primary, darken($color-primary, 10%));
-        color: $color-white;
-        border: none;
-        box-shadow: $box-shadow-light;
-
-        &:hover {
-          background: linear-gradient(135deg, lighten($color-primary, 5%), $color-primary);
-          transform: translateY(-1px);
-          box-shadow: $box-shadow;
-        }
-
-        &:active {
-          transform: translateY(1px);
-          box-shadow: $box-shadow-light;
-        }
-      }
+      padding: 0 $spacing-md;
+      height: 40px;
+      position: relative;
+      overflow: hidden;
 
       i {
         font-size: $font-size-md;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform;
+      }
+
+      &[mat-stroked-button] {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.87);
+
+        i {
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.2);
+
+          i {
+            animation: slideLeft 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          }
+        }
+
+        &:not(:hover) i {
+          animation: slideLeftReturn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        &:active {
+          background: rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      &[color="primary"] {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        border: none;
+        
+        &:hover {
+          background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+          
+          i {
+            animation: float 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          }
+        }
+
+        &:not(:hover) i {
+          animation: floatReturn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        &:active {
+          background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+        }
       }
     }
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translate(2px, -2px);
+  }
+  50% {
+    transform: translate(4px, -4px);
+  }
+  100% {
+    transform: translate(2px, -2px);
+  }
+}
+
+@keyframes floatReturn {
+  from {
+    transform: translate(4px, -4px);
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes slideLeft {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideLeftReturn {
+  from {
+    transform: translateX(-4px);
+  }
+  to {
+    transform: translateX(0);
   }
 }
 
