@@ -1,85 +1,88 @@
-<div class="concursos-container">
-  <app-search-header
-    title="Inscripciones Vigentes"
-    icon="gavel"
-    placeholder="Buscar concursos..."
-    (search)="onSearch($event)"
-    (filter)="onFilter()">
-  </app-search-header>
+<div class="concursos-feature-container">
+  <div class="main-content" [class.blur-effect]="concursoSeleccionado">
+    <app-search-header
+      title="Inscripciones Vigentes"
+      icon="gavel"
+      placeholder="Buscar concursos..."
+      (search)="onSearch($event)"
+      (filter)="onFilter()">
+    </app-search-header>
 
-  <div class="content">
-    <app-loader 
-      *ngIf="loading"
-      [overlay]="true"
-      message="Cargando concursos...">
-    </app-loader>
+    <div class="concursos-content">
+      <app-loader 
+        *ngIf="loading"
+        [overlay]="true"
+        message="Cargando concursos...">
+      </app-loader>
 
-    <div class="error-message" *ngIf="error">
-      <i class="fas fa-exclamation-circle"></i>
-      <div class="error-content">
-        <h4>Error al cargar los concursos</h4>
-        <p>{{ error.status === 0 ? 'No se pudo conectar con el servidor' : error.error?.message || 'Ocurrió un error inesperado' }}</p>
+      <div class="error-message" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i>
+        <div class="error-content">
+          <h4>Error al cargar los concursos</h4>
+          <p>{{ error.status === 0 ? 'No se pudo conectar con el servidor' : error.error?.message || 'Ocurrió un error inesperado' }}</p>
+        </div>
+        <button mat-button (click)="retryLoad()">
+          <i class="fas fa-redo"></i>
+          Reintentar
+        </button>
       </div>
-      <button mat-button (click)="retryLoad()">
-        <i class="fas fa-redo"></i>
-        Reintentar
-      </button>
-    </div>
 
-    <div class="concursos-list" *ngIf="!loading && !error && concursos.length > 0">
-      <div class="concurso-item" *ngFor="let concurso of concursos" (click)="verDetalle(concurso)">
-        <div class="card-header">
-          <div class="estado" [ngClass]="concurso.status">
-            {{ getEstadoConcursoLabel(concurso.status) }}
+      <div class="concursos-list" *ngIf="!loading && !error && concursos.length > 0">
+        <div class="concurso-item" *ngFor="let concurso of concursos" (click)="verDetalle(concurso)">
+          <div class="card-header">
+            <div class="estado" [ngClass]="concurso.status">
+              {{ getEstadoConcursoLabel(concurso.status) }}
+            </div>
+            <div class="fecha">
+              <i class="fas fa-calendar-alt"></i>
+              {{ concurso.startDate | date:'dd/MM/yyyy' }} - {{ concurso.endDate | date:'dd/MM/yyyy' }}
+            </div>
           </div>
-          <div class="fecha">
-            <i class="fas fa-calendar-alt"></i>
-            {{ concurso.startDate | date:'dd/MM/yyyy' }} - {{ concurso.endDate | date:'dd/MM/yyyy' }}
+
+          <div class="card-content">
+            <h3>{{ concurso.title }}</h3>
+            <p class="cargo">{{ concurso.position }}</p>
+            <p class="dependencia">{{ concurso.dependencia }}</p>
           </div>
-        </div>
 
-        <div class="card-content">
-          <h3>{{ concurso.title }}</h3>
-          <p class="cargo">{{ concurso.position }}</p>
-          <p class="dependencia">{{ concurso.dependencia }}</p>
-        </div>
-
-        <div class="card-actions">
-          <button mat-stroked-button class="details-button" (click)="verDetalle(concurso, $event)">
-            <i class="fas fa-search-plus"></i>
-            Ver detalles
-          </button>
-          <app-inscription-button
-            [contestId]="concurso.id"
-            (inscriptionComplete)="onInscriptionComplete(concurso.id)"
-            *ngIf="concurso.status === 'ABIERTO'"
-          ></app-inscription-button>
+          <div class="card-actions">
+            <button mat-stroked-button class="details-button" (click)="verDetalle(concurso, $event)">
+              <i class="fas fa-search-plus"></i>
+              Ver detalles
+            </button>
+            <app-inscription-button
+              [contestId]="concurso.id"
+              (inscriptionComplete)="onInscriptionComplete(concurso.id)"
+              *ngIf="concurso.status === 'ABIERTO'"
+            ></app-inscription-button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="no-results" *ngIf="!loading && !error && concursos.length === 0">
-      <i class="fas fa-search"></i>
-      <h4>No se encontraron concursos</h4>
-      <p>Intenta con otros términos de búsqueda</p>
-    </div>
+      <div class="no-results" *ngIf="!loading && !error && concursos.length === 0">
+        <i class="fas fa-search"></i>
+        <h4>No se encontraron concursos</h4>
+        <p>Intenta con otros términos de búsqueda</p>
+      </div>
 
-    <app-concurso-detalle
-      *ngIf="concursoSeleccionado"
-      [concurso]="concursoSeleccionado"
-      (cerrarDetalle)="cerrarDetalle()">
-    </app-concurso-detalle>
-
-    <app-filtros-panel
-      *ngIf="showFilters"
-      (close)="onFilter()"
-      [@slideInOut]>
-    </app-filtros-panel>
-    
-    <div class="backdrop" 
-      *ngIf="showFilters"
-      (click)="onFilter()"
-      [@fadeInOut]>
+      <app-filtros-panel
+        *ngIf="showFilters"
+        (close)="onFilter()"
+        [@slideInOut]>
+      </app-filtros-panel>
+      
+      <div class="backdrop" 
+        *ngIf="showFilters"
+        (click)="onFilter()"
+        [@fadeInOut]>
+      </div>
     </div>
   </div>
+
+  <div class="overlay" *ngIf="concursoSeleccionado" [@fadeInOut]></div>
+  <app-concurso-detalle
+    *ngIf="concursoSeleccionado"
+    [concurso]="concursoSeleccionado"
+    (cerrarDetalle)="cerrarDetalle()">
+  </app-concurso-detalle>
 </div>

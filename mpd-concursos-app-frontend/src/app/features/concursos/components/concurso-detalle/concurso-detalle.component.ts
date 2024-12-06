@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { MatDialogModule } from '@angular/material/dialog';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -16,16 +17,33 @@ import { MatDialogModule } from '@angular/material/dialog';
     MatButtonModule,
     MatDialogModule
   ],
+  animations: [
+    trigger('slidePanel', [
+      transition(':enter', [
+        style({ transform: 'translateX(100%)' }),
+        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(0)' }))
+      ]),
+      transition(':leave', [
+        style({ transform: 'translateX(0)' }),
+        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(100%)' }))
+      ])
+    ])
+  ],
   host: {
-    'class': 'concurso-detalle-panel'
+    'class': 'concurso-detalle-panel',
+    '[@slidePanel]': 'true'
   }
 })
 export class ConcursoDetalleComponent {
   @Input() concurso!: Concurso;
   @Output() cerrarDetalle = new EventEmitter<void>();
+  closing = false;
 
   onCerrar() {
-    this.cerrarDetalle.emit();
+    this.closing = true;
+    setTimeout(() => {
+      this.cerrarDetalle.emit();
+    }, 400); // Mismo tiempo que la duración de la animación
   }
 
   getEstadoConcursoLabel(estado: string): string {
@@ -36,6 +54,8 @@ export class ConcursoDetalleComponent {
         return 'Borrador';
       case 'CLOSED':
         return 'Cerrado';
+      case 'CANCELLED':
+        return 'Cancelado';
       default:
         return estado;
     }
