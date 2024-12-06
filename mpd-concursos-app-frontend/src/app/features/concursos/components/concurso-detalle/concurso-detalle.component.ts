@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { MatDialogModule } from '@angular/material/dialog';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -15,7 +16,8 @@ import { animate, style, transition, trigger } from '@angular/animations';
     CommonModule, 
     MatIconModule, 
     MatButtonModule,
-    MatDialogModule
+    MatDialogModule,
+    InscripcionButtonComponent
   ],
   animations: [
     trigger('slidePanel', [
@@ -59,5 +61,10 @@ export class ConcursoDetalleComponent {
       default:
         return estado;
     }
+  }
+
+  onInscriptionComplete() {
+    // Aquí podrías actualizar el estado del concurso si es necesario
+    // o mostrar algún mensaje de éxito adicional
   }
 }

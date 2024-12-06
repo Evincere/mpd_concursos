@@ -1,144 +1,142 @@
 import { Injectable } from '@angular/core';
 import { JwtDto } from '../../dtos/jwt-dto';
 import { User } from '../../models/user.model';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { Observable, throwError, tap, map, catchError } from 'rxjs';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class TokenService {
-  private tokenKey: string = 'auth_token';
-  private usernameKey: string = 'auth_username';
-  private authoritiesKey: string = 'auth_authorities';
-  private cuit: string = 'auth_cuit';
-  private refreshTokenKey: string = 'auth_refresh_token';
+  private TOKEN_KEY = 'auth-token';
+  private USER_KEY = 'auth-user';
+  private REFRESH_TOKEN_KEY = 'auth-refresh-token';
+  private USERNAME_KEY = 'auth-username';
+  private AUTHORITIES_KEY = 'auth-authorities';
+  private CUIT_KEY = 'auth-cuit';
   private readonly apiUrl = 'http://localhost:8080/api';  // URL de tu backend
 
   constructor(private http: HttpClient, private router: Router) { }
 
-  // Método para guardar el token en sessionStorage
   public saveToken(jwtDto: JwtDto): void {
-    console.log('Guardando token:', jwtDto);
+    console.log('[TokenService] Guardando token y datos de usuario');
     
-    if (!jwtDto || !jwtDto.token) {
-      console.error('Token inválido o vacío');
-      return;
+    // Guardar token
+    window.sessionStorage.removeItem(this.TOKEN_KEY);
+    window.sessionStorage.setItem(this.TOKEN_KEY, jwtDto.token);
+    console.log('[TokenService] Token guardado');
+    
+    // Extraer y guardar usuario
+    const user = this.extractUserFromToken(jwtDto.token);
+    if (user) {
+      this.saveUser(user);
+      console.log('[TokenService] Usuario extraído y guardado:', user);
+    } else {
+      console.warn('[TokenService] No se pudo extraer usuario del token');
     }
 
-    try {
-      // Decodificar el token para verificar su estructura
-      const payload = this.decodeToken(jwtDto.token);
-      
-      console.log('Payload del token:', payload);
-      console.log('Tiempo de expiración:', new Date(payload.exp * 1000).toLocaleString());
-      
-      // Guardar todos los datos del token
-      this.setSessionItem(this.tokenKey, jwtDto.token);
-      this.setSessionItem(this.usernameKey, jwtDto.username);
-      this.setSessionItem(this.authoritiesKey, JSON.stringify(jwtDto.authorities));
-      this.setSessionItem(this.cuit, jwtDto.cuit);
+    // Guardar datos adicionales
+    window.sessionStorage.setItem(this.USERNAME_KEY, jwtDto.username);
+    window.sessionStorage.setItem(this.AUTHORITIES_KEY, JSON.stringify(jwtDto.authorities));
+    window.sessionStorage.setItem(this.CUIT_KEY, jwtDto.cuit);
+    
+    console.log('[TokenService] Datos guardados:', {
+      username: jwtDto.username,
+      authorities: jwtDto.authorities,
+      cuit: jwtDto.cuit
+    });
 
-      // Guardar el refresh token si está presente
-      if ('refreshToken' in jwtDto) {
-        this.saveRefreshToken((jwtDto as any).refreshToken);
-      }
-
-      console.log('Elementos guardados en sessionStorage:', {
-        token: !!this.getSessionItem(this.tokenKey),
-        username: this.getSessionItem(this.usernameKey),
-        authorities: this.getSessionItem(this.authoritiesKey),
-        cuit: this.getSessionItem(this.cuit),
-        refreshToken: !!this.getRefreshToken()
-      });
-    } catch (error) {
-      console.error('Error al guardar el token:', error);
+    if ('refreshToken' in jwtDto) {
+      this.saveRefreshToken((jwtDto as any).refreshToken);
+      console.log('[TokenService] Refresh token guardado');
     }
   }
 
-  private setSessionItem(key: string, value: any): void {
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-    sessionStorage.setItem(key, stringValue);
-  }
-
-  private getSessionItem(key: string): string | null {
-    return sessionStorage.getItem(key);
-  }
-
-  private removeSessionItem(key: string): void {
-    sessionStorage.removeItem(key);
-  }
-
-  // Método para obtener el token de sessionStorage
   public getToken(): string | null {
-    const token = this.getSessionItem(this.tokenKey);
-    if (!token) {
-      console.warn('No se encontró token en sessionStorage');
+    return window.sessionStorage.getItem(this.TOKEN_KEY);
+  }
+
+  public removeToken(): void {
+    window.sessionStorage.removeItem(this.TOKEN_KEY);
+    window.sessionStorage.removeItem(this.USERNAME_KEY);
+    window.sessionStorage.removeItem(this.AUTHORITIES_KEY);
+    window.sessionStorage.removeItem(this.CUIT_KEY);
+  }
+
+  public decodeToken(token: string): any {
+    try {
+      return jwtDecode(token);
+    } catch (error) {
+      console.error('Error decodificando el token:', error);
       return null;
     }
-    return token;
   }
 
-  // Método para obtener el username de sessionStorage
-  public getUsername(): string | null {
-    return this.getSessionItem(this.usernameKey);
+  public saveUser(user: User): void {
+    window.sessionStorage.removeItem(this.USER_KEY);
+    window.sessionStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
-  // Método para obtener las authorities de sessionStorage
-  public getAuthorities(): { authority: string }[] {
-    const authorities = this.getSessionItem(this.authoritiesKey);
-    return authorities ? JSON.parse(authorities) : [];
+  public getUser(): User | null {
+    const user = window.sessionStorage.getItem(this.USER_KEY);
+    if (user) {
+      return JSON.parse(user);
+    }
+    return null;
+  }
+
+  public getAuthorities(): any[] {
+    console.log('[TokenService] Obteniendo autoridades...');
+    const token = this.getToken();
+    
+    if (!token) {
+      console.warn('[TokenService] No hay token disponible');
+      return [];
+    }
+
+    const decodedToken = this.decodeToken(token);
+    console.log('[TokenService] Token decodificado:', {
+      hasAuthorities: !!decodedToken?.authorities,
+      authorities: decodedToken?.authorities
+    });
+    
+    // Intentar obtener autoridades del token primero
+    if (decodedToken?.authorities) {
+      return decodedToken.authorities;
+    }
+    
+    // Si no hay en el token, intentar obtener del sessionStorage
+    const storedAuthorities = window.sessionStorage.getItem(this.AUTHORITIES_KEY);
+    if (storedAuthorities) {
+      const authorities = JSON.parse(storedAuthorities);
+      console.log('[TokenService] Autoridades desde sessionStorage:', authorities);
+      return authorities;
+    }
+    
+    console.warn('[TokenService] No se encontraron autoridades');
+    return [];
   }
 
   public getCuit(): string | null {
-    const cuit = this.getSessionItem(this.cuit);
-    return cuit ? cuit : null;
+    const token = this.getToken();
+    if (!token) return null;
+
+    const decodedToken = this.decodeToken(token);
+    return decodedToken?.cuit || null;
   }
 
-  // Método para eliminar el token y los datos de usuario de sessionStorage
-  public removeToken(): void {
-    this.removeSessionItem(this.tokenKey);
-    this.removeSessionItem(this.usernameKey);
-    this.removeSessionItem(this.authoritiesKey);
-    this.removeSessionItem(this.cuit);
+  public getUsername(): string | null {
+    return window.sessionStorage.getItem(this.USERNAME_KEY);
   }
 
-  // Método para verificar si el usuario está autenticado
   public isAuthenticated(): boolean {
     const token = this.getToken();
     if (!token) return false;
     return !this.isTokenExpired();
   }
 
-  // Método para obtener el usuario autenticado
-  public getUser(): User | null {
-    const token = this.getToken();
-    const username = this.getUsername();
-    const authorities = this.getAuthorities();
-    const cuit = this.getCuit();
-
-    if (token && username && cuit) {
-      const jwtDto = new JwtDto(token, "", username, authorities, cuit);
-      return new User(username, '', '', '', '', undefined, '', jwtDto);
-    }
-    return null;
-  }
-
-  // Método para manejar token expirado
-  public handleExpiredToken(): void {
-    console.log('Token expirado. Cerrando sesión.');
-    
-    // Limpiar tokens
-    this.removeToken();
-    this.removeRefreshToken();
-    
-    // Redirigir al login
-    this.router.navigate(['/login']);
-  }
-
-  // Método para verificar si el token está expirado
   public isTokenExpired(): boolean {
     const token = this.getToken();
     
@@ -148,20 +146,22 @@ export class TokenService {
     }
 
     try {
-      const payload = this.decodeToken(token);
+      const decodedToken = this.decodeToken(token);
+      console.log('Token decodificado:', decodedToken);
+      
       const currentTime = Math.floor(Date.now() / 1000);
 
-      if (!payload || !payload.exp) {
+      if (!decodedToken || !decodedToken.exp) {
         console.error('Token inválido o sin fecha de expiración');
         return true;
       }
 
-      console.log('Payload del token:', payload);
+      console.log('Payload del token:', decodedToken);
       console.log('Tiempo actual:', currentTime);
-      console.log('Tiempo de expiración:', payload.exp);
+      console.log('Tiempo de expiración:', decodedToken.exp);
 
       // Agregar un margen de 5 segundos para evitar problemas de sincronización
-      const isExpired = (payload.exp - 5) < currentTime;
+      const isExpired = (decodedToken.exp - 5) < currentTime;
       console.log('Token expirado:', isExpired);
 
       return isExpired;
@@ -171,18 +171,6 @@ export class TokenService {
     }
   }
 
-  private decodeToken(token: string): any {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      return JSON.parse(window.atob(base64));
-    } catch (error) {
-      console.error('Error al decodificar token:', error);
-      throw error;
-    }
-  }
-
-  // Método para refrescar el token
   public refreshToken(): Observable<string> {
     console.log('Intentando refrescar token');
     
@@ -223,14 +211,41 @@ export class TokenService {
   }
 
   private getRefreshToken(): string | null {
-    return this.getSessionItem(this.refreshTokenKey);
+    return window.sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   private saveRefreshToken(refreshToken: string): void {
-    this.setSessionItem(this.refreshTokenKey, refreshToken);
+    window.sessionStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
   }
 
   private removeRefreshToken(): void {
-    this.removeSessionItem(this.refreshTokenKey);
+    window.sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
+  }
+
+  private extractUserFromToken(token: string): User | null {
+    try {
+      const decodedToken = this.decodeToken(token);
+      if (!decodedToken) return null;
+
+      return new User({
+        id: decodedToken.userId || decodedToken.sub,
+        username: decodedToken.sub,
+        cuit: decodedToken.cuit
+      });
+    } catch (error) {
+      console.error('Error extrayendo usuario del token:', error);
+      return null;
+    }
+  }
+
+  public handleExpiredToken(): void {
+    console.log('Token expirado. Cerrando sesión.');
+    
+    // Limpiar tokens
+    this.removeToken();
+    this.removeRefreshToken();
+    
+    // Redirigir al login
+    this.router.navigate(['/login']);
   }
 }

@@ -32,7 +32,33 @@ export class AuthService {
 
   // Método para verificar si el usuario está autenticado
   public isAuthenticated(): boolean {
-    return this.tokenService.isAuthenticated();
+    const isAuth = this.tokenService.getToken() !== null;
+    console.log('[AuthService] isAuthenticated:', isAuth);
+    return isAuth;
+  }
+
+  // Método para obtener el ID del usuario actual
+  public getCurrentUserId(): string | null {
+    const token = this.tokenService.getToken();
+    if (!token) {
+      console.warn('No hay token disponible');
+      return null;
+    }
+
+    try {
+      const decodedToken: any = this.tokenService.decodeToken(token);
+      const userId = decodedToken?.userId;
+      
+      if (!userId) {
+        console.warn('No se encontró userId en el token');
+        return null;
+      }
+
+      return userId;
+    } catch (error) {
+      console.error('Error al obtener el ID del usuario:', error);
+      return null;
+    }
   }
 
   // Método para obtener el usuario autenticado
@@ -42,15 +68,25 @@ export class AuthService {
 
   // Método para verificar si el usuario tiene un rol específico
   public hasRole(role: string): boolean {
+    console.log('[AuthService] Verificando rol:', role);
+    
+    const token = this.tokenService.getToken();
+    console.log('[AuthService] Token presente:', !!token);
+    
     const authorities = this.tokenService.getAuthorities();
-    // Verificar si alguna autoridad tiene el rol especificado
-    for (const authorityObj of authorities) {
-      console.log(authorityObj);
-
-      return authorities.some(authorityObj => authorityObj.authority === role);
-    }
-
-    return false;
+    console.log('[AuthService] Authorities:', authorities);
+    
+    const hasRole = authorities.some(authorityObj => {
+      console.log('[AuthService] Comparando:', { 
+        expected: role, 
+        actual: authorityObj.authority,
+        matches: authorityObj.authority === role
+      });
+      return authorityObj.authority === role;
+    });
+    
+    console.log('[AuthService] Usuario tiene el rol?', hasRole);
+    return hasRole;
   }
 
   public getCuit(): string | null {

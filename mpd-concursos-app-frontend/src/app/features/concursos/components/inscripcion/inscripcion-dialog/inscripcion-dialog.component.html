@@ -1,0 +1,30 @@
+<div class="inscripcion-dialog">
+    <h2 mat-dialog-title>Confirmar Inscripción</h2>
+    
+    <mat-dialog-content>
+        <div class="dialog-content">
+            <div class="concurso-info">
+                <h3>{{ concurso.title }}</h3>
+                <p class="cargo">{{ concurso.position }}</p>
+                <p class="dependencia">{{ concurso.dependencia }}</p>
+            </div>
+            
+            <div class="warning-message">
+                <mat-icon>warning</mat-icon>
+                <p>
+                    Al confirmar su inscripción, declara que cumple con todos los requisitos
+                    establecidos para este concurso y que la información proporcionada es verídica.
+                </p>
+            </div>
+        </div>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button (click)="cancelar()">
+            Cancelar
+        </button>
+        <button mat-raised-button color="primary" (click)="confirmar()">
+            Confirmar Inscripción
+        </button>
+    </mat-dialog-actions>
+</div>

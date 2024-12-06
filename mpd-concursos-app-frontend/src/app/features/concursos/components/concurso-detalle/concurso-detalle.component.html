@@ -49,16 +49,20 @@
         <p class="descripcion">{{ concurso.description }}</p>
       </div>
     </div>
-  </div>
 
-  <div class="detalle-actions">
-    <button mat-stroked-button (click)="onCerrar()">
-      <i class="fas fa-arrow-left"></i>
-      Volver
-    </button>
-    <button mat-flat-button color="primary" *ngIf="concurso.status === 'PUBLISHED'">
-      <i class="fas fa-paper-plane"></i>
-      Inscribirse
-    </button>
+    <div class="seccion acciones">
+      <div class="botones">
+        <button mat-stroked-button class="volver-btn" (click)="onCerrar()">
+          <i class="fas fa-arrow-left"></i>
+          Volver
+        </button>
+        
+        <app-inscripcion-button
+          *ngIf="concurso.status === 'PUBLISHED'"
+          [concurso]="concurso"
+          (inscripcionComplete)="onInscriptionComplete()">
+        </app-inscripcion-button>
+      </div>
+    </div>
   </div>
 </div>

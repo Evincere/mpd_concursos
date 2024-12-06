@@ -1,7 +1,7 @@
 import { CategoriaEnum } from "../../constants/enums/categoria-enum";
 
 export interface Concurso {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   startDate: string;

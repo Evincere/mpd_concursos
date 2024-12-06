@@ -50,11 +50,11 @@
               <i class="fas fa-search-plus"></i>
               Ver detalles
             </button>
-            <app-inscription-button
-              [contestId]="concurso.id"
-              (inscriptionComplete)="onInscriptionComplete(concurso.id)"
+            <app-inscripcion-button
+              [concurso]="concurso"
+              (inscripcionComplete)="onInscriptionComplete($event)"
               *ngIf="concurso.status === 'ABIERTO'"
-            ></app-inscription-button>
+            ></app-inscripcion-button>
           </div>
         </div>
       </div>

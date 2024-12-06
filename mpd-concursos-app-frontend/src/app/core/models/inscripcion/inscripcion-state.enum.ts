@@ -1,0 +1,6 @@
+export enum InscripcionState {
+    PENDIENTE = 'PENDIENTE',
+    CONFIRMADA = 'CONFIRMADA',
+    RECHAZADA = 'RECHAZADA',
+    CANCELADA = 'CANCELADA'
+}

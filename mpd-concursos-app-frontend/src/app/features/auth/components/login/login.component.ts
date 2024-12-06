@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { HeaderComponent } from '../../../dashboard/components/header/header.component';
 import { AuthService } from '../../../../core/services/auth/auth.service';
+import { LoginUser } from '../../../../core/models/login-user.model';
 
 @Component({
   selector: 'app-login',
@@ -57,25 +58,41 @@ export class LoginComponent implements OnInit {
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.loginError = null;
-      this.authService.handleLogin(this.loginForm.value)
+      const loginData = new LoginUser(
+        this.loginForm.get('username')?.value?.trim(),
+        this.loginForm.get('password')?.value
+      );
+
+      if (!loginData.isValid()) {
+        this.loginError = 'Por favor, complete todos los campos correctamente';
+        return;
+      }
+
+      console.log('[LoginComponent] Enviando datos de login:', { 
+        username: loginData.username,
+        passwordValid: loginData.password?.length >= 6 
+      });
+      
+      this.authService.handleLogin(loginData)
         .subscribe({
-          next: () => {
+          next: (response) => {
+            console.log('[LoginComponent] Login exitoso, redirigiendo...');
             this.router.navigate(['dashboard']);
           },
-          error: error => {
-            if (error.status === 404) {
-              this.loginError = 'Usuario no registrado';
-            } else if (error.status === 401) {
-              this.loginError = 'Credenciales incorrectas';
-            } else {
-              this.loginError = 'Error al intentar iniciar sesión';
-            }
+          error: (error: Error) => {
+            console.error('[LoginComponent] Error en login:', error.message);
+            this.loginError = error.message || 'Error al intentar iniciar sesión';
+
+            // Solo reseteamos el password en caso de error
             setTimeout(() => {
-              this.loginForm.reset();
+              this.loginForm.get('password')?.reset();
               this.isFlipped = true;
-            }, 2000);
+            }, 3000);
           }
         });
+    } else {
+      this.loginError = 'Por favor, complete todos los campos correctamente';
+      this.isFlipped = true;
     }
   }
 

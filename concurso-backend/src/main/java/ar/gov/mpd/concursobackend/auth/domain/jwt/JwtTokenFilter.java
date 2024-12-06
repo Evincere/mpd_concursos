@@ -116,21 +116,26 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         whitelistedPaths.addAll(Arrays.asList(SecurityConstants.ANT_MATCHER_PATHS));
         whitelistedPaths.addAll(Arrays.asList(SecurityConstants.MVC_MATCHER_PATHS));
 
+        // Normalizar el path de entrada
+        String normalizedPath = path.startsWith("/api") ? path : "/api" + path;
+        logger.debug("Checking normalized path: {}", normalizedPath);
+
         boolean isWhitelisted = whitelistedPaths.stream()
                 .anyMatch(pattern -> {
                     // Si el patrón termina en /**, hacemos una coincidencia de prefijo
                     if (pattern.endsWith("/**")) {
                         String prefix = pattern.substring(0, pattern.length() - 2);
-                        return path.startsWith(prefix);
+                        boolean matches = normalizedPath.startsWith(prefix);
+                        logger.debug("Checking pattern {} against path {}: {}", prefix, normalizedPath, matches);
+                        return matches;
                     }
                     // Si no, hacemos una coincidencia exacta
-                    return path.equals(pattern);
+                    boolean matches = normalizedPath.equals(pattern);
+                    logger.debug("Checking exact pattern {} against path {}: {}", pattern, normalizedPath, matches);
+                    return matches;
                 });
 
-        if (isWhitelisted) {
-            logger.debug("Path {} is whitelisted", path);
-        }
-        
+        logger.debug("Path {} is {} whitelisted", path, isWhitelisted ? "" : "not");
         return isWhitelisted;
     }
 

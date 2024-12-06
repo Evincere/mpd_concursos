@@ -150,6 +150,36 @@
           margin: 0;
         }
       }
+
+      &.acciones {
+        margin-top: auto;
+        padding-top: $spacing-xl;
+        border-top: 1px solid rgba($color-border, 0.2);
+
+        .botones {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: $spacing-md;
+
+          .volver-btn {
+            i {
+              margin-right: $spacing-sm;
+              transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            &:hover {
+              i {
+                transform: translateX(-4px);
+              }
+            }
+          }
+
+          app-inscripcion-button {
+            flex-shrink: 0;
+          }
+        }
+      }
     }
   }
 

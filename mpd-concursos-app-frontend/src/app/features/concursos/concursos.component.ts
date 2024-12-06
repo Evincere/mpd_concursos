@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, RouterLink } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
-import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
-import { trigger, transition, style, animate } from '@angular/animations';
-import { ConcursosService } from '@core/services/concursos/concursos.service';
-import { HttpErrorResponse } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { LoaderComponent } from '@shared/components/loader/loader.component';
+import { HttpErrorResponse } from '@angular/common/http';
+
+import { ConcursosService } from '@core/services/concursos/concursos.service';
+import { InscripcionService } from '@core/services/inscripcion/inscripcion.service';
+import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
+import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.component';
-import { InscriptionButtonComponent } from './components/inscription-button/inscription-button.component';
-import { InscriptionService } from '../../core/services/inscrption/inscription.service';
 import { ConcursoDetalleComponent } from './components/concurso-detalle/concurso-detalle.component';
+import { LoaderComponent } from '@shared/components/loader/loader.component';
+import { InscripcionButtonComponent } from './components/inscripcion/inscripcion-button/inscripcion-button.component';
 
 @Component({
   selector: 'app-concursos',
@@ -22,27 +22,14 @@ import { ConcursoDetalleComponent } from './components/concurso-detalle/concurso
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     RouterModule,
     MatButtonModule,
-    SearchHeaderComponent,
     MatProgressSpinnerModule,
-    LoaderComponent,
+    InscripcionButtonComponent,
+    SearchHeaderComponent,
     FiltrosPanelComponent,
-    InscriptionButtonComponent,
-    ConcursoDetalleComponent
-  ],
-  animations: [
-    trigger('fadeInOut', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        style({ opacity: 1 }),
-        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 0 }))
-      ])
-    ])
+    ConcursoDetalleComponent,
+    LoaderComponent
   ]
 })
 export class ConcursosComponent implements OnInit {
@@ -55,7 +42,7 @@ export class ConcursosComponent implements OnInit {
 
   constructor(
     private concursosService: ConcursosService,
-    private inscriptionService: InscriptionService,
+    private inscripcionService: InscripcionService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -65,8 +52,6 @@ export class ConcursosComponent implements OnInit {
 
   cargarConcursos(): void {
     this.loading = true;
-    this.error = null;
-    
     this.concursosService.getConcursos().subscribe({
       next: (concursos: Concurso[]) => {
         console.log('Concursos recibidos:', concursos);
@@ -118,13 +103,13 @@ export class ConcursosComponent implements OnInit {
     return estados[status] || status;
   }
 
-  retryLoad() {
+  retryLoad(): void {
     this.error = null;
     this.loading = true;
     this.cargarConcursos();
   }
 
-  onInscriptionComplete(concursoId: number): void {
+  onInscriptionComplete(concursoId: string): void {
     const concurso = this.concursos.find(c => c.id === concursoId);
     if (concurso) {
       this.snackBar.open(
@@ -137,14 +122,14 @@ export class ConcursosComponent implements OnInit {
     }
   }
 
-  verDetalle(concurso: Concurso, event?: MouseEvent) {
+  verDetalle(concurso: Concurso, event?: MouseEvent): void {
     if (event) {
       event.stopPropagation();
     }
     this.concursoSeleccionado = concurso;
   }
 
-  cerrarDetalle() {
+  cerrarDetalle(): void {
     this.concursoSeleccionado = null;
   }
 }

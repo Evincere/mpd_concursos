@@ -1,0 +1,55 @@
+@use 'variables' as *;
+
+.inscripcion-dialog {
+    min-width: 400px;
+    max-width: 600px;
+
+    .dialog-content {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-lg;
+
+        .concurso-info {
+            padding: $spacing-md;
+            background-color: rgba($color-primary, 0.1);
+            border-radius: $border-radius;
+
+            h3 {
+                margin: 0 0 $spacing-sm;
+                color: $color-primary;
+            }
+
+            .cargo {
+                font-weight: 500;
+                margin: 0 0 $spacing-xs;
+            }
+
+            .dependencia {
+                color: $color-text-secondary;
+                margin: 0;
+            }
+        }
+
+        .warning-message {
+            display: flex;
+            gap: $spacing-md;
+            padding: $spacing-md;
+            background-color: rgba($color-warning, 0.1);
+            border-radius: $border-radius;
+
+            mat-icon {
+                color: $color-warning;
+            }
+
+            p {
+                margin: 0;
+                flex: 1;
+            }
+        }
+    }
+
+    mat-dialog-actions {
+        padding: $spacing-md;
+        gap: $spacing-md;
+    }
+}

@@ -1,0 +1,32 @@
+@use 'variables' as *;
+
+.inscripcion-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 140px;
+    transition: all 0.3s ease;
+
+    &.loading {
+        pointer-events: none;
+        opacity: 0.8;
+    }
+
+    mat-icon {
+        margin-right: $spacing-xs;
+        font-size: 1rem;
+    }
+
+    &[disabled] {
+        &:not(.loading) {
+            background-color: rgba($color-primary, 0.3);
+            color: rgba($color-text-primary, 0.5);
+        }
+    }
+
+    mat-spinner {
+        margin-left: $spacing-sm;
+    }
+}
