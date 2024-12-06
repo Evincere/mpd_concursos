@@ -15,12 +15,14 @@ import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapp
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageRequest;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -72,5 +74,19 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
             .orElse(null);
         
         return inscriptionMapper.toDetailResponse(inscription, contest);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public InscriptionStatus findInscriptionStatus(Long contestId, String userId) {
+        try {
+            UUID userUUID = UUID.fromString(userId);
+            return loadInscriptionPort.findByContestIdAndUserId(contestId, userUUID)
+                .map(Inscription::getStatus)
+                .orElse(InscriptionStatus.NOT_REGISTERED);
+        } catch (IllegalArgumentException e) {
+            // Si el UUID no es válido o hay algún otro error, asumimos que no está inscrito
+            return InscriptionStatus.NOT_REGISTERED;
+        }
     }
 }

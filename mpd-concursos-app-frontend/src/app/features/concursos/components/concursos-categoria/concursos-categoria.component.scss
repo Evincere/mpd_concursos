@@ -1,132 +1,132 @@
 @use 'variables' as *;
 
 .categoria-card {
-    background: $color-background;
-    border-radius: $border-radius;
-    box-shadow: $box-shadow;
-    overflow: hidden;
-    height: 100%;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-lg;
+  overflow: hidden;
 
-    .categoria-header {
-        background: darken($color-background, 3%);
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid rgba($color-text-secondary, 0.1);
+  .categoria-header {
+    padding: $spacing-lg;
+    background: $color-surface-light;
+    border-bottom: 1px solid $color-border;
 
-        h2 {
-            color: $color-text-primary;
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: 500;
+    h2 {
+      margin: 0;
+      color: $color-text-primary;
+      font-size: $font-size-lg;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
+  .concursos-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $spacing-lg;
+    padding: $spacing-lg;
+
+    .concurso-item {
+      background: $color-surface;
+      border: 1px solid $color-border;
+      border-radius: $border-radius;
+      padding: $spacing-lg;
+      display: flex;
+      flex-direction: column;
+      transition: $transition-normal;
+      cursor: pointer;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $box-shadow;
+        background: $color-surface-light;
+      }
+
+      .concurso-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-sm;
+
+        h3 {
+          margin: 0;
+          color: $color-text-primary;
+          font-size: $font-size-md;
+          font-weight: 500;
+          line-height: 1.4;
+        }
+
+        .cargo {
+          margin: 0;
+          color: $color-primary;
+          font-size: $font-size-sm;
+          font-weight: 500;
+        }
+
+        .dependencia {
+          margin: 0;
+          color: $color-text-secondary;
+          font-size: $font-size-sm;
+        }
+
+        .meta-info {
+          display: flex;
+          flex-wrap: wrap;
+          gap: $spacing-md;
+          margin-top: auto;
+          padding-top: $spacing-md;
+          border-top: 1px solid $color-border;
+
+          span {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: $spacing-xs;
+            color: $color-text-secondary;
+            font-size: $font-size-sm;
 
-           
+            i {
+              color: $color-text-muted;
+              font-size: $font-size-md;
+            }
+          }
         }
-    }
+      }
 
-    .concursos-list {
-        padding: 1.25rem;
+      .ver-mas-btn {
+        margin-top: $spacing-md;
+        padding: $spacing-sm $spacing-md;
+        background: transparent;
+        border: 1px solid $color-primary;
+        border-radius: $border-radius-sm;
+        color: $color-primary;
+        font-size: $font-size-sm;
+        font-weight: 500;
+        cursor: pointer;
+        transition: $transition-normal;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: $spacing-xs;
 
-        .concurso-item {
-            background: darken($color-background, 2%);
-            border-radius: $border-radius;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
-
-            &:last-child {
-                margin-bottom: 0;
-            }
-
-            &:hover {
-                border-color: rgba($color-primary, 0.3);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            }
-
-            .concurso-info {
-                h3 {
-                    color: $color-text-primary;
-                    margin: 0 0 0.75rem 0;
-                    font-size: 1rem;
-                    font-weight: 500;
-                    line-height: 1.4;
-                }
-
-                .cargo {
-                    color: $color-primary;
-                    margin: 0 0 0.5rem 0;
-                    font-size: 0.9rem;
-                    font-weight: 500;
-                }
-
-                .dependencia {
-                    color: $color-text-secondary;
-                    margin: 0 0 1rem 0;
-                    font-size: 0.875rem;
-                }
-
-                .meta-info {
-                    display: flex;
-                    gap: 1.5rem;
-                    margin-top: 1rem;
-                    padding-top: 1rem;
-                    border-top: 1px solid rgba($color-text-secondary, 0.1);
-
-                    span {
-                        display: flex;
-                        align-items: center;
-                        color: $color-text-secondary;
-                        font-size: 0.875rem;
-
-                        i {
-                            color: $color-text-secondary;
-                            margin-right: 0.5rem;
-                            font-size: 0.875rem;
-                        }
-                    }
-                }
-            }
-
-            .ver-mas-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0.625rem 1.25rem;
-                margin-top: 1.25rem;
-                background: transparent;
-                border: 1px solid $color-primary;
-                border-radius: $border-radius;
-                color: $color-primary;
-                font-size: 0.875rem;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s ease;
-
-                &:hover {
-                    background: $color-primary;
-                    color: white;
-                }
-            }
+        &:hover {
+          background: $color-primary;
+          color: $color-surface;
         }
+      }
     }
+  }
 }
 
 @media (max-width: 768px) {
-    .categoria-card {
-        .concursos-list {
-            padding: 1rem;
-
-            .concurso-item {
-                padding: 1rem;
-
-                .meta-info {
-                    flex-direction: column;
-                    gap: 0.75rem;
-                }
-            }
-        }
+  .categoria-card {
+    .concursos-list {
+      grid-template-columns: 1fr;
+      gap: $spacing-md;
+      padding: $spacing-md;
     }
+  }
 }

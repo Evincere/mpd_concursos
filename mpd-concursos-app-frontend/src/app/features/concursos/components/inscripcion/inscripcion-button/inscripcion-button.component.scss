@@ -1,5 +1,9 @@
 @use 'variables' as *;
 
+:host {
+    display: block;
+}
+
 .inscripcion-button {
     width: 100%;
     display: flex;
@@ -7,26 +11,36 @@
     justify-content: center;
     gap: 0.5rem;
     min-width: 140px;
+    padding: 0.5rem 1rem;
     transition: all 0.3s ease;
+    border-radius: 4px;
+    font-weight: 500;
 
     &.loading {
         pointer-events: none;
         opacity: 0.8;
     }
 
-    mat-icon {
-        margin-right: $spacing-xs;
+    i {
         font-size: 1rem;
-    }
-
-    &[disabled] {
-        &:not(.loading) {
-            background-color: rgba($color-primary, 0.3);
-            color: rgba($color-text-primary, 0.5);
-        }
+        margin-right: 0.5rem;
     }
 
     mat-spinner {
-        margin-left: $spacing-sm;
+        margin-right: 0.5rem;
+    }
+
+    span {
+        line-height: 1.2;
+    }
+
+    &.inscripto {
+        background-color: #4CAF50;
+        color: white;
+
+        &:disabled {
+            background-color: #81C784;
+            opacity: 0.9;
+        }
     }
 }

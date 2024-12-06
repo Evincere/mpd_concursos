@@ -11,4 +11,5 @@ public interface LoadInscriptionPort {
     PageResponse<Inscription> findAllByUserId(UUID userId, PageRequest pageRequest);
     PageResponse<Inscription> findAll(PageRequest pageRequest);
     Optional<Inscription> findById(Long id);
+    Optional<Inscription> findByContestIdAndUserId(Long contestId, UUID userId);
 }

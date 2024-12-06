@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpRequest, HttpEvent, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { TokenService } from '../services/auth/token.service';
-import { tap, catchError, switchMap, EMPTY, Observable, throwError } from 'rxjs';
+import { tap, catchError, switchMap, EMPTY, Observable, throwError, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth/auth.service';
 
@@ -22,64 +22,59 @@ export const authInterceptor: HttpInterceptorFn = (
   const tokenService = inject(TokenService);
   const router = inject(Router);
   const authService = inject(AuthService);
-  
-  console.log(`[AuthInterceptor] URL: ${request.url}`);
-  console.log(`[AuthInterceptor] Método: ${request.method}`);
+
+  console.debug('[AuthInterceptor] Processing request:', request.url);
 
   // Verificar si la ruta actual está en la lista de rutas públicas
-  const isPublicRoute = PUBLIC_ROUTES.some(route => request.url.endsWith(route));
+  const isPublicRoute = PUBLIC_ROUTES.some(route => request.url.includes(route));
   if (isPublicRoute) {
-    console.log('[AuthInterceptor] Omitiendo interceptor para ruta pública:', request.url);
+    console.debug('[AuthInterceptor] Public URL detected, skipping token');
     return next(request);
   }
 
+  // Agregamos el token a la solicitud
   const token = tokenService.getToken();
-  console.log(`[AuthInterceptor] Token actual: ${token ? 'presente' : 'ausente'}`);
-
-  if (!token) {
-    console.warn('[AuthInterceptor] No hay token disponible');
-    authService.logout();
-    router.navigate(['/login']);
-    return EMPTY;
+  if (token) {
+    request = request.clone({
+      headers: request.headers.set(HEADER_STRING, `${TOKEN_PREFIX}${token}`)
+    });
   }
 
-  // Verificar si el token está expirado antes de hacer la solicitud
-  if (tokenService.isTokenExpired()) {
-    console.log('[AuthInterceptor] Token expirado, intentando refresh');
-    
-    return tokenService.refreshToken().pipe(
-      switchMap((newToken) => {
-        // Crear una nueva solicitud con el token actualizado
-        const clonedRequest = request.clone({
-          headers: request.headers.set(HEADER_STRING, `${TOKEN_PREFIX}${newToken}`)
-        });
-        return next(clonedRequest);
-      }),
-      catchError((error) => {
-        console.error('[AuthInterceptor] Error al refrescar token:', error);
-        authService.logout();
-        router.navigate(['/login']);
-        return EMPTY;
-      })
-    );
-  }
+  return next(request).pipe(
+    catchError((error: HttpErrorResponse) => {
+      console.debug('[AuthInterceptor] Error intercepted:', error.status, error.message);
 
-  // Clonar la solicitud y agregar el token
-  const clonedRequest = request.clone({
-    headers: request.headers.set(HEADER_STRING, `${TOKEN_PREFIX}${token}`)
-  });
+      if (error.status === 401) {
+        console.debug('[AuthInterceptor] 401 error detected, checking token status');
 
-  return next(clonedRequest).pipe(
-    tap({
-      error: (error: unknown) => {
-        if (error instanceof HttpErrorResponse) {
-          if (error.status === 401) {
-            console.log('[AuthInterceptor] Error 401, redirigiendo al login');
-            authService.logout();
-            router.navigate(['/login']);
-          }
+        // Si el token está expirado, intentamos refrescarlo
+        if (tokenService.isTokenExpired()) {
+          console.debug('[AuthInterceptor] Token expired, attempting refresh');
+          return tokenService.refreshToken().pipe(
+            switchMap((newToken) => {
+              if (!newToken) {
+                throw new Error('No se pudo obtener un nuevo token');
+              }
+              // Crear una nueva solicitud con el token actualizado
+              const clonedRequest = request.clone({
+                headers: request.headers.set(HEADER_STRING, `${TOKEN_PREFIX}${newToken}`)
+              });
+              return next(clonedRequest);
+            }),
+            catchError((refreshError) => {
+              console.error('[AuthInterceptor] Error al refrescar token:', refreshError);
+              authService.logout();
+              router.navigate(['/login']);
+              return EMPTY;
+            })
+          );
+        } else {
+          console.debug('[AuthInterceptor] Token not expired but got 401, redirecting to login');
+          authService.logout();
+          router.navigate(['/login']);
         }
       }
+      return throwError(() => error);
     })
   );
 };

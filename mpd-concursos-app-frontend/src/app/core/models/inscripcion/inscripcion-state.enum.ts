@@ -1,4 +1,5 @@
 export enum InscripcionState {
+    NO_INSCRIPTO = 'NO_INSCRIPTO',
     PENDIENTE = 'PENDIENTE',
     CONFIRMADA = 'CONFIRMADA',
     RECHAZADA = 'RECHAZADA',

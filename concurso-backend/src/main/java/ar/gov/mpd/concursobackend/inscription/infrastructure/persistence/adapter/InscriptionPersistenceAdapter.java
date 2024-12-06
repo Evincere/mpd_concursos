@@ -50,6 +50,12 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
             .map(mapper::toDomain);
     }
 
+    @Override
+    public Optional<Inscription> findByContestIdAndUserId(Long contestId, UUID userId) {
+        return repository.findByContestIdAndUserId(contestId, userId)
+            .map(mapper::toDomain);
+    }
+
     private Pageable createPageable(PageRequest pageRequest) {
         return org.springframework.data.domain.PageRequest.of(
             pageRequest.getPage(),

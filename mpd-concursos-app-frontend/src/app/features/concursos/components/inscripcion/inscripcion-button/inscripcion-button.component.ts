@@ -5,13 +5,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Observable, firstValueFrom } from 'rxjs';
+import { Observable } from 'rxjs';
 import { finalize, shareReplay } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 import { InscripcionService } from '@core/services/inscripcion/inscripcion.service';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { InscripcionDialogComponent } from '../inscripcion-dialog/inscripcion-dialog.component';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
+import { InscripcionResponse } from '@shared/interfaces/inscripcion/inscripcion.interface';
 
 @Component({
     selector: 'app-inscripcion-button',
@@ -32,6 +34,7 @@ export class InscripcionButtonComponent implements OnInit {
 
     inscripcionState$!: Observable<InscripcionState>;
     loading = false;
+    InscripcionState = InscripcionState; // Expose enum to template
 
     constructor(
         private inscripcionService: InscripcionService,
@@ -46,51 +49,43 @@ export class InscripcionButtonComponent implements OnInit {
             .pipe(shareReplay(1));
     }
 
-    async onInscribirse() {
+    async onInscribirse(): Promise<InscripcionResponse> {
         if (!this.concurso.id) {
             this.showError('ID de concurso no válido');
-            return;
+            return Promise.reject('ID de concurso no válido');
         }
 
-        try {
-            const elegibilidad = await firstValueFrom(
-                this.inscripcionService.verificarElegibilidad(this.concurso.id)
+        const elegibilidad = await firstValueFrom(this.inscripcionService.verificarElegibilidad(this.concurso.id));
+        if (!elegibilidad.elegible) {
+            this.mostrarDialogoNoElegible(elegibilidad.motivo || 'No cumple con los requisitos necesarios');
+            return Promise.reject('No elegible');
+        }
+
+        const dialogRef = this.dialog.open(InscripcionDialogComponent, {
+            data: { concurso: this.concurso },
+            width: '500px',
+            disableClose: true
+        });
+
+        const result = await dialogRef.afterClosed().toPromise();
+        if (result) {
+            this.loading = true;
+            this.cdr.detectChanges();
+
+            const response = await firstValueFrom(
+                this.inscripcionService.inscribirse(this.concurso.id, result.documentos)
+                    .pipe(finalize(() => {
+                        this.loading = false;
+                        this.cdr.detectChanges();
+                    }))
             );
 
-            if (!elegibilidad.elegible) {
-                this.mostrarDialogoNoElegible(elegibilidad.motivo || 'No cumple con los requisitos necesarios');
-                return;
-            }
-
-            const dialogRef = this.dialog.open(InscripcionDialogComponent, {
-                data: { concurso: this.concurso },
-                width: '500px',
-                disableClose: true
-            });
-
-            const result = await dialogRef.afterClosed().toPromise();
-            if (result) {
-                this.loading = true;
-                this.cdr.detectChanges();
-
-                await firstValueFrom(
-                    this.inscripcionService
-                        .inscribirse(this.concurso.id, result.documentos)
-                        .pipe(finalize(() => {
-                            this.loading = false;
-                            this.cdr.detectChanges();
-                        }))
-                );
-
-                this.showSuccess('Inscripción realizada con éxito');
-                this.inscripcionComplete.emit(this.concurso.id);
-            }
-        } catch (error) {
-            console.error('Error en el proceso de inscripción:', error);
-            this.showError('Error al procesar la inscripción');
-            this.loading = false;
-            this.cdr.detectChanges();
+            this.showSuccess('Inscripción realizada con éxito');
+            this.inscripcionComplete.emit(this.concurso.id);
+            return response;
         }
+        const response: InscripcionResponse = await firstValueFrom(this.inscripcionService.inscribirse(this.concurso.id));
+        return response;
     }
 
     private mostrarDialogoNoElegible(motivo: string): void {

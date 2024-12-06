@@ -141,69 +141,72 @@ export class TokenService {
     const token = this.getToken();
     
     if (!token) {
-      console.log('No hay token');
+      console.log('[TokenService] No hay token');
       return true;
     }
 
     try {
       const decodedToken = this.decodeToken(token);
-      console.log('Token decodificado:', decodedToken);
+      console.log('[TokenService] Token decodificado:', decodedToken);
       
-      const currentTime = Math.floor(Date.now() / 1000);
-
       if (!decodedToken || !decodedToken.exp) {
-        console.error('Token inválido o sin fecha de expiración');
+        console.error('[TokenService] Token inválido o sin fecha de expiración');
         return true;
       }
 
-      console.log('Payload del token:', decodedToken);
-      console.log('Tiempo actual:', currentTime);
-      console.log('Tiempo de expiración:', decodedToken.exp);
+      const currentTime = Math.floor(Date.now() / 1000);
+      // Agregar un margen de 30 segundos para evitar problemas de sincronización
+      const margin = 30;
+      const isExpired = (decodedToken.exp - margin) < currentTime;
 
-      // Agregar un margen de 5 segundos para evitar problemas de sincronización
-      const isExpired = (decodedToken.exp - 5) < currentTime;
-      console.log('Token expirado:', isExpired);
+      console.log('[TokenService] Verificación de expiración:', {
+        currentTime,
+        expirationTime: decodedToken.exp,
+        margin,
+        isExpired
+      });
 
       return isExpired;
     } catch (error) {
-      console.error('Error al verificar expiración del token:', error);
+      console.error('[TokenService] Error al verificar expiración del token:', error);
       return true;
     }
   }
 
   public refreshToken(): Observable<string> {
-    console.log('Intentando refrescar token');
+    console.log('[TokenService] Intentando refrescar token');
     
     const refreshToken = this.getRefreshToken();
     const currentToken = this.getToken();
     
-    if (!refreshToken) {
-      console.error('No se encontró refresh token');
+    if (!refreshToken || !currentToken) {
+      console.error('[TokenService] No se encontró refresh token o token actual');
       return throwError(() => new Error('No refresh token available'));
     }
 
     return this.http.post<JwtDto>(`${this.apiUrl}/auth/refresh-token`, { 
       refreshToken,
-      token: currentToken // Enviar también el token actual por si el backend lo necesita
+      token: currentToken
     }).pipe(
-      tap(response => {
-        console.log('Respuesta de refresh token:', response);
+      map(response => {
+        console.log('[TokenService] Respuesta de refresh token:', response);
         
         if (!response || !response.token) {
           throw new Error('Respuesta de refresh token inválida');
         }
         
-        // Guardar el nuevo token
+        // Guardar el nuevo token y datos asociados
         this.saveToken(response);
         
-        // Guardar el refresh token si viene en la respuesta
+        // Si hay un nuevo refresh token, guardarlo también
         if ('refreshToken' in response) {
           this.saveRefreshToken((response as any).refreshToken);
         }
+
+        return response.token;
       }),
-      map(response => response.token),
       catchError(error => {
-        console.error('Error al refrescar token:', error);
+        console.error('[TokenService] Error al refrescar token:', error);
         this.handleExpiredToken();
         return throwError(() => error);
       })
@@ -239,13 +242,9 @@ export class TokenService {
   }
 
   public handleExpiredToken(): void {
-    console.log('Token expirado. Cerrando sesión.');
-    
-    // Limpiar tokens
+    console.log('[TokenService] Manejando token expirado');
     this.removeToken();
     this.removeRefreshToken();
-    
-    // Redirigir al login
     this.router.navigate(['/login']);
   }
 }

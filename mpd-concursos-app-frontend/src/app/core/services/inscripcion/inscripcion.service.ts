@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '@env/environment';
@@ -11,6 +11,7 @@ import {
 } from '@shared/interfaces/inscripcion/inscripcion.interface';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { AuthService } from '@core/services/auth/auth.service';
+import { InscriptionResponse } from '../concursos/inscription.service';
 
 @Injectable({
     providedIn: 'root'
@@ -58,11 +59,15 @@ export class InscripcionService {
 
     obtenerEstadoInscripcion(concursoId: string): Observable<InscripcionState> {
         const userId = this.authService.getCurrentUserId();
+        if (!userId) {
+            return of(InscripcionState.NO_INSCRIPTO);
+        }
+        
         return this.http.get<{ estado: string }>(
-            `${this.baseUrl}/estado/${concursoId}/${userId}`
+            `${this.baseUrl}/concursos/${concursoId}/estado`
         ).pipe(
-            map(response => response.estado as InscripcionState),
-            catchError(this.handleError.bind(this))
+            map(response => InscripcionState[response.estado as keyof typeof InscripcionState]),
+            catchError(() => of(InscripcionState.NO_INSCRIPTO))
         );
     }
 
@@ -73,6 +78,31 @@ export class InscripcionService {
             tap(() => this.snackBar.open('Inscripción cancelada con éxito', 'Cerrar', {
                 duration: 3000
             })),
+            catchError(this.handleError.bind(this))
+        );
+    }
+
+    createInscription(contestId: number): Observable<InscriptionResponse> {
+        return this.http.post<InscriptionResponse>(
+            `${this.baseUrl}/api/v1/contests/${contestId}/inscriptions`,
+            {}
+        ).pipe(
+            catchError(this.handleError.bind(this))
+        );
+    }
+
+    getUserInscriptions(): Observable<InscriptionResponse[]> {
+        return this.http.get<InscriptionResponse[]>(
+            `${this.baseUrl}/api/v1/contests/inscriptions/me`
+        ).pipe(
+            catchError(this.handleError.bind(this))
+        );
+    }
+
+    getInscriptionStatus(inscripcionId: number): Observable<InscriptionResponse> {
+        return this.http.get<InscriptionResponse>(
+            `${this.baseUrl}/api/v1/contests/inscriptions/${inscripcionId}`
+        ).pipe(
             catchError(this.handleError.bind(this))
         );
     }
