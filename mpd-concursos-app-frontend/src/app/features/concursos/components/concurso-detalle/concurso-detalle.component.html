@@ -2,7 +2,7 @@
   <div class="detalle-header">
     <h2>Detalle del Concurso</h2>
     <button mat-icon-button class="cerrar-btn" (click)="onCerrar()">
-      <i class="fas fa-times"></i>
+      <mat-icon>close</mat-icon>
     </button>
   </div>
 
@@ -11,20 +11,22 @@
       <h3>Información General</h3>
       <div class="info-grid">
         <div class="info-item">
-          <label>Título</label>
-          <p>{{ concurso.title }}</p>
+          <div class="label">Título</div>
+          <div class="value">{{ concurso.title }}</div>
         </div>
         <div class="info-item">
-          <label>Cargo</label>
-          <p>{{ concurso.position }}</p>
+          <div class="label">Cargo</div>
+          <div class="value">{{ concurso.position }}</div>
         </div>
         <div class="info-item">
-          <label>Dependencia</label>
-          <p>{{ concurso.dependencia }}</p>
+          <div class="label">Dependencia</div>
+          <div class="value">{{ concurso.dependencia }}</div>
         </div>
         <div class="info-item">
-          <label>Estado</label>
-          <p class="estado" [ngClass]="concurso.status">{{ getEstadoConcursoLabel(concurso.status) }}</p>
+          <div class="label">Estado</div>
+          <div class="value estado-badge" [ngClass]="concurso.status.toLowerCase()">
+            {{ getEstadoConcursoLabel(concurso.status) }}
+          </div>
         </div>
       </div>
     </div>
@@ -33,36 +35,35 @@
       <h3>Fechas</h3>
       <div class="info-grid">
         <div class="info-item">
-          <label>Fecha de Inicio</label>
-          <p>{{ concurso.startDate | date:'dd/MM/yyyy' }}</p>
+          <div class="label">Fecha de Inicio</div>
+          <div class="value">{{ concurso.startDate | date:'dd/MM/yyyy' }}</div>
         </div>
         <div class="info-item">
-          <label>Fecha de Fin</label>
-          <p>{{ concurso.endDate | date:'dd/MM/yyyy' }}</p>
+          <div class="label">Fecha de Fin</div>
+          <div class="value">{{ concurso.endDate | date:'dd/MM/yyyy' }}</div>
         </div>
       </div>
     </div>
 
     <div class="seccion" *ngIf="concurso.description">
       <h3>Descripción</h3>
-      <div class="descripcion-container">
-        <p class="descripcion">{{ concurso.description }}</p>
+      <div class="descripcion">
+        {{ concurso.description }}
       </div>
     </div>
 
-    <div class="seccion acciones">
-      <div class="botones">
-        <button mat-stroked-button class="volver-btn" (click)="onCerrar()">
-          <i class="fas fa-arrow-left"></i>
-          Volver
-        </button>
-        
-        <app-inscripcion-button
-          *ngIf="concurso.status === 'PUBLISHED'"
-          [concurso]="concurso"
-          (inscripcionComplete)="onInscriptionComplete()">
-        </app-inscripcion-button>
-      </div>
+    <div class="acciones">
+      <button mat-button 
+              class="volver-btn" 
+              (click)="onCerrar()">
+        <mat-icon>arrow_back</mat-icon>
+        <span>Volver</span>
+      </button>
+      <app-inscripcion-button
+        [concurso]="concurso"
+        (inscripcionComplete)="onInscriptionComplete(concurso)"
+        *ngIf="concurso.status === 'PUBLISHED'"
+      ></app-inscripcion-button>
     </div>
   </div>
 </div>

@@ -9,8 +9,8 @@
   <form [formGroup]="filtrosForm" class="filtros-form">
     <!-- Estado -->
     <div class="filtro-seccion">
-      <h3>Estado del Concurso</h3>
-      <mat-button-toggle-group formControlName="estado" class="estado-toggle" aria-label="Estado del concurso">
+      <h3>Estado de la Postulación</h3>
+      <mat-button-toggle-group formControlName="estado" class="estado-toggle" aria-label="Estado de la postulación">
         <mat-button-toggle *ngFor="let option of estadoOptions" [value]="option.value" [attr.aria-label]="option.label">
           <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
           {{ option.label }}
@@ -18,11 +18,11 @@
       </mat-button-toggle-group>
     </div>
 
-    <!-- Categoría -->
+    <!-- Periodo -->
     <div class="filtro-seccion">
-      <h3>Categoría</h3>
-      <mat-button-toggle-group formControlName="categoria" class="categoria-toggle" aria-label="Categoría del concurso">
-        <mat-button-toggle *ngFor="let option of categoriaOptions" [value]="option.value" [attr.aria-label]="option.label">
+      <h3>Período</h3>
+      <mat-button-toggle-group formControlName="periodo" class="periodo-toggle" aria-label="Período de postulación">
+        <mat-button-toggle *ngFor="let option of periodoOptions" [value]="option.value" [attr.aria-label]="option.label">
           <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
           {{ option.label }}
         </mat-button-toggle>
@@ -32,10 +32,10 @@
     <!-- Dependencia -->
     <div class="filtro-seccion">
       <h3>Dependencia</h3>
-      <mat-button-toggle-group formControlName="dependencia" class="dependencia-toggle" aria-label="Seleccionar dependencia">
+      <mat-button-toggle-group formControlName="dependencia" class="dependencia-toggle" aria-label="Dependencia">
         <mat-button-toggle *ngFor="let option of dependenciaOptions" [value]="option.value" [attr.aria-label]="option.label">
-          <i class="material-icons" *ngIf="option.icon">{{option.icon}}</i>
-          <span>{{ option.label }}</span>
+          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
+          {{ option.label }}
         </mat-button-toggle>
       </mat-button-toggle-group>
     </div>
@@ -43,10 +43,10 @@
     <!-- Cargo -->
     <div class="filtro-seccion">
       <h3>Cargo</h3>
-      <mat-button-toggle-group formControlName="cargo" class="cargo-toggle" aria-label="Seleccionar cargo">
+      <mat-button-toggle-group formControlName="cargo" class="cargo-toggle" aria-label="Cargo">
         <mat-button-toggle *ngFor="let option of cargoOptions" [value]="option.value" [attr.aria-label]="option.label">
-          <i class="material-icons" *ngIf="option.icon">{{option.icon}}</i>
-          <span>{{ option.label }}</span>
+          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
+          {{ option.label }}
         </mat-button-toggle>
       </mat-button-toggle-group>
     </div>

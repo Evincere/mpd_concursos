@@ -1,20 +1,32 @@
 .concursos-feature-container {
-  padding: 1.5rem;
   height: 100%;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
 
   .main-content {
     height: 100%;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    
     &.blur-effect {
       filter: blur(2px);
-      pointer-events: none;
+      pointer-events: auto;
     }
+  }
+
+  app-filtros-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    z-index: 1000;
+    box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
   }
 
   .overlay {
@@ -165,14 +177,31 @@
             gap: 0.5rem;
             color: #90caf9;
             border-color: rgba(144, 202, 249, 0.5);
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s ease;
 
-            &:hover {
-              background: rgba(144, 202, 249, 0.08);
-              border-color: #90caf9;
+            .details-icon {
+              transition: transform 0.3s ease;
+              color: rgba(255, 255, 255, 0.6);
             }
 
-            i {
-              font-size: 1rem;
+            span {
+              font-weight: 500;
+            }
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.05);
+              border-color: rgba(255, 255, 255, 0.2);
+
+              .details-icon {
+                color: rgba(255, 255, 255, 0.87);
+              }
+            }
+
+            &:active {
+              background: rgba(255, 255, 255, 0.1);
             }
           }
         }

@@ -1,30 +1,37 @@
 <div class="inscripcion-dialog">
-    <h2 mat-dialog-title>Confirmar Inscripción</h2>
-    
-    <mat-dialog-content>
-        <div class="dialog-content">
-            <div class="concurso-info">
-                <h3>{{ concurso.title }}</h3>
-                <p class="cargo">{{ concurso.position }}</p>
-                <p class="dependencia">{{ concurso.dependencia }}</p>
-            </div>
-            
-            <div class="warning-message">
-                <mat-icon>warning</mat-icon>
-                <p>
-                    Al confirmar su inscripción, declara que cumple con todos los requisitos
-                    establecidos para este concurso y que la información proporcionada es verídica.
-                </p>
-            </div>
+    <div class="dialog-content">
+        <div class="dialog-header">
+            <h2>Confirmar Inscripción</h2>
         </div>
-    </mat-dialog-content>
 
-    <mat-dialog-actions align="end">
-        <button mat-button (click)="cancelar()">
-            Cancelar
-        </button>
-        <button mat-raised-button color="primary" (click)="confirmar()">
-            Confirmar Inscripción
-        </button>
-    </mat-dialog-actions>
+        <div class="dialog-body">
+            <p>¿Está seguro que desea inscribirse en este concurso?</p>
+            
+            <div class="concurso-info">
+                <div class="info-item">
+                    <span class="label">Cargo:</span>
+                    <span class="value">{{ data.position }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Organismo:</span>
+                    <span class="value">{{ data.dependencia }}</span>
+                </div>
+            </div>
+
+            <p>Una vez confirmada la inscripción, recibirá un correo electrónico con los detalles.</p>
+        </div>
+
+        <div class="dialog-actions">
+            <button mat-button 
+                    class="cancel-btn" 
+                    (click)="cancelar()">
+                Cancelar
+            </button>
+            <button mat-button 
+                    class="confirm-btn"
+                    (click)="confirmar()">
+                Confirmar Inscripción
+            </button>
+        </div>
+    </div>
 </div>

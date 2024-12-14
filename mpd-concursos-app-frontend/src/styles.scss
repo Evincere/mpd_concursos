@@ -5,6 +5,48 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+body {
+  overflow: hidden;
+}
+
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
+}
+
+main {
+  flex: 1;
+  background-color: var(--background-color);
+  min-height: 0;
+  position: relative;
+}
+
+:root {
+  --surface-color: 30, 30, 30;
+  --surface-color-rgb: var(--surface-color);
+  --primary-color: #{$color-primary};
+  --primary-color-rgb: 25, 118, 210;
+  --text-color: #{$color-text-primary};
+  --text-secondary: #{$color-text-secondary};
+  --text-secondary-rgb: 176, 176, 176;
+  --card-background: var(--surface-color);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --card-backdrop-filter: blur(8px);
+  --background-color: #121212;
+  --background-color-rgb: 18, 18, 18;
+}
+
 // Note: Color palettes are generated from primary: #8e6f6e, secondary: #f0f8ff, tertiary: #cce4ff, neutral: #f5f5f5
 $_palettes: (
   primary: (
@@ -156,237 +198,233 @@ $dark-theme: mat.define-theme((
   .mat-datepicker-content {
     background-color: $color-background !important;
     color: $color-text-primary !important;
-    position: fixed !important; // Asegura posicionamiento correcto
-    z-index: 1000 !important; // Asegura que aparezca sobre otros elementos
 
     .mat-calendar {
       background-color: transparent;
-      padding: 0.5rem;
-      width: 280px !important; // Ancho fijo para mejor presentación
 
-      .mat-calendar-header {
-        padding: 0.5rem 0.5rem 0;
+      .mat-calendar-body-cell-content {
         color: $color-text-primary;
       }
 
-      .mat-calendar-table-header {
+      .mat-calendar-body-selected {
+        background-color: $color-primary;
+        color: white;
+      }
+
+      .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+        border-color: $color-primary;
+      }
+
+      .mat-calendar-arrow,
+      .mat-calendar-previous-button,
+      .mat-calendar-next-button {
         color: $color-text-secondary;
       }
-
-      .mat-calendar-body-cell {
-        height: 32px;
-        width: 32px;
-
-        .mat-calendar-body-cell-content {
-          color: $color-text-primary;
-          height: 28px;
-          width: 28px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          &:hover {
-            background-color: rgba($color-primary, 0.1);
-          }
-        }
-
-        &.mat-calendar-body-selected {
-          .mat-calendar-body-cell-content {
-            background-color: $color-primary;
-            color: white;
-          }
-        }
-
-        &.mat-calendar-body-today:not(.mat-calendar-body-selected) {
-          .mat-calendar-body-cell-content {
-            border: 1px solid $color-primary;
-          }
-        }
-      }
-
-      .mat-calendar-controls {
-        margin: 0 0 0.5rem;
-
-        .mat-calendar-arrow,
-        .mat-calendar-previous-button,
-        .mat-calendar-next-button {
-          color: $color-text-secondary;
-
-          &:hover {
-            color: $color-text-primary;
-          }
-        }
-      }
     }
   }
 
-  // Ajuste para el overlay del datepicker
+  // Asegurar que el overlay container esté por encima de todo
   .cdk-overlay-container {
     z-index: 1000;
+  }
+}
 
-    .cdk-overlay-connected-position-bounding-box {
-      // Asegura que el calendario se posicione correctamente
-      position: absolute !important;
+// Estilos mínimos necesarios para el datepicker de Material
+.mat-datepicker-content {
+  background-color: rgb(var(--surface-color)) !important;
+  color: var(--text-color) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--card-shadow) !important;
+  backdrop-filter: var(--card-backdrop-filter);
+  min-width: 280px !important;
+  max-width: 320px !important;
+  margin: 0 auto;
+
+  .mat-calendar {
+    background-color: transparent;
+    
+    // Header styling
+    .mat-calendar-header {
+      padding: 0.5rem 0.5rem 0;
+      
+      .mat-calendar-controls {
+        margin: 0 0.5rem;
+        
+        .mat-calendar-period-button {
+          color: var(--text-color);
+          font-weight: 500;
+          padding: 0.5rem;
+          border-radius: 4px;
+          
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+          }
+        }
+        
+        .mat-calendar-arrow {
+          fill: var(--text-color);
+        }
+      }
+    }
+    
+    // Table styling
+    .mat-calendar-table {
+      padding: 0.5rem;
+      
+      .mat-calendar-table-header {
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+        
+        th {
+          padding: 0.5rem 0;
+        }
+      }
+      
+      // Calendar cells
+      .mat-calendar-body-cell {
+        height: 36px;
+        width: 36px;
+        border-radius: 50%;
+        
+        &:not(.mat-calendar-body-disabled) {
+          &:hover .mat-calendar-body-cell-content {
+            background-color: rgba(255, 255, 255, 0.08);
+          }
+        }
+        
+        .mat-calendar-body-cell-content {
+          height: 32px;
+          width: 32px;
+          border-radius: 50%;
+          line-height: 32px;
+          color: var(--text-color);
+          border: none;
+          
+          &.mat-calendar-body-selected {
+            background-color: var(--primary-color);
+            color: white;
+          }
+          
+          &.mat-calendar-body-today {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+          }
+        }
+        
+        &.mat-calendar-body-disabled {
+          > .mat-calendar-body-cell-content {
+            color: rgba(255, 255, 255, 0.3);
+          }
+        }
+      }
+    }
+    
+    // Previous/Next navigation buttons
+    .mat-calendar-previous-button,
+    .mat-calendar-next-button {
+      color: var(--text-color);
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+      
+      &[disabled] {
+        color: rgba(255, 255, 255, 0.3);
+      }
     }
   }
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Roboto', sans-serif;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-body {
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-    &.dark-mode {
-        opacity: 0.9;
-        background: #1a1a1a;
-    }
-}
-
-
-// Agregar estos estilos globalmente
-.success-snackbar {
-  background: #4CAF50;
-  color: white;
+// Datepicker toggle button styling
+.mat-datepicker-toggle {
+  color: var(--text-secondary);
   
-  .mat-simple-snackbar-action {
-    color: white;
+  .mat-datepicker-toggle-default-icon {
+    width: 24px;
+    height: 24px;
   }
-}
-
-.error-snackbar {
-  background: #F44336;
-  color: white;
   
-  .mat-simple-snackbar-action {
-    color: white;
-  }
-}
-
-// Estilos globales para el diálogo
-.filtros-dialog {
-  .mat-mdc-dialog-container {
-    .mdc-dialog__surface {
-      background-color: $color-background !important;
-      color: $color-text-primary !important;
+  &:hover {
+    .mat-datepicker-toggle-default-icon {
+      color: var(--primary-color);
     }
   }
 }
 
-// Estilo para el backdrop
-.dialog-backdrop {
-  background: rgba(0, 0, 0, 0.7) !important;
-  backdrop-filter: blur(3px);
+// Ensure proper overlay positioning
+.cdk-overlay-container {
+  .cdk-overlay-pane {
+    &.mat-datepicker-popup {
+      @media (max-width: 599px) {
+        max-width: calc(100vw - 32px) !important;
+        margin: 0 auto;
+      }
+    }
+  }
 }
 
-// Asegurar que el overlay container esté por encima de todo
+// Estilos del calendario
+.mat-calendar-body-cell-content {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.mat-calendar-body-selected {
+  background-color: #2196f3;
+  color: white;
+}
+
+.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+  border-color: #2196f3;
+}
+
+.mat-calendar-table-header,
+.mat-calendar-body-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mat-calendar-arrow {
+  border-top-color: white;
+}
+
+.mat-calendar-next-button,
+.mat-calendar-previous-button {
+  color: white;
+}
+
+.mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+// Ajustes de overlay y posicionamiento
 .cdk-overlay-container {
   z-index: 1000;
 }
 
-.cdk-global-overlay-wrapper {
+.cdk-overlay-connected-position-bounding-box {
+  position: absolute;
   z-index: 1000;
-  display: flex;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  justify-content: center;
-  align-items: flex-start;
-  pointer-events: none;
+}
+
+// Ajustes para el contenedor de pestañas
+.mat-tab-body-content {
+  overflow: visible;
+  height: auto;
+}
+
+.mat-tab-body.mat-tab-body-active {
+  overflow: visible;
+  position: relative;
+  z-index: 1;
   
-  .cdk-overlay-pane {
-    pointer-events: auto;
-    margin-top: 10vh;
+  .curriculum-container {
+    overflow: visible;
   }
 }
 
-/* Estilos para scrollbar - Webkit (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba($color-background, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba($color-primary, 0.3);
-    border-radius: 4px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    transition: background 0.2s ease-in-out;
-    
-    &:hover {
-        background: rgba($color-primary, 0.5);
-    }
-
-    &:active {
-        background: rgba($color-primary, 0.7);
-    }
-}
-
-/* Estilos para scrollbar - Firefox */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: rgba($color-primary, 0.3) transparent;
-
-    &:hover {
-        scrollbar-color: rgba($color-primary, 0.5) transparent;
-    }
-}
-
-/* Ocultar scrollbar pero mantener funcionalidad */
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    
-    &::-webkit-scrollbar {
-        display: none;
-    }
-}
-
-// Añade estos estilos específicos para el datepicker
-.mat-datepicker-content {
-  background-color: $color-background !important;
-  color: $color-text-primary !important;
-
-  .mat-calendar {
-    background-color: transparent;
-
-    .mat-calendar-body-cell-content {
-      color: $color-text-primary;
-    }
-
-    .mat-calendar-body-selected {
-      background-color: $color-primary;
-      color: white;
-    }
-
-    .mat-calendar-body-today:not(.mat-calendar-body-selected) {
-      border-color: $color-primary;
-    }
-
-    .mat-calendar-arrow,
-    .mat-calendar-previous-button,
-    .mat-calendar-next-button {
-      color: $color-text-secondary;
-    }
-  }
-}
-
-// Estilos para el detalle de postulación
-.postulacion-detalle {
+// Estilos específicos para el contenedor del curriculum
+.curriculum-container {
   padding: $spacing-xl;
   background-color: $color-surface;
   border-radius: $border-radius;
@@ -596,4 +634,184 @@ body {
       background-color: rgba($color-primary, 0.2) !important;
     }
   }
+}
+
+// Variables para el datepicker
+$datepicker-bg: #424242;
+$datepicker-text: rgba(255, 255, 255, 0.87);
+$datepicker-selected: #2196f3;
+$datepicker-hover: rgba(255, 255, 255, 0.04);
+$datepicker-cell-size: 36px;
+
+::ng-deep {
+  // Overlay container principal
+  .cdk-overlay-container {
+    position: fixed !important;
+    z-index: 10000 !important;
+    pointer-events: none !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    isolation: isolate !important;
+
+    // Panel del overlay
+    .cdk-overlay-pane {
+      pointer-events: auto !important;
+      position: absolute !important;
+      z-index: 11000 !important;
+      max-width: 320px !important;
+      min-width: 280px !important;
+      background: none !important;
+      isolation: isolate !important;
+    }
+
+    // Backdrop
+    .cdk-overlay-backdrop {
+      background: rgba(0, 0, 0, 0.32) !important;
+      backdrop-filter: blur(2px) !important;
+      z-index: 10500 !important;
+    }
+  }
+
+  // Popup del datepicker
+  .mat-datepicker-popup {
+    background: $datepicker-bg !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    width: 300px !important;
+    max-width: 320px !important;
+    min-width: 280px !important;
+    margin: 8px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+
+    .mat-datepicker-content {
+      background: $datepicker-bg !important;
+      color: $datepicker-text !important;
+      display: block !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+    }
+  }
+
+  // Calendario
+  .mat-calendar {
+    width: 100% !important;
+    background: $datepicker-bg !important;
+    color: $datepicker-text !important;
+    padding: 8px !important;
+
+    // Header del calendario
+    &-header {
+      padding: 8px 8px 0 8px !important;
+      background: none !important;
+
+      .mat-calendar-controls {
+        margin: 0 !important;
+        
+        .mat-calendar-period-button,
+        .mat-calendar-previous-button,
+        .mat-calendar-next-button {
+          color: $datepicker-text !important;
+          
+          &:hover {
+            background: $datepicker-hover !important;
+          }
+        }
+      }
+    }
+
+    // Tabla del calendario
+    &-table {
+      width: 100% !important;
+      border-spacing: 0 !important;
+      border-collapse: collapse !important;
+
+      th {
+        height: 32px !important;
+        text-align: center !important;
+        font-weight: 500 !important;
+        color: $datepicker-text !important;
+      }
+    }
+
+    // Celdas del calendario
+    &-body-cell {
+      position: relative !important;
+      height: $datepicker-cell-size !important;
+      padding: 0 !important;
+      text-align: center !important;
+      outline: none !important;
+      cursor: pointer !important;
+
+      &-content {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: $datepicker-cell-size !important;
+        height: $datepicker-cell-size !important;
+        line-height: $datepicker-cell-size !important;
+        border-radius: 50% !important;
+        font-size: 13px !important;
+        color: $datepicker-text !important;
+        
+        &:hover {
+          background: $datepicker-hover !important;
+        }
+      }
+    }
+
+    // Estados especiales
+    &-body-selected {
+      background: $datepicker-selected !important;
+      color: white !important;
+
+      &:hover {
+        background: darken($datepicker-selected, 5%) !important;
+      }
+    }
+
+    &-body-today:not(.mat-calendar-body-selected) {
+      border: 1px solid $datepicker-selected !important;
+    }
+
+    &-body-disabled {
+      opacity: 0.5 !important;
+      cursor: default !important;
+
+      .mat-calendar-body-cell-content {
+        cursor: default !important;
+        
+        &:hover {
+          background: none !important;
+        }
+      }
+    }
+  }
+}
+
+// Asegurar que los contenedores no interfieran
+.app-root,
+main.mat-app-background,
+.perfil-container,
+.mat-tab-body-content,
+.mat-tab-body-active,
+.mat-tab-body-wrapper {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+
+// Asegurar que el sidebar y otros elementos no interfieran
+.sidebar,
+.header {
+  z-index: 5 !important;
 }

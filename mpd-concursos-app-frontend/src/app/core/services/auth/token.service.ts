@@ -120,11 +120,9 @@ export class TokenService {
   }
 
   public getCuit(): string | null {
-    const token = this.getToken();
-    if (!token) return null;
-
-    const decodedToken = this.decodeToken(token);
-    return decodedToken?.cuit || null;
+    const cuit = window.sessionStorage.getItem(this.CUIT_KEY);
+    console.log('[TokenService] getCuit:', cuit);
+    return cuit;
   }
 
   public getUsername(): string | null {

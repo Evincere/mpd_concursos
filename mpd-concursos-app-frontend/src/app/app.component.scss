@@ -1,11 +1,24 @@
 :host {
   display: block;
-  height: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 main {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+router-outlet {
+  position: static;
+  z-index: auto;
+}
+
+router-outlet + * {
+  position: relative;
+  z-index: 1;
+  flex: 1;
 }

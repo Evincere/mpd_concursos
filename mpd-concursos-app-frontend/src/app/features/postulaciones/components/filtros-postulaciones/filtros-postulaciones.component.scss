@@ -46,6 +46,7 @@
 
         &:hover {
           color: var(--text-color);
+          transform: rotate(90deg);
         }
       }
     }
@@ -160,5 +161,37 @@
 @media (max-width: 768px) {
   :host {
     max-width: none;
+  }
+}
+
+// Estilos para el panel de selección de Material
+::ng-deep {
+  .mat-mdc-select-panel {
+    background: var(--surface-color) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+    
+    .mat-mdc-option {
+      color: var(--text-secondary);
+      min-height: 45px;
+      
+      &:hover:not(.mdc-list-item--disabled) {
+        background: rgba(var(--primary-color-rgb), 0.1);
+      }
+      
+      &.mat-mdc-option-active {
+        background: rgba(var(--primary-color-rgb), 0.15);
+      }
+      
+      &.mat-selected:not(.mat-mdc-option-disabled) {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .mdc-list-item__primary-text {
+        font-size: 0.875rem;
+      }
+    }
   }
 }

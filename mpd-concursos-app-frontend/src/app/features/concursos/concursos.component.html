@@ -1,11 +1,12 @@
 <div class="concursos-feature-container">
   <div class="main-content" [class.blur-effect]="concursoSeleccionado">
     <app-search-header
-      title="Inscripciones Vigentes"
-      icon="gavel"
+      title="Concursos"
+      icon="briefcase"
       placeholder="Buscar concursos..."
       (search)="onSearch($event)"
-      (filter)="onFilter()">
+      (filter)="onFilter()"
+      [filtrosActivos]="filtrosActivos">
     </app-search-header>
 
     <div class="concursos-content">
@@ -46,15 +47,12 @@
           </div>
 
           <div class="card-actions">
-            <button mat-stroked-button class="details-button" (click)="verDetalle(concurso, $event)">
-              <i class="fas fa-search-plus"></i>
-              Ver detalles
+            <button mat-stroked-button 
+                    class="details-button" 
+                    (click)="verDetalle(concurso)">
+              <mat-icon class="details-icon">visibility</mat-icon>
+              <span>Ver Detalles</span>
             </button>
-            <app-inscripcion-button
-              [concurso]="concurso"
-              (inscripcionComplete)="onInscriptionComplete($event)"
-              *ngIf="concurso.status === 'ABIERTO'"
-            ></app-inscripcion-button>
           </div>
         </div>
       </div>
@@ -65,24 +63,25 @@
         <p>Intenta con otros términos de búsqueda</p>
       </div>
 
-      <app-filtros-panel
-        *ngIf="showFilters"
-        (close)="onFilter()"
-        [@slideInOut]>
+      <app-filtros-panel 
+        *ngIf="mostrarFiltros"
+        (filtrosChange)="aplicarFiltros($event)"
+        (cerrar)="toggleFiltros()">
       </app-filtros-panel>
       
       <div class="backdrop" 
-        *ngIf="showFilters"
-        (click)="onFilter()"
-        [@fadeInOut]>
+        *ngIf="mostrarFiltros"
+        (click)="toggleFiltros()"
+        [@fadeInOut]="mostrarFiltros">
       </div>
     </div>
   </div>
 
   <div class="overlay" *ngIf="concursoSeleccionado" [@fadeInOut]></div>
-  <app-concurso-detalle
+  <app-concurso-detalle 
     *ngIf="concursoSeleccionado"
     [concurso]="concursoSeleccionado"
-    (cerrarDetalle)="cerrarDetalle()">
+    (cerrarDetalle)="cerrarDetalle()"
+    (inscripcionRealizada)="onInscriptionComplete($event)">
   </app-concurso-detalle>
 </div>

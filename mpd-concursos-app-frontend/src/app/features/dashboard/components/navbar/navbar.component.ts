@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { UserInfoComponent } from './user-info/user-info.component';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 
-
 @Component({
   selector: 'app-navbar',
   standalone: true,
@@ -10,7 +9,7 @@ import { AuthService } from '../../../../core/services/auth/auth.service';
     UserInfoComponent
   ],
   templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.scss'
+  styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit {
   userInfo: { username: string, cuit: string };
@@ -20,7 +19,14 @@ export class NavbarComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userInfo = this.authService.getUserInfo();
+    const user = this.authService.getUser();
+    const cuit = this.authService.getCuit();
+    console.log('User Info:', { user, cuit });
+    
+    this.userInfo = {
+      username: user?.username || '',
+      cuit: cuit || ''
+    };
   }
 
   onLogout(): void {

@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
@@ -14,7 +16,9 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule
   ],
   templateUrl: './search-header.component.html',
   styleUrl: './search-header.component.scss',
@@ -24,6 +28,7 @@ export class SearchHeaderComponent {
   @Input() title: string = '';
   @Input() icon: string = '';
   @Input() placeholder: string = 'Ingrese término de búsqueda';
+  @Input() filtrosActivos: boolean = false;
   @Output() search = new EventEmitter<string>();
   @Output() filter = new EventEmitter<void>();
 

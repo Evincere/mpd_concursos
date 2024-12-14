@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -16,6 +17,7 @@ import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.
 import { ConcursoDetalleComponent } from './components/concurso-detalle/concurso-detalle.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { InscripcionButtonComponent } from './components/inscripcion/inscripcion-button/inscripcion-button.component';
+import { FiltrosConcurso } from '@shared/interfaces/filters/filtros.interface';
 
 @Component({
   selector: 'app-concursos',
@@ -26,6 +28,7 @@ import { InscripcionButtonComponent } from './components/inscripcion/inscripcion
     CommonModule,
     RouterModule,
     MatButtonModule,
+    MatIconModule,
     MatProgressSpinnerModule,
     InscripcionButtonComponent,
     SearchHeaderComponent,
@@ -42,16 +45,33 @@ import { InscripcionButtonComponent } from './components/inscripcion/inscripcion
       transition(':leave', [
         animate('300ms ease-out', style({ opacity: 0 }))
       ])
+    ]),
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ transform: 'translateX(-100%)' }),
+        animate('300ms ease-out', style({ transform: 'translateX(0)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ transform: 'translateX(-100%)' }))
+      ])
     ])
   ]
 })
 export class ConcursosComponent implements OnInit {
-  loading = false;
   concursos: Concurso[] = [];
-  showFilters = false;
-  searchTerm: string = '';
-  error: HttpErrorResponse | null = null;
+  loading = false;
+  error: any = null;
   concursoSeleccionado: Concurso | null = null;
+  mostrarFiltros = false;
+  filtrosActivos = false;
+  filtros: FiltrosConcurso = {
+    estado: 'todos',
+    dependencia: 'todos',
+    cargo: 'todos',
+    periodo: 'todos'
+  };
+  concursosSinFiltrar: Concurso[] = [];
+  searchTerm: string = '';
 
   constructor(
     private concursosService: ConcursosService,
@@ -69,6 +89,7 @@ export class ConcursosComponent implements OnInit {
       next: (concursos: Concurso[]) => {
         console.log('Concursos recibidos:', concursos);
         this.concursos = concursos;
+        this.concursosSinFiltrar = [...concursos]; // Guardamos una copia sin filtrar
         this.loading = false;
       },
       error: (error: HttpErrorResponse) => {
@@ -99,7 +120,60 @@ export class ConcursosComponent implements OnInit {
   }
 
   onFilter(): void {
-    this.showFilters = !this.showFilters;
+    console.log('Filtro activado:', this.mostrarFiltros);
+    this.mostrarFiltros = !this.mostrarFiltros;
+    console.log('Estado de mostrarFiltros después de cambiar:', this.mostrarFiltros);
+  }
+
+  aplicarFiltros(filtros: FiltrosConcurso): void {
+    this.filtros = filtros;
+    this.filtrosActivos = this.hayFiltrosActivos(filtros);
+    // Aquí implementar la lógica de filtrado
+    this.concursos = this.concursosSinFiltrar.filter(concurso => {
+      // Filtro por estado
+      if (filtros.estado && filtros.estado !== 'todos') {
+        if (concurso.status !== filtros.estado) {
+          return false;
+        }
+      }
+
+      // Filtro por dependencia
+      if (filtros.dependencia && filtros.dependencia !== 'todos') {
+        if (!concurso.dependencia || 
+            concurso.dependencia.toLowerCase() !== filtros.dependencia.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // Filtro por cargo
+      if (filtros.cargo && filtros.cargo !== 'todos') {
+        if (!concurso.position || 
+            !concurso.position.toLowerCase().includes(filtros.cargo.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Filtro por período
+      if (filtros.periodo && filtros.periodo !== 'todos') {
+        const fechas = this.obtenerFechasPeriodo(filtros.periodo);
+        if (fechas) {
+          const fechaConcurso = new Date(concurso.startDate);
+          if (fechaConcurso < fechas.fechaInicio || fechaConcurso > fechas.fechaFin) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
+  }
+
+  private hayFiltrosActivos(filtros: FiltrosConcurso): boolean {
+    return Object.values(filtros).some(valor => valor && valor !== 'todos');
+  }
+
+  toggleFiltros(): void {
+    this.mostrarFiltros = !this.mostrarFiltros;
   }
 
   clearSearch(): void {
@@ -122,17 +196,18 @@ export class ConcursosComponent implements OnInit {
     this.cargarConcursos();
   }
 
-  onInscriptionComplete(concursoId: string): void {
-    const concurso = this.concursos.find(c => c.id === concursoId);
-    if (concurso) {
-      this.snackBar.open(
-        `Te has inscrito exitosamente al concurso "${concurso.title}"`,
-        'Cerrar',
-        { duration: 5000 }
-      );
-      // Recargar la lista de concursos para actualizar estados
-      this.cargarConcursos();
+  onInscriptionComplete(concurso: Concurso): void {
+    // Actualizar la lista de concursos después de una inscripción exitosa
+    this.cargarConcursos();
+    // Opcional: actualizar el concurso seleccionado si es necesario
+    if (this.concursoSeleccionado?.id === concurso.id) {
+      this.concursoSeleccionado = { ...concurso };
     }
+    this.snackBar.open(
+      `Te has inscrito exitosamente al concurso "${concurso.title}"`,
+      'Cerrar',
+      { duration: 5000 }
+    );
   }
 
   verDetalle(concurso: Concurso, event?: MouseEvent): void {
@@ -144,5 +219,51 @@ export class ConcursosComponent implements OnInit {
 
   cerrarDetalle(): void {
     this.concursoSeleccionado = null;
+  }
+
+  private obtenerFechasPeriodo(periodo: string): { fechaInicio: Date, fechaFin: Date } | null {
+    if (periodo === 'todos') return null;
+
+    const hoy = new Date();
+    let fechaInicio: Date;
+    let fechaFin: Date;
+
+    switch (periodo) {
+      case 'hoy':
+        fechaInicio = new Date(hoy);
+        fechaFin = new Date(hoy);
+        fechaInicio.setHours(0, 0, 0, 0);
+        fechaFin.setHours(23, 59, 59, 999);
+        break;
+      case 'semana':
+        fechaInicio = new Date(hoy);
+        const diaSemana = hoy.getDay();
+        fechaInicio.setDate(hoy.getDate() - diaSemana);
+        fechaInicio.setHours(0, 0, 0, 0);
+        fechaFin = new Date(fechaInicio);
+        fechaFin.setDate(fechaInicio.getDate() + 6);
+        fechaFin.setHours(23, 59, 59, 999);
+        break;
+      case 'mes':
+        fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+        fechaFin.setHours(23, 59, 59, 999);
+        break;
+      case 'trimestre':
+        const trimestre = Math.floor(hoy.getMonth() / 3);
+        fechaInicio = new Date(hoy.getFullYear(), trimestre * 3, 1);
+        fechaFin = new Date(hoy.getFullYear(), (trimestre + 1) * 3, 0);
+        fechaFin.setHours(23, 59, 59, 999);
+        break;
+      case 'anio':
+        fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+        fechaFin = new Date(hoy.getFullYear(), 11, 31);
+        fechaFin.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return null;
+    }
+
+    return { fechaInicio, fechaFin };
   }
 }

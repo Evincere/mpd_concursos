@@ -12,7 +12,8 @@
             <div class="tab-content">
                 <div class="perfil-foto">
                     <div class="foto-container">
-                        <ng-container *ngIf="fotoPerfil && fotoPerfil !== 'assets/images/default-avatar.png'; else defaultAvatar">
+                        <ng-container
+                            *ngIf="fotoPerfil && fotoPerfil !== 'assets/images/default-avatar.png'; else defaultAvatar">
                             <img [src]="fotoPerfil" alt="Foto de perfil">
                         </ng-container>
                         <ng-template #defaultAvatar>
@@ -20,16 +21,10 @@
                                 <i class="fas fa-user"></i>
                             </div>
                         </ng-template>
-                        <button mat-mini-fab 
-                                class="cambiar-foto-btn"
-                                (click)="abrirSelectorArchivo()">
+                        <button mat-mini-fab class="cambiar-foto-btn" (click)="abrirSelectorArchivo()">
                             <i class="fas fa-camera"></i>
                         </button>
-                        <input type="file" 
-                               hidden 
-                               #fileInput 
-                               (change)="onFileSelected($event)"
-                               accept="image/*">
+                        <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*">
                     </div>
                 </div>
 
@@ -44,7 +39,7 @@
                                 <input matInput formControlName="nombre" required>
                                 <mat-label>
                                     <span *ngFor="let item of splitLabel('Nombre')"
-                                          [style.transition-delay]="item.delay">
+                                        [style.transition-delay]="item.delay">
                                         {{item.char}}
                                     </span>
                                 </mat-label>
@@ -57,7 +52,7 @@
                                 <input matInput formControlName="apellido" required>
                                 <mat-label>
                                     <span *ngFor="let item of splitLabel('Apellido')"
-                                          [style.transition-delay]="item.delay">
+                                        [style.transition-delay]="item.delay">
                                         {{item.char}}
                                     </span>
                                 </mat-label>
@@ -69,8 +64,7 @@
                             <mat-form-field>
                                 <input matInput formControlName="cuit" required>
                                 <mat-label>
-                                    <span *ngFor="let item of splitLabel('CUIT')"
-                                          [style.transition-delay]="item.delay">
+                                    <span *ngFor="let item of splitLabel('CUIT')" [style.transition-delay]="item.delay">
                                         {{item.char}}
                                     </span>
                                 </mat-label>
@@ -83,7 +77,7 @@
                                 <input matInput formControlName="usuario" required>
                                 <mat-label>
                                     <span *ngFor="let item of splitLabel('Usuario')"
-                                          [style.transition-delay]="item.delay">
+                                        [style.transition-delay]="item.delay">
                                         {{item.char}}
                                     </span>
                                 </mat-label>
@@ -104,7 +98,7 @@
                                 <input matInput formControlName="email" type="email" required>
                                 <mat-label>
                                     <span *ngFor="let item of splitLabel('Email')"
-                                          [style.transition-delay]="item.delay">
+                                        [style.transition-delay]="item.delay">
                                         {{item.char}}
                                     </span>
                                 </mat-label>
@@ -117,7 +111,7 @@
                                 <input matInput formControlName="telefono" required>
                                 <mat-label>
                                     <span *ngFor="let item of splitLabel('Teléfono')"
-                                          [style.transition-delay]="item.delay">
+                                        [style.transition-delay]="item.delay">
                                         {{item.char}}
                                     </span>
                                 </mat-label>
@@ -130,7 +124,7 @@
                                 <input matInput formControlName="direccion" required>
                                 <mat-label>
                                     <span *ngFor="let item of splitLabel('Dirección')"
-                                          [style.transition-delay]="item.delay">
+                                        [style.transition-delay]="item.delay">
                                         {{item.char}}
                                     </span>
                                 </mat-label>
@@ -142,20 +136,13 @@
                     </div>
 
                     <div class="form-actions">
-                        <button mat-stroked-button 
-                                type="button"
-                                class="action-button"
-                                [ngClass]="{'accent-button': true}"
-                                (click)="resetForm()">
+                        <button mat-stroked-button type="button" class="action-button"
+                            [ngClass]="{'accent-button': true}" (click)="resetForm()">
                             <i class="fas fa-undo"></i>
                             Restaurar
                         </button>
-                        <button mat-flat-button 
-                                type="button"
-                                class="action-button"
-                                [ngClass]="{'primary-button': true}"
-                                [disabled]="!perfilForm.valid || !perfilForm.dirty"
-                                (click)="guardarPerfil()">
+                        <button mat-flat-button type="button" class="action-button" [ngClass]="{'primary-button': true}"
+                            [disabled]="!perfilForm.valid || !perfilForm.dirty" (click)="guardarPerfil()">
                             <i class="fas fa-save"></i>
                             Guardar Cambios
                         </button>
@@ -173,9 +160,8 @@
                         <h3>LinkedIn</h3>
                     </div>
                     <p>Conecta tu cuenta de LinkedIn para compartir tus logros y actividades</p>
-                    <button mat-raised-button 
-                            [color]="linkedInConectado ? 'warn' : 'primary'"
-                            (click)="conectarLinkedIn()">
+                    <button mat-raised-button [color]="linkedInConectado ? 'warn' : 'primary'"
+                        (click)="conectarLinkedIn()">
                         {{ linkedInConectado ? 'Desconectar' : 'Conectar' }}
                     </button>
                 </div>
@@ -184,127 +170,185 @@
 
         <!-- Tab Currículum -->
         <mat-tab label="Currículum">
-            <div class="tab-content" [formGroup]="perfilForm">
-                <!-- Experiencia Laboral -->
-                <section class="cv-section">
-                    <div class="section-header">
-                        <i class="fas fa-briefcase"></i>
+            <div class="curriculum-container">
+                <!-- Barra lateral con botones de acción -->
+                <aside class="curriculum-sidebar">
+                    <div class="action-group">
                         <h3>Experiencia Laboral</h3>
-                        <button mat-stroked-button (click)="agregarExperiencia()" class="add-button">
+                        <button mat-flat-button color="primary" (click)="agregarExperiencia()">
                             <i class="fas fa-plus"></i>
                             Agregar Experiencia
                         </button>
                     </div>
-                    
-                    <div class="cv-items" formArrayName="experiencias">
-                        <div class="cv-item" *ngFor="let exp of experiencias.controls; let i = index" [formGroupName]="i">
-                            <div class="item-header">
-                                <div class="item-title">
-                                    <mat-form-field>
-                                        <input matInput formControlName="puesto" placeholder="Cargo o Puesto">
-                                    </mat-form-field>
-                                    <mat-form-field>
-                                        <input matInput formControlName="empresa" placeholder="Empresa u Organización">
-                                    </mat-form-field>
-                                </div>
-                                <button mat-icon-button color="warn" (click)="eliminarExperiencia(i)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="item-dates">
-                                <mat-form-field>
-                                    <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" placeholder="Fecha de Inicio">
-                                    <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
-                                    <mat-datepicker #pickerInicio></mat-datepicker>
-                                </mat-form-field>
-                                
-                                <mat-form-field>
-                                    <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" placeholder="Fecha de Fin">
-                                    <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
-                                    <mat-datepicker #pickerFin></mat-datepicker>
-                                </mat-form-field>
-                            </div>
-                            
-                            <mat-form-field class="full-width">
-                                <textarea matInput formControlName="descripcion" 
-                                          placeholder="Descripción de responsabilidades y logros"
-                                          rows="3"></textarea>
-                            </mat-form-field>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Educación -->
-                <section class="cv-section">
-                    <div class="section-header">
-                        <i class="fas fa-graduation-cap"></i>
+                    <div class="action-group">
                         <h3>Educación</h3>
-                        <button mat-stroked-button (click)="agregarEducacion()" class="add-button">
+                        <button mat-flat-button color="primary" (click)="agregarEducacion()">
                             <i class="fas fa-plus"></i>
                             Agregar Educación
                         </button>
                     </div>
-                    
-                    <div class="cv-items" formArrayName="educacion">
-                        <div class="cv-item" *ngFor="let edu of educacion.controls; let i = index" [formGroupName]="i">
-                            <div class="item-header">
-                                <div class="item-title">
-                                    <mat-form-field>
-                                        <input matInput formControlName="titulo" placeholder="Título o Certificación">
+                </aside>
+
+                <!-- Contenido principal del currículum -->
+                <main class="curriculum-content" [formGroup]="perfilForm">
+                    <!-- Sección de Experiencia Laboral -->
+                    <section class="cv-section">
+                        <div class="section-header">
+                            <i class="fas fa-briefcase"></i>
+                            <h2>Experiencia Laboral</h2>
+                        </div>
+
+                        <div class="cv-items" formArrayName="experiencias">
+                            <div class="cv-item" *ngFor="let exp of experiencias.controls; let i = index"
+                                [formGroupName]="i">
+                                <div class="item-main">
+                                    <div class="item-header">
+                                        <mat-form-field appearance="outline">
+                                            <mat-label>Cargo o Puesto</mat-label>
+                                            <input matInput formControlName="puesto">
+                                        </mat-form-field>
+                                    </div>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Empresa u Organización</mat-label>
+                                        <input matInput formControlName="empresa">
                                     </mat-form-field>
-                                    <mat-form-field>
-                                        <input matInput formControlName="institucion" placeholder="Institución">
+
+                                    <div class="form-row">
+                                        <!-- Campo de fecha de inicio -->
+                                        <div class="form-field-container">
+                                            <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                                            <div class="input-group">
+                                                <input id="fechaInicio" 
+                                                    type="text" 
+                                                    class="form-control" 
+                                                    #dp="bsDatepicker"
+                                                    [bsConfig]="bsConfig" 
+                                                    bsDatepicker 
+                                                    [formControl]="fechaInicioControl"
+                                                    [attr.aria-label]="'Seleccionar fecha de inicio'" 
+                                                    placement="bottom">
+                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dp.toggle()"
+                                                    [attr.aria-label]="'Abrir calendario'">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Campo de fecha de fin -->
+                                        <div class="form-field-container">
+                                            <label for="fechaFin" class="form-label">Fecha de Fin</label>
+                                            <div class="input-group">
+                                                <input id="fechaFin" 
+                                                    type="text" 
+                                                    class="form-control" 
+                                                    #dpFin="bsDatepicker"
+                                                    [bsConfig]="bsConfig" 
+                                                    bsDatepicker 
+                                                    [formControl]="fechaFinControl"
+                                                    [attr.aria-label]="'Seleccionar fecha de fin'" 
+                                                    placement="bottom">
+                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dpFin.toggle()"
+                                                    [attr.aria-label]="'Abrir calendario'">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <mat-form-field appearance="outline" class="description-field">
+                                        <mat-label>Descripción de responsabilidades y logros</mat-label>
+                                        <textarea matInput formControlName="descripcion" rows="3"></textarea>
                                     </mat-form-field>
                                 </div>
-                                <button mat-icon-button color="warn" (click)="eliminarEducacion(i)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="item-dates">
-                                <mat-form-field>
-                                    <input matInput [matDatepicker]="pickerInicioEdu" formControlName="fechaInicio" placeholder="Fecha de Inicio">
-                                    <mat-datepicker-toggle matSuffix [for]="pickerInicioEdu"></mat-datepicker-toggle>
-                                    <mat-datepicker #pickerInicioEdu></mat-datepicker>
-                                </mat-form-field>
-                                
-                                <mat-form-field>
-                                    <input matInput [matDatepicker]="pickerFinEdu" formControlName="fechaFin" placeholder="Fecha de Fin">
-                                    <mat-datepicker-toggle matSuffix [for]="pickerFinEdu"></mat-datepicker-toggle>
-                                    <mat-datepicker #pickerFinEdu></mat-datepicker>
-                                </mat-form-field>
-                            </div>
-                            
-                            <mat-form-field class="full-width">
-                                <textarea matInput formControlName="descripcion" 
-                                          placeholder="Descripción de estudios y logros"
-                                          rows="3"></textarea>
-                            </mat-form-field>
-                        </div>
-                    </div>
-                </section>
 
-                <!-- Habilidades -->
-                <section class="cv-section">
-                    <div class="section-header">
-                        <i class="fas fa-star"></i>
-                        <h3>Habilidades</h3>
-                        <button mat-stroked-button (click)="agregarHabilidad()" class="add-button">
-                            <i class="fas fa-plus"></i>
-                            Agregar Habilidad
-                        </button>
-                    </div>
-                    
-                    <div class="cv-items" formArrayName="habilidades">
-                        <div class="habilidades-grid">
-                            <div class="habilidad-item" *ngFor="let hab of habilidades.controls; let i = index" [formGroupName]="i">
-                                <!-- ... resto del contenido de habilidades ... -->
+                                <div class="item-actions">
+                                    <button mat-icon-button color="warn" (click)="eliminarExperiencia(i)"
+                                        class="delete-button">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+
+                    <!-- Sección de Educación -->
+                    <section class="cv-section">
+                        <div class="section-header">
+                            <i class="fas fa-graduation-cap"></i>
+                            <h2>Educación</h2>
+                        </div>
+
+                        <div class="cv-items" formArrayName="educacion">
+                            <div class="cv-item" *ngFor="let edu of educacion.controls; let i = index"
+                                [formGroupName]="i">
+                                <div class="item-main">
+                                    <div class="item-header">
+                                        <mat-form-field appearance="outline">
+                                            <mat-label>Título o Certificación</mat-label>
+                                            <input matInput formControlName="titulo">
+                                        </mat-form-field>
+                                    </div>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Institución</mat-label>
+                                        <input matInput formControlName="institucion">
+                                    </mat-form-field>
+
+                                    <div class="form-row">
+                                        <!-- Campo de fecha de inicio educación -->
+                                        <div class="form-field-container">
+                                            <label for="fechaEduInicio" class="form-label">Fecha de Inicio</label>
+                                            <div class="input-group">
+                                                <input id="fechaEduInicio" 
+                                                    type="text" 
+                                                    class="form-control" 
+                                                    #dpEduInicio="bsDatepicker"
+                                                    [bsConfig]="bsConfig" 
+                                                    bsDatepicker 
+                                                    [formControl]="fechaEduInicioControl"
+                                                    [attr.aria-label]="'Seleccionar fecha de inicio de educación'" 
+                                                    placement="bottom">
+                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dpEduInicio.toggle()"
+                                                    [attr.aria-label]="'Abrir calendario'">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Campo de fecha de fin educación -->
+                                        <div class="form-field-container">
+                                            <label for="fechaEduFin" class="form-label">Fecha de Fin</label>
+                                            <div class="input-group">
+                                                <input id="fechaEduFin" 
+                                                    type="text" 
+                                                    class="form-control" 
+                                                    #dpEduFin="bsDatepicker"
+                                                    [bsConfig]="bsConfig" 
+                                                    bsDatepicker 
+                                                    [formControl]="fechaEduFinControl"
+                                                    [attr.aria-label]="'Seleccionar fecha de fin de educación'" 
+                                                    placement="bottom">
+                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dpEduFin.toggle()"
+                                                    [attr.aria-label]="'Abrir calendario'">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="item-actions">
+                                    <button mat-icon-button color="warn" (click)="eliminarEducacion(i)"
+                                        class="delete-button">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </main>
             </div>
         </mat-tab>
     </mat-tab-group>
-</div> 
+</div>

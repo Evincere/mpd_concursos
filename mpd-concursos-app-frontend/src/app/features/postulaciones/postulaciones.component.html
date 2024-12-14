@@ -1,17 +1,10 @@
-<div class="postulaciones-container">
-  <app-search-header
-    title="Mis Postulaciones"
-    icon="file-alt"
-    placeholder="Ingrese término de búsqueda"
-    (search)="onSearch($event)"
-    (filter)="onFilter()">
+<div class="postulaciones-container" [class.panel-active]="mostrarFiltros">
+  <app-search-header title="Mis Postulaciones" icon="file-alt" placeholder="Ingrese término de búsqueda"
+    (search)="onSearch($event)" (filter)="onFilter()">
   </app-search-header>
 
-  <div class="content">
-    <app-loader 
-      *ngIf="loading"
-      [overlay]="true"
-      message="Cargando postulaciones...">
+  <div class="content" [class.blurred]="mostrarFiltros">
+    <app-loader *ngIf="loading" [overlay]="true" message="Cargando postulaciones...">
     </app-loader>
 
     <div class="error-message" *ngIf="error">
@@ -26,45 +19,94 @@
       </button>
     </div>
 
-    <div class="postulaciones-list" *ngIf="!loading && !error && postulaciones.length > 0">
-      <div class="postulacion-item" *ngFor="let postulacion of postulaciones" (click)="verDetalle(postulacion)">
-        <div class="postulacion-info">
-          <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
-          <p class="cargo">{{ postulacion.concurso?.cargo || 'Cargo no especificado' }}</p>
-          <p class="dependencia">{{ postulacion.concurso?.dependencia || 'Dependencia no especificada' }}</p>
-          <div class="meta-info">
-            <span>
-              <i class="fas fa-calendar-alt"></i>
-              Postulado el: {{ postulacion.concurso?.fechaInicio | date:'dd/MM/yyyy' }}
-            </span>
-            <span>
-              <i class="fas fa-clock"></i>
-              Estado: {{ getEstadoPostulacionLabel(postulacion.estado) }}
-            </span>
+    <ng-container *ngIf="!loading && !error">
+      <!-- Lista de postulaciones -->
+      <div class="postulaciones-list" *ngIf="dataSource.data.length > 0" [ngClass]="{'blurred': postulacionSeleccionada}">
+        <div class="postulacion-item" *ngFor="let postulacion of dataSource.data" (click)="verDetalle(postulacion)">
+          <div class="postulacion-info">
+            <div class="header">
+              <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
+              <div class="estados">
+                <span class="estado-badge" [class]="getEstadoPostulacionClass(postulacion.estado)">
+                  {{ getEstadoPostulacionLabel(postulacion.estado) }}
+                </span>
+              </div>
+            </div>
+            <div class="detalles">
+              <p class="cargo">
+                <i class="fas fa-briefcase"></i>
+                {{ postulacion.concurso?.cargo || 'Cargo no especificado' }}
+              </p>
+              <p class="dependencia">
+                <i class="fas fa-building"></i>
+                {{ postulacion.concurso?.dependencia || 'Dependencia no especificada' }}
+              </p>
+            </div>
+            <div class="meta-info">
+              <span class="fecha-postulacion">
+                <i class="fas fa-calendar-check"></i>
+                Postulado: {{ postulacion.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}
+              </span>
+              <span class="fecha-concurso" *ngIf="postulacion.concurso?.fechaInicio">
+                <i class="fas fa-calendar-alt"></i>
+                Inicio concurso: {{ postulacion.concurso?.fechaInicio | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+          </div>
+          <div class="actions">
+            <button mat-stroked-button class="details-button" (click)="verDetalle(postulacion)">
+              <mat-icon class="details-icon">visibility</mat-icon>
+              <span>Ver detalles</span>
+            </button>
           </div>
         </div>
-        <button mat-stroked-button class="details-button" (click)="verDetalle(postulacion, $event)">
-          <i class="fas fa-search-plus"></i>
-          Ver detalles
-        </button>
       </div>
-    </div>
 
-    <div class="no-postulaciones" *ngIf="!loading && !error && (!postulaciones || postulaciones.length === 0)">
-      <i class="fas fa-folder-open"></i>
-      <p>No tienes postulaciones activas en este momento.<br>¿Te gustaría explorar los concursos disponibles?</p>
-      <button mat-raised-button routerLink="/dashboard/concursos">
-        Explorar Concursos
-        <i class="fas fa-arrow-right"></i>
-      </button>
-    </div>
+      <!-- Mensaje cuando no hay postulaciones -->
+      <div class="postulaciones-list no-postulaciones" *ngIf="dataSource.data.length === 0 && !filtrosActuales && !terminoBusqueda">
+        <div class="mensaje-contenido">
+          <i class="fas fa-folder-open"></i>
+          <h4>No tienes postulaciones activas</h4>
+          <p>Explora los concursos disponibles y postúlate para comenzar tu carrera en el Ministerio Público de la Defensa.</p>
+          <div class="acciones">
+            <button mat-raised-button color="primary" routerLink="/dashboard/concursos">
+              <i class="fas fa-list-check"></i>
+              Ver concursos disponibles
+            </button>
+          </div>
+        </div>
+      </div>
 
-    <!-- Vista de detalle -->
-    <div class="detalle-container" *ngIf="postulacionSeleccionada">
-      <app-postulacion-detalle
-        [postulacion]="postulacionSeleccionada"
-        (cerrarDetalle)="cerrarDetalle()"
-      ></app-postulacion-detalle>
-    </div>
+      <!-- Mensaje cuando no hay resultados de búsqueda -->
+      <div class="postulaciones-list no-resultados" *ngIf="dataSource.data.length === 0 && (filtrosActuales || terminoBusqueda)">
+        <div class="mensaje-contenido">
+          <i class="fas fa-search"></i>
+          <h4>No se encontraron postulaciones</h4>
+          <p>No hay postulaciones que coincidan con los criterios de búsqueda actuales.</p>
+          <div class="acciones">
+            <button mat-stroked-button (click)="limpiarFiltros()">
+              <i class="fas fa-filter-circle-xmark"></i>
+              Limpiar filtros
+            </button>
+            <button mat-raised-button routerLink="/dashboard/concursos">
+              <i class="fas fa-list-check"></i>
+              Ver concursos disponibles
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
   </div>
+
+  <!-- Panel de Detalle -->
+  <app-postulacion-detalle *ngIf="postulacionSeleccionada" [postulacion]="postulacionSeleccionada"
+    (cerrarDetalle)="cerrarDetalle()">
+  </app-postulacion-detalle>
+
+  <!-- Panel de Filtros -->
+  <app-filtros-postulaciones *ngIf="mostrarFiltros" (filtrosChange)="aplicarFiltros($event)" (cerrar)="toggleFiltros()">
+  </app-filtros-postulaciones>
+
+  <!-- Backdrop -->
+  <div class="backdrop" *ngIf="mostrarFiltros" (click)="toggleFiltros()" @fadeInOut></div>
 </div>

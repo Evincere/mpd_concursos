@@ -1,4 +1,14 @@
-import { InscripcionState } from '../../../core/models/inscripcion/inscripcion-state.enum';
+import { InscripcionState } from "@core/models/inscripcion/inscripcion-state.enum";
+
+export interface Inscripcion {
+  id: string;
+  concursoId: string;
+  userId: string;
+  state: InscripcionState;
+  createdAt: Date;
+  updatedAt: Date;
+  observations?: string;
+}
 
 export interface InscripcionResponse {
     id: string;

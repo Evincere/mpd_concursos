@@ -18,6 +18,6 @@ public class Rol {
 	public Rol(RoleEnum role) {
 		this.role = role;
 	}
-
+	
 	
 }

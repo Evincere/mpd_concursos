@@ -187,6 +187,15 @@
                     color: rgba(255, 255, 255, 0.87);
                 }
             }
+
+            &.active {
+                background: #2196f3;
+                color: white;
+
+                &:hover {
+                    background: darken(#2196f3, 5%);
+                }
+            }
         }
     }
 }

@@ -2,10 +2,10 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { MatDialogModule } from '@angular/material/dialog';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
+import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -13,8 +13,8 @@ import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/in
   styleUrls: ['./concurso-detalle.component.scss'],
   standalone: true,
   imports: [
-    CommonModule, 
-    MatIconModule, 
+    CommonModule,
+    MatIconModule,
     MatButtonModule,
     MatDialogModule,
     InscripcionButtonComponent
@@ -33,20 +33,15 @@ import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/in
   ],
   host: {
     'class': 'concurso-detalle-panel',
-    '[@slidePanel]': 'true'
+    '[@slidePanel]': ''
   }
 })
 export class ConcursoDetalleComponent {
   @Input() concurso!: Concurso;
   @Output() cerrarDetalle = new EventEmitter<void>();
+  @Output() inscripcionRealizada = new EventEmitter<Concurso>();
+  
   closing = false;
-
-  onCerrar() {
-    this.closing = true;
-    setTimeout(() => {
-      this.cerrarDetalle.emit();
-    }, 400); // Mismo tiempo que la duración de la animación
-  }
 
   getEstadoConcursoLabel(estado: string): string {
     switch (estado) {
@@ -63,8 +58,14 @@ export class ConcursoDetalleComponent {
     }
   }
 
-  onInscriptionComplete() {
-    // Aquí podrías actualizar el estado del concurso si es necesario
-    // o mostrar algún mensaje de éxito adicional
+  onCerrar() {
+    this.closing = true;
+    setTimeout(() => {
+      this.cerrarDetalle.emit();
+    }, 400); // Mismo tiempo que la duración de la animación
+  }
+
+  onInscriptionComplete(concurso: Concurso) {
+    this.inscripcionRealizada.emit(concurso);
   }
 }

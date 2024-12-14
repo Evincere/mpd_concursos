@@ -53,3 +53,134 @@
         gap: $spacing-md;
     }
 }
+
+:host {
+  display: block;
+}
+
+::ng-deep .mat-mdc-dialog-container {
+  --mdc-dialog-container-color: #1e1e1e !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+
+  .mdc-dialog__surface {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  .mdc-dialog__content {
+    color: rgba(255, 255, 255, 0.87) !important;
+  }
+}
+
+.dialog-content {
+  min-width: 400px;
+  padding: 24px;
+
+  .dialog-header {
+    margin-bottom: 20px;
+    text-align: center;
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin: 0;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .dialog-body {
+    margin-bottom: 24px;
+    color: rgba(255, 255, 255, 0.87);
+    font-size: 1rem;
+    line-height: 1.5;
+
+    p {
+      margin: 0 0 16px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .concurso-info {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+
+      .info-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .label {
+          font-weight: 500;
+          min-width: 120px;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .value {
+          flex: 1;
+        }
+      }
+    }
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding: 0;
+
+    button {
+      min-width: 120px;
+      height: 40px;
+      border-radius: 20px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &.cancel-btn {
+        color: rgba(255, 255, 255, 0.87);
+        background: transparent;
+        border: 2px solid rgba(255, 255, 255, 0.12);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        &:active {
+          background: rgba(255, 255, 255, 0.12);
+        }
+      }
+
+      &.confirm-btn {
+        color: #ffffff;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+        &:hover {
+          background: linear-gradient(135deg, #45a049, #3d8b40);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+          transform: translateY(-1px);
+        }
+
+        &:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+      }
+    }
+  }
+}

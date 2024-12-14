@@ -6,10 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
+import { BsDatepickerModule, BsLocaleService } from 'ngx-bootstrap/datepicker';
+import { defineLocale } from 'ngx-bootstrap/chronos';
+import { esLocale } from 'ngx-bootstrap/locale';
+
+defineLocale('es', esLocale);
 
 @Component({
   selector: 'app-perfil',
@@ -22,23 +25,42 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } fr
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
     MatSelectModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    BsDatepickerModule
+  ],
+  providers: [
+    BsLocaleService
   ],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.scss']
 })
 export class PerfilComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
-  
-  fotoPerfil: string = 'assets/images/default-avatar.png';
   perfilForm!: FormGroup;
+  fechaInicioControl = new FormControl('');
+  fechaFinControl = new FormControl('');
+  fechaEduInicioControl = new FormControl('');
+  fechaEduFinControl = new FormControl('');
+  bsConfig = {
+    containerClass: 'theme-dark',
+    dateInputFormat: 'DD/MM/YYYY',
+    showWeekNumbers: false,
+    adaptivePosition: true
+  };
+  fotoPerfil: string = 'assets/images/default-avatar.png';
   linkedInConectado = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private localeService: BsLocaleService
+  ) {
+    this.localeService.use('es');
     this.initializeForms();
+  }
+
+  ngOnInit(): void {
+    // Cargar datos del usuario
   }
 
   private initializeForms() {
@@ -69,28 +91,30 @@ export class PerfilComponent implements OnInit {
     return this.perfilForm.get('habilidades') as FormArray;
   }
 
-  // Métodos para crear nuevos FormGroups
-  private crearExperiencia(): FormGroup {
+  // Método para crear un nuevo grupo de experiencia
+  createExperienciaFormGroup(): FormGroup {
     return this.fb.group({
-      puesto: ['', Validators.required],
       empresa: ['', Validators.required],
-      fechaInicio: [null, Validators.required],
-      fechaFin: [null],
-      descripcion: ['']
+      puesto: ['', Validators.required],
+      descripcion: ['', Validators.required],
+      fechaInicio: ['', Validators.required],
+      fechaFin: ['']
     });
   }
 
-  private crearEducacion(): FormGroup {
+  // Método para crear un nuevo grupo de educación
+  createEducacionFormGroup(): FormGroup {
     return this.fb.group({
-      titulo: ['', Validators.required],
       institucion: ['', Validators.required],
-      fechaInicio: [null, Validators.required],
-      fechaFin: [null],
-      descripcion: ['']
+      titulo: ['', Validators.required],
+      descripcion: ['', Validators.required],
+      fechaInicio: ['', Validators.required],
+      fechaFin: ['']
     });
   }
 
-  private crearHabilidad(): FormGroup {
+  // Método para crear un nuevo grupo de habilidad
+  createHabilidadFormGroup(): FormGroup {
     return this.fb.group({
       nombre: ['', Validators.required],
       nivel: ['', Validators.required]
@@ -99,15 +123,15 @@ export class PerfilComponent implements OnInit {
 
   // Métodos para agregar elementos
   agregarExperiencia(): void {
-    this.experiencias.push(this.crearExperiencia());
+    this.experiencias.push(this.createExperienciaFormGroup());
   }
 
   agregarEducacion(): void {
-    this.educacion.push(this.crearEducacion());
+    this.educacion.push(this.createEducacionFormGroup());
   }
 
   agregarHabilidad(): void {
-    this.habilidades.push(this.crearHabilidad());
+    this.habilidades.push(this.createHabilidadFormGroup());
   }
 
   // Métodos para eliminar elementos
@@ -121,10 +145,6 @@ export class PerfilComponent implements OnInit {
 
   eliminarHabilidad(index: number): void {
     this.habilidades.removeAt(index);
-  }
-
-  ngOnInit(): void {
-    // Cargar datos del usuario
   }
 
   onFileSelected(event: any): void {
@@ -165,4 +185,4 @@ export class PerfilComponent implements OnInit {
         delay: `${index * 50}ms`
     }));
   }
-} 
+}
