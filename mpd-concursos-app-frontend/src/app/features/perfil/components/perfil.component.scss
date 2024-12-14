@@ -1,60 +1,346 @@
+// Variables comunes
+$common-spacing: 1rem;
+$border-radius: 8px;
+$surface-bg: rgba(var(--surface-color-rgb), 0.5);
+$scrollbar-width: 8px;
+$scrollbar-track-color: rgba(var(--surface-color-rgb), 0.3);
+$scrollbar-thumb-color: rgba(var(--primary-color-rgb), 0.5);
+$scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
+
+// Mixins comunes
+@mixin card-base {
+  background-color: $surface-bg;
+  border-radius: $border-radius;
+  border: 1px solid var(--card-border);
+  backdrop-filter: var(--card-backdrop-filter);
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+}
+
+@mixin button-base {
+  @include flex-center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: $border-radius;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin section-header {
+  @include flex-center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: $common-spacing;
+  border-bottom: 1px solid var(--card-border);
+
+  i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+  }
+
+  h2, h3 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 0;
+  }
+}
+
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: $scrollbar-width;
+    height: $scrollbar-width;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $scrollbar-track-color;
+    border-radius: $scrollbar-width / 2;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $scrollbar-thumb-color;
+    border-radius: $scrollbar-width / 2;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: $scrollbar-thumb-hover-color;
+    }
+  }
+
+  // Firefox
+  scrollbar-width: thin;
+  scrollbar-color: $scrollbar-thumb-color $scrollbar-track-color;
+}
+
+// Estilos del contenedor principal
+.perfil-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+// Estilos del encabezado
+.perfil-header {
+  @include flex-center;
+  gap: 0.75rem;
+
+  h2 {
+    @include flex-center;
+    gap: 0.75rem;
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 500;
+
+    i {
+      color: var(--primary-color);
+    }
+  }
+}
+
+// Estilos de las pestañas
+.perfil-tabs {
+  flex: 1;
+  @include card-base;
+  overflow: hidden;
+
+  ::ng-deep {
+    .mat-mdc-tab-body-wrapper {
+      flex: 1;
+    }
+
+    .mat-mdc-tab-body-content {
+      padding: 1.5rem;
+      overflow-x: hidden;
+    }
+  }
+}
+
+// Contenido de las pestañas
+.tab-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+// Estilos del formulario de perfil
+.perfil-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding: 1rem;
+    @include card-base;
+
+    button {
+      @include button-base;
+      min-width: 160px;
+
+      &.action-button {
+        background-color: rgba(var(--surface-color-rgb), 0.8);
+        color: var(--text-color);
+        border: 1px solid var(--card-border);
+
+        i {
+          color: var(--primary-color);
+        }
+
+        &:hover:not(:disabled) {
+          background-color: rgba(var(--surface-color-rgb), 0.9);
+          border-color: var(--primary-color);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        &.primary-button {
+          background-color: var(--primary-color);
+          color: white;
+          border: none;
+
+          i {
+            color: white;
+          }
+
+          &:hover:not(:disabled) {
+            background-color: rgba(var(--primary-color-rgb), 0.9);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          }
+        }
+
+        &:disabled {
+          background-color: rgba(var(--surface-color-rgb), 0.5);
+          border-color: transparent;
+          transform: none;
+          box-shadow: none;
+
+          i {
+            color: rgba(var(--text-secondary-rgb), 0.5);
+          }
+        }
+      }
+    }
+  }
+
+  .form-section {
+    @include card-base;
+    padding: 1.5rem;
+
+    .section-header {
+      @include section-header;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+  }
+}
+
+// Estilos de la foto de perfil
+.perfil-foto {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.foto-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  @include card-base;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .default-avatar {
+    width: 100%;
+    height: 100%;
+    @include flex-center;
+    justify-content: center;
+    background-color: rgba(var(--surface-color-rgb), 0.8);
+
+    i {
+      font-size: 4rem;
+      color: var(--primary-color);
+    }
+  }
+
+  .cambiar-foto-btn {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background-color: var(--primary-color);
+    color: white;
+
+    &:hover {
+      background-color: rgba(var(--primary-color-rgb), 0.9);
+    }
+  }
+}
+
+// Estilos para los campos de formulario
+::ng-deep {
+  .mat-mdc-form-field {
+    width: 100%;
+    
+    .mat-mdc-text-field-wrapper {
+      background-color: rgba(var(--surface-color-rgb), 0.8);
+    }
+
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+      background-color: transparent;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(var(--primary-color-rgb), 0.1);
+    }
+  }
+}
+
+// Estilos para la sección de currículum
 .curriculum-container {
   display: flex;
   gap: 2rem;
   height: 100%;
   padding: 1.5rem;
-  background-color: rgb(var(--surface-color));
-  border-radius: 8px;
+  @include card-base;
   box-shadow: var(--card-shadow);
-  backdrop-filter: var(--card-backdrop-filter);
 
   .curriculum-sidebar {
     width: 280px;
     flex-shrink: 0;
-    background-color: rgba(var(--surface-color-rgb), 0.5);
-    border-radius: 8px;
     padding: 1.5rem;
-    border: 1px solid var(--card-border);
-    backdrop-filter: var(--card-backdrop-filter);
+    @include card-base;
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    @include custom-scrollbar;
+  }
 
-    .action-group {
-      h3 {
-        color: var(--text-color);
-        font-size: 1.1rem;
-        font-weight: 500;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+  .action-group {
+    h3 {
+      color: var(--text-color);
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: $common-spacing;
+      @include flex-center;
+      gap: 0.5rem;
+      i { color: var(--primary-color); }
+    }
 
-        i {
-          color: var(--primary-color);
-        }
+    button {
+      width: 100%;
+      margin-bottom: $common-spacing;
+      @include flex-center;
+      gap: 0.5rem;
+      justify-content: flex-start;
+      padding: 0.75rem;
+      border-radius: 6px;
+      background-color: rgba(var(--surface-color-rgb), 0.8);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      transition: all 0.2s ease;
+
+      i {
+        font-size: 1rem;
+        color: var(--primary-color);
       }
 
-      button {
-        width: 100%;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        justify-content: flex-start;
-        padding: 0.75rem 1rem;
-        border-radius: 6px;
-        background-color: rgba(var(--surface-color-rgb), 0.8);
-        border: 1px solid var(--card-border);
-        color: var(--text-color);
-        transition: all 0.2s ease-in-out;
-
-        i {
-          font-size: 1rem;
-          color: var(--primary-color);
-        }
-
-        &:hover {
-          background-color: rgba(var(--primary-color-rgb), 0.1);
-          border-color: var(--primary-color);
-        }
+      &:hover {
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+        border-color: var(--primary-color);
       }
     }
   }
@@ -62,372 +348,24 @@
   .curriculum-content {
     flex: 1;
     overflow-y: auto;
-    padding-right: 1rem;
-
-    .cv-section {
-      background-color: rgba(var(--surface-color-rgb), 0.5);
-      border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-      border: 1px solid var(--card-border);
-      backdrop-filter: var(--card-backdrop-filter);
-
-      .section-header {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--card-border);
-
-        i {
-          font-size: 1.5rem;
-          color: var(--primary-color);
-        }
-
-        h2 {
-          color: var(--text-color);
-          font-size: 1.25rem;
-          font-weight: 500;
-          margin: 0;
-        }
-      }
-
-      .cv-items {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-
-        .cv-item {
-          background-color: rgba(var(--surface-color-rgb), 0.8);
-          border-radius: 6px;
-          padding: 1.5rem;
-          border: 1px solid var(--card-border);
-
-          .item-main {
-            .item-header {
-              margin-bottom: 1rem;
-
-              mat-form-field {
-                width: 100%;
-              }
-            }
-
-            .form-row {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 1rem;
-              margin-bottom: 1rem;
-            }
-
-            .description-field {
-              width: 100%;
-            }
-          }
-
-          .item-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--card-border);
-
-            .delete-button {
-              color: #f44336;
-              transition: all 0.2s ease-in-out;
-
-              &:hover {
-                background-color: rgba(244, 67, 54, 0.1);
-              }
-            }
-          }
-        }
-      }
-    }
+    padding-right: $common-spacing;
+    @include custom-scrollbar;
+    max-height: calc(100vh - 8rem);
   }
 }
 
-// Estilos para el header de Mi Perfil
-.perfil-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: rgba(49, 49, 49, 0.5);
-  backdrop-filter: blur(10px);
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+// Estilos para la sección de información
+.cv-section {
+  @include card-base;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
 
-  h2 {
-    display: flex;
-    align-items: center;
-    color: #fff;
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 500;
-
-    i {
-      margin-right: 0.75rem;
-      color: #2196f3;
-      font-size: 1.5rem;
-    }
+  .section-header {
+    @include section-header;
   }
 }
 
-// Estilos para la pestaña de Información Personal
-.perfil-form {
-  .form-section {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1.25rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-      i {
-        font-size: 24px;
-        padding: 0.75rem;
-        border-radius: 50%;
-        transition: all 0.3s ease;
-        background: rgba(33, 150, 243, 0.1);
-        color: #2196f3;
-      }
-
-      h3 {
-        color: rgba(255, 255, 255, 0.87);
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 500;
-      }
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.25rem;
-
-      mat-form-field {
-        width: 100%;
-
-        ::ng-deep {
-          .mat-mdc-text-field-wrapper {
-            background: transparent;
-          }
-
-          .mat-mdc-form-field-flex {
-            background: rgba(49, 49, 49, 0.9);
-            border-radius: 4px;
-            padding: 0 12px;
-            min-height: 45px;
-          }
-
-          .mat-mdc-form-field-infix {
-            padding: 12px 0;
-            min-height: 45px;
-          }
-
-          .mdc-floating-label {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            top: 22px;
-          }
-
-          .mdc-floating-label--float-above {
-            transform: translateY(-25px) scale(0.75);
-            transform-origin: left top;
-            transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .mat-mdc-input-element {
-            color: rgba(255, 255, 255, 0.87);
-            font-size: 14px;
-            line-height: 20px;
-            padding: 8px 0 0;
-            margin-top: 4px;
-          }
-
-          .mdc-line-ripple {
-            &::before {
-              border-bottom-color: rgba(255, 255, 255, 0.1);
-            }
-            &::after {
-              border-bottom-color: #2196f3;
-            }
-          }
-
-          &.mat-focused {
-            .mdc-floating-label {
-              color: #2196f3;
-            }
-            .mat-mdc-form-field-flex {
-              background: rgba(49, 49, 49, 1);
-            }
-          }
-
-          &.mat-form-field-invalid {
-            .mdc-floating-label {
-              color: #ff4081;
-            }
-            .mat-mdc-form-field-flex {
-              background: rgba(49, 49, 49, 0.9);
-            }
-            .mdc-line-ripple::after {
-              border-bottom-color: #ff4081;
-            }
-          }
-
-          .mat-mdc-form-field-error-wrapper {
-            padding: 0;
-            position: relative;
-          }
-
-          .mat-mdc-form-field-error {
-            color: #ff4081;
-            font-size: 12px;
-            margin-top: 4px;
-            font-weight: 400;
-          }
-        }
-      }
-    }
-  }
-
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
-    padding: 1.25rem;
-    background: rgba(49, 49, 49, 0.9);
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-
-    ::ng-deep {
-      .action-button {
-        min-width: 140px !important;
-        height: 42px !important;
-        padding: 0 16px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 8px !important;
-        font-size: 14px !important;
-        font-weight: 500 !important;
-        letter-spacing: 0.3px !important;
-        line-height: 36px !important;
-        transition: all 0.3s ease !important;
-
-        i {
-          font-size: 16px;
-          transition: transform 0.3s ease;
-        }
-
-        // Estilos para el botón de restaurar
-        &.mdc-button--outlined {
-          background-color: transparent !important;
-          border-color: rgba(255, 255, 255, 0.2) !important;
-          color: rgba(255, 255, 255, 0.87) !important;
-
-          .mdc-button__ripple {
-            background-color: rgba(255, 255, 255, 0.05);
-          }
-
-          &:hover {
-            border-color: rgba(255, 255, 255, 0.3) !important;
-            background-color: rgba(255, 255, 255, 0.05) !important;
-
-            i {
-              transform: rotate(-45deg);
-            }
-          }
-
-          &:active {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-          }
-
-          &:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-        }
-
-        // Estilos para el botón de guardar
-        &.mdc-button--unelevated {
-          background-color: #2196f3 !important;
-          color: white !important;
-          border: none !important;
-          position: relative !important;
-          overflow: hidden !important;
-
-          .mdc-button__ripple {
-            background-color: rgba(255, 255, 255, 0.1);
-          }
-
-          &::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 120%;
-            height: 120%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-            transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.5s ease-out;
-            pointer-events: none;
-          }
-
-          &:hover:not(:disabled) {
-            background-color: #1976d2 !important;
-
-            &::before {
-              transform: translate(-50%, -50%) scale(1);
-            }
-
-            i {
-              transform: translateX(3px);
-            }
-          }
-
-          &:active:not(:disabled) {
-            background-color: #1565c0 !important;
-            transform: scale(0.98);
-          }
-
-          &:disabled {
-            background-color: rgba(33, 150, 243, 0.5) !important;
-            cursor: not-allowed !important;
-            opacity: 0.7 !important;
-
-            i {
-              transform: none;
-            }
-          }
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      flex-direction: column-reverse;
-      padding: 1rem;
-      
-      .action-button {
-        width: 100%;
-      }
-    }
-  }
-}
-
-// Estilos para la pestaña de Redes Sociales
+// Estilos para la sección de redes sociales
 .social-card {
   background: rgba(49, 49, 49, 0.9);
   border-radius: 4px;
@@ -560,313 +498,65 @@
   }
 }
 
-// Estilos para los campos de fecha
-.form-field-container {
+// Estilos para la sección de carga de foto
+.foto-container {
   position: relative;
-  margin-bottom: 1rem;
-  width: 100%;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid #2196f3;
+  box-shadow: 0px 0px 30px rgba(33, 150, 243, 0.2),
+             inset 0px 0px 10px rgba(33, 150, 243, 0.1);
+  transition: all 0.3s ease;
 
-  .form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-
-  .input-group {
-    display: flex;
-    align-items: stretch;
+  img {
     width: 100%;
-
-    .form-control {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--card-border);
-      border-right: none;
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-      border-top-left-radius: 6px;
-      border-bottom-left-radius: 6px;
-      background-color: rgba(var(--surface-color-rgb), 0.8);
-      color: var(--text-color);
-      font-size: 1rem;
-      transition: all 0.2s ease-in-out;
-
-      &:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
-      }
-
-      &:disabled {
-        background-color: rgba(var(--surface-color-rgb), 0.5);
-        cursor: not-allowed;
-      }
-    }
-
-    .calendar-btn {
-      padding: 0.75rem 1rem;
-      border: 1px solid var(--card-border);
-      border-left: none;
-      border-top-right-radius: 6px;
-      border-bottom-right-radius: 6px;
-      background-color: rgba(var(--surface-color-rgb), 0.8);
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-
-      i {
-        font-size: 1rem;
-      }
-
-      &:hover {
-        background-color: rgba(var(--primary-color-rgb), 0.1);
-        color: var(--primary-color);
-      }
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
-      }
-    }
-  }
-}
-
-// Estilos para el datepicker de Ngx-Bootstrap
-:host ::ng-deep {
-  .theme-dark {
-    .bs-datepicker {
-      background-color: rgb(var(--surface-color));
-      box-shadow: var(--card-shadow);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      min-width: 280px;
-      backdrop-filter: var(--card-backdrop-filter);
-
-      &-container {
-        padding: 1rem;
-      }
-
-      &-head {
-        background-color: rgba(var(--surface-color-rgb), 0.5);
-        border-bottom: 1px solid var(--card-border);
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
-        border-radius: 6px;
-
-        button {
-          color: var(--text-color);
-          background: none;
-          border: none;
-          padding: 0.5rem;
-          border-radius: 4px;
-          font-weight: 500;
-
-          &:hover {
-            background-color: rgba(var(--primary-color-rgb), 0.1);
-            color: var(--primary-color);
-          }
-
-          &:disabled {
-            color: var(--text-secondary);
-            cursor: not-allowed;
-          }
-        }
-      }
-
-      &-body {
-        border: none;
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-
-          th {
-            color: var(--text-secondary);
-            font-weight: 500;
-            padding: 0.5rem;
-            text-align: center;
-            font-size: 0.9rem;
-          }
-
-          td {
-            padding: 0.25rem;
-            text-align: center;
-
-            span {
-              display: inline-block;
-              width: 2.25rem;
-              height: 2.25rem;
-              line-height: 2.25rem;
-              border-radius: 50%;
-              color: var(--text-color);
-              cursor: pointer;
-              font-size: 0.9rem;
-
-              &.selected {
-                background-color: var(--primary-color);
-                color: white;
-              }
-
-              &:hover:not(.disabled) {
-                background-color: rgba(var(--primary-color-rgb), 0.1);
-                color: var(--primary-color);
-              }
-            }
-
-            &.disabled span {
-              color: var(--text-secondary);
-              background-color: transparent;
-              cursor: not-allowed;
-              opacity: 0.5;
-            }
-
-            &.is-highlighted:not(.disabled) span {
-              background-color: rgba(var(--primary-color-rgb), 0.1);
-              color: var(--primary-color);
-            }
-
-            &.is-other-month span {
-              color: var(--text-secondary);
-              opacity: 0.5;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-// Estilos para la zona de pestañas
-.perfil-tabs {
-  background: rgba(49, 49, 49, 0.5);
-  backdrop-filter: blur(10px);
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: auto;
-  position: relative;
-  overflow: visible !important;
-  z-index: 1;
-
-  ::ng-deep {
-    .mat-mdc-tab-header {
-      background: rgba(255, 255, 255, 0.05);
-      border-top-left-radius: 4px;
-      border-top-right-radius: 4px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-      .mat-mdc-tab {
-        height: 48px;
-        opacity: 0.7;
-        transition: all 0.3s ease;
-
-        &.mdc-tab--active {
-          opacity: 1;
-          
-          .mdc-tab__text-label {
-            color: #2196f3;
-          }
-        }
-
-        .mdc-tab__text-label {
-          color: rgba(255, 255, 255, 0.87);
-          font-weight: 500;
-        }
-      }
-
-      .mdc-tab-indicator--active {
-        .mdc-tab-indicator__content {
-          border-color: #2196f3;
-        }
-      }
-    }
-
-    .mat-mdc-tab-body-wrapper {
-      position: relative;
-      z-index: 1;
-      
-      .mat-tab-body-content {
-        padding: 1.5rem;
-        overflow: visible !important;
-        position: relative;
-      }
-    }
-
-    .mat-tab-body.mat-tab-body-active {
-      overflow: visible !important;
-      position: relative;
-      z-index: 2;
-    }
-  }
-}
-
-// Estilos para la carga de la foto
-.perfil-foto {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-
-  .foto-container {
-    position: relative;
-    width: 150px;
-    height: 150px;
+    height: 100%;
+    object-fit: cover;
     border-radius: 50%;
-    overflow: visible;
+  }
+
+  .default-avatar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: rgba(255, 255, 255, 0.05);
-    border: 2px solid #2196f3;
-    box-shadow: 0px 0px 30px rgba(33, 150, 243, 0.2),
-               inset 0px 0px 10px rgba(33, 150, 243, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    animation: avatarFlicker 4s linear infinite;
+
+    i {
+      font-size: 4rem;
+      color: #2196f3;
+      animation: iconFlicker 4s linear infinite;
+    }
+  }
+
+  .cambiar-foto-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: #2196f3;
+    width: 36px;
+    height: 36px;
+    min-height: unset;
+    padding: 0;
+    border: 2px solid rgba(49, 49, 49, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
+    i {
+      font-size: 0.9rem;
+      color: white;
     }
 
-    .default-avatar {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      animation: avatarFlicker 4s linear infinite;
-
-      i {
-        font-size: 4rem;
-        color: #2196f3;
-        animation: iconFlicker 4s linear infinite;
-      }
-    }
-
-    .cambiar-foto-btn {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: #2196f3;
-      width: 36px;
-      height: 36px;
-      min-height: unset;
-      padding: 0;
-      border: 2px solid rgba(49, 49, 49, 0.9);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-
-      i {
-        font-size: 0.9rem;
-        color: white;
-      }
-
-      &:hover {
-        background: lighten(#2196f3, 10%);
-        transform: scale(1.05);
-      }
+    &:hover {
+      background: lighten(#2196f3, 10%);
+      transform: scale(1.05);
     }
   }
 }
