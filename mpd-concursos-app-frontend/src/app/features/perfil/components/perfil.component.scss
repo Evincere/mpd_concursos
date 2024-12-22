@@ -1,4 +1,3 @@
-// Variables comunes
 $common-spacing: 1rem;
 $border-radius: 8px;
 $surface-bg: rgba(var(--surface-color-rgb), 0.5);
@@ -7,7 +6,6 @@ $scrollbar-track-color: rgba(var(--surface-color-rgb), 0.3);
 $scrollbar-thumb-color: rgba(var(--primary-color-rgb), 0.5);
 $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
 
-// Mixins comunes
 @mixin card-base {
   background-color: $surface-bg;
   border-radius: $border-radius;
@@ -68,12 +66,11 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
 
   &::-webkit-scrollbar-track {
     background: $scrollbar-track-color;
-    border-radius: $scrollbar-width / 2;
+    border-radius: calc($scrollbar-width / 2);
   }
-
   &::-webkit-scrollbar-thumb {
     background: $scrollbar-thumb-color;
-    border-radius: $scrollbar-width / 2;
+    border-radius: calc($scrollbar-width / 2);
     transition: background 0.2s ease;
 
     &:hover {
@@ -81,12 +78,10 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
     }
   }
 
-  // Firefox
   scrollbar-width: thin;
   scrollbar-color: $scrollbar-thumb-color $scrollbar-track-color;
 }
 
-// Estilos del contenedor principal
 .perfil-container {
   height: 100%;
   display: flex;
@@ -95,7 +90,6 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   gap: 1.5rem;
 }
 
-// Estilos del encabezado
 .perfil-header {
   @include flex-center;
   gap: 0.75rem;
@@ -114,7 +108,6 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   }
 }
 
-// Estilos de las pestañas
 .perfil-tabs {
   flex: 1;
   @include card-base;
@@ -132,7 +125,6 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   }
 }
 
-// Contenido de las pestañas
 .tab-content {
   height: 100%;
   display: flex;
@@ -141,7 +133,6 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   padding: 1rem;
 }
 
-// Estilos del formulario de perfil
 .perfil-form {
   display: flex;
   flex-direction: column;
@@ -224,7 +215,6 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   }
 }
 
-// Estilos de la foto de perfil
 .perfil-foto {
   display: flex;
   justify-content: center;
@@ -270,7 +260,6 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
     }
   }
 }
-
 // Estilos para los campos de formulario
 ::ng-deep {
   .mat-mdc-form-field {
@@ -292,8 +281,7 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
 
 // Estilos para la sección de currículum
 .curriculum-container {
-  display: flex;
-  gap: 2rem;
+// Estilos para la sección de currículum
   height: 100%;
   padding: 1.5rem;
   @include card-base;
@@ -358,8 +346,7 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
 .cv-section {
   @include card-base;
   padding: 1.5rem;
-  margin-bottom: 2rem;
-
+// Estilos para la sección de información
   .section-header {
     @include section-header;
   }
@@ -369,8 +356,7 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
 .social-card {
   background: rgba(49, 49, 49, 0.9);
   border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1.5rem;
+// Estilos para la sección de redes sociales
   margin-bottom: 1rem;
   transition: all 0.3s ease;
   height: calc(100% - 2rem);
@@ -505,8 +491,7 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   height: 150px;
   border-radius: 50%;
   overflow: visible;
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid #2196f3;
+// Estilos para la sección de carga de foto
   box-shadow: 0px 0px 30px rgba(33, 150, 243, 0.2),
              inset 0px 0px 10px rgba(33, 150, 243, 0.1);
   transition: all 0.3s ease;

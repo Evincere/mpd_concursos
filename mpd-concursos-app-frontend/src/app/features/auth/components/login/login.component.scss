@@ -35,7 +35,6 @@
   overflow: hidden;
 }
 
-
 .front, .back {
   position: absolute;
   top: 0;
@@ -116,7 +115,7 @@
   position: relative;
 }
 
-.login-box .user-box input {
+.login-box .user-box .login-input {
   width: 100%;
   padding: 10px 0;
   font-size: 16px;
@@ -128,9 +127,19 @@
   background: transparent;
 }
 
-.login-box .user-box input:-webkit-autofill {
-  background-color: rgba(0, 0, 0, 0.9) !important;
-  color: #fff !important;
+.login-box .user-box .login-input:-webkit-autofill,
+.login-box .user-box .login-input:-internal-autofill-preview {
+  -webkit-box-shadow: 0 0 0 100px transparent inset;
+  -webkit-text-fill-color: white;
+}
+
+.login-box .user-box .login-input:-ms-input-placeholder,
+.login-box .user-box .login-input::-ms-input-placeholder {
+  color: white;
+}
+
+.login-box .user-box .login-input::placeholder {
+  color: white;
 }
 
 .login-box .user-box label {
@@ -144,8 +153,8 @@
   transition: .5s;
 }
 
-.login-box .user-box input:focus ~ label,
-.login-box .user-box input:valid ~ label {
+.login-box .user-box .login-input:focus ~ label,
+.login-box .user-box .login-input:valid ~ label {
   top: -20px;
   left: 0;
   color: #fff;
@@ -292,9 +301,7 @@ mat-error {
   right: -2px;
   bottom: -2px;
   // background: linear-gradient(45deg, #0c50bf, #2196F3);
-  background: none;
   z-index: -1;
-  border-radius: 12px;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -308,4 +315,23 @@ mat-error {
   text-align: center;
   margin-top: 10px;
   font-size: 0.9em;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: #fff !important;
+    -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+    background-color: transparent !important;
+}
+
+input {
+    background: transparent !important;
+    color: #fff !important;
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
 }

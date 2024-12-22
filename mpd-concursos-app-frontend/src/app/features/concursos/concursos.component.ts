@@ -17,7 +17,7 @@ import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.
 import { ConcursoDetalleComponent } from './components/concurso-detalle/concurso-detalle.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { InscripcionButtonComponent } from './components/inscripcion/inscripcion-button/inscripcion-button.component';
-import { FiltrosConcurso } from '@shared/interfaces/filters/filtros.interface';
+import { FiltersConcurso } from '@shared/interfaces/filters/filters-concurso.interface';
 
 @Component({
   selector: 'app-concursos',
@@ -64,7 +64,7 @@ export class ConcursosComponent implements OnInit {
   concursoSeleccionado: Concurso | null = null;
   mostrarFiltros = false;
   filtrosActivos = false;
-  filtros: FiltrosConcurso = {
+  filtros: FiltersConcurso = {
     estado: 'todos',
     dependencia: 'todos',
     cargo: 'todos',
@@ -72,6 +72,7 @@ export class ConcursosComponent implements OnInit {
   };
   concursosSinFiltrar: Concurso[] = [];
   searchTerm: string = '';
+  primeraConsulta = true;
 
   constructor(
     private concursosService: ConcursosService,
@@ -91,6 +92,7 @@ export class ConcursosComponent implements OnInit {
         this.concursos = concursos;
         this.concursosSinFiltrar = [...concursos]; // Guardamos una copia sin filtrar
         this.loading = false;
+        this.primeraConsulta = false;
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error al cargar los concursos:', error);
@@ -125,9 +127,11 @@ export class ConcursosComponent implements OnInit {
     console.log('Estado de mostrarFiltros después de cambiar:', this.mostrarFiltros);
   }
 
-  aplicarFiltros(filtros: FiltrosConcurso): void {
+  aplicarFiltros(filtros: FiltersConcurso): void {
     this.filtros = filtros;
     this.filtrosActivos = this.hayFiltrosActivos(filtros);
+    this.primeraConsulta = false;
+    
     // Aquí implementar la lógica de filtrado
     this.concursos = this.concursosSinFiltrar.filter(concurso => {
       // Filtro por estado
@@ -168,8 +172,12 @@ export class ConcursosComponent implements OnInit {
     });
   }
 
-  private hayFiltrosActivos(filtros: FiltrosConcurso): boolean {
-    return Object.values(filtros).some(valor => valor && valor !== 'todos');
+  private hayFiltrosActivos(filtros: FiltersConcurso): boolean {
+    return Object.values(filtros).some(valor => 
+      valor !== null && 
+      valor !== undefined && 
+      valor !== 'todos'
+    );
   }
 
   toggleFiltros(): void {
@@ -265,5 +273,24 @@ export class ConcursosComponent implements OnInit {
     }
 
     return { fechaInicio, fechaFin };
+  }
+
+  hayFiltrosAplicados(): boolean {
+    if (this.primeraConsulta) {
+      return false;
+    }
+    return this.hayFiltrosActivos(this.filtros) || Boolean(this.searchTerm?.trim());
+  }
+
+  limpiarFiltros(): void {
+    this.searchTerm = '';
+    this.filtrosActivos = false;
+    this.filtros = {
+      estado: 'todos',
+      dependencia: 'todos',
+      cargo: 'todos',
+      periodo: 'todos'
+    };
+    this.cargarConcursos();
   }
 }

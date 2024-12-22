@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { FiltrosConcurso } from '@shared/interfaces/filters/filtros.interface';
+import { FiltersConcurso } from '@shared/interfaces/filters/filters-concurso.interface';
 
 interface FilterOption {
   value: string;
@@ -47,31 +47,37 @@ interface FilterOption {
   }
 })
 export class FiltrosPanelComponent implements OnInit, OnDestroy {
-  @Output() filtrosChange = new EventEmitter<FiltrosConcurso>();
+  @Output() filtrosChange = new EventEmitter<FiltersConcurso>();
   @Output() cerrar = new EventEmitter<void>();
 
   filtrosForm: FormGroup;
   private destroy$ = new Subject<void>();
 
   estadoOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todos', icon: 'all_inclusive' },
     { value: 'activo', label: 'Activo', icon: 'check_circle' },
-    { value: 'finalizado', label: 'Finalizado', icon: 'cancel' },
-    { value: 'todos', label: 'Todos', icon: 'all_inclusive' }
+    { value: 'proximo', label: 'Próximo', icon: 'schedule' },
+    { value: 'finalizado', label: 'Finalizado', icon: 'cancel' }
   ];
 
-  categoriaOptions: FilterOption[] = [
-    { value: 'administrativo', label: 'Administrativo', icon: 'business' },
-    { value: 'tecnico', label: 'Técnico', icon: 'build' },
-    { value: 'profesional', label: 'Profesional', icon: 'school' }
+  periodoOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todos', icon: 'date_range' },
+    { value: 'hoy', label: 'Hoy', icon: 'today' },
+    { value: 'semana', label: 'Esta semana', icon: 'view_week' },
+    { value: 'mes', label: 'Este mes', icon: 'calendar_today' },
+    { value: 'trimestre', label: 'Este trimestre', icon: 'date_range' },
+    { value: 'anio', label: 'Este año', icon: 'event' }
   ];
 
   dependenciaOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todas', icon: 'account_balance' },
     { value: 'defensa_penal', label: 'Defensa Penal', icon: 'gavel' },
     { value: 'recursos_humanos', label: 'Recursos Humanos', icon: 'people' },
     { value: 'informatica', label: 'Informática', icon: 'computer' }
   ];
 
   cargoOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todos', icon: 'work' },
     { value: 'defensor', label: 'Defensor', icon: 'person' },
     { value: 'analista', label: 'Analista', icon: 'analytics' },
     { value: 'asistente', label: 'Asistente', icon: 'support_agent' }
@@ -80,9 +86,9 @@ export class FiltrosPanelComponent implements OnInit, OnDestroy {
   constructor(private fb: FormBuilder) {
     this.filtrosForm = this.fb.group({
       estado: ['todos'],
-      categoria: [''],
-      dependencia: [''],
-      cargo: ['']
+      periodo: ['todos'],
+      dependencia: ['todos'],
+      cargo: ['todos']
     });
   }
 
@@ -94,7 +100,13 @@ export class FiltrosPanelComponent implements OnInit, OnDestroy {
         distinctUntilChanged()
       )
       .subscribe(filtros => {
-        this.filtrosChange.emit(filtros);
+        const filtrosFormateados: FiltersConcurso = {
+          estado: filtros.estado as FiltersConcurso['estado'],
+          periodo: filtros.periodo as FiltersConcurso['periodo'],
+          dependencia: filtros.dependencia,
+          cargo: filtros.cargo
+        };
+        this.filtrosChange.emit(filtrosFormateados);
       });
   }
 

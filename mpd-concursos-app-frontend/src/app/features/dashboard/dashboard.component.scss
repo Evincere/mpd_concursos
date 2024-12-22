@@ -17,16 +17,21 @@
     display: flex;
     height: calc(100vh - 92px);
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
 
     app-sidebar {
         flex-shrink: 0;
         transition: width 0.3s ease;
         width: 250px;
+        position: relative;
 
         &.collapsed {
-            width: 80px;
+            width: 60px; 
+        }
+
+        ::ng-deep .sidebar-container {
+            overflow: visible;
         }
     }
 
@@ -35,10 +40,11 @@
         overflow-y: auto;
         transition: all 0.3s ease;
         margin-left: 0;
+        position: relative;
+        z-index: 1;
 
         &.sidebar-collapsed {
             margin-left: 0;
         }
     }
 }
-

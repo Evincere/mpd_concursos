@@ -1,83 +1,69 @@
-@use 'variables' as *;
+@use '../../../../../styles/variables' as *;
 
 .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: $color-background;
+  color: white;
+  height: 64px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  .logo-container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%; 
-    background: $color-background;
-    height: 100%;
-    padding: 0 2rem 0 0.6rem;
+    gap: 1rem;
+
+    img {
+      height: 40px;
+      width: auto;
+    }
 
     .navbar-title {
-        text-align: center;
-        color: $color-text-secondary;
-        margin: 0;
-        flex-grow: 1;
-        font-size: 1.5rem;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: white;
+      text-decoration: none;
     }
+  }
 
-    .nav-right {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-    }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 
     .logout-btn {
-        padding: 0.8rem;
-        background-color: $color-secondary;
-        color: $color-text-secondary;
-        border: none;
-        border-radius: $border-radius;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: $transition-default;
-        
-        i {
-            font-size: 1.2rem;
-        }
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
 
-        .logout-text {
-            max-width: 0;
-            overflow: hidden;
-            white-space: nowrap;
-            transition: $transition-default;
-            opacity: 0;
-        }
+      &:hover {
+        background-color: rgba(255,255,255,0.1);
+      }
 
-        &:hover {
-            background-color: $color-primary;
-            padding: 0.8rem 1.2rem;
+      i {
+        font-size: 1rem;
+      }
 
-            .logout-text {
-                max-width: 200px;
-                opacity: 1;
-            }
-        }
+      .logout-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
     }
-
-    .logo-container {
-        position: relative;
-        padding: 0.5rem;
-        border-radius: $border-radius;
-        transition: $transition-default;
-
-        img {
-            height: 60px;
-            transition: $transition-default;
-        }
-
-        &:hover {
-            background: rgba($color-primary, 0.1);
-        }
-    }
+  }
 }
 
 .user-info {
-    display: flex;
-    flex-direction: column; // Alinea el nombre y el CUIT verticalmente
-    align-items: flex-end; // Alinea a la derecha
-    color: #fff;
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-end; 
+  color: #fff;
 }

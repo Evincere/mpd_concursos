@@ -14,7 +14,7 @@ interface ValidationError {
   providedIn: 'root'
 })
 export class RegisterService {
-  private apiUrl = environment.apiUrl + '/api/auth/register';
+  private apiUrl = environment.apiUrl + '/auth/register';
 
   constructor(private http: HttpClient) { }
 

@@ -12,11 +12,6 @@
     overflow-y: auto;
     position: relative;
     transition: all 0.3s ease;
-    
-    &.blurred {
-      filter: blur(4px);
-      pointer-events: none;
-    }
   }
 
   app-filtros-postulaciones {
@@ -35,14 +30,11 @@
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
     z-index: 999;
   }
 
   &.panel-active {
     .content {
-      filter: blur(4px);
-      transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       pointer-events: none;
     }
   }
@@ -359,6 +351,67 @@
 
     &.no-resultados {
       animation: fadeIn 0.3s ease;
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    padding: 2rem;
+
+    .empty-state-content {
+      text-align: center;
+      max-width: 500px;
+      padding: 2rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+      &.filtered {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      i {
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 1.5rem;
+      }
+
+      h3 {
+        color: #fff;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      p {
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 2rem;
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      .actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+
+        button {
+          i {
+            margin-right: 0.5rem;
+            margin-bottom: 0;
+            font-size: 1rem;
+            color: inherit;
+          }
+        }
+      }
+
+      button {
+        i {
+          margin-right: 0.5rem;
+        }
+      }
     }
   }
 

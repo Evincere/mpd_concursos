@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { CommonModule } from '@angular/common';
@@ -28,7 +28,8 @@ import { LoginUser } from '../../../../core/models/login-user.model';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, AfterViewInit {
+  @ViewChild('loginFormContainer') loginFormContainer!: ElementRef;
   loginForm: FormGroup;
   loginError: string | null = null;
   hide: boolean = true;
@@ -46,14 +47,24 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit() {
-
-    // Suscribirse a cambios en cualquier campo del formulario
     this.loginForm.valueChanges.subscribe(() => {
       if (this.loginError) {
         this.loginError = null;
       }
     });
   }
+
+  ngAfterViewInit() {
+    const inputs = this.loginFormContainer.nativeElement.querySelectorAll('.login-input');
+    inputs.forEach((input: HTMLInputElement) => {
+      input.addEventListener('input', () => {
+            setTimeout(() => {
+          input.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+          input.style.color = 'white';
+        }, 100);
+        });
+    });
+    }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
@@ -66,7 +77,7 @@ export class LoginComponent implements OnInit {
       if (!loginData.isValid()) {
         this.loginError = 'Por favor, complete todos los campos correctamente';
         return;
-      }
+  }
 
       console.log('[LoginComponent] Enviando datos de login:', { 
         username: loginData.username,
@@ -83,18 +94,17 @@ export class LoginComponent implements OnInit {
             console.error('[LoginComponent] Error en login:', error.message);
             this.loginError = error.message || 'Error al intentar iniciar sesión';
 
-            // Solo reseteamos el password en caso de error
             setTimeout(() => {
               this.loginForm.get('password')?.reset();
-              this.isFlipped = true;
+      this.isFlipped = true;
             }, 3000);
-          }
+    }
         });
     } else {
       this.loginError = 'Por favor, complete todos los campos correctamente';
       this.isFlipped = true;
-    }
   }
+}
 
   goToRegister(): void {
     this.router.navigate(['/register']);

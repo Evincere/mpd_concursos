@@ -64,7 +64,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     'estado',
     'acciones'
   ];
-  dataSource!: MatTableDataSource<Postulacion>;
+  dataSource = new MatTableDataSource<Postulacion>([]);
   postulaciones: Postulacion[] = [];
   postulacionesFiltradas: Postulacion[] = [];
   loading = false;
@@ -75,12 +75,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   postulacionSeleccionada: Postulacion | null = null;
 
   private destroy$ = new Subject<void>();
-  public filtrosActuales: FiltrosPostulacion = {
-    estado: 'todos',
-    periodo: 'todos',
-    dependencia: 'todas',
-    cargo: 'todos'
-  };
+  public filtrosActuales: FiltrosPostulacion | null = null;
   public terminoBusqueda = '';
   public filtrosModificados = false;
   private dialogRef: MatDialogRef<FiltrosPostulacionesComponent> | null = null;
@@ -97,13 +92,13 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
+  primeraConsulta = true; // Nueva variable para controlar si es la primera carga
+
   constructor(
     private postulacionesService: PostulacionesService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) {
-    this.dataSource = new MatTableDataSource<Postulacion>();
-  }
+  ) { }
 
   ngOnInit(): void {
     this.cargarPostulaciones();
@@ -145,6 +140,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         finalize(() => {
           this.loading = false;
+          this.primeraConsulta = false; // Marcamos que ya no es la primera consulta
           // Asegurarnos de que los filtros estén en su estado inicial
           if (!this.terminoBusqueda && this.filtrosActuales?.estado === 'todos' && 
               this.filtrosActuales?.periodo === 'todos' && 
@@ -237,16 +233,31 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     return estadosMap[estadoFiltro.toLowerCase()] || estadoFiltro.toUpperCase();
   }
 
+  hayFiltrosAplicados(): boolean {
+    if (this.primeraConsulta) return false; // Si es la primera consulta, no hay filtros aplicados
+    
+    return !!(
+      this.filtrosActuales?.estado ||
+      this.filtrosActuales?.periodo ||
+      this.filtrosActuales?.dependencia ||
+      this.filtrosActuales?.cargo ||
+      this.filtrosActuales?.fechaDesde ||
+      this.filtrosActuales?.fechaHasta ||
+      this.terminoBusqueda
+    );
+  }
+
   limpiarFiltros(): void {
     this.filtrosActuales = {
-      estado: 'todos',
-      periodo: 'todos',
-      dependencia: 'todas',
-      cargo: 'todos'
+      estado: null,
+      periodo: null,
+      dependencia: null,
+      cargo: null,
+      fechaDesde: null,
+      fechaHasta: null
     };
     this.terminoBusqueda = '';
-    this.filtrosModificados = false;
-    this.aplicarFiltros();
+    this.cargarPostulaciones();
   }
 
   retryLoad(): void {

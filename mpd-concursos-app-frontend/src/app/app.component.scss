@@ -22,3 +22,27 @@ router-outlet + * {
   z-index: 1;
   flex: 1;
 }
+
+// Estilos para el botón de colapso del sidebar
+::ng-deep {
+  .sidebar-toggle {
+    position: absolute;
+    z-index: 1000;
+    left: 240px; // Ancho del sidebar
+    transform: translateX(-50%); // Centra el botón en el borde
+    background-color: rgba(66, 66, 66, 0.98);
+    border: none;
+    border-radius: 0 4px 4px 0;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background-color: rgba(76, 76, 76, 0.98);
+    }
+  }
+}
