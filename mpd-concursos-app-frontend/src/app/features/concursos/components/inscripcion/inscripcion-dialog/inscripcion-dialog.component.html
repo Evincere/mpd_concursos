@@ -1,37 +1,39 @@
 <div class="inscripcion-dialog">
+  <h2 mat-dialog-title>Confirmar Inscripción</h2>
+
+  <mat-dialog-content>
     <div class="dialog-content">
-        <div class="dialog-header">
-            <h2>Confirmar Inscripción</h2>
+      <p class="confirmation-message">¿Estás seguro que deseas inscribirte en este concurso?</p>
+      
+      <div class="concurso-info">
+        <div class="info-item">
+          <span class="label">Cargo:</span>
+          <span class="value">{{data.position}}</span>
         </div>
-
-        <div class="dialog-body">
-            <p>¿Está seguro que desea inscribirse en este concurso?</p>
-            
-            <div class="concurso-info">
-                <div class="info-item">
-                    <span class="label">Cargo:</span>
-                    <span class="value">{{ data.position }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Organismo:</span>
-                    <span class="value">{{ data.dependencia }}</span>
-                </div>
-            </div>
-
-            <p>Una vez confirmada la inscripción, recibirá un correo electrónico con los detalles.</p>
+        <div class="info-item">
+          <span class="label">Dependencia:</span>
+          <span class="value">{{data.dependencia}}</span>
         </div>
-
-        <div class="dialog-actions">
-            <button mat-button 
-                    class="cancel-btn" 
-                    (click)="cancelar()">
-                Cancelar
-            </button>
-            <button mat-button 
-                    class="confirm-btn"
-                    (click)="confirmar()">
-                Confirmar Inscripción
-            </button>
-        </div>
+      </div>
     </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-stroked-button
+            (click)="cancelar()"
+            [disabled]="loading">
+      Cancelar
+    </button>
+    <button mat-flat-button
+            color="primary"
+            (click)="confirmar()"
+            [disabled]="loading">
+      <mat-icon *ngIf="!loading">how_to_reg</mat-icon>
+      <mat-progress-spinner *ngIf="loading"
+                          [diameter]="20"
+                          mode="indeterminate">
+      </mat-progress-spinner>
+      <span>{{loading ? 'Inscribiendo...' : 'Confirmar Inscripción'}}</span>
+    </button>
+  </mat-dialog-actions>
 </div>

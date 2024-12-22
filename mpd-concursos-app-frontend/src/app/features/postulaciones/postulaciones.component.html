@@ -54,9 +54,16 @@
             </div>
           </div>
           <div class="actions">
-            <button mat-stroked-button class="details-button" (click)="verDetalle(postulacion)">
-              <mat-icon class="details-icon">visibility</mat-icon>
-              <span>Ver detalles</span>
+            <button mat-icon-button
+                    color="warn"
+                    matTooltip="Cancelar inscripción"
+                    (click)="$event.stopPropagation(); desinscribirse(postulacion)">
+              <mat-icon>cancel</mat-icon>
+            </button>
+            <button mat-icon-button
+                    matTooltip="Ver detalle"
+                    (click)="verDetalle(postulacion)">
+              <mat-icon>visibility</mat-icon>
             </button>
           </div>
         </div>

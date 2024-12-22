@@ -21,6 +21,8 @@ import { PostulacionesService } from '@core/services/postulaciones/postulaciones
 import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaciones.interface';
 import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interface';
 import { PostulacionDetalleComponent } from './components/postulacion-detalle/postulacion-detalle.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { InscripcionService } from '@core/services/inscripcion/inscripcion.service';
 
 @Component({
   selector: 'app-postulaciones',
@@ -41,7 +43,8 @@ import { PostulacionDetalleComponent } from './components/postulacion-detalle/po
     SearchHeaderComponent,
     LoaderComponent,
     FiltrosPostulacionesComponent,
-    PostulacionDetalleComponent
+    PostulacionDetalleComponent,
+    ConfirmDialogComponent
   ],
   animations: [
     trigger('fadeInOut', [
@@ -97,7 +100,8 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   constructor(
     private postulacionesService: PostulacionesService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private inscripcionService: InscripcionService
   ) { }
 
   ngOnInit(): void {
@@ -286,5 +290,52 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   getEstadoPostulacionClass(estado: string | undefined): string {
     if (!estado) return 'pending';
     return estado.toLowerCase();
+  }
+
+  desinscribirse(postulacion: any): void {
+    if (!postulacion.id) {
+      this.snackBar.open('Error: No se pudo identificar la inscripción', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Confirmar cancelación',
+        message: '¿Estás seguro que deseas cancelar tu inscripción a este concurso?',
+        confirmText: 'Sí, cancelar',
+        cancelText: 'No, mantener'
+      },
+      panelClass: 'custom-dialog'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading = true;
+        this.inscripcionService.desinscribirse(postulacion.id.toString())
+          .pipe(
+            takeUntil(this.destroy$),
+            finalize(() => this.loading = false)
+          )
+          .subscribe({
+            next: () => {
+              this.snackBar.open('Inscripción cancelada exitosamente', 'Cerrar', {
+                duration: 3000
+              });
+              this.cargarPostulaciones();
+            },
+            error: (error) => {
+              console.error('Error al cancelar la inscripción:', error);
+              this.snackBar.open(
+                'No se pudo cancelar la inscripción. Por favor, intenta nuevamente.',
+                'Cerrar',
+                { duration: 3000 }
+              );
+            }
+          });
+      }
+    });
   }
 }

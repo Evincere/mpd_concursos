@@ -12,10 +12,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import io.jsonwebtoken.Jwts;
-import jakarta.annotation.PostConstruct;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.security.SignatureException;
+import jakarta.annotation.PostConstruct;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 
 @Component
@@ -34,7 +34,7 @@ public class JwtProvider {
     @PostConstruct
     public void init() {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        logger.info("Clave JWT inicializada");
+        logger.info("Clave JWT inicializada con longitud: {}", secret.length());
     }
 
     public String generateToken(Authentication authentication, User user) {
@@ -44,72 +44,97 @@ public class JwtProvider {
                 .map(authority -> authority.getAuthority())
                 .collect(Collectors.toList());
 
-        logger.info("Generando token para usuario: {} con roles: {}", 
+        logger.debug("Generando token para usuario: {} con roles: {}", 
             userDetails.getUsername(), roles);
+
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration * 1000);
 
         String token = Jwts.builder()
             .setSubject(userDetails.getUsername())
             .claim("roles", roles)
             .claim("userId", user.getId().value().toString())
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(new Date().getTime() + expiration * 1000))
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
             .signWith(key)
             .compact();
 
-        logger.info("Token generado: {}", token);
+        logger.debug("Token generado. Expira en: {}", expiryDate);
         return token;
     }
 
     public String getUsernameFromToken(String token) {
-        String username = Jwts.parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .getBody()
-            .getSubject();
+        try {
+            String username = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
 
-        logger.info("Nombre de usuario extraído del token: {}", username);
-        return username;
+            logger.debug("Nombre de usuario extraído del token: {}", username);
+            return username;
+        } catch (Exception e) {
+            logger.error("Error al extraer username del token: {}", e.getMessage());
+            throw e;
+        }
     }
 
     public String getUserIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
-        
-        String userId = claims.get("userId", String.class);
-        logger.info("ID de usuario extraído del token: {}", userId);
-        return userId;
+        try {
+            Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+            
+            String userId = claims.get("userId", String.class);
+            logger.debug("ID de usuario extraído del token: {}", userId);
+            return userId;
+        } catch (Exception e) {
+            logger.error("Error al extraer userId del token: {}", e.getMessage());
+            throw e;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRolesFromToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+            List<String> roles = claims.get("roles", List.class);
+            logger.debug("Roles extraídos del token: {}", roles);
+            return roles;
+        } catch (Exception e) {
+            logger.error("Error al extraer roles del token: {}", e.getMessage());
+            throw e;
+        }
     }
 
     public boolean validateToken(String token) {
         try {
+            logger.debug("Validando token...");
             Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token);
-            logger.info("Token válido");
+            logger.debug("Token válido");
             return true;
-        } catch (Exception e) {
-            logger.error("Error al validar el token: {}", e.getMessage());
-            e.printStackTrace();
+        } catch (SignatureException e) {
+            logger.error("Firma JWT inválida: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            logger.error("Token mal formado: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            logger.error("Token expirado: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.error("Token no soportado: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("Claims vacíos: {}", e.getMessage());
         }
         return false;
     }
-
-    public List<String> getRolesFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-            .setSigningKey(key)
-            .build()
-            .parseClaimsJws(token)
-            .getBody();
-        
-        @SuppressWarnings("unchecked")
-        List<String> roles = claims.get("roles", List.class);
-        logger.info("Roles extraídos del token: {}", roles);
-        return roles;
-    }
-
 }

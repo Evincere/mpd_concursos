@@ -24,8 +24,10 @@
         </div>
         <div class="info-item">
           <div class="label">Estado</div>
-          <div class="value estado-badge" [ngClass]="concurso.status.toLowerCase()">
-            {{ getEstadoConcursoLabel(concurso.status) }}
+          <div class="value">
+            <span class="estado-badge" [ngClass]="concurso.status.toLowerCase()">
+              {{ getEstadoConcursoLabel(concurso.status) }}
+            </span>
           </div>
         </div>
       </div>
@@ -51,19 +53,29 @@
         {{ concurso.description }}
       </div>
     </div>
+  </div>
 
-    <div class="acciones">
-      <button mat-button 
-              class="volver-btn" 
-              (click)="onCerrar()">
-        <mat-icon>arrow_back</mat-icon>
-        <span>Volver</span>
+  <div class="actions-container">
+    <button mat-stroked-button
+            class="volver-btn"
+            (click)="onCerrar()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <div class="actions">
+      <button mat-flat-button
+              color="primary"
+              (click)="realizarInscripcion()"
+              [disabled]="estaInscripto || inscripcionLoading"
+              class="inscribirse-btn"
+              [class.inscripto]="estaInscripto">
+        <mat-icon>{{ estaInscripto ? 'check_circle' : 'how_to_reg' }}</mat-icon>
+        <span>{{ estaInscripto ? 'Ya inscripto' : 'Inscribirse' }}</span>
+        <mat-progress-spinner *ngIf="inscripcionLoading"
+                            diameter="20"
+                            mode="indeterminate">
+        </mat-progress-spinner>
       </button>
-      <app-inscripcion-button
-        [concurso]="concurso"
-        (inscripcionComplete)="onInscriptionComplete(concurso)"
-        *ngIf="concurso.status === 'PUBLISHED'"
-      ></app-inscripcion-button>
     </div>
   </div>
 </div>

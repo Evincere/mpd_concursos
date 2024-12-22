@@ -1,77 +1,193 @@
-@use 'variables' as *;
+@use '@angular/material' as mat;
 
-.inscripcion-dialog {
-    min-width: 400px;
-    max-width: 600px;
-
-    .dialog-content {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-lg;
-
-        .concurso-info {
-            padding: $spacing-md;
-            background-color: rgba($color-primary, 0.1);
-            border-radius: $border-radius;
-
-            h3 {
-                margin: 0 0 $spacing-sm;
-                color: $color-primary;
-            }
-
-            .cargo {
-                font-weight: 500;
-                margin: 0 0 $spacing-xs;
-            }
-
-            .dependencia {
-                color: $color-text-secondary;
-                margin: 0;
-            }
-        }
-
-        .warning-message {
-            display: flex;
-            gap: $spacing-md;
-            padding: $spacing-md;
-            background-color: rgba($color-warning, 0.1);
-            border-radius: $border-radius;
-
-            mat-icon {
-                color: $color-warning;
-            }
-
-            p {
-                margin: 0;
-                flex: 1;
-            }
-        }
-    }
-
-    mat-dialog-actions {
-        padding: $spacing-md;
-        gap: $spacing-md;
-    }
-}
+// Variables de color para el tema oscuro
+$dark-bg-primary: #1e1e1e;
+$dark-bg-secondary: #2d2d2d;
+$dark-text-primary: rgba(255, 255, 255, 0.87);
+$dark-text-secondary: rgba(255, 255, 255, 0.6);
+$dark-border: rgba(255, 255, 255, 0.12);
+$dark-primary: #1976d2;
+$dark-primary-lighter: rgba(25, 118, 210, 0.3);
 
 :host {
   display: block;
 }
 
-::ng-deep .mat-mdc-dialog-container {
-  --mdc-dialog-container-color: #1e1e1e !important;
-  border-radius: 16px !important;
-  overflow: hidden !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+// Mixins para efectos de glassmorphism
+@mixin glassmorphism {
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
 
-  .mdc-dialog__surface {
-    background-color: #1e1e1e !important;
-    color: #ffffff !important;
-    padding: 0 !important;
+@mixin glass-button {
+  background: rgba(45, 45, 45, 0.9);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(55, 55, 55, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  .mdc-dialog__content {
-    color: rgba(255, 255, 255, 0.87) !important;
+  &:active {
+    background: rgba(65, 65, 65, 0.9);
+  }
+}
+
+.inscripcion-dialog {
+  background-color: $dark-bg-primary;
+  border-radius: 8px;
+
+  .dialog-content {
+    padding: 20px 0;
+
+    .confirmation-message {
+      font-size: 16px;
+      margin-bottom: 24px;
+      color: $dark-text-primary;
+    }
+
+    .concurso-info {
+      @include glassmorphism();
+      padding: 16px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+
+      .info-item {
+        display: flex;
+        margin-bottom: 12px;
+        line-height: 24px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .label {
+          min-width: 120px;
+          font-weight: 500;
+          color: $dark-text-secondary;
+        }
+
+        .value {
+          color: $dark-text-primary;
+          font-weight: 400;
+        }
+      }
+    }
+  }
+}
+
+::ng-deep {
+  .glassmorphism {
+    .mat-mdc-dialog-surface {
+      @include glassmorphism();
+      border-radius: 16px;
+      color: $dark-text-primary;
+    }
+
+    .mat-mdc-dialog-container {
+      --mdc-dialog-container-color: transparent;
+      padding: 24px !important;
+    }
+
+    .mat-mdc-dialog-content {
+      padding: 0 24px !important;
+      margin: 0;
+      max-height: 65vh;
+      color: $dark-text-primary;
+    }
+
+    .mat-mdc-dialog-title {
+      padding: 0 24px !important;
+      margin: 0 0 20px 0 !important;
+      color: $dark-text-primary;
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 32px;
+    }
+
+    .mat-mdc-dialog-actions {
+      padding: 8px 24px 24px !important;
+      margin-bottom: 0;
+      gap: 8px;
+
+      button {
+        &[mat-stroked-button] {
+          @include glass-button();
+          color: $dark-text-primary;
+        }
+
+        &[mat-flat-button] {
+          @include glass-button();
+          color: $dark-text-primary;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+
+          &.mat-primary {
+            background: $dark-primary-lighter;
+            border: 1px solid rgba(25, 118, 210, 0.5);
+
+            &:hover {
+              background: rgba(25, 118, 210, 0.4);
+              border-color: rgba(25, 118, 210, 0.6);
+            }
+
+            &:active {
+              background: rgba(25, 118, 210, 0.5);
+            }
+          }
+
+          mat-icon {
+            margin-right: 4px;
+          }
+
+          mat-progress-spinner {
+            margin-right: 8px;
+          }
+        }
+
+        &[disabled] {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+// Estilos para el backdrop
+.dark-backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+// Estilos globales para el diálogo
+::ng-deep {
+  .cdk-overlay-container {
+    z-index: 1000;
+  }
+
+  .cdk-global-overlay-wrapper {
+    z-index: 1000;
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .cdk-overlay-backdrop {
+    z-index: 999;
   }
 }
 
@@ -94,7 +210,7 @@
 
   .dialog-body {
     margin-bottom: 24px;
-    color: rgba(255, 255, 255, 0.87);
+    color: $dark-text-primary;
     font-size: 1rem;
     line-height: 1.5;
 
@@ -124,7 +240,7 @@
         .label {
           font-weight: 500;
           min-width: 120px;
-          color: rgba(255, 255, 255, 0.6);
+          color: $dark-text-secondary;
         }
 
         .value {
@@ -150,13 +266,13 @@
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       &.cancel-btn {
-        color: rgba(255, 255, 255, 0.87);
+        color: $dark-text-primary;
         background: transparent;
-        border: 2px solid rgba(255, 255, 255, 0.12);
+        border: 2px solid $dark-border;
 
         &:hover {
           background: rgba(255, 255, 255, 0.08);
-          border-color: rgba(255, 255, 255, 0.3);
+          border-color: $dark-border;
         }
 
         &:active {
@@ -166,12 +282,12 @@
 
       &.confirm-btn {
         color: #ffffff;
-        background: linear-gradient(135deg, #4CAF50, #45a049);
+        background: linear-gradient(135deg, $dark-primary, $dark-primary-lighter);
         border: none;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 
         &:hover {
-          background: linear-gradient(135deg, #45a049, #3d8b40);
+          background: linear-gradient(135deg, $dark-primary-lighter, $dark-primary);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
           transform: translateY(-1px);
         }
@@ -180,6 +296,63 @@
           transform: translateY(0);
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
+      }
+    }
+  }
+}
+
+.dialog-content {
+  padding: 20px 0;
+
+  .concurso-info {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: $dark-bg-secondary;
+    border-radius: 4px;
+
+    .info-item {
+      margin-bottom: 10px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      strong {
+        margin-right: 8px;
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  .warning-text {
+    display: flex;
+    align-items: center;
+    color: #f57c00;
+    margin-top: 20px;
+    font-size: 14px;
+
+    mat-icon {
+      margin-right: 8px;
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+  
+  button {
+    &[mat-raised-button] {
+      min-width: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      mat-spinner {
+        margin-right: 8px;
       }
     }
   }

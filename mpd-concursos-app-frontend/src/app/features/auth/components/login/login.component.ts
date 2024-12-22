@@ -55,16 +55,20 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    const inputs = this.loginFormContainer.nativeElement.querySelectorAll('.login-input');
-    inputs.forEach((input: HTMLInputElement) => {
-      input.addEventListener('input', () => {
+    if (this.loginFormContainer && this.loginFormContainer.nativeElement) {
+      const inputs = this.loginFormContainer.nativeElement.querySelectorAll('.login-input');
+      if (inputs) {
+        inputs.forEach((input: HTMLInputElement) => {
+          input.addEventListener('input', () => {
             setTimeout(() => {
-          input.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-          input.style.color = 'white';
-        }, 100);
+              input.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+              input.style.color = 'white';
+            }, 100);
+          });
         });
-    });
+      }
     }
+  }
 
   onSubmit(): void {
     if (this.loginForm.valid) {
@@ -77,7 +81,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
       if (!loginData.isValid()) {
         this.loginError = 'Por favor, complete todos los campos correctamente';
         return;
-  }
+      }
 
       console.log('[LoginComponent] Enviando datos de login:', { 
         username: loginData.username,
@@ -96,15 +100,15 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
             setTimeout(() => {
               this.loginForm.get('password')?.reset();
-      this.isFlipped = true;
+              this.isFlipped = true;
             }, 3000);
-    }
+          }
         });
     } else {
       this.loginError = 'Por favor, complete todos los campos correctamente';
       this.isFlipped = true;
+    }
   }
-}
 
   goToRegister(): void {
     this.router.navigate(['/register']);

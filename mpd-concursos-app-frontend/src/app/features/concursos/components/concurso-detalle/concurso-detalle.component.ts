@@ -1,107 +1,137 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { InscripcionService } from '../../../../core/services/inscripcion/inscripcion.service';
+import { finalize } from 'rxjs/operators';
+import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { animate, style, transition, trigger } from '@angular/animations';
-import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
-import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
-import { InscripcionDialogComponent } from '../inscripcion/inscripcion-dialog/inscripcion-dialog.component';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DatePipe } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-concurso-detalle',
-  templateUrl: './concurso-detalle.component.html',
-  styleUrls: ['./concurso-detalle.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    MatDialogModule,
-    InscripcionButtonComponent
+    MatCardModule,
+    MatDividerModule,
+    MatProgressSpinnerModule,
+    DatePipe
   ],
-  animations: [
-    trigger('slidePanel', [
-      transition(':enter', [
-        style({ transform: 'translateX(100%)' }),
-        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(0)' }))
-      ]),
-      transition(':leave', [
-        style({ transform: 'translateX(0)' }),
-        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(100%)' }))
-      ])
-    ])
-  ],
-  host: {
-    'class': 'concurso-detalle-panel',
-    '[@slidePanel]': ''
-  }
+  templateUrl: './concurso-detalle.component.html',
+  styleUrls: ['./concurso-detalle.component.scss']
 })
-export class ConcursoDetalleComponent {
+export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   @Input() concurso!: Concurso;
   @Output() cerrarDetalle = new EventEmitter<void>();
   @Output() inscripcionRealizada = new EventEmitter<Concurso>();
-  
-  private dialogRef!: MatDialogRef<InscripcionDialogComponent> | null;
 
   closing = false;
+  inscripcionLoading = false;
+  estaInscripto = false;
+  private destroy$ = new Subject<void>();
 
-  constructor(private dialog: MatDialog) { }
+  constructor(
+    private inscripcionService: InscripcionService,
+    private snackBar: MatSnackBar
+  ) { }
 
-  getEstadoConcursoLabel(estado: string): string {
-    switch (estado) {
-      case 'PUBLISHED':
-        return 'Publicado';
-      case 'DRAFT':
-        return 'Borrador';
-      case 'CLOSED':
-        return 'Cerrado';
-      case 'CANCELLED':
-        return 'Cancelado';
-      default:
-        return estado;
+  ngOnInit() {
+    console.log('Concurso recibido:', this.concurso);
+    if (this.concurso) {
+      this.verificarInscripcion();
     }
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private verificarInscripcion(): void {
+    this.inscripcionLoading = true;
+    this.inscripcionService.verificarInscripcion(this.concurso.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.inscripcionLoading = false)
+      )
+      .subscribe({
+        next: (inscripto) => {
+          this.estaInscripto = inscripto;
+          console.log('Estado de inscripción:', inscripto);
+        },
+        error: (error) => {
+          console.error('Error al verificar inscripción:', error);
+        }
+      });
+  }
+
+  getEstadoConcursoLabel(status: string): string {
+    const estados: { [key: string]: string } = {
+      'PUBLISHED': 'Publicado',
+      'DRAFT': 'Borrador',
+      'CLOSED': 'Cerrado'
+    };
+    return estados[status] || status;
   }
 
   openInscripcionDialog() {
-    this.dialogRef = this.dialog.open(InscripcionDialogComponent, {
-      width: '500px',
-      data: { concursoId: this.concurso.id, position: this.concurso.position, dependencia: this.concurso.dependencia },
-      position: {
-        top: '11%',
-        left: '15%'
-      }
-    });
+    if (!this.concurso) {
+      console.error('No hay datos del concurso disponibles');
+      return;
+    }
 
-    this.dialogRef.afterClosed().subscribe(() => {
-      this.dialogRef = null; // Limpiar la referencia al cerrar
-    });
+    if (this.estaInscripto) {
+      this.snackBar.open('Ya te encuentras inscripto en este concurso', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    this.realizarInscripcion();
   }
 
-  private closeAllDialogs() {
-    // Cerrar el diálogo de inscripción si está abierto
-    if (this.dialogRef) {
-      this.dialogRef.close(false);
-      this.dialogRef = null;
+  realizarInscripcion(): void {
+    if (this.estaInscripto) {
+      return;
     }
-    
-    // Cerrar cualquier otro diálogo abierto
-    this.dialog.closeAll();
+
+    this.inscripcionLoading = true;
+    this.inscripcionService.inscribirseAConcurso(this.concurso.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => this.inscripcionLoading = false)
+      )
+      .subscribe({
+        next: () => {
+          this.estaInscripto = true;
+          this.inscripcionRealizada.emit(this.concurso);
+          this.snackBar.open(
+            `Te has inscrito exitosamente al concurso "${this.concurso.title}"`,
+            'Cerrar',
+            { duration: 3000 }
+          );
+        },
+        error: (error) => {
+          console.error('Error al realizar inscripción:', error);
+          this.snackBar.open(
+            'Error al realizar la inscripción. Por favor, intenta nuevamente.',
+            'Cerrar',
+            { duration: 3000 }
+          );
+        }
+      });
   }
 
   onCerrar() {
     this.closing = true;
-    
-    // Cerrar todos los diálogos abiertos
-    this.closeAllDialogs();
-
-    // Cerrar la ventana de detalle con la animación
-    setTimeout(() => {
-      this.cerrarDetalle.emit();
-    }, 400);
-  }
-
-  onInscriptionComplete(concurso: Concurso) {
-    this.inscripcionRealizada.emit(concurso);
+    setTimeout(() => this.cerrarDetalle.emit(), 300);
   }
 }

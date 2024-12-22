@@ -18,7 +18,9 @@ public final class SecurityConstants {
         "/api/auth/register",
         "/v3/api-docs/**",
         "/swagger-ui/**",
-        "/api/concursos/**"
+        "/api/concursos/**",
+        "/api/contests/inscripciones/**",
+        "/api/contests/inscripciones"
     };
 
     // Constantes de autenticación

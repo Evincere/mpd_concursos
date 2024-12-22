@@ -4,6 +4,7 @@ import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.port.in.CancelInscriptionUseCase;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageRequest;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStat
 public class InscriptionController {
     private final CreateInscriptionUseCase createInscriptionUseCase;
     private final FindInscriptionsUseCase findInscriptionsUseCase;
+    private final CancelInscriptionUseCase cancelInscriptionUseCase;
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_USER')")
@@ -51,6 +53,17 @@ public class InscriptionController {
         try {
             InscriptionStatus status = findInscriptionsUseCase.findInscriptionStatus(concursoId, userId);
             return ResponseEntity.ok(status);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Void> cancelInscription(@PathVariable Long id) {
+        try {
+            cancelInscriptionUseCase.cancel(id);
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }

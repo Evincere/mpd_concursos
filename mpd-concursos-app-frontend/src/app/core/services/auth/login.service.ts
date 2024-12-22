@@ -1,9 +1,11 @@
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, catchError, tap, throwError, map } from 'rxjs';
+import { Observable, catchError, tap, throwError } from 'rxjs';
 import { JwtDto } from '../../dtos/jwt-dto';
 import { LoginUser } from '../../models/login-user.model';
 import { environment } from '../../../../environments/environment';
+import { TokenService } from './token.service';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -11,10 +13,15 @@ import { environment } from '../../../../environments/environment';
 export class LoginService {
   private apiUrl = `${environment.apiUrl}/auth`;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private tokenService: TokenService,
+    private router: Router
+  ) { }
 
   public login(loginUser: LoginUser): Observable<JwtDto> {
     if (!loginUser.isValid()) {
+      console.error('[LoginService] Credenciales inválidas');
       return throwError(() => new Error('Credenciales inválidas'));
     }
 
@@ -29,60 +36,37 @@ export class LoginService {
       apiUrl: `${this.apiUrl}/login`
     });
     
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    });
+    const headers = new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Accept', 'application/json');
 
     return this.http.post<JwtDto>(`${this.apiUrl}/login`, payload, {
       headers,
-      observe: 'response',
-      withCredentials: false
+      withCredentials: true
     }).pipe(
       tap(response => {
-        console.log('[LoginService] Login exitoso. Response:', {
-          status: response.status,
-          headers: {
-            'content-type': response.headers.get('content-type'),
-            'authorization': response.headers.has('authorization')
-          }
-        });
-      }),
-      map(response => {
-        if (!response.body) {
-          throw new Error('Respuesta vacía del servidor');
+        console.log('[LoginService] Respuesta del servidor:', response);
+        
+        if (!response || !response.token) {
+          console.error('[LoginService] Respuesta inválida del servidor');
+          throw new Error('Respuesta inválida del servidor');
         }
-        const token = response.headers.get('authorization');
-        if (token) {
-          response.body.token = token.replace('Bearer ', '');
-        }
-        return response.body;
+
+        this.tokenService.saveToken(response);
+        console.log('[LoginService] Token guardado exitosamente');
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('[LoginService] Error en login:', {
-          status: error.status,
-          statusText: error.statusText,
-          error: error.error,
-          message: error.message
-        });
-
-        if (error.error?.error) {
-          return throwError(() => new Error(error.error.error));
-        }
-
-        if (error.status === 0) {
-          return throwError(() => new Error('No se pudo conectar con el servidor'));
-        }
+        console.error('[LoginService] Error en login:', error);
         if (error.status === 401) {
           return throwError(() => new Error('Credenciales incorrectas'));
         }
-        if (error.status === 404) {
-          return throwError(() => new Error('Usuario no encontrado'));
-        }
-        
-        return throwError(() => new Error('Error al intentar iniciar sesión'));
+        return throwError(() => new Error('Error en el servidor'));
       })
     );
+  }
+
+  public logout(): void {
+    this.tokenService.removeToken();
+    this.router.navigate(['/login']);
   }
 }
