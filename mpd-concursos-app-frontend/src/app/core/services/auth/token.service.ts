@@ -155,8 +155,29 @@ export class TokenService {
     }
   }
 
-  private isTokenExpired(decodedToken: any): boolean {
-    if (!decodedToken.exp) {
+  public validateToken(token: string): boolean {
+    try {
+      const decodedToken = this.decodeToken(token);
+      if (!decodedToken) {
+        console.warn('[TokenService] Token inválido o no puede ser decodificado');
+        return false;
+      }
+
+      if (this.isTokenExpired(decodedToken)) {
+        console.warn('[TokenService] Token expirado');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[TokenService] Error validando token:', error);
+      return false;
+    }
+  }
+
+  public isTokenExpired(decodedToken: any): boolean {
+    if (!decodedToken?.exp) {
+      console.warn('[TokenService] Token no tiene fecha de expiración');
       return true;
     }
 
@@ -165,7 +186,7 @@ export class TokenService {
     const isExpired = now >= expiry;
 
     if (isExpired) {
-      console.warn('[TokenService] Token expired at:', new Date(expiry));
+      console.warn('[TokenService] Token expirado en:', new Date(expiry));
     }
 
     return isExpired;

@@ -101,6 +101,10 @@ export class AuthService {
     return user.id;
   }
 
+  public getToken(): string | null {
+    return this.tokenService.getToken();
+  }
+
   private loadUserInfo(): void {
     console.log('[AuthService] Cargando información del usuario');
     const username = this.tokenService.getUsername();
