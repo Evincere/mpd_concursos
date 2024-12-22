@@ -1,3 +1,6 @@
+@use 'variables' as *;
+@use '../styles/mixins' as *; 
+
 .concursos-feature-container {
   height: 100%;
   position: relative;
@@ -421,11 +424,11 @@
       box-shadow: 0 3px 5px -1px rgba(0,0,0,.2),
               0 6px 10px 0 rgba(0,0,0,.14),
               0 1px 18px 0 rgba(0,0,0,.12);
+      padding: 2rem;
       border-radius: 8px;
-      padding: 2.5rem;
+      color: white;
       text-align: center;
-      max-width: 500px;
-      width: 100%;
+      margin: 1rem;
 
       i {
         color: #2196f3;
@@ -476,6 +479,19 @@
           color: #ffc107;
         }
       }
+
+      .actions button {
+        @include button-base; 
+        background-color: $color-primary;
+        color: white; 
+        border-radius: 5px; 
+        padding: 0.5rem 1rem; 
+        transition: background-color 0.3s ease; 
+
+        &:hover {
+          background-color: darken($color-primary, 10%); 
+        }
+      }
     }
   }
 }
@@ -492,5 +508,37 @@
         }
       }
     }
+  }
+}
+
+.no-concursos button {
+  @include button-base; 
+  background-color: $color-primary; 
+  color: white; 
+  border-radius: 5px; 
+  padding: 0.5rem 1rem; 
+  transition: background-color 0.3s ease; 
+
+  &:hover {
+    background-color: darken($color-primary, 10%); 
+  }
+}
+
+.clear-filters-button {
+  @include button-base; 
+  background-color: $color-secondary; 
+  color: white; 
+
+  &:hover {
+    background-color: darken($color-secondary, 10%); 
+    transform: scale(1.05); 
+
+    i {
+      transform: rotate(180deg); 
+    }
+  }
+
+  i {
+    transition: transform 0.3s ease; 
   }
 }

@@ -51,5 +51,6 @@ export class SearchHeaderComponent {
 
   limpiarBusqueda(): void {
     this.searchForm.get('termino')?.reset();
+    // this.filter.emit(); 
   }
 }

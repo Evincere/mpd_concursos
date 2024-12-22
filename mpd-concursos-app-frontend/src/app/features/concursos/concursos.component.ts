@@ -107,7 +107,7 @@ export class ConcursosComponent implements OnInit {
 
   onSearch(term: string): void {
     this.searchTerm = term;
-    if (!term.trim()) {
+    if (!term || !term.trim()) {  
       this.cargarConcursos();
       return;
     }
@@ -135,7 +135,17 @@ export class ConcursosComponent implements OnInit {
     // Aquí implementar la lógica de filtrado
     this.concursos = this.concursosSinFiltrar.filter(concurso => {
       // Filtro por estado
-      if (filtros.estado && filtros.estado !== 'todos') {
+      if (filtros.estado === 'activo') {
+        if (concurso.status !== 'PUBLISHED') {
+          return false;
+        }
+      } else if (filtros.estado === 'finalizado') {
+        if (concurso.status !== 'CLOSED') {
+          return false;
+        }
+      } else if (filtros.estado && filtros.estado !== 'todos') {
+        console.log('Filtrando por estado:', filtros.estado);
+        console.log('Estado del concurso:', concurso.status);
         if (concurso.status !== filtros.estado) {
           return false;
         }
@@ -290,7 +300,7 @@ export class ConcursosComponent implements OnInit {
       dependencia: 'todos',
       cargo: 'todos',
       periodo: 'todos'
-    };
+    }; 
     this.cargarConcursos();
   }
 }

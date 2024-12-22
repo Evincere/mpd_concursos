@@ -144,7 +144,15 @@ export class InscripcionButtonComponent {
   onInscribirse() {
     const dialogRef = this.dialog.open(InscripcionDialogComponent, {
       width: '500px',
-      data: { concursoId: this.concurso.id }
+      data: {
+        concursoId: this.concurso.id,
+        position: this.concurso.position, // Asegúrate de que estos campos existan en tu objeto
+        dependencia: this.concurso.dependencia // Asegúrate de que estos campos existan en tu objeto
+      },
+      position: {
+        top: '11%',
+        left: '15%'
+      }  
     });
 
     dialogRef.afterClosed().subscribe(result => {

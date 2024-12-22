@@ -19,7 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
 export class InscripcionDialogComponent {
   constructor(
     public dialogRef: MatDialogRef<InscripcionDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: { concursoId: string; position: string; dependencia: string }
   ) {}
 
   cancelar(): void {
