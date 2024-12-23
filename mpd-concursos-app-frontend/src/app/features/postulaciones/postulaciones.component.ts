@@ -325,7 +325,10 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               this.snackBar.open('Inscripción cancelada exitosamente', 'Cerrar', {
-                duration: 3000
+                duration: 3000,
+                panelClass: ['success-snackbar'],
+                verticalPosition: 'bottom',
+                horizontalPosition: 'center'
               });
               this.cargarPostulaciones();
             },
@@ -334,7 +337,12 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
               this.snackBar.open(
                 'No se pudo cancelar la inscripción. Por favor, intenta nuevamente.',
                 'Cerrar',
-                { duration: 3000 }
+                {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  verticalPosition: 'bottom',
+                  horizontalPosition: 'center'
+                }
               );
             }
           });

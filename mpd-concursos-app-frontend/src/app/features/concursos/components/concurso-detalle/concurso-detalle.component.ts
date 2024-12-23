@@ -153,20 +153,29 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
           this.snackBar.open(
             `Te has inscrito exitosamente al concurso "${this.concurso?.title}"`,
             'Cerrar',
-            { duration: 3000 }
+            {
+              duration: 3000,
+              panelClass: ['success-snackbar'],
+              verticalPosition: 'bottom',
+              horizontalPosition: 'center'
+            }
           );
           // Refrescar el estado después de inscribirse
           this.verificarInscripcion();
         },
-        error: (error: Error) => {
+        error: (error) => {
           console.error('[ConcursoDetalleComponent] Error al realizar inscripción:', error);
-          let mensaje = 'Error al realizar la inscripción. Por favor, intenta nuevamente.';
-          
-          if (error.message.includes('no autenticado')) {
-            mensaje = 'Debes iniciar sesión para inscribirte al concurso.';
-          }
-          
-          this.snackBar.open(mensaje, 'Cerrar', { duration: 3000 });
+          this.inscripcionLoading = false;
+          this.snackBar.open(
+            'No se pudo completar la inscripción. Por favor, intente nuevamente.',
+            'Cerrar',
+            {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+              verticalPosition: 'bottom',
+              horizontalPosition: 'center'
+            }
+          );
         }
       });
   }

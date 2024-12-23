@@ -221,11 +221,6 @@ export class ConcursosComponent implements OnInit {
     if (this.concursoSeleccionado?.id === concurso.id) {
       this.concursoSeleccionado = { ...concurso };
     }
-    this.snackBar.open(
-      `Te has inscrito exitosamente al concurso "${concurso.title}"`,
-      'Cerrar',
-      { duration: 5000 }
-    );
   }
 
   verDetalle(concurso: Concurso, event?: MouseEvent): void {

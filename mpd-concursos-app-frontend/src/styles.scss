@@ -976,3 +976,97 @@ main.mat-app-background,
   box-sizing: border-box;
   z-index: 9999;
 }
+
+// Variables para Snackbars
+$snackbar-success: rgba(76, 175, 80, 0.85);
+$snackbar-error: rgba(244, 67, 54, 0.85);
+$snackbar-info: rgba(33, 150, 243, 0.85);
+$snackbar-text: rgba(255, 255, 255, 0.95);
+$snackbar-action: rgba(255, 255, 255, 0.7);
+
+// Mixin para efecto glassmorphism
+@mixin glassmorphism {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+}
+
+// Mixin para estilos comunes de snackbar
+@mixin snackbar-base($bg-color) {
+  .mdc-snackbar__surface {
+    background: $bg-color !important;
+    @include glassmorphism;
+    min-height: 40px !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .mdc-snackbar__label {
+    color: $snackbar-text !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+  }
+
+  .mat-simple-snackbar-action {
+    padding-inline-start: 12px !important;
+
+    button {
+      color: $snackbar-text !important;
+      font-size: 13px !important;
+      font-weight: 400 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      padding: 0 8px !important;
+      min-width: auto !important;
+      height: 28px !important;
+      line-height: 28px !important;
+      border-radius: 4px !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+  }
+}
+
+// Estilos para Snackbars
+.success-snackbar {
+  @include snackbar-base($snackbar-success);
+}
+
+.error-snackbar {
+  @include snackbar-base($snackbar-error);
+}
+
+.info-snackbar {
+  @include snackbar-base($snackbar-info);
+}
+
+// Ajustes generales para el contenedor del snackbar
+.mat-mdc-snack-bar-container {
+  &.success-snackbar, &.error-snackbar, &.info-snackbar {
+    margin: 16px !important;
+    
+    .mat-mdc-snack-bar-actions {
+      margin-inline-end: -8px !important;
+    }
+  }
+}
+
+// Animaciones para snackbars
+@keyframes snackbarFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mat-mdc-snack-bar-container {
+  animation: snackbarFadeIn 0.3s ease-out;
+}
