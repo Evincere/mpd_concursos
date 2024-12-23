@@ -226,272 +226,8 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   width: 150px;
   height: 150px;
   border-radius: 50%;
-  overflow: hidden;
-  @include card-base;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .default-avatar {
-    width: 100%;
-    height: 100%;
-    @include flex-center;
-    justify-content: center;
-    background-color: rgba(var(--surface-color-rgb), 0.8);
-
-    i {
-      font-size: 4rem;
-      color: var(--primary-color);
-    }
-  }
-
-  .cambiar-foto-btn {
-    position: absolute;
-    bottom: 0.5rem;
-    right: 0.5rem;
-    background-color: var(--primary-color);
-    color: white;
-
-    &:hover {
-      background-color: rgba(var(--primary-color-rgb), 0.9);
-    }
-  }
-}
-// Estilos para los campos de formulario
-::ng-deep {
-  .mat-mdc-form-field {
-    width: 100%;
-    
-    .mat-mdc-text-field-wrapper {
-      background-color: rgba(var(--surface-color-rgb), 0.8);
-    }
-
-    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
-      background-color: transparent;
-    }
-
-    .mat-mdc-form-field-focus-overlay {
-      background-color: rgba(var(--primary-color-rgb), 0.1);
-    }
-  }
-}
-
-// Estilos para la sección de currículum
-.curriculum-container {
-// Estilos para la sección de currículum
-  height: 100%;
-  padding: 1.5rem;
-  @include card-base;
-  box-shadow: var(--card-shadow);
-
-  .curriculum-sidebar {
-    width: 280px;
-    flex-shrink: 0;
-    padding: 1.5rem;
-    @include card-base;
-    max-height: calc(100vh - 8rem);
-    overflow-y: auto;
-    @include custom-scrollbar;
-  }
-
-  .action-group {
-    h3 {
-      color: var(--text-color);
-      font-size: 1.1rem;
-      font-weight: 500;
-      margin-bottom: $common-spacing;
-      @include flex-center;
-      gap: 0.5rem;
-      i { color: var(--primary-color); }
-    }
-
-    button {
-      width: 100%;
-      margin-bottom: $common-spacing;
-      @include flex-center;
-      gap: 0.5rem;
-      justify-content: flex-start;
-      padding: 0.75rem;
-      border-radius: 6px;
-      background-color: rgba(var(--surface-color-rgb), 0.8);
-      border: 1px solid var(--card-border);
-      color: var(--text-color);
-      transition: all 0.2s ease;
-
-      i {
-        font-size: 1rem;
-        color: var(--primary-color);
-      }
-
-      &:hover {
-        background-color: rgba(var(--primary-color-rgb), 0.1);
-        border-color: var(--primary-color);
-      }
-    }
-  }
-
-  .curriculum-content {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: $common-spacing;
-    @include custom-scrollbar;
-    max-height: calc(100vh - 8rem);
-  }
-}
-
-// Estilos para la sección de información
-.cv-section {
-  @include card-base;
-  padding: 1.5rem;
-// Estilos para la sección de información
-  .section-header {
-    @include section-header;
-  }
-}
-
-// Estilos para la sección de redes sociales
-.social-card {
-  background: rgba(49, 49, 49, 0.9);
-  border-radius: 4px;
-// Estilos para la sección de redes sociales
-  margin-bottom: 1rem;
-  transition: all 0.3s ease;
-  height: calc(100% - 2rem);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  }
-
-  .social-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-
-    i {
-      font-size: 24px;
-      padding: 0.75rem;
-      border-radius: 50%;
-      transition: all 0.3s ease;
-      background: rgba(0, 119, 181, 0.1);
-      color: #0077B5;
-    }
-
-    h3 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.87);
-    }
-  }
-
-  p {
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 1.5rem;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  ::ng-deep {
-    button.mat-mdc-raised-button {
-      min-width: 140px !important;
-      height: 42px !important;
-      font-size: 14px !important;
-      font-weight: 500 !important;
-      letter-spacing: 0.3px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      gap: 8px !important;
-      transition: all 0.3s ease !important;
-      position: relative !important;
-      overflow: hidden !important;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 120%;
-        height: 120%;
-        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-        transform: translate(-50%, -50%) scale(0);
-        transition: transform 0.5s ease-out;
-        pointer-events: none;
-      }
-
-      &:not(.mat-warn) {
-        background-color: #0077B5 !important;
-        color: white !important;
-
-        &:hover {
-          background-color: #006396 !important;
-
-          &::before {
-            transform: translate(-50%, -50%) scale(1);
-          }
-        }
-
-        &:active {
-          transform: scale(0.98);
-          background-color: #005279 !important;
-        }
-      }
-
-      &.mat-warn {
-        background-color: #dc3545 !important;
-        color: white !important;
-
-        &:hover {
-          background-color: #c82333 !important;
-
-          &::before {
-            transform: translate(-50%, -50%) scale(1);
-          }
-        }
-
-        &:active {
-          transform: scale(0.98);
-          background-color: #bd2130 !important;
-        }
-      }
-
-      &:disabled {
-        background-color: rgba(255, 255, 255, 0.12) !important;
-        color: rgba(255, 255, 255, 0.3) !important;
-        cursor: not-allowed !important;
-      }
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-
-    .social-header {
-      i {
-        font-size: 20px;
-        padding: 0.5rem;
-      }
-
-      h3 {
-        font-size: 1.1rem;
-      }
-    }
-  }
-}
-
-// Estilos para la sección de carga de foto
-.foto-container {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
   overflow: visible;
-// Estilos para la sección de carga de foto
+
   box-shadow: 0px 0px 30px rgba(33, 150, 243, 0.2),
              inset 0px 0px 10px rgba(33, 150, 243, 0.1);
   transition: all 0.3s ease;
@@ -536,7 +272,6 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
 
     i {
       font-size: 0.9rem;
-      color: white;
     }
 
     &:hover {
@@ -563,5 +298,630 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+// Variables para el currículum
+$sidebar-width: 280px;
+$content-spacing: 1.5rem;
+$item-spacing: 1rem;
+$transition-speed: 0.3s;
+
+// Estilos para la sección de currículum
+.curriculum-container {
+  display: flex;
+  gap: $content-spacing;
+  height: 100%;
+  padding: $content-spacing;
+  background: rgba(var(--background-color-rgb), 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: $border-radius;
+
+  .curriculum-sidebar {
+    width: $sidebar-width;
+    flex-shrink: 0;
+    padding: $content-spacing;
+    @include card-base;
+    border-radius: $border-radius;
+    background: rgba(var(--surface-color-rgb), 0.7);
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+    @include custom-scrollbar;
+
+    .action-group {
+      & + .action-group {
+        margin-top: $content-spacing * 1.5;
+      }
+
+      h3 {
+        @include section-header;
+        font-size: 1.1rem;
+        margin-bottom: $item-spacing;
+      }
+
+      button {
+        width: 100%;
+        padding: 0.75rem;
+        border-radius: $border-radius;
+        background: rgba(var(--primary-color-rgb), 0.1);
+        color: var(--text-color);
+        border: 1px solid rgba(var(--primary-color-rgb), 0.2);
+        transition: all $transition-speed ease;
+
+        &:hover {
+          background: rgba(var(--primary-color-rgb), 0.2);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        i {
+          margin-right: 8px;
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+
+  .curriculum-content {
+    flex: 1;
+    padding: $content-spacing;
+    @include card-base;
+    background: rgba(var(--surface-color-rgb), 0.7);
+    border-radius: $border-radius;
+    overflow-y: auto;
+    @include custom-scrollbar;
+
+    .cv-section {
+      & + .cv-section {
+        margin-top: $content-spacing * 2;
+      }
+
+      .section-header {
+        @include section-header;
+        padding-bottom: $item-spacing;
+        border-bottom: 1px solid rgba(var(--text-secondary-rgb), 0.1);
+        margin-bottom: $content-spacing;
+
+        h2 {
+          font-size: 1.3rem;
+          font-weight: 500;
+        }
+
+        i {
+          font-size: 1.4rem;
+        }
+      }
+
+      .section-content {
+        display: flex;
+        flex-direction: column;
+        gap: $content-spacing;
+      }
+
+      .cv-item {
+        padding: $item-spacing;
+        background: rgba(var(--surface-color-rgb), 0.5);
+        border-radius: $border-radius;
+        border: 1px solid rgba(var(--text-secondary-rgb), 0.1);
+        transition: all $transition-speed ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          border-color: rgba(var(--primary-color-rgb), 0.3);
+        }
+
+        .item-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: $item-spacing;
+
+          .item-title {
+            h3 {
+              font-size: 1.1rem;
+              color: var(--text-color);
+              margin: 0 0 0.25rem;
+            }
+
+            h4 {
+              font-size: 0.95rem;
+              color: var(--text-secondary);
+              margin: 0;
+            }
+          }
+
+          .item-period {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            background: rgba(var(--text-secondary-rgb), 0.1);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+          }
+        }
+
+        .item-description {
+          color: var(--text-secondary);
+          font-size: 0.95rem;
+          line-height: 1.5;
+        }
+
+        .item-actions {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: $item-spacing;
+          justify-content: flex-end;
+
+          button {
+            padding: 0.5rem;
+            border-radius: $border-radius;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid rgba(var(--text-secondary-rgb), 0.2);
+            transition: all $transition-speed ease;
+
+            &:hover {
+              background: rgba(var(--text-secondary-rgb), 0.1);
+              color: var(--text-color);
+            }
+
+            &.delete-btn:hover {
+              background: rgba(244, 67, 54, 0.1);
+              color: #f44336;
+              border-color: rgba(244, 67, 54, 0.3);
+            }
+
+            i {
+              font-size: 1rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Estilos para los inputs del currículum
+.cv-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.cv-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.item-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-field {
+  width: 100%;
+
+  mat-form-field {
+    width: 100%;
+
+    &.description-field {
+      textarea {
+        min-height: 80px;
+      }
+    }
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+
+  .form-field-container {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+:host ::ng-deep {
+  .mat-form-field-appearance-outline {
+    .mat-form-field-wrapper {
+      margin: 0;
+      padding-bottom: 0;
+    }
+
+    .mat-form-field-infix {
+      padding: 0.4em 0;
+      border-top: 0;
+      height: 36px;
+    }
+
+    .mat-form-field-outline {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .mat-form-field-label {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    input.mat-input-element {
+      margin-top: 0;
+      padding: 0;
+      height: 18px;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+        opacity: 1;
+        -webkit-text-fill-color: rgba(255, 255, 255, 0.5);
+      }
+    }
+
+    textarea.mat-input-element {
+      margin: 0;
+      padding: 0;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+        opacity: 1;
+        -webkit-text-fill-color: rgba(255, 255, 255, 0.5);
+      }
+    }
+
+    .mat-form-field-label-wrapper {
+      top: -1.2em;
+    }
+  }
+
+  input.form-control {
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+
+    &:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+    }
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      opacity: 1;
+    }
+  }
+
+  .input-group {
+    .calendar-btn {
+      height: 36px;
+      padding: 0 0.8rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      border-left: none;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .form-label {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+  }
+}
+
+.delete-button {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: rgba(220, 53, 69, 0.2);
+    transform: scale(1.05);
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+.item-actions {
+  display: flex;
+  align-items: flex-start;
+}
+
+// Estilos para el datepicker
+::ng-deep {
+  .bs-datepicker {
+    background-color: rgba(var(--surface-color-rgb), 0.95);
+    border: 1px solid rgba(var(--text-secondary-rgb), 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-radius: $border-radius;
+    backdrop-filter: blur(10px);
+
+    .bs-datepicker-head {
+      background-color: var(--primary-color);
+      border-radius: $border-radius $border-radius 0 0;
+      padding: 10px;
+
+      button {
+        color: white;
+        
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+
+    .bs-datepicker-body {
+      border: none;
+      padding: 10px;
+
+      table {
+        td {
+          span {
+            border-radius: 4px;
+            
+            &.selected {
+              background-color: var(--primary-color);
+            }
+
+            &:hover {
+              background-color: rgba(var(--primary-color-rgb), 0.1);
+            }
+          }
+
+          &.week span {
+            color: var(--text-secondary);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animaciones para elementos del currículum
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cv-item {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+// Estilos para los campos de formulario
+::ng-deep {
+  .mat-mdc-form-field {
+    width: 100%;
+    
+    .mat-mdc-text-field-wrapper {
+      background-color: rgba(var(--surface-color-rgb), 0.8);
+    }
+
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+      background-color: transparent;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(var(--primary-color-rgb), 0.1);
+    }
+  }
+}
+
+// Estilos para la sección de información
+.cv-section {
+  @include card-base;
+  padding: 1.5rem;
+
+  .section-header {
+    @include section-header;
+  }
+}
+
+// Estilos para la sección de redes sociales
+.social-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .social-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    i {
+      font-size: 2rem;
+      color: #0077b5;
+    }
+
+    h3 {
+      margin: 0;
+      color: white;
+      font-size: 1.5rem;
+    }
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 1.5rem;
+  }
+
+  button {
+    min-width: 120px;
+  }
+}
+
+.social-networks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  .social-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+
+    .form-field {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .add-button {
+    align-self: flex-start;
+    height: 36px;
+    padding: 0 1.2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      font-size: 0.9rem;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+  }
+
+  .social-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .social-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-content {
+      flex: 1;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+
+      .social-icon {
+        font-size: 1.2rem;
+        width: 24px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .social-info {
+        flex: 1;
+        min-width: 0;
+
+        .social-name {
+          font-weight: 500;
+          color: white;
+          margin-bottom: 0.2rem;
+        }
+
+        .social-url {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+
+    .delete-button {
+      background: rgba(220, 53, 69, 0.1);
+      color: #dc3545;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+
+      &:hover {
+        background: rgba(220, 53, 69, 0.2);
+        transform: scale(1.05);
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
   }
 }

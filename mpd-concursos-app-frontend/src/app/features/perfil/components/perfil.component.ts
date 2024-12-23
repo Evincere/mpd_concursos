@@ -8,7 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
-import { BsDatepickerModule, BsLocaleService } from 'ngx-bootstrap/datepicker';
+import { BsDatepickerModule, BsLocaleService, BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
 import { defineLocale } from 'ngx-bootstrap/chronos';
 import { esLocale } from 'ngx-bootstrap/locale';
 
@@ -37,12 +37,12 @@ defineLocale('es', esLocale);
 })
 export class PerfilComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
+  @ViewChild('fechaInicio') fechaInicio: any;
+  @ViewChild('fechaFin') fechaFin: any;
+  @ViewChild('fechaEduInicio') fechaEduInicio: any;
+  @ViewChild('fechaEduFin') fechaEduFin: any;
   perfilForm!: FormGroup;
-  fechaInicioControl = new FormControl('');
-  fechaFinControl = new FormControl('');
-  fechaEduInicioControl = new FormControl('');
-  fechaEduFinControl = new FormControl('');
-  bsConfig = {
+  bsConfig: Partial<BsDatepickerConfig> = {
     containerClass: 'theme-dark',
     dateInputFormat: 'DD/MM/YYYY',
     showWeekNumbers: false,
@@ -74,7 +74,8 @@ export class PerfilComponent implements OnInit {
       usuario: ['', Validators.required],
       experiencias: this.fb.array([]),
       educacion: this.fb.array([]),
-      habilidades: this.fb.array([])
+      habilidades: this.fb.array([]),
+      redesSociales: this.fb.array([])
     });
   }
 
@@ -93,24 +94,62 @@ export class PerfilComponent implements OnInit {
 
   // Método para crear un nuevo grupo de experiencia
   createExperienciaFormGroup(): FormGroup {
-    return this.fb.group({
+    const group = this.fb.group({
       empresa: ['', Validators.required],
       puesto: ['', Validators.required],
       descripcion: ['', Validators.required],
-      fechaInicio: ['', Validators.required],
-      fechaFin: ['']
+      fechaInicio: [null, Validators.required],
+      fechaFin: [null]
     });
+
+    // Suscribirse a cambios en las fechas
+    group.get('fechaInicio')?.valueChanges.subscribe(value => {
+      const fechaFinControl = group.get('fechaFin');
+      if (fechaFinControl && value) {
+        fechaFinControl.setValidators([
+          Validators.required,
+          (control) => {
+            const fechaFin = control.value;
+            if (!fechaFin) return null;
+            return new Date(fechaFin) <= new Date(value) ? 
+              { fechaInvalida: 'La fecha de fin debe ser posterior a la fecha de inicio' } : null;
+          }
+        ]);
+        fechaFinControl.updateValueAndValidity();
+      }
+    });
+
+    return group;
   }
 
   // Método para crear un nuevo grupo de educación
   createEducacionFormGroup(): FormGroup {
-    return this.fb.group({
+    const group = this.fb.group({
       institucion: ['', Validators.required],
       titulo: ['', Validators.required],
       descripcion: ['', Validators.required],
-      fechaInicio: ['', Validators.required],
-      fechaFin: ['']
+      fechaInicio: [null, Validators.required],
+      fechaFin: [null]
     });
+
+    // Suscribirse a cambios en las fechas
+    group.get('fechaInicio')?.valueChanges.subscribe(value => {
+      const fechaFinControl = group.get('fechaFin');
+      if (fechaFinControl && value) {
+        fechaFinControl.setValidators([
+          Validators.required,
+          (control) => {
+            const fechaFin = control.value;
+            if (!fechaFin) return null;
+            return new Date(fechaFin) <= new Date(value) ? 
+              { fechaInvalida: 'La fecha de fin debe ser posterior a la fecha de inicio' } : null;
+          }
+        ]);
+        fechaFinControl.updateValueAndValidity();
+      }
+    });
+
+    return group;
   }
 
   // Método para crear un nuevo grupo de habilidad
@@ -175,7 +214,11 @@ export class PerfilComponent implements OnInit {
 
   conectarLinkedIn(): void {
     this.linkedInConectado = !this.linkedInConectado;
-    // Implementar integración con LinkedIn
+    const mensaje = this.linkedInConectado ? 
+      'Cuenta de LinkedIn conectada exitosamente' : 
+      'Cuenta de LinkedIn desconectada';
+    
+    // this.messageService.showSuccess(mensaje);
   }
 
   // Método para convertir texto en array de letras

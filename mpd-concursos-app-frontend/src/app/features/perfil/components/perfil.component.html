@@ -202,53 +202,69 @@
                             <div class="cv-item" *ngFor="let exp of experiencias.controls; let i = index"
                                 [formGroupName]="i">
                                 <div class="item-main">
-                                    <div class="item-header">
+                                    <div class="form-field">
                                         <mat-form-field appearance="outline">
                                             <mat-label>Cargo o Puesto</mat-label>
-                                            <input matInput formControlName="puesto">
+                                            <input matInput 
+                                                formControlName="puesto" 
+                                                placeholder="Ej: Abogado Senior">
+                                            <mat-error *ngIf="exp.get('puesto')?.errors?.['required']">
+                                                Este campo es requerido
+                                            </mat-error>
                                         </mat-form-field>
                                     </div>
 
-                                    <mat-form-field appearance="outline">
-                                        <mat-label>Empresa u Organización</mat-label>
-                                        <input matInput formControlName="empresa">
-                                    </mat-form-field>
+                                    <div class="form-field">
+                                        <mat-form-field appearance="outline">
+                                            <mat-label>Empresa u Organización</mat-label>
+                                            <input matInput 
+                                                formControlName="empresa" 
+                                                placeholder="Ej: Ministerio Público de la Defensa">
+                                            <mat-error *ngIf="exp.get('empresa')?.errors?.['required']">
+                                                Este campo es requerido
+                                            </mat-error>
+                                        </mat-form-field>
+                                    </div>
 
                                     <div class="form-row">
-                                        <!-- Campo de fecha de inicio -->
                                         <div class="form-field-container">
                                             <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
                                             <div class="input-group">
                                                 <input id="fechaInicio" 
+                                                    #fechaInicio="bsDatepicker"
                                                     type="text" 
                                                     class="form-control" 
-                                                    #dp="bsDatepicker"
-                                                    [bsConfig]="bsConfig" 
                                                     bsDatepicker 
-                                                    [formControl]="fechaInicioControl"
-                                                    [attr.aria-label]="'Seleccionar fecha de inicio'" 
-                                                    placement="bottom">
-                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dp.toggle()"
+                                                    [bsConfig]="bsConfig"
+                                                    formControlName="fechaInicio"
+                                                    placeholder="DD/MM/AAAA"
+                                                    placement="bottom"
+                                                    [attr.aria-label]="'Seleccionar fecha de inicio'">
+                                                <button type="button" 
+                                                    class="btn btn-outline-secondary calendar-btn" 
+                                                    (click)="fechaInicio.toggle()"
                                                     [attr.aria-label]="'Abrir calendario'">
                                                     <i class="fas fa-calendar-alt"></i>
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <!-- Campo de fecha de fin -->
                                         <div class="form-field-container">
                                             <label for="fechaFin" class="form-label">Fecha de Fin</label>
                                             <div class="input-group">
                                                 <input id="fechaFin" 
+                                                    #fechaFin="bsDatepicker"
                                                     type="text" 
                                                     class="form-control" 
-                                                    #dpFin="bsDatepicker"
-                                                    [bsConfig]="bsConfig" 
                                                     bsDatepicker 
-                                                    [formControl]="fechaFinControl"
-                                                    [attr.aria-label]="'Seleccionar fecha de fin'" 
-                                                    placement="bottom">
-                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dpFin.toggle()"
+                                                    [bsConfig]="bsConfig"
+                                                    formControlName="fechaFin"
+                                                    placeholder="DD/MM/AAAA"
+                                                    placement="bottom"
+                                                    [attr.aria-label]="'Seleccionar fecha de fin'">
+                                                <button type="button" 
+                                                    class="btn btn-outline-secondary calendar-btn" 
+                                                    (click)="fechaFin.toggle()"
                                                     [attr.aria-label]="'Abrir calendario'">
                                                     <i class="fas fa-calendar-alt"></i>
                                                 </button>
@@ -256,15 +272,27 @@
                                         </div>
                                     </div>
 
-                                    <mat-form-field appearance="outline" class="description-field">
-                                        <mat-label>Descripción de responsabilidades y logros</mat-label>
-                                        <textarea matInput formControlName="descripcion" rows="3"></textarea>
-                                    </mat-form-field>
+                                    <div class="form-field">
+                                        <mat-form-field appearance="outline" class="description-field">
+                                            <mat-label>Descripción de responsabilidades y logros</mat-label>
+                                            <textarea matInput 
+                                                formControlName="descripcion" 
+                                                rows="3"
+                                                placeholder="Describe tus principales responsabilidades y logros en este puesto">
+                                            </textarea>
+                                            <mat-error *ngIf="exp.get('descripcion')?.errors?.['required']">
+                                                Este campo es requerido
+                                            </mat-error>
+                                        </mat-form-field>
+                                    </div>
                                 </div>
 
                                 <div class="item-actions">
-                                    <button mat-icon-button color="warn" (click)="eliminarExperiencia(i)"
-                                        class="delete-button">
+                                    <button mat-icon-button 
+                                        type="button"
+                                        class="delete-button" 
+                                        (click)="eliminarExperiencia(i)"
+                                        [attr.aria-label]="'Eliminar experiencia'">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -283,53 +311,69 @@
                             <div class="cv-item" *ngFor="let edu of educacion.controls; let i = index"
                                 [formGroupName]="i">
                                 <div class="item-main">
-                                    <div class="item-header">
+                                    <div class="form-field">
                                         <mat-form-field appearance="outline">
                                             <mat-label>Título o Certificación</mat-label>
-                                            <input matInput formControlName="titulo">
+                                            <input matInput 
+                                                formControlName="titulo" 
+                                                placeholder="Ej: Abogado">
+                                            <mat-error *ngIf="edu.get('titulo')?.errors?.['required']">
+                                                Este campo es requerido
+                                            </mat-error>
                                         </mat-form-field>
                                     </div>
 
-                                    <mat-form-field appearance="outline">
-                                        <mat-label>Institución</mat-label>
-                                        <input matInput formControlName="institucion">
-                                    </mat-form-field>
+                                    <div class="form-field">
+                                        <mat-form-field appearance="outline">
+                                            <mat-label>Institución</mat-label>
+                                            <input matInput 
+                                                formControlName="institucion" 
+                                                placeholder="Ej: Universidad de Buenos Aires">
+                                            <mat-error *ngIf="edu.get('institucion')?.errors?.['required']">
+                                                Este campo es requerido
+                                            </mat-error>
+                                        </mat-form-field>
+                                    </div>
 
                                     <div class="form-row">
-                                        <!-- Campo de fecha de inicio educación -->
                                         <div class="form-field-container">
                                             <label for="fechaEduInicio" class="form-label">Fecha de Inicio</label>
                                             <div class="input-group">
                                                 <input id="fechaEduInicio" 
+                                                    #fechaEduInicio="bsDatepicker"
                                                     type="text" 
                                                     class="form-control" 
-                                                    #dpEduInicio="bsDatepicker"
-                                                    [bsConfig]="bsConfig" 
                                                     bsDatepicker 
-                                                    [formControl]="fechaEduInicioControl"
-                                                    [attr.aria-label]="'Seleccionar fecha de inicio de educación'" 
-                                                    placement="bottom">
-                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dpEduInicio.toggle()"
+                                                    [bsConfig]="bsConfig"
+                                                    formControlName="fechaInicio"
+                                                    placeholder="DD/MM/AAAA"
+                                                    placement="bottom"
+                                                    [attr.aria-label]="'Seleccionar fecha de inicio de educación'">
+                                                <button type="button" 
+                                                    class="btn btn-outline-secondary calendar-btn" 
+                                                    (click)="fechaEduInicio.toggle()"
                                                     [attr.aria-label]="'Abrir calendario'">
                                                     <i class="fas fa-calendar-alt"></i>
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <!-- Campo de fecha de fin educación -->
                                         <div class="form-field-container">
                                             <label for="fechaEduFin" class="form-label">Fecha de Fin</label>
                                             <div class="input-group">
                                                 <input id="fechaEduFin" 
+                                                    #fechaEduFin="bsDatepicker"
                                                     type="text" 
                                                     class="form-control" 
-                                                    #dpEduFin="bsDatepicker"
-                                                    [bsConfig]="bsConfig" 
                                                     bsDatepicker 
-                                                    [formControl]="fechaEduFinControl"
-                                                    [attr.aria-label]="'Seleccionar fecha de fin de educación'" 
-                                                    placement="bottom">
-                                                <button class="btn btn-outline-secondary calendar-btn" (click)="dpEduFin.toggle()"
+                                                    [bsConfig]="bsConfig"
+                                                    formControlName="fechaFin"
+                                                    placeholder="DD/MM/AAAA"
+                                                    placement="bottom"
+                                                    [attr.aria-label]="'Seleccionar fecha de fin de educación'">
+                                                <button type="button" 
+                                                    class="btn btn-outline-secondary calendar-btn" 
+                                                    (click)="fechaEduFin.toggle()"
                                                     [attr.aria-label]="'Abrir calendario'">
                                                     <i class="fas fa-calendar-alt"></i>
                                                 </button>
@@ -339,8 +383,11 @@
                                 </div>
 
                                 <div class="item-actions">
-                                    <button mat-icon-button color="warn" (click)="eliminarEducacion(i)"
-                                        class="delete-button">
+                                    <button mat-icon-button 
+                                        type="button"
+                                        class="delete-button" 
+                                        (click)="eliminarEducacion(i)"
+                                        [attr.aria-label]="'Eliminar educación'">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

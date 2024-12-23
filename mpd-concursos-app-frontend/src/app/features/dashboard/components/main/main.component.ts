@@ -48,10 +48,15 @@ export class MainComponent {
       estado: 'Activo',
     },
     {
-      titulo: 'Fiscal Federal',
+      titulo: 'Asesor de NNA Y PCR',
       fecha: '2024-03-10',
       estado: 'Próximo',
     },
+    {
+      titulo: 'Asesor de NNA Y PCR',
+      fecha: '2024-03-10',
+      estado: 'Próximo',
+    }
   ];
 
 

@@ -17,14 +17,14 @@
     display: flex;
     height: calc(100vh - 92px);
     width: 100%;
-    overflow: visible;
+    overflow: hidden;
     position: relative;
 
     app-sidebar {
         flex-shrink: 0;
         transition: width 0.3s ease;
         width: 250px;
-        position: relative;
+        height: 100%;
 
         &.collapsed {
             width: 60px; 
@@ -32,6 +32,7 @@
 
         ::ng-deep .sidebar-container {
             overflow: visible;
+            height: 100%;
         }
     }
 
