@@ -55,20 +55,33 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private verificarInscripcion(): void {
+  verificarInscripcion(): void {
+    if (!this.concurso) {
+      console.warn('[ConcursoDetalleComponent] No hay concurso para verificar inscripción');
+      return;
+    }
+
     this.inscripcionLoading = true;
     this.inscripcionService.verificarInscripcion(this.concurso.id)
       .pipe(
         takeUntil(this.destroy$),
-        finalize(() => this.inscripcionLoading = false)
+        finalize(() => {
+          this.inscripcionLoading = false;
+          console.log('Finalizada verificación de inscripción');
+        })
       )
       .subscribe({
         next: (inscripto) => {
+          console.log('Estado de inscripción actualizado:', inscripto);
           this.estaInscripto = inscripto;
-          console.log('Estado de inscripción:', inscripto);
+          // Refrescar la lista de inscripciones si está inscripto
+          if (inscripto) {
+            this.inscripcionService.refreshInscripciones();
+          }
         },
         error: (error) => {
           console.error('Error al verificar inscripción:', error);
+          this.estaInscripto = false;
         }
       });
   }
@@ -99,12 +112,36 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   }
 
   realizarInscripcion(): void {
-    if (this.estaInscripto) {
+    if (!this.concurso) {
+      console.warn('[ConcursoDetalleComponent] No hay concurso para realizar inscripción');
       return;
     }
 
+    if (!this.concurso.id) {
+      console.warn('[ConcursoDetalleComponent] El concurso no tiene ID');
+      this.snackBar.open('Error al realizar la inscripción', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    if (this.estaInscripto) {
+      this.snackBar.open('Ya te encuentras inscripto en este concurso', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    if (this.concurso.status !== 'PUBLISHED') {
+      this.snackBar.open('Este concurso no está disponible para inscripción', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    console.log('[ConcursoDetalleComponent] Iniciando inscripción al concurso:', this.concurso.id);
     this.inscripcionLoading = true;
-    this.inscripcionService.inscribirseAConcurso(this.concurso.id)
+    this.inscripcionService.inscribirseAConcurso(this.concurso.id.toString())
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => this.inscripcionLoading = false)
@@ -114,18 +151,22 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
           this.estaInscripto = true;
           this.inscripcionRealizada.emit(this.concurso);
           this.snackBar.open(
-            `Te has inscrito exitosamente al concurso "${this.concurso.title}"`,
+            `Te has inscrito exitosamente al concurso "${this.concurso?.title}"`,
             'Cerrar',
             { duration: 3000 }
           );
+          // Refrescar el estado después de inscribirse
+          this.verificarInscripcion();
         },
-        error: (error) => {
-          console.error('Error al realizar inscripción:', error);
-          this.snackBar.open(
-            'Error al realizar la inscripción. Por favor, intenta nuevamente.',
-            'Cerrar',
-            { duration: 3000 }
-          );
+        error: (error: Error) => {
+          console.error('[ConcursoDetalleComponent] Error al realizar inscripción:', error);
+          let mensaje = 'Error al realizar la inscripción. Por favor, intenta nuevamente.';
+          
+          if (error.message.includes('no autenticado')) {
+            mensaje = 'Debes iniciar sesión para inscribirte al concurso.';
+          }
+          
+          this.snackBar.open(mensaje, 'Cerrar', { duration: 3000 });
         }
       });
   }

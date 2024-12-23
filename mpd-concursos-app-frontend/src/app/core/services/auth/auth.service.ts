@@ -45,13 +45,20 @@ export class AuthService {
     console.log('[AuthService] Iniciando login para usuario:', loginUser.username);
     return this.loginService.login(loginUser).pipe(
       tap(jwtDto => {
-        if (jwtDto) {
+        if (jwtDto && jwtDto.token) {
           console.log('[AuthService] Login exitoso, guardando token');
           this.tokenService.saveToken(jwtDto);
-          this.loadUserInfo();
+          const decodedToken = this.tokenService.decodeToken(jwtDto.token);
+          if (decodedToken) {
+            this.loadUserInfo();
+          } else {
+            console.error('[AuthService] No se pudo decodificar el token');
+            this.logout();
+            throw new Error('Token inválido');
+          }
         } else {
-          console.error('[AuthService] Respuesta de login vacía');
-          throw new Error('Respuesta vacía del servidor');
+          console.error('[AuthService] Respuesta de login vacía o sin token');
+          throw new Error('Respuesta inválida del servidor');
         }
       })
     );
@@ -59,20 +66,21 @@ export class AuthService {
 
   public logout(): void {
     console.log('[AuthService] Cerrando sesión');
-    this.tokenService.removeToken();
-    localStorage.removeItem('userProfileImage');
     this.userInfoSignal.set({
       username: '',
       cuit: '',
       profileImage: ''
     });
+    this.tokenService.signOut();
   }
 
   public isAuthenticated(): boolean {
     const token = this.tokenService.getToken();
-    const isAuth = token !== null;
-    console.log('[AuthService] isAuthenticated:', isAuth);
-    return isAuth;
+    if (!token) {
+      console.warn('[AuthService] No hay token disponible');
+      return false;
+    }
+    return this.tokenService.validateToken(token);
   }
 
   public hasRole(role: string): boolean {
@@ -93,12 +101,8 @@ export class AuthService {
   }
 
   public getCurrentUserId(): string | null {
-    const user = this.tokenService.getUser();
-    if (!user) {
-      console.warn('[AuthService] No hay usuario autenticado');
-      return null;
-    }
-    return user.id;
+    console.log('[AuthService] Obteniendo ID del usuario actual');
+    return this.tokenService.getUserId();
   }
 
   public getToken(): string | null {
@@ -106,20 +110,43 @@ export class AuthService {
   }
 
   private loadUserInfo(): void {
-    console.log('[AuthService] Cargando información del usuario');
+    const token = this.tokenService.getToken();
+    if (!token) {
+      console.warn('[AuthService] No hay token disponible');
+      this.clearUserInfo();
+      return;
+    }
+
+    const decodedToken = this.tokenService.decodeToken(token);
+    if (!decodedToken) {
+      console.warn('[AuthService] No se pudo decodificar el token');
+      this.clearUserInfo();
+      return;
+    }
+
     const username = this.tokenService.getUsername();
     const cuit = this.tokenService.getCuit();
+    const profileImage = localStorage.getItem('userProfileImage') || '';
 
     if (username && cuit) {
+      console.log('[AuthService] Cargando información del usuario:', { username, cuit });
       this.userInfoSignal.set({
         username,
         cuit,
-        profileImage: localStorage.getItem('userProfileImage') || ''
+        profileImage
       });
-      console.log('[AuthService] Información del usuario cargada:', { username, cuit });
     } else {
-      console.warn('[AuthService] No se pudo cargar la información del usuario');
+      console.warn('[AuthService] Información del usuario incompleta');
+      this.clearUserInfo();
     }
+  }
+
+  private clearUserInfo(): void {
+    this.userInfoSignal.set({
+      username: '',
+      cuit: '',
+      profileImage: ''
+    });
   }
 
   public updateProfileImage(imageUrl: string): void {

@@ -66,6 +66,7 @@
       <button mat-flat-button
               color="primary"
               (click)="realizarInscripcion()"
+              *ngIf="concurso.status === 'PUBLISHED'"
               [disabled]="estaInscripto || inscripcionLoading"
               class="inscribirse-btn"
               [class.inscripto]="estaInscripto">

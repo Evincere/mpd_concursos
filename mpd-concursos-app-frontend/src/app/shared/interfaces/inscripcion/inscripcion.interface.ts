@@ -2,8 +2,8 @@ import { InscripcionState } from "@core/models/inscripcion/inscripcion-state.enu
 
 export interface Inscripcion {
   id: string;
-  concursoId: string;
-  userId: string;
+  concursoId: string | number; 
+  userId: string; 
   state: InscripcionState;
   createdAt: Date;
   updatedAt: Date;
@@ -12,16 +12,15 @@ export interface Inscripcion {
 
 export interface InscripcionResponse {
     id: string;
-    concursoId: string;
-    userId: string;
+    concursoId: string | number;
+    userId: string; 
     estado: InscripcionState;
     fechaInscripcion: Date;
 }
 
 export interface ElegibilidadResponse {
     elegible: boolean;
-    motivo?: string;
-    requisitos?: RequisitoInscripcion[];
+    requisitos: RequisitoInscripcion[];
 }
 
 export interface RequisitoInscripcion {
@@ -31,8 +30,8 @@ export interface RequisitoInscripcion {
 }
 
 export interface InscripcionRequest {
-    concursoId: string;
-    documentos?: DocumentoAdjunto[];
+  contestId: number;
+  userId: string;
 }
 
 export interface DocumentoAdjunto {

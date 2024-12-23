@@ -66,7 +66,7 @@ export class LoginService {
   }
 
   public logout(): void {
-    this.tokenService.removeToken();
+    this.tokenService.signOut();
     this.router.navigate(['/login']);
   }
 }

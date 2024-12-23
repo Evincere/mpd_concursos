@@ -1,215 +1,232 @@
 import { Injectable } from '@angular/core';
+import { JwtHelperService } from '@auth0/angular-jwt';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { JwtDto } from '../../dtos/jwt-dto';
 import { User } from '../../models/user.model';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TokenService {
-  private TOKEN_KEY = 'auth-token';
-  private USER_KEY = 'auth-user';
-  private REFRESH_TOKEN_KEY = 'auth-refresh-token';
-  private USERNAME_KEY = 'auth-username';
-  private AUTHORITIES_KEY = 'auth-authorities';
-  private CUIT_KEY = 'auth-cuit';
+  private jwtHelper = new JwtHelperService();
+  private tokenKey = 'auth-token';
+  private userKey = 'auth-user';
+  private refreshTokenKey = 'auth-refresh-token';
+  private usernameKey = 'auth-username';
+  private authoritiesKey = 'auth-authorities';
+  private cuitKey = 'auth-cuit';
+  private tokenSubject = new BehaviorSubject<string | null>(null);
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) {
+    // Inicializar el subject con el token almacenado
+    const token = this.getStoredToken();
+    this.tokenSubject.next(token);
+  }
 
   public saveToken(jwtDto: JwtDto): void {
     try {
-      console.log('[TokenService] Guardando token y datos de usuario');
-
-      // Guardar token
-      if (jwtDto.token) {
-        localStorage.setItem(this.TOKEN_KEY, jwtDto.token);
-        console.log('[TokenService] Token guardado exitosamente');
+      if (!jwtDto.token) {
+        console.error('[TokenService] Token vacío');
+        return;
       }
 
-      // Guardar datos adicionales
-      if (jwtDto.username) {
-        localStorage.setItem(this.USERNAME_KEY, jwtDto.username);
-      }
-      if (jwtDto.authorities) {
-        localStorage.setItem(this.AUTHORITIES_KEY, JSON.stringify(jwtDto.authorities));
-      }
-      if (jwtDto.cuit) {
-        localStorage.setItem(this.CUIT_KEY, jwtDto.cuit);
-      }
-
-      console.log('[TokenService] Datos adicionales guardados');
-
-      // Extraer y guardar usuario
       const decodedToken = this.decodeToken(jwtDto.token);
-      if (decodedToken) {
-        const user = this.extractUserFromToken(jwtDto.token);
-        if (user) {
-          this.saveUser(user);
-          console.log('[TokenService] Usuario extraído y guardado:', user);
-        }
+      if (!decodedToken) {
+        console.error('[TokenService] No se pudo decodificar el token');
+        return;
       }
 
-      console.log('[TokenService] Datos guardados:', {
-        username: jwtDto.username,
-        authorities: jwtDto.authorities,
-        cuit: jwtDto.cuit
-      });
+      window.localStorage.setItem(this.tokenKey, jwtDto.token);
+      if (jwtDto.refreshToken) {
+        window.localStorage.setItem(this.refreshTokenKey, jwtDto.refreshToken);
+      }
+      window.localStorage.setItem(this.usernameKey, jwtDto.username);
+      window.localStorage.setItem(this.authoritiesKey, JSON.stringify(jwtDto.authorities));
+      window.localStorage.setItem(this.cuitKey, jwtDto.cuit);
+      this.tokenSubject.next(jwtDto.token);
+      console.log('[TokenService] Token guardado exitosamente');
     } catch (error) {
-      console.error('[TokenService] Error guardando el token:', error);
+      console.error('[TokenService] Error al guardar token:', error);
     }
   }
 
   public getToken(): string | null {
-    const token = localStorage.getItem(this.TOKEN_KEY);
-    console.log('[TokenService] Intentando obtener token:', token ? 'presente' : 'ausente');
-    
-    if (!token) {
-      console.warn('[TokenService] No token found in localStorage');
-      return null;
-    }
-
     try {
-      // Verificar si el token está expirado
-      const decodedToken = this.decodeToken(token);
-      if (!decodedToken) {
-        console.warn('[TokenService] Token could not be decoded');
-        this.removeToken();
+      const token = this.getStoredToken();
+      if (!token) {
+        console.log('[TokenService] No token found in localStorage');
         return null;
       }
       
-      if (this.isTokenExpired(decodedToken)) {
-        console.warn('[TokenService] Token is expired');
-        this.removeToken();
+      const decodedToken = this.decodeToken(token);
+      if (!decodedToken || this.isTokenExpired(token)) {
+        console.log('[TokenService] Token expirado o inválido, removiendo...');
+        this.signOut();
         return null;
       }
 
-      console.log('[TokenService] Token válido encontrado');
       return token;
     } catch (error) {
-      console.error('[TokenService] Error validando token:', error);
-      this.removeToken();
+      console.error('[TokenService] Error al obtener token:', error);
       return null;
     }
   }
 
-  public removeToken(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.USERNAME_KEY);
-    localStorage.removeItem(this.AUTHORITIES_KEY);
-    localStorage.removeItem(this.CUIT_KEY);
-  }
-
-  public getAuthorities(): any[] {
-    console.log('[TokenService] Obteniendo autoridades...');
-    const token = this.getToken();
-    
-    if (token) {
-      const decodedToken = this.decodeToken(token);
-      console.log('[TokenService] Token decodificado:', {
-        hasAuthorities: !!decodedToken?.authorities,
-        authorities: decodedToken?.authorities
-      });
-
-      if (decodedToken?.authorities) {
-        return decodedToken.authorities;
-      }
-    }
-
-    // Si no hay autoridades en el token, intentar obtenerlas del localStorage
-    const authoritiesStr = localStorage.getItem(this.AUTHORITIES_KEY);
-    const authorities = authoritiesStr ? JSON.parse(authoritiesStr) : [];
-    console.log('[TokenService] Autoridades desde localStorage:', authorities);
-    return authorities;
-  }
-
-  public getCuit(): string | null {
-    return localStorage.getItem(this.CUIT_KEY);
-  }
-
-  public getUsername(): string | null {
-    return localStorage.getItem(this.USERNAME_KEY);
+  public getTokenObservable(): Observable<string | null> {
+    return this.tokenSubject.asObservable();
   }
 
   public decodeToken(token: string): any {
     try {
-      return jwtDecode(token);
+      const decoded = this.jwtHelper.decodeToken(token);
+      if (!decoded) {
+        console.error('[TokenService] Token no pudo ser decodificado');
+        return null;
+      }
+      return decoded;
     } catch (error) {
-      console.error('[TokenService] Error decodificando token:', error);
+      console.error('[TokenService] Error al decodificar token:', error);
       return null;
     }
   }
 
-  public getUser(): User | null {
-    const userStr = localStorage.getItem(this.USER_KEY);
-    if (!userStr) return null;
-    
+  public getUser(): any {
     try {
-      return JSON.parse(userStr);
+      const user = window.localStorage.getItem(this.userKey);
+      return user ? JSON.parse(user) : null;
     } catch (error) {
-      console.error('[TokenService] Error parsing user from storage:', error);
+      console.error('[TokenService] Error al obtener usuario:', error);
       return null;
+    }
+  }
+
+  public saveUser(user: any): void {
+    try {
+      window.localStorage.setItem(this.userKey, JSON.stringify(user));
+      console.log('[TokenService] Usuario guardado exitosamente');
+    } catch (error) {
+      console.error('[TokenService] Error al guardar usuario:', error);
+    }
+  }
+
+  public signOut(): void {
+    try {
+      window.localStorage.removeItem(this.tokenKey);
+      window.localStorage.removeItem(this.userKey);
+      window.localStorage.removeItem(this.refreshTokenKey);
+      window.localStorage.removeItem(this.usernameKey);
+      window.localStorage.removeItem(this.authoritiesKey);
+      window.localStorage.removeItem(this.cuitKey);
+      this.tokenSubject.next(null);
+      console.log('[TokenService] Sesión cerrada exitosamente');
+    } catch (error) {
+      console.error('[TokenService] Error al cerrar sesión:', error);
+    }
+  }
+
+  public getAuthorities(): any[] {
+    try {
+      const authoritiesStr = window.localStorage.getItem(this.authoritiesKey);
+      return authoritiesStr ? JSON.parse(authoritiesStr) : [];
+    } catch (error) {
+      console.error('[TokenService] Error al obtener autoridades:', error);
+      return [];
+    }
+  }
+
+  public getCuit(): string | null {
+    try {
+      return window.localStorage.getItem(this.cuitKey);
+    } catch (error) {
+      console.error('[TokenService] Error al obtener cuit:', error);
+      return null;
+    }
+  }
+
+  public getUsername(): string | null {
+    try {
+      return window.localStorage.getItem(this.usernameKey);
+    } catch (error) {
+      console.error('[TokenService] Error al obtener username:', error);
+      return null;
+    }
+  }
+
+  private getStoredToken(): string | null {
+    try {
+      return window.localStorage.getItem(this.tokenKey);
+    } catch (error) {
+      console.error('[TokenService] Error al obtener token almacenado:', error);
+      return null;
+    }
+  }
+
+  public isTokenExpired(token: string): boolean {
+    try {
+      return this.jwtHelper.isTokenExpired(token);
+    } catch (error) {
+      console.error('[TokenService] Error al verificar expiración del token:', error);
+      return true; // Si hay error, consideramos el token como expirado
     }
   }
 
   public validateToken(token: string): boolean {
     try {
-      const decodedToken = this.decodeToken(token);
-      if (!decodedToken) {
-        console.warn('[TokenService] Token inválido o no puede ser decodificado');
+      if (!token) {
+        console.log('[TokenService] Token no proporcionado');
         return false;
       }
 
-      if (this.isTokenExpired(decodedToken)) {
-        console.warn('[TokenService] Token expirado');
+      const decodedToken = this.decodeToken(token);
+      if (!decodedToken) {
+        console.log('[TokenService] Token no pudo ser decodificado');
+        return false;
+      }
+
+      if (this.isTokenExpired(token)) {
+        console.log('[TokenService] Token expirado');
+        return false;
+      }
+
+      // Verificar que el token tenga los campos necesarios
+      if (!decodedToken.sub || !decodedToken.userId) {
+        console.log('[TokenService] Token no contiene la información necesaria');
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('[TokenService] Error validando token:', error);
+      console.error('[TokenService] Error al validar token:', error);
       return false;
     }
   }
 
-  public isTokenExpired(decodedToken: any): boolean {
-    if (!decodedToken?.exp) {
-      console.warn('[TokenService] Token no tiene fecha de expiración');
-      return true;
-    }
-
-    const expiry = decodedToken.exp * 1000; // Convertir a milisegundos
-    const now = Date.now();
-    const isExpired = now >= expiry;
-
-    if (isExpired) {
-      console.warn('[TokenService] Token expirado en:', new Date(expiry));
-    }
-
-    return isExpired;
-  }
-
-  private saveUser(user: User): void {
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-  }
-
-  private extractUserFromToken(token: string): User | null {
+  public getUserId(): string | null {
     try {
+      const token = this.getToken();
+      if (!token) {
+        console.log('[TokenService] No hay token disponible');
+        return null;
+      }
+
       const decodedToken = this.decodeToken(token);
-      if (!decodedToken) return null;
+      if (!decodedToken) {
+        console.log('[TokenService] No se pudo decodificar el token');
+        return null;
+      }
 
-      return User.fromToken({
-        userId: decodedToken.userId,
-        sub: decodedToken.sub,
-        cuit: decodedToken.cuit,
-        authorities: decodedToken.roles?.map((role: any) => ({ authority: role })) || []
-      });
+      // Obtener el userId del token
+      const userId = decodedToken.userId;
+      if (!userId) {
+        console.log('[TokenService] No se encontró userId en el token');
+        return null;
+      }
 
+      return userId;
     } catch (error) {
-      console.error('[TokenService] Error extracting user from token:', error);
+      console.error('[TokenService] Error al obtener userId:', error);
       return null;
     }
   }

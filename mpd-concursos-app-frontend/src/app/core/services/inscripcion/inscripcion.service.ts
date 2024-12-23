@@ -1,11 +1,20 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Observable, throwError, BehaviorSubject, of, EMPTY } from 'rxjs';
 import { catchError, tap, map, finalize } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { Inscripcion } from '@shared/interfaces/inscripcion/inscripcion.interface';
 import { AuthService } from '@core/services/auth/auth.service';
 import { TokenService } from '../auth/token.service';
+import { JwtHelperService } from '@auth0/angular-jwt';
+import { Router } from '@angular/router';
+import { PageRequest, PageResponse } from '@core/interfaces/page.interface';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+
+interface InscripcionRequest {
+  contestId: number;
+  userId: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -13,183 +22,126 @@ import { TokenService } from '../auth/token.service';
 export class InscripcionService {
   private apiUrl = environment.apiUrl;
   private inscripcionesUsuario = new BehaviorSubject<Inscripcion[]>([]);
+  private jwtHelperService: JwtHelperService = new JwtHelperService();
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-    private tokenService: TokenService // Inyectar el servicio de token
+    private tokenService: TokenService,
+    private router: Router
   ) {
-    this.cargarInscripcionesUsuario();
+    this.cargarInscripcionesUsuario({ page: 0, size: 10 });
   }
 
-  private cargarInscripcionesUsuario(): void {
+  private cargarInscripcionesUsuario(pageRequest: PageRequest): Observable<PageResponse<Inscripcion>> {
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
       console.warn('[InscripcionService] No hay usuario autenticado');
-      this.inscripcionesUsuario.next([]);
-      return;
+      return EMPTY;
     }
 
     console.log('[InscripcionService] Cargando inscripciones para usuario:', userId);
-    
-    // Verificar token antes de hacer la petición
-    const token = this.tokenService.getToken();
-    const tokenInfo = token ? this.tokenService.decodeToken(token) : null;
-    
-    console.log('[InscripcionService] Detalles del token:', {
-      tokenPresent: !!token,
-      tokenDecoded: tokenInfo ? {
-        sub: tokenInfo.sub,
-        exp: tokenInfo.exp ? new Date(tokenInfo.exp * 1000).toISOString() : 'N/A',
-        roles: tokenInfo.roles,
-        userId: tokenInfo.userId || tokenInfo.sub
-      } : 'No decodificado'
-    });
+    const params = new HttpParams()
+      .set('page', pageRequest.page.toString())
+      .set('size', pageRequest.size.toString())
+      .set('sort', pageRequest.sort || '');
 
-    if (!token) {
-      console.error('[InscripcionService] No hay token disponible');
-      return;
-    }
-
-    if (!this.tokenService.validateToken(token)) {
-      console.error('[InscripcionService] Token inválido o expirado');
-      return;
-    }
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    });
-
-    this.http.get<Inscripcion[]>(`${this.apiUrl}/inscripciones/user/${userId}`, { headers }).pipe(
-      tap(response => {
-        console.log('[InscripcionService] Respuesta exitosa:', response);
-      }),
-      catchError((error: HttpErrorResponse) => {
-        console.error('[InscripcionService] Error al obtener inscripciones:', {
-          status: error.status,
-          statusText: error.statusText,
-          message: error.message,
-          url: error.url,
-          headers: Object.fromEntries(error.headers.keys().map(key => [key, error.headers.get(key)])),
-          body: error.error
-        });
-
-        let errorMessage = 'Error desconocido al obtener inscripciones';
-        
-        switch (error.status) {
-          case 401:
-            errorMessage = 'No autorizado. Por favor, inicie sesión nuevamente.';
-            break;
-          case 403:
-            errorMessage = 'No tiene permisos para acceder a este recurso.';
-            break;
-          case 404:
-            errorMessage = 'No se encontraron inscripciones para este usuario.';
-            break;
-          case 500:
-            errorMessage = 'Error interno del servidor. Intente nuevamente más tarde.';
-            break;
-        }
-
-        if (error.status === 401) {
-          console.warn('[InscripcionService] Error de autenticación al cargar inscripciones', {
-            errorBody: error.error,
-            errorUrl: error.url
-          });
-          this.inscripcionesUsuario.next([]);
-          this.authService.logout();
-        } else if (error.status === 403) {
-          console.warn('[InscripcionService] Sin permisos para cargar inscripciones');
-          this.inscripcionesUsuario.next([]);
-        } else {
-          console.warn('[InscripcionService] Error desconocido al cargar inscripciones');
-          this.inscripcionesUsuario.next([]);
-        }
-        return of([]);
-      }),
-      finalize(() => {
-        console.log('[InscripcionService] Finalizada la carga de inscripciones');
-      })
-    ).subscribe(inscripciones => {
-      console.log('[InscripcionService] Actualizando inscripciones:', inscripciones);
-      this.inscripcionesUsuario.next(inscripciones || []);
-    });
+    return this.http.get<PageResponse<Inscripcion>>(`${this.apiUrl}/inscripciones/usuario/${userId}`, { params })
+      .pipe(
+        tap(response => console.log('[InscripcionService] Inscripciones cargadas:', response)),
+        catchError(error => this.handleError(error))
+      );
   }
 
-  inscribirseAConcurso(concursoId: string): Observable<Inscripcion> {
+  private handleError(error: any): Observable<never> {
+    console.error('[InscripcionService] Error:', error);
+    if (error.status === 401) {
+      console.log('[InscripcionService] Error de autenticación, redirigiendo a login');
+      this.tokenService.signOut();
+      this.router.navigate(['/login']);
+    }
+    return throwError(() => error);
+  }
+
+  public inscribirse(inscripcion: Inscripcion): Observable<Inscripcion> {
+    if (!this.authService.isAuthenticated()) {
+      console.warn('[InscripcionService] Usuario no autenticado');
+      this.router.navigate(['/auth/login']);
+      return EMPTY;
+    }
+
+    console.log('[InscripcionService] Iniciando inscripción:', inscripcion);
+    return this.http.post<Inscripcion>(`${this.apiUrl}/inscripciones`, inscripcion)
+      .pipe(
+        tap(response => console.log('[InscripcionService] Inscripción exitosa:', response)),
+        catchError(error => this.handleError(error))
+      );
+  }
+
+  public inscribirseAConcurso(concursoId: string): Observable<Inscripcion> {
+    if (!this.tokenService.getToken()) {
+      console.warn('[InscripcionService] No hay token disponible');
+      this.router.navigate(['/login']);
+      return EMPTY;
+    }
+
+    if (!this.authService.isAuthenticated()) {
+      console.warn('[InscripcionService] Token no válido');
+      this.tokenService.signOut();
+      this.router.navigate(['/login']);
+      return EMPTY;
+    }
+
+    if (!concursoId) {
+      console.warn('[InscripcionService] El ID del concurso es requerido');
+      return throwError(() => new Error('El ID del concurso es requerido'));
+    }
+
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
-      console.warn('[InscripcionService] No hay usuario autenticado');
-      return throwError(() => new Error('Usuario no autenticado'));
+      console.warn('[InscripcionService] No se pudo obtener el ID del usuario');
+      this.tokenService.signOut();
+      this.router.navigate(['/login']);
+      return EMPTY;
     }
 
-    console.log('[InscripcionService] Inscribiendo usuario a concurso:', {
+    console.log('[InscripcionService] Preparando inscripción:', {
       userId,
-      concursoId
+      concursoId,
+      tokenPresente: !!this.tokenService.getToken(),
+      token: this.tokenService.getToken()
     });
 
-    // Verificar token antes de hacer la petición
-    const token = this.tokenService.getToken();
-    const tokenInfo = token ? this.tokenService.decodeToken(token) : null;
-    
-    console.log('[InscripcionService] Detalles del token:', {
-      tokenPresent: !!token,
-      tokenDecoded: tokenInfo ? {
-        sub: tokenInfo.sub,
-        exp: tokenInfo.exp ? new Date(tokenInfo.exp * 1000).toISOString() : 'N/A',
-        roles: tokenInfo.roles,
-        userId: tokenInfo.userId || tokenInfo.sub
-      } : 'No decodificado'
+    // Crear el objeto de inscripción en el formato que espera el backend
+    const inscripcionRequest: InscripcionRequest = {
+      contestId: parseInt(concursoId, 10),
+      userId: userId
+    };
+
+    console.log('[InscripcionService] Request que será enviado:', {
+      url: `${this.apiUrl}/inscripciones`,
+      body: inscripcionRequest,
+      headers: {
+        'Authorization': `Bearer ${this.tokenService.getToken()}`,
+        'Content-Type': 'application/json'
+      }
     });
 
-    if (!token) {
-      console.error('[InscripcionService] No hay token disponible');
-      return throwError(() => new Error('No hay token de autenticación'));
-    }
-
-    if (!this.tokenService.validateToken(token)) {
-      console.error('[InscripcionService] Token inválido o expirado');
-      return throwError(() => new Error('Token inválido o expirado'));
-    }
-
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    });
-
-    return this.http.post<Inscripcion>(`${this.apiUrl}/inscripciones`, {
-      userId,
-      concursoId
-    }, { headers }).pipe(
-      tap(inscripcion => {
-        const inscripciones = this.inscripcionesUsuario.value;
-        this.inscripcionesUsuario.next([...inscripciones, inscripcion]);
-      }),
-      catchError((error: HttpErrorResponse) => {
-        console.error('[InscripcionService] Error al inscribirse:', error);
-        let errorMessage = 'Error desconocido al inscribirse';
-        
-        switch (error.status) {
-          case 401:
-            errorMessage = 'No autorizado. Por favor, inicie sesión nuevamente.';
-            break;
-          case 403:
-            errorMessage = 'No tiene permisos para acceder a este recurso.';
-            break;
-          case 404:
-            errorMessage = 'No se encontraron inscripciones para este usuario.';
-            break;
-          case 500:
-            errorMessage = 'Error interno del servidor. Intente nuevamente más tarde.';
-            break;
-        }
-
-        return throwError(() => new Error(errorMessage));
-      })
-    );
+    return this.http.post<Inscripcion>(`${this.apiUrl}/inscripciones`, inscripcionRequest)
+      .pipe(
+        tap(response => {
+          console.log('[InscripcionService] Inscripción exitosa:', response);
+          this.refreshInscripciones();
+        }),
+        catchError(error => {
+          console.error('[InscripcionService] Error en la inscripción:', {
+            status: error.status,
+            message: error.message,
+            error: error
+          });
+          return this.handleError(error);
+        })
+      );
   }
 
   desinscribirse(inscripcionId: string): Observable<void> {
@@ -197,28 +149,10 @@ export class InscripcionService {
       return throwError(() => new Error('El ID de la inscripción es requerido'));
     }
 
-    // Verificar token antes de hacer la petición
-    const token = this.tokenService.getToken();
-    const tokenInfo = token ? this.tokenService.decodeToken(token) : null;
-    
-    console.log('[InscripcionService] Detalles del token:', {
-      tokenPresent: !!token,
-      tokenDecoded: tokenInfo ? {
-        sub: tokenInfo.sub,
-        exp: tokenInfo.exp ? new Date(tokenInfo.exp * 1000).toISOString() : 'N/A',
-        roles: tokenInfo.roles,
-        userId: tokenInfo.userId || tokenInfo.sub
-      } : 'No decodificado'
-    });
-
+    const token = this.validateTokenAndGetToken();
     if (!token) {
       console.error('[InscripcionService] No hay token disponible');
       return throwError(() => new Error('No hay token de autenticación'));
-    }
-
-    if (!this.tokenService.validateToken(token)) {
-      console.error('[InscripcionService] Token inválido o expirado');
-      return throwError(() => new Error('Token inválido o expirado'));
     }
 
     const headers = new HttpHeaders({
@@ -258,28 +192,33 @@ export class InscripcionService {
     );
   }
 
-  verificarInscripcion(concursoId: string | number): Observable<boolean> {
+  public verificarInscripcion(concursoId: string): Observable<boolean> {
+    console.log('[InscripcionService] Verificando inscripción para concurso:', concursoId);
+    
+    if (!this.tokenService.getToken()) {
+      console.warn('[InscripcionService] No hay token disponible');
+      return of(false);
+    }
+
+    if (!this.authService.isAuthenticated()) {
+      console.warn('[InscripcionService] Token no válido');
+      this.tokenService.signOut();
+      this.router.navigate(['/login']);
+      return of(false);
+    }
+
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
       console.warn('[InscripcionService] No hay usuario autenticado');
       return of(false);
     }
 
-    return this.inscripcionesUsuario.pipe(
-      map(inscripciones => {
-        if (!inscripciones || inscripciones.length === 0) {
-          console.log('[InscripcionService] No hay inscripciones para el usuario');
-          return false;
-        }
-        const inscripto = inscripciones.some(i => {
-          const inscripcionId = i.concursoId?.toString() || '';
-          const concursoIdStr = concursoId?.toString() || '';
-          const resultado = inscripcionId === concursoIdStr;
-          console.log('[InscripcionService] Comparando:', { inscripcionId, concursoIdStr, resultado });
-          return resultado;
-        });
-        console.log('[InscripcionService] Estado de inscripción:', inscripto);
-        return inscripto;
+    // Usar el endpoint específico para verificar el estado de inscripción
+    return this.http.get<boolean>(`${this.apiUrl}/inscripciones/estado/${concursoId}/${userId}`).pipe(
+      tap(inscripto => console.log('[InscripcionService] Estado de inscripción:', inscripto)),
+      catchError(error => {
+        console.error('[InscripcionService] Error al verificar inscripción:', error);
+        return of(false);
       })
     );
   }
@@ -301,28 +240,10 @@ export class InscripcionService {
   }
 
   getInscripcionesConcurso(concursoId: string): Observable<Inscripcion[]> {
-    // Verificar token antes de hacer la petición
-    const token = this.tokenService.getToken();
-    const tokenInfo = token ? this.tokenService.decodeToken(token) : null;
-    
-    console.log('[InscripcionService] Detalles del token:', {
-      tokenPresent: !!token,
-      tokenDecoded: tokenInfo ? {
-        sub: tokenInfo.sub,
-        exp: tokenInfo.exp ? new Date(tokenInfo.exp * 1000).toISOString() : 'N/A',
-        roles: tokenInfo.roles,
-        userId: tokenInfo.userId || tokenInfo.sub
-      } : 'No decodificado'
-    });
-
+    const token = this.validateTokenAndGetToken();
     if (!token) {
       console.error('[InscripcionService] No hay token disponible');
       return throwError(() => new Error('No hay token de autenticación'));
-    }
-
-    if (!this.tokenService.validateToken(token)) {
-      console.error('[InscripcionService] Token inválido o expirado');
-      return throwError(() => new Error('Token inválido o expirado'));
     }
 
     const headers = new HttpHeaders({
@@ -335,28 +256,10 @@ export class InscripcionService {
   }
 
   cancelarInscripcion(inscripcionId: string): Observable<void> {
-    // Verificar token antes de hacer la petición
-    const token = this.tokenService.getToken();
-    const tokenInfo = token ? this.tokenService.decodeToken(token) : null;
-    
-    console.log('[InscripcionService] Detalles del token:', {
-      tokenPresent: !!token,
-      tokenDecoded: tokenInfo ? {
-        sub: tokenInfo.sub,
-        exp: tokenInfo.exp ? new Date(tokenInfo.exp * 1000).toISOString() : 'N/A',
-        roles: tokenInfo.roles,
-        userId: tokenInfo.userId || tokenInfo.sub
-      } : 'No decodificado'
-    });
-
+    const token = this.validateTokenAndGetToken();
     if (!token) {
       console.error('[InscripcionService] No hay token disponible');
       return throwError(() => new Error('No hay token de autenticación'));
-    }
-
-    if (!this.tokenService.validateToken(token)) {
-      console.error('[InscripcionService] Token inválido o expirado');
-      return throwError(() => new Error('Token inválido o expirado'));
     }
 
     const headers = new HttpHeaders({
@@ -369,28 +272,10 @@ export class InscripcionService {
   }
 
   actualizarEstadoInscripcion(inscripcionId: string, estado: string, observaciones?: string): Observable<Inscripcion> {
-    // Verificar token antes de hacer la petición
-    const token = this.tokenService.getToken();
-    const tokenInfo = token ? this.tokenService.decodeToken(token) : null;
-    
-    console.log('[InscripcionService] Detalles del token:', {
-      tokenPresent: !!token,
-      tokenDecoded: tokenInfo ? {
-        sub: tokenInfo.sub,
-        exp: tokenInfo.exp ? new Date(tokenInfo.exp * 1000).toISOString() : 'N/A',
-        roles: tokenInfo.roles,
-        userId: tokenInfo.userId || tokenInfo.sub
-      } : 'No decodificado'
-    });
-
+    const token = this.validateTokenAndGetToken();
     if (!token) {
       console.error('[InscripcionService] No hay token disponible');
       return throwError(() => new Error('No hay token de autenticación'));
-    }
-
-    if (!this.tokenService.validateToken(token)) {
-      console.error('[InscripcionService] Token inválido o expirado');
-      return throwError(() => new Error('Token inválido o expirado'));
     }
 
     const headers = new HttpHeaders({
@@ -406,12 +291,15 @@ export class InscripcionService {
   }
 
   refreshInscripciones(): void {
-    this.cargarInscripcionesUsuario();
+    this.cargarInscripcionesUsuario({ page: 0, size: 10 });
   }
 
-  // Método para manejar errores genéricos
-  private handleError(error: HttpErrorResponse) {
-    console.error('[InscripcionService] Error HTTP:', error);
-    return throwError(() => new Error('Ocurrió un error inesperado'));
+  private validateTokenAndGetToken(): string | null {
+    const token = this.tokenService.getToken();
+    if (!token) {
+      console.warn('[InscripcionService] No hay token disponible');
+      return null;
+    }
+    return token;
   }
 }

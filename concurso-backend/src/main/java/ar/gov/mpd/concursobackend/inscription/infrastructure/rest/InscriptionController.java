@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 
 @RestController
 @RequestMapping("/api/inscripciones")
@@ -25,7 +24,22 @@ public class InscriptionController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<InscriptionDetailResponse> createInscription(@RequestBody InscriptionRequest request) {
-        return ResponseEntity.ok(createInscriptionUseCase.createInscription(request));
+        // Log de la petición recibida
+        System.out.println("[InscriptionController] Recibida petición de inscripción: " + request);
+        System.out.println("[InscriptionController] Detalles de la petición:");
+        System.out.println("  - Contest ID: " + request.getContestId());
+        System.out.println("  - Request completo: " + request.toString());
+
+        // Procesar la inscripción
+        try {
+            InscriptionDetailResponse response = createInscriptionUseCase.createInscription(request);
+            System.out.println("[InscriptionController] Inscripción creada exitosamente: " + response);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.err.println("[InscriptionController] Error al crear inscripción: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @GetMapping
@@ -47,14 +61,27 @@ public class InscriptionController {
 
     @GetMapping("/estado/{concursoId}/{userId}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<InscriptionStatus> getInscriptionStatus(
+    public ResponseEntity<Boolean> getInscriptionStatus(
             @PathVariable Long concursoId,
             @PathVariable String userId) {
         try {
-            InscriptionStatus status = findInscriptionsUseCase.findInscriptionStatus(concursoId, userId);
-            return ResponseEntity.ok(status);
+            Boolean inscripto = findInscriptionsUseCase.findInscriptionStatus(concursoId, userId);
+            return ResponseEntity.ok(inscripto);
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    @GetMapping("/verificar/{concursoId}/{userId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Boolean> verificarInscripcion(
+            @PathVariable Long concursoId,
+            @PathVariable String userId) {
+        try {
+            Boolean inscripto = findInscriptionsUseCase.findInscriptionStatus(concursoId, userId) != null;
+            return ResponseEntity.ok(inscripto);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
         }
     }
 

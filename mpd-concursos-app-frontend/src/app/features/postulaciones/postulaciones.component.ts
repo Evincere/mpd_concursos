@@ -13,6 +13,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
@@ -31,6 +32,7 @@ import { InscripcionService } from '@core/services/inscripcion/inscripcion.servi
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     MatButtonModule,
     MatIconModule,
     MatTableModule,
@@ -99,9 +101,10 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   constructor(
     private postulacionesService: PostulacionesService,
+    private inscripcionService: InscripcionService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private inscripcionService: InscripcionService
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -337,5 +340,9 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
           });
       }
     });
+  }
+
+  navegarAConcursos(): void {
+    this.router.navigate(['/dashboard/concursos']);
   }
 }
