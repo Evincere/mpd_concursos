@@ -73,7 +73,7 @@ public class UserService implements IUserService {
             new UserPassword(encodedPassword),
             new UserEmail(dto.getEmail()),
             new UserDni(dto.getDni()),
-            new UserCuit(dto.getCuit(), dto.getDni())
+            new UserCuit(dto.getCuit())
         );
 
         Set<Rol> roles = new HashSet<>();

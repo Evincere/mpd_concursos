@@ -50,7 +50,7 @@ public class InscriptionController {
             @RequestParam(defaultValue = "inscriptionDate") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDirection) {
         return ResponseEntity.ok(findInscriptionsUseCase.findAll(
-                new PageRequest(page, size, sortBy, sortDirection)));
+                PageRequest.of(page, size, sortBy, sortDirection)));
     }
 
     @GetMapping("/{id}")

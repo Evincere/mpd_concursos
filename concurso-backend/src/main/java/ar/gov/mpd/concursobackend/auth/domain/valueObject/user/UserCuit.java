@@ -3,17 +3,18 @@ package ar.gov.mpd.concursobackend.auth.domain.valueObject.user;
 import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCuitException;
 
 public class UserCuit {
-    private final String cuit;
-    @SuppressWarnings("unused")
-    private final String dni;
+    private final String value;
 
-    public UserCuit(String cuit, String dni) {
-        validateCuit(cuit, dni);
-        this.cuit = cuit;
-        this.dni = dni;
+    public UserCuit(String cuit) {
+        validateCuit(cuit);
+        this.value = cuit;
     }
 
-    private void validateCuit(String cuit, String dni) {
+    private void validateCuit(String cuit) {
+        if (cuit == null || cuit.trim().isEmpty()) {
+            throw new InvalidCuitException("El CUIT no puede estar vacío.");
+        }
+
         // Verificación de longitud
         if (cuit.length() != 11) {
             throw new InvalidCuitException("El CUIT debe tener 11 caracteres.");
@@ -21,18 +22,44 @@ public class UserCuit {
         
         // Verificación de formato
         if (!cuit.matches("\\d{2}\\d{8}\\d")) {
-            throw new InvalidCuitException("El CUIT debe tener el formato correcto.");
+            throw new InvalidCuitException("El CUIT debe tener el formato correcto (solo números).");
         }
 
-        // Verificación de que los 8 números coincidan con el DNI
-        String cuitDniPart = cuit.substring(2, 10);
-        if (!cuitDniPart.equals(dni)) {
-            throw new InvalidCuitException("Los números del CUIT no coinciden con el DNI.");
+        // Verificar dígito verificador
+        if (!isValidCuitVerifier(cuit)) {
+            throw new InvalidCuitException("El dígito verificador del CUIT es inválido.");
         }
+    }
+
+    private boolean isValidCuitVerifier(String cuit) {
+        int[] mult = {5, 4, 3, 2, 7, 6, 5, 4, 3, 2};
+        int[] numbers = cuit.chars()
+                .map(Character::getNumericValue)
+                .toArray();
+        
+        int sum = 0;
+        for (int i = 0; i < mult.length; i++) {
+            sum += numbers[i] * mult[i];
+        }
+        
+        int mod11 = sum % 11;
+        int verifier = 11 - mod11;
+        
+        if (verifier == 11) {
+            verifier = 0;
+        } else if (verifier == 10) {
+            verifier = 9;
+        }
+        
+        return verifier == numbers[10];
     }
 
     public String value() {
-        return this.cuit;
+        return value;
     }
 
+    @Override
+    public String toString() {
+        return value;
+    }
 }

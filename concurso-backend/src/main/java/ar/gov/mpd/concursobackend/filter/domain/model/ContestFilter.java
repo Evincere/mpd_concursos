@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.filter.domain.model;
 
-import ar.gov.mpd.concursobackend.filter.domain.model.enums.ContestStatus;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.DateRange;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.Department;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.Position;

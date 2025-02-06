@@ -6,26 +6,18 @@ import java.time.LocalDate;
 
 @Value
 public class DateRange {
-    LocalDate start;
-    LocalDate end;
+    LocalDate startDate;
+    LocalDate endDate;
 
-    public DateRange(LocalDate start, LocalDate end) {
-        validateDateRange(start, end);
-        this.start = start;
-        this.end = end;
+    public DateRange(LocalDate startDate, LocalDate endDate) {
+        validateDateRange(startDate, endDate);
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
-    private void validateDateRange(LocalDate start, LocalDate end) {
-        if (start != null && end != null && start.isAfter(end)) {
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
             throw new InvalidDateRangeException("La fecha de inicio no puede ser posterior a la fecha de fin");
         }
     }
-
-    public LocalDate getStart() {
-        return start;
-    }
-
-    public LocalDate getEnd() {
-        return end;
-    }
-} 
+}

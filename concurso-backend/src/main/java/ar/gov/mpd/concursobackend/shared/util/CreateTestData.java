@@ -58,14 +58,14 @@ public class CreateTestData implements CommandLineRunner {
     @SuppressWarnings("unused")
     private void createUsers() {
         // Crear usuario semper (admin)
-        User semper = createUserIfNotExists("semper", "spereyra@gmail.com", "123456", "26598410", "20265984100");
+        User semper = createUserIfNotExists("semper", "spereyra@gmail.com", "123456", "26598410", "20265984104");
 
         // Crear usuarios de prueba
-        User usuario1 = createUserIfNotExists("usuario1", "usuario1@example.com", "123456", "12345678", "20123456780");
-        User usuario2 = createUserIfNotExists("usuario2", "usuario2@example.com", "123456", "23456789", "20234567890");
-        User usuario3 = createUserIfNotExists("usuario3", "usuario3@example.com", "123456", "34567890", "20345678900");
-        User usuario4 = createUserIfNotExists("usuario4", "usuario4@example.com", "123456", "45678901", "20456789010");
-        User usuario5 = createUserIfNotExists("usuario5", "usuario5@example.com", "123456", "56789012", "20567890120");
+        User usuario1 = createUserIfNotExists("usuario1", "usuario1@example.com", "123456", "12345678", "20123456784");
+        User usuario2 = createUserIfNotExists("usuario2", "usuario2@example.com", "123456", "23456789", "20234567897");
+        User usuario3 = createUserIfNotExists("usuario3", "usuario3@example.com", "123456", "34567890", "20345678901");
+        User usuario4 = createUserIfNotExists("usuario4", "usuario4@example.com", "123456", "45678901", "20456789014");
+        User usuario5 = createUserIfNotExists("usuario5", "usuario5@example.com", "123456", "56789012", "20567890127");
     }
 
     private User createUserIfNotExists(String username, String email, String password, String dni, String cuit) {
