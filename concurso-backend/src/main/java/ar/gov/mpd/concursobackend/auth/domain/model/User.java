@@ -22,6 +22,8 @@ public class User {
     private UserEmail email;
 	private UserDni dni;
 	private UserCuit cuit;
+    private String firstName;
+    private String lastName;
     private Set<Rol> roles = new HashSet<>();
     private UserCreatedAt createdAt;
 
@@ -30,19 +32,21 @@ public class User {
         this.createdAt = new UserCreatedAt(LocalDateTime.now());
     }
 
-    public User(UserUsername username, UserPassword password, UserEmail email, UserDni dni, UserCuit cuit) {
+    public User(UserUsername username, UserPassword password, UserEmail email, UserDni dni, UserCuit cuit, String firstName, String lastName) {
         this.id = new UserId(UUID.randomUUID());
         this.username = username;
         this.password = password;
         this.email = email;
 		this.dni = dni;
 		this.cuit = cuit;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.roles = new HashSet<>();
         this.createdAt = new UserCreatedAt(LocalDateTime.now());
     }
 
-    public static User create(UserUsername username, UserPassword password, UserEmail email, UserDni dni, UserCuit cuit) {
-        return new User(username, password, email, dni, cuit);
+    public static User create(UserUsername username, UserPassword password, UserEmail email, UserDni dni, UserCuit cuit, String firstName, String lastName) {
+        return new User(username, password, email, dni, cuit, firstName, lastName);
     }
     
 }

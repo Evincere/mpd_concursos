@@ -178,17 +178,71 @@ $_rest: (
 $_primary: map.merge(map.get($_palettes, primary), $_rest);
 $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
 
-$dark-theme: mat.define-theme((
+// Definición de paletas compatible con Angular Material
+$custom-primary: (
+  50: #e8eaf6,
+  100: #c5cae9,
+  200: #9fa8da,
+  300: #7986cb,
+  400: #5c6bc0,
+  500: #3f51b5,
+  600: #3949ab,
+  700: #303f9f,
+  800: #283593,
+  900: #1a237e,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: white,
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$custom-accent: (
+  50: #e3f2fd,
+  100: #bbdefb,
+  200: #90caf9,
+  300: #64b5f6,
+  400: #42a5f5,
+  500: #2196f3,
+  600: #1e88e5,
+  700: #1976d2,
+  800: #1565c0,
+  900: #0d47a1,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// Nueva sintaxis para Angular Material 17
+$dark-theme: mat.define-dark-theme((
   color: (
-    theme-type: dark,
-    primary: $_primary,
-    tertiary: $_tertiary,
-    use-system-variables: true,
+    primary: mat.define-palette($custom-primary),
+    accent: mat.define-palette($custom-accent),
+    warn: mat.define-palette(mat.$red-palette),
   ),
-  typography: (
-    use-system-variables: true,
-  ),
+  typography: mat.define-typography-config(),
+  density: 0,
 ));
+
+// Aplicar el tema
+@include mat.core();
+@include mat.all-component-themes($dark-theme);
 
 // Aplicar el tema dentro de un selector
 .mat-app-background {
@@ -242,58 +296,58 @@ $dark-theme: mat.define-theme((
 
   .mat-calendar {
     background-color: transparent;
-    
+
     // Header styling
     .mat-calendar-header {
       padding: 0.5rem 0.5rem 0;
-      
+
       .mat-calendar-controls {
         margin: 0 0.5rem;
-        
+
         .mat-calendar-period-button {
           color: var(--text-color);
           font-weight: 500;
           padding: 0.5rem;
           border-radius: 4px;
-          
+
           &:hover {
             background-color: rgba(255, 255, 255, 0.05);
           }
         }
-        
+
         .mat-calendar-arrow {
           fill: var(--text-color);
         }
       }
     }
-    
+
     // Table styling
     .mat-calendar-table {
       padding: 0.5rem;
-      
+
       .mat-calendar-table-header {
         color: var(--text-secondary);
         font-size: 12px;
         font-weight: 500;
         text-align: center;
-        
+
         th {
           padding: 0.5rem 0;
         }
       }
-      
+
       // Calendar cells
       .mat-calendar-body-cell {
         height: 36px;
         width: 36px;
         border-radius: 50%;
-        
+
         &:not(.mat-calendar-body-disabled) {
           &:hover .mat-calendar-body-cell-content {
             background-color: rgba(255, 255, 255, 0.08);
           }
         }
-        
+
         .mat-calendar-body-cell-content {
           height: 32px;
           width: 32px;
@@ -301,18 +355,18 @@ $dark-theme: mat.define-theme((
           line-height: 32px;
           color: var(--text-color);
           border: none;
-          
+
           &.mat-calendar-body-selected {
             background-color: var(--primary-color);
             color: white;
           }
-          
+
           &.mat-calendar-body-today {
             border: 2px solid var(--primary-color);
             color: var(--primary-color);
           }
         }
-        
+
         &.mat-calendar-body-disabled {
           > .mat-calendar-body-cell-content {
             color: rgba(255, 255, 255, 0.3);
@@ -320,16 +374,16 @@ $dark-theme: mat.define-theme((
         }
       }
     }
-    
+
     // Previous/Next navigation buttons
     .mat-calendar-previous-button,
     .mat-calendar-next-button {
       color: var(--text-color);
-      
+
       &:hover {
         background-color: rgba(255, 255, 255, 0.05);
       }
-      
+
       &[disabled] {
         color: rgba(255, 255, 255, 0.3);
       }
@@ -340,12 +394,12 @@ $dark-theme: mat.define-theme((
 // Datepicker toggle button styling
 .mat-datepicker-toggle {
   color: var(--text-secondary);
-  
+
   .mat-datepicker-toggle-default-icon {
     width: 24px;
     height: 24px;
   }
-  
+
   &:hover {
     .mat-datepicker-toggle-default-icon {
       color: var(--primary-color);
@@ -417,7 +471,7 @@ $dark-theme: mat.define-theme((
   overflow: visible;
   position: relative;
   z-index: 1;
-  
+
   .curriculum-container {
     overflow: visible;
   }
@@ -451,7 +505,7 @@ $dark-theme: mat.define-theme((
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: $spacing-xl;
-    
+
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
@@ -544,7 +598,7 @@ $dark-theme: mat.define-theme((
 // Estilos para los form fields
 .mat-mdc-form-field {
     margin: 20px 0;
-    
+
     .mat-mdc-form-field-flex {
         background-color: $color-surface-light !important;
         padding: 0.5rem 1rem !important;
@@ -605,7 +659,7 @@ $dark-theme: mat.define-theme((
 
         .mat-mdc-form-field-label {
             color: $color-primary !important;
-            
+
             span {
                 transform: translateY(-25px);
                 @for $i from 0 through 20 {
@@ -712,12 +766,12 @@ $datepicker-cell-size: 36px;
 
       .mat-calendar-controls {
         margin: 0 !important;
-        
+
         .mat-calendar-period-button,
         .mat-calendar-previous-button,
         .mat-calendar-next-button {
           color: $datepicker-text !important;
-          
+
           &:hover {
             background: $datepicker-hover !important;
           }
@@ -762,7 +816,7 @@ $datepicker-cell-size: 36px;
         border-radius: 50% !important;
         font-size: 13px !important;
         color: $datepicker-text !important;
-        
+
         &:hover {
           background: $datepicker-hover !important;
         }
@@ -789,7 +843,7 @@ $datepicker-cell-size: 36px;
 
       .mat-calendar-body-cell-content {
         cursor: default !important;
-        
+
         &:hover {
           background: none !important;
         }
@@ -1023,7 +1077,7 @@ $snackbar-action: rgba(255, 255, 255, 0.7);
       line-height: 28px !important;
       border-radius: 4px !important;
       background: rgba(255, 255, 255, 0.1) !important;
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.2) !important;
       }
@@ -1048,7 +1102,7 @@ $snackbar-action: rgba(255, 255, 255, 0.7);
 .mat-mdc-snack-bar-container {
   &.success-snackbar, &.error-snackbar, &.info-snackbar {
     margin: 16px !important;
-    
+
     .mat-mdc-snack-bar-actions {
       margin-inline-end: -8px !important;
     }

@@ -8,7 +8,9 @@
 		"java.compile.nullAnalysis.mode": "automatic",
 		"java.configuration.updateBuildConfiguration": "automatic",
 		"terminal.integrated.accessibleViewFocusOnCommandExecution": true,
-		"terminal.integrated.automationProfile.windows": {},
+		"terminal.integrated.automationProfile.windows": {
+		
+		},
 		"terminal.explorerKind": "both",
 		"terminal.integrated.copyOnSelection": true,
 		"terminal.integrated.defaultLocation": "editor",

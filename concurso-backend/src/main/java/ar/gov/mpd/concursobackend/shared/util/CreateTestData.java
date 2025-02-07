@@ -58,17 +58,50 @@ public class CreateTestData implements CommandLineRunner {
     @SuppressWarnings("unused")
     private void createUsers() {
         // Crear usuario semper (admin)
-        User semper = createUserIfNotExists("semper", "spereyra@gmail.com", "123456", "26598410", "20265984104");
+        String semperDni = "26598410";
+        User semper = createUserIfNotExists("semper", "spereyra@gmail.com", "123456", semperDni, calculateCuit(semperDni), "Admin", "Semper");
 
         // Crear usuarios de prueba
-        User usuario1 = createUserIfNotExists("usuario1", "usuario1@example.com", "123456", "12345678", "20123456784");
-        User usuario2 = createUserIfNotExists("usuario2", "usuario2@example.com", "123456", "23456789", "20234567897");
-        User usuario3 = createUserIfNotExists("usuario3", "usuario3@example.com", "123456", "34567890", "20345678901");
-        User usuario4 = createUserIfNotExists("usuario4", "usuario4@example.com", "123456", "45678901", "20456789014");
-        User usuario5 = createUserIfNotExists("usuario5", "usuario5@example.com", "123456", "56789012", "20567890127");
+        String dni1 = "12345678";
+        String dni2 = "23456789";
+        String dni3 = "34567890";
+        String dni4 = "45678901";
+        String dni5 = "56789012";
+
+        User usuario1 = createUserIfNotExists("usuario1", "usuario1@example.com", "123456", dni1, calculateCuit(dni1), "Juan", "Perez");
+        User usuario2 = createUserIfNotExists("usuario2", "usuario2@example.com", "123456", dni2, calculateCuit(dni2), "Maria", "Gonzalez");
+        User usuario3 = createUserIfNotExists("usuario3", "usuario3@example.com", "123456", dni3, calculateCuit(dni3), "Pedro", "Lopez");
+        User usuario4 = createUserIfNotExists("usuario4", "usuario4@example.com", "123456", dni4, calculateCuit(dni4), "Ana", "Rodriguez");
+        User usuario5 = createUserIfNotExists("usuario5", "usuario5@example.com", "123456", dni5, calculateCuit(dni5), "Luis", "Martinez");
     }
 
-    private User createUserIfNotExists(String username, String email, String password, String dni, String cuit) {
+    private String calculateCuit(String dni) {
+        // Prefijo para persona física masculina
+        String prefix = "20";
+        String base = prefix + dni;
+        
+        int[] multipliers = {5, 4, 3, 2, 7, 6, 5, 4, 3, 2};
+        int sum = 0;
+        
+        for (int i = 0; i < 10; i++) {
+            sum += Character.getNumericValue(base.charAt(i)) * multipliers[i];
+        }
+        
+        int remainder = sum % 11;
+        int verifier;
+        
+        if (remainder == 0) {
+            verifier = 0;
+        } else if (remainder == 1) {
+            verifier = 9; // Para prefijo 20 (masculino)
+        } else {
+            verifier = 11 - remainder;
+        }
+        
+        return base + verifier;
+    }
+
+    private User createUserIfNotExists(String username, String email, String password, String dni, String cuit, String firstName, String lastName) {
         if (!userService.existsByUsername(new UserUsername(username))) {
             UserCreateDto user = new UserCreateDto();
             user.setEmail(email);
@@ -76,6 +109,9 @@ public class CreateTestData implements CommandLineRunner {
             user.setPassword(password);
             user.setDni(dni);
             user.setCuit(cuit);
+            user.setNombre(firstName);  
+            user.setApellido(lastName); 
+            user.setConfirmPassword(password); // Required for validation
             return userService.createUser(user);
         }
         return userService.getByUsername(new UserUsername(username)).orElse(null);

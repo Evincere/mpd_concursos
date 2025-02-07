@@ -41,6 +41,8 @@ public class UserMapper {
         if (user.getCuit() != null) {
             entity.setCuit(user.getCuit().value());
         }
+        entity.setFirstName(user.getFirstName());
+        entity.setLastName(user.getLastName());
         if (user.getRoles() != null) {
             entity.setRoles(user.getRoles().stream()
                     .map(rol -> {
@@ -83,6 +85,8 @@ public class UserMapper {
         if (entity.getCuit() != null) {
             user.setCuit(new UserCuit(entity.getCuit()));
         }
+        user.setFirstName(entity.getFirstName());
+        user.setLastName(entity.getLastName());
         if (entity.getRoles() != null) {
             Set<Rol> roles = entity.getRoles().stream()
                     .map(roleEntity -> {
