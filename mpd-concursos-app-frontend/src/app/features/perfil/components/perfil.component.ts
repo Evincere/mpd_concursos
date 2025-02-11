@@ -7,12 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
-import { BsDatepickerModule, BsLocaleService, BsDatepickerConfig } from 'ngx-bootstrap/datepicker';
-import { defineLocale } from 'ngx-bootstrap/chronos';
-import { esLocale } from 'ngx-bootstrap/locale';
-
-defineLocale('es', esLocale);
 
 @Component({
   selector: 'app-perfil',
@@ -26,11 +23,12 @@ defineLocale('es', esLocale);
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    ReactiveFormsModule,
-    BsDatepickerModule
+    MatDatepickerModule,
+    MatNativeDateModule,
+    ReactiveFormsModule
   ],
   providers: [
-    BsLocaleService
+    { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }
   ],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.scss']
@@ -42,20 +40,13 @@ export class PerfilComponent implements OnInit {
   @ViewChild('fechaEduInicio') fechaEduInicio: any;
   @ViewChild('fechaEduFin') fechaEduFin: any;
   perfilForm!: FormGroup;
-  bsConfig: Partial<BsDatepickerConfig> = {
-    containerClass: 'theme-dark',
-    dateInputFormat: 'DD/MM/YYYY',
-    showWeekNumbers: false,
-    adaptivePosition: true
-  };
+  
   fotoPerfil: string = 'assets/images/default-avatar.png';
   linkedInConectado = false;
 
   constructor(
-    private fb: FormBuilder,
-    private localeService: BsLocaleService
+    private fb: FormBuilder
   ) {
-    this.localeService.use('es');
     this.initializeForms();
   }
 

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @Primary
@@ -26,10 +27,10 @@ public class NotificationRepositoryImpl implements INotificationRepository {
 
     @Override
     public List<Notification> findByRecipientId(UUID recipientId) {
-        return jpaRepository.findByRecipientIdOrderByCreatedAtDesc(recipientId)
+        return jpaRepository.findByRecipientIdOrderBySentAtDesc(recipientId)
                 .stream()
                 .map(mapper::toDomainEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

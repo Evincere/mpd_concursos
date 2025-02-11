@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.notification.infrastructure.persistence;
 
 import ar.gov.mpd.concursobackend.notification.application.port.out.INotificationRepository;
 import ar.gov.mpd.concursobackend.notification.domain.model.Notification;
+import ar.gov.mpd.concursobackend.notification.infrastructure.persistence.entity.NotificationJpaEntity;
 import ar.gov.mpd.concursobackend.notification.infrastructure.persistence.mapper.NotificationPersistenceMapper;
 import ar.gov.mpd.concursobackend.notification.infrastructure.persistence.repository.JpaNotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -19,10 +21,10 @@ public class NotificationPersistenceAdapter implements INotificationRepository {
 
     @Override
     public List<Notification> findByRecipientId(UUID recipientId) {
-        return jpaRepository.findByRecipientIdOrderByCreatedAtDesc(recipientId)
-                .stream()
+        List<NotificationJpaEntity> notifications = jpaRepository.findByRecipientIdOrderBySentAtDesc(recipientId);
+        return notifications.stream()
                 .map(mapper::toDomainEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override

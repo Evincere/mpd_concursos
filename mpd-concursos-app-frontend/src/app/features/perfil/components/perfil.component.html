@@ -229,46 +229,28 @@
                                     <div class="form-row">
                                         <div class="form-field-container">
                                             <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
-                                            <div class="input-group">
-                                                <input id="fechaInicio" 
-                                                    #fechaInicio="bsDatepicker"
-                                                    type="text" 
-                                                    class="form-control" 
-                                                    bsDatepicker 
-                                                    [bsConfig]="bsConfig"
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Fecha de Inicio</mat-label>
+                                                <input matInput 
+                                                    [matDatepicker]="fechaInicioPicker"
                                                     formControlName="fechaInicio"
-                                                    placeholder="DD/MM/AAAA"
-                                                    placement="bottom"
-                                                    [attr.aria-label]="'Seleccionar fecha de inicio'">
-                                                <button type="button" 
-                                                    class="btn btn-outline-secondary calendar-btn" 
-                                                    (click)="fechaInicio.toggle()"
-                                                    [attr.aria-label]="'Abrir calendario'">
-                                                    <i class="fas fa-calendar-alt"></i>
-                                                </button>
-                                            </div>
+                                                    placeholder="DD/MM/AAAA">
+                                                <mat-datepicker-toggle matSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
+                                                <mat-datepicker #fechaInicioPicker></mat-datepicker>
+                                            </mat-form-field>
                                         </div>
 
                                         <div class="form-field-container">
                                             <label for="fechaFin" class="form-label">Fecha de Fin</label>
-                                            <div class="input-group">
-                                                <input id="fechaFin" 
-                                                    #fechaFin="bsDatepicker"
-                                                    type="text" 
-                                                    class="form-control" 
-                                                    bsDatepicker 
-                                                    [bsConfig]="bsConfig"
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Fecha de Fin</mat-label>
+                                                <input matInput 
+                                                    [matDatepicker]="fechaFinPicker"
                                                     formControlName="fechaFin"
-                                                    placeholder="DD/MM/AAAA"
-                                                    placement="bottom"
-                                                    [attr.aria-label]="'Seleccionar fecha de fin'">
-                                                <button type="button" 
-                                                    class="btn btn-outline-secondary calendar-btn" 
-                                                    (click)="fechaFin.toggle()"
-                                                    [attr.aria-label]="'Abrir calendario'">
-                                                    <i class="fas fa-calendar-alt"></i>
-                                                </button>
-                                            </div>
+                                                    placeholder="DD/MM/AAAA">
+                                                <mat-datepicker-toggle matSuffix [for]="fechaFinPicker"></mat-datepicker-toggle>
+                                                <mat-datepicker #fechaFinPicker></mat-datepicker>
+                                            </mat-form-field>
                                         </div>
                                     </div>
 
@@ -338,46 +320,28 @@
                                     <div class="form-row">
                                         <div class="form-field-container">
                                             <label for="fechaEduInicio" class="form-label">Fecha de Inicio</label>
-                                            <div class="input-group">
-                                                <input id="fechaEduInicio" 
-                                                    #fechaEduInicio="bsDatepicker"
-                                                    type="text" 
-                                                    class="form-control" 
-                                                    bsDatepicker 
-                                                    [bsConfig]="bsConfig"
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Fecha de Inicio</mat-label>
+                                                <input matInput 
+                                                    [matDatepicker]="fechaEduInicioPicker"
                                                     formControlName="fechaInicio"
-                                                    placeholder="DD/MM/AAAA"
-                                                    placement="bottom"
-                                                    [attr.aria-label]="'Seleccionar fecha de inicio de educación'">
-                                                <button type="button" 
-                                                    class="btn btn-outline-secondary calendar-btn" 
-                                                    (click)="fechaEduInicio.toggle()"
-                                                    [attr.aria-label]="'Abrir calendario'">
-                                                    <i class="fas fa-calendar-alt"></i>
-                                                </button>
-                                            </div>
+                                                    placeholder="DD/MM/AAAA">
+                                                <mat-datepicker-toggle matSuffix [for]="fechaEduInicioPicker"></mat-datepicker-toggle>
+                                                <mat-datepicker #fechaEduInicioPicker></mat-datepicker>
+                                            </mat-form-field>
                                         </div>
 
                                         <div class="form-field-container">
                                             <label for="fechaEduFin" class="form-label">Fecha de Fin</label>
-                                            <div class="input-group">
-                                                <input id="fechaEduFin" 
-                                                    #fechaEduFin="bsDatepicker"
-                                                    type="text" 
-                                                    class="form-control" 
-                                                    bsDatepicker 
-                                                    [bsConfig]="bsConfig"
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Fecha de Fin</mat-label>
+                                                <input matInput 
+                                                    [matDatepicker]="fechaEduFinPicker"
                                                     formControlName="fechaFin"
-                                                    placeholder="DD/MM/AAAA"
-                                                    placement="bottom"
-                                                    [attr.aria-label]="'Seleccionar fecha de fin de educación'">
-                                                <button type="button" 
-                                                    class="btn btn-outline-secondary calendar-btn" 
-                                                    (click)="fechaEduFin.toggle()"
-                                                    [attr.aria-label]="'Abrir calendario'">
-                                                    <i class="fas fa-calendar-alt"></i>
-                                                </button>
-                                            </div>
+                                                    placeholder="DD/MM/AAAA">
+                                                <mat-datepicker-toggle matSuffix [for]="fechaEduFinPicker"></mat-datepicker-toggle>
+                                                <mat-datepicker #fechaEduFinPicker></mat-datepicker>
+                                            </mat-form-field>
                                         </div>
                                     </div>
                                 </div>
