@@ -21,6 +21,9 @@ import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import lombok.RequiredArgsConstructor;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
     private final ContestRepository contestRepository;
     private final InscriptionMapper inscriptionMapper;
     private final IUserService userService;
+    private static final Logger log = LoggerFactory.getLogger(FindInscriptionsService.class);
 
     @Override
     @Transactional(readOnly = true)
@@ -72,5 +76,32 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
             .orElse(null);
         
         return inscriptionMapper.toDetailResponse(inscription, contest);
+    }
+
+    @Override
+    public Boolean findInscriptionStatus(Long contestId, String userId) {
+        try {
+            log.debug("Verificando inscripción para concurso {} y usuario {}", contestId, userId);
+            UUID userUUID = UUID.fromString(userId);
+            
+            // Verificar si existe una inscripción
+            var inscripcionOpt = loadInscriptionPort.findByContestIdAndUserId(contestId, userUUID);
+            
+            if (inscripcionOpt.isPresent()) {
+                var inscripcion = inscripcionOpt.get();
+                log.debug("Se encontró una inscripción: {}", inscripcion);
+                return true;
+            }
+            
+            log.debug("No se encontró inscripción para el concurso {} y usuario {}", contestId, userId);
+            return false;
+            
+        } catch (IllegalArgumentException e) {
+            log.error("Error al convertir userId a UUID: {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.error("Error al verificar inscripción: {}", e.getMessage());
+            return false;
+        }
     }
 }

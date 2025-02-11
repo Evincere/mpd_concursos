@@ -1,10 +1,15 @@
 <div class="navbar">
-    <a href="https://defensamendoza.gob.ar/" target="_blank" rel="noopener noreferrer" class="logo-container">
-        <img src="icons/favicon.png" alt="Logo Ministerio Público de la Defensa">
+    <a href="https://defensamendoza.gob.ar/" target="_blank" rel="noopener noreferrer" 
+       class="logo-container" [class.collapsed]="isSidebarCollapsed">
+        <img src="/icons/favicon.png" 
+             (error)="onLogoError($event)" 
+             alt="Logo Ministerio Público de la Defensa"
+             [@logoRotate]="logoState">
     </a>
-    <h1 class="navbar-title">RRHH - MPD - CONCURSOS</h1>
+    <h1 class="navbar-title" [class.collapsed]="isSidebarCollapsed">RRHH - MPD - CONCURSOS</h1>
     <div class="nav-right">
-        <app-user-info [username]="userInfo.username" [cuit]="userInfo.cuit"></app-user-info>
+        <app-notifications></app-notifications>
+        <app-user-info></app-user-info>
         <button class="logout-btn" (click)="onLogout()">
             <i class="fas fa-sign-out-alt"></i>
             <span class="logout-text">Cerrar sesión</span>

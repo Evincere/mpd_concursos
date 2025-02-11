@@ -1,11 +1,12 @@
 <div class="concursos-feature-container">
   <div class="main-content" [class.blur-effect]="concursoSeleccionado">
     <app-search-header
-      title="Inscripciones Vigentes"
-      icon="gavel"
+      title="Concursos"
+      icon="briefcase"
       placeholder="Buscar concursos..."
       (search)="onSearch($event)"
-      (filter)="onFilter()">
+      (filter)="onFilter()"
+      [filtrosActivos]="filtrosActivos">
     </app-search-header>
 
     <div class="concursos-content">
@@ -46,43 +47,63 @@
           </div>
 
           <div class="card-actions">
-            <button mat-stroked-button class="details-button" (click)="verDetalle(concurso, $event)">
-              <i class="fas fa-search-plus"></i>
-              Ver detalles
+            <button mat-stroked-button 
+                    class="details-button" 
+                    (click)="verDetalle(concurso)">
+              <mat-icon class="details-icon">visibility</mat-icon>
+              <span>Ver Detalles</span>
             </button>
-            <app-inscription-button
-              [contestId]="concurso.id"
-              (inscriptionComplete)="onInscriptionComplete(concurso.id)"
-              *ngIf="concurso.status === 'ABIERTO'"
-            ></app-inscription-button>
           </div>
         </div>
       </div>
 
-      <div class="no-results" *ngIf="!loading && !error && concursos.length === 0">
-        <i class="fas fa-search"></i>
-        <h4>No se encontraron concursos</h4>
-        <p>Intenta con otros términos de búsqueda</p>
+      <div class="empty-state" *ngIf="!loading && !error && concursos.length === 0">
+        <div class="empty-state-content" [ngClass]="{'filtered': hayFiltrosAplicados()}">
+          <!-- Caso 1: No hay concursos disponibles -->
+          <ng-container *ngIf="!hayFiltrosAplicados()">
+            <i class="fas fa-clipboard-list fa-4x"></i>
+            <h3>No hay concursos disponibles</h3>
+            <p>Actualmente no hay concursos abiertos. Te notificaremos cuando se publiquen nuevas convocatorias.</p>
+            <button mat-raised-button color="primary" (click)="retryLoad()">
+              <i class="fas fa-sync"></i>
+              Actualizar lista
+            </button>
+          </ng-container>
+
+          <!-- Caso 2: No hay coincidencias con los filtros -->
+          <ng-container *ngIf="hayFiltrosAplicados()">
+            <i class="fas fa-filter fa-4x"></i>
+            <h3>No se encontraron coincidencias</h3>
+            <p>No hay concursos que coincidan con los criterios de búsqueda actuales. Prueba ajustando los filtros o realizando una nueva búsqueda.</p>
+            <div class="actions">
+              <button mat-stroked-button (click)="limpiarFiltros()" class="clear-filters-button">
+                <i class="fas fa-times" aria-hidden="true"></i>
+                Limpiar filtros
+              </button>
+            </div>
+          </ng-container>
+        </div>
       </div>
 
-      <app-filtros-panel
-        *ngIf="showFilters"
-        (close)="onFilter()"
-        [@slideInOut]>
+      <app-filtros-panel 
+        *ngIf="mostrarFiltros"
+        (filtrosChange)="aplicarFiltros($event)"
+        (cerrar)="toggleFiltros()">
       </app-filtros-panel>
       
       <div class="backdrop" 
-        *ngIf="showFilters"
-        (click)="onFilter()"
-        [@fadeInOut]>
+        *ngIf="mostrarFiltros"
+        (click)="toggleFiltros()"
+        [@fadeInOut]="mostrarFiltros">
       </div>
     </div>
   </div>
 
   <div class="overlay" *ngIf="concursoSeleccionado" [@fadeInOut]></div>
-  <app-concurso-detalle
+  <app-concurso-detalle 
     *ngIf="concursoSeleccionado"
     [concurso]="concursoSeleccionado"
-    (cerrarDetalle)="cerrarDetalle()">
+    (cerrarDetalle)="cerrarDetalle()"
+    (inscripcionRealizada)="onInscriptionComplete($event)">
   </app-concurso-detalle>
 </div>

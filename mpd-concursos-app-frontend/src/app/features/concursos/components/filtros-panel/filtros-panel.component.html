@@ -1,110 +1,54 @@
-<div class="filtros-panel-wrapper">
-    <div class="filtros-panel">
-        <div class="filtros-header">
-            <h2>
-                <i class="fas fa-filter"></i>
-                Filtros de Búsqueda
-            </h2>
-            <button mat-icon-button (click)="cerrar()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
+<div class="filtros-panel">
+  <header>
+    <h2>Filtros</h2>
+    <button mat-icon-button (click)="cerrar.emit()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
 
-        <form [formGroup]="filtrosForm" class="filtros-content">
-            <!-- Estado -->
-            <div class="filtro-grupo">
-                <div class="grupo-titulo">
-                    <i class="fas fa-check-circle"></i>
-                    Estado
-                </div>
-                <div class="grupo-contenido radio-button-container">
-                    <div class="radio-button" *ngFor="let option of estadoOptions">
-                        <input type="radio" 
-                               [id]="'estado-' + option.value"
-                               [value]="option.value"
-                               [name]="'estado'"
-                               formControlName="estado"
-                               class="radio-button__input">
-                        <label [for]="'estado-' + option.value" class="radio-button__label">
-                            {{option.label}}
-                            <span class="radio-button__custom"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Período -->
-            <div class="filtro-grupo">
-                <div class="grupo-titulo">
-                    <i class="fas fa-calendar"></i>
-                    Período
-                </div>
-                <div class="grupo-contenido radio-button-container">
-                    <div class="radio-button" *ngFor="let option of periodoOptions">
-                        <input type="radio" 
-                               [id]="'periodo-' + option.value"
-                               [value]="option.value"
-                               [name]="'periodo'"
-                               formControlName="periodo"
-                               class="radio-button__input">
-                        <label [for]="'periodo-' + option.value" class="radio-button__label">
-                            {{option.label}}
-                            <span class="radio-button__custom"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dependencia -->
-            <div class="filtro-grupo">
-                <div class="grupo-titulo">
-                    <i class="fas fa-building"></i>
-                    Dependencia
-                </div>
-                <div class="grupo-contenido">
-                    <div class="select-container">
-                        <mat-form-field>
-                            <mat-select formControlName="dependencia" panelClass="custom-select-panel">
-                                <mat-option *ngFor="let option of dependenciaOptions" 
-                                          [value]="option.value">
-                                    {{option.label}}
-                                </mat-option>
-                            </mat-select>
-                        </mat-form-field>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cargo -->
-            <div class="filtro-grupo">
-                <div class="grupo-titulo">
-                    <i class="fas fa-briefcase"></i>
-                    Cargo
-                </div>
-                <div class="grupo-contenido">
-                    <div class="select-container">
-                        <mat-form-field>
-                            <mat-select formControlName="cargo" panelClass="custom-select-panel">
-                                <mat-option *ngFor="let option of cargoOptions" 
-                                          [value]="option.value">
-                                    {{option.label}}
-                                </mat-option>
-                            </mat-select>
-                        </mat-form-field>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <div class="filtros-actions">
-            <button mat-stroked-button (click)="limpiarFiltros()">
-                <i class="fas fa-eraser"></i>
-                Limpiar
-            </button>
-            <button mat-flat-button color="primary" (click)="aplicarFiltros()">
-                <i class="fas fa-check"></i>
-                Aplicar
-            </button>
-        </div>
+  <form [formGroup]="filtrosForm">
+    <!-- Estado -->
+    <div class="filtro-grupo">
+      <h3>Estado</h3>
+      <mat-button-toggle-group formControlName="estado">
+        <mat-button-toggle *ngFor="let option of estadoOptions" [value]="option.value">
+          <mat-icon>{{ option.icon }}</mat-icon>
+          {{ option.label }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
     </div>
+
+    <!-- Periodo -->
+    <div class="filtro-grupo">
+      <h3>Periodo</h3>
+      <mat-button-toggle-group formControlName="periodo">
+        <mat-button-toggle *ngFor="let option of periodoOptions" [value]="option.value">
+          <mat-icon>{{ option.icon }}</mat-icon>
+          {{ option.label }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- Dependencia -->
+    <div class="filtro-grupo">
+      <h3>Dependencia</h3>
+      <mat-select formControlName="dependencia" placeholder="Seleccione dependencia">
+        <mat-option *ngFor="let option of dependenciaOptions" [value]="option.value">
+          <mat-icon>{{ option.icon }}</mat-icon>
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </div>
+
+    <!-- Cargo -->
+    <div class="filtro-grupo">
+      <h3>Cargo</h3>
+      <mat-select formControlName="cargo" placeholder="Seleccione cargo">
+        <mat-option *ngFor="let option of cargoOptions" [value]="option.value">
+          <mat-icon>{{ option.icon }}</mat-icon>
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </div>
+  </form>
 </div>

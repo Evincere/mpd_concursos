@@ -11,7 +11,7 @@
         <p>Iniciar Sesión</p>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <div class="user-box">
-            <input matInput type="text" formControlName="username" placeholder=" " required>
+            <input matInput type="text" class="login-input" formControlName="username" placeholder=" " required>
             <label>Username</label>
             <mat-error *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.errors?.['required']">
               El username es requerido
@@ -21,7 +21,7 @@
             </mat-error>
           </div>
           <div class="user-box">
-            <input matInput type="password" formControlName="password" placeholder=" " required>
+            <input matInput type="password" class="login-input" formControlName="password" placeholder=" " required>
             <label>Password</label>
             <mat-error *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
               La contraseña es requerida

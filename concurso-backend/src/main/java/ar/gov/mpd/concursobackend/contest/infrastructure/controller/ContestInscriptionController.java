@@ -3,9 +3,9 @@ package ar.gov.mpd.concursobackend.contest.infrastructure.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
-import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
-import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
+import ar.gov.mpd.concursobackend.contest.application.dto.ContestInscriptionRequest;
+import ar.gov.mpd.concursobackend.contest.application.port.in.CreateContestInscriptionUseCase;
+import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -13,15 +13,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ContestInscriptionController {
 
-    private final CreateInscriptionUseCase createInscriptionUseCase;
+    private final CreateContestInscriptionUseCase createContestInscriptionUseCase;
 
     @PostMapping("/{contestId}/inscriptions")
-    public ResponseEntity<InscriptionDetailResponse> createInscription(@PathVariable Long contestId) {
-        InscriptionRequest request = InscriptionRequest.builder()
-            .contestId(contestId)
-            .userId(null) // Ajustar para obtener el userId
-            .build();
-        InscriptionDetailResponse inscription = createInscriptionUseCase.createInscription(request);
+    public ResponseEntity<Inscription> createInscription(@PathVariable Long contestId) {
+        ContestInscriptionRequest request = new ContestInscriptionRequest(contestId);
+        Inscription inscription = createContestInscriptionUseCase.createInscription(request);
         return ResponseEntity.ok(inscription);
     }
 }

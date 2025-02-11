@@ -1,449 +1,220 @@
-@use '@angular/material' as mat;
-@use 'variables' as *;
+:host {
+  display: block;
+  height: 100vh;
+  width: 100%;
+  max-width: 400px;
+}
 
-// El ancho original era 250px, aumentamos un 15%
-$panel-width: 288px; // 250px + 15% = 287.5px, redondeado a 288px
-
-.filtros-panel {
-    background: $color-background;
-    padding: 1.5rem 1rem;
-    box-shadow: $box-shadow;
+:host ::ng-deep {
+  .filtros-panel {
     height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    transition: all 0.3s ease;
-    width: $panel-width;
-    position: relative;
-}
-
-.filtros-panel-wrapper {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: $panel-width;
-    z-index: 1000;
-}
-
-.filtros-header {
+    width: 100%;
+    background: rgba(var(--surface-color-rgb), 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
+    flex-direction: column;
 
-    h2 {
-        display: flex;
-        align-items: center;
-        color: $color-text-primary;
+    header {
+      padding: 1rem;
+      background: rgba(var(--surface-color-rgb), 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h2 {
         margin: 0;
-        font-size: 0.875rem;
-        font-weight: 500;
-        
-        i {
-            width: 20px;
-            text-align: center;
-            font-size: 1rem;
-            margin-right: 1rem;
-            color: $color-primary;
-        }
-    }
-
-    button {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        color: $color-text-secondary;
-        transition: all 0.2s ease;
-        
-        &:hover {
-            color: $color-primary;
-            background: rgba($color-primary, 0.1);
-        }
-    }
-}
-
-.filtros-content {
-    .filtro-grupo {
-        margin-bottom: 1.5rem;
-
-        .grupo-titulo {
-            display: flex;
-            align-items: center;
-            color: $color-text-secondary;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.75rem;
-
-            i {
-                width: 20px;
-                text-align: center;
-                font-size: 1rem;
-                margin-right: 1rem;
-                color: $color-primary;
-            }
-        }
-
-        .grupo-contenido {
-            padding-left: 2.25rem;
-
-            mat-radio-group {
-                display: flex;
-                flex-direction: column;
-                gap: 0.75rem;
-
-                mat-radio-button {
-                    color: $color-text-secondary;
-                    font-size: 0.875rem;
-                    
-                    ::ng-deep {
-                        .mdc-form-field {
-                            color: inherit;
-                        }
-                        .mdc-radio {
-                            .mdc-radio__background {
-                                border-color: $color-text-secondary;
-                            }
-                        }
-                        .mdc-radio--selected {
-                            .mdc-radio__background {
-                                border-color: $color-primary;
-                            }
-                        }
-                    }
-                }
-            }
-
-            mat-form-field.mat-mdc-form-field {
-                width: 100%;
-                font-size: 0.875rem;
-
-                ::ng-deep {
-                    .mat-mdc-form-field-flex {
-                        background: rgba($color-primary, 0.05);
-                        border-radius: $border-radius;
-                        min-height: 40px;
-                        padding: 0 8px;
-                    }
-
-                    .mat-mdc-form-field-infix {
-                        padding: 8px 0;
-                        min-height: unset;
-                    }
-
-                    .mat-mdc-floating-label {
-                        font-size: 0.875rem;
-                        top: 16px;
-                    }
-
-                    .mat-mdc-select-arrow {
-                        margin: 0 4px;
-                    }
-
-                    .mdc-line-ripple {
-                        display: none;
-                    }
-                }
-            }
-        }
-    }
-}
-
-.filtros-actions {
-    margin-top: 1.5rem;
-    display: flex;
-    gap: 0.75rem;
-
-    button {
-        flex: 1;
+        font-size: 1.25rem;
+        color: var(--text-color);
         display: flex;
         align-items: center;
-        justify-content: center;
         gap: 0.5rem;
-        padding: 0.75rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        border-radius: $border-radius;
-        transition: all 0.2s ease;
 
         i {
-            font-size: 0.875rem;
+          color: var(--primary-color);
         }
+      }
 
-        &[mat-stroked-button] {
-            color: $color-text-secondary;
-            border-color: rgba($color-text-secondary, 0.2);
+      button {
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
 
-            &:hover {
-                color: $color-primary;
-                border-color: $color-primary;
-                background: rgba($color-primary, 0.1);
-            }
+        &:hover {
+          color: var(--text-color);
+          transform: rotate(90deg);
         }
-
-        &[mat-flat-button] {
-            background: $color-primary;
-            color: white;
-
-            &:hover {
-                background: darken($color-primary, 5%);
-            }
-        }
+      }
     }
-}
 
-.backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 990;
+    form {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(var(--primary-color-rgb), 0.2);
+        border-radius: 3px;
+
+        &:hover {
+          background: rgba(var(--primary-color-rgb), 0.3);
+        }
+      }
+
+      .filtro-grupo {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        h3 {
+          margin: 0 0 1rem 0;
+          font-size: 1rem;
+          color: var(--text-color);
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          i {
+            color: var(--primary-color);
+          }
+        }
+
+        .mat-button-toggle-group {
+          border: none;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0;
+          background: transparent;
+          border-radius: 6px;
+          overflow: hidden;
+          width: 100%;
+
+          .mat-button-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0;
+            margin: 0;
+            border-right: none;
+            flex: 1;
+
+            &:last-child {
+              border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.1);
+            }
+
+            &.mat-button-toggle-checked {
+              background: rgba(var(--primary-color-rgb), 0.2);
+              border-color: rgba(var(--primary-color-rgb), 0.3);
+
+              .mat-button-toggle-label-content {
+                color: var(--primary-color);
+              }
+            }
+
+            .mat-button-toggle-label-content {
+              line-height: 36px;
+              padding: 0 1rem;
+              color: var(--text-color);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.5rem;
+
+              mat-icon {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+                line-height: 18px;
+              }
+            }
+          }
+        }
+
+        mat-select {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 6px;
+          padding: 0.5rem;
+          color: var(--text-color);
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+          }
+        }
+      }
+    }
+  }
 }
 
 @media (max-width: 768px) {
-    .filtros-panel {
-        padding: 1rem 0.75rem;
-    }
+  :host {
+    max-width: none;
+  }
+}
+
+// Estilos para el panel de selección de Material
+::ng-deep {
+  .mat-mdc-select-panel {
+    background: var(--surface-color) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
     
-    .filtros-content {
-        .filtro-grupo {
-            margin-bottom: 1rem;
-        }
-    }
-}
+    .mat-mdc-option {
+      color: var(--text-secondary);
+      min-height: 45px;
+      
+      &:hover:not(.mdc-list-item--disabled) {
+        background: rgba(var(--primary-color-rgb), 0.1);
+      }
+      
+      &.mat-mdc-option-active {
+        background: rgba(var(--primary-color-rgb), 0.15);
+      }
+      
+      &.mat-selected:not(.mat-mdc-option-disabled) {
+        background: var(--primary-color);
+        color: white;
+      }
 
-::ng-deep {
-    .mat-datepicker-content {
-        background: $color-background;
-        border-radius: $border-radius;
-        box-shadow: $box-shadow;
-
-        .mat-calendar {
-            width: 280px;
-            padding: 0.5rem;
-        }
-    }
-
-    .mat-datepicker-content .mat-calendar-header {
-        padding: 0.5rem 0.5rem 0;
-        color: $color-text-primary;
-        
-        .mat-calendar-controls {
-            margin: 0;
-            
-            .mat-calendar-period-button {
-                color: $color-text-primary;
-                font-weight: 500;
-            }
-
-            .mat-calendar-arrow {
-                fill: $color-text-secondary;
-            }
-
-            .mat-calendar-previous-button,
-            .mat-calendar-next-button {
-                color: $color-text-secondary;
-
-                &:hover {
-                    color: $color-primary;
-                }
-            }
-        }
-    }
-
-    .mat-mdc-select-panel.mat-mdc-select-panel {
-        background: $color-background;
-        border-radius: $border-radius;
-        box-shadow: $box-shadow;
-        
-        .mat-mdc-option {
-            font-size: 0.875rem;
-            min-height: 36px;
-            padding: 0 8px;
-            
-            &:hover:not(.mdc-list-item--disabled) {
-                background: rgba($color-primary, 0.05);
-            }
-            
-            &.mat-mdc-option-active {
-                background: rgba($color-primary, 0.1);
-            }
-            
-            &.mat-mdc-selected:not(.mdc-list-item--disabled) {
-                background: $color-primary;
-                color: white;
-            }
-        }
-    }
-}
-
-.mat-mdc-radio-group {
-    .mat-mdc-radio-button.mat-mdc-radio-button {
-        .mdc-form-field {
-            color: $color-text-secondary;
-        }
-
-        .mdc-radio {
-            .mdc-radio__background {
-                border-color: $color-text-secondary;
-            }
-        }
-
-        &.mat-mdc-radio-checked {
-            .mdc-radio__background {
-                border-color: $color-primary;
-            }
-        }
-    }
-}
-
-.radio-button-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.radio-button {
-    display: inline-block;
-    position: relative;
-    cursor: pointer;
-
-    &__input {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    &__label {
-        display: inline-block;
-        padding-left: 30px;
-        margin-bottom: 0;
-        position: relative;
+      .mdc-list-item__primary-text {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
         font-size: 0.875rem;
-        color: $color-text-secondary;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
 
-    &__custom {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        transform: translateY(-50%);
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        border: 2px solid rgba($color-text-secondary, 0.5);
-        transition: all 0.3s ease;
-    }
-
-    &__input:checked + &__label {
-        color: $color-primary;
-
-        .radio-button__custom {
-            background-color: $color-primary;
-            border-color: transparent;
-            transform: translateY(-50%) scale(0.8);
-            box-shadow: 0 0 15px rgba($color-primary, 0.3);
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          line-height: 18px;
         }
+      }
     }
-
-    &__label:hover .radio-button__custom {
-        transform: translateY(-50%) scale(1.1);
-        border-color: $color-primary;
-        box-shadow: 0 0 10px rgba($color-primary, 0.2);
-    }
-}
-
-.select-container {
-    position: relative;
-    width: 100%;
-
-    mat-form-field {
-        width: 100%;
-
-        ::ng-deep {
-            .mat-mdc-form-field-flex {
-                background: transparent;
-                border: 2px solid rgba($color-text-secondary, 0.5);
-                border-radius: 8px;
-                transition: all 0.3s ease;
-                min-height: 45px;
-                padding: 0 15px;
-            }
-
-            .mat-mdc-text-field-wrapper {
-                padding: 0;
-                background: transparent;
-            }
-
-            .mat-mdc-form-field-infix {
-                padding: 8px 0;
-                border: none;
-            }
-
-            .mdc-line-ripple {
-                display: none;
-            }
-
-            .mat-mdc-select-value {
-                color: $color-text-secondary;
-            }
-
-            .mat-mdc-select-arrow {
-                color: $color-text-secondary;
-            }
-
-            // Ocultar el outline por defecto
-            .mdc-notched-outline {
-                display: none;
-            }
-
-            &:hover .mat-mdc-form-field-flex {
-                border-color: $color-primary;
-                transform: scale(1.02);
-                box-shadow: 0 0 10px rgba($color-primary, 0.2);
-            }
-
-            &.mat-focused .mat-mdc-form-field-flex {
-                border-color: $color-primary;
-                transform: scale(1.02);
-                box-shadow: 0 0 15px rgba($color-primary, 0.3);
-            }
-        }
-    }
-}
-
-::ng-deep {
-    .custom-select-panel {
-        background: $color-background !important;
-        border-radius: 8px !important;
-        border: 2px solid $color-primary;
-        box-shadow: 0 0 15px rgba($color-primary, 0.3) !important;
-        margin-top: 4px;
-        
-        .mat-mdc-option {
-            color: $color-text-secondary;
-            min-height: 45px;
-            
-            &:hover:not(.mdc-list-item--disabled) {
-                background: rgba($color-primary, 0.1);
-            }
-            
-            &.mat-mdc-option-active {
-                background: rgba($color-primary, 0.15);
-            }
-            
-            &.mat-selected:not(.mat-mdc-option-disabled) {
-                background: $color-primary;
-                color: white;
-            }
-
-            .mdc-list-item__primary-text {
-                font-size: 0.875rem;
-            }
-        }
-    }
+  }
 }

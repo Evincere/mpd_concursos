@@ -1,38 +1,28 @@
 import { JwtDto } from '../dtos/jwt-dto';
 
 export class User {
-    id?: number;
-    username: string;
-    email: string;
-    password?: string;
-    nombre: string;
-    apellido: string;
-    dni: string;
-    jwtDto?: JwtDto;
-    cuit: string;
+  id: string;
+  username: string;
+  cuit: string;
+  authorities?: { authority: string }[];
 
-    constructor(
-        username: string = '',
-        email: string = '',
-        nombre: string = '',
-        apellido: string = '',
-        cuit: string = '',
-        id?: number,
-        password?: string,
-        jwtDto?: JwtDto,
-    ) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.password = password;
-        this.jwtDto = jwtDto;
-        this.cuit = cuit;
-        this.dni = this.extraerDni(cuit);
-    }
+  constructor(data: Partial<User>) {
+    this.id = data.id || '';
+    this.username = data.username || '';
+    this.cuit = data.cuit || '';
+    this.authorities = data.authorities || [];
+  }
 
-    private extraerDni(cuit: string): string {
-        return cuit.slice(2, -1);
-    }
+  static fromToken(tokenData: any): User {
+    return new User({
+      id: tokenData.userId || tokenData.sub || '',
+      username: tokenData.sub || '',
+      cuit: tokenData.cuit || '',
+      authorities: tokenData.authorities || []
+    });
+  }
+
+  hasRole(role: string): boolean {
+    return this.authorities?.some(auth => auth.authority === role) || false;
+  }
 }

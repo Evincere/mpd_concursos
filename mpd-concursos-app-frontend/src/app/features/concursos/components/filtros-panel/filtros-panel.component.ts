@@ -1,93 +1,89 @@
-import { Component, EventEmitter, Output, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { animate, style, transition, trigger } from '@angular/animations';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatRadioModule } from '@angular/material/radio';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSelectModule } from '@angular/material/select';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
-import { FiltrosConcurso } from '../../../../shared/interfaces/filters/filtros.interface';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { FiltersConcurso } from '@shared/interfaces/filters/filters-concurso.interface';
+
+interface FilterOption {
+  value: string;
+  label: string;
+  icon?: string;
+}
 
 @Component({
   selector: 'app-filtros-panel',
+  templateUrl: './filtros-panel.component.html',
+  styleUrls: ['./filtros-panel.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
-    MatRadioModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatDatepickerModule,
+    MatButtonToggleModule,
     MatSelectModule,
-    MatNativeDateModule,
-    MatIconModule,
+    MatIconModule
   ],
-  templateUrl: './filtros-panel.component.html',
-  styleUrls: ['./filtros-panel.component.scss'],
   animations: [
-    trigger('slideInOut', [
+    trigger('slidePanel', [
       transition(':enter', [
         style({ transform: 'translateX(100%)' }),
-        animate('200ms ease-out', style({ transform: 'translateX(0)' }))
+        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(0)' }))
       ]),
       transition(':leave', [
-        animate('200ms ease-in', style({ transform: 'translateX(100%)' }))
+        style({ transform: 'translateX(0)' }),
+        animate('400ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'translateX(100%)' }))
       ])
     ])
-  ]
+  ],
+  host: {
+    'class': 'filtros-panel-container',
+    '[@slidePanel]': ''
+  }
 })
-export class FiltrosPanelComponent implements OnInit {
-  @Output() filtrosChange = new EventEmitter<FiltrosConcurso>();
-  @Output() cerrarPanel = new EventEmitter<void>();
+export class FiltrosPanelComponent implements OnInit, OnDestroy {
+  @Output() filtrosChange = new EventEmitter<FiltersConcurso>();
+  @Output() cerrar = new EventEmitter<void>();
 
-  filtrosForm!: FormGroup;
+  filtrosForm: FormGroup;
+  private destroy$ = new Subject<void>();
 
-  estadoOptions = [
-    { value: 'todos', label: 'Todos' },
-    { value: 'activo', label: 'Activo' },
-    { value: 'proximo', label: 'Próximo' },
-    { value: 'finalizado', label: 'Finalizado' }
+  estadoOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todos', icon: 'all_inclusive' },
+    { value: 'activo', label: 'Activo', icon: 'check_circle' },
+    { value: 'proximo', label: 'Próximo', icon: 'schedule' },
+    { value: 'finalizado', label: 'Finalizado', icon: 'cancel' }
   ];
 
-  periodoOptions = [
-    { value: 'todos', label: 'Todos' },
-    { value: 'hoy', label: 'Hoy' },
-    { value: 'semana', label: 'Última semana' },
-    { value: 'mes', label: 'Último mes' },
-    { value: 'trimestre', label: 'Último trimestre' },
-    { value: 'anio', label: 'Último año' }
+  periodoOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todos', icon: 'date_range' },
+    { value: 'hoy', label: 'Hoy', icon: 'today' },
+    { value: 'semana', label: 'Esta semana', icon: 'view_week' },
+    { value: 'mes', label: 'Este mes', icon: 'calendar_today' },
+    { value: 'trimestre', label: 'Este trimestre', icon: 'date_range' },
+    { value: 'anio', label: 'Este año', icon: 'event' }
   ];
 
-  dependenciaOptions = [
-    { value: 'todos', label: 'Todas' },
-    { value: 'defensoria1', label: 'Defensoría Civil Nº 1' },
-    { value: 'defensoria2', label: 'Defensoría Civil Nº 2' },
-    { value: 'defensoria3', label: 'Defensoría Penal Nº 1' },
-    { value: 'defensoria4', label: 'Defensoría Penal Nº 2' },
-    { value: 'asesoria1', label: 'Asesoría de Menores Nº 1' },
-    { value: 'asesoria2', label: 'Asesoría de Menores Nº 2' }
+  dependenciaOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todas', icon: 'account_balance' },
+    { value: 'defensa_penal', label: 'Defensa Penal', icon: 'gavel' },
+    { value: 'recursos_humanos', label: 'Recursos Humanos', icon: 'people' },
+    { value: 'informatica', label: 'Informática', icon: 'computer' }
   ];
 
-  cargoOptions = [
-    { value: 'todos', label: 'Todos' },
-    { value: 'defensor', label: 'Defensor/a' },
-    { value: 'asesor', label: 'Asesor/a' },
-    { value: 'secretario', label: 'Secretario/a' },
-    { value: 'prosecretario', label: 'Prosecretario/a' },
-    { value: 'administrativo', label: 'Administrativo/a' },
-    { value: 'auxiliar', label: 'Auxiliar' }
+  cargoOptions: FilterOption[] = [
+    { value: 'todos', label: 'Todos', icon: 'work' },
+    { value: 'defensor', label: 'Defensor', icon: 'person' },
+    { value: 'analista', label: 'Analista', icon: 'analytics' },
+    { value: 'asistente', label: 'Asistente', icon: 'support_agent' }
   ];
 
   constructor(private fb: FormBuilder) {
-    this.initForm();
-  }
-
-  private initForm(): void {
     this.filtrosForm = this.fb.group({
       estado: ['todos'],
       periodo: ['todos'],
@@ -96,27 +92,30 @@ export class FiltrosPanelComponent implements OnInit {
     });
   }
 
-  aplicarFiltros(): void {
-    if (this.filtrosForm.valid) {
-      this.filtrosChange.emit(this.filtrosForm.value);
-      this.cerrarPanel.emit();
-    }
-  }
-
-  limpiarFiltros(): void {
-    this.filtrosForm.patchValue({
-      estado: 'todos',
-      periodo: 'todos',
-      dependencia: 'todos',
-      cargo: 'todos'
-    });
-  }
-
-  cerrar(): void {
-    this.cerrarPanel.emit();
-  }
-
   ngOnInit(): void {
-    this.initForm();
+    this.filtrosForm.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(filtros => {
+        const filtrosFormateados: FiltersConcurso = {
+          estado: filtros.estado as FiltersConcurso['estado'],
+          periodo: filtros.periodo as FiltersConcurso['periodo'],
+          dependencia: filtros.dependencia,
+          cargo: filtros.cargo
+        };
+        this.filtrosChange.emit(filtrosFormateados);
+      });
   }
-} 
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  cerrarPanel(): void {
+    this.cerrar.emit();
+  }
+}

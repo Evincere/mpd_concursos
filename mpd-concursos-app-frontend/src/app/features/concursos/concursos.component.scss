@@ -1,36 +1,57 @@
+@use 'variables' as *;
+@use '../styles/mixins' as *; 
+
 .concursos-feature-container {
-  padding: 1.5rem;
   height: 100%;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
 
   .main-content {
     height: 100%;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    
     &.blur-effect {
       filter: blur(2px);
-      pointer-events: none;
+      pointer-events: auto;
     }
   }
 
-  .overlay {
-    position: absolute;
+  .content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  app-filtros-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    z-index: 1000;
+    box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .backdrop {
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 999;
   }
 
   &.panel-active {
-    .main-content {
-      filter: blur(2px);
-      transition: filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    .content {
       pointer-events: none;
     }
   }
@@ -165,14 +186,31 @@
             gap: 0.5rem;
             color: #90caf9;
             border-color: rgba(144, 202, 249, 0.5);
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s ease;
 
-            &:hover {
-              background: rgba(144, 202, 249, 0.08);
-              border-color: #90caf9;
+            .details-icon {
+              transition: transform 0.3s ease;
+              color: rgba(255, 255, 255, 0.6);
             }
 
-            i {
-              font-size: 1rem;
+            span {
+              font-weight: 500;
+            }
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.05);
+              border-color: rgba(255, 255, 255, 0.2);
+
+              .details-icon {
+                color: rgba(255, 255, 255, 0.87);
+              }
+            }
+
+            &:active {
+              background: rgba(255, 255, 255, 0.1);
             }
           }
         }
@@ -371,6 +409,90 @@
         }
       }
     }
+
+    .empty-state {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
+      width: 100%;
+      padding: 2rem;
+    }
+
+    .empty-state-content {
+      background-color: rgba(66, 66, 66, 0.98);
+      box-shadow: 0 3px 5px -1px rgba(0,0,0,.2),
+              0 6px 10px 0 rgba(0,0,0,.14),
+              0 1px 18px 0 rgba(0,0,0,.12);
+      padding: 2rem;
+      border-radius: 8px;
+      color: white;
+      text-align: center;
+      margin: 1rem;
+
+      i {
+        color: #2196f3;
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        display: block;
+        opacity: 0.9;
+      }
+
+      h3 {
+        color: rgba(255, 255, 255, 0.87);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+
+      p {
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 2rem;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+
+        button {
+          min-width: 140px;
+
+          &.mat-mdc-stroked-button {
+            border-color: rgba(255, 255, 255, 0.12);
+          }
+
+          i {
+            font-size: 1rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0;
+            color: inherit;
+            opacity: 1;
+          }
+        }
+      }
+
+      &.filtered {
+        i {
+          color: #ffc107;
+        }
+      }
+
+      .actions button {
+        @include button-base; 
+        background-color: $color-primary;
+        color: white; 
+        border-radius: 5px; 
+        padding: 0.5rem 1rem; 
+        transition: background-color 0.3s ease; 
+
+        &:hover {
+          background-color: darken($color-primary, 10%); 
+        }
+      }
+    }
   }
 }
 
@@ -386,5 +508,37 @@
         }
       }
     }
+  }
+}
+
+.no-concursos button {
+  @include button-base; 
+  background-color: $color-primary; 
+  color: white; 
+  border-radius: 5px; 
+  padding: 0.5rem 1rem; 
+  transition: background-color 0.3s ease; 
+
+  &:hover {
+    background-color: darken($color-primary, 10%); 
+  }
+}
+
+.clear-filters-button {
+  @include button-base; 
+  background-color: $color-secondary; 
+  color: white; 
+
+  &:hover {
+    background-color: darken($color-secondary, 10%); 
+    transform: scale(1.05); 
+
+    i {
+      transform: rotate(180deg); 
+    }
+  }
+
+  i {
+    transition: transform 0.3s ease; 
   }
 }

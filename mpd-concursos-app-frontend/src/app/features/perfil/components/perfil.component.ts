@@ -6,10 +6,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-perfil',
@@ -22,23 +22,36 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } fr
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatSelectModule,
     ReactiveFormsModule
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }
   ],
   templateUrl: './perfil.component.html',
   styleUrls: ['./perfil.component.scss']
 })
 export class PerfilComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
+  @ViewChild('fechaInicio') fechaInicio: any;
+  @ViewChild('fechaFin') fechaFin: any;
+  @ViewChild('fechaEduInicio') fechaEduInicio: any;
+  @ViewChild('fechaEduFin') fechaEduFin: any;
+  perfilForm!: FormGroup;
   
   fotoPerfil: string = 'assets/images/default-avatar.png';
-  perfilForm!: FormGroup;
   linkedInConectado = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder
+  ) {
     this.initializeForms();
+  }
+
+  ngOnInit(): void {
+    // Cargar datos del usuario
   }
 
   private initializeForms() {
@@ -52,7 +65,8 @@ export class PerfilComponent implements OnInit {
       usuario: ['', Validators.required],
       experiencias: this.fb.array([]),
       educacion: this.fb.array([]),
-      habilidades: this.fb.array([])
+      habilidades: this.fb.array([]),
+      redesSociales: this.fb.array([])
     });
   }
 
@@ -69,28 +83,68 @@ export class PerfilComponent implements OnInit {
     return this.perfilForm.get('habilidades') as FormArray;
   }
 
-  // Métodos para crear nuevos FormGroups
-  private crearExperiencia(): FormGroup {
-    return this.fb.group({
-      puesto: ['', Validators.required],
+  // Método para crear un nuevo grupo de experiencia
+  createExperienciaFormGroup(): FormGroup {
+    const group = this.fb.group({
       empresa: ['', Validators.required],
+      puesto: ['', Validators.required],
+      descripcion: ['', Validators.required],
       fechaInicio: [null, Validators.required],
-      fechaFin: [null],
-      descripcion: ['']
+      fechaFin: [null]
     });
+
+    // Suscribirse a cambios en las fechas
+    group.get('fechaInicio')?.valueChanges.subscribe(value => {
+      const fechaFinControl = group.get('fechaFin');
+      if (fechaFinControl && value) {
+        fechaFinControl.setValidators([
+          Validators.required,
+          (control) => {
+            const fechaFin = control.value;
+            if (!fechaFin) return null;
+            return new Date(fechaFin) <= new Date(value) ? 
+              { fechaInvalida: 'La fecha de fin debe ser posterior a la fecha de inicio' } : null;
+          }
+        ]);
+        fechaFinControl.updateValueAndValidity();
+      }
+    });
+
+    return group;
   }
 
-  private crearEducacion(): FormGroup {
-    return this.fb.group({
-      titulo: ['', Validators.required],
+  // Método para crear un nuevo grupo de educación
+  createEducacionFormGroup(): FormGroup {
+    const group = this.fb.group({
       institucion: ['', Validators.required],
+      titulo: ['', Validators.required],
+      descripcion: ['', Validators.required],
       fechaInicio: [null, Validators.required],
-      fechaFin: [null],
-      descripcion: ['']
+      fechaFin: [null]
     });
+
+    // Suscribirse a cambios en las fechas
+    group.get('fechaInicio')?.valueChanges.subscribe(value => {
+      const fechaFinControl = group.get('fechaFin');
+      if (fechaFinControl && value) {
+        fechaFinControl.setValidators([
+          Validators.required,
+          (control) => {
+            const fechaFin = control.value;
+            if (!fechaFin) return null;
+            return new Date(fechaFin) <= new Date(value) ? 
+              { fechaInvalida: 'La fecha de fin debe ser posterior a la fecha de inicio' } : null;
+          }
+        ]);
+        fechaFinControl.updateValueAndValidity();
+      }
+    });
+
+    return group;
   }
 
-  private crearHabilidad(): FormGroup {
+  // Método para crear un nuevo grupo de habilidad
+  createHabilidadFormGroup(): FormGroup {
     return this.fb.group({
       nombre: ['', Validators.required],
       nivel: ['', Validators.required]
@@ -99,15 +153,15 @@ export class PerfilComponent implements OnInit {
 
   // Métodos para agregar elementos
   agregarExperiencia(): void {
-    this.experiencias.push(this.crearExperiencia());
+    this.experiencias.push(this.createExperienciaFormGroup());
   }
 
   agregarEducacion(): void {
-    this.educacion.push(this.crearEducacion());
+    this.educacion.push(this.createEducacionFormGroup());
   }
 
   agregarHabilidad(): void {
-    this.habilidades.push(this.crearHabilidad());
+    this.habilidades.push(this.createHabilidadFormGroup());
   }
 
   // Métodos para eliminar elementos
@@ -121,10 +175,6 @@ export class PerfilComponent implements OnInit {
 
   eliminarHabilidad(index: number): void {
     this.habilidades.removeAt(index);
-  }
-
-  ngOnInit(): void {
-    // Cargar datos del usuario
   }
 
   onFileSelected(event: any): void {
@@ -155,7 +205,11 @@ export class PerfilComponent implements OnInit {
 
   conectarLinkedIn(): void {
     this.linkedInConectado = !this.linkedInConectado;
-    // Implementar integración con LinkedIn
+    const mensaje = this.linkedInConectado ? 
+      'Cuenta de LinkedIn conectada exitosamente' : 
+      'Cuenta de LinkedIn desconectada';
+    
+    // this.messageService.showSuccess(mensaje);
   }
 
   // Método para convertir texto en array de letras
@@ -165,4 +219,4 @@ export class PerfilComponent implements OnInit {
         delay: `${index * 50}ms`
     }));
   }
-} 
+}

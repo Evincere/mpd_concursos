@@ -7,4 +7,5 @@ import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 public interface FindInscriptionsUseCase {
     PageResponse<InscriptionDetailResponse> findAll(PageRequest pageRequest);
     InscriptionDetailResponse findById(Long id);
+    Boolean findInscriptionStatus(Long contestId, String userId);
 }

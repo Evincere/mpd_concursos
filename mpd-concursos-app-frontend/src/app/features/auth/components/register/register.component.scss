@@ -372,3 +372,23 @@ mat-error {
     box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
   }
 }
+
+// Estilos para manejar el autocompletado
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: #fff !important;
+    -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+    background-color: transparent !important;
+}
+
+input {
+    background: transparent !important;
+    color: #fff !important;
+    
+    &::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+}

@@ -1,110 +1,67 @@
-import { HttpInterceptorFn, HttpRequest, HttpEvent, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpResponse, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { TokenService } from '../services/auth/token.service';
-import { tap, catchError, switchMap, EMPTY, Observable, throwError } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthService } from '../services/auth/auth.service';
+import { catchError, tap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
-export const TOKEN_PREFIX = 'Bearer ';
-export const HEADER_STRING = 'Authorization';
-
-// Rutas públicas que no requieren token
-const PUBLIC_ROUTES = [
-  '/api/auth/login',
-  '/api/auth/register',
-  '/api/auth/refresh-token'
-];
-
-export const authInterceptor: HttpInterceptorFn = (
-  request: HttpRequest<unknown>,
-  next: HttpHandlerFn
-): Observable<HttpEvent<unknown>> => {
+export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
   const router = inject(Router);
-  const authService = inject(AuthService);
-  
-  console.log(`[AuthInterceptor] URL: ${request.url}`);
-  console.log(`[AuthInterceptor] Método: ${request.method}`);
-
-  // Verificar si la ruta actual está en la lista de rutas públicas
-  const isPublicRoute = PUBLIC_ROUTES.some(route => request.url.includes(route));
-  if (isPublicRoute) {
-    console.log('[AuthInterceptor] Omitiendo interceptor para ruta pública:', request.url);
-    return next(request);
-  }
-
   const token = tokenService.getToken();
-  console.log(`[AuthInterceptor] Token actual: ${token ? 'presente' : 'ausente'}`);
+  const isApiUrl = req.url.startsWith(environment.apiUrl);
 
-  if (!token) {
-    console.warn('[AuthInterceptor] No hay token disponible');
-    authService.logout();
-    router.navigate(['/login']);
-    return EMPTY;
+  // Logging detallado del token
+  console.log('[AuthInterceptor] Estado del token:', {
+    tokenPresent: !!token,
+    isApiUrl,
+    endpoint: req.url.replace(environment.apiUrl, '')
+  });
+
+  // No interceptamos peticiones que no van a nuestra API
+  if (!isApiUrl) {
+    return next(req);
   }
 
-  // Verificar si el token está expirado antes de hacer la solicitud
-  if (tokenService.isTokenExpired()) {
-    console.log('[AuthInterceptor] Token expirado, intentando refresh');
-    
-    return tokenService.refreshToken().pipe(
-      switchMap((newToken) => {
-        console.log('[AuthInterceptor] Token refrescado exitosamente');
-        return next(
-          request.clone({
-            setHeaders: {
-              [HEADER_STRING]: `${TOKEN_PREFIX}${newToken}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          })
-        );
-      }),
-      catchError((error) => {
-        console.error('[AuthInterceptor] Error al refrescar token:', error);
-        authService.logout();
-        router.navigate(['/login']);
-        return EMPTY;
+  // Si es una petición de login o registro, no agregamos el token
+  if (req.url.includes('/auth/login') || req.url.includes('/auth/register')) {
+    const authReq = req.clone({
+      headers: req.headers
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json'),
+      withCredentials: true
+    });
+    return next(authReq);
+  }
+
+  // Validar el token antes de usarlo
+  if (token && tokenService.validateToken(token)) {
+    const authReq = req.clone({
+      headers: req.headers
+        .set('Authorization', `Bearer ${token}`)
+        .set('Content-Type', 'application/json')
+        .set('Accept', 'application/json'),
+      withCredentials: true
+    });
+
+    return next(authReq).pipe(
+      catchError(error => {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            console.log('[AuthInterceptor] Error 401, redirigiendo a login');
+            tokenService.signOut();
+            router.navigate(['/login']);
+          }
+        }
+        return throwError(() => error);
       })
     );
   }
 
-  // Si el token es válido, agregar a la solicitud
-  const clonedRequest = request.clone({
-    setHeaders: {
-      [HEADER_STRING]: `${TOKEN_PREFIX}${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
-  });
-
-  console.log('[AuthInterceptor] Headers configurados:', clonedRequest.headers.keys());
-
-  return next(clonedRequest).pipe(
-    tap({
-      error: (error: HttpErrorResponse) => {
-        console.error('[AuthInterceptor] Error en la solicitud:', {
-          status: error.status,
-          statusText: error.statusText,
-          url: error.url,
-          message: error.message,
-          error: error.error
-        });
-
-        if (error.status === 401) {
-          console.error('[AuthInterceptor] Error de autenticación');
-          if (error.error && error.error.message) {
-            console.error('[AuthInterceptor] Mensaje del servidor:', error.error.message);
-          }
-          tokenService.handleExpiredToken();
-        }
-      }
-    }),
-    catchError(error => {
-      if (error.status === 401) {
-        return EMPTY;
-      }
-      return throwError(() => error);
-    })
-  );
+  // Si no hay token o no es válido, redirigimos al login
+  console.log('[AuthInterceptor] Token no válido o ausente, redirigiendo a login');
+  tokenService.signOut();
+  router.navigate(['/login']);
+  return throwError(() => new Error('No hay token de autenticación válido'));
 };

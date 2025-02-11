@@ -5,6 +5,48 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+body {
+  overflow: hidden;
+}
+
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-color);
+}
+
+main {
+  flex: 1;
+  background-color: var(--background-color);
+  min-height: 0;
+  position: relative;
+}
+
+:root {
+  --surface-color: 30, 30, 30;
+  --surface-color-rgb: var(--surface-color);
+  --primary-color: #{$color-primary};
+  --primary-color-rgb: 25, 118, 210;
+  --text-color: #{$color-text-primary};
+  --text-secondary: #{$color-text-secondary};
+  --text-secondary-rgb: 176, 176, 176;
+  --card-background: var(--surface-color);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --card-backdrop-filter: blur(8px);
+  --background-color: #121212;
+  --background-color-rgb: 18, 18, 18;
+}
+
 // Note: Color palettes are generated from primary: #8e6f6e, secondary: #f0f8ff, tertiary: #cce4ff, neutral: #f5f5f5
 $_palettes: (
   primary: (
@@ -136,17 +178,71 @@ $_rest: (
 $_primary: map.merge(map.get($_palettes, primary), $_rest);
 $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
 
-$dark-theme: mat.define-theme((
+// Definición de paletas compatible con Angular Material
+$custom-primary: (
+  50: #e8eaf6,
+  100: #c5cae9,
+  200: #9fa8da,
+  300: #7986cb,
+  400: #5c6bc0,
+  500: #3f51b5,
+  600: #3949ab,
+  700: #303f9f,
+  800: #283593,
+  900: #1a237e,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: white,
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$custom-accent: (
+  50: #e3f2fd,
+  100: #bbdefb,
+  200: #90caf9,
+  300: #64b5f6,
+  400: #42a5f5,
+  500: #2196f3,
+  600: #1e88e5,
+  700: #1976d2,
+  800: #1565c0,
+  900: #0d47a1,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+// Nueva sintaxis para Angular Material 17
+$dark-theme: mat.define-dark-theme((
   color: (
-    theme-type: dark,
-    primary: $_primary,
-    tertiary: $_tertiary,
-    use-system-variables: true,
+    primary: mat.define-palette($custom-primary),
+    accent: mat.define-palette($custom-accent),
+    warn: mat.define-palette(mat.$red-palette),
   ),
-  typography: (
-    use-system-variables: true,
-  ),
+  typography: mat.define-typography-config(),
+  density: 0,
 ));
+
+// Aplicar el tema
+@include mat.core();
+@include mat.all-component-themes($dark-theme);
 
 // Aplicar el tema dentro de un selector
 .mat-app-background {
@@ -156,237 +252,233 @@ $dark-theme: mat.define-theme((
   .mat-datepicker-content {
     background-color: $color-background !important;
     color: $color-text-primary !important;
-    position: fixed !important; // Asegura posicionamiento correcto
-    z-index: 1000 !important; // Asegura que aparezca sobre otros elementos
 
     .mat-calendar {
       background-color: transparent;
-      padding: 0.5rem;
-      width: 280px !important; // Ancho fijo para mejor presentación
 
-      .mat-calendar-header {
-        padding: 0.5rem 0.5rem 0;
+      .mat-calendar-body-cell-content {
         color: $color-text-primary;
       }
 
-      .mat-calendar-table-header {
+      .mat-calendar-body-selected {
+        background-color: $color-primary;
+        color: white;
+      }
+
+      .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+        border-color: $color-primary;
+      }
+
+      .mat-calendar-arrow,
+      .mat-calendar-previous-button,
+      .mat-calendar-next-button {
         color: $color-text-secondary;
       }
-
-      .mat-calendar-body-cell {
-        height: 32px;
-        width: 32px;
-
-        .mat-calendar-body-cell-content {
-          color: $color-text-primary;
-          height: 28px;
-          width: 28px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          &:hover {
-            background-color: rgba($color-primary, 0.1);
-          }
-        }
-
-        &.mat-calendar-body-selected {
-          .mat-calendar-body-cell-content {
-            background-color: $color-primary;
-            color: white;
-          }
-        }
-
-        &.mat-calendar-body-today:not(.mat-calendar-body-selected) {
-          .mat-calendar-body-cell-content {
-            border: 1px solid $color-primary;
-          }
-        }
-      }
-
-      .mat-calendar-controls {
-        margin: 0 0 0.5rem;
-
-        .mat-calendar-arrow,
-        .mat-calendar-previous-button,
-        .mat-calendar-next-button {
-          color: $color-text-secondary;
-
-          &:hover {
-            color: $color-text-primary;
-          }
-        }
-      }
     }
   }
 
-  // Ajuste para el overlay del datepicker
+  // Asegurar que el overlay container esté por encima de todo
   .cdk-overlay-container {
     z-index: 1000;
-
-    .cdk-overlay-connected-position-bounding-box {
-      // Asegura que el calendario se posicione correctamente
-      position: absolute !important;
-    }
   }
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Roboto', sans-serif;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-body {
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-    &.dark-mode {
-        opacity: 0.9;
-        background: #1a1a1a;
-    }
-}
-
-
-// Agregar estos estilos globalmente
-.success-snackbar {
-  background: #4CAF50;
-  color: white;
-  
-  .mat-simple-snackbar-action {
-    color: white;
-  }
-}
-
-.error-snackbar {
-  background: #F44336;
-  color: white;
-  
-  .mat-simple-snackbar-action {
-    color: white;
-  }
-}
-
-// Estilos globales para el diálogo
-.filtros-dialog {
-  .mat-mdc-dialog-container {
-    .mdc-dialog__surface {
-      background-color: $color-background !important;
-      color: $color-text-primary !important;
-    }
-  }
-}
-
-// Estilo para el backdrop
-.dialog-backdrop {
-  background: rgba(0, 0, 0, 0.7) !important;
-  backdrop-filter: blur(3px);
-}
-
-// Asegurar que el overlay container esté por encima de todo
-.cdk-overlay-container {
-  z-index: 1000;
-}
-
-.cdk-global-overlay-wrapper {
-  z-index: 1000;
-  display: flex;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  justify-content: center;
-  align-items: flex-start;
-  pointer-events: none;
-  
-  .cdk-overlay-pane {
-    pointer-events: auto;
-    margin-top: 10vh;
-  }
-}
-
-/* Estilos para scrollbar - Webkit (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba($color-background, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba($color-primary, 0.3);
-    border-radius: 4px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    transition: background 0.2s ease-in-out;
-    
-    &:hover {
-        background: rgba($color-primary, 0.5);
-    }
-
-    &:active {
-        background: rgba($color-primary, 0.7);
-    }
-}
-
-/* Estilos para scrollbar - Firefox */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: rgba($color-primary, 0.3) transparent;
-
-    &:hover {
-        scrollbar-color: rgba($color-primary, 0.5) transparent;
-    }
-}
-
-/* Ocultar scrollbar pero mantener funcionalidad */
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    
-    &::-webkit-scrollbar {
-        display: none;
-    }
-}
-
-// Añade estos estilos específicos para el datepicker
+// Estilos mínimos necesarios para el datepicker de Material
 .mat-datepicker-content {
-  background-color: $color-background !important;
-  color: $color-text-primary !important;
+  background-color: rgb(var(--surface-color)) !important;
+  color: var(--text-color) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--card-shadow) !important;
+  backdrop-filter: var(--card-backdrop-filter);
+  min-width: 280px !important;
+  max-width: 320px !important;
+  margin: 0 auto;
 
   .mat-calendar {
     background-color: transparent;
 
-    .mat-calendar-body-cell-content {
-      color: $color-text-primary;
+    // Header styling
+    .mat-calendar-header {
+      padding: 0.5rem 0.5rem 0;
+
+      .mat-calendar-controls {
+        margin: 0 0.5rem;
+
+        .mat-calendar-period-button {
+          color: var(--text-color);
+          font-weight: 500;
+          padding: 0.5rem;
+          border-radius: 4px;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+          }
+        }
+
+        .mat-calendar-arrow {
+          fill: var(--text-color);
+        }
+      }
     }
 
-    .mat-calendar-body-selected {
-      background-color: $color-primary;
-      color: white;
+    // Table styling
+    .mat-calendar-table {
+      padding: 0.5rem;
+
+      .mat-calendar-table-header {
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+
+        th {
+          padding: 0.5rem 0;
+        }
+      }
+
+      // Calendar cells
+      .mat-calendar-body-cell {
+        height: 36px;
+        width: 36px;
+        border-radius: 50%;
+
+        &:not(.mat-calendar-body-disabled) {
+          &:hover .mat-calendar-body-cell-content {
+            background-color: rgba(255, 255, 255, 0.08);
+          }
+        }
+
+        .mat-calendar-body-cell-content {
+          height: 32px;
+          width: 32px;
+          border-radius: 50%;
+          line-height: 32px;
+          color: var(--text-color);
+          border: none;
+
+          &.mat-calendar-body-selected {
+            background-color: var(--primary-color);
+            color: white;
+          }
+
+          &.mat-calendar-body-today {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+          }
+        }
+
+        &.mat-calendar-body-disabled {
+          > .mat-calendar-body-cell-content {
+            color: rgba(255, 255, 255, 0.3);
+          }
+        }
+      }
     }
 
-    .mat-calendar-body-today:not(.mat-calendar-body-selected) {
-      border-color: $color-primary;
-    }
-
-    .mat-calendar-arrow,
+    // Previous/Next navigation buttons
     .mat-calendar-previous-button,
     .mat-calendar-next-button {
-      color: $color-text-secondary;
+      color: var(--text-color);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      &[disabled] {
+        color: rgba(255, 255, 255, 0.3);
+      }
     }
   }
 }
 
-// Estilos para el detalle de postulación
-.postulacion-detalle {
+// Datepicker toggle button styling
+.mat-datepicker-toggle {
+  color: var(--text-secondary);
+
+  .mat-datepicker-toggle-default-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  &:hover {
+    .mat-datepicker-toggle-default-icon {
+      color: var(--primary-color);
+    }
+  }
+}
+
+// Ensure proper overlay positioning
+.cdk-overlay-container {
+  .cdk-overlay-pane {
+    &.mat-datepicker-popup {
+      @media (max-width: 599px) {
+        max-width: calc(100vw - 32px) !important;
+        margin: 0 auto;
+      }
+    }
+  }
+}
+
+// Estilos del calendario
+.mat-calendar-body-cell-content {
+  color: rgba(255, 255, 255, 0.87);
+}
+
+.mat-calendar-body-selected {
+  background-color: #2196f3;
+  color: white;
+}
+
+.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+  border-color: #2196f3;
+}
+
+.mat-calendar-table-header,
+.mat-calendar-body-label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mat-calendar-arrow {
+  border-top-color: white;
+}
+
+.mat-calendar-next-button,
+.mat-calendar-previous-button {
+  color: white;
+}
+
+.mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover > .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+// Ajustes de overlay y posicionamiento
+.cdk-overlay-container {
+  z-index: 1000;
+}
+
+.cdk-overlay-connected-position-bounding-box {
+  position: absolute;
+  z-index: 1000;
+}
+
+// Ajustes para el contenedor de pestañas
+.mat-tab-body-content {
+  overflow: visible;
+  height: auto;
+}
+
+.mat-tab-body.mat-tab-body-active {
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+
+  .curriculum-container {
+    overflow: visible;
+  }
+}
+
+// Estilos específicos para el contenedor del curriculum
+.curriculum-container {
   padding: $spacing-xl;
   background-color: $color-surface;
   border-radius: $border-radius;
@@ -413,7 +505,7 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: $spacing-xl;
-    
+
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
@@ -506,7 +598,7 @@ body {
 // Estilos para los form fields
 .mat-mdc-form-field {
     margin: 20px 0;
-    
+
     .mat-mdc-form-field-flex {
         background-color: $color-surface-light !important;
         padding: 0.5rem 1rem !important;
@@ -567,7 +659,7 @@ body {
 
         .mat-mdc-form-field-label {
             color: $color-primary !important;
-            
+
             span {
                 transform: translateY(-25px);
                 @for $i from 0 through 20 {
@@ -596,4 +688,439 @@ body {
       background-color: rgba($color-primary, 0.2) !important;
     }
   }
+}
+
+// Variables para el datepicker
+$datepicker-bg: #424242;
+$datepicker-text: rgba(255, 255, 255, 0.87);
+$datepicker-selected: #2196f3;
+$datepicker-hover: rgba(255, 255, 255, 0.04);
+$datepicker-cell-size: 36px;
+
+::ng-deep {
+  // Overlay container principal
+  .cdk-overlay-container {
+    position: fixed !important;
+    z-index: 10000 !important;
+    pointer-events: none !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    isolation: isolate !important;
+
+    // Panel del overlay
+    .cdk-overlay-pane {
+      pointer-events: auto !important;
+      position: absolute !important;
+      z-index: 11000 !important;
+      max-width: 320px !important;
+      min-width: 280px !important;
+      background: none !important;
+      isolation: isolate !important;
+    }
+
+    // Backdrop
+    .cdk-overlay-backdrop {
+      background: rgba(0, 0, 0, 0.32) !important;
+      backdrop-filter: blur(2px) !important;
+      z-index: 10500 !important;
+    }
+  }
+
+  // Popup del datepicker
+  .mat-datepicker-popup {
+    background: $datepicker-bg !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    width: 300px !important;
+    max-width: 320px !important;
+    min-width: 280px !important;
+    margin: 8px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    isolation: isolate !important;
+
+    .mat-datepicker-content {
+      background: $datepicker-bg !important;
+      color: $datepicker-text !important;
+      display: block !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+    }
+  }
+
+  // Calendario
+  .mat-calendar {
+    width: 100% !important;
+    background: $datepicker-bg !important;
+    color: $datepicker-text !important;
+    padding: 8px !important;
+
+    // Header del calendario
+    &-header {
+      padding: 8px 8px 0 8px !important;
+      background: none !important;
+
+      .mat-calendar-controls {
+        margin: 0 !important;
+
+        .mat-calendar-period-button,
+        .mat-calendar-previous-button,
+        .mat-calendar-next-button {
+          color: $datepicker-text !important;
+
+          &:hover {
+            background: $datepicker-hover !important;
+          }
+        }
+      }
+    }
+
+    // Tabla del calendario
+    &-table {
+      width: 100% !important;
+      border-spacing: 0 !important;
+      border-collapse: collapse !important;
+
+      th {
+        height: 32px !important;
+        text-align: center !important;
+        font-weight: 500 !important;
+        color: $datepicker-text !important;
+      }
+    }
+
+    // Celdas del calendario
+    &-body-cell {
+      position: relative !important;
+      height: $datepicker-cell-size !important;
+      padding: 0 !important;
+      text-align: center !important;
+      outline: none !important;
+      cursor: pointer !important;
+
+      &-content {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: $datepicker-cell-size !important;
+        height: $datepicker-cell-size !important;
+        line-height: $datepicker-cell-size !important;
+        border-radius: 50% !important;
+        font-size: 13px !important;
+        color: $datepicker-text !important;
+
+        &:hover {
+          background: $datepicker-hover !important;
+        }
+      }
+    }
+
+    // Estados especiales
+    &-body-selected {
+      background: $datepicker-selected !important;
+      color: white !important;
+
+      &:hover {
+        background: darken($datepicker-selected, 5%) !important;
+      }
+    }
+
+    &-body-today:not(.mat-calendar-body-selected) {
+      border: 1px solid $datepicker-selected !important;
+    }
+
+    &-body-disabled {
+      opacity: 0.5 !important;
+      cursor: default !important;
+
+      .mat-calendar-body-cell-content {
+        cursor: default !important;
+
+        &:hover {
+          background: none !important;
+        }
+      }
+    }
+  }
+}
+
+// Asegurar que los contenedores no interfieran
+.app-root,
+main.mat-app-background,
+.perfil-container,
+.mat-tab-body-content,
+.mat-tab-body-active,
+.mat-tab-body-wrapper {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+
+// Asegurar que el sidebar y otros elementos no interfieran
+.sidebar,
+.header {
+  z-index: 5 !important;
+}
+
+// Estilos globales para las barras de scroll
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--primary-color-rgb), 0.5) rgba(var(--surface-color-rgb), 0.3);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(var(--surface-color-rgb), 0.3);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-color-rgb), 0.5);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(var(--primary-color-rgb), 0.7);
+    }
+  }
+}
+
+// Estilos específicos para componentes de Material
+.mat-mdc-tab-body-content,
+.mat-dialog-content,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.mat-mdc-menu-panel,
+.mat-expansion-panel-content,
+.mat-drawer-content,
+.mat-sidenav-content,
+.mat-drawer-container,
+.mat-table-container,
+.mat-mdc-table,
+.mat-mdc-paginator,
+.mat-mdc-card-content,
+.mat-mdc-list,
+.cdk-virtual-scroll-viewport,
+.mat-calendar-content {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(var(--surface-color-rgb), 0.3) !important;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-color-rgb), 0.5) !important;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(var(--primary-color-rgb), 0.7) !important;
+    }
+  }
+
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(var(--primary-color-rgb), 0.5) rgba(var(--surface-color-rgb), 0.3) !important;
+}
+
+// Contenedores con scroll personalizado
+.scroll-container,
+.scrollable-content,
+.scroll-area,
+[scrollable="true"],
+[data-scrollable="true"],
+.overflow-auto,
+.overflow-y-auto,
+.overflow-x-auto {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--primary-color-rgb), 0.5) rgba(var(--surface-color-rgb), 0.3);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(var(--surface-color-rgb), 0.3);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-color-rgb), 0.5);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(var(--primary-color-rgb), 0.7);
+    }
+  }
+}
+
+// Sobrescribir estilos de Material para los contenedores con scroll
+.mat-mdc-dialog-container,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.mat-mdc-menu-content,
+.mat-mdc-table-container {
+  max-height: 80vh !important;
+  overflow: auto !important;
+}
+
+// Estilos para diálogos
+.dark-backdrop {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.cdk-overlay-container {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cdk-overlay-backdrop {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  pointer-events: auto;
+  transition: opacity 400ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  opacity: 0;
+
+  &.cdk-overlay-backdrop-showing {
+    opacity: 1;
+  }
+}
+
+.cdk-global-overlay-wrapper {
+  display: flex;
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cdk-overlay-pane {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  z-index: 9999;
+}
+
+// Variables para Snackbars
+$snackbar-success: rgba(76, 175, 80, 0.85);
+$snackbar-error: rgba(244, 67, 54, 0.85);
+$snackbar-info: rgba(33, 150, 243, 0.85);
+$snackbar-text: rgba(255, 255, 255, 0.95);
+$snackbar-action: rgba(255, 255, 255, 0.7);
+
+// Mixin para efecto glassmorphism
+@mixin glassmorphism {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+}
+
+// Mixin para estilos comunes de snackbar
+@mixin snackbar-base($bg-color) {
+  .mdc-snackbar__surface {
+    background: $bg-color !important;
+    @include glassmorphism;
+    min-height: 40px !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .mdc-snackbar__label {
+    color: $snackbar-text !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+  }
+
+  .mat-simple-snackbar-action {
+    padding-inline-start: 12px !important;
+
+    button {
+      color: $snackbar-text !important;
+      font-size: 13px !important;
+      font-weight: 400 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      padding: 0 8px !important;
+      min-width: auto !important;
+      height: 28px !important;
+      line-height: 28px !important;
+      border-radius: 4px !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+  }
+}
+
+// Estilos para Snackbars
+.success-snackbar {
+  @include snackbar-base($snackbar-success);
+}
+
+.error-snackbar {
+  @include snackbar-base($snackbar-error);
+}
+
+.info-snackbar {
+  @include snackbar-base($snackbar-info);
+}
+
+// Ajustes generales para el contenedor del snackbar
+.mat-mdc-snack-bar-container {
+  &.success-snackbar, &.error-snackbar, &.info-snackbar {
+    margin: 16px !important;
+
+    .mat-mdc-snack-bar-actions {
+      margin-inline-end: -8px !important;
+    }
+  }
+}
+
+// Animaciones para snackbars
+@keyframes snackbarFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mat-mdc-snack-bar-container {
+  animation: snackbarFadeIn 0.3s ease-out;
 }

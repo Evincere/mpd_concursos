@@ -5,16 +5,16 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true
 })
 export class CuitFormatPipe implements PipeTransform {
-  transform(value: string): string {
+  transform(value: string | null): string {
     if (!value) return '';
     
-    // Elimina cualquier caracter que no sea número
+    // Eliminar cualquier caracter que no sea número
     const numbers = value.replace(/\D/g, '');
     
-    // Verifica si hay suficientes números
+    // Asegurarse de que tengamos exactamente 11 dígitos
     if (numbers.length !== 11) return value;
     
-    // Formatea como XX-XXXXXXXX-X
-    return `${numbers.slice(0,2)}-${numbers.slice(2,10)}-${numbers.slice(10)}`;
+    // Formatear como XX-XXXXXXXX-X
+    return `${numbers.slice(0, 2)}-${numbers.slice(2, 10)}-${numbers.slice(10)}`;
   }
-} 
+}

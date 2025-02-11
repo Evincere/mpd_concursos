@@ -14,5 +14,12 @@ public class ContestFilterCommand {
     private final String department;
     private final String position;
 
-    
-} 
+    public ContestFilterCommand(String status, LocalDate startDate, LocalDate endDate, 
+                              String department, String position) {
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.department = department;
+        this.position = position;
+    }
+}

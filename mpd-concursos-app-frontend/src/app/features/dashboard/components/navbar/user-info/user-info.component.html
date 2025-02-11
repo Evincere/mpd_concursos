@@ -1,4 +1,16 @@
 <div class="user-info">
-    <h3><i class="fas fa-user user-icon"></i> {{username}}</h3>
-    <p>CUIT: {{cuit | cuitFormat}}</p>
+    <div class="profile-image-container">
+        <ng-container *ngIf="hasProfileImage(); else defaultAvatar">
+            <img [src]="userInfo().profileImage" [alt]="userInfo().username" class="profile-image">
+        </ng-container>
+        <ng-template #defaultAvatar>
+            <div class="default-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+        </ng-template>
+    </div>
+    <div class="user-details">
+        <span class="username">{{userInfo().username}}</span>
+        <span class="cuit">{{userInfo().cuit | cuitFormat}}</span>
+    </div>
 </div>

@@ -9,7 +9,7 @@ import { BusquedaConcurso, FiltrosConcurso } from '@shared/interfaces/filters/fi
   providedIn: 'root'
 })
 export class ConcursosService {
-  private apiUrl = `${environment.apiUrl}/api/concursos`;
+  private apiUrl = `${environment.apiUrl}/concursos`;
 
   constructor(private http: HttpClient) { }
 

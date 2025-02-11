@@ -14,6 +14,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,21 +41,35 @@ public class UserEntity {
     @Column(unique = true)
     @NotNull
     private String cuit;
+    @NotNull
+    @Column(name = "first_name")
+    private String firstName;
+    @NotNull
+    @Column(name = "last_name")
+    private String lastName;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_rol", joinColumns = @JoinColumn(name = "user_id"), 
     inverseJoinColumns = @JoinColumn(name =  "rol_id"))
     @NotNull
-    private Set<RoleEntity> roles = new HashSet<>();
-    @Column(columnDefinition = "TIMESTAMP")
+    private Set<RoleEntity> roles;
+    @NotNull
+    @Column(name = "created_at", nullable = false)
+    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime createdAt;
 
-    public UserEntity() {}
+    public UserEntity() {
+        this.roles = new HashSet<>();
+        this.createdAt = LocalDateTime.now();
+    }
 
-    public UserEntity(String username, String password, String email, String dni, String cuit) {
+    public UserEntity(String username, String password, String email, String dni, String cuit, String firstName, String lastName) {
+        this();
         this.username = username;
         this.password = password;
         this.email = email;
         this.dni = dni;
         this.cuit = cuit;
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 }

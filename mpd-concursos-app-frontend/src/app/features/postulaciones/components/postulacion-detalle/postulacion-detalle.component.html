@@ -1,0 +1,71 @@
+<div class="detalle-container" [class.closing]="closing">
+  <div class="detalle-header">
+    <h2>Detalle de la Postulación</h2>
+    <button mat-icon-button class="cerrar-btn" (click)="onCerrar()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="detalle-content">
+    <!-- Información del Concurso -->
+    <div class="seccion">
+      <h3>Información del Concurso</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Título</div>
+          <div class="value">{{ postulacion.concurso?.titulo }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Cargo</div>
+          <div class="value">{{ postulacion.concurso?.cargo }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Dependencia</div>
+          <div class="value">{{ postulacion.concurso?.dependencia }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Estado del Concurso</div>
+          <div class="value estado-badge" [ngClass]="postulacion.concurso?.estado?.toLowerCase()">
+            {{ postulacion.concurso?.estado }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información de la Postulación -->
+    <div class="seccion">
+      <h3>Información de la Postulación</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="label">Fecha de Inscripción</div>
+          <div class="value">{{ postulacion.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+        <div class="info-item">
+          <div class="label">Estado</div>
+          <div class="value estado-badge" [ngClass]="postulacion.estado.toLowerCase()">
+            {{ getEstadoPostulacionLabel(postulacion.estado) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Documentos -->
+    <div class="seccion" *ngIf="postulacion.attachedDocuments?.length">
+      <h3>Documentos Adjuntos</h3>
+      <div class="documentos">
+        <div class="documento" *ngFor="let doc of postulacion.attachedDocuments">
+          <mat-icon class="icono">description</mat-icon>
+          <span class="nombre">{{ doc.name }}</span>
+          <div class="acciones">
+            <button mat-icon-button (click)="descargarDocumento(doc)" matTooltip="Descargar">
+              <mat-icon>download</mat-icon>
+            </button>
+            <button mat-icon-button (click)="eliminarDocumento(doc)" matTooltip="Eliminar" color="warn">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

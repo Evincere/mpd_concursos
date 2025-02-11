@@ -19,9 +19,11 @@
                 <i matSuffix class="fas fa-search" *ngIf="!searchForm.get('termino')?.value"></i>
             </mat-form-field>
         </form>
-        <button mat-raised-button (click)="filter.emit()">
-            <i class="fas fa-filter"></i>
-            Filtrar
+        <button mat-raised-button 
+                (click)="filter.emit()"
+                [class.active]="filtrosActivos">
+            <i class="fas" [class.fa-filter]="!filtrosActivos" [class.fa-filter-circle-xmark]="filtrosActivos"></i>
+            {{ filtrosActivos ? 'Filtros Activos' : 'Filtrar' }}
         </button>
     </div>
 </header>

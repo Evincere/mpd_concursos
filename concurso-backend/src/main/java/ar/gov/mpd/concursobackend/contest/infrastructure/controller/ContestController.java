@@ -32,7 +32,13 @@ public class ContestController {
             @RequestParam(required = false) String dependency,
             @RequestParam(required = false) String position) {
         
-        ContestFilters filters = new ContestFilters(status, startDate, endDate, dependency, position);
+        ContestFilters filters = ContestFilters.builder()
+                .status(status)
+                .startDate(startDate)
+                .endDate(endDate)
+                .dependency(dependency)
+                .position(position)
+                .build();
         return ResponseEntity.ok(contestService.getFilteredContests(filters));
     }
 

@@ -1,0 +1,51 @@
+@use 'variables' as *;
+
+.dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+
+    app-header {
+        height: 92px;
+        flex-shrink: 0;
+    }
+}
+
+.dashboard-container {
+    display: flex;
+    height: calc(100vh - 92px);
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+
+    app-sidebar {
+        flex-shrink: 0;
+        transition: width 0.3s ease;
+        width: 250px;
+        height: 100%;
+
+        &.collapsed {
+            width: 60px; 
+        }
+
+        ::ng-deep .sidebar-container {
+            overflow: visible;
+            height: 100%;
+        }
+    }
+
+    .dashboard-content {
+        flex: 1;
+        overflow-y: auto;
+        transition: all 0.3s ease;
+        margin-left: 0;
+        position: relative;
+        z-index: 1;
+
+        &.sidebar-collapsed {
+            margin-left: 0;
+        }
+    }
+}

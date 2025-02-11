@@ -4,3 +4,8 @@ node_modules/
 concursosH2bd/concursosbd.mv.db
 concursosH2bd/concursosbd.trace.db
 concurso-backend/src/main/resources/static/concursosH2bd/concursosbd.trace.db
+
+# H2 Database files
+concurso-backend/data/concursosH2bd.*
+*.mv.db
+*.trace.db

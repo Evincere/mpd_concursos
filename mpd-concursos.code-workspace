@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "automatic",
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"terminal.integrated.accessibleViewFocusOnCommandExecution": true,
+		"terminal.integrated.automationProfile.windows": {
+		
+		},
+		"terminal.explorerKind": "both",
+		"terminal.integrated.copyOnSelection": true,
+		"terminal.integrated.defaultLocation": "editor",
+		"terminal.integrated.defaultProfile.windows": "Git Bash",
+		"terminal.integrated.ignoreBracketedPasteMode": true,
+		"terminal.integrated.confirmOnKill": "editor"
+	}
+}

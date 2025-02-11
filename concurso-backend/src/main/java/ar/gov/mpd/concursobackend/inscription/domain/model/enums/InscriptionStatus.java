@@ -2,8 +2,10 @@ package ar.gov.mpd.concursobackend.inscription.domain.model.enums;
 
 public enum InscriptionStatus {
     PENDING("Pendiente"),
-    ACCEPTED("Aceptada"),
-    REJECTED("Rechazada");
+    APPROVED("Aceptada"),
+    REJECTED("Rechazada"),
+    CANCELLED("Cancelada"),
+    NOT_REGISTERED("No Registrada");
 
     private final String description;
 

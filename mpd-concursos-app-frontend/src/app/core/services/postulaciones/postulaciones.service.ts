@@ -9,23 +9,23 @@ import { ContestStatus, Postulacion, PostulacionRequest, PostulacionResponse } f
     providedIn: 'root'
 })
 export class PostulacionesService {
-    private apiUrl = `${environment.apiUrl}/api/inscriptions`;
+    private apiUrl = `${environment.apiUrl}/inscripciones`;
   
     constructor(private http: HttpClient) { }
   
-    getPostulaciones(page: number = 0, size: number = 10, sortBy: string = 'inscriptionDate', sortDirection: string = 'desc'): Observable<PostulacionResponse> {
+    getPostulaciones(page: number = 0, size: number = 10, sortBy: string = 'fechaPostulacion', sortDirection: string = 'desc'): Observable<PostulacionResponse> {
       let params = new HttpParams()
-          .set('page', page.toString())
-          .set('size', size.toString())
-          .set('sortBy', sortBy)
-          .set('sortDirection', sortDirection);
+          .set('pageNumber', page.toString())
+          .set('pageSize', size.toString())
+          .set('orderBy', sortBy)
+          .set('direction', sortDirection);
   
       return this.http.get<PostulacionResponse>(this.apiUrl, {
           params,
           withCredentials: true
       }).pipe(
           map(response => {
-              console.log('response', response);
+              console.log('Response from API:', response);
               return this.transformResponse(response);
           }),
           catchError(this.handleError)

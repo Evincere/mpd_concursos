@@ -73,7 +73,9 @@ public class UserService implements IUserService {
             new UserPassword(encodedPassword),
             new UserEmail(dto.getEmail()),
             new UserDni(dto.getDni()),
-            new UserCuit(dto.getCuit(), dto.getDni())
+            new UserCuit(dto.getCuit()),
+            dto.getNombre(),
+            dto.getApellido()
         );
 
         Set<Rol> roles = new HashSet<>();
@@ -142,31 +144,47 @@ public class UserService implements IUserService {
     public JwtDto login(UserLogin userLogin) {
         try {
             logger.info("Intentando autenticar al usuario: {}", userLogin.getUsername());
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    userLogin.getUsername(),
-                    userLogin.getPassword()
-                )
-            );
+            
+            // Verificar si el usuario existe antes de intentar autenticar
+            if (!existsByUsername(new UserUsername(userLogin.getUsername()))) {
+                logger.error("Usuario no encontrado: {}", userLogin.getUsername());
+                throw new InvalidCredentialsException("El usuario no existe");
+            }
+
+            // Intentar autenticar
+            Authentication authentication;
+            try {
+                authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                        userLogin.getUsername(),
+                        userLogin.getPassword()
+                    )
+                );
+            } catch (Exception e) {
+                logger.error("Error durante la autenticación: {}", e.getMessage());
+                throw new InvalidCredentialsException("Contraseña incorrecta");
+            }
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
             
             // Obtener los detalles del usuario autenticado
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             User user = getByUsername(new UserUsername(userDetails.getUsername()))
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> {
+                    logger.error("Usuario no encontrado después de la autenticación: {}", userDetails.getUsername());
+                    return new RuntimeException("Usuario no encontrado después de la autenticación");
+                });
             
             String jwt = jwtProvider.generateToken(authentication, user);
-            logger.info("token: {}", jwt);
+            logger.info("Token generado exitosamente para el usuario: {}", userDetails.getUsername());
             
-            logger.info("Autenticación exitosa para el usuario: {}", userDetails.getUsername());
             return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities(), user.getCuit().value());
+        } catch (InvalidCredentialsException e) {
+            throw e; // Re-lanzar excepciones específicas de credenciales
         } catch (Exception e) {
-            logger.error("Error al autenticar al usuario: {}", e.getMessage());
-            throw new InvalidCredentialsException("Credenciales inválidas. Por favor, verifica tu nombre de usuario y contraseña.");
+            logger.error("Error inesperado durante el login: {}", e.getMessage(), e);
+            throw new RuntimeException("Error inesperado durante la autenticación");
         }
     }
-
-    
 
 }

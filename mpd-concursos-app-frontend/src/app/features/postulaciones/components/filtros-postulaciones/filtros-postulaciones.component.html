@@ -1,0 +1,54 @@
+<div class="filtros-panel">
+  <div class="panel-header">
+    <h2>Filtros de Búsqueda</h2>
+    <button mat-icon-button (click)="cerrarPanel()" aria-label="Cerrar panel de filtros">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <form [formGroup]="filtrosForm" class="filtros-form">
+    <!-- Estado -->
+    <div class="filtro-seccion">
+      <h3>Estado de la Postulación</h3>
+      <mat-button-toggle-group formControlName="estado" class="estado-toggle" aria-label="Estado de la postulación">
+        <mat-button-toggle *ngFor="let option of estadoOptions" [value]="option.value" [attr.aria-label]="option.label">
+          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
+          {{ option.label }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- Periodo -->
+    <div class="filtro-seccion">
+      <h3>Período</h3>
+      <mat-button-toggle-group formControlName="periodo" class="periodo-toggle" aria-label="Período de postulación">
+        <mat-button-toggle *ngFor="let option of periodoOptions" [value]="option.value" [attr.aria-label]="option.label">
+          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
+          {{ option.label }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- Dependencia -->
+    <div class="filtro-seccion">
+      <h3>Dependencia</h3>
+      <mat-button-toggle-group formControlName="dependencia" class="dependencia-toggle" aria-label="Dependencia">
+        <mat-button-toggle *ngFor="let option of dependenciaOptions" [value]="option.value" [attr.aria-label]="option.label">
+          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
+          {{ option.label }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+
+    <!-- Cargo -->
+    <div class="filtro-seccion">
+      <h3>Cargo</h3>
+      <mat-button-toggle-group formControlName="cargo" class="cargo-toggle" aria-label="Cargo">
+        <mat-button-toggle *ngFor="let option of cargoOptions" [value]="option.value" [attr.aria-label]="option.label">
+          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
+          {{ option.label }}
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </form>
+</div>

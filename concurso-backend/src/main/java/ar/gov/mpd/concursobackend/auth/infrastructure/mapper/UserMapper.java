@@ -19,13 +19,30 @@ public class UserMapper {
         }
 
         UserEntity entity = new UserEntity();
-        entity.setId(user.getId().value());
-        entity.setUsername(user.getUsername().value());
-        entity.setEmail(user.getEmail().value());
-        entity.setPassword(user.getPassword().value());
-        entity.setCreatedAt(user.getCreatedAt().value());
-        entity.setDni(user.getDni().value());
-        entity.setCuit(user.getCuit().value());
+        
+        if (user.getId() != null) {
+            entity.setId(user.getId().value());
+        }
+        if (user.getUsername() != null) {
+            entity.setUsername(user.getUsername().value());
+        }
+        if (user.getEmail() != null) {
+            entity.setEmail(user.getEmail().value());
+        }
+        if (user.getPassword() != null) {
+            entity.setPassword(user.getPassword().value());
+        }
+        if (user.getCreatedAt() != null) {
+            entity.setCreatedAt(user.getCreatedAt().value());
+        }
+        if (user.getDni() != null) {
+            entity.setDni(user.getDni().value());
+        }
+        if (user.getCuit() != null) {
+            entity.setCuit(user.getCuit().value());
+        }
+        entity.setFirstName(user.getFirstName());
+        entity.setLastName(user.getLastName());
         if (user.getRoles() != null) {
             entity.setRoles(user.getRoles().stream()
                     .map(rol -> {
@@ -47,6 +64,9 @@ public class UserMapper {
 
         User user = new User();
 
+        if (entity.getId() != null) {
+            user.setId(new UserId(entity.getId()));
+        }
         if (entity.getUsername() != null) {
             user.setUsername(new UserUsername(entity.getUsername()));
         }
@@ -56,9 +76,6 @@ public class UserMapper {
         if (entity.getEmail() != null) {
             user.setEmail(new UserEmail(entity.getEmail()));
         }
-        if (entity.getId() != null) {
-            user.setId(new UserId(entity.getId()));
-        }
         if (entity.getCreatedAt() != null) {
             user.setCreatedAt(new UserCreatedAt(entity.getCreatedAt()));
         }
@@ -66,17 +83,21 @@ public class UserMapper {
             user.setDni(new UserDni(entity.getDni()));
         }
         if (entity.getCuit() != null) {
-            user.setCuit(new UserCuit(entity.getCuit(), entity.getDni()));
+            user.setCuit(new UserCuit(entity.getCuit()));
         }
-
-        // Convertir los roles
-        Set<Rol> roles = entity.getRoles().stream().map(roleEntity -> {
-            Rol rol = new Rol();
-            rol.setRole(roleEntity.getRole());
-            return rol;
-        }).collect(Collectors.toSet());
-
-        user.setRoles(roles);
+        user.setFirstName(entity.getFirstName());
+        user.setLastName(entity.getLastName());
+        if (entity.getRoles() != null) {
+            Set<Rol> roles = entity.getRoles().stream()
+                    .map(roleEntity -> {
+                        Rol rol = new Rol();
+                        rol.setId(roleEntity.getId());
+                        rol.setRole(roleEntity.getRole());
+                        return rol;
+                    })
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
+        }
 
         return user;
     }

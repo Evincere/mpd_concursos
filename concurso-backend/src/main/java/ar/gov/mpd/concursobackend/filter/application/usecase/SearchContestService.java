@@ -7,14 +7,13 @@ import ar.gov.mpd.concursobackend.filter.application.dto.ContestResponse;
 import ar.gov.mpd.concursobackend.filter.application.mapper.ContestMapper;
 import ar.gov.mpd.concursobackend.filter.application.port.in.SearchContestUseCase;
 import ar.gov.mpd.concursobackend.filter.domain.model.ContestFilter;
-import ar.gov.mpd.concursobackend.filter.domain.model.enums.ContestStatus;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.DateRange;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.Department;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.Position;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,61 +42,46 @@ public class SearchContestService implements SearchContestUseCase {
     }
 
     private ContestFilter createFilterFromCommand(ContestFilterCommand command) {
-        ContestStatus status = command.getStatus() != null ? 
-            ContestStatus.fromString(command.getStatus()) : null;
+        ContestStatus status = null;
+        if (command.getStatus() != null && !command.getStatus().trim().isEmpty()) {
+            status = ContestStatus.fromString(command.getStatus());
+        }
         
-        DateRange dateRange = (command.getStartDate() != null || command.getEndDate() != null) ?
-            new DateRange(command.getStartDate(), command.getEndDate()) : null;
+        DateRange dateRange = null;
+        if (command.getStartDate() != null || command.getEndDate() != null) {
+            dateRange = new DateRange(command.getStartDate(), command.getEndDate());
+        }
         
-        Department department = command.getDepartment() != null ? 
-            new Department(command.getDepartment()) : null;
+        Department department = null;
+        if (command.getDepartment() != null && !command.getDepartment().trim().isEmpty()) {
+            department = new Department(command.getDepartment());
+        }
         
-        Position position = command.getPosition() != null ? 
-            new Position(command.getPosition()) : null;
-
+        Position position = null;
+        if (command.getPosition() != null && !command.getPosition().trim().isEmpty()) {
+            position = new Position(command.getPosition());
+        }
+        
         return new ContestFilter(status, dateRange, department, position);
     }
 
-    /**
-     * Mapea los filtros del módulo filter a los filtros del módulo contest
-     */
     private ContestFilters mapToContestFilters(ContestFilter filter) {
-        return new ContestFilters(
-            mapStatus(filter.getStatus()),
-            mapStartDate(filter.getDateRange()),
-            mapEndDate(filter.getDateRange()),
-            mapDepartmentToDependency(filter.getDepartment()),
-            mapPosition(filter.getPosition())
-        );
-    }
-
-    private String mapStatus(ContestStatus status) {
-        return Optional.ofNullable(status)
-                .map(ContestStatus::toString)
-                .orElse(null);
-    }
-
-    private LocalDate mapStartDate(DateRange dateRange) {
-        return Optional.ofNullable(dateRange)
-                .map(DateRange::getStart)
-                .orElse(null);
-    }
-
-    private LocalDate mapEndDate(DateRange dateRange) {
-        return Optional.ofNullable(dateRange)
-                .map(DateRange::getEnd)
-                .orElse(null);
-    }
-
-    private String mapDepartmentToDependency(Department department) {
-        return Optional.ofNullable(department)
-                .map(Department::getValue)
-                .orElse(null);
-    }
-
-    private String mapPosition(Position position) {
-        return Optional.ofNullable(position)
-                .map(Position::getValue)
-                .orElse(null);
+        return ContestFilters.builder()
+                .status(Optional.ofNullable(filter.getStatus())
+                        .map(ContestStatus::toString)
+                        .orElse(null))
+                .startDate(Optional.ofNullable(filter.getDateRange())
+                        .map(DateRange::getStartDate)
+                        .orElse(null))
+                .endDate(Optional.ofNullable(filter.getDateRange())
+                        .map(DateRange::getEndDate)
+                        .orElse(null))
+                .dependency(Optional.ofNullable(filter.getDepartment())
+                        .map(Department::getValue)
+                        .orElse(null))
+                .position(Optional.ofNullable(filter.getPosition())
+                        .map(Position::getValue)
+                        .orElse(null))
+                .build();
     }
 }

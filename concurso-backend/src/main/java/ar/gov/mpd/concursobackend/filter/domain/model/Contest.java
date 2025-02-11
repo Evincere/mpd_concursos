@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.filter.domain.model;
 
-import ar.gov.mpd.concursobackend.filter.domain.model.enums.ContestStatus;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.*;
 import lombok.Builder;
 import lombok.Data;
@@ -26,4 +26,3 @@ public class Contest {
         this.position = position;
     }
 }
-
