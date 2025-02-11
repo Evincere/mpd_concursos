@@ -4,13 +4,14 @@ import { UserInfoComponent } from './user-info/user-info.component';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { Router } from '@angular/router';
+import { NotificationsComponent } from '../../../../shared/components/notifications/notifications.component';
 
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
   standalone: true,
-  imports: [CommonModule, UserInfoComponent],
+  imports: [CommonModule, UserInfoComponent, NotificationsComponent],
   animations: [
     trigger('logoRotate', [
       state('start', style({

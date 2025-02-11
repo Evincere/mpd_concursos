@@ -31,7 +31,12 @@
   .nav-right {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 16px;
+    margin-left: auto;
+
+    app-notifications {
+      margin-right: 8px;
+    }
 
     .logout-btn {
       display: flex;

@@ -10,5 +10,5 @@
   "terminal.integrated.ignoreBracketedPasteMode": true,
   "terminal.integrated.tabs.defaultColor": "terminal.ansiGreen",
   "terminal.integrated.confirmOnKill": "editor",
-  "java.jdt.ls.java.home": "b:\\Program Files\\Java\\jdk-22",
+  "java.jdt.ls.java.home": "b:\\Program Files\\Java\\jdk-21",
 }

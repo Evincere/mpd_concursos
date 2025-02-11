@@ -1,4 +1,4 @@
-package ar.gov.mpd.concursobackend.notification.application.service;
+package ar.gov.mpd.concursobackend.notification.application.mapper;
 
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationResponse;
 import ar.gov.mpd.concursobackend.notification.domain.model.Notification;
@@ -9,10 +9,10 @@ public class NotificationMapper {
     
     public NotificationResponse toResponse(Notification notification) {
         return NotificationResponse.builder()
-            .id(notification.getId().getValue())
-            .recipientId(notification.getRecipient().getId().value())
-            .subject(notification.getSubject().getValue())
-            .content(notification.getContent().getValue())
+            .id(notification.getId())
+            .recipientId(notification.getRecipientId())
+            .subject(notification.getSubject())
+            .content(notification.getContent())
             .status(notification.getStatus())
             .sentAt(notification.getSentAt())
             .readAt(notification.getReadAt())

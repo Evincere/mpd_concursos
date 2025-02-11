@@ -1,59 +1,47 @@
 package ar.gov.mpd.concursobackend.notification.domain.model;
 
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
-import ar.gov.mpd.concursobackend.notification.domain.valueobjects.NotificationId;
-import ar.gov.mpd.concursobackend.notification.domain.valueobjects.NotificationContent;
-import ar.gov.mpd.concursobackend.notification.domain.valueobjects.NotificationSubject;
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import lombok.Builder;
 import lombok.Getter;
+
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
+@Builder
 public class Notification {
-    private final NotificationId id;
-    private final User recipient;
-    private final NotificationSubject subject;
-    private final NotificationContent content;
+    private UUID id;
+    private UUID recipientId;
+    private String subject;
+    private String content;
     private NotificationStatus status;
     private LocalDateTime sentAt;
     private LocalDateTime readAt;
     private LocalDateTime acknowledgedAt;
     private String acknowledgementSignature;
-
-    public Notification(NotificationId id, User recipient, NotificationSubject subject, 
-                       NotificationContent content) {
-        this.id = id;
-        this.recipient = recipient;
-        this.subject = subject;
-        this.content = content;
-        this.status = NotificationStatus.PENDING;
-    }
-
-    public void send() {
-        if (this.status != NotificationStatus.PENDING) {
-            throw new IllegalStateException("La notificación ya ha sido enviada");
-        }
-        this.status = NotificationStatus.SENT;
-        this.sentAt = LocalDateTime.now();
-    }
+    private Long version;
 
     public void markAsRead() {
-        if (this.status != NotificationStatus.SENT) {
-            throw new IllegalStateException("La notificación debe estar enviada para marcarla como leída");
+        if (this.readAt == null) {
+            this.readAt = LocalDateTime.now();
+            if (this.status == NotificationStatus.PENDING || this.status == NotificationStatus.SENT) {
+                this.status = NotificationStatus.READ;
+            }
         }
-        this.status = NotificationStatus.READ;
-        this.readAt = LocalDateTime.now();
     }
 
     public void acknowledge(String signature) {
-        if (this.status != NotificationStatus.READ) {
-            throw new IllegalStateException("La notificación debe estar leída para acusarla");
+        if (this.acknowledgedAt == null) {
+            this.acknowledgedAt = LocalDateTime.now();
+            this.acknowledgementSignature = signature;
+            this.status = NotificationStatus.ACKNOWLEDGED;
         }
-        if (signature == null || signature.trim().isEmpty()) {
-            throw new IllegalArgumentException("La firma no puede estar vacía");
+    }
+
+    public void send() {
+        if (this.sentAt == null) {
+            this.sentAt = LocalDateTime.now();
+            this.status = NotificationStatus.SENT;
         }
-        this.status = NotificationStatus.ACKNOWLEDGED;
-        this.acknowledgedAt = LocalDateTime.now();
-        this.acknowledgementSignature = signature;
     }
 }

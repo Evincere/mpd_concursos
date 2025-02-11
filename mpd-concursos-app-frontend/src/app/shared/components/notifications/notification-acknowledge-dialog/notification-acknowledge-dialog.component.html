@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>Acuse de Recibo</h2>
+
+<mat-dialog-content>
+    <div class="notification-details">
+        <h3>{{ data.notification.subject }}</h3>
+        <p>{{ data.notification.content }}</p>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Firma Digital</mat-label>
+        <input matInput
+               [(ngModel)]="signature"
+               placeholder="Ingrese su firma digital"
+               required>
+        <mat-icon matSuffix>fingerprint</mat-icon>
+        <mat-hint>Esta firma quedará registrada como confirmación de lectura</mat-hint>
+    </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">
+        Cancelar
+    </button>
+    <button mat-raised-button 
+            color="primary" 
+            [disabled]="!isValid"
+            (click)="onConfirm()">
+        Confirmar Recibo
+    </button>
+</mat-dialog-actions>
