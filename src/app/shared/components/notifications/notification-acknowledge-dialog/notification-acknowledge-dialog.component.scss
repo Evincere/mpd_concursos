@@ -1,0 +1,159 @@
+// Importar los estilos de Material
+@use '@angular/material' as mat;
+
+:host {
+    display: block;
+
+    ::ng-deep {
+        .acknowledge-dialog-container {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            
+            .mat-mdc-dialog-surface {
+                background-color: var(--background-color);
+                color: var(--text-color);
+            }
+        }
+    }
+}
+
+.acknowledge-dialog-container {
+    @include mat.elevation(24);
+    border-radius: 8px;
+    
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 16px 24px;
+        background-color: var(--mat-primary-color);
+        color: var(--mat-primary-contrast);
+        border-radius: 8px 8px 0 0;
+
+        mat-icon {
+            margin-right: 8px;
+        }
+    }
+}
+
+.acknowledge-dialog-content {
+    padding: 24px;
+    min-width: 400px;
+    max-width: 600px;
+}
+
+.notification-details {
+    padding: 16px;
+    margin-bottom: 24px;
+    background-color: var(--mat-card-background-color);
+    border-radius: 4px;
+
+    h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: var(--mat-primary-text);
+    }
+
+    p {
+        margin: 0;
+        color: var(--mat-secondary-text);
+        line-height: 1.5;
+    }
+}
+
+.acknowledge-level-info {
+    display: flex;
+    padding: 16px;
+    margin-bottom: 24px;
+    background-color: var(--mat-surface-variant);
+    border-radius: 4px;
+    
+    mat-icon {
+        margin-right: 16px;
+        color: var(--mat-primary-color);
+    }
+    
+    .info-content {
+        h4 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--mat-primary-text);
+        }
+        
+        p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--mat-secondary-text);
+            line-height: 1.4;
+        }
+    }
+}
+
+.signature-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.signature-type-option {
+    display: flex;
+    flex-direction: column;
+    
+    .signature-type-label {
+        font-weight: 500;
+    }
+    
+    .signature-type-description {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--mat-secondary-text);
+        font-size: 0.8rem;
+        
+        .coming-soon-icon {
+            font-size: 16px;
+            height: 16px;
+            width: 16px;
+            color: var(--mat-warn-color);
+        }
+    }
+}
+
+.declaration-section {
+    padding: 16px;
+    background-color: var(--mat-surface-variant);
+    border-radius: 4px;
+    
+    h4 {
+        margin: 0 0 8px 0;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    .declaration-info {
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+        color: var(--mat-secondary-text);
+    }
+}
+
+mat-dialog-actions {
+    padding: 16px 24px;
+    margin: 0;
+    background-color: var(--mat-dialog-container-background-color);
+    border-top: 1px solid var(--mat-divider-color);
+    border-radius: 0 0 8px 8px;
+    
+    button {
+        mat-icon {
+            margin-right: 8px;
+        }
+    }
+}
+
+.full-width {
+    width: 100%;
+} 

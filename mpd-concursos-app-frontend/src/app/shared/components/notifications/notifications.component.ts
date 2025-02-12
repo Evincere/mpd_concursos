@@ -104,7 +104,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe(signature => {
                 if (signature) {
-                    this.notificationsService.acknowledge(notification.id, signature)
+                    this.notificationsService.acknowledge(notification.id, signature.type, signature.value)
                         .pipe(takeUntil(this.destroy$))
                         .subscribe({
                             error: (error) => {

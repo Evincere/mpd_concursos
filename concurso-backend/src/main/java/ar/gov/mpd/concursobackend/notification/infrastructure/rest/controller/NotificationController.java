@@ -40,7 +40,7 @@ public class NotificationController {
         return ResponseEntity.ok(markNotificationAsReadUseCase.markAsRead(notificationId));
     }
 
-    @PatchMapping("/{id}/acknowledge")
+    @PatchMapping("/{id}/acknowledge") 
     public ResponseEntity<NotificationResponse> acknowledgeNotification(
             @PathVariable("id") UUID notificationId,
             @Valid @RequestBody NotificationAcknowledgementRequest request) {

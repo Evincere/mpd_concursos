@@ -1,0 +1,105 @@
+<div class="acknowledge-dialog-container" role="dialog" aria-labelledby="acknowledge-dialog-title">
+    <h2 mat-dialog-title id="acknowledge-dialog-title">
+        <mat-icon>verified_user</mat-icon>
+        Acuse de Recibo
+    </h2>
+
+    <mat-dialog-content class="acknowledge-dialog-content">
+        <!-- Detalles de la notificación -->
+        <div class="notification-details">
+            <h3>{{ data.notification.subject }}</h3>
+            <p>{{ data.notification.content }}</p>
+        </div>
+
+        <!-- Información del nivel de acuse -->
+        <div class="acknowledge-level-info">
+            <mat-icon>info</mat-icon>
+            <div class="info-content">
+                <h4>Nivel de Acuse Requerido</h4>
+                <p>{{ acknowledgeInstructions }}</p>
+            </div>
+        </div>
+
+        <!-- Sección de firma -->
+        <div class="signature-section">
+            <!-- Selector de tipo de firma -->
+            <mat-form-field appearance="fill" class="full-width">
+                <mat-label>Método de Firma</mat-label>
+                <mat-select [(ngModel)]="signatureType" required>
+                    @for (type of availableSignatureTypes; track type.value) {
+                        <mat-option [value]="type.value" [disabled]="!type.available">
+                            <div class="signature-type-option">
+                                <span class="signature-type-label">{{ type.label }}</span>
+                                <small class="signature-type-description">
+                                    {{ type.description }}
+                                    @if (!type.available) {
+                                        <mat-icon class="coming-soon-icon">schedule</mat-icon>
+                                    }
+                                </small>
+                            </div>
+                        </mat-option>
+                    }
+                </mat-select>
+                <mat-hint>Seleccione el método de firma que desea utilizar</mat-hint>
+            </mat-form-field>
+
+            <!-- Campo de firma -->
+            @if (signatureType === SignatureType.PIN) {
+                <mat-form-field appearance="fill" class="full-width">
+                    <mat-label>PIN de Usuario</mat-label>
+                    <input matInput
+                           type="password"
+                           [(ngModel)]="signature"
+                           placeholder="Ingrese su PIN"
+                           required>
+                    <mat-icon matSuffix>pin</mat-icon>
+                    <mat-hint>Ingrese su PIN personal para confirmar su identidad</mat-hint>
+                </mat-form-field>
+            }
+
+            <!-- Sección de declaración jurada -->
+            @if (signatureType === SignatureType.DECLARATION) {
+                <div class="declaration-section">
+                    <h4>Declaración Jurada</h4>
+                    <p class="declaration-info">
+                        Complete la siguiente declaración con sus datos personales. 
+                        Esta información será registrada junto con su acuse de recibo.
+                    </p>
+                    <mat-form-field appearance="fill" class="full-width">
+                        <mat-label>Firma Digital</mat-label>
+                        <input matInput
+                               [(ngModel)]="signature"
+                               placeholder="Ingrese su firma"
+                               required>
+                        <mat-icon matSuffix>draw</mat-icon>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="full-width">
+                        <mat-label>Declaración</mat-label>
+                        <textarea matInput
+                                  [(ngModel)]="declaration"
+                                  placeholder="Ingrese su declaración jurada"
+                                  rows="3"
+                                  required></textarea>
+                        <mat-hint>Detalle la información requerida para la declaración jurada</mat-hint>
+                    </mat-form-field>
+                </div>
+            }
+        </div>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button 
+                [disabled]="isSubmitting"
+                (click)="onCancel()"
+                cdkFocusInitial>
+            Cancelar
+        </button>
+        <button mat-raised-button 
+                color="primary" 
+                [disabled]="!isValid || isSubmitting"
+                (click)="onConfirm()">
+            <mat-icon>{{ isSubmitting ? 'hourglass_empty' : 'done' }}</mat-icon>
+            {{ isSubmitting ? 'Procesando...' : 'Confirmar Acuse' }}
+        </button>
+    </mat-dialog-actions>
+</div> 

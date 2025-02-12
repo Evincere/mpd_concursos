@@ -1,0 +1,11 @@
+<button mat-button
+        color="primary"
+        *ngIf="canAcknowledge"
+        (click)="onAcknowledge()">
+    <mat-icon>done_all</mat-icon>
+    Acusar Recibo
+</button>
+
+<span class="status-badge" [class.acknowledged]="notification.status === 'ACKNOWLEDGED'">
+    {{ statusText }}
+</span> 
