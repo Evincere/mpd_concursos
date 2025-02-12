@@ -1,10 +1,31 @@
-@use 'sass:map';
 @use '@angular/material' as mat;
+@use 'sass:map';  // Agregamos la importación del módulo map
 @import './styles/variables';
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
+// Definición de paletas compatible con Angular Material
+$custom-primary: mat.define-palette(mat.$indigo-palette);
+$custom-accent: mat.define-palette(mat.$blue-palette);
+$custom-warn: mat.define-palette(mat.$red-palette);
+
+// Nueva sintaxis para Angular Material 17
+$dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $custom-primary,
+    accent: $custom-accent,
+    warn: $custom-warn,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0,
+));
+
+// Aplicar el tema una sola vez
+@include mat.core();
+@include mat.all-component-themes($dark-theme);
+
+// Estilos globales
 html, body {
   height: 100%;
   margin: 0;
@@ -31,14 +52,13 @@ main {
   position: relative;
 }
 
+// Variables globales
 :root {
   --surface-color: 30, 30, 30;
   --surface-color-rgb: var(--surface-color);
-  --primary-color: #{$color-primary};
-  --primary-color-rgb: 25, 118, 210;
-  --text-color: #{$color-text-primary};
-  --text-secondary: #{$color-text-secondary};
-  --text-secondary-rgb: 176, 176, 176;
+  --primary-color: #{mat.get-color-from-palette($custom-primary)};
+  --text-color: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
   --card-background: var(--surface-color);
   --card-border: rgba(255, 255, 255, 0.1);
   --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
@@ -177,57 +197,6 @@ $_rest: (
 );
 $_primary: map.merge(map.get($_palettes, primary), $_rest);
 $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
-
-// Definición de paletas compatible con Angular Material
-$custom-primary: (
-  50: #e8eaf6,
-  100: #c5cae9,
-  200: #9fa8da,
-  300: #7986cb,
-  400: #5c6bc0,
-  500: #3f51b5,
-  600: #3949ab,
-  700: #303f9f,
-  800: #283593,
-  900: #1a237e,
-  contrast: (
-    50: rgba(black, 0.87),
-    100: rgba(black, 0.87),
-    200: rgba(black, 0.87),
-    300: white,
-    400: white,
-    500: white,
-    600: white,
-    700: white,
-    800: white,
-    900: white,
-  )
-);
-
-$custom-accent: (
-  50: #e3f2fd,
-  100: #bbdefb,
-  200: #90caf9,
-  300: #64b5f6,
-  400: #42a5f5,
-  500: #2196f3,
-  600: #1e88e5,
-  700: #1976d2,
-  800: #1565c0,
-  900: #0d47a1,
-  contrast: (
-    50: rgba(black, 0.87),
-    100: rgba(black, 0.87),
-    200: rgba(black, 0.87),
-    300: rgba(black, 0.87),
-    400: rgba(black, 0.87),
-    500: white,
-    600: white,
-    700: white,
-    800: white,
-    900: white,
-  )
-);
 
 // Nueva sintaxis para Angular Material 17
 $dark-theme: mat.define-dark-theme((
@@ -870,7 +839,7 @@ main.mat-app-background,
   z-index: 5 !important;
 }
 
-// Estilos globales para las barras de scroll
+// Estilos para scrollbars
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--primary-color-rgb), 0.5) rgba(var(--surface-color-rgb), 0.3);
@@ -888,7 +857,6 @@ main.mat-app-background,
   &::-webkit-scrollbar-thumb {
     background: rgba(var(--primary-color-rgb), 0.5);
     border-radius: 4px;
-    transition: background 0.2s ease;
 
     &:hover {
       background: rgba(var(--primary-color-rgb), 0.7);
@@ -1123,4 +1091,17 @@ $snackbar-action: rgba(255, 255, 255, 0.7);
 
 .mat-mdc-snack-bar-container {
   animation: snackbarFadeIn 0.3s ease-out;
+}
+
+// Estilos para diálogos
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: var(--background-color);
+  --mdc-dialog-with-divider-divider-color: var(--card-border);
+}
+
+.mat-mdc-dialog-surface {
+  border-radius: 8px !important;
+  background-color: var(--background-color) !important;
+  color: var(--text-color) !important;
+  box-shadow: var(--card-shadow) !important;
 }

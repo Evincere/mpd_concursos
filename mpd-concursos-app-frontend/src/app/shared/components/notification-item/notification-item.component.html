@@ -28,6 +28,11 @@
                     </span>
                 </div>
             </div>
+            <div class="notification-acknowledgement-info" *ngIf="isAcknowledged">
+                <span class="acknowledgement-date">
+                    Acusado el {{ notification.acknowledgedAt | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+            </div>
         </div>
     </div>
 

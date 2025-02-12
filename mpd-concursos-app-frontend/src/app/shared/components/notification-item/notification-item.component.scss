@@ -125,3 +125,24 @@
         }
     }
 }
+
+.notification-acknowledgement-info {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 0.8rem;
+    color: rgba(0, 0, 0, 0.54);
+    font-style: italic;
+
+    .acknowledgement-date {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        &::before {
+            content: '✓';
+            color: #388e3c;
+            font-weight: bold;
+        }
+    }
+}

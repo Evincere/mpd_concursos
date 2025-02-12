@@ -39,25 +39,25 @@ public class JwtProvider {
 
     public String generateToken(Authentication authentication, User user) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        
+
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(authority -> authority.getAuthority())
                 .collect(Collectors.toList());
 
-        logger.debug("Generando token para usuario: {} con roles: {}", 
-            userDetails.getUsername(), roles);
+        logger.debug("Generando token para usuario: {} con roles: {}",
+                userDetails.getUsername(), roles);
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration * 1000);
 
         String token = Jwts.builder()
-            .setSubject(userDetails.getUsername())
-            .claim("roles", roles)
-            .claim("userId", user.getId().value().toString())
-            .setIssuedAt(now)
-            .setExpiration(expiryDate)
-            .signWith(key)
-            .compact();
+                .setSubject(userDetails.getUsername())
+                .claim("roles", roles)
+                .claim("userId", user.getId().value().toString())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key)
+                .compact();
 
         logger.debug("Token generado. Expira en: {}", expiryDate);
         return token;
@@ -66,11 +66,11 @@ public class JwtProvider {
     public String getUsernameFromToken(String token) {
         try {
             String username = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
 
             logger.debug("Nombre de usuario extraído del token: {}", username);
             return username;
@@ -83,11 +83,11 @@ public class JwtProvider {
     public String getUserIdFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-            
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
             String userId = claims.get("userId", String.class);
             logger.debug("ID de usuario extraído del token: {}", userId);
             return userId;
@@ -101,10 +101,10 @@ public class JwtProvider {
     public List<String> getRolesFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
 
             List<String> roles = claims.get("roles", List.class);
             logger.debug("Roles extraídos del token: {}", roles);
@@ -117,19 +117,20 @@ public class JwtProvider {
 
     public boolean validateToken(String token) {
         try {
-            logger.debug("Validando token...");
-            Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token);
-            logger.debug("Token válido");
+            logger.debug("Validando token: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            logger.debug("Token válido. Claims: {}", claims);
             return true;
         } catch (SignatureException e) {
             logger.error("Firma JWT inválida: {}", e.getMessage());
         } catch (MalformedJwtException e) {
             logger.error("Token mal formado: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            logger.error("Token expirado: {}", e.getMessage());
+            logger.error("Token expirado. Fecha de expiración: {}", e.getClaims().getExpiration());
         } catch (UnsupportedJwtException e) {
             logger.error("Token no soportado: {}", e.getMessage());
         } catch (IllegalArgumentException e) {

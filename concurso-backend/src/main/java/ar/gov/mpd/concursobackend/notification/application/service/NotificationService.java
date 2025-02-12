@@ -53,13 +53,45 @@ public class NotificationService
     @Override
     @Transactional
     public NotificationResponse acknowledgeNotification(NotificationAcknowledgementRequest request) {
-        Notification notification = notificationRepository.findById(request.getNotificationId());
-        if (notification == null) {
-            throw new IllegalArgumentException("Notificación no encontrada");
+        int maxRetries = 3;
+        int retryCount = 0;
+        long waitTimeMs = 100;
+
+        while (retryCount < maxRetries) {
+            try {
+                Notification notification = notificationRepository.findById(request.getNotificationId());
+                if (notification == null) {
+                    throw new IllegalArgumentException("Notificación no encontrada");
+                }
+
+                // Si ya está acusada, retornar la notificación sin cambios
+                if (notification.getAcknowledgedAt() != null) {
+                    return notificationMapper.toResponse(notification);
+                }
+
+                notification.acknowledge(request.getSignatureType(), request.getSignatureValue(),
+                        request.getMetadata());
+
+                try {
+                    Notification savedNotification = notificationRepository.save(notification);
+                    return notificationMapper.toResponse(savedNotification);
+                } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+                    retryCount++;
+                    if (retryCount >= maxRetries) {
+                        throw new RuntimeException(
+                                "No se pudo acusar recibo de la notificación después de " + maxRetries + " intentos",
+                                e);
+                    }
+                    // Espera exponencial entre reintentos
+                    Thread.sleep(waitTimeMs * retryCount);
+                    continue;
+                }
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Operación interrumpida", ie);
+            }
         }
-        notification.acknowledge(request.getSignatureType(), request.getSignatureValue(), request.getMetadata());
-        Notification savedNotification = notificationRepository.save(notification);
-        return notificationMapper.toResponse(savedNotification);
+        throw new RuntimeException("No se pudo acusar recibo de la notificación");
     }
 
     @Override

@@ -48,7 +48,13 @@ export class NotificationItemComponent {
 
     get canAcknowledge(): boolean {
         return this.notification.status === NotificationStatus.READ &&
-               this.notification.acknowledgementLevel !== AcknowledgementLevel.NONE;
+               this.notification.acknowledgementLevel !== AcknowledgementLevel.NONE &&
+               !this.isAcknowledged;
+    }
+
+    get isAcknowledged(): boolean {
+        return this.notification.status === NotificationStatus.ACKNOWLEDGED ||
+               this.notification.acknowledgedAt !== null;
     }
 
     getStatusText(status: NotificationStatus): string {

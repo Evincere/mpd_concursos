@@ -2,7 +2,6 @@ package ar.gov.mpd.concursobackend.notification.infrastructure.rest.mapper;
 
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRequest;
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationResponse;
-import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
 import ar.gov.mpd.concursobackend.notification.domain.model.Notification;
 import org.springframework.stereotype.Component;
 
@@ -36,9 +35,7 @@ public class NotificationRestMapper {
                 .readAt(notification.getReadAt())
                 .acknowledgedAt(notification.getAcknowledgedAt())
                 .acknowledgementLevel(notification.getAcknowledgementLevel())
-                .signatureType(
-                        notification.getSignatureType() != null ? SignatureType.valueOf(notification.getSignatureType())
-                                : null)
+                .signatureType(notification.getSignatureType())
                 .signatureValue(notification.getSignatureValue())
                 .signatureMetadata(notification.getSignatureMetadata())
                 .build();

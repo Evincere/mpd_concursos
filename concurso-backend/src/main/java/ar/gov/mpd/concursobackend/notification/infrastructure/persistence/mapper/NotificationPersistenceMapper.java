@@ -12,7 +12,7 @@ public class NotificationPersistenceMapper {
             return null;
         }
 
-        return NotificationJpaEntity.builder()
+        NotificationJpaEntity entity = NotificationJpaEntity.builder()
                 .id(notification.getId())
                 .recipientId(notification.getRecipientId())
                 .subject(notification.getSubject())
@@ -25,8 +25,12 @@ public class NotificationPersistenceMapper {
                 .signatureType(notification.getSignatureType())
                 .signatureValue(notification.getSignatureValue())
                 .signatureMetadata(notification.getSignatureMetadata())
-                .version(0L)
                 .build();
+
+        // Aseguramos que la versión se mantenga
+        entity.setVersion(notification.getVersion());
+
+        return entity;
     }
 
     public Notification toDomainEntity(NotificationJpaEntity entity) {
@@ -47,6 +51,7 @@ public class NotificationPersistenceMapper {
                 .signatureType(entity.getSignatureType())
                 .signatureValue(entity.getSignatureValue())
                 .signatureMetadata(entity.getSignatureMetadata())
+                .version(entity.getVersion())
                 .build();
     }
 }

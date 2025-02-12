@@ -2,11 +2,10 @@ package ar.gov.mpd.concursobackend.notification.infrastructure.persistence.entit
 
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
+import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
+import ar.gov.mpd.concursobackend.notification.infrastructure.persistence.converter.JsonMapConverter;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -24,39 +23,41 @@ public class NotificationJpaEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "recipient_id", nullable = false)
     private UUID recipientId;
 
-    @Column(nullable = false, length = 200)
+    @Column(nullable = false)
     private String subject;
 
-    @Column(nullable = false, length = 5000)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private NotificationStatus status;
 
-    @Column(nullable = false)
+    @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
 
-    @Column
+    @Column(name = "read_at")
     private LocalDateTime readAt;
 
-    @Column
+    @Column(name = "acknowledged_at")
     private LocalDateTime acknowledgedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "acknowledgement_level", nullable = false)
     private AcknowledgementLevel acknowledgementLevel;
 
-    @Column
-    private String signatureType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "signature_type")
+    private SignatureType signatureType;
 
-    @Column
+    @Column(name = "signature_value")
     private String signatureValue;
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "signature_metadata")
+    @Convert(converter = JsonMapConverter.class)
     private Map<String, String> signatureMetadata;
 
     @Version

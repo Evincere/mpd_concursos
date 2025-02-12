@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.notification.domain.model;
 
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
+import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -12,19 +13,41 @@ import java.util.UUID;
 @Getter
 @Builder
 public class Notification {
-    private UUID id;
-    private UUID recipientId;
-    private String subject;
-    private String content;
+    private final UUID id;
+    private final UUID recipientId;
+    private final String subject;
+    private final String content;
     private NotificationStatus status;
-    private LocalDateTime sentAt;
+    private final LocalDateTime sentAt;
     private LocalDateTime readAt;
     private LocalDateTime acknowledgedAt;
-    private AcknowledgementLevel acknowledgementLevel;
-    private String signatureType;
+    private final AcknowledgementLevel acknowledgementLevel;
+    private SignatureType signatureType;
     private String signatureValue;
     private Map<String, String> signatureMetadata;
-    private Long version;
+    @Builder.Default
+    private Long version = 0L;
+
+    @Builder
+    public Notification(UUID id, UUID recipientId, String subject, String content,
+            NotificationStatus status, LocalDateTime sentAt, LocalDateTime readAt,
+            LocalDateTime acknowledgedAt, AcknowledgementLevel acknowledgementLevel,
+            SignatureType signatureType, String signatureValue,
+            Map<String, String> signatureMetadata, Long version) {
+        this.id = id;
+        this.recipientId = recipientId;
+        this.subject = subject;
+        this.content = content;
+        this.status = status != null ? status : NotificationStatus.PENDING;
+        this.sentAt = sentAt != null ? sentAt : LocalDateTime.now();
+        this.readAt = readAt;
+        this.acknowledgedAt = acknowledgedAt;
+        this.acknowledgementLevel = acknowledgementLevel;
+        this.signatureType = signatureType;
+        this.signatureValue = signatureValue;
+        this.signatureMetadata = signatureMetadata;
+        this.version = version != null ? version : 0L;
+    }
 
     public void markAsRead() {
         if (this.readAt == null) {
@@ -39,7 +62,7 @@ public class Notification {
         if (this.acknowledgedAt == null) {
             validateAcknowledgement(signatureType, signatureValue);
             this.acknowledgedAt = LocalDateTime.now();
-            this.signatureType = signatureType;
+            this.signatureType = SignatureType.valueOf(signatureType);
             this.signatureValue = signatureValue;
             this.signatureMetadata = metadata;
             this.status = NotificationStatus.ACKNOWLEDGED;
@@ -60,8 +83,7 @@ public class Notification {
     }
 
     public void send() {
-        if (this.sentAt == null) {
-            this.sentAt = LocalDateTime.now();
+        if (this.status == NotificationStatus.PENDING) {
             this.status = NotificationStatus.SENT;
         }
     }

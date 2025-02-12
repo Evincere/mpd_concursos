@@ -5,10 +5,12 @@ import { Router } from '@angular/router';
 import { catchError, tap } from 'rxjs/operators';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
   const router = inject(Router);
+  const snackBar = inject(MatSnackBar);
   const token = tokenService.getToken();
   const isApiUrl = req.url.startsWith(environment.apiUrl);
 
@@ -49,9 +51,20 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
       catchError(error => {
         if (error instanceof HttpErrorResponse) {
           if (error.status === 401) {
-            console.log('[AuthInterceptor] Error 401, redirigiendo a login');
+            console.log('[AuthInterceptor] Error 401, sesión expirada');
+            snackBar.open('Su sesión ha expirado. Por favor, vuelva a iniciar sesión.', 'Cerrar', {
+              duration: 5000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+              panelClass: ['error-snackbar']
+            });
             tokenService.signOut();
-            router.navigate(['/login']);
+            router.navigate(['/login'], {
+              queryParams: {
+                returnUrl: router.url,
+                reason: 'session_expired'
+              }
+            });
           }
         }
         return throwError(() => error);
@@ -61,7 +74,18 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Si no hay token o no es válido, redirigimos al login
   console.log('[AuthInterceptor] Token no válido o ausente, redirigiendo a login');
+  snackBar.open('Debe iniciar sesión para acceder a esta funcionalidad.', 'Cerrar', {
+    duration: 5000,
+    horizontalPosition: 'center',
+    verticalPosition: 'top',
+    panelClass: ['warning-snackbar']
+  });
   tokenService.signOut();
-  router.navigate(['/login']);
+  router.navigate(['/login'], {
+    queryParams: {
+      returnUrl: router.url,
+      reason: 'invalid_token'
+    }
+  });
   return throwError(() => new Error('No hay token de autenticación válido'));
 };

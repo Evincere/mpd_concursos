@@ -19,6 +19,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 
 @Component
 public class JwtTokenFilter extends OncePerRequestFilter {
@@ -45,60 +46,81 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         try {
             String token = getToken(request);
             String requestPath = request.getServletPath();
-            logger.debug("Processing request for path: {} with token: {}", requestPath, token != null ? "present" : "absent");
+            logger.debug("Processing request for path: {} with token: {}", requestPath,
+                    token != null ? token.substring(0, Math.min(token.length(), 20)) + "..." : "absent");
 
             if (token != null) {
-                logger.debug("Validating token...");
+                logger.debug("Validando token para la ruta: {}", requestPath);
                 if (jwtProvider.validateToken(token)) {
                     String username = jwtProvider.getUsernameFromToken(token);
                     List<String> roles = jwtProvider.getRolesFromToken(token);
-                    logger.debug("Token valid for user: {} with roles: {}", username, roles);
+                    logger.debug("Token válido para usuario: {} con roles: {} en ruta: {}", username, roles,
+                            requestPath);
 
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    logger.debug("User details loaded successfully: {}", userDetails.getAuthorities());
+                    logger.debug("Detalles de usuario cargados exitosamente: {}", userDetails.getAuthorities());
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.debug("Authentication set in SecurityContext: {}", authentication.getAuthorities());
+                    logger.debug("Autenticación establecida en SecurityContext: {}", authentication.getAuthorities());
+                    filterChain.doFilter(request, response);
                 } else {
-                    logger.warn("Invalid token provided for path: {}", requestPath);
+                    logger.warn("Token inválido proporcionado para la ruta: {}", requestPath);
+                    handleAuthenticationError(response, "Su sesión ha expirado. Por favor, vuelva a iniciar sesión.",
+                            HttpServletResponse.SC_UNAUTHORIZED);
                 }
+            } else {
+                logger.warn("No se proporcionó token para la ruta: {}", requestPath);
+                handleAuthenticationError(response, "Se requiere autenticación para acceder a este recurso",
+                        HttpServletResponse.SC_UNAUTHORIZED);
             }
-
-            filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException e) {
+            logger.error("Token expirado: {}", e.getMessage());
+            handleAuthenticationError(response, "Su sesión ha expirado. Por favor, vuelva a iniciar sesión.",
+                    HttpServletResponse.SC_UNAUTHORIZED);
         } catch (Exception e) {
-            logger.error("Error processing JWT token: {}", e.getMessage(), e);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Error procesando el token\", \"message\": \"" + e.getMessage() + "\"}");
+            logger.error("Error procesando el token JWT: {}", e.getMessage(), e);
+            handleAuthenticationError(response, "Error de autenticación: " + e.getMessage(),
+                    HttpServletResponse.SC_UNAUTHORIZED);
         }
+    }
+
+    private void handleAuthenticationError(HttpServletResponse response, String message, int status)
+            throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(String.format(
+                "{\"error\": \"Error de autenticación\", \"message\": \"%s\", \"status\": %d}",
+                message.replace("\"", "'"),
+                status));
     }
 
     private String getToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
-        logger.debug("Authorization header: {}", header != null ? header.substring(0, Math.min(header.length(), 20)) + "..." : "null");
+        logger.debug("Authorization header: {}",
+                header != null ? header.substring(0, Math.min(header.length(), 20)) + "..." : "null");
 
         if (header == null || !header.startsWith("Bearer ")) {
-            logger.debug("No Authorization header found");
+            logger.debug("No se encontró el header Authorization o no tiene el formato correcto");
             return null;
         }
 
         String token = header.substring(7);
-        logger.debug("Token extracted from header: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
+        logger.debug("Token extraído del header: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
         return token;
     }
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/auth/") || 
-               path.startsWith("/h2-console") || 
-               path.equals("/favicon.ico") ||
-               path.startsWith("/v3/api-docs") ||
-               path.startsWith("/swagger-ui") ||
-               (path.startsWith("/api/concursos") && request.getMethod().equals("GET"));
+        return path.startsWith("/api/auth/") ||
+                path.startsWith("/h2-console") ||
+                path.equals("/favicon.ico") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/swagger-ui") ||
+                (path.startsWith("/api/concursos") && request.getMethod().equals("GET"));
     }
 }

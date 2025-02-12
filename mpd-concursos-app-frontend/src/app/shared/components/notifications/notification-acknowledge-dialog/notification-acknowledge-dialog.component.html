@@ -6,23 +6,38 @@
         <p>{{ data.notification.content }}</p>
     </div>
 
-    <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Firma Digital</mat-label>
-        <input matInput
-               [(ngModel)]="signature"
-               placeholder="Ingrese su firma digital"
-               required>
-        <mat-icon matSuffix>fingerprint</mat-icon>
-        <mat-hint>Esta firma quedará registrada como confirmación de lectura</mat-hint>
-    </mat-form-field>
+    <ng-container *ngIf="requiresPin">
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>PIN de Confirmación</mat-label>
+            <input matInput
+                   [(ngModel)]="pin"
+                   type="password"
+                   placeholder="Ingrese su PIN"
+                   minlength="4"
+                   maxlength="8"
+                   required>
+            <mat-icon matSuffix>pin</mat-icon>
+            <mat-hint>Ingrese su PIN personal para confirmar la lectura (mínimo 4 dígitos)</mat-hint>
+            <mat-error *ngIf="pin && pin.length < 4">El PIN debe tener al menos 4 dígitos</mat-error>
+        </mat-form-field>
+    </ng-container>
+
+    <ng-container *ngIf="requiresDeclaration">
+        <div class="declaration-container">
+            <p class="declaration-text">{{ declarationText }}</p>
+            <mat-checkbox [(ngModel)]="declaration" color="primary">
+                Acepto esta declaración
+            </mat-checkbox>
+        </div>
+    </ng-container>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">
         Cancelar
     </button>
-    <button mat-raised-button 
-            color="primary" 
+    <button mat-raised-button
+            color="primary"
             [disabled]="!isValid"
             (click)="onConfirm()">
         Confirmar Recibo

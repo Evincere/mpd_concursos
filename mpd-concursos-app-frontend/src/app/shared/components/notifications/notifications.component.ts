@@ -5,13 +5,12 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-
+import { Subject, takeUntil } from 'rxjs';
 import { NotificationsService } from '../../../core/services/notifications/notifications.service';
 import { NotificationItemComponent } from '../notification-item/notification-item.component';
-import { Notification } from '../../../core/models/notification.model';
 import { NotificationAcknowledgeDialogComponent } from './notification-acknowledge-dialog/notification-acknowledge-dialog.component';
+import { Notification, AcknowledgementLevel } from '../../../core/models/notification.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
     selector: 'app-notifications',
@@ -36,7 +35,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
     constructor(
         private notificationsService: NotificationsService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private snackBar: MatSnackBar
     ) {}
 
     ngOnInit(): void {
@@ -50,16 +50,16 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     }
 
     private loadNotifications(): void {
-        this.notificationsService.getNotifications()
+        this.notificationsService.loadNotifications()
             .pipe(takeUntil(this.destroy$))
             .subscribe({
-                next: (notifications) => {
+                next: (notifications: Notification[]) => {
                     this.notifications = notifications;
                     this.updateUnreadCount();
                 },
-                error: (error) => {
+                error: (error: Error) => {
                     console.error('Error loading notifications:', error);
-                    // Aquí podrías mostrar un mensaje de error al usuario
+                    this.showErrorMessage('Error al cargar las notificaciones');
                 }
             });
     }
@@ -74,7 +74,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     }
 
     private updateUnreadCount(): void {
-        this.unreadCount = this.notifications.filter(n => 
+        this.unreadCount = this.notifications.filter(n =>
             n.status === 'SENT' || n.status === 'PENDING'
         ).length;
     }
@@ -84,35 +84,74 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     }
 
     onNotificationRead(notification: Notification): void {
-        this.notificationsService.markAsRead(notification.id)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-                error: (error) => {
-                    console.error('Error marking notification as read:', error);
-                    // Aquí podrías mostrar un mensaje de error al usuario
-                }
-            });
+        if (!notification.readAt) {
+            this.notificationsService.markAsRead(notification.id)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                    next: () => {
+                        // La actualización del estado se maneja a través del BehaviorSubject
+                    },
+                    error: (error: Error) => {
+                        console.error('Error marking notification as read:', error);
+                        this.showErrorMessage('Error al marcar como leída la notificación');
+                    }
+                });
+        }
     }
 
     onNotificationAcknowledge(notification: Notification): void {
+        if (notification.status === 'ACKNOWLEDGED' || notification.acknowledgedAt) {
+            this.showInfoMessage('Esta notificación ya ha sido acusada');
+            return;
+        }
+
         const dialogRef = this.dialog.open(NotificationAcknowledgeDialogComponent, {
             data: { notification },
+            width: '500px',
             disableClose: true
         });
 
         dialogRef.afterClosed()
             .pipe(takeUntil(this.destroy$))
-            .subscribe(signature => {
-                if (signature) {
-                    this.notificationsService.acknowledge(notification.id, signature.type, signature.value)
-                        .pipe(takeUntil(this.destroy$))
-                        .subscribe({
-                            error: (error) => {
-                                console.error('Error acknowledging notification:', error);
-                                // Aquí podrías mostrar un mensaje de error al usuario
-                            }
-                        });
+            .subscribe(result => {
+                if (result) {
+                    this.notificationsService.acknowledge(
+                        notification.id,
+                        result.signatureType,
+                        result.signatureValue,
+                        result.declaration
+                    ).subscribe({
+                        next: () => {
+                            // La actualización del estado se maneja a través del BehaviorSubject
+                            this.showSuccessMessage('Notificación acusada correctamente');
+                        },
+                        error: (error: Error) => {
+                            console.error('Error acknowledging notification:', error);
+                            this.showErrorMessage('Error al acusar recibo de la notificación');
+                        }
+                    });
                 }
             });
+    }
+
+    private showErrorMessage(message: string): void {
+        this.snackBar.open(message, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+        });
+    }
+
+    private showSuccessMessage(message: string): void {
+        this.snackBar.open(message, 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+        });
+    }
+
+    private showInfoMessage(message: string): void {
+        this.snackBar.open(message, 'Cerrar', {
+            duration: 3000,
+            panelClass: ['info-snackbar']
+        });
     }
 }
