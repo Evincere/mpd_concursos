@@ -1,10 +1,14 @@
 package ar.gov.mpd.concursobackend.notification.infrastructure.persistence.entity;
 
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
+import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -42,8 +46,18 @@ public class NotificationJpaEntity {
     @Column
     private LocalDateTime acknowledgedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AcknowledgementLevel acknowledgementLevel;
+
     @Column
-    private String acknowledgementSignature;
+    private String signatureType;
+
+    @Column
+    private String signatureValue;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, String> signatureMetadata;
 
     @Version
     private Long version;

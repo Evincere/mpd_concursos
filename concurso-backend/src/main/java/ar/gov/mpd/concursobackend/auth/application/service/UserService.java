@@ -6,6 +6,7 @@ import ar.gov.mpd.concursobackend.auth.application.dto.UserLogin;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserCreate;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserExists;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserGetByUsername;
+import ar.gov.mpd.concursobackend.auth.application.usecase.role.RoleGetByRole;
 import ar.gov.mpd.concursobackend.auth.domain.exception.UserAlreadyExistsException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.UserDniAlreadyExistsException;
 import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtProvider;
@@ -13,6 +14,7 @@ import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.exception.EmailAlreadyExistsException;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.port.IUserRoleManager;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
@@ -40,47 +42,51 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
-public class UserService implements IUserService {
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class); 
+public class UserService implements IUserService, IUserRoleManager {
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserCreate userCreate;
     private final UserGetByUsername getByUsername;
     private final UserExists userExists;
     private final PasswordEncoder passwordEncoder;
+    private final RoleGetByRole findByRole;
+
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
     private JwtProvider jwtProvider;
 
-    @Autowired
-    RolService rolService;
-    public UserService(@Autowired UserExists userExists, @Autowired UserCreate userCreate, @Autowired UserGetByUsername getByUserName, @Autowired PasswordEncoder passwordEncoder) {
+    public UserService(@Autowired UserExists userExists,
+            @Autowired UserCreate userCreate,
+            @Autowired UserGetByUsername getByUserName,
+            @Autowired PasswordEncoder passwordEncoder,
+            @Autowired RoleGetByRole findByRole) {
         this.userCreate = userCreate;
         this.getByUsername = getByUserName;
         this.userExists = userExists;
         this.passwordEncoder = passwordEncoder;
+        this.findByRole = findByRole;
     }
 
     @Override
     @Transactional
     public User createUser(UserCreateDto dto) {
         validateNewUserCredentials(dto);
-        
+
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
 
         User user = new User(
-            new UserUsername(dto.getUsername()),
-            new UserPassword(encodedPassword),
-            new UserEmail(dto.getEmail()),
-            new UserDni(dto.getDni()),
-            new UserCuit(dto.getCuit()),
-            dto.getNombre(),
-            dto.getApellido()
-        );
+                new UserUsername(dto.getUsername()),
+                new UserPassword(encodedPassword),
+                new UserEmail(dto.getEmail()),
+                new UserDni(dto.getDni()),
+                new UserCuit(dto.getCuit()),
+                dto.getNombre(),
+                dto.getApellido());
 
         Set<Rol> roles = new HashSet<>();
-        Rol userRole = rolService.findByRole(RoleEnum.ROLE_USER)
-            .orElseThrow(() -> new RuntimeException("Error: Rol de usuario no encontrado"));
+        Rol userRole = findByRole.run(RoleEnum.ROLE_USER)
+                .orElseThrow(() -> new RuntimeException("Error: Rol de usuario no encontrado"));
         roles.add(userRole);
         user.setRoles(roles);
 
@@ -144,7 +150,7 @@ public class UserService implements IUserService {
     public JwtDto login(UserLogin userLogin) {
         try {
             logger.info("Intentando autenticar al usuario: {}", userLogin.getUsername());
-            
+
             // Verificar si el usuario existe antes de intentar autenticar
             if (!existsByUsername(new UserUsername(userLogin.getUsername()))) {
                 logger.error("Usuario no encontrado: {}", userLogin.getUsername());
@@ -155,29 +161,28 @@ public class UserService implements IUserService {
             Authentication authentication;
             try {
                 authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                        userLogin.getUsername(),
-                        userLogin.getPassword()
-                    )
-                );
+                        new UsernamePasswordAuthenticationToken(
+                                userLogin.getUsername(),
+                                userLogin.getPassword()));
             } catch (Exception e) {
                 logger.error("Error durante la autenticación: {}", e.getMessage());
                 throw new InvalidCredentialsException("Contraseña incorrecta");
             }
-            
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            
+
             // Obtener los detalles del usuario autenticado
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             User user = getByUsername(new UserUsername(userDetails.getUsername()))
-                .orElseThrow(() -> {
-                    logger.error("Usuario no encontrado después de la autenticación: {}", userDetails.getUsername());
-                    return new RuntimeException("Usuario no encontrado después de la autenticación");
-                });
-            
+                    .orElseThrow(() -> {
+                        logger.error("Usuario no encontrado después de la autenticación: {}",
+                                userDetails.getUsername());
+                        return new RuntimeException("Usuario no encontrado después de la autenticación");
+                    });
+
             String jwt = jwtProvider.generateToken(authentication, user);
             logger.info("Token generado exitosamente para el usuario: {}", userDetails.getUsername());
-            
+
             return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities(), user.getCuit().value());
         } catch (InvalidCredentialsException e) {
             throw e; // Re-lanzar excepciones específicas de credenciales
@@ -187,4 +192,25 @@ public class UserService implements IUserService {
         }
     }
 
+    @Override
+    public User addRole(User user, Rol role) {
+        Set<Rol> roles = user.getRoles();
+        if (!roles.contains(role)) {
+            roles.add(role);
+            user.setRoles(roles);
+            return userCreate.run(user);
+        }
+        return user;
+    }
+
+    @Override
+    public User removeRole(User user, Rol role) {
+        Set<Rol> roles = user.getRoles();
+        if (roles.contains(role)) {
+            roles.remove(role);
+            user.setRoles(roles);
+            return userCreate.run(user);
+        }
+        return user;
+    }
 }

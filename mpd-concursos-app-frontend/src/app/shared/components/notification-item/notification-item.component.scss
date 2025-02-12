@@ -29,7 +29,7 @@
 
 .notification-icon {
     color: rgba(0, 0, 0, 0.54);
-    
+
     &.unread {
         color: #1976d2;
     }
@@ -56,18 +56,27 @@
 .notification-meta {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-top: 8px;
     font-size: 0.8rem;
     color: rgba(0, 0, 0, 0.54);
 }
 
-.notification-status {
+.notification-badges {
+    display: flex;
+    gap: 8px;
+}
+
+.notification-status,
+.notification-acknowledgement {
     padding: 2px 8px;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 500;
     text-transform: lowercase;
+}
 
+.notification-status {
     &.sent {
         background-color: rgba(33, 150, 243, 0.12);
         color: #1976d2;
@@ -86,6 +95,23 @@
     &.pending {
         background-color: rgba(255, 152, 0, 0.12);
         color: #f57c00;
+    }
+}
+
+.notification-acknowledgement {
+    &.signature_basic {
+        background-color: rgba(63, 81, 181, 0.12);
+        color: #3f51b5;
+    }
+
+    &.signature_advanced {
+        background-color: rgba(103, 58, 183, 0.12);
+        color: #673ab7;
+    }
+
+    &.simple {
+        background-color: rgba(0, 150, 136, 0.12);
+        color: #00796b;
     }
 }
 

@@ -1,15 +1,15 @@
-<div class="notification-item" 
+<div class="notification-item"
      [ngClass]="{'unread': isUnread}"
      matRipple
      (click)="onRead($event)">
-    
+
     <div class="notification-content">
         <div class="notification-icon">
             <mat-icon [ngClass]="{'unread': isUnread}">
                 {{ statusIcon }}
             </mat-icon>
         </div>
-        
+
         <div class="notification-text">
             <h4>{{ notification.subject }}</h4>
             <p>{{ notification.content }}</p>
@@ -17,18 +17,25 @@
                 <span class="notification-date">
                     {{ notification.sentAt | date:'dd/MM/yyyy HH:mm' }}
                 </span>
-                <span class="notification-status" [ngClass]="notification.status.toLowerCase()">
-                    {{ notification.status }}
-                </span>
+                <div class="notification-badges">
+                    <span class="notification-status" [ngClass]="notification.status.toLowerCase()">
+                        {{ getStatusText(notification.status) }}
+                    </span>
+                    <span class="notification-acknowledgement"
+                          *ngIf="notification.acknowledgementLevel !== AcknowledgementLevel.NONE"
+                          [ngClass]="notification.acknowledgementLevel.toLowerCase()">
+                        {{ getAcknowledgementLevelText(notification.acknowledgementLevel) }}
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="notification-actions" *ngIf="canAcknowledge">
-        <button mat-stroked-button 
-                color="primary" 
+        <button mat-stroked-button
+                color="primary"
                 (click)="onAcknowledge($event)">
-            <mat-icon>check_circle</mat-icon>
+            <mat-icon>verified</mat-icon>
             <span>Acusar Recibo</span>
         </button>
     </div>

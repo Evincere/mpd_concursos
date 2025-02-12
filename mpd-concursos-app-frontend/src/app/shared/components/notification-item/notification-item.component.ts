@@ -3,7 +3,11 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
-import { Notification, NotificationStatus } from '../../../core/models/notification.model';
+import {
+    Notification,
+    NotificationStatus,
+    AcknowledgementLevel
+} from '../../../core/models/notification.model';
 
 @Component({
     selector: 'app-notification-item',
@@ -22,10 +26,12 @@ export class NotificationItemComponent {
     @Output() read = new EventEmitter<Notification>();
     @Output() acknowledge = new EventEmitter<Notification>();
 
+    protected AcknowledgementLevel = AcknowledgementLevel;
+
     get statusIcon(): string {
         switch (this.notification.status) {
             case NotificationStatus.ACKNOWLEDGED:
-                return 'check_circle';
+                return 'verified';
             case NotificationStatus.READ:
                 return 'mark_email_read';
             case NotificationStatus.SENT:
@@ -36,12 +42,41 @@ export class NotificationItemComponent {
     }
 
     get isUnread(): boolean {
-        return this.notification.status === NotificationStatus.SENT || 
+        return this.notification.status === NotificationStatus.SENT ||
                this.notification.status === NotificationStatus.PENDING;
     }
 
     get canAcknowledge(): boolean {
-        return this.notification.status === NotificationStatus.READ;
+        return this.notification.status === NotificationStatus.READ &&
+               this.notification.acknowledgementLevel !== AcknowledgementLevel.NONE;
+    }
+
+    getStatusText(status: NotificationStatus): string {
+        switch (status) {
+            case NotificationStatus.ACKNOWLEDGED:
+                return 'Acusado';
+            case NotificationStatus.READ:
+                return 'Leído';
+            case NotificationStatus.SENT:
+                return 'Enviado';
+            case NotificationStatus.PENDING:
+                return 'Pendiente';
+            default:
+                return status;
+        }
+    }
+
+    getAcknowledgementLevelText(level: AcknowledgementLevel): string {
+        switch (level) {
+            case AcknowledgementLevel.SIGNATURE_ADVANCED:
+                return 'Firma Avanzada';
+            case AcknowledgementLevel.SIGNATURE_BASIC:
+                return 'Firma Básica';
+            case AcknowledgementLevel.SIMPLE:
+                return 'Acuse Simple';
+            default:
+                return level;
+        }
     }
 
     onRead(event: Event): void {

@@ -34,7 +34,10 @@ CREATE TABLE notifications (
     sent_at TIMESTAMP,
     read_at TIMESTAMP,
     acknowledged_at TIMESTAMP,
-    acknowledgement_signature VARCHAR(255),
+    acknowledgement_level VARCHAR(50) NOT NULL DEFAULT 'NONE',
+    signature_type VARCHAR(50),
+    signature_value CLOB,
+    signature_metadata CLOB,
     version BIGINT NOT NULL DEFAULT 0,
     FOREIGN KEY (recipient_id) REFERENCES user_entity(id)
 );

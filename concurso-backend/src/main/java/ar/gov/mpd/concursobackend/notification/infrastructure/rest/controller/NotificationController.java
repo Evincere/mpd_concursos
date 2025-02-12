@@ -5,6 +5,7 @@ import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRespo
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationAcknowledgementRequest;
 import ar.gov.mpd.concursobackend.notification.application.port.in.AcknowledgeNotificationUseCase;
 import ar.gov.mpd.concursobackend.notification.application.port.in.GetUserNotificationsUseCase;
+import ar.gov.mpd.concursobackend.notification.application.port.in.MarkNotificationAsReadUseCase;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,28 +21,30 @@ import java.util.UUID;
 public class NotificationController {
 
     private final SendNotificationUseCase sendNotificationUseCase;
-    private final AcknowledgeNotificationUseCase acknowledgeNotificationUseCase;
     private final GetUserNotificationsUseCase getUserNotificationsUseCase;
+    private final AcknowledgeNotificationUseCase acknowledgeNotificationUseCase;
+    private final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
 
-    @GetMapping("/user")
+    @GetMapping
     public ResponseEntity<List<NotificationResponse>> getUserNotifications() {
-        List<NotificationResponse> notifications = getUserNotificationsUseCase.getUserNotifications();
-        return ResponseEntity.ok(notifications);
+        return ResponseEntity.ok(getUserNotificationsUseCase.getUserNotifications());
     }
 
     @PostMapping
-    public ResponseEntity<NotificationResponse> sendNotification(
-            @Valid @RequestBody NotificationRequest request) {
-        NotificationResponse result = sendNotificationUseCase.sendNotification(request);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<NotificationResponse> sendNotification(@Valid @RequestBody NotificationRequest request) {
+        return ResponseEntity.ok(sendNotificationUseCase.sendNotification(request));
     }
 
-    @PostMapping("/{id}/acknowledge")
+    @PatchMapping("/{id}/read")
+    public ResponseEntity<NotificationResponse> markAsRead(@PathVariable("id") UUID notificationId) {
+        return ResponseEntity.ok(markNotificationAsReadUseCase.markAsRead(notificationId));
+    }
+
+    @PatchMapping("/{id}/acknowledge")
     public ResponseEntity<NotificationResponse> acknowledgeNotification(
-            @PathVariable("id") UUID id,
+            @PathVariable("id") UUID notificationId,
             @Valid @RequestBody NotificationAcknowledgementRequest request) {
-        request.setNotificationId(id);
-        NotificationResponse result = acknowledgeNotificationUseCase.acknowledgeNotification(request);
-        return ResponseEntity.ok(result);
+        request.setNotificationId(notificationId);
+        return ResponseEntity.ok(acknowledgeNotificationUseCase.acknowledgeNotification(request));
     }
 }

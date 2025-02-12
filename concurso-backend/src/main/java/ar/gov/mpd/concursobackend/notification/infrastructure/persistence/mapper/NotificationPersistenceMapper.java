@@ -21,8 +21,11 @@ public class NotificationPersistenceMapper {
                 .sentAt(notification.getSentAt())
                 .readAt(notification.getReadAt())
                 .acknowledgedAt(notification.getAcknowledgedAt())
-                .acknowledgementSignature(notification.getAcknowledgementSignature())
-                .version(notification.getVersion())
+                .acknowledgementLevel(notification.getAcknowledgementLevel())
+                .signatureType(notification.getSignatureType())
+                .signatureValue(notification.getSignatureValue())
+                .signatureMetadata(notification.getSignatureMetadata())
+                .version(0L)
                 .build();
     }
 
@@ -40,8 +43,10 @@ public class NotificationPersistenceMapper {
                 .sentAt(entity.getSentAt())
                 .readAt(entity.getReadAt())
                 .acknowledgedAt(entity.getAcknowledgedAt())
-                .acknowledgementSignature(entity.getAcknowledgementSignature())
-                .version(entity.getVersion())
+                .acknowledgementLevel(entity.getAcknowledgementLevel())
+                .signatureType(entity.getSignatureType())
+                .signatureValue(entity.getSignatureValue())
+                .signatureMetadata(entity.getSignatureMetadata())
                 .build();
     }
 }

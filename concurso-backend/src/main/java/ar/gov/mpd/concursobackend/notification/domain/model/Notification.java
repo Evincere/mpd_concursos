@@ -1,10 +1,12 @@
 package ar.gov.mpd.concursobackend.notification.domain.model;
 
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
+import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -18,7 +20,10 @@ public class Notification {
     private LocalDateTime sentAt;
     private LocalDateTime readAt;
     private LocalDateTime acknowledgedAt;
-    private String acknowledgementSignature;
+    private AcknowledgementLevel acknowledgementLevel;
+    private String signatureType;
+    private String signatureValue;
+    private Map<String, String> signatureMetadata;
     private Long version;
 
     public void markAsRead() {
@@ -30,11 +35,27 @@ public class Notification {
         }
     }
 
-    public void acknowledge(String signature) {
+    public void acknowledge(String signatureType, String signatureValue, Map<String, String> metadata) {
         if (this.acknowledgedAt == null) {
+            validateAcknowledgement(signatureType, signatureValue);
             this.acknowledgedAt = LocalDateTime.now();
-            this.acknowledgementSignature = signature;
+            this.signatureType = signatureType;
+            this.signatureValue = signatureValue;
+            this.signatureMetadata = metadata;
             this.status = NotificationStatus.ACKNOWLEDGED;
+        }
+    }
+
+    private void validateAcknowledgement(String signatureType, String signatureValue) {
+        if (acknowledgementLevel == AcknowledgementLevel.NONE) {
+            throw new IllegalStateException("Esta notificación no requiere acuse de recibo");
+        }
+
+        if (acknowledgementLevel == AcknowledgementLevel.SIGNATURE_BASIC ||
+                acknowledgementLevel == AcknowledgementLevel.SIGNATURE_ADVANCED) {
+            if (signatureType == null || signatureValue == null) {
+                throw new IllegalArgumentException("Se requiere firma para este nivel de acuse");
+            }
         }
     }
 
