@@ -1089,3 +1089,25 @@ $snackbar-action: rgba(255, 255, 255, 0.7);
   color: var(--text-color) !important;
   box-shadow: var(--card-shadow) !important;
 }
+
+// Estilos específicos para el diálogo de acuse
+.acknowledge-dialog {
+    .mat-mdc-dialog-container {
+        --mdc-dialog-container-color: var(--background-color);
+        padding: 0;
+        border-radius: 8px;
+        overflow: hidden;
+
+        .mat-mdc-dialog-content {
+            padding: 0;
+            margin: 0;
+            max-height: 80vh;
+        }
+
+        .mat-mdc-dialog-actions {
+            padding: 16px 24px;
+            margin: 0;
+            border-top: 1px solid var(--card-border);
+        }
+    }
+}
