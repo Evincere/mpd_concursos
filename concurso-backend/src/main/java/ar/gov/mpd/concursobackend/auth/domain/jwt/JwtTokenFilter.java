@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.auth.domain.jwt;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -46,6 +47,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         try {
             String token = getToken(request);
             String requestPath = request.getServletPath();
+            
+            logger.debug("Headers de la petición:");
+            Collections.list(request.getHeaderNames()).forEach(headerName -> 
+                logger.debug("{}: {}", headerName, request.getHeader(headerName))
+            );
+            
             logger.debug("Processing request for path: {} with token: {}", requestPath,
                     token != null ? token.substring(0, Math.min(token.length(), 20)) + "..." : "absent");
 
@@ -82,9 +89,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             handleAuthenticationError(response, "Su sesión ha expirado. Por favor, vuelva a iniciar sesión.",
                     HttpServletResponse.SC_UNAUTHORIZED);
         } catch (Exception e) {
-            logger.error("Error procesando el token JWT: {}", e.getMessage(), e);
-            handleAuthenticationError(response, "Error de autenticación: " + e.getMessage(),
-                    HttpServletResponse.SC_UNAUTHORIZED);
+            logger.error("Error detallado en el filtro JWT:", e);
+            throw e;
         }
     }
 

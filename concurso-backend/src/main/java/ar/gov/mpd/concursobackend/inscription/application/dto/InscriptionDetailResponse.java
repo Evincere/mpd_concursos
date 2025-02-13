@@ -1,28 +1,29 @@
 package ar.gov.mpd.concursobackend.inscription.application.dto;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 @Builder
 public class InscriptionDetailResponse {
-    private Long id;
-    private Long contestId;
-    private String userId;
-    private String estado;
-    private LocalDateTime fechaPostulacion;
-    private ConcursoDTO concurso;
+    UUID id;
+    Long contestId;
+    String userId;
+    String estado;
+    LocalDateTime fechaPostulacion;
+    ConcursoDTO concurso;
 
-    @Data
+    @Value
     @Builder
     public static class ConcursoDTO {
-        private Long id;
-        private String titulo;
-        private String cargo;
-        private String dependencia;
-        private String estado;
-        private LocalDateTime fechaInicio;
-        private LocalDateTime fechaFin;
+        Long id;
+        String titulo;
+        String cargo;
+        String dependencia;
+        String estado;
+        LocalDateTime fechaInicio;
+        LocalDateTime fechaFin;
     }
 } 

@@ -46,13 +46,19 @@
             <p class="dependencia">{{ concurso.dependencia }}</p>
           </div>
 
-          <div class="card-actions">
+          <div class="card-actions" (click)="$event.stopPropagation()">
             <button mat-stroked-button 
                     class="details-button" 
-                    (click)="verDetalle(concurso)">
+                    (click)="verDetalle(concurso, $event)">
               <mat-icon class="details-icon">visibility</mat-icon>
               <span>Ver Detalles</span>
             </button>
+
+            <app-inscripcion-button
+              *ngIf="concurso.status === 'ACTIVE'"
+              [concurso]="concurso"
+              (inscripcionComplete)="onInscriptionComplete($event)">
+            </app-inscripcion-button>
           </div>
         </div>
       </div>

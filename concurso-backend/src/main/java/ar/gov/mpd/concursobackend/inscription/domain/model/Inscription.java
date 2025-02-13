@@ -16,6 +16,7 @@ public class Inscription {
     private final UserId userId;
     private InscriptionStatus status;
     private final LocalDateTime inscriptionDate;
+    private final LocalDateTime createdAt;
 
     public void cancel() {
         this.status = InscriptionStatus.CANCELLED;

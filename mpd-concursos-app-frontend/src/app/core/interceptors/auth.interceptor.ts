@@ -39,6 +39,11 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Validar el token antes de usarlo
   if (token && tokenService.validateToken(token)) {
+    console.log('[AuthInterceptor] Token válido, agregando a la petición:', {
+      url: req.url,
+      method: req.method,
+      headers: req.headers.keys()
+    });
     const authReq = req.clone({
       headers: req.headers
         .set('Authorization', `Bearer ${token}`)

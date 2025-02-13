@@ -217,7 +217,18 @@ export class ConcursosComponent implements OnInit {
   onInscriptionComplete(concurso: Concurso): void {
     // Actualizar la lista de concursos después de una inscripción exitosa
     this.cargarConcursos();
-    // Opcional: actualizar el concurso seleccionado si es necesario
+    
+    // Mostrar mensaje de éxito
+    this.snackBar.open(
+      `Te has inscrito exitosamente al concurso "${concurso.title}"`,
+      'Cerrar',
+      {
+        duration: 3000,
+        panelClass: ['success-snackbar']
+      }
+    );
+
+    // Si el concurso está seleccionado, actualizar su vista de detalle
     if (this.concursoSeleccionado?.id === concurso.id) {
       this.concursoSeleccionado = { ...concurso };
     }

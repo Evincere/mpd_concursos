@@ -174,31 +174,18 @@ export class TokenService {
 
   public validateToken(token: string): boolean {
     try {
-      if (!token) {
-        console.log('[TokenService] Token no proporcionado');
-        return false;
-      }
-
-      const decodedToken = this.decodeToken(token);
-      if (!decodedToken) {
-        console.log('[TokenService] Token no pudo ser decodificado');
-        return false;
-      }
-
-      if (this.isTokenExpired(token)) {
-        console.log('[TokenService] Token expirado');
-        return false;
-      }
-
-      // Verificar que el token tenga los campos necesarios
-      if (!decodedToken.sub || !decodedToken.userId) {
-        console.log('[TokenService] Token no contiene la información necesaria');
-        return false;
-      }
-
-      return true;
+      const decoded = this.jwtHelper.decodeToken(token);
+      const isExpired = this.jwtHelper.isTokenExpired(token);
+      
+      console.log('[TokenService] Validación de token:', {
+        isExpired,
+        exp: decoded.exp,
+        now: Date.now() / 1000
+      });
+      
+      return !isExpired;
     } catch (error) {
-      console.error('[TokenService] Error al validar token:', error);
+      console.error('[TokenService] Error validando token:', error);
       return false;
     }
   }

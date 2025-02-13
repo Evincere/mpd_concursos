@@ -62,21 +62,10 @@
       <mat-icon>arrow_back</mat-icon>
       Volver
     </button>
-    <div class="actions">
-      <button mat-flat-button
-              color="primary"
-              (click)="realizarInscripcion()"
-              *ngIf="concurso.status === 'PUBLISHED'"
-              [disabled]="estaInscripto || inscripcionLoading"
-              class="inscribirse-btn"
-              [class.inscripto]="estaInscripto">
-        <mat-icon>{{ estaInscripto ? 'check_circle' : 'how_to_reg' }}</mat-icon>
-        <span>{{ estaInscripto ? 'Ya inscripto' : 'Inscribirse' }}</span>
-        <mat-progress-spinner *ngIf="inscripcionLoading"
-                            diameter="20"
-                            mode="indeterminate">
-        </mat-progress-spinner>
-      </button>
-    </div>
+    <app-inscripcion-button
+      *ngIf="concurso.status === 'ACTIVE'"
+      [concurso]="concurso"
+      (inscripcionComplete)="onInscriptionComplete($event)">
+    </app-inscripcion-button>
   </div>
 </div>

@@ -9,18 +9,9 @@ import java.util.UUID;
 @Value
 @Builder
 public class InscriptionResponse {
-    Long id;
-    Long contestId;
+    UUID id;
     UUID userId;
+    Long contestId;
     InscriptionStatus status;
-    LocalDateTime inscriptionDate;
-    ContestDTO contest;
-
-    @Value
-    @Builder
-    public static class ContestDTO {
-        String title;
-        String position;
-        String department;
-    }
+    LocalDateTime createdAt;
 }

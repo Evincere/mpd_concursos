@@ -1,8 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects;
 
-import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionException;
 import lombok.Value;
-
 import java.util.UUID;
 
 @Value
@@ -11,7 +9,7 @@ public class UserId {
 
     public UserId(UUID value) {
         if (value == null) {
-            throw new InvalidInscriptionException("El ID del usuario no puede ser nulo");
+            throw new IllegalArgumentException("UserId no puede ser nulo");
         }
         this.value = value;
     }

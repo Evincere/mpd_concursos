@@ -41,6 +41,7 @@ public class NotificationService
                 .subject(request.getSubject())
                 .content(request.getContent())
                 .status(NotificationStatus.PENDING)
+                .type(request.getType())
                 .sentAt(LocalDateTime.now())
                 .acknowledgementLevel(request.getAcknowledgementLevel())
                 .build();

@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.notification.domain.model;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,13 +28,14 @@ public class Notification {
     private Map<String, String> signatureMetadata;
     @Builder.Default
     private Long version = 0L;
+    private final NotificationType type;
 
     @Builder
     public Notification(UUID id, UUID recipientId, String subject, String content,
             NotificationStatus status, LocalDateTime sentAt, LocalDateTime readAt,
             LocalDateTime acknowledgedAt, AcknowledgementLevel acknowledgementLevel,
             SignatureType signatureType, String signatureValue,
-            Map<String, String> signatureMetadata, Long version) {
+            Map<String, String> signatureMetadata, Long version, NotificationType type) {
         this.id = id;
         this.recipientId = recipientId;
         this.subject = subject;
@@ -47,6 +49,7 @@ public class Notification {
         this.signatureValue = signatureValue;
         this.signatureMetadata = signatureMetadata;
         this.version = version != null ? version : 0L;
+        this.type = type;
     }
 
     public void markAsRead() {

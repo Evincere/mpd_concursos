@@ -4,20 +4,22 @@
         color="primary"
         class="inscripcion-button"
         [class.loading]="loading"
-        [disabled]="loading || estado !== InscripcionState.NO_INSCRIPTO"
-        (click)="onInscribirse()"
-        *ngIf="estado === InscripcionState.NO_INSCRIPTO">
-        <i class="fas fa-user-plus" *ngIf="!loading"></i>
-        <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-        <span>{{ loading ? 'Inscribiendo...' : 'Inscribirse' }}</span>
-    </button>
-    <button 
-        mat-flat-button 
-        color="accent" 
-        class="inscripcion-button inscripto"
-        disabled 
-        *ngIf="estado === InscripcionState.CONFIRMADA">
-        <i class="fas fa-check"></i>
-        <span>Inscripto</span>
+        [class.inscripto]="estado === InscripcionState.CONFIRMADA"
+        [disabled]="loading || estado === InscripcionState.CONFIRMADA"
+        (click)="onInscribirse()">
+        <ng-container *ngIf="!loading && estado !== InscripcionState.CONFIRMADA">
+            <i class="fas fa-user-plus"></i>
+            <span>Inscribirse</span>
+        </ng-container>
+        
+        <ng-container *ngIf="loading">
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Inscribiendo...</span>
+        </ng-container>
+        
+        <ng-container *ngIf="estado === InscripcionState.CONFIRMADA">
+            <i class="fas fa-check"></i>
+            <span>Inscripto</span>
+        </ng-container>
     </button>
 </ng-container>

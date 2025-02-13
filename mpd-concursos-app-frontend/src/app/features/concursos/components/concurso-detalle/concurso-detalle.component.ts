@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -23,7 +24,8 @@ import { takeUntil } from 'rxjs/operators';
     MatCardModule,
     MatDividerModule,
     MatProgressSpinnerModule,
-    DatePipe
+    DatePipe,
+    InscripcionButtonComponent
   ],
   templateUrl: './concurso-detalle.component.html',
   styleUrls: ['./concurso-detalle.component.scss']
@@ -95,89 +97,15 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
     return estados[status] || status;
   }
 
-  openInscripcionDialog() {
-    if (!this.concurso) {
-      console.error('No hay datos del concurso disponibles');
-      return;
-    }
-
-    if (this.estaInscripto) {
-      this.snackBar.open('Ya te encuentras inscripto en este concurso', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    this.realizarInscripcion();
-  }
-
-  realizarInscripcion(): void {
-    if (!this.concurso) {
-      console.warn('[ConcursoDetalleComponent] No hay concurso para realizar inscripción');
-      return;
-    }
-
-    if (!this.concurso.id) {
-      console.warn('[ConcursoDetalleComponent] El concurso no tiene ID');
-      this.snackBar.open('Error al realizar la inscripción', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    if (this.estaInscripto) {
-      this.snackBar.open('Ya te encuentras inscripto en este concurso', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    if (this.concurso.status !== 'PUBLISHED') {
-      this.snackBar.open('Este concurso no está disponible para inscripción', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    console.log('[ConcursoDetalleComponent] Iniciando inscripción al concurso:', this.concurso.id);
-    this.inscripcionLoading = true;
-    this.inscripcionService.inscribirseAConcurso(this.concurso.id.toString())
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.inscripcionLoading = false)
-      )
-      .subscribe({
-        next: () => {
-          this.estaInscripto = true;
-          this.inscripcionRealizada.emit(this.concurso);
-          this.snackBar.open(
-            `Te has inscrito exitosamente al concurso "${this.concurso?.title}"`,
-            'Cerrar',
-            {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-              verticalPosition: 'bottom',
-              horizontalPosition: 'center'
-            }
-          );
-          // Refrescar el estado después de inscribirse
-          this.verificarInscripcion();
-        },
-        error: (error) => {
-          console.error('[ConcursoDetalleComponent] Error al realizar inscripción:', error);
-          this.inscripcionLoading = false;
-          this.snackBar.open(
-            'No se pudo completar la inscripción. Por favor, intente nuevamente.',
-            'Cerrar',
-            {
-              duration: 5000,
-              panelClass: ['error-snackbar'],
-              verticalPosition: 'bottom',
-              horizontalPosition: 'center'
-            }
-          );
-        }
-      });
+  onInscriptionComplete(concurso: Concurso): void {
+    // Emitir el evento al componente padre
+    this.inscripcionRealizada.emit(concurso);
+    
+    // Actualizar el estado local si es necesario
+    this.estaInscripto = true;
+    
+    // Opcionalmente cerrar el detalle
+    setTimeout(() => this.onCerrar(), 1500);
   }
 
   onCerrar() {

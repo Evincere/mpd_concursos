@@ -1,18 +1,19 @@
 package ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects;
 
-import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionException;
 import lombok.Value;
+import java.util.UUID;
 
 @Value
 public class InscriptionId {
-    Long value;
+    UUID value;
 
-    public InscriptionId(Long value) {
+    public InscriptionId() {
+        this.value = UUID.randomUUID();
+    }
+
+    public InscriptionId(UUID value) {
         if (value == null) {
-            throw new InvalidInscriptionException("El ID de inscripción no puede ser nulo");
-        }
-        if (value <= 0) {
-            throw new InvalidInscriptionException("El ID de inscripción debe ser un número positivo");
+            throw new IllegalArgumentException("InscriptionId no puede ser nulo");
         }
         this.value = value;
     }
