@@ -1,16 +1,17 @@
 @use '@angular/material' as mat;
-@use 'sass:map';  // Agregamos la importación del módulo map
+@use 'sass:map';
 @import './styles/variables';
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Definición de paletas compatible con Angular Material
 $custom-primary: mat.define-palette(mat.$indigo-palette);
 $custom-accent: mat.define-palette(mat.$blue-palette);
 $custom-warn: mat.define-palette(mat.$red-palette);
 
-// Nueva sintaxis para Angular Material 17
+// Definir el tema una sola vez
 $dark-theme: mat.define-dark-theme((
   color: (
     primary: $custom-primary,
@@ -21,9 +22,24 @@ $dark-theme: mat.define-dark-theme((
   density: 0,
 ));
 
-// Aplicar el tema una sola vez
+// Incluir core y temas una sola vez a nivel global
 @include mat.core();
 @include mat.all-component-themes($dark-theme);
+
+// Variables globales
+:root {
+  --surface-color: 30, 30, 30;
+  --surface-color-rgb: var(--surface-color);
+  --primary-color: #{mat.get-color-from-palette($custom-primary)};
+  --text-color: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --card-background: var(--surface-color);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --card-backdrop-filter: blur(8px);
+  --background-color: #121212;
+  --background-color-rgb: 18, 18, 18;
+}
 
 // Estilos globales
 html, body {
@@ -50,21 +66,6 @@ main {
   background-color: var(--background-color);
   min-height: 0;
   position: relative;
-}
-
-// Variables globales
-:root {
-  --surface-color: 30, 30, 30;
-  --surface-color-rgb: var(--surface-color);
-  --primary-color: #{mat.get-color-from-palette($custom-primary)};
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --card-background: var(--surface-color);
-  --card-border: rgba(255, 255, 255, 0.1);
-  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  --card-backdrop-filter: blur(8px);
-  --background-color: #121212;
-  --background-color-rgb: 18, 18, 18;
 }
 
 // Note: Color palettes are generated from primary: #8e6f6e, secondary: #f0f8ff, tertiary: #cce4ff, neutral: #f5f5f5
@@ -198,26 +199,9 @@ $_rest: (
 $_primary: map.merge(map.get($_palettes, primary), $_rest);
 $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
 
-// Nueva sintaxis para Angular Material 17
-$dark-theme: mat.define-dark-theme((
-  color: (
-    primary: mat.define-palette($custom-primary),
-    accent: mat.define-palette($custom-accent),
-    warn: mat.define-palette(mat.$red-palette),
-  ),
-  typography: mat.define-typography-config(),
-  density: 0,
-));
-
-// Aplicar el tema
-@include mat.core();
-@include mat.all-component-themes($dark-theme);
-
-// Aplicar el tema dentro de un selector
+// Estilos específicos de componentes
 .mat-app-background {
-  @include mat.all-component-themes($dark-theme);
-
-  // Estilos para el contenedor del datepicker
+  // Mantener los estilos específicos del datepicker y otros componentes
   .mat-datepicker-content {
     background-color: $color-background !important;
     color: $color-text-primary !important;
