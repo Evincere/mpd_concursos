@@ -6,6 +6,7 @@ import { RecentSectionComponent } from './recent-section/recent-section.componen
 import { QuickActionsComponent } from './quick-actions/quick-actions.component';
 import { DashboardService } from '@core/services/dashboard/dashboard.service';
 import { Card } from '@shared/interfaces/concurso/card.interface';
+import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.interface';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -24,42 +25,38 @@ import { Subscription } from 'rxjs';
 })
 export class MainComponent implements OnInit, OnDestroy {
   cards: Card[] = [];
+  recentConcursos: RecentConcurso[] = [];
   private subscription: Subscription = new Subscription();
-
-  recentConcursos = [
-    {
-      titulo: 'Defensor Público Oficial',
-      fecha: '2024-03-15',
-      estado: 'Activo',
-    },
-    {
-      titulo: 'Asesor de NNA Y PCR',
-      fecha: '2024-03-10',
-      estado: 'Próximo',
-    },
-    {
-      titulo: 'Asesor de NNA Y PCR',
-      fecha: '2024-03-10',
-      estado: 'Próximo',
-    }
-  ];
 
   constructor(private dashboardService: DashboardService) {}
 
   ngOnInit(): void {
+    // Suscripción a las cards
     this.subscription.add(
       this.dashboardService.getDashboardCards().subscribe({
         next: (cards) => {
+          console.log('[MainComponent] Cards actualizadas:', cards);
           this.cards = cards;
         },
         error: (error) => {
-          console.error('Error al cargar las cards del dashboard:', error);
-          // Aquí podrías mostrar un mensaje de error al usuario
+          console.error('[MainComponent] Error al cargar las cards:', error);
+        }
+      })
+    );
+
+    // Suscripción a los concursos recientes
+    this.subscription.add(
+      this.dashboardService.getRecentConcursos().subscribe({
+        next: (concursos) => {
+          console.log('[MainComponent] Concursos recientes actualizados:', concursos);
+          this.recentConcursos = concursos;
+        },
+        error: (error) => {
+          console.error('[MainComponent] Error al cargar los concursos recientes:', error);
         }
       })
     );
   }
-
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();

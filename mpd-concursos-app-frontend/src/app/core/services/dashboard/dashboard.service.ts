@@ -5,6 +5,7 @@ import { ConcursosService } from '../concursos/concursos.service';
 import { InscripcionService } from '../inscripcion/inscripcion.service';
 import { Card } from '@shared/interfaces/concurso/card.interface';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
+import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -62,5 +63,44 @@ export class DashboardService {
         return cards;
       })
     );
+  }
+
+  getRecentConcursos(): Observable<RecentConcurso[]> {
+    console.log('[DashboardService] Obteniendo concursos recientes...');
+
+    return this.concursosService.getConcursos().pipe(
+      map(concursos => {
+        // Ordenar por fecha de inicio, más recientes primero
+        const sortedConcursos = [...concursos].sort((a, b) =>
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        );
+
+        // Tomar los 5 más recientes
+        const recentConcursos = sortedConcursos.slice(0, 5).map(c => ({
+          id: c.id,
+          titulo: c.title,
+          fecha: c.startDate,
+          estado: this.mapStatus(c.status)
+        }));
+
+        console.log('[DashboardService] Concursos recientes obtenidos:', recentConcursos);
+        return recentConcursos;
+      })
+    );
+  }
+
+  private mapStatus(status: string): string {
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        return 'Activo';
+      case 'PENDING':
+        return 'Pendiente';
+      case 'CLOSED':
+        return 'Cerrado';
+      case 'FINISHED':
+        return 'Finalizado';
+      default:
+        return 'Desconocido';
+    }
   }
 }
