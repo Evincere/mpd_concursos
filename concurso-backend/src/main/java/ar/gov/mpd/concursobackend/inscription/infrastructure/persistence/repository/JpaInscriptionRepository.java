@@ -5,6 +5,7 @@ import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.InscriptionEntity;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper.InscriptionEntityMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import lombok.RequiredArgsConstructor;
@@ -63,10 +64,16 @@ public class JpaInscriptionRepository implements InscriptionRepository {
         
         return result.map(mapper::toDomain);
     }
+
+    @Override
+    public Page<Inscription> findAllByUserId(UUID userId, PageRequest pageRequest) {
+        return repository.findAllByUserId(userId, pageRequest).map(mapper::toDomain);
+    }
 }
 
 interface SpringJpaInscriptionRepository extends JpaRepository<InscriptionEntity, UUID> {
     List<InscriptionEntity> findByUserId(UUID userId);
     boolean existsByUserIdAndContestId(UUID userId, Long contestId);
     List<InscriptionEntity> findByContestId(Long contestId);
+    Page<InscriptionEntity> findAllByUserId(UUID userId, PageRequest pageRequest);
 } 

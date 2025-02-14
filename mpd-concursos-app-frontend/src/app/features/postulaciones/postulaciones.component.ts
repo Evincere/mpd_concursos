@@ -143,34 +143,38 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
     
-    this.postulacionesService.getPostulaciones(this.pageIndex, this.pageSize)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => {
-          this.loading = false;
-          this.primeraConsulta = false; // Marcamos que ya no es la primera consulta
-          // Asegurarnos de que los filtros estén en su estado inicial
-          if (!this.terminoBusqueda && this.filtrosActuales?.estado === 'todos' && 
-              this.filtrosActuales?.periodo === 'todos' && 
-              this.filtrosActuales?.dependencia === 'todas' && 
-              this.filtrosActuales?.cargo === 'todos') {
-            this.filtrosModificados = false;
-          }
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          this.postulaciones = response.content;
-          this.aplicarFiltros();
-        },
-        error: (error) => {
-          console.error('Error al cargar las postulaciones:', error);
-          this.snackBar.open('Error al cargar las postulaciones', 'Cerrar', {
-            duration: 3000
-          });
-          this.error = error;
+    this.postulacionesService.getPostulaciones(
+      this.pageIndex,
+      this.pageSize,
+      'inscriptionDate',
+      'DESC'
+    ).pipe(
+      takeUntil(this.destroy$),
+      finalize(() => {
+        this.loading = false;
+        this.primeraConsulta = false; // Marcamos que ya no es la primera consulta
+        // Asegurarnos de que los filtros estén en su estado inicial
+        if (!this.terminoBusqueda && this.filtrosActuales?.estado === 'todos' && 
+            this.filtrosActuales?.periodo === 'todos' && 
+            this.filtrosActuales?.dependencia === 'todas' && 
+            this.filtrosActuales?.cargo === 'todos') {
+          this.filtrosModificados = false;
         }
-      });
+      })
+    )
+    .subscribe({
+      next: (response) => {
+        this.postulaciones = response.content;
+        this.aplicarFiltros();
+      },
+      error: (error) => {
+        console.error('Error al cargar las postulaciones:', error);
+        this.snackBar.open('Error al cargar las postulaciones', 'Cerrar', {
+          duration: 3000
+        });
+        this.error = error;
+      }
+    });
   }
 
   onSearch(termino: string): void {
@@ -296,29 +300,40 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     return estado.toLowerCase();
   }
 
-  desinscribirse(inscriptionId: string) {
+  desinscribirse(postulacion: Postulacion) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Confirmar cancelación',
-        message: '¿Está seguro que desea cancelar su inscripción?'
+        message: '¿Estás seguro de que deseas cancelar esta inscripción?',
+        confirmText: 'Sí, cancelar',
+        cancelText: 'No, mantener'
       }
     });
 
-    dialogRef.afterClosed().pipe(
-      filter(result => result === true),
-      switchMap(() => this.inscripcionService.cancelarInscripcion(inscriptionId)),
-      catchError(error => {
-        this.snackBar.open(error.message, 'Cerrar', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        if (!postulacion.id) {
+          this.snackBar.open('Error: ID de postulación no válido', 'Cerrar', {
+            duration: 3000
+          });
+          return;
+        }
+        this.inscripcionService.cancelarInscripcion(postulacion.id.toString()).subscribe({
+          next: () => {
+            this.snackBar.open('Inscripción cancelada exitosamente', 'Cerrar', {
+              duration: 3000
+            });
+            this.cargarPostulaciones();
+          },
+          error: (error: any) => {
+            console.error('Error al cancelar inscripción:', error);
+            this.snackBar.open('Error al cancelar la inscripción', 'Cerrar', {
+              duration: 3000
+            });
+          }
         });
-        return EMPTY;
-      }),
-      finalize(() => {
-        // Recargar las inscripciones después de cancelar
-        this.loadInscriptions();
-      })
-    ).subscribe();
+      }
+    });
   }
 
   navegarAConcursos(): void {

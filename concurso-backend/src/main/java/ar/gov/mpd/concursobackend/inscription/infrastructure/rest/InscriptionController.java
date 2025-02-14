@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
 
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
+import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
@@ -8,6 +9,9 @@ import ar.gov.mpd.concursobackend.inscription.application.port.in.CancelInscript
 import ar.gov.mpd.concursobackend.shared.domain.model.PageRequest;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -45,17 +49,6 @@ public class InscriptionController {
             e.printStackTrace();
             throw e;
         }
-    }
-
-    @GetMapping
-    @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<PageResponse<InscriptionDetailResponse>> findAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "inscriptionDate") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDirection) {
-        return ResponseEntity.ok(findInscriptionsUseCase.findAll(
-                PageRequest.of(page, size, sortBy, sortDirection)));
     }
 
     @GetMapping("/{id}")
@@ -106,5 +99,21 @@ public class InscriptionController {
         }
     }
 
-    
+    @GetMapping
+    public ResponseEntity<Page<InscriptionResponse>> getInscriptions(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "inscriptionDate") String sort,
+        @RequestParam(defaultValue = "DESC") String direction,
+        @RequestParam String userId
+    ) {
+        var pageRequest = org.springframework.data.domain.PageRequest.of(
+            page, 
+            size,
+            Sort.Direction.valueOf(direction),
+            sort
+        );
+        UUID userUUID = UUID.fromString(userId);
+        return ResponseEntity.ok(findInscriptionsUseCase.findAllPaged(pageRequest, userUUID));
+    }
 }

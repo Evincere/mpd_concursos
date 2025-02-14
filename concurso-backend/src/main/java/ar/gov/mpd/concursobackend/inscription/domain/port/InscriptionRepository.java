@@ -14,4 +14,5 @@ public interface InscriptionRepository {
     boolean existsByUserIdAndContestId(UUID userId, Long contestId);
     List<Inscription> findByContestId(Long contestId);
     Page<Inscription> findAll(PageRequest pageRequest);
+    Page<Inscription> findAllByUserId(UUID userId, PageRequest pageRequest);
 } 

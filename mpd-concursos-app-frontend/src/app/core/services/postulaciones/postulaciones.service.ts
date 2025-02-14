@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ContestStatus, Postulacion, PostulacionRequest, PostulacionResponse } from '../../../shared/interfaces/postulacion/postulacion.interface';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({
     providedIn: 'root'
@@ -11,25 +12,39 @@ import { ContestStatus, Postulacion, PostulacionRequest, PostulacionResponse } f
 export class PostulacionesService {
     private apiUrl = `${environment.apiUrl}/inscripciones`;
   
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient, private authService: AuthService) { }
   
     getPostulaciones(page: number = 0, size: number = 10, sortBy: string = 'fechaPostulacion', sortDirection: string = 'desc'): Observable<PostulacionResponse> {
-      let params = new HttpParams()
-          .set('pageNumber', page.toString())
-          .set('pageSize', size.toString())
-          .set('orderBy', sortBy)
-          .set('direction', sortDirection);
-  
-      return this.http.get<PostulacionResponse>(this.apiUrl, {
-          params,
-          withCredentials: true
-      }).pipe(
-          map(response => {
-              console.log('Response from API:', response);
-              return this.transformResponse(response);
-          }),
-          catchError(this.handleError)
-      );
+        const userId = this.authService.getCurrentUserId();
+        console.log('[PostulacionesService] Obteniendo postulaciones para userId:', userId);
+
+        if (!userId) {
+            return throwError(() => new Error('Usuario no autenticado'));
+        }
+
+        const params = new HttpParams()
+            .set('page', page.toString())
+            .set('size', size.toString())
+            .set('sort', sortBy)
+            .set('direction', sortDirection.toUpperCase())
+            .set('userId', userId);
+
+        console.log('[PostulacionesService] Parámetros de la petición:', params.toString());
+
+        return this.http.get<PostulacionResponse>(`${this.apiUrl}`, { params })
+            .pipe(
+                map(response => {
+                    console.log('[PostulacionesService] Respuesta del servidor:', response);
+                    return this.transformResponse(response);
+                }),
+                catchError(error => {
+                    console.error('[PostulacionesService] Error completo:', error);
+                    if (error.status === 400) {
+                        return throwError(() => new Error('Parámetros de búsqueda inválidos'));
+                    }
+                    return throwError(() => new Error('Error del servidor. Por favor, intente más tarde.'));
+                })
+            );
     }
     
     private transformResponse(response: any): PostulacionResponse {
@@ -39,31 +54,26 @@ export class PostulacionesService {
                     id: item.id,
                     contestId: item.contestId,
                     userId: item.userId,
-                    estado: item.estado,
-                    fechaPostulacion: item.fechaPostulacion
+                    estado: item.status,
+                    fechaPostulacion: item.inscriptionDate
                 });
 
                 return {
                     id: item.id,
                     contestId: item.contestId,
                     userId: item.userId,
-                    estado: item.estado,
-                    fechaPostulacion: item.fechaPostulacion,
-                    concurso: {
-                        id: item.concurso.id,
-                        titulo: item.concurso.titulo,
-                        cargo: item.concurso.cargo,
-                        dependencia: item.concurso.dependencia,
-                        estado: item.concurso.estado,
-                        fechaInicio: item.concurso.fechaInicio,
-                        fechaFin: item.concurso.fechaFin,
-                        results: item.concurso.results,
-                        resolution: item.concurso.resolution,
-                        requirements: item.concurso.requirements,
-                        category: item.concurso.category,
-                        class: item.concurso.class,
-                        status: item.concurso.status as ContestStatus
-                    }
+                    estado: item.status,
+                    fechaPostulacion: item.inscriptionDate,
+                    concurso: item.contest ? {
+                        id: item.contest.id,
+                        titulo: item.contest.title,
+                        cargo: item.contest.position,
+                        dependencia: item.contest.department,
+                        estado: item.contest.status,
+                        fechaInicio: item.contest.startDate,
+                        fechaFin: item.contest.endDate,
+                        status: item.contest.status as ContestStatus
+                    } : null
                 };
             }),
             pageNumber: response.pageNumber || 0,

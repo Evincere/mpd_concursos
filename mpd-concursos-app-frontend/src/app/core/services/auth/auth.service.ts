@@ -5,6 +5,7 @@ import { TokenService } from './token.service';
 import { LoginService } from './login.service';
 import { User } from '../../models/user.model';
 import { JwtDto } from '../../dtos/jwt-dto';
+import { jwtDecode } from 'jwt-decode';
 
 export interface UserInfo {
   username: string;
@@ -100,9 +101,21 @@ export class AuthService {
     return hasRole;
   }
 
-  public getCurrentUserId(): string | null {
-    console.log('[AuthService] Obteniendo ID del usuario actual');
-    return this.tokenService.getUserId();
+  public getCurrentUserId(): string {
+    const token = this.tokenService.getToken();
+    if (!token) {
+        console.log('[AuthService] No hay token disponible');
+        return '';
+    }
+    
+    try {
+        const decodedToken = jwtDecode(token) as any;
+        console.log('[AuthService] Token decodificado:', decodedToken);
+        return decodedToken.userId || '';
+    } catch (error) {
+        console.error('[AuthService] Error al decodificar token:', error);
+        return '';
+    }
   }
 
   public getToken(): string | null {

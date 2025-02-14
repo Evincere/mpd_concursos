@@ -18,6 +18,10 @@ import lombok.RequiredArgsConstructor;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
+import org.springframework.data.domain.PageRequest;
+import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -26,11 +30,12 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
     private final ContestRepository contestRepository;
     private final InscriptionMapper inscriptionMapper;
     private static final Logger log = LoggerFactory.getLogger(FindInscriptionsService.class);
+    private final InscriptionRepository inscriptionRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<InscriptionDetailResponse> findAll(ar.gov.mpd.concursobackend.shared.domain.model.PageRequest pageRequest) {
-        log.debug("Buscando inscripciones con pageRequest: {}", pageRequest);
+    public PageResponse<InscriptionDetailResponse> findAll(ar.gov.mpd.concursobackend.shared.domain.model.PageRequest pageRequest, UUID userId) {
+        log.debug("Buscando inscripciones para usuario: {}", userId);
         
         var springPageRequest = org.springframework.data.domain.PageRequest.of(
             pageRequest.getPage(),
@@ -39,8 +44,7 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
                     pageRequest.getSortBy())
         );
         
-        var page = loadInscriptionPort.findAll(springPageRequest);
-        log.debug("Inscripciones encontradas: {}", page.getContent());
+        var page = loadInscriptionPort.findAllByUserId(userId, springPageRequest);
         
         List<InscriptionDetailResponse> detailResponses = page.getContent().stream()
             .map(inscription -> {
@@ -97,5 +101,11 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
             log.error("Error al verificar inscripción: {}", e.getMessage());
             return false;
         }
+    }
+
+    @Override
+    public Page<InscriptionResponse> findAllPaged(PageRequest pageRequest, UUID userId) {
+        return inscriptionRepository.findAllByUserId(userId, pageRequest)
+            .map(inscriptionMapper::toResponse);
     }
 }

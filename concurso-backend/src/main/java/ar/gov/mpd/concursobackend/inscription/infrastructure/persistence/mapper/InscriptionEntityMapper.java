@@ -23,13 +23,13 @@ import java.util.UUID;
 )
 public interface InscriptionEntityMapper {
 
-    @Mapping(target = "id", expression = "java(inscription.getId().getValue())")
-    @Mapping(target = "contestId", expression = "java(inscription.getContestId().getValue())")
-    @Mapping(target = "userId", expression = "java(inscription.getUserId().getValue())")
+    @Mapping(target = "id", expression = "java(domain.getId().getValue())")
+    @Mapping(target = "contestId", expression = "java(domain.getContestId().getValue())")
+    @Mapping(target = "userId", expression = "java(domain.getUserId().getValue())")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "inscriptionDate", source = "inscriptionDate")
-    InscriptionEntity toEntity(Inscription inscription);
+    InscriptionEntity toEntity(Inscription domain);
 
     @Mapping(target = "id", expression = "java(new InscriptionId(entity.getId()))")
     @Mapping(target = "contestId", expression = "java(new ContestId(entity.getContestId()))")
