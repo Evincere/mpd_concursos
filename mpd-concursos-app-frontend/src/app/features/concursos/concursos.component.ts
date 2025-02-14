@@ -18,6 +18,7 @@ import { ConcursoDetalleComponent } from './components/concurso-detalle/concurso
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { InscripcionButtonComponent } from './components/inscripcion/inscripcion-button/inscripcion-button.component';
 import { FiltersConcurso } from '@shared/interfaces/filters/filters-concurso.interface';
+import { FiltersService } from '@core/services/filters/filters.service';
 
 @Component({
   selector: 'app-concursos',
@@ -77,7 +78,8 @@ export class ConcursosComponent implements OnInit {
   constructor(
     private concursosService: ConcursosService,
     private inscripcionService: InscripcionService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private filtersService: FiltersService
   ) {}
 
   ngOnInit(): void {
@@ -88,14 +90,21 @@ export class ConcursosComponent implements OnInit {
     this.loading = true;
     this.concursosService.getConcursos().subscribe({
       next: (concursos: Concurso[]) => {
-        console.log('Concursos recibidos:', concursos);
-        this.concursos = concursos;
-        this.concursosSinFiltrar = [...concursos]; // Guardamos una copia sin filtrar
+        console.log('[ConcursosComponent] Concursos recibidos:', concursos);
+        this.concursosSinFiltrar = [...concursos];
+
+        // Obtener los filtros actuales del servicio
+        this.filtersService.getFiltros().subscribe(filtros => {
+          console.log('[ConcursosComponent] Aplicando filtros después de cargar:', filtros);
+          this.filtros = filtros;
+          this.aplicarFiltros(filtros);
+        });
+
         this.loading = false;
         this.primeraConsulta = false;
       },
       error: (error: HttpErrorResponse) => {
-        console.error('Error al cargar los concursos:', error);
+        console.error('[ConcursosComponent] Error al cargar los concursos:', error);
         this.error = error;
         this.loading = false;
         this.snackBar.open('Error al cargar los concursos', 'Cerrar', {
@@ -107,13 +116,13 @@ export class ConcursosComponent implements OnInit {
 
   onSearch(term: string): void {
     this.searchTerm = term;
-    if (!term || !term.trim()) {  
+    if (!term || !term.trim()) {
       this.cargarConcursos();
       return;
     }
-    
+
     const searchTermLower = term.toLowerCase();
-    this.concursos = this.concursos.filter(concurso => 
+    this.concursos = this.concursos.filter(concurso =>
       concurso.title.toLowerCase().includes(searchTermLower) ||
       concurso.position.toLowerCase().includes(searchTermLower) ||
       (concurso.dependencia && concurso.dependencia.toLowerCase().includes(searchTermLower)) ||
@@ -131,61 +140,61 @@ export class ConcursosComponent implements OnInit {
     this.filtros = filtros;
     this.filtrosActivos = this.hayFiltrosActivos(filtros);
     this.primeraConsulta = false;
-    
-    // Aquí implementar la lógica de filtrado
+
+    console.log('[ConcursosComponent] Iniciando aplicación de filtros:', {
+      filtros,
+      totalConcursos: this.concursosSinFiltrar.length
+    });
+
+    // Aplicar filtros
     this.concursos = this.concursosSinFiltrar.filter(concurso => {
+      let cumpleFiltros = true;
+
       // Filtro por estado
-      if (filtros.estado === 'activo') {
-        if (concurso.status !== 'PUBLISHED') {
-          return false;
-        }
-      } else if (filtros.estado === 'finalizado') {
-        if (concurso.status !== 'CLOSED') {
-          return false;
-        }
-      } else if (filtros.estado && filtros.estado !== 'todos') {
-        console.log('Filtrando por estado:', filtros.estado);
-        console.log('Estado del concurso:', concurso.status);
-        if (concurso.status !== filtros.estado) {
-          return false;
-        }
+      if (filtros.estado !== 'todos') {
+        console.log('[ConcursosComponent] Evaluando concurso:', {
+          id: concurso.id,
+          titulo: concurso.title,
+          estadoFiltro: filtros.estado,
+          estadoConcurso: concurso.status
+        });
+
+        cumpleFiltros = concurso.status === filtros.estado;
       }
 
-      // Filtro por dependencia
-      if (filtros.dependencia && filtros.dependencia !== 'todos') {
-        if (!concurso.dependencia || 
-            concurso.dependencia.toLowerCase() !== filtros.dependencia.toLowerCase()) {
-          return false;
+      // Resto de los filtros solo si el estado ya cumple
+      if (cumpleFiltros) {
+        if (filtros.dependencia !== 'todos') {
+          cumpleFiltros = concurso.dependencia?.toLowerCase() === filtros.dependencia.toLowerCase();
         }
-      }
 
-      // Filtro por cargo
-      if (filtros.cargo && filtros.cargo !== 'todos') {
-        if (!concurso.position || 
-            !concurso.position.toLowerCase().includes(filtros.cargo.toLowerCase())) {
-          return false;
+        if (cumpleFiltros && filtros.cargo !== 'todos') {
+          cumpleFiltros = concurso.position?.toLowerCase().includes(filtros.cargo.toLowerCase());
         }
-      }
 
-      // Filtro por período
-      if (filtros.periodo && filtros.periodo !== 'todos') {
-        const fechas = this.obtenerFechasPeriodo(filtros.periodo);
-        if (fechas) {
-          const fechaConcurso = new Date(concurso.startDate);
-          if (fechaConcurso < fechas.fechaInicio || fechaConcurso > fechas.fechaFin) {
-            return false;
+        if (cumpleFiltros && filtros.periodo !== 'todos') {
+          const fechas = this.obtenerFechasPeriodo(filtros.periodo);
+          if (fechas) {
+            const fechaConcurso = new Date(concurso.startDate);
+            cumpleFiltros = fechaConcurso >= fechas.fechaInicio && fechaConcurso <= fechas.fechaFin;
           }
         }
       }
 
-      return true;
+      return cumpleFiltros;
+    });
+
+    console.log('[ConcursosComponent] Resultado del filtrado:', {
+      totalOriginal: this.concursosSinFiltrar.length,
+      totalFiltrado: this.concursos.length,
+      filtrosAplicados: filtros
     });
   }
 
   private hayFiltrosActivos(filtros: FiltersConcurso): boolean {
-    return Object.values(filtros).some(valor => 
-      valor !== null && 
-      valor !== undefined && 
+    return Object.values(filtros).some(valor =>
+      valor !== null &&
+      valor !== undefined &&
       valor !== 'todos'
     );
   }
@@ -201,9 +210,10 @@ export class ConcursosComponent implements OnInit {
 
   getEstadoConcursoLabel(status: string): string {
     const estados: { [key: string]: string } = {
-      'PUBLISHED': 'Publicado',
-      'DRAFT': 'Borrador',
-      'CLOSED': 'Cerrado'
+      'ACTIVE': 'Activo',
+      'PENDING': 'Pendiente',
+      'CLOSED': 'Cerrado',
+      'FINISHED': 'Finalizado'
     };
     return estados[status] || status;
   }
@@ -217,7 +227,7 @@ export class ConcursosComponent implements OnInit {
   onInscriptionComplete(concurso: Concurso): void {
     // Actualizar la lista de concursos después de una inscripción exitosa
     this.cargarConcursos();
-    
+
     // Mostrar mensaje de éxito
     this.snackBar.open(
       `Te has inscrito exitosamente al concurso "${concurso.title}"`,
@@ -306,7 +316,7 @@ export class ConcursosComponent implements OnInit {
       dependencia: 'todos',
       cargo: 'todos',
       periodo: 'todos'
-    }; 
+    };
     this.cargarConcursos();
   }
 }

@@ -23,6 +23,7 @@ export class FiltersService implements IFiltersService {
   }
 
   actualizarFiltros(filtros: Partial<FiltersConcurso>): void {
+    console.log('[FiltersService] Actualizando filtros:', filtros);
     this.filtrosSubject.next({
       ...this.filtrosSubject.value,
       ...filtros
@@ -30,17 +31,19 @@ export class FiltersService implements IFiltersService {
   }
 
   limpiarFiltros(): void {
+    console.log('[FiltersService] Limpiando filtros');
     this.filtrosSubject.next(this.filtrosIniciales);
   }
 
   aplicarFiltros(concursos: any[]): any[] {
     const filtrosActuales = this.filtrosSubject.value;
+    console.log('[FiltersService] Aplicando filtros:', filtrosActuales);
 
     return concursos.filter(concurso => {
       let cumpleFiltros = true;
 
       if (filtrosActuales.estado !== 'todos') {
-        cumpleFiltros = cumpleFiltros && concurso.estado === filtrosActuales.estado;
+        cumpleFiltros = cumpleFiltros && concurso.status === filtrosActuales.estado;
       }
 
       if (filtrosActuales.periodo !== 'todos') {
