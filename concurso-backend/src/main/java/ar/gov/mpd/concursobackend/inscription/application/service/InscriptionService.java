@@ -88,4 +88,13 @@ public class InscriptionService {
         
         return inscriptionMapper.toResponse(savedInscription);
     }
+
+    @Transactional
+    public void cancelInscription(UUID inscriptionId) {
+        Inscription inscription = inscriptionRepository.findById(inscriptionId)
+            .orElseThrow(() -> new IllegalArgumentException("Inscripción no encontrada"));
+        
+        inscription.cancel();
+        inscriptionRepository.save(inscription);
+    }
 } 

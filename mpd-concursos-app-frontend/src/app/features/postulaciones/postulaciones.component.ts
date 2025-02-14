@@ -12,7 +12,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { Subject } from 'rxjs';
-import { takeUntil, finalize } from 'rxjs/operators';
+import { takeUntil, finalize, filter, switchMap, catchError } from 'rxjs/operators';
+import { EMPTY } from 'rxjs';
 import { Router } from '@angular/router';
 
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
@@ -295,62 +296,36 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     return estado.toLowerCase();
   }
 
-  desinscribirse(postulacion: any): void {
-    if (!postulacion.id) {
-      this.snackBar.open('Error: No se pudo identificar la inscripción', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
+  desinscribirse(inscriptionId: string) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
       data: {
         title: 'Confirmar cancelación',
-        message: '¿Estás seguro que deseas cancelar tu inscripción a este concurso?',
-        confirmText: 'Sí, cancelar',
-        cancelText: 'No, mantener'
-      },
-      panelClass: 'custom-dialog'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loading = true;
-        this.inscripcionService.desinscribirse(postulacion.id.toString())
-          .pipe(
-            takeUntil(this.destroy$),
-            finalize(() => this.loading = false)
-          )
-          .subscribe({
-            next: () => {
-              this.snackBar.open('Inscripción cancelada exitosamente', 'Cerrar', {
-                duration: 3000,
-                panelClass: ['success-snackbar'],
-                verticalPosition: 'bottom',
-                horizontalPosition: 'center'
-              });
-              this.cargarPostulaciones();
-            },
-            error: (error) => {
-              console.error('Error al cancelar la inscripción:', error);
-              this.snackBar.open(
-                'No se pudo cancelar la inscripción. Por favor, intenta nuevamente.',
-                'Cerrar',
-                {
-                  duration: 5000,
-                  panelClass: ['error-snackbar'],
-                  verticalPosition: 'bottom',
-                  horizontalPosition: 'center'
-                }
-              );
-            }
-          });
+        message: '¿Está seguro que desea cancelar su inscripción?'
       }
     });
+
+    dialogRef.afterClosed().pipe(
+      filter(result => result === true),
+      switchMap(() => this.inscripcionService.cancelarInscripcion(inscriptionId)),
+      catchError(error => {
+        this.snackBar.open(error.message, 'Cerrar', {
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
+        return EMPTY;
+      }),
+      finalize(() => {
+        // Recargar las inscripciones después de cancelar
+        this.loadInscriptions();
+      })
+    ).subscribe();
   }
 
   navegarAConcursos(): void {
     this.router.navigate(['/dashboard/concursos']);
+  }
+
+  loadInscriptions() {
+    this.cargarPostulaciones();
   }
 }

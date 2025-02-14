@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/inscripciones")
@@ -20,6 +24,7 @@ public class InscriptionController {
     private final CreateInscriptionUseCase createInscriptionUseCase;
     private final FindInscriptionsUseCase findInscriptionsUseCase;
     private final CancelInscriptionUseCase cancelInscriptionUseCase;
+    private static final Logger log = LoggerFactory.getLogger(InscriptionController.class);
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_USER')")
@@ -87,12 +92,19 @@ public class InscriptionController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<Void> cancelInscription(@PathVariable Long id) {
+    public ResponseEntity<?> cancelInscription(@PathVariable UUID id) {
+        log.debug("Recibida solicitud para cancelar inscripción: {}", id);
         try {
             cancelInscriptionUseCase.cancel(id);
             return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Error al cancelar inscripción: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            log.error("Error inesperado al cancelar inscripción: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body("Error interno del servidor");
         }
     }
+
+    
 }

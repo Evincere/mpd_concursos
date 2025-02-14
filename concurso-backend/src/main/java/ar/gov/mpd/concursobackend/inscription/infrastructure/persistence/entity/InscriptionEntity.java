@@ -13,7 +13,6 @@ import java.util.UUID;
 @Setter
 public class InscriptionEntity {
     @Id
-    @Column(columnDefinition = "uuid")
     private UUID id;
     
     private Long contestId;

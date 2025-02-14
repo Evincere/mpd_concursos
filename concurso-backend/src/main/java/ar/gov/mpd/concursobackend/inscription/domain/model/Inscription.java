@@ -6,11 +6,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import org.springframework.lang.NonNull;
 
 @Getter
 @Builder
 @AllArgsConstructor
 public class Inscription {
+    @NonNull
     private final InscriptionId id;
     private final ContestId contestId;
     private final UserId userId;
@@ -19,6 +21,9 @@ public class Inscription {
     private final LocalDateTime createdAt;
 
     public void cancel() {
+        if (this.status == InscriptionStatus.CANCELLED) {
+            throw new IllegalStateException("La inscripción ya está cancelada");
+        }
         this.status = InscriptionStatus.CANCELLED;
     }
 }

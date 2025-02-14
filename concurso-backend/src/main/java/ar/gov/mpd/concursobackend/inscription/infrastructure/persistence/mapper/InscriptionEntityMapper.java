@@ -8,13 +8,20 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.InscriptionEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
-@Mapper(componentModel = "spring", imports = {InscriptionId.class, ContestId.class, UserId.class})
+@Mapper(
+    componentModel = "spring",
+    imports = {
+        InscriptionId.class,
+        ContestId.class,
+        UserId.class,
+        UUID.class,
+        InscriptionStatus.class
+    }
+)
 public interface InscriptionEntityMapper {
-
-    InscriptionEntityMapper INSTANCE = Mappers.getMapper(InscriptionEntityMapper.class);
 
     @Mapping(target = "id", expression = "java(inscription.getId().getValue())")
     @Mapping(target = "contestId", expression = "java(inscription.getContestId().getValue())")

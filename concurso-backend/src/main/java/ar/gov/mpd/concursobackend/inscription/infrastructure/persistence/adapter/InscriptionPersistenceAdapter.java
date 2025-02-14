@@ -4,38 +4,31 @@ import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscripti
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
-import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.InscriptionEntity;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.repository.InscriptionJpaRepository;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper.InscriptionEntityMapper;
-import ar.gov.mpd.concursobackend.shared.domain.model.PageRequest;
-import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 @Component
+@RequiredArgsConstructor
 public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveInscriptionPort {
     private final InscriptionJpaRepository repository;
     private final InscriptionEntityMapper mapper;
 
     @Override
-    public PageResponse<Inscription> findAllByUserId(UUID userId, PageRequest pageRequest) {
-        Pageable pageable = createPageable(pageRequest);
-        var page = repository.findAllByUserId(userId, pageable);
-        return createPageResponse(page);
+    public Page<Inscription> findAllByUserId(UUID userId, org.springframework.data.domain.PageRequest pageRequest) {
+        var page = repository.findAllByUserId(userId, pageRequest);
+        return page.map(mapper::toDomain);
     }
 
     @Override
-    public PageResponse<Inscription> findAll(PageRequest pageRequest) {
-        Pageable pageable = createPageable(pageRequest);
-        var page = repository.findAll(pageable);
-        return createPageResponse(page);
+    public Page<Inscription> findAll(org.springframework.data.domain.PageRequest pageRequest) {
+        var page = repository.findAll(pageRequest);
+        return page.map(mapper::toDomain);
     }
 
     @Override
@@ -55,27 +48,5 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
     public Optional<Inscription> findByContestIdAndUserId(Long contestId, UUID userId) {
         return repository.findByContestIdAndUserIdAndStatusNot(contestId, userId, InscriptionStatus.CANCELLED)
             .map(mapper::toDomain);
-    }
-
-    private Pageable createPageable(PageRequest pageRequest) {
-        return org.springframework.data.domain.PageRequest.of(
-            pageRequest.getPage(),
-            pageRequest.getSize(),
-            Sort.by(Sort.Direction.fromString(pageRequest.getSortDirection()), 
-                   pageRequest.getSortBy())
-        );
-    }
-
-    private PageResponse<Inscription> createPageResponse(org.springframework.data.domain.Page<InscriptionEntity> page) {
-        return new PageResponse<>(
-            page.getContent().stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList()),
-            page.getNumber(),
-            page.getSize(),
-            page.getTotalElements(),
-            page.getTotalPages(),
-            page.isLast()
-        );
     }
 }

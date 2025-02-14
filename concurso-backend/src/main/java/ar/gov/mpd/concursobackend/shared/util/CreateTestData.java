@@ -36,7 +36,7 @@ public class CreateTestData implements CommandLineRunner {
             createUsers();
 
             // Crear inscripciones de prueba
-            createInscriptions();
+            // createInscriptions();
 
         } catch (Exception e) {
             e.printStackTrace();
