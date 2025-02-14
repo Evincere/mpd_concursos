@@ -1,9 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CardsComponent } from './cards/cards.component';
 import { RecentSectionComponent } from './recent-section/recent-section.component';
 import { QuickActionsComponent } from './quick-actions/quick-actions.component';
+import { DashboardService } from '@core/services/dashboard/dashboard.service';
+import { Card } from '@shared/interfaces/concurso/card.interface';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-main',
@@ -19,27 +22,9 @@ import { QuickActionsComponent } from './quick-actions/quick-actions.component';
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
 })
-export class MainComponent {
-  cards = [
-    {
-      title: 'Concursos Activos',
-      count: 5,
-      icon: 'fa-gavel',
-      color: '#4CAF50',
-    },
-    {
-      title: 'Mis Postulaciones',
-      count: 2,
-      icon: 'fa-file-alt',
-      color: '#2196F3',
-    },
-    {
-      title: 'Próximos a Vencer',
-      count: 3,
-      icon: 'fa-clock',
-      color: '#FF9800',
-    },
-  ];
+export class MainComponent implements OnInit, OnDestroy {
+  cards: Card[] = [];
+  private subscription: Subscription = new Subscription();
 
   recentConcursos = [
     {
@@ -59,8 +44,24 @@ export class MainComponent {
     }
   ];
 
+  constructor(private dashboardService: DashboardService) {}
 
-  constructor() {
+  ngOnInit(): void {
+    this.subscription.add(
+      this.dashboardService.getDashboardCards().subscribe({
+        next: (cards) => {
+          this.cards = cards;
+        },
+        error: (error) => {
+          console.error('Error al cargar las cards del dashboard:', error);
+          // Aquí podrías mostrar un mensaje de error al usuario
+        }
+      })
+    );
+  }
 
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 }

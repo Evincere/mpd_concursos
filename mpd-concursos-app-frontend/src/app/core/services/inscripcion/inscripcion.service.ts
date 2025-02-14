@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject, of, EMPTY } from 'rxjs';
-import { catchError, tap, map, finalize } from 'rxjs/operators';
+import { catchError, tap, map, finalize, take } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { Inscripcion } from '@shared/interfaces/inscripcion/inscripcion.interface';
 import { AuthService } from '@core/services/auth/auth.service';
@@ -30,7 +30,7 @@ export class InscripcionService {
     private tokenService: TokenService,
     private router: Router
   ) {
-    this.cargarInscripcionesUsuario({ page: 0, size: 10 });
+    this.refreshInscripciones();
   }
 
   private cargarInscripcionesUsuario(pageRequest: PageRequest): Observable<PageResponse<Inscripcion>> {
@@ -44,12 +44,22 @@ export class InscripcionService {
     const params = new HttpParams()
       .set('page', pageRequest.page.toString())
       .set('size', pageRequest.size.toString())
-      .set('sort', pageRequest.sort || '');
+      .set('sort', 'inscriptionDate')
+      .set('direction', 'DESC')
+      .set('userId', userId);
 
-    return this.http.get<PageResponse<Inscripcion>>(`${this.apiUrl}/inscripciones/usuario/${userId}`, { params })
+    return this.http.get<PageResponse<Inscripcion>>(`${this.apiUrl}/inscripciones`, { params })
       .pipe(
-        tap(response => console.log('[InscripcionService] Inscripciones cargadas:', response)),
-        catchError(error => this.handleError(error))
+        tap(response => {
+          console.log('[InscripcionService] Inscripciones cargadas:', response);
+          if (response && response.content) {
+            this.inscripcionesUsuario.next(response.content);
+          }
+        }),
+        catchError(error => {
+          console.error('[InscripcionService] Error al cargar inscripciones:', error);
+          return this.handleError(error);
+        })
       );
   }
 
@@ -171,7 +181,7 @@ export class InscripcionService {
       catchError((error: HttpErrorResponse) => {
         console.error('[InscripcionService] Error al cancelar la inscripción:', error);
         let errorMessage = 'Error desconocido al cancelar la inscripción';
-        
+
         switch (error.status) {
           case 401:
             errorMessage = 'No autorizado. Por favor, inicie sesión nuevamente.';
@@ -194,7 +204,7 @@ export class InscripcionService {
 
   public verificarInscripcion(concursoId: string): Observable<boolean> {
     console.log('[InscripcionService] Verificando inscripción para concurso:', concursoId);
-    
+
     if (!this.tokenService.getToken()) {
       console.warn('[InscripcionService] No hay token disponible');
       return of(false);
@@ -224,6 +234,10 @@ export class InscripcionService {
   }
 
   getInscripcionesUsuario(): Observable<Inscripcion[]> {
+    // Si no hay inscripciones, intentamos cargarlas
+    if (this.inscripcionesUsuario.value.length === 0) {
+      this.refreshInscripciones();
+    }
     return this.inscripcionesUsuario.asObservable();
   }
 
@@ -291,7 +305,17 @@ export class InscripcionService {
   }
 
   refreshInscripciones(): void {
-    this.cargarInscripcionesUsuario({ page: 0, size: 10 });
+    console.log('[InscripcionService] Refrescando inscripciones...');
+    this.cargarInscripcionesUsuario({ page: 0, size: 10 })
+      .pipe(take(1))
+      .subscribe({
+        next: (response) => {
+          console.log('[InscripcionService] Inscripciones refrescadas exitosamente:', response);
+        },
+        error: (error) => {
+          console.error('[InscripcionService] Error al refrescar inscripciones:', error);
+        }
+      });
   }
 
   private validateTokenAndGetToken(): string | null {

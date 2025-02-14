@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class CreateContestInscriptionService implements CreateContestInscriptionUseCase {
-    
+
     private final ContestRepository contestRepository;
     private final IUserService userService;
     private final SaveInscriptionPort saveInscriptionPort;
@@ -36,14 +36,14 @@ public class CreateContestInscriptionService implements CreateContestInscription
         // Obtener el usuario autenticado
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        
+
         // Obtener el usuario
         User user = userService.getByUsername(new UserUsername(username))
-            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 
         // Verificar que el concurso existe
         Contest contest = contestRepository.findById(request.getContestId())
-            .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado"));
 
         // Verificar que el concurso está publicado
         if (!contest.getStatus().equals("PUBLISHED")) {
@@ -52,12 +52,12 @@ public class CreateContestInscriptionService implements CreateContestInscription
 
         // Crear la inscripción
         Inscription inscription = Inscription.builder()
-            .id(null)
-            .contestId(new ContestId(contest.getId()))
-            .userId(new UserId(user.getId().value()))
-            .inscriptionDate(LocalDateTime.now())
-            .status(InscriptionStatus.PENDING)
-            .build();
+                .id(null)
+                .contestId(new ContestId(contest.getId()))
+                .userId(new UserId(user.getId().value()))
+                .inscriptionDate(LocalDateTime.now())
+                .status(InscriptionStatus.PENDING)
+                .build();
 
         // Guardar la inscripción
         return saveInscriptionPort.save(inscription);
