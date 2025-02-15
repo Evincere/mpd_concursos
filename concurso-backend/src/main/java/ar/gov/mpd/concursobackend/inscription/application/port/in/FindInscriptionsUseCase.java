@@ -9,8 +9,12 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 
 public interface FindInscriptionsUseCase {
-    PageResponse<InscriptionDetailResponse> findAll(ar.gov.mpd.concursobackend.shared.domain.model.PageRequest pageRequest, UUID userId);
-    InscriptionDetailResponse findById(Long id);
+    PageResponse<InscriptionDetailResponse> findAll(
+            ar.gov.mpd.concursobackend.shared.domain.model.PageRequest pageRequest, UUID userId);
+
+    InscriptionDetailResponse findById(UUID id);
+
     Boolean findInscriptionStatus(Long contestId, String userId);
+
     Page<InscriptionResponse> findAllPaged(PageRequest pageRequest, UUID userId);
 }

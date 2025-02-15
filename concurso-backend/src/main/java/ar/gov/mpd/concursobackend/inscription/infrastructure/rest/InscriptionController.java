@@ -51,7 +51,8 @@ public class InscriptionController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<InscriptionDetailResponse> findById(@PathVariable Long id) {
+    public ResponseEntity<InscriptionDetailResponse> findById(@PathVariable UUID id) {
+        log.debug("Buscando inscripción con ID: {}", id);
         return ResponseEntity.ok(findInscriptionsUseCase.findById(id));
     }
 
@@ -60,11 +61,17 @@ public class InscriptionController {
     public ResponseEntity<Boolean> getInscriptionStatus(
             @PathVariable Long concursoId,
             @PathVariable String userId) {
+        log.debug("Verificando estado de inscripción para concurso {} y usuario {}", concursoId, userId);
         try {
             Boolean inscripto = findInscriptionsUseCase.findInscriptionStatus(concursoId, userId);
+            log.debug("Resultado de verificación de inscripción: {}", inscripto);
             return ResponseEntity.ok(inscripto);
+        } catch (IllegalArgumentException e) {
+            log.error("Error de validación al verificar inscripción: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            return ResponseEntity.ok(false);
+            log.error("Error al verificar inscripción: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
@@ -73,28 +80,26 @@ public class InscriptionController {
     public ResponseEntity<Boolean> verificarInscripcion(
             @PathVariable Long concursoId,
             @PathVariable String userId) {
+        log.debug("Verificando inscripción para concurso {} y usuario {}", concursoId, userId);
         try {
-            Boolean inscripto = findInscriptionsUseCase.findInscriptionStatus(concursoId, userId) != null;
+            Boolean inscripto = findInscriptionsUseCase.findInscriptionStatus(concursoId, userId);
+            log.debug("Resultado de verificación de inscripción: {}", inscripto);
             return ResponseEntity.ok(inscripto);
+        } catch (IllegalArgumentException e) {
+            log.error("Error de validación al verificar inscripción: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            return ResponseEntity.ok(false);
+            log.error("Error al verificar inscripción: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<?> cancelInscription(@PathVariable UUID id) {
-        log.debug("Recibida solicitud para cancelar inscripción: {}", id);
-        try {
-            cancelInscriptionUseCase.cancel(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            log.error("Error al cancelar inscripción: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            log.error("Error inesperado al cancelar inscripción: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body("Error interno del servidor");
-        }
+    public ResponseEntity<Void> cancelInscription(@PathVariable UUID id) {
+        log.debug("Cancelando inscripción con ID: {}", id);
+        cancelInscriptionUseCase.cancel(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping

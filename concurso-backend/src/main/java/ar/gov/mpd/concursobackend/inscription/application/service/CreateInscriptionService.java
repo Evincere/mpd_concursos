@@ -4,6 +4,7 @@ import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailR
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
 import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapper;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
@@ -15,32 +16,52 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class CreateInscriptionService implements CreateInscriptionUseCase {
-    private final SaveInscriptionPort saveInscriptionPort;
-    private final InscriptionMapper inscriptionMapper;
-    private static final Logger log = LoggerFactory.getLogger(CreateInscriptionService.class);
+        private final SaveInscriptionPort saveInscriptionPort;
+        private final LoadInscriptionPort loadInscriptionPort;
+        private final InscriptionMapper inscriptionMapper;
+        private static final Logger log = LoggerFactory.getLogger(CreateInscriptionService.class);
 
-    @Override
-    public InscriptionDetailResponse createInscription(InscriptionRequest request) {
-        LocalDateTime now = LocalDateTime.now();
-        
-        Inscription inscription = Inscription.builder()
-            .id(new InscriptionId())
-            .contestId(new ContestId(request.getContestId()))
-            .userId(new UserId(request.getUserId()))
-            .status(InscriptionStatus.PENDING)
-            .createdAt(now)
-            .inscriptionDate(now)
-            .build();
+        @Override
+        public InscriptionDetailResponse createInscription(InscriptionRequest request) {
+                log.debug("Iniciando creación de inscripción para concurso {} y usuario {}",
+                                request.getContestId(), request.getUserId());
 
-        log.debug("Creando inscripción con ID: {}", inscription.getId().getValue());
-        Inscription savedInscription = saveInscriptionPort.save(inscription);
-        log.debug("Inscripción guardada con ID: {}", savedInscription.getId().getValue());
+                // Verificar si ya existe una inscripción activa
+                Optional<Inscription> existingInscription = loadInscriptionPort.findByContestIdAndUserId(
+                                request.getContestId(),
+                                request.getUserId());
 
-        return inscriptionMapper.toDetailResponse(savedInscription, null);
-    }
-} 
+                if (existingInscription.isPresent()) {
+                        Inscription inscription = existingInscription.get();
+                        if (inscription.getStatus() == InscriptionStatus.ACTIVE ||
+                                        inscription.getStatus() == InscriptionStatus.PENDING) {
+                                log.error("Ya existe una inscripción activa para el concurso {} y usuario {}",
+                                                request.getContestId(), request.getUserId());
+                                throw new IllegalStateException("Ya existe una inscripción activa para este concurso");
+                        }
+                }
+
+                LocalDateTime now = LocalDateTime.now();
+
+                Inscription inscription = Inscription.builder()
+                                .id(new InscriptionId())
+                                .contestId(new ContestId(request.getContestId()))
+                                .userId(new UserId(request.getUserId()))
+                                .status(InscriptionStatus.PENDING)
+                                .createdAt(now)
+                                .inscriptionDate(now)
+                                .build();
+
+                log.debug("Creando inscripción con ID: {}", inscription.getId().getValue());
+                Inscription savedInscription = saveInscriptionPort.save(inscription);
+                log.debug("Inscripción guardada con ID: {}", savedInscription.getId().getValue());
+
+                return inscriptionMapper.toDetailResponse(savedInscription, null);
+        }
+}

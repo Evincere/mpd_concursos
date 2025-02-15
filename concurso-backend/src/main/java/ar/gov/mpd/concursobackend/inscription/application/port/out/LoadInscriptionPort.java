@@ -10,7 +10,10 @@ import org.springframework.data.domain.PageRequest;
 
 public interface LoadInscriptionPort {
     Page<Inscription> findAll(PageRequest pageRequest);
+
     Page<Inscription> findAllByUserId(UUID userId, PageRequest pageRequest);
-    Optional<Inscription> findById(Long id);
+
+    Optional<Inscription> findById(UUID id);
+
     Optional<Inscription> findByContestIdAndUserId(Long contestId, UUID userId);
 }

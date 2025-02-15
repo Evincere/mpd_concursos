@@ -39,20 +39,14 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
     }
 
     @Override
-    public Optional<Inscription> findById(Long id) {
-        // Convertir el ID a String y luego a UUID de manera segura
-        try {
-            UUID uuid = UUID.fromString(id.toString());
-            return repository.findById(uuid)
-                    .map(mapper::toDomain);
-        } catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
+    public Optional<Inscription> findById(UUID id) {
+        return repository.findById(id)
+                .map(mapper::toDomain);
     }
 
     @Override
     public Optional<Inscription> findByContestIdAndUserId(Long contestId, UUID userId) {
-        return repository.findByContestIdAndUserIdAndStatusNot(contestId, userId, InscriptionStatus.CANCELLED)
+        return repository.findByContestIdAndUserId(contestId, userId)
                 .map(mapper::toDomain);
     }
 }
