@@ -10,7 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { ConcursosService } from '@core/services/concursos/concursos.service';
-import { InscripcionService } from '@core/services/inscripcion/inscripcion.service';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.component';
@@ -77,7 +77,7 @@ export class ConcursosComponent implements OnInit {
 
   constructor(
     private concursosService: ConcursosService,
-    private inscripcionService: InscripcionService,
+    private inscriptionService: InscriptionService,
     private snackBar: MatSnackBar,
     private filtersService: FiltersService
   ) {}

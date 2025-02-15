@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { InscripcionService } from '../../../../core/services/inscripcion/inscripcion.service';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { finalize } from 'rxjs/operators';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { CommonModule } from '@angular/common';
@@ -41,18 +41,17 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private inscripcionService: InscripcionService,
+    private inscriptionService: InscriptionService,
     private snackBar: MatSnackBar
   ) { }
 
-  ngOnInit() {
-    console.log('Concurso recibido:', this.concurso);
+  ngOnInit(): void {
     if (this.concurso) {
       this.verificarInscripcion();
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -64,7 +63,7 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
     }
 
     this.inscripcionLoading = true;
-    this.inscripcionService.verificarInscripcion(this.concurso.id)
+    this.inscriptionService.getInscriptionStatus(parseInt(this.concurso.id, 10))
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -76,14 +75,15 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
         next: (inscripto) => {
           console.log('Estado de inscripción actualizado:', inscripto);
           this.estaInscripto = inscripto;
-          // Refrescar la lista de inscripciones si está inscripto
-          if (inscripto) {
-            this.inscripcionService.refreshInscripciones();
-          }
         },
         error: (error) => {
           console.error('Error al verificar inscripción:', error);
           this.estaInscripto = false;
+          this.snackBar.open(
+            'No se pudo verificar el estado de la inscripción',
+            'Cerrar',
+            { duration: 3000 }
+          );
         }
       });
   }
@@ -97,19 +97,15 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
     return estados[status] || status;
   }
 
-  onInscriptionComplete(concurso: Concurso): void {
-    // Emitir el evento al componente padre
-    this.inscripcionRealizada.emit(concurso);
-    
-    // Actualizar el estado local si es necesario
-    this.estaInscripto = true;
-    
-    // Opcionalmente cerrar el detalle
-    setTimeout(() => this.onCerrar(), 1500);
+  onCerrar(): void {
+    this.closing = true;
+    setTimeout(() => {
+      this.cerrarDetalle.emit();
+    }, 300);
   }
 
-  onCerrar() {
-    this.closing = true;
-    setTimeout(() => this.cerrarDetalle.emit(), 300);
+  onInscripcionCompleta(concurso: Concurso): void {
+    this.verificarInscripcion();
+    this.inscripcionRealizada.emit(concurso);
   }
 }

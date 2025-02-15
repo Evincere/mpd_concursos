@@ -17,8 +17,6 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStat
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 import lombok.RequiredArgsConstructor;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
 import org.springframework.data.domain.PageRequest;

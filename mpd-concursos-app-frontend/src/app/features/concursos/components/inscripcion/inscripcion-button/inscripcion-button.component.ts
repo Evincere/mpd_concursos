@@ -6,15 +6,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { InscripcionDialogComponent } from '../inscripcion-dialog/inscripcion-dialog.component';
-import { InscripcionService } from '@core/services/inscripcion/inscripcion.service';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { animate, style, transition, trigger } from '@angular/animations';
-
-export enum InscripcionState {
-  NO_INSCRIPTO = 'NO_INSCRIPTO',
-  CONFIRMADA = 'CONFIRMADA'
-}
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 
 @Component({
   selector: 'app-inscripcion-button',
@@ -24,43 +20,43 @@ export enum InscripcionState {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
-    InscripcionDialogComponent
+    MatSnackBarModule
   ],
   templateUrl: './inscripcion-button.component.html',
   styleUrls: ['./inscripcion-button.component.scss'],
   animations: [
-    trigger('buttonState', [
-      transition('idle => loading', [
-        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'scale(0.95)' }))
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('300ms', style({ opacity: 1 })),
       ]),
-      transition('loading => idle', [
-        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ transform: 'scale(1)' }))
+      transition(':leave', [
+        animate('300ms', style({ opacity: 0 }))
       ])
     ])
   ]
 })
 export class InscripcionButtonComponent implements OnInit {
   @Input() concurso!: Concurso;
-  @Output() inscripcionComplete = new EventEmitter<Concurso>();
+  @Output() inscripcionCompleta = new EventEmitter<Concurso>();
 
   loading = false;
   InscripcionState = InscripcionState;
   private inscripcionStateSubject = new BehaviorSubject<InscripcionState>(InscripcionState.NO_INSCRIPTO);
-  inscripcionState$: Observable<InscripcionState> = this.inscripcionStateSubject.asObservable();
+  inscripcionState$ = this.inscripcionStateSubject.asObservable();
 
   constructor(
+    private inscriptionService: InscriptionService,
     private dialog: MatDialog,
-    private inscripcionService: InscripcionService,
     private snackBar: MatSnackBar
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.verificarEstadoInscripcion();
   }
 
   private verificarEstadoInscripcion() {
-    this.inscripcionService.verificarInscripcion(this.concurso.id)
+    this.inscriptionService.getInscriptionStatus(parseInt(this.concurso.id, 10))
       .subscribe({
         next: (inscripto) => {
           this.inscripcionStateSubject.next(
@@ -70,6 +66,11 @@ export class InscripcionButtonComponent implements OnInit {
         error: (error) => {
           console.error('Error al verificar inscripción:', error);
           this.inscripcionStateSubject.next(InscripcionState.NO_INSCRIPTO);
+          this.snackBar.open(
+            'No se pudo verificar el estado de la inscripción',
+            'Cerrar',
+            { duration: 3000 }
+          );
         }
       });
   }
@@ -88,15 +89,25 @@ export class InscripcionButtonComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loading = true;
-        this.inscripcionService.inscribirseAConcurso(this.concurso.id)
+        this.inscriptionService.createInscription(parseInt(this.concurso.id, 10))
           .subscribe({
             next: () => {
               this.inscripcionStateSubject.next(InscripcionState.CONFIRMADA);
-              this.inscripcionComplete.emit(this.concurso);
+              this.inscripcionCompleta.emit(this.concurso);
+              this.snackBar.open(
+                'Inscripción realizada con éxito',
+                'Cerrar',
+                { duration: 3000 }
+              );
             },
             error: (error) => {
               console.error('Error al realizar inscripción:', error);
               this.inscripcionStateSubject.next(InscripcionState.NO_INSCRIPTO);
+              this.snackBar.open(
+                error.message || 'Error al realizar la inscripción',
+                'Cerrar',
+                { duration: 3000 }
+              );
             },
             complete: () => {
               this.loading = false;

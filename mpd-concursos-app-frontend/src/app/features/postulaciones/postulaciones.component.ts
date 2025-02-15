@@ -24,12 +24,10 @@ import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaci
 import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interface';
 import { PostulacionDetalleComponent } from './components/postulacion-detalle/postulacion-detalle.component';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
-import { InscripcionService } from '@core/services/inscripcion/inscripcion.service';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 
 @Component({
   selector: 'app-postulaciones',
-  templateUrl: './postulaciones.component.html',
-  styleUrls: ['./postulaciones.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -49,6 +47,8 @@ import { InscripcionService } from '@core/services/inscripcion/inscripcion.servi
     PostulacionDetalleComponent,
     ConfirmDialogComponent
   ],
+  templateUrl: './postulaciones.component.html',
+  styleUrls: ['./postulaciones.component.scss'],
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
@@ -102,7 +102,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   constructor(
     private postulacionesService: PostulacionesService,
-    private inscripcionService: InscripcionService,
+    private inscriptionService: InscriptionService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router
@@ -300,11 +300,20 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     return estado.toLowerCase();
   }
 
-  desinscribirse(postulacion: Postulacion) {
+  cancelarPostulacion(postulacion: Postulacion): void {
+    const postulacionId = postulacion.id?.toString();
+    if (!postulacionId) {
+      this.snackBar.open('Error: ID de postulación no válido', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
       data: {
-        title: 'Confirmar cancelación',
-        message: '¿Estás seguro de que deseas cancelar esta inscripción?',
+        title: 'Cancelar Postulación',
+        message: '¿Está seguro que desea cancelar esta postulación?',
         confirmText: 'Sí, cancelar',
         cancelText: 'No, mantener'
       }
@@ -312,26 +321,23 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        if (!postulacion.id) {
-          this.snackBar.open('Error: ID de postulación no válido', 'Cerrar', {
-            duration: 3000
+        this.inscriptionService.cancelInscription(postulacionId)
+          .subscribe({
+            next: () => {
+              this.snackBar.open('Postulación cancelada con éxito', 'Cerrar', {
+                duration: 3000
+              });
+              this.cargarPostulaciones();
+            },
+            error: (error) => {
+              console.error('Error al cancelar postulación:', error);
+              this.snackBar.open(
+                error.message || 'Error al cancelar la postulación',
+                'Cerrar',
+                { duration: 3000 }
+              );
+            }
           });
-          return;
-        }
-        this.inscripcionService.cancelarInscripcion(postulacion.id.toString()).subscribe({
-          next: () => {
-            this.snackBar.open('Inscripción cancelada exitosamente', 'Cerrar', {
-              duration: 3000
-            });
-            this.cargarPostulaciones();
-          },
-          error: (error: any) => {
-            console.error('Error al cancelar inscripción:', error);
-            this.snackBar.open('Error al cancelar la inscripción', 'Cerrar', {
-              duration: 3000
-            });
-          }
-        });
       }
     });
   }

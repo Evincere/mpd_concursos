@@ -14,8 +14,6 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
-    DatePipe,
     CardsComponent,
     RecentSectionComponent,
     QuickActionsComponent

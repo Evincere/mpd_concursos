@@ -10,7 +10,7 @@
     </app-search-header>
 
     <div class="concursos-content">
-      <app-loader 
+      <app-loader
         *ngIf="loading"
         [overlay]="true"
         message="Cargando concursos...">
@@ -47,8 +47,8 @@
           </div>
 
           <div class="card-actions" (click)="$event.stopPropagation()">
-            <button mat-stroked-button 
-                    class="details-button" 
+            <button mat-stroked-button
+                    class="details-button"
                     (click)="verDetalle(concurso, $event)">
               <mat-icon class="details-icon">visibility</mat-icon>
               <span>Ver Detalles</span>
@@ -57,7 +57,7 @@
             <app-inscripcion-button
               *ngIf="concurso.status === 'ACTIVE'"
               [concurso]="concurso"
-              (inscripcionComplete)="onInscriptionComplete($event)">
+              (inscripcionComplete)="onInscriptionComplete(concurso)">
             </app-inscripcion-button>
           </div>
         </div>
@@ -91,13 +91,13 @@
         </div>
       </div>
 
-      <app-filtros-panel 
+      <app-filtros-panel
         *ngIf="mostrarFiltros"
         (filtrosChange)="aplicarFiltros($event)"
         (cerrar)="toggleFiltros()">
       </app-filtros-panel>
-      
-      <div class="backdrop" 
+
+      <div class="backdrop"
         *ngIf="mostrarFiltros"
         (click)="toggleFiltros()"
         [@fadeInOut]="mostrarFiltros">
@@ -106,7 +106,7 @@
   </div>
 
   <div class="overlay" *ngIf="concursoSeleccionado" [@fadeInOut]></div>
-  <app-concurso-detalle 
+  <app-concurso-detalle
     *ngIf="concursoSeleccionado"
     [concurso]="concursoSeleccionado"
     (cerrarDetalle)="cerrarDetalle()"

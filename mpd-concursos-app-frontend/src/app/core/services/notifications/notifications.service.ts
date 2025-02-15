@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, Subscription, throwError, timer } from 'rxjs';
-import { map, tap, startWith, switchMap, catchError, retry, retryWhen, delay } from 'rxjs/operators';
+import { Observable, BehaviorSubject, interval, Subscription, throwError, timer, of } from 'rxjs';
+import { map, tap, startWith, switchMap, catchError, retry, retryWhen, delay, filter } from 'rxjs/operators';
 import {
     Notification,
     NotificationAcknowledgementRequest,
@@ -18,7 +18,7 @@ import { AuthService } from '../auth/auth.service';
 export class NotificationsService implements OnDestroy {
     private apiUrl = `${environment.apiUrl}/v1/notifications`;
     private notificationsSubject = new BehaviorSubject<Notification[]>([]);
-    private pollingSubscription: Subscription;
+    private pollingSubscription: Subscription = new Subscription();
     notifications$ = this.notificationsSubject.asObservable();
 
     constructor(
@@ -26,24 +26,48 @@ export class NotificationsService implements OnDestroy {
         private tokenService: TokenService,
         private authService: AuthService
     ) {
-        // Iniciar el polling cada 10 segundos
+        // Suscribirse a cambios en el token
+        this.tokenService.getTokenObservable().subscribe(token => {
+            if (token) {
+                this.startPolling();
+            } else {
+                this.stopPolling();
+                this.notificationsSubject.next([]);
+            }
+        });
+    }
+
+    private startPolling(): void {
+        if (this.pollingSubscription) {
+            this.stopPolling();
+        }
+
         this.pollingSubscription = interval(10000)
             .pipe(
                 startWith(0),
+                filter(() => this.authService.isAuthenticated()),
                 switchMap(() => this.loadNotifications().pipe(
                     catchError(error => {
+                        if (error instanceof HttpErrorResponse && error.status === 401) {
+                            this.stopPolling();
+                            return of([]);
+                        }
                         console.error('Error en el polling de notificaciones:', error);
-                        return [];
+                        return of([]);
                     })
                 ))
             )
             .subscribe();
     }
 
-    ngOnDestroy() {
+    private stopPolling(): void {
         if (this.pollingSubscription) {
             this.pollingSubscription.unsubscribe();
         }
+    }
+
+    ngOnDestroy(): void {
+        this.stopPolling();
     }
 
     private getHeaders(): HttpHeaders {

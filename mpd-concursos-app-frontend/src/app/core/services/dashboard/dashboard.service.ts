@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable, combineLatest } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, tap, switchMap, catchError } from 'rxjs/operators';
 import { ConcursosService } from '../concursos/concursos.service';
-import { InscripcionService } from '../inscripcion/inscripcion.service';
+import { InscriptionService } from '../inscripcion/inscription.service';
 import { Card } from '@shared/interfaces/concurso/card.interface';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.interface';
@@ -13,24 +13,15 @@ import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.inte
 export class DashboardService {
   constructor(
     private concursosService: ConcursosService,
-    private inscripcionService: InscripcionService
+    private inscriptionService: InscriptionService
   ) {}
 
   getDashboardCards(): Observable<Card[]> {
     console.log('[DashboardService] Iniciando obtención de datos para cards...');
 
-    return combineLatest([
-      this.concursosService.getConcursos(),
-      this.inscripcionService.getInscripcionesUsuario()
-    ]).pipe(
-      tap(([concursos, inscripciones]) => {
-        console.log('[DashboardService] Datos recibidos:');
-        console.log('- Concursos:', concursos);
-        console.log('- Inscripciones:', inscripciones);
-      }),
-      map(([concursos, inscripciones]) => {
+    return this.concursosService.getConcursos().pipe(
+      map(concursos => {
         const concursosActivos = concursos.filter(c => c.status === 'ACTIVE').length;
-        const misPostulaciones = Array.isArray(inscripciones) ? inscripciones.length : 0;
         const proximosAVencer = concursos.filter(c => {
           const fechaFin = new Date(c.endDate);
           const hoy = new Date();
@@ -47,7 +38,7 @@ export class DashboardService {
           },
           {
             title: 'Mis Postulaciones',
-            count: misPostulaciones,
+            count: 0,
             icon: 'fa-file-alt',
             color: '#2196F3',
           },
@@ -59,9 +50,18 @@ export class DashboardService {
           },
         ];
 
-        console.log('[DashboardService] Cards generadas:', cards);
         return cards;
-      })
+      }),
+      switchMap(cards => {
+        return this.inscriptionService.getUserInscriptions().pipe(
+          map(response => {
+            cards[1].count = response.content.length;
+            return cards;
+          }),
+          catchError(() => of(cards)) // Si hay error, retornamos las cards sin modificar
+        );
+      }),
+      tap(cards => console.log('[DashboardService] Cards generadas:', cards))
     );
   }
 
@@ -85,6 +85,10 @@ export class DashboardService {
 
         console.log('[DashboardService] Concursos recientes obtenidos:', recentConcursos);
         return recentConcursos;
+      }),
+      catchError(error => {
+        console.error('[DashboardService] Error al obtener concursos recientes:', error);
+        return of([]);
       })
     );
   }

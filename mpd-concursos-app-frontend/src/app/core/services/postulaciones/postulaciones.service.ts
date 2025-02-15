@@ -11,9 +11,9 @@ import { AuthService } from '../auth/auth.service';
 })
 export class PostulacionesService {
     private apiUrl = `${environment.apiUrl}/inscripciones`;
-  
+
     constructor(private http: HttpClient, private authService: AuthService) { }
-  
+
     getPostulaciones(page: number = 0, size: number = 10, sortBy: string = 'fechaPostulacion', sortDirection: string = 'desc'): Observable<PostulacionResponse> {
         const userId = this.authService.getCurrentUserId();
         console.log('[PostulacionesService] Obteniendo postulaciones para userId:', userId);
@@ -31,7 +31,7 @@ export class PostulacionesService {
 
         console.log('[PostulacionesService] Parámetros de la petición:', params.toString());
 
-        return this.http.get<PostulacionResponse>(`${this.apiUrl}`, { params })
+        return this.http.get<PostulacionResponse>(`${this.apiUrl}/me`, { params })
             .pipe(
                 map(response => {
                     console.log('[PostulacionesService] Respuesta del servidor:', response);
@@ -46,7 +46,7 @@ export class PostulacionesService {
                 })
             );
     }
-    
+
     private transformResponse(response: any): PostulacionResponse {
         const transformedResponse = {
             content: response.content.map((item: any) => {
@@ -114,7 +114,7 @@ export class PostulacionesService {
     // Obtener una postulación específica
     getPostulacion(id: number): Observable<Postulacion> {
         console.log(`Intentando obtener postulación con ID: ${id}`);
-        
+
         return this.http.get<Postulacion>(`${this.apiUrl}/${id}`, {
             withCredentials: true,
             observe: 'response'  // Obtener toda la respuesta HTTP
@@ -123,7 +123,7 @@ export class PostulacionesService {
                 console.log('Respuesta completa:', response);
                 console.log('Código de estado:', response.status);
                 console.log('Headers:', response.headers.keys());
-                
+
                 if (response.status === 200) {
                     const postulacion = this.transformSingleResponse(response.body);
                     console.log('Detalles de postulación transformados:', postulacion);
@@ -134,7 +134,7 @@ export class PostulacionesService {
             }),
             catchError(error => {
                 console.error('Error al obtener postulación:', error);
-                
+
                 if (error instanceof HttpErrorResponse) {
                     console.error('Detalles del error HTTP:', {
                         status: error.status,
@@ -142,7 +142,7 @@ export class PostulacionesService {
                         url: error.url
                     });
                 }
-                
+
                 return throwError(() => error);
             })
         );

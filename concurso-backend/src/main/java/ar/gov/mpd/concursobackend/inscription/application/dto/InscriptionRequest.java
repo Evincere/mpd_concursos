@@ -1,12 +1,16 @@
 package ar.gov.mpd.concursobackend.inscription.application.dto;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
 import java.util.UUID;
 
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class InscriptionRequest {
-    Long contestId;
-    UUID userId;
+    private Long contestId;
+    private UUID userId;
 }
