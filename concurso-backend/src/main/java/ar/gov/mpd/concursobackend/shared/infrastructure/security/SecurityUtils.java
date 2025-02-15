@@ -1,7 +1,5 @@
 package ar.gov.mpd.concursobackend.shared.infrastructure.security;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import ar.gov.mpd.concursobackend.shared.application.service.SecurityService;
