@@ -6,6 +6,7 @@ import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailR
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CancelInscriptionUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +28,7 @@ public class InscriptionController {
     private final CreateInscriptionUseCase createInscriptionUseCase;
     private final FindInscriptionsUseCase findInscriptionsUseCase;
     private final CancelInscriptionUseCase cancelInscriptionUseCase;
+    private final UpdateInscriptionStatusUseCase updateInscriptionStatusUseCase;
     private final SecurityUtils securityUtils;
     private static final Logger log = LoggerFactory.getLogger(InscriptionController.class);
 
@@ -118,5 +120,17 @@ public class InscriptionController {
 
         cancelInscriptionUseCase.cancel(id);
         return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Void> updateStatus(@PathVariable UUID id, @RequestParam String status) {
+        try {
+            updateInscriptionStatusUseCase.updateStatus(id, status);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Error de validación al actualizar estado de inscripción: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

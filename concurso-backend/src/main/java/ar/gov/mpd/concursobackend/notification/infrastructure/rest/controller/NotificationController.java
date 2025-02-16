@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationController {
 
     private final SendNotificationUseCase sendNotificationUseCase;
@@ -27,12 +29,18 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<List<NotificationResponse>> getUserNotifications() {
-        return ResponseEntity.ok(getUserNotificationsUseCase.getUserNotifications());
+        log.debug("Obteniendo notificaciones del usuario");
+        var notifications = getUserNotificationsUseCase.getUserNotifications();
+        log.debug("Notificaciones obtenidas: {}", notifications.size());
+        return ResponseEntity.ok(notifications);
     }
 
     @PostMapping
     public ResponseEntity<NotificationResponse> sendNotification(@Valid @RequestBody NotificationRequest request) {
-        return ResponseEntity.ok(sendNotificationUseCase.sendNotification(request));
+        log.debug("Recibida solicitud para enviar notificación: {}", request);
+        var response = sendNotificationUseCase.sendNotification(request);
+        log.debug("Notificación enviada: {}", response);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/read")
@@ -40,7 +48,7 @@ public class NotificationController {
         return ResponseEntity.ok(markNotificationAsReadUseCase.markAsRead(notificationId));
     }
 
-    @PatchMapping("/{id}/acknowledge") 
+    @PatchMapping("/{id}/acknowledge")
     public ResponseEntity<NotificationResponse> acknowledgeNotification(
             @PathVariable("id") UUID notificationId,
             @Valid @RequestBody NotificationAcknowledgementRequest request) {

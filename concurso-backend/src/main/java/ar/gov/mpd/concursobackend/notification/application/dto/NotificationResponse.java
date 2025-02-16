@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.notification.application.dto;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -24,4 +25,5 @@ public class NotificationResponse {
     private SignatureType signatureType;
     private String signatureValue;
     private Map<String, String> signatureMetadata;
+    private NotificationType type;
 }

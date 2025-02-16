@@ -47,12 +47,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         try {
             String token = getToken(request);
             String requestPath = request.getServletPath();
-            
+
             logger.debug("Headers de la petición:");
-            Collections.list(request.getHeaderNames()).forEach(headerName -> 
-                logger.debug("{}: {}", headerName, request.getHeader(headerName))
-            );
-            
+            Collections.list(request.getHeaderNames())
+                    .forEach(headerName -> logger.debug("{}: {}", headerName, request.getHeader(headerName)));
+
             logger.debug("Processing request for path: {} with token: {}", requestPath,
                     token != null ? token.substring(0, Math.min(token.length(), 20)) + "..." : "absent");
 
@@ -68,7 +67,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                     logger.debug("Detalles de usuario cargados exitosamente: {}", userDetails.getAuthorities());
 
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                            userDetails, token, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);

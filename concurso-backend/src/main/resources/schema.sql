@@ -39,5 +39,6 @@ CREATE TABLE notifications (
     signature_value CLOB,
     signature_metadata CLOB,
     version BIGINT NOT NULL DEFAULT 0,
+    type VARCHAR(20) NOT NULL CHECK (type IN ('INSCRIPTION', 'SYSTEM', 'CONTEST', 'GENERAL')),
     FOREIGN KEY (recipient_id) REFERENCES user_entity(id)
 );

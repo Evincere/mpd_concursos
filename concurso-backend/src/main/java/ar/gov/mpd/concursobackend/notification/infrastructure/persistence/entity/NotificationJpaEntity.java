@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.notification.infrastructure.persistence.entit
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import ar.gov.mpd.concursobackend.notification.infrastructure.persistence.converter.JsonMapConverter;
 import jakarta.persistence.*;
 import lombok.*;
@@ -62,4 +63,8 @@ public class NotificationJpaEntity {
 
     @Version
     private Long version;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NotificationType type;
 }

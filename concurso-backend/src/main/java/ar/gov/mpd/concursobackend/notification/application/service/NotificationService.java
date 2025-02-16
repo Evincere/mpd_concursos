@@ -14,6 +14,7 @@ import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService
         implements SendNotificationUseCase, AcknowledgeNotificationUseCase, MarkNotificationAsReadUseCase {
 
@@ -32,8 +34,12 @@ public class NotificationService
     @Override
     @Transactional
     public NotificationResponse sendNotification(NotificationRequest request) {
+        log.debug("Enviando notificación para usuario: {}", request.getRecipientUsername());
+
         User recipient = userRepository.getByUsername(new UserUsername(request.getRecipientUsername()))
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        log.debug("Usuario encontrado: {}", recipient.getId().value());
 
         Notification notification = Notification.builder()
                 .id(UUID.randomUUID())
@@ -46,8 +52,12 @@ public class NotificationService
                 .acknowledgementLevel(request.getAcknowledgementLevel())
                 .build();
 
+        log.debug("Notificación creada: {}", notification);
+
         notification.send();
         Notification savedNotification = notificationRepository.save(notification);
+        log.debug("Notificación guardada: {}", savedNotification);
+
         return notificationMapper.toResponse(savedNotification);
     }
 

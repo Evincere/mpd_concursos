@@ -37,14 +37,18 @@ export class NotificationsService implements OnDestroy {
         });
     }
 
+    ngOnDestroy(): void {
+        this.stopPolling();
+    }
+
     private startPolling(): void {
         if (this.pollingSubscription) {
             this.stopPolling();
         }
 
-        this.pollingSubscription = interval(10000)
+        // Cargar inmediatamente y luego cada 10 segundos
+        this.pollingSubscription = timer(0, 10000)
             .pipe(
-                startWith(0),
                 filter(() => this.authService.isAuthenticated()),
                 switchMap(() => this.loadNotifications().pipe(
                     catchError(error => {
@@ -53,11 +57,36 @@ export class NotificationsService implements OnDestroy {
                             return of([]);
                         }
                         console.error('Error en el polling de notificaciones:', error);
-                        return of([]);
+                        return of(this.notificationsSubject.value); // Mantener el estado actual en caso de error
                     })
                 ))
             )
-            .subscribe();
+            .subscribe({
+                next: (notifications) => {
+                    if (notifications && notifications.length > 0) {
+                        const currentNotifications = this.notificationsSubject.value;
+                        const hasNewNotifications = notifications.some(newNotif =>
+                            !currentNotifications.some(currentNotif =>
+                                currentNotif.id === newNotif.id
+                            )
+                        );
+
+                        if (hasNewNotifications) {
+                            console.log('Nuevas notificaciones recibidas:', notifications);
+                            // Actualizar el estado con las nuevas notificaciones
+                            this.notificationsSubject.next(notifications);
+                        }
+                    } else {
+                        // Mantener el estado actual si no hay notificaciones
+                        this.notificationsSubject.next(this.notificationsSubject.value);
+                    }
+                },
+                error: (error) => {
+                    console.error('Error en la suscripción de polling:', error);
+                    // Mantener el estado actual en caso de error
+                    this.notificationsSubject.next(this.notificationsSubject.value);
+                }
+            });
     }
 
     private stopPolling(): void {
@@ -66,26 +95,11 @@ export class NotificationsService implements OnDestroy {
         }
     }
 
-    ngOnDestroy(): void {
-        this.stopPolling();
-    }
-
-    private getHeaders(): HttpHeaders {
-        const token = this.tokenService.getToken();
-        if (!token) {
-            console.warn('No hay token disponible');
-            return new HttpHeaders();
-        }
-        return new HttpHeaders()
-            .set('Authorization', `Bearer ${token}`)
-            .set('Content-Type', 'application/json');
-    }
-
     loadNotifications(): Observable<Notification[]> {
         return this.http.get<Notification[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
-            tap(notifications => {
-                this.notificationsSubject.next(notifications);
-            }),
+            map(notifications => notifications.sort((a, b) =>
+                new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+            )),
             catchError(error => {
                 console.error('Error loading notifications:', error);
                 if (error instanceof HttpErrorResponse) {
@@ -96,6 +110,14 @@ export class NotificationsService implements OnDestroy {
                 return throwError(() => error);
             })
         );
+    }
+
+    private getHeaders(): HttpHeaders {
+        const token = this.tokenService.getToken();
+        return new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        });
     }
 
     markAsRead(notificationId: string): Observable<Notification> {
@@ -117,7 +139,7 @@ export class NotificationsService implements OnDestroy {
                     if (error instanceof HttpErrorResponse) {
                         if (error.status === 409 || error.status === 0) {
                             console.log(`Reintentando marcar como leído (${retryCount}/3)...`);
-                            return interval(1000);
+                            return timer(1000);
                         }
                     }
                     return throwError(() => error);
@@ -147,11 +169,7 @@ export class NotificationsService implements OnDestroy {
             notificationId,
             signatureType: signatureType as SignatureType,
             signatureValue: signatureValue.trim(),
-            declaration: declaration ? String(declaration) : undefined,
-            metadata: {
-                timestamp: new Date().toISOString(),
-                userAgent: navigator.userAgent
-            }
+            declaration: declaration ? String(declaration) : undefined
         };
 
         return this.http.patch<Notification>(
@@ -163,10 +181,9 @@ export class NotificationsService implements OnDestroy {
                 count: 3,
                 delay: (error, retryCount) => {
                     if (error instanceof HttpErrorResponse) {
-                        // Reintenta solo para errores específicos
-                        if (error.status === 409 || error.status === 0 || error.status === 500) {
-                            console.log(`Reintentando acknowledge (${retryCount}/3)...`);
-                            return timer(1000 * Math.pow(2, retryCount - 1)); // Espera exponencial: 1s, 2s, 4s
+                        if (error.status === 409 || error.status === 0) {
+                            console.log(`Reintentando acusar recibo (${retryCount}/3)...`);
+                            return timer(1000);
                         }
                     }
                     return throwError(() => error);
@@ -174,7 +191,6 @@ export class NotificationsService implements OnDestroy {
             }),
             tap({
                 next: (response) => {
-                    // Actualizar el estado local
                     const currentNotifications = this.notificationsSubject.value;
                     const updatedNotifications = currentNotifications.map(n =>
                         n.id === notificationId ? response : n

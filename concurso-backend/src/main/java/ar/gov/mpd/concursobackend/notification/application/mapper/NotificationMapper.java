@@ -21,6 +21,7 @@ public class NotificationMapper {
                 .signatureType(notification.getSignatureType())
                 .signatureValue(notification.getSignatureValue())
                 .signatureMetadata(notification.getSignatureMetadata())
+                .type(notification.getType())
                 .build();
     }
 }
