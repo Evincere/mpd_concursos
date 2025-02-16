@@ -25,6 +25,7 @@ import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interfac
 import { PostulacionDetalleComponent } from './components/postulacion-detalle/postulacion-detalle.component';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { PostulationStatus } from '@shared/interfaces/postulacion/postulacion.interface';
 
 @Component({
   selector: 'app-postulaciones',
@@ -127,7 +128,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       cargo: 'todos'
     };
     this.filtrosModificados = false;
-    
+
     // Limpiar subscripciones
     this.destroy$.next();
     this.destroy$.complete();
@@ -142,7 +143,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   cargarPostulaciones(): void {
     this.loading = true;
     this.error = null;
-    
+
     this.postulacionesService.getPostulaciones(
       this.pageIndex,
       this.pageSize,
@@ -154,9 +155,9 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.primeraConsulta = false; // Marcamos que ya no es la primera consulta
         // Asegurarnos de que los filtros estén en su estado inicial
-        if (!this.terminoBusqueda && this.filtrosActuales?.estado === 'todos' && 
-            this.filtrosActuales?.periodo === 'todos' && 
-            this.filtrosActuales?.dependencia === 'todas' && 
+        if (!this.terminoBusqueda && this.filtrosActuales?.estado === 'todos' &&
+            this.filtrosActuales?.periodo === 'todos' &&
+            this.filtrosActuales?.dependencia === 'todas' &&
             this.filtrosActuales?.cargo === 'todos') {
           this.filtrosModificados = false;
         }
@@ -196,7 +197,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       this.filtros = nuevosFiltros;
       this.filtrosActivos = Object.values(nuevosFiltros).some(valor => valor !== 'todos');
     }
-    
+
     this.postulacionesFiltradas = this.postulaciones.filter(postulacion => {
       let cumpleFiltros = true;
 
@@ -220,12 +221,12 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         const concursoTitulo = postulacion.concurso?.titulo?.toLowerCase() || '';
         const concursoCargo = postulacion.concurso?.cargo?.toLowerCase() || '';
         const concursoDependencia = postulacion.concurso?.dependencia?.toLowerCase() || '';
-        
-        const coincideTermino = 
+
+        const coincideTermino =
           concursoTitulo.includes(terminoLower) ||
           concursoCargo.includes(terminoLower) ||
           concursoDependencia.includes(terminoLower);
-        
+
         cumpleFiltros = cumpleFiltros && coincideTermino;
       }
 
@@ -247,7 +248,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   hayFiltrosAplicados(): boolean {
     if (this.primeraConsulta) return false; // Si es la primera consulta, no hay filtros aplicados
-    
+
     return !!(
       this.filtrosActuales?.estado ||
       this.filtrosActuales?.periodo ||
@@ -286,7 +287,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   getEstadoPostulacionLabel(estado: string | undefined): string {
     if (!estado) return 'Desconocido';
-    
+
     const labels: { [key: string]: string } = {
       'PENDING': 'Pendiente',
       'APPROVED': 'Aprobada',
@@ -348,5 +349,11 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   loadInscriptions() {
     this.cargarPostulaciones();
+  }
+
+  puedesCancelarPostulacion(postulacion: Postulacion): boolean {
+    // Solo se puede cancelar si está en estado PENDING o ACCEPTED
+    return postulacion.estado === PostulationStatus.PENDING ||
+           postulacion.estado === PostulationStatus.ACCEPTED;
   }
 }

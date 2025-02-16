@@ -1,16 +1,18 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, throwError, forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ContestStatus, Postulacion, PostulacionRequest, PostulacionResponse } from '../../../shared/interfaces/postulacion/postulacion.interface';
 import { AuthService } from '../auth/auth.service';
+import { PostulationStatus } from '../../../shared/interfaces/postulacion/postulacion.interface';
 
 @Injectable({
     providedIn: 'root'
 })
 export class PostulacionesService {
     private apiUrl = `${environment.apiUrl}/inscripciones`;
+    private concursosUrl = `${environment.apiUrl}/contests/search`;
 
     constructor(private http: HttpClient, private authService: AuthService) { }
 
@@ -33,10 +35,42 @@ export class PostulacionesService {
 
         return this.http.get<PostulacionResponse>(`${this.apiUrl}/me`, { params })
             .pipe(
-                map(response => {
+                switchMap(response => {
                     console.log('[PostulacionesService] Respuesta del servidor:', response);
-                    return this.transformResponse(response);
+
+                    // Obtener los detalles de cada concurso
+                    const concursoRequests = response.content.map(item => {
+                        // Construir los parámetros para buscar el concurso específico
+                        const searchParams = new HttpParams()
+                            .set('id', item.contestId.toString());
+
+                        return this.http.get(this.concursosUrl, { params: searchParams }).pipe(
+                            map(contests => {
+                                // Asumimos que la búsqueda devuelve una lista y tomamos el primer resultado
+                                const contestList = contests as any[];
+                                return contestList.length > 0 ? contestList[0] : null;
+                            }),
+                            catchError(error => {
+                                console.error(`Error al obtener concurso ${item.contestId}:`, error);
+                                return of(null); // Retornar null si falla la obtención del concurso
+                            })
+                        );
+                    });
+
+                    return forkJoin(concursoRequests).pipe(
+                        map(concursos => {
+                            const contentWithConcursos = response.content.map((item, index) => ({
+                                ...item,
+                                contest: concursos[index]
+                            }));
+                            return {
+                                ...response,
+                                content: contentWithConcursos
+                            };
+                        })
+                    );
                 }),
+                map(response => this.transformResponse(response)),
                 catchError(error => {
                     console.error('[PostulacionesService] Error completo:', error);
                     if (error.status === 400) {
@@ -49,33 +83,7 @@ export class PostulacionesService {
 
     private transformResponse(response: any): PostulacionResponse {
         const transformedResponse = {
-            content: response.content.map((item: any) => {
-                console.log('Item de postulación:', {
-                    id: item.id,
-                    contestId: item.contestId,
-                    userId: item.userId,
-                    estado: item.status,
-                    fechaPostulacion: item.inscriptionDate
-                });
-
-                return {
-                    id: item.id,
-                    contestId: item.contestId,
-                    userId: item.userId,
-                    estado: item.status,
-                    fechaPostulacion: item.inscriptionDate,
-                    concurso: item.contest ? {
-                        id: item.contest.id,
-                        titulo: item.contest.title,
-                        cargo: item.contest.position,
-                        dependencia: item.contest.department,
-                        estado: item.contest.status,
-                        fechaInicio: item.contest.startDate,
-                        fechaFin: item.contest.endDate,
-                        status: item.contest.status as ContestStatus
-                    } : null
-                };
-            }),
+            content: response.content.map((item: any) => this.mapPostulacion(item)),
             pageNumber: response.pageNumber || 0,
             pageSize: response.pageSize || 10,
             totalElements: response.totalElements,
@@ -85,6 +93,57 @@ export class PostulacionesService {
 
         console.log('Transformed Response:', transformedResponse);
         return transformedResponse;
+    }
+
+    private mapPostulacion(item: any): Postulacion {
+        return {
+            id: item.id,
+            contestId: item.contestId,
+            userId: item.userId,
+            estado: this.mapearEstado(item.estado || item.status),
+            fechaPostulacion: item.createdAt || item.inscription_date || new Date().toISOString(),
+            concurso: item.contest ? {
+                id: item.contest.id,
+                titulo: item.contest.name || item.contest.title || 'Concurso para ' + item.contest.position,
+                cargo: item.contest.position || 'No especificado',
+                dependencia: item.contest.department || 'No especificada',
+                estado: item.contest.status || ContestStatus.OPEN,
+                fechaInicio: item.contest.startDate || new Date().toISOString(),
+                fechaFin: item.contest.endDate || new Date().toISOString(),
+                status: (item.contest.status as ContestStatus) || ContestStatus.OPEN,
+                category: this.mapearCategoria(item.contest.position),
+                class: item.contest.class || 'No especificada'
+            } : undefined,
+            attachedDocuments: Array.isArray(item.attachedDocuments) ? item.attachedDocuments : []
+        };
+    }
+
+    private mapearEstado(status: string): PostulationStatus {
+        const estadosMap: { [key: string]: PostulationStatus } = {
+            'PENDING': PostulationStatus.PENDING,
+            'ACCEPTED': PostulationStatus.ACCEPTED,
+            'REJECTED': PostulationStatus.REJECTED,
+            'CANCELLED': PostulationStatus.CANCELLED
+        };
+        return estadosMap[status] || PostulationStatus.PENDING;
+    }
+
+    private mapearCategoria(cargo: string | undefined): string {
+        if (!cargo) return 'No especificada';
+
+        // Extraer la categoría del cargo
+        if (cargo.toLowerCase().includes('defensor')) return 'DEFENSOR';
+        if (cargo.toLowerCase().includes('fiscal')) return 'FISCAL';
+        if (cargo.toLowerCase().includes('secretario')) return 'SECRETARIO';
+
+        // Si no coincide con ninguna categoría conocida, extraer la primera palabra del cargo
+        const primeraPalabra = cargo.split(' ')[0];
+        return primeraPalabra.toUpperCase();
+    }
+
+    // Método para transformar una única respuesta de postulación
+    private transformSingleResponse(item: any): Postulacion {
+        return this.mapPostulacion(item);
     }
 
     private handleError(error: HttpErrorResponse) {
@@ -146,32 +205,5 @@ export class PostulacionesService {
                 return throwError(() => error);
             })
         );
-    }
-
-    // Método para transformar una única respuesta de postulación
-    private transformSingleResponse(item: any): Postulacion {
-        return {
-            id: item.id,
-            contestId: item.contestId,
-            userId: item.userId,
-            estado: item.estado,
-            fechaPostulacion: item.fechaPostulacion,
-            concurso: {
-                id: item.concurso.id,
-                titulo: item.concurso.titulo,
-                cargo: item.concurso.cargo,
-                dependencia: item.concurso.dependencia,
-                estado: item.concurso.estado,
-                fechaInicio: item.concurso.fechaInicio,
-                fechaFin: item.concurso.fechaFin,
-                results: item.concurso.results,
-                resolution: item.concurso.resolution,
-                requirements: item.concurso.requirements,
-                category: item.concurso.category,
-                class: item.concurso.class,
-                status: item.concurso.status
-            },
-            attachedDocuments: item.attachedDocuments || []
-        };
     }
 }

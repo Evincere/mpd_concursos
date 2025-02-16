@@ -23,40 +23,12 @@
       <!-- Lista de postulaciones -->
       <div class="postulaciones-list" *ngIf="dataSource.data.length > 0" [ngClass]="{'blurred': postulacionSeleccionada}">
         <div class="postulacion-item" *ngFor="let postulacion of dataSource.data" (click)="verDetalle(postulacion)">
-          <div class="postulacion-info">
-            <div class="header">
-              <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
-              <div class="estados">
-                <span class="estado-badge" [class]="getEstadoPostulacionClass(postulacion.estado)">
-                  {{ getEstadoPostulacionLabel(postulacion.estado) }}
-                </span>
-              </div>
-            </div>
-            <div class="detalles">
-              <p class="cargo">
-                <i class="fas fa-briefcase"></i>
-                {{ postulacion.concurso?.cargo || 'Cargo no especificado' }}
-              </p>
-              <p class="dependencia">
-                <i class="fas fa-building"></i>
-                {{ postulacion.concurso?.dependencia || 'Dependencia no especificada' }}
-              </p>
-            </div>
-            <div class="meta-info">
-              <span class="fecha-postulacion">
-                <i class="fas fa-calendar-check"></i>
-                Postulado: {{ postulacion.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}
-              </span>
-              <span class="fecha-concurso" *ngIf="postulacion.concurso?.fechaInicio">
-                <i class="fas fa-calendar-alt"></i>
-                Inicio concurso: {{ postulacion.concurso?.fechaInicio | date:'dd/MM/yyyy' }}
-              </span>
-            </div>
-          </div>
+          <!-- Acciones -->
           <div class="actions">
             <button mat-icon-button
                     color="warn"
                     matTooltip="Cancelar postulación"
+                    [disabled]="!puedesCancelarPostulacion(postulacion)"
                     (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)">
               <mat-icon>cancel</mat-icon>
             </button>
@@ -65,6 +37,88 @@
                     (click)="verDetalle(postulacion)">
               <mat-icon>visibility</mat-icon>
             </button>
+          </div>
+
+          <div class="postulacion-info">
+            <!-- Encabezado con título y estado -->
+            <div class="header-container">
+              <div class="titulo-container">
+                <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
+              </div>
+              <div class="header-actions">
+                <div class="estado-badge" [class]="getEstadoPostulacionClass(postulacion.estado)">
+                  {{ getEstadoPostulacionLabel(postulacion.estado) }}
+                </div>
+                <div class="actions">
+                  <button mat-icon-button
+                          color="warn"
+                          matTooltip="Cancelar postulación"
+                          [disabled]="!puedesCancelarPostulacion(postulacion)"
+                          (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                  <button mat-icon-button
+                          matTooltip="Ver detalle"
+                          (click)="verDetalle(postulacion)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                </div>
+              </div>
+              <span class="categoria" *ngIf="postulacion.concurso?.category">
+                {{ postulacion.concurso?.category }}
+              </span>
+            </div>
+
+            <!-- Información principal -->
+            <div class="detalles-grid">
+              <div class="detalle-item cargo">
+                <i class="fas fa-briefcase"></i>
+                <div class="detalle-content">
+                  <span class="label">Cargo</span>
+                  <span class="value">{{ postulacion.concurso?.cargo || 'No especificado' }}</span>
+                </div>
+              </div>
+              <div class="detalle-item dependencia">
+                <i class="fas fa-building"></i>
+                <div class="detalle-content">
+                  <span class="label">Dependencia</span>
+                  <span class="value">{{ postulacion.concurso?.dependencia || 'No especificada' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fechas -->
+            <div class="fechas-grid">
+              <div class="fecha-item">
+                <i class="fas fa-calendar-check"></i>
+                <div class="fecha-content">
+                  <span class="label">Postulación</span>
+                  <span class="value">{{ postulacion.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
+              <div class="fecha-item" *ngIf="postulacion.concurso?.fechaInicio">
+                <i class="fas fa-calendar-alt"></i>
+                <div class="fecha-content">
+                  <span class="label">Inicio</span>
+                  <span class="value">{{ postulacion.concurso?.fechaInicio | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+              <div class="fecha-item" *ngIf="postulacion.concurso?.fechaFin">
+                <i class="fas fa-calendar-times"></i>
+                <div class="fecha-content">
+                  <span class="label">Fin</span>
+                  <span class="value">{{ postulacion.concurso?.fechaFin | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Documentos -->
+            <div class="documentos-info" *ngIf="postulacion.attachedDocuments?.length">
+              <div class="documentos-header">
+                <i class="fas fa-file-alt"></i>
+                <span>{{ postulacion.attachedDocuments?.length }} documento(s) adjunto(s)</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
