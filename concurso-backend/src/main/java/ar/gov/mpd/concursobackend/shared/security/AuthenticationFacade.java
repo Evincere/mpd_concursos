@@ -31,4 +31,14 @@ public class AuthenticationFacade implements IAuthenticationFacade {
     log.debug("Token obtenido de la autenticación: {}", token);
     return token;
   }
+
+  @Override
+  public Authentication getAuthentication() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null || !authentication.isAuthenticated()) {
+      log.error("No authenticated user found");
+      throw new IllegalStateException("No authenticated user found");
+    }
+    return authentication;
+  }
 }

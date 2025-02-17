@@ -12,9 +12,18 @@ import java.util.Optional;
 
 public interface IUserService {
     User createUser(UserCreateDto dto);
+
     Optional<User> getByUsername(UserUsername username);
+
     boolean existsByUsername(UserUsername username);
+
     boolean existsByEmail(UserEmail email);
+
     JwtDto login(UserLogin userLogin);
+
     boolean existsByDni(UserDni dni);
+
+    User updateUser(User user);
+
+    User updateProfile(User user);
 }

@@ -42,3 +42,61 @@ CREATE TABLE notifications (
     type VARCHAR(20) NOT NULL CHECK (type IN ('INSCRIPTION', 'SYSTEM', 'CONTEST', 'GENERAL')),
     FOREIGN KEY (recipient_id) REFERENCES user_entity(id)
 );
+
+-- Tabla de usuarios
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    dni VARCHAR(8) UNIQUE NOT NULL,
+    cuit VARCHAR(13) UNIQUE NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    telefono VARCHAR(20),
+    direccion TEXT,
+    created_at TIMESTAMP NOT NULL
+);
+
+-- Tabla de roles
+CREATE TABLE IF NOT EXISTS roles (
+    id UUID PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Tabla de relación usuarios-roles
+CREATE TABLE IF NOT EXISTS user_roles (
+    user_id UUID REFERENCES users(id),
+    role_id UUID REFERENCES roles(id),
+    PRIMARY KEY (user_id, role_id)
+);
+
+-- Tabla de experiencias
+CREATE TABLE IF NOT EXISTS experiencias (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    empresa VARCHAR(100) NOT NULL,
+    cargo VARCHAR(100) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    descripcion TEXT
+);
+
+-- Tabla de educación
+CREATE TABLE IF NOT EXISTS educacion (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    institucion VARCHAR(100) NOT NULL,
+    titulo VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE
+);
+
+-- Tabla de habilidades
+CREATE TABLE IF NOT EXISTS habilidades (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    nombre VARCHAR(100) NOT NULL,
+    nivel VARCHAR(50) NOT NULL
+);

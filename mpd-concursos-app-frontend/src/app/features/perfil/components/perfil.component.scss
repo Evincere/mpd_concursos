@@ -140,77 +140,216 @@ $scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  padding: 1.5rem;
 
-  .form-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 2rem;
-    padding: 1rem;
-    @include card-base;
+  .form-section {
+    background: #2A2A2A;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 
-    button {
-      @include button-base;
-      min-width: 160px;
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: #2F2F2F;
+    }
 
-      &.action-button {
-        background-color: rgba(var(--surface-color-rgb), 0.8);
-        color: var(--text-color);
-        border: 1px solid var(--card-border);
+    .section-header {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+
+      .header-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
 
         i {
+          font-size: 1.5rem;
           color: var(--primary-color);
         }
 
-        &:hover:not(:disabled) {
-          background-color: rgba(var(--surface-color-rgb), 0.9);
-          border-color: var(--primary-color);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        h3 {
+          margin: 0;
+          color: var(--text-color);
+          font-size: 1.25rem;
         }
+      }
 
-        &.primary-button {
-          background-color: var(--primary-color);
+      .edit-button {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: var(--primary-color);
           color: white;
-          border: none;
-
-          i {
-            color: white;
-          }
-
-          &:hover:not(:disabled) {
-            background-color: rgba(var(--primary-color-rgb), 0.9);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-          }
+          transform: scale(1.05);
         }
 
-        &:disabled {
-          background-color: rgba(var(--surface-color-rgb), 0.5);
-          border-color: transparent;
-          transform: none;
-          box-shadow: none;
+        &[color="warn"] {
+          &:not(:disabled):hover {
+            background: var(--error-color);
+            color: white;
+            transform: scale(1.05);
+          }
+        }
+      }
+    }
 
-          i {
-            color: rgba(var(--text-secondary-rgb), 0.5);
+    .form-content {
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &.editing {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+
+        @media (max-width: 768px) {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .form-field {
+          flex: 1;
+
+          label {
+            display: block;
+            color: var(--text-color-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          .field-content {
+            .field-value {
+              display: block;
+              font-size: 1.1rem;
+              color: var(--text-color);
+              padding: 0.75rem 0;
+              min-height: 24px;
+              font-weight: 500;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+              transition: all 0.3s ease;
+
+              &:hover {
+                border-color: rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.02);
+              }
+            }
+
+            mat-form-field {
+              width: 100%;
+
+              ::ng-deep {
+                .mat-mdc-form-field-subscript-wrapper {
+                  padding: 0;
+
+                  .mat-mdc-form-field-hint {
+                    color: var(--text-color-secondary);
+                    font-size: 0.75rem;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    background: rgba(255, 255, 255, 0.05);
+                    margin-top: 4px;
+                    display: inline-block;
+
+                    i {
+                      margin-right: 4px;
+                      color: var(--primary-color);
+                    }
+                  }
+
+                  .mat-mdc-form-field-error {
+                    color: var(--error-color);
+                    font-size: 0.75rem;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    background: rgba(244, 67, 54, 0.1);
+                    margin-top: 4px;
+                    display: inline-block;
+
+                    i {
+                      margin-right: 4px;
+                    }
+                  }
+                }
+
+                .mdc-text-field--disabled {
+                  background: rgba(255, 255, 255, 0.03);
+                  border: 1px solid rgba(255, 255, 255, 0.1);
+
+                  .mat-mdc-form-field-hint {
+                    background: rgba(var(--primary-color-rgb), 0.1);
+                    color: var(--primary-color);
+                  }
+                }
+
+                .mdc-text-field {
+                  background: rgba(255, 255, 255, 0.05);
+                  border-radius: 8px;
+                  overflow: hidden;
+
+                  &:hover:not(.mdc-text-field--disabled) {
+                    background: rgba(255, 255, 255, 0.08);
+                  }
+                }
+
+                .mat-mdc-form-field-infix {
+                  padding: 0.5em 0;
+                }
+              }
+            }
           }
         }
       }
     }
   }
 
-  .form-section {
-    @include card-base;
-    padding: 1.5rem;
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 0;
 
-    .section-header {
-      @include section-header;
-    }
+    .save-button {
+      min-width: 150px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
+      i {
+        margin-right: 0.5rem;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &:not(:disabled):hover {
+        background: var(--primary-color);
+        color: white;
+        transform: scale(1.05);
+      }
     }
   }
 }
@@ -513,14 +652,95 @@ $transition-speed: 0.3s;
 }
 
 .form-field {
-  width: 100%;
+  flex: 1;
 
-  mat-form-field {
-    width: 100%;
+  label {
+    display: block;
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
-    &.description-field {
-      textarea {
-        min-height: 80px;
+  .field-content {
+    .field-value {
+      display: block;
+      font-size: 1.1rem;
+      color: var(--text-color);
+      padding: 0.75rem 0;
+      min-height: 24px;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.02);
+      }
+    }
+
+    mat-form-field {
+      width: 100%;
+
+      ::ng-deep {
+        .mat-mdc-form-field-subscript-wrapper {
+          padding: 0;
+
+          .mat-mdc-form-field-hint {
+            color: var(--text-color-secondary);
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-top: 4px;
+            display: inline-block;
+
+            i {
+              margin-right: 4px;
+              color: var(--primary-color);
+            }
+          }
+
+          .mat-mdc-form-field-error {
+            color: var(--error-color);
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(244, 67, 54, 0.1);
+            margin-top: 4px;
+            display: inline-block;
+
+            i {
+              margin-right: 4px;
+            }
+          }
+        }
+
+        .mdc-text-field--disabled {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+
+          .mat-mdc-form-field-hint {
+            background: rgba(var(--primary-color-rgb), 0.1);
+            color: var(--primary-color);
+          }
+        }
+
+        .mdc-text-field {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 8px;
+          overflow: hidden;
+
+          &:hover:not(.mdc-text-field--disabled) {
+            background: rgba(255, 255, 255, 0.08);
+          }
+        }
+
+        .mat-mdc-form-field-infix {
+          padding: 0.5em 0;
+        }
       }
     }
   }
@@ -632,6 +852,16 @@ $transition-speed: 0.3s;
     margin-bottom: 0.4rem;
     font-size: 0.9rem;
   }
+
+  .mat-form-field-disabled {
+    .mat-form-field-outline {
+      background-color: #f5f5f5;
+    }
+  }
+
+  .mat-form-field-appearance-outline .mat-form-field-outline {
+    background-color: white;
+  }
 }
 
 .delete-button {
@@ -677,7 +907,7 @@ $transition-speed: 0.3s;
 
       button {
         color: white;
-        
+
         &:hover {
           background-color: rgba(255, 255, 255, 0.1);
         }
@@ -692,7 +922,7 @@ $transition-speed: 0.3s;
         td {
           span {
             border-radius: 4px;
-            
+
             &.selected {
               background-color: var(--primary-color);
             }
@@ -731,7 +961,7 @@ $transition-speed: 0.3s;
 ::ng-deep {
   .mat-mdc-form-field {
     width: 100%;
-    
+
     .mat-mdc-text-field-wrapper {
       background-color: rgba(var(--surface-color-rgb), 0.8);
     }
@@ -924,4 +1154,20 @@ $transition-speed: 0.3s;
       }
     }
   }
+}
+
+// Animaciones
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.editing mat-form-field {
+  animation: fadeIn 0.3s ease-out;
 }
