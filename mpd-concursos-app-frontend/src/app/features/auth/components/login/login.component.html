@@ -2,11 +2,11 @@
   <div class="cols">
     <div class="login-box" [class.flipped]="isFlipped" (click)="onCardClick()">
       <div class="front">
-        <img src="/icons/favicon.png" alt="Logo Defensa" class="logo-defensa">
+        <img src="assets/images/mpd-logo.png" alt="Logo Defensa" class="logo-defensa" (error)="onLogoError($event)">
         <h2>Bienvenido</h2>
         <p>Inicie sesión para continuar</p>
       </div>
-      
+
       <div class="back">
         <p>Iniciar Sesión</p>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">

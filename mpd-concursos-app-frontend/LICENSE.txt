@@ -1,0 +1,6 @@
+Copyright (c) 2024 Ministerio Público de la Defensa
+
+Todos los derechos reservados.
+
+Este software es propiedad del Ministerio Público de la Defensa de la República Argentina.
+No se permite su uso, copia, modificación o distribución sin autorización expresa.

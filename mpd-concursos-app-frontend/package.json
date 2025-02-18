@@ -1,6 +1,7 @@
 {
   "name": "mpd-concursos-app-frontend",
   "version": "1.0.0",
+  "description": "Aplicación de gestión de concursos del Ministerio Público de la Defensa",
   "main": "./electron/main.js",
   "author": {
     "name": "Semper Evincere"
@@ -10,7 +11,12 @@
     "start": "ng serve",
     "build": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
-    "electron": "npm run build && electron .",
+    "electron": "ng build --configuration production && electron .",
+    "pack": "electron-builder --dir",
+    "dist": "ng build --configuration production && electron-builder",
+    "make:win": "ng build --configuration production && electron-builder --win",
+    "make:mac": "ng build --configuration production && electron-builder --mac",
+    "make:linux": "ng build --configuration production && electron-builder --linux",
     "test": "ng test"
   },
   "private": true,
@@ -41,6 +47,7 @@
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.20",
     "electron": "^28.1.4",
+    "electron-builder": "^24.13.3",
     "jasmine-core": "~5.2.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
@@ -49,5 +56,53 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1",
     "typescript": "~5.5.4"
+  },
+  "build": {
+    "appId": "ar.gov.mpd.concursos",
+    "productName": "MPD Concursos",
+    "directories": {
+      "output": "dist/electron",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/mpd-concursos-app-frontend/browser/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/mpd-concursos-app-frontend/browser",
+        "to": "app/dist/mpd-concursos-app-frontend/browser",
+        "filter": ["**/*"]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "uninstallDisplayName": "Desinstalar MPD Concursos",
+      "license": "LICENSE.txt",
+      "artifactName": "MPD-Concursos-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "src/assets/icons/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "src/assets/icons/icon.png"
+    }
   }
 }

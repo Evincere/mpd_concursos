@@ -29,7 +29,7 @@ import { NotificationsComponent } from '../../../../shared/components/notificati
 export class NavbarComponent {
   @Input() isSidebarCollapsed = false;
   logoState = 'start';
-  private readonly fallbackLogoUrl = '/assets/images/mpd-logo.png';
+  private readonly fallbackLogoUrl = 'assets/images/mpd-logo.png';
 
   constructor(
     private authService: AuthService,

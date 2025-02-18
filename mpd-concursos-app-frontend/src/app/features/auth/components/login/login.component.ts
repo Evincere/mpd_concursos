@@ -34,6 +34,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   loginError: string | null = null;
   hide: boolean = true;
   isFlipped: boolean = false;
+  private readonly fallbackLogoUrl = 'assets/images/mpd-logo.png';
 
   constructor(
     private fb: FormBuilder,
@@ -83,11 +84,11 @@ export class LoginComponent implements OnInit, AfterViewInit {
         return;
       }
 
-      console.log('[LoginComponent] Enviando datos de login:', { 
+      console.log('[LoginComponent] Enviando datos de login:', {
         username: loginData.username,
-        passwordValid: loginData.password?.length >= 6 
+        passwordValid: loginData.password?.length >= 6
       });
-      
+
       this.authService.handleLogin(loginData)
         .subscribe({
           next: (response) => {
@@ -118,5 +119,19 @@ export class LoginComponent implements OnInit, AfterViewInit {
     if (!this.isFlipped) {
       this.isFlipped = true;
     }
+  }
+
+  onLogoError(event: any) {
+    console.log('Error al cargar el logo en login, intentando con fallback');
+    const imgElement = event.target as HTMLImageElement;
+    imgElement.src = this.fallbackLogoUrl;
+    // Si también falla el fallback, mostrar un texto
+    imgElement.onerror = () => {
+      console.log('Error al cargar el logo fallback en login');
+      const container = imgElement.parentElement;
+      if (container) {
+        container.innerHTML = '<span class="logo-text">MPD</span>';
+      }
+    };
   }
 }
