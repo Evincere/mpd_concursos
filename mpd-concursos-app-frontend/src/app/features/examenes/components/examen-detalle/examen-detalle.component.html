@@ -1,0 +1,115 @@
+<div class="examen-detalle-container">
+  <div class="header-actions">
+    <button mat-button color="primary" [routerLink]="['/dashboard/examenes']" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+      Volver a Exámenes
+    </button>
+  </div>
+
+  <mat-card class="examen-card">
+    <mat-card-header>
+      <div class="header-content">
+        <div class="titulo-estado">
+          <h1>{{examen.titulo}}</h1>
+          <div class="etiquetas">
+            <span class="etiqueta" [ngClass]="obtenerClaseTipo()">
+              {{examen.tipo | titlecase}}
+            </span>
+            <span class="etiqueta" [ngClass]="obtenerClaseEstado()">
+              {{examen.estado | titlecase}}
+            </span>
+          </div>
+        </div>
+        <div class="info-general">
+          <div class="info-item">
+            <mat-icon>timer</mat-icon>
+            <span>{{examen.duracion}} minutos</span>
+          </div>
+          <div class="info-item">
+            <mat-icon>stars</mat-icon>
+            <span>{{examen.puntajeMaximo}} puntos</span>
+          </div>
+          <div class="info-item">
+            <mat-icon>event</mat-icon>
+            <span>{{examen.fechaInicio | date:'dd/MM/yyyy HH:mm'}}</span>
+          </div>
+          <div class="info-item">
+            <mat-icon>refresh</mat-icon>
+            <span>{{examen.intentosRealizados}}/{{examen.intentosPermitidos}} intentos</span>
+          </div>
+        </div>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-tab-group animationDuration="300ms">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">description</mat-icon>
+            Descripción
+          </ng-template>
+          <div class="tab-content">
+            <p class="descripcion">{{examen.descripcion}}</p>
+          </div>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">check_circle</mat-icon>
+            Requisitos
+          </ng-template>
+          <div class="tab-content">
+            <h3>Requisitos del Examen</h3>
+            <mat-list>
+              <mat-list-item *ngFor="let requisito of examen.requisitos">
+                <mat-icon matListItemIcon>check_circle</mat-icon>
+                <span matListItemTitle>{{requisito}}</span>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">gavel</mat-icon>
+            Reglas
+          </ng-template>
+          <div class="tab-content">
+            <h3>Reglas del Examen</h3>
+            <mat-list>
+              <mat-list-item *ngFor="let regla of examen.reglasExamen">
+                <mat-icon matListItemIcon>gavel</mat-icon>
+                <span matListItemTitle>{{regla}}</span>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </mat-tab>
+
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">book</mat-icon>
+            Materiales
+          </ng-template>
+          <div class="tab-content">
+            <h3>Materiales Permitidos</h3>
+            <mat-list>
+              <mat-list-item *ngFor="let material of examen.materialesPermitidos">
+                <mat-icon matListItemIcon>book</mat-icon>
+                <span matListItemTitle>{{material}}</span>
+              </mat-list-item>
+            </mat-list>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" (click)="iniciarExamen()" 
+              [disabled]="examen.estado !== 'PENDIENTE'"
+              matTooltip="Iniciar el examen">
+        <mat-icon>play_circle</mat-icon>
+        Iniciar Examen
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div> 

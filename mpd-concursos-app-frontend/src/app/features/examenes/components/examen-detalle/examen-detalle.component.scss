@@ -1,0 +1,264 @@
+:host {
+  display: block;
+  background-color: #1e1e1e;
+  min-height: 100%;
+}
+
+.examen-detalle-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .header-actions {
+    margin-bottom: 20px;
+
+    .back-button {
+      background-color: #2d2d2d;
+      padding: 8px 16px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      color: #fff;
+
+      mat-icon {
+        margin-right: 8px;
+      }
+
+      &:hover {
+        background-color: #3d3d3d;
+      }
+    }
+  }
+
+  .examen-card {
+    background-color: #2d2d2d;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+
+    mat-card-header {
+      background-color: #333333;
+      border-radius: 8px 8px 0 0;
+      padding: 24px;
+      border-bottom: 1px solid #404040;
+    }
+
+    .header-content {
+      width: 100%;
+      
+      .titulo-estado {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+
+        h1 {
+          margin: 0;
+          font-size: 28px;
+          font-weight: 500;
+          color: #fff;
+        }
+
+        .etiquetas {
+          display: flex;
+          gap: 12px;
+        }
+      }
+
+      .info-general {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+
+        .info-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background-color: #333333;
+          padding: 8px 16px;
+          border-radius: 4px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+
+          mat-icon {
+            color: #64b5f6;
+          }
+
+          span {
+            font-size: 15px;
+            color: #fff;
+          }
+        }
+      }
+    }
+  }
+
+  mat-card-content {
+    padding: 0;
+    background-color: #2d2d2d;
+
+    .tab-content {
+      padding: 24px;
+
+      .descripcion {
+        white-space: pre-line;
+        line-height: 1.8;
+        color: #fff;
+        font-size: 16px;
+        background-color: #333333;
+        padding: 16px;
+        border-radius: 4px;
+        border-left: 4px solid #64b5f6;
+      }
+
+      h3 {
+        margin-bottom: 20px;
+        color: #64b5f6;
+        font-size: 20px;
+        font-weight: 500;
+      }
+
+      mat-list {
+        padding: 0;
+      }
+
+      mat-list-item {
+        margin-bottom: 12px;
+        background-color: #333333;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: #404040;
+          transform: translateX(4px);
+        }
+
+        mat-icon {
+          color: #64b5f6;
+        }
+
+        span {
+          color: #fff;
+          font-size: 15px;
+        }
+      }
+    }
+  }
+}
+
+.etiqueta {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+}
+
+// Estilos para tipos de examen
+.tipo-juridico {
+  background-color: rgba(100, 181, 246, 0.2);
+  color: #64b5f6;
+}
+
+.tipo-administrativo {
+  background-color: rgba(186, 104, 200, 0.2);
+  color: #ba68c8;
+}
+
+.tipo-auxiliar {
+  background-color: rgba(129, 199, 132, 0.2);
+  color: #81c784;
+}
+
+// Estilos para estados
+.estado-pendiente {
+  background-color: rgba(255, 167, 38, 0.2);
+  color: #ffa726;
+}
+
+.estado-en-curso {
+  background-color: rgba(100, 181, 246, 0.2);
+  color: #64b5f6;
+}
+
+.estado-completado {
+  background-color: rgba(129, 199, 132, 0.2);
+  color: #81c784;
+}
+
+.estado-vencido {
+  background-color: rgba(239, 83, 80, 0.2);
+  color: #ef5350;
+}
+
+mat-card-actions {
+  padding: 16px 24px;
+  border-top: 1px solid #404040;
+  background-color: #333333;
+
+  button {
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Estilos para las pestañas
+::ng-deep {
+  .mat-mdc-tab {
+    color: #fff !important;
+
+    .tab-icon {
+      margin-right: 8px;
+      color: #64b5f6;
+    }
+  }
+
+  .mat-mdc-tab-header {
+    background-color: #333333;
+    border-bottom: 1px solid #404040;
+    padding: 0 24px;
+  }
+
+  .mat-mdc-tab-body-content {
+    padding: 0 !important;
+  }
+
+  .mdc-tab-indicator__content--underline {
+    border-color: #64b5f6 !important;
+  }
+
+  .mat-mdc-tab:not(.mat-mdc-tab-disabled).mdc-tab--active .mdc-tab__text-label {
+    color: #64b5f6 !important;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .examen-detalle-container {
+    padding: 16px;
+
+    .header-content {
+      .titulo-estado {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+
+        h1 {
+          font-size: 24px;
+        }
+      }
+
+      .info-general {
+        gap: 16px;
+        
+        .info-item {
+          width: calc(50% - 8px);
+        }
+      }
+    }
+  }
+} 

@@ -1,0 +1,71 @@
+<div class="examenes-feature-container">
+  <div class="main-content">
+    <app-search-header
+      title="Exámenes"
+      icon="file-alt"
+      placeholder="Buscar exámenes..."
+      (search)="onSearch($event)"
+      (filter)="onFilter()">
+    </app-search-header>
+
+    <div class="examenes-content">
+      <app-loader
+        *ngIf="loading"
+        [overlay]="true"
+        message="Cargando exámenes...">
+      </app-loader>
+
+      <div class="error-message" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>{{ error }}</p>
+      </div>
+
+      <div class="examenes-grid" *ngIf="!loading && !error">
+        <div class="examen-card" *ngFor="let examen of examenes">
+          <div class="examen-header">
+            <span class="examen-tipo" [class]="examen.tipo.toLowerCase()">
+              {{ examen.tipo | titlecase }}
+            </span>
+            <span class="examen-estado" [class]="examen.estado.toLowerCase()">
+              {{ examen.estado | titlecase }}
+            </span>
+          </div>
+
+          <div class="examen-body">
+            <h3>{{ examen.titulo }}</h3>
+            <p class="descripcion">{{ examen.descripcion }}</p>
+            
+            <div class="examen-info">
+              <div class="info-item">
+                <i class="fas fa-clock"></i>
+                <span>{{ examen.duracion }} minutos</span>
+              </div>
+              <div class="info-item">
+                <i class="fas fa-star"></i>
+                <span>{{ examen.puntajeMaximo }} puntos</span>
+              </div>
+              <div class="info-item">
+                <i class="fas fa-calendar"></i>
+                <span>{{ examen.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="examen-actions">
+            <button mat-flat-button 
+                    color="primary"
+                    [disabled]="examen.estado !== 'PENDIENTE'"
+                    class="action-button">
+              <i class="fas fa-play"></i>
+              Iniciar Examen
+            </button>
+            <button mat-button [routerLink]="['/dashboard/examenes', examen.id]">
+              <i class="fas fa-info-circle"></i>
+              Ver Detalle
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

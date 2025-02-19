@@ -1,0 +1,171 @@
+@use '@angular/material' as mat;
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.examenes-feature-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .main-content {
+    flex: 1;
+    padding: $spacing-lg;
+    overflow-y: auto;
+  }
+
+  .examenes-content {
+    position: relative;
+    margin-top: $spacing-lg;
+  }
+
+  .examenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $spacing-lg;
+  }
+
+  .examen-card {
+    background: $color-surface;
+    border-radius: $border-radius;
+    box-shadow: $box-shadow;
+    overflow: hidden;
+    transition: $transition-default;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .examen-header {
+      padding: $spacing-md;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid $color-border;
+
+      .examen-tipo, .examen-estado {
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-sm;
+        font-size: $font-size-sm;
+        font-weight: 500;
+      }
+
+      .examen-tipo {
+        &.tecnico_juridico { background: rgba($color-primary, 0.2); color: $color-primary; }
+        &.tecnico_administrativo { background: rgba($color-warning, 0.2); color: $color-warning; }
+        &.servicios_auxiliares { background: rgba($color-accent, 0.2); color: $color-accent; }
+      }
+
+      .examen-estado {
+        &.pendiente { background: rgba($color-warning, 0.2); color: $color-warning; }
+        &.en_curso { background: rgba($color-primary, 0.2); color: $color-primary; }
+        &.completado { background: rgba($color-success, 0.2); color: $color-success; }
+        &.vencido { background: rgba($color-error, 0.2); color: $color-error; }
+      }
+    }
+
+    .examen-body {
+      padding: $spacing-lg;
+
+      h3 {
+        margin: 0 0 $spacing-sm;
+        color: $color-text-primary;
+        font-size: $font-size-lg;
+      }
+
+      .descripcion {
+        color: $color-text-secondary;
+        font-size: $font-size-sm;
+        margin-bottom: $spacing-md;
+      }
+
+      .examen-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: $spacing-sm;
+        margin-top: $spacing-md;
+
+        .info-item {
+          display: flex;
+          align-items: center;
+          gap: $spacing-xs;
+          color: $color-text-secondary;
+          font-size: $font-size-sm;
+
+          i {
+            color: $color-primary;
+            font-size: $font-size-md;
+          }
+        }
+      }
+    }
+
+    .examen-actions {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      justify-content: flex-end;
+
+      button {
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        &.action-button {
+          background-color: #1976d2;
+          color: white;
+
+          &:disabled {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.3);
+          }
+
+          &:not(:disabled):hover {
+            background-color: #1565c0;
+          }
+        }
+
+        &[routerLink] {
+          background-color: rgba(255, 255, 255, 0.05);
+          color: #64b5f6;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        }
+
+        mat-icon, i {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-error-bg;
+  color: $color-error;
+  border-radius: $border-radius;
+  margin: $spacing-md 0;
+
+  i {
+    font-size: $font-size-lg;
+  }
+}
+
+@media (max-width: 768px) {
+  .examenes-feature-container {
+    .main-content {
+      padding: $spacing-md;
+    }
+
+    .examenes-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+} 
