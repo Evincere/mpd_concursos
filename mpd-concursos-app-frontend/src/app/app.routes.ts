@@ -8,6 +8,8 @@ import { PerfilComponent } from '@features/perfil/components/perfil.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { ConcursosComponent } from '@features/concursos/concursos.component';
+import { ExamenesComponent } from '@features/examenes/examenes.component';
+import { ExamenDetalleComponent } from '@features/examenes/components/examen-detalle/examen-detalle.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, data: { animation: 'login' } },
@@ -21,7 +23,9 @@ export const routes: Routes = [
       { path: '', component: MainComponent },
       { path: 'concursos', component: ConcursosComponent },
       { path: 'postulaciones', component: PostulacionesComponent },
-      { path: 'perfil', component: PerfilComponent }
+      { path: 'perfil', component: PerfilComponent },
+      { path: 'examenes', component: ExamenesComponent },
+      { path: 'examenes/:id', component: ExamenDetalleComponent }
     ]
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
