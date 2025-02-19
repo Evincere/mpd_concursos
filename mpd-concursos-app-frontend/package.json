@@ -65,14 +65,14 @@
       "buildResources": "build"
     },
     "files": [
-      "dist/mpd-concursos-app-frontend/browser/**/*",
+      "dist/browser/**/*",
       "electron/**/*",
       "package.json"
     ],
     "extraResources": [
       {
-        "from": "dist/mpd-concursos-app-frontend/browser",
-        "to": "app/dist/mpd-concursos-app-frontend/browser",
+        "from": "dist/browser",
+        "to": "app/dist/browser",
         "filter": ["**/*"]
       }
     ],

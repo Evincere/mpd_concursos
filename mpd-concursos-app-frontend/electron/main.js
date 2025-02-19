@@ -1,8 +1,15 @@
-const { app, BrowserWindow, session } = require('electron');
+const { app, BrowserWindow, session, protocol } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 let win;
+
+function getAssetPath() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, 'app/dist/browser');
+  }
+  return path.join(__dirname, '../dist/browser');
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -38,30 +45,23 @@ function createWindow() {
   });
 
   // Determinar la ruta del index.html
-  const possiblePaths = [
-    path.join(__dirname, '../dist/index.html'),
-    path.join(process.cwd(), 'dist/index.html')
-  ];
+  const assetPath = getAssetPath();
+  const indexPath = path.join(assetPath, 'index.html');
 
+  console.log('Asset Path:', assetPath);
+  console.log('Index Path:', indexPath);
+  console.log('Is Packaged:', app.isPackaged);
+  console.log('Resource Path:', process.resourcesPath);
   console.log('Current directory:', process.cwd());
-  console.log('Electron directory:', __dirname);
+  console.log('App Path:', app.getAppPath());
 
-  let indexPath = null;
-
-  for (const testPath of possiblePaths) {
-    console.log('Checking path:', testPath);
-    if (fs.existsSync(testPath)) {
-      console.log('Found index.html at:', testPath);
-      indexPath = testPath;
-      break;
-    }
-  }
-
-  if (!indexPath) {
-    console.error('Could not find index.html in any of these locations:', possiblePaths);
+  if (!fs.existsSync(indexPath)) {
+    console.error('Index file NOT found at:', indexPath);
     app.quit();
     return;
   }
+
+  console.log('Found index.html at:', indexPath);
 
   // Cargar el index.html
   win.loadFile(indexPath)
@@ -97,12 +97,15 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    // Registrar protocolo personalizado para servir archivos estáticos
+    protocol.registerFileProtocol('app', (request, callback) => {
+      const filePath = path.join(getAssetPath(), request.url.slice('app://'.length));
+      callback(filePath);
+    });
+
     // Permitir la carga de recursos locales
     session.defaultSession.webRequest.onBeforeRequest((details, callback) => {
-      const url = details.url.toLowerCase();
-      callback({
-        cancel: false // Permitir todas las solicitudes
-      });
+      callback({ cancel: false });
     });
 
     createWindow();
