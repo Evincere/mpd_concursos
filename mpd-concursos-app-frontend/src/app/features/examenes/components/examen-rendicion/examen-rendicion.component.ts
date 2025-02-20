@@ -17,6 +17,9 @@ import { takeUntil } from 'rxjs/operators';
 import { MatListModule } from '@angular/material/list';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatListOption } from '@angular/material/list';
+import { ExamenSecurityService } from '@core/services/examenes/examen-security.service';
+import { SecurityViolation } from '@core/interfaces/security/security-violation.interface';
+import { ExamenActivityLoggerService, ActivityLogType } from '@core/services/examenes/examen-activity-logger.service';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -50,7 +53,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     private examenesService: ExamenesService,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private securityService: ExamenSecurityService,
+    private activityLogger: ExamenActivityLoggerService
   ) {}
 
   ngOnInit(): void {
@@ -60,26 +65,70 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Primero configuramos los observables
+    this.setupObservables();
+
+    // Luego cargamos las preguntas e iniciamos el examen
     this.examenesService.getPreguntas(examenId).subscribe(preguntas => {
       this.preguntas = preguntas;
       this.examenService.iniciarExamen(examenId, preguntas);
     });
 
+    this.securityService.initializeSecurityMeasures();
+
+    // Registrar inicio del examen
+    this.activityLogger.logActivity({
+      type: ActivityLogType.SYSTEM_EVENT,
+      timestamp: Date.now(),
+      details: {
+        event: 'EXAMEN_INICIADO',
+        examenId: this.route.snapshot.params['id']
+      }
+    });
+  }
+
+  private setupObservables(): void {
     this.examenService.getPreguntaActual()
       .pipe(takeUntil(this.destroy$))
       .subscribe(pregunta => {
-        this.preguntaActual = pregunta;
-        if (pregunta?.tipo === TipoPregunta.ORDENAMIENTO) {
-          this.opcionesOrdenadas = Array.from(pregunta.opciones || []);
+        if (pregunta) {
+          this.preguntaActual = pregunta;
+          if (pregunta.tipo === TipoPregunta.ORDENAMIENTO) {
+            this.opcionesOrdenadas = pregunta.opciones ?
+              pregunta.opciones.map(opcion => ({...opcion})) : [];
+          }
+          this.cdr.detectChanges();
         }
       });
 
     this.examenService.getTiempoRestante()
       .pipe(takeUntil(this.destroy$))
       .subscribe(tiempo => this.tiempoRestante = tiempo);
+
+    this.securityService.getSecurityViolations()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(violations => {
+        if (violations.length > 0) {
+          const lastViolation = violations[violations.length - 1];
+          this.handleSecurityViolation(lastViolation);
+        }
+      });
+  }
+
+  private handleSecurityViolation(violation: SecurityViolation): void {
+    switch (violation.type) {
+      case 'FULLSCREEN_EXIT':
+        break;
+      case 'TAB_SWITCH':
+        break;
+      case 'INACTIVITY_TIMEOUT':
+        break;
+    }
   }
 
   ngOnDestroy(): void {
+    this.securityService.cleanup();
+    this.activityLogger.cleanup();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -101,6 +150,16 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     };
 
     this.examenService.guardarRespuesta(respuestaUsuario);
+
+    this.activityLogger.logActivity({
+      type: ActivityLogType.USER_INTERACTION,
+      timestamp: Date.now(),
+      details: {
+        event: 'RESPUESTA_GUARDADA',
+        preguntaId: respuestaUsuario.preguntaId,
+        tiempoRespuesta: Date.now() - new Date(respuestaUsuario.timestamp).getTime()
+      }
+    });
   }
 
   siguiente(): void {
@@ -120,8 +179,17 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   formatTiempo(segundos: number): string {
     const horas = Math.floor(segundos / 3600);
     const minutos = Math.floor((segundos % 3600) / 60);
-    const segs = segundos % 60;
-    return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
+    const segs = Math.floor(segundos % 60);
+
+    if (horas < 0 || minutos < 0 || segs < 0) {
+      return '00:00:00';
+    }
+
+    const horasFormateadas = Math.min(horas, 99).toString().padStart(2, '0');
+    const minutosFormateados = Math.min(minutos, 59).toString().padStart(2, '0');
+    const segsFormateados = Math.min(segs, 59).toString().padStart(2, '0');
+
+    return `${horasFormateadas}:${minutosFormateados}:${segsFormateados}`;
   }
 
   guardarRespuestaMultiple(seleccionadas: MatListOption[]): void {
@@ -136,27 +204,21 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   }
 
   drop(event: CdkDragDrop<OpcionRespuesta[]>): void {
-    console.log('Drop event triggered');
-    console.log('Previous Index:', event.previousIndex);
-    console.log('Current Index:', event.currentIndex);
-
     if (!this.preguntaActual) return;
 
-    // Crear una nueva copia del array
-    const opcionesActualizadas = [...this.opcionesOrdenadas];
+    // Crear una copia del array
+    const opcionesActualizadas = this.opcionesOrdenadas.slice();
 
-    // Realizar el movimiento en la copia
+    // Realizar el movimiento
     moveItemInArray(opcionesActualizadas, event.previousIndex, event.currentIndex);
 
-    // Actualizar el array original
+    // Actualizar el estado
     this.opcionesOrdenadas = opcionesActualizadas;
 
-    console.log('Updated Options:', this.opcionesOrdenadas);
-
-    // Forzar detección de cambios
+    // Forzar actualización de la vista
     this.cdr.detectChanges();
 
-    // Guardar respuesta
+    // Guardar la respuesta
     const respuesta = this.opcionesOrdenadas.map(opcion => opcion.id);
     this.guardarRespuesta(respuesta);
   }

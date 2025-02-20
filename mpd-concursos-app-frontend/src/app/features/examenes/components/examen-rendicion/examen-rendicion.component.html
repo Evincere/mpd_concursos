@@ -59,18 +59,15 @@
                  class="opciones-lista"
                  [cdkDropListData]="opcionesOrdenadas"
                  (cdkDropListDropped)="drop($event)"
-                 cdkDropListOrientation="vertical"
-                 [cdkDropListLockAxis]="'y'">
-              <div *ngFor="let opcion of opcionesOrdenadas; trackBy: trackByOpcion; let i = index"
+                 cdkDropListOrientation="vertical">
+              <div *ngFor="let opcion of opcionesOrdenadas; let i = index; trackBy: trackByOpcion"
                    class="opcion-item"
                    cdkDrag
-                   [cdkDragData]="opcion"
-                   [attr.data-index]="i">
+                   [cdkDragData]="opcion">
                 <div class="drag-handle" cdkDragHandle>
                   <mat-icon>drag_indicator</mat-icon>
                 </div>
                 <span class="opcion-texto">{{ opcion.texto }}</span>
-                <div class="drag-placeholder" *cdkDragPlaceholder></div>
               </div>
             </div>
           </div>

@@ -22,8 +22,10 @@ export interface Pregunta {
 
 export interface RespuestaUsuario {
   preguntaId: string;
-  respuesta: string | string[]; // string para desarrollo, string[] para selección múltiple
+  respuesta: string | string[];
   timestamp: string;
+  hash?: string;
+  intentos?: number;
 }
 
 export interface ExamenEnCurso {
