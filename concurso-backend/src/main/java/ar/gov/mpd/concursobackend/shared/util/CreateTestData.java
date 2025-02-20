@@ -152,6 +152,7 @@ public class CreateTestData implements CommandLineRunner {
         return userService.getByUsername(new UserUsername(username)).orElse(null);
     }
 
+    @SuppressWarnings("unused")
     private void createInscriptions() {
         // Obtener IDs de usuarios
         UUID usuario1Id = getUserId("usuario1");

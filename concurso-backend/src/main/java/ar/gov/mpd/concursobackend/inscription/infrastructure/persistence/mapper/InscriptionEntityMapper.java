@@ -10,7 +10,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import java.util.UUID;
 
-@SuppressWarnings("unused")
 @Mapper(
     componentModel = "spring",
     imports = {

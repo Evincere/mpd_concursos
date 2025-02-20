@@ -3,7 +3,6 @@ package ar.gov.mpd.concursobackend.shared.security;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class AuthenticationFacade implements IAuthenticationFacade {
-
-  private final JwtProvider jwtProvider;
 
   @Override
   public String getCurrentUserId() {

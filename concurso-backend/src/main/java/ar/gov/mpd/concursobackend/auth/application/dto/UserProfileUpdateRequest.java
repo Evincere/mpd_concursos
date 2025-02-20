@@ -2,9 +2,6 @@ package ar.gov.mpd.concursobackend.auth.application.dto;
 
 import java.util.List;
 
-import ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto;
-import ar.gov.mpd.concursobackend.auth.application.dto.EducacionDto;
-import ar.gov.mpd.concursobackend.auth.application.dto.HabilidadDto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;

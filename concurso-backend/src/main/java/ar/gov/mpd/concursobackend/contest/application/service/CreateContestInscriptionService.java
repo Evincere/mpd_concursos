@@ -16,6 +16,7 @@ import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
+import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -64,7 +66,7 @@ public class CreateContestInscriptionService implements CreateContestInscription
 
                 // Crear la inscripción
                 Inscription inscription = Inscription.builder()
-                                .id(null)
+                                .id(new InscriptionId(UUID.randomUUID()))
                                 .contestId(new ContestId(contest.getId()))
                                 .userId(new UserId(user.getId().value()))
                                 .inscriptionDate(LocalDateTime.now())

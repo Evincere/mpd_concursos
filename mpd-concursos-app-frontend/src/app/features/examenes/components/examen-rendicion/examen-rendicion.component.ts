@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,8 +18,12 @@ import { MatListModule } from '@angular/material/list';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MatListOption } from '@angular/material/list';
 import { ExamenSecurityService } from '@core/services/examenes/examen-security.service';
-import { SecurityViolation } from '@core/interfaces/security/security-violation.interface';
+import { SecurityViolation, SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ExamenActivityLoggerService, ActivityLogType } from '@core/services/examenes/examen-activity-logger.service';
+import { ExamenNotificationService } from '@core/services/examenes/examen-notification.service';
+import { fromEvent, merge } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { ExamenRecoveryService } from '@core/services/examenes/examen-recovery.service';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -47,6 +51,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   tiempoRestante: number = 0;
   private destroy$ = new Subject<void>();
   opcionesOrdenadas: OpcionRespuesta[] = [];
+  private preguntaStartTime: number = 0;
 
   constructor(
     private examenService: ExamenRendicionService,
@@ -55,7 +60,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private securityService: ExamenSecurityService,
-    private activityLogger: ExamenActivityLoggerService
+    private activityLogger: ExamenActivityLoggerService,
+    private notificationService: ExamenNotificationService,
+    private recoveryService: ExamenRecoveryService
   ) {}
 
   ngOnInit(): void {
@@ -85,6 +92,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
         examenId: this.route.snapshot.params['id']
       }
     });
+
+    this.setupConnectionMonitoring();
+    this.setupBeforeUnloadWarning();
   }
 
   private setupObservables(): void {
@@ -93,6 +103,8 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       .subscribe(pregunta => {
         if (pregunta) {
           this.preguntaActual = pregunta;
+          this.preguntaStartTime = Date.now();
+          
           if (pregunta.tipo === TipoPregunta.ORDENAMIENTO) {
             this.opcionesOrdenadas = pregunta.opciones ?
               pregunta.opciones.map(opcion => ({...opcion})) : [];
@@ -116,13 +128,19 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   }
 
   private handleSecurityViolation(violation: SecurityViolation): void {
-    switch (violation.type) {
-      case 'FULLSCREEN_EXIT':
-        break;
-      case 'TAB_SWITCH':
-        break;
-      case 'INACTIVITY_TIMEOUT':
-        break;
+    this.notificationService.showSecurityWarning(violation.type);
+    
+    if (violation.severity === 'HIGH') {
+      const examenId = this.route.snapshot.params['id'];
+      
+      // Nos suscribimos al Observable para obtener el valor actual
+      this.examenService.getExamenEnCurso()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(examen => {
+          if (examen) {
+            this.recoveryService.saveToLocalBackup(examenId, examen);
+          }
+        });
     }
   }
 
@@ -143,10 +161,18 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   guardarRespuesta(respuesta: string | string[]): void {
     if (!this.preguntaActual) return;
 
+    const tiempoRespuesta = Date.now() - this.preguntaStartTime;
+    
+    if (!this.validarTiempoRespuesta(tiempoRespuesta, this.preguntaActual)) {
+      this.notificationService.showSecurityWarning(SecurityViolationType.ANSWER_TOO_FAST);
+      return;
+    }
+
     const respuestaUsuario: RespuestaUsuario = {
       preguntaId: this.preguntaActual.id,
       respuesta,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      tiempoRespuesta
     };
 
     this.examenService.guardarRespuesta(respuestaUsuario);
@@ -157,9 +183,56 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       details: {
         event: 'RESPUESTA_GUARDADA',
         preguntaId: respuestaUsuario.preguntaId,
-        tiempoRespuesta: Date.now() - new Date(respuestaUsuario.timestamp).getTime()
+        tiempoRespuesta
       }
     });
+  }
+
+  private validarTiempoRespuesta(tiempoMs: number, pregunta: Pregunta): boolean {
+    // Ajustamos los tiempos base para ser más realistas
+    const MIN_TIEMPO_BASE = 1000;  // Reducido a 1 segundo
+    const TIEMPO_POR_PALABRA = 100; // Reducido a 100ms por palabra
+    const TIEMPO_POR_OPCION = 500;  // Reducido a 500ms por opción
+
+    let tiempoMinimoEsperado = MIN_TIEMPO_BASE;
+
+    // Calculamos el tiempo basado en el contenido
+    const palabras = pregunta.texto.trim().split(/\s+/).length;
+    tiempoMinimoEsperado += palabras * TIEMPO_POR_PALABRA;
+
+    // Ajustamos según el tipo de pregunta
+    switch (pregunta.tipo) {
+      case TipoPregunta.OPCION_MULTIPLE:
+      case TipoPregunta.SELECCION_MULTIPLE:
+        tiempoMinimoEsperado += (pregunta.opciones?.length || 0) * TIEMPO_POR_OPCION;
+        break;
+      case TipoPregunta.ORDENAMIENTO:
+        // Para ordenamiento, el tiempo mínimo es menor ya que el usuario puede reconocer el orden rápidamente
+        tiempoMinimoEsperado += (pregunta.opciones?.length || 0) * (TIEMPO_POR_OPCION * 0.75);
+        break;
+      case TipoPregunta.DESARROLLO:
+        // Para desarrollo, mantenemos un tiempo base más alto
+        tiempoMinimoEsperado += MIN_TIEMPO_BASE;
+        break;
+      case TipoPregunta.VERDADERO_FALSO:
+        // Para verdadero/falso, el tiempo mínimo es menor
+        tiempoMinimoEsperado += MIN_TIEMPO_BASE * 0.5;
+        break;
+    }
+
+    // Agregamos un margen de tolerancia del 20%
+    tiempoMinimoEsperado *= 0.8;
+
+    // Para debug
+    console.debug('Validación de tiempo:', {
+      tiempoRespuesta: tiempoMs,
+      tiempoMinimo: tiempoMinimoEsperado,
+      tipoPregunta: pregunta.tipo,
+      palabras,
+      opcionesLength: pregunta.opciones?.length
+    });
+
+    return tiempoMs >= tiempoMinimoEsperado;
   }
 
   siguiente(): void {
@@ -170,10 +243,12 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     this.examenService.preguntaAnterior();
   }
 
-  finalizar(): void {
-    // Agregar diálogo de confirmación
-    this.examenService.finalizarExamen();
-    this.router.navigate(['/dashboard/examenes']);
+  async finalizar(): Promise<void> {
+    const confirmed = await this.notificationService.confirmAction('finalizar');
+    if (confirmed) {
+      this.examenService.finalizarExamen();
+      this.router.navigate(['/dashboard/examenes']);
+    }
   }
 
   formatTiempo(segundos: number): string {
@@ -221,5 +296,44 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     // Guardar la respuesta
     const respuesta = this.opcionesOrdenadas.map(opcion => opcion.id);
     this.guardarRespuesta(respuesta);
+  }
+
+  private setupConnectionMonitoring(): void {
+    merge(
+      fromEvent(window, 'online'),
+      fromEvent(window, 'offline')
+    ).pipe(
+      debounceTime(300)
+    ).subscribe(() => {
+      this.notificationService.showConnectionWarning(navigator.onLine);
+    });
+  }
+
+  private setupBeforeUnloadWarning(): void {
+    let currentExamen: boolean = false;
+    
+    // Mantener una única suscripción al estado del examen
+    this.examenService.getExamenEnCurso()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(examen => {
+        currentExamen = !!examen;
+      });
+
+    window.addEventListener('beforeunload', (e) => {
+      if (currentExamen) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && document.fullscreenElement) {
+      event.preventDefault();
+      this.notificationService.showSecurityWarning(
+        SecurityViolationType.FULLSCREEN_EXIT
+      );
+    }
   }
 }

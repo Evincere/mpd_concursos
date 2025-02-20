@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, fromEvent, merge, Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SecurityViolation, SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
+import { ExamenNotificationService } from './examen-notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,9 @@ export class ExamenSecurityService {
   private inactivityTimer: any;
   private readonly INACTIVITY_TIMEOUT = 300000; // 5 minutos
 
-  constructor() {}
+  constructor(
+    private notificationService: ExamenNotificationService
+  ) {}
 
   initializeSecurityMeasures(): void {
     this.setupFullscreenMode();
@@ -171,16 +174,14 @@ export class ExamenSecurityService {
   }
 
   private handleViolation(violation: SecurityViolation): void {
+    this.notificationService.showSecurityWarning(violation.type);
+    
     // Enviar al servidor
     this.sendViolationToServer(violation);
 
-    // Acciones locales según severidad
     if (violation.severity === 'HIGH') {
       this.handleHighSeverityViolation(violation);
     }
-
-    // Notificar al componente
-    console.warn('Security Violation:', violation);
   }
 
   private handleHighSeverityViolation(violation: SecurityViolation): void {

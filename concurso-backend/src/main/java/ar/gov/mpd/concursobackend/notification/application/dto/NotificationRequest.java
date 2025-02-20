@@ -26,5 +26,6 @@ public class NotificationRequest {
     private NotificationType type;
 
     @NotNull(message = "El nivel de acuse es requerido")
+    @Builder.Default
     private AcknowledgementLevel acknowledgementLevel = AcknowledgementLevel.NONE;
 }
