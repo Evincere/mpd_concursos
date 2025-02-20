@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,9 +11,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExamenRendicionService } from '@core/services/examenes/examen-rendicion.service';
 import { ExamenesService } from '@core/services/examenes/examenes.service';
-import { Pregunta, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
+import { OpcionRespuesta, Pregunta, RespuestaUsuario, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { MatListModule } from '@angular/material/list';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { MatListOption } from '@angular/material/list';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -28,7 +31,9 @@ import { takeUntil } from 'rxjs/operators';
     MatInputModule,
     MatIconModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatListModule,
+    DragDropModule
   ],
   templateUrl: './examen-rendicion.component.html',
   styleUrls: ['./examen-rendicion.component.scss']
@@ -38,12 +43,14 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   preguntas: Pregunta[] = [];
   tiempoRestante: number = 0;
   private destroy$ = new Subject<void>();
+  opcionesOrdenadas: OpcionRespuesta[] = [];
 
   constructor(
     private examenService: ExamenRendicionService,
     private examenesService: ExamenesService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -60,7 +67,12 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
 
     this.examenService.getPreguntaActual()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(pregunta => this.preguntaActual = pregunta);
+      .subscribe(pregunta => {
+        this.preguntaActual = pregunta;
+        if (pregunta?.tipo === TipoPregunta.ORDENAMIENTO) {
+          this.opcionesOrdenadas = Array.from(pregunta.opciones || []);
+        }
+      });
 
     this.examenService.getTiempoRestante()
       .pipe(takeUntil(this.destroy$))
@@ -110,5 +122,42 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     const minutos = Math.floor((segundos % 3600) / 60);
     const segs = segundos % 60;
     return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
+  }
+
+  guardarRespuestaMultiple(seleccionadas: MatListOption[]): void {
+    if (!this.preguntaActual) return;
+
+    const respuestas = seleccionadas.map(option => option.value);
+    this.guardarRespuesta(respuestas);
+  }
+
+  trackByOpcion(index: number, opcion: OpcionRespuesta): string {
+    return opcion.id;
+  }
+
+  drop(event: CdkDragDrop<OpcionRespuesta[]>): void {
+    console.log('Drop event triggered');
+    console.log('Previous Index:', event.previousIndex);
+    console.log('Current Index:', event.currentIndex);
+
+    if (!this.preguntaActual) return;
+
+    // Crear una nueva copia del array
+    const opcionesActualizadas = [...this.opcionesOrdenadas];
+
+    // Realizar el movimiento en la copia
+    moveItemInArray(opcionesActualizadas, event.previousIndex, event.currentIndex);
+
+    // Actualizar el array original
+    this.opcionesOrdenadas = opcionesActualizadas;
+
+    console.log('Updated Options:', this.opcionesOrdenadas);
+
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+
+    // Guardar respuesta
+    const respuesta = this.opcionesOrdenadas.map(opcion => opcion.id);
+    this.guardarRespuesta(respuesta);
   }
 }

@@ -86,12 +86,30 @@
         color: $color-text-secondary;
         font-size: $font-size-sm;
         margin-bottom: $spacing-md;
-        // Limitar altura de descripción
+
+        // Limitar altura de descripción con mejor compatibilidad
         display: -webkit-box;
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         -webkit-box-orient: vertical;
+        box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
+
+        // Fallback para navegadores que no soportan line-clamp
+        @supports not (line-clamp: 3) {
+          max-height: 4.5em; // 1.5em (line-height) * 3 líneas
+          position: relative;
+
+          &::after {
+            content: '...';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: $color-surface;
+            padding-left: 4px;
+          }
+        }
       }
 
       .examen-info {

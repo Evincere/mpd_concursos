@@ -40,6 +40,41 @@
             </mat-radio-group>
           </div>
 
+          <!-- Selección múltiple -->
+          <div *ngSwitchCase="'SELECCION_MULTIPLE'" class="seleccion-multiple">
+            <mat-selection-list #seleccionList
+                               (selectionChange)="guardarRespuestaMultiple(seleccionList.selectedOptions.selected)">
+              <mat-list-option *ngFor="let opcion of preguntaActual.opciones"
+                               [value]="opcion.id"
+                               checkboxPosition="before"
+                               class="opcion-item">
+                {{ opcion.texto }}
+              </mat-list-option>
+            </mat-selection-list>
+          </div>
+
+          <!-- Ordenamiento -->
+          <div *ngSwitchCase="'ORDENAMIENTO'" class="ordenamiento">
+            <div cdkDropList
+                 class="opciones-lista"
+                 [cdkDropListData]="opcionesOrdenadas"
+                 (cdkDropListDropped)="drop($event)"
+                 cdkDropListOrientation="vertical"
+                 [cdkDropListLockAxis]="'y'">
+              <div *ngFor="let opcion of opcionesOrdenadas; trackBy: trackByOpcion; let i = index"
+                   class="opcion-item"
+                   cdkDrag
+                   [cdkDragData]="opcion"
+                   [attr.data-index]="i">
+                <div class="drag-handle" cdkDragHandle>
+                  <mat-icon>drag_indicator</mat-icon>
+                </div>
+                <span class="opcion-texto">{{ opcion.texto }}</span>
+                <div class="drag-placeholder" *cdkDragPlaceholder></div>
+              </div>
+            </div>
+          </div>
+
           <!-- Verdadero/Falso -->
           <div *ngSwitchCase="'VERDADERO_FALSO'" class="opciones-vf">
             <mat-radio-group class="opciones-grupo" (change)="guardarRespuesta($event.value)">

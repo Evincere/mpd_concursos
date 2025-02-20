@@ -46,7 +46,6 @@ export class ExamenesService {
   }
 
   getPreguntas(examenId: string): Observable<Pregunta[]> {
-    // Por ahora retornamos datos mockeados
     return of([
       {
         id: '1',
@@ -74,6 +73,32 @@ export class ExamenesService {
         tipo: TipoPregunta.DESARROLLO,
         puntaje: 15,
         orden: 3
+      },
+      {
+        id: '4',
+        texto: 'Seleccione todas las garantías constitucionales que aplican al proceso penal:',
+        tipo: TipoPregunta.SELECCION_MULTIPLE,
+        opciones: [
+          { id: 'a', texto: 'Juez natural' },
+          { id: 'b', texto: 'Defensa en juicio' },
+          { id: 'c', texto: 'Non bis in idem' },
+          { id: 'd', texto: 'Debido proceso' }
+        ],
+        puntaje: 12,
+        orden: 4
+      },
+      {
+        id: '5',
+        texto: 'Ordene cronológicamente las etapas del proceso penal:',
+        tipo: TipoPregunta.ORDENAMIENTO,
+        opciones: [
+          { id: 'a', texto: 'Investigación preliminar' },
+          { id: 'b', texto: 'Elevación a juicio' },
+          { id: 'c', texto: 'Debate oral' },
+          { id: 'd', texto: 'Sentencia' }
+        ],
+        puntaje: 8,
+        orden: 5
       }
     ]);
   }
