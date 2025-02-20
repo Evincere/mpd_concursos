@@ -1,0 +1,35 @@
+export enum TipoPregunta {
+  OPCION_MULTIPLE = 'OPCION_MULTIPLE',
+  VERDADERO_FALSO = 'VERDADERO_FALSO',
+  DESARROLLO = 'DESARROLLO'
+}
+
+export interface OpcionRespuesta {
+  id: string;
+  texto: string;
+}
+
+export interface Pregunta {
+  id: string;
+  texto: string;
+  tipo: TipoPregunta;
+  opciones?: OpcionRespuesta[];
+  puntaje: number;
+  orden: number;
+}
+
+export interface RespuestaUsuario {
+  preguntaId: string;
+  respuesta: string | string[]; // string para desarrollo, string[] para selección múltiple
+  timestamp: string;
+}
+
+export interface ExamenEnCurso {
+  examenId: string;
+  usuarioId: string;
+  fechaInicio: string;
+  fechaLimite: string;
+  respuestas: RespuestaUsuario[];
+  preguntaActual: number;
+  estado: 'EN_CURSO' | 'PAUSADO' | 'FINALIZADO';
+}

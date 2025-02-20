@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 import { Examen, TipoExamen, EstadoExamen } from '@shared/interfaces/examen/examen.interface';
 
@@ -41,7 +41,7 @@ export class ExamenDetalleComponent implements OnInit {
     - Derecho Penal
     - Derecho Procesal
     - Derechos Humanos
-    
+
     Instrucciones importantes:
     - Lea cuidadosamente cada pregunta antes de responder
     - No se permite consultar material durante el examen
@@ -69,7 +69,7 @@ export class ExamenDetalleComponent implements OnInit {
     ]
   };
 
-  constructor() {}
+  constructor(private router: Router) {}
 
   ngOnInit(): void {}
 
@@ -93,7 +93,6 @@ export class ExamenDetalleComponent implements OnInit {
   }
 
   iniciarExamen(): void {
-    // Implementar lógica de inicio de examen
-    console.log('Iniciando examen...');
+    this.router.navigate([`/dashboard/examenes/${this.examen.id}/rendir`]);
   }
-} 
+}

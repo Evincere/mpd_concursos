@@ -34,7 +34,7 @@
           <div class="examen-body">
             <h3>{{ examen.titulo }}</h3>
             <p class="descripcion">{{ examen.descripcion }}</p>
-            
+
             <div class="examen-info">
               <div class="info-item">
                 <i class="fas fa-clock"></i>
@@ -52,20 +52,23 @@
           </div>
 
           <div class="examen-actions">
-            <button mat-flat-button 
+            <button mat-flat-button
                     color="primary"
                     [disabled]="examen.estado !== 'PENDIENTE'"
+                    (click)="iniciarExamen(examen.id)"
                     class="action-button">
               <i class="fas fa-play"></i>
-              Iniciar Examen
+              <span>Iniciar Examen</span>
             </button>
-            <button mat-button [routerLink]="['/dashboard/examenes', examen.id]">
+            <button mat-button
+                    [routerLink]="['/dashboard/examenes', examen.id]"
+                    class="action-button secondary">
               <i class="fas fa-info-circle"></i>
-              Ver Detalle
+              <span>Ver Detalle</span>
             </button>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div> 
+</div>

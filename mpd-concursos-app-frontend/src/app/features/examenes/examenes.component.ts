@@ -6,7 +6,7 @@ import { Examen } from '@shared/interfaces/examen/examen.interface';
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { Subject, takeUntil } from 'rxjs';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-examenes',
@@ -27,7 +27,10 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   error: string | null = null;
   private destroy$ = new Subject<void>();
 
-  constructor(private examenesState: ExamenesStateService) {}
+  constructor(
+    private examenesState: ExamenesStateService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     // Suscribirse a los cambios de estado
@@ -59,4 +62,8 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   onFilter(): void {
     // Implementar filtros
   }
-} 
+
+  iniciarExamen(examenId: string): void {
+    this.router.navigate([`/dashboard/examenes/${examenId}/rendir`]);
+  }
+}

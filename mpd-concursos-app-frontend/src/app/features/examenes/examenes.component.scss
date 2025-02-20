@@ -30,6 +30,12 @@
     box-shadow: $box-shadow;
     overflow: hidden;
     transition: $transition-default;
+    min-width: 300px; // Establece un ancho mínimo para la card
+    max-width: 400px; // Establece un ancho máximo para la card
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 400px; // Altura mínima para consistencia
 
     &:hover {
       transform: translateY(-2px);
@@ -65,7 +71,10 @@
     }
 
     .examen-body {
+      flex: 1; // Toma el espacio restante
       padding: $spacing-lg;
+      display: flex;
+      flex-direction: column;
 
       h3 {
         margin: 0 0 $spacing-sm;
@@ -77,13 +86,19 @@
         color: $color-text-secondary;
         font-size: $font-size-sm;
         margin-bottom: $spacing-md;
+        // Limitar altura de descripción
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .examen-info {
+        margin-top: auto; // Empuja la info hacia abajo
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: $spacing-sm;
-        margin-top: $spacing-md;
 
         .info-item {
           display: flex;
@@ -101,42 +116,54 @@
     }
 
     .examen-actions {
+      padding: $spacing-lg;
+      border-top: 1px solid $color-border;
+      background-color: rgba(0, 0, 0, 0.03);
       display: flex;
-      gap: 12px;
-      padding: 16px;
+      gap: $spacing-md;
       justify-content: flex-end;
+      flex-wrap: nowrap;
 
-      button {
-        padding: 8px 16px;
+      .action-button {
+
+        justify-content: center;
         display: flex;
         align-items: center;
         gap: 8px;
+        padding: 8px 16px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
 
-        &.action-button {
+        i {
+          font-size: 16px;
+          flex-shrink: 0;
+        }
+
+        span {
+          white-space: nowrap;
+        }
+
+        &[color="primary"] {
           background-color: #1976d2;
           color: white;
 
-          &:disabled {
-            background-color: rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.3);
-          }
-
-          &:not(:disabled):hover {
+          &:hover:not([disabled]) {
             background-color: #1565c0;
           }
-        }
 
-        &[routerLink] {
-          background-color: rgba(255, 255, 255, 0.05);
-          color: #64b5f6;
-
-          &:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+          &[disabled] {
+            background-color: rgba(25, 118, 210, 0.5);
           }
         }
 
-        mat-icon, i {
-          margin-right: 8px;
+        &.secondary {
+          color: #1976d2;
+          background-color: transparent;
+
+          &:hover {
+            background-color: rgba(25, 118, 210, 0.1);
+          }
         }
       }
     }
@@ -168,4 +195,4 @@
       grid-template-columns: 1fr;
     }
   }
-} 
+}

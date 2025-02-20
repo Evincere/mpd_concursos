@@ -1,0 +1,92 @@
+<div class="examen-rendicion-container">
+  <!-- Header con información del examen y temporizador -->
+  <mat-card class="header-card">
+    <div class="header-content">
+      <div class="timer-container" [ngClass]="{'warning': tiempoRestante < 300}">
+        <mat-icon>timer</mat-icon>
+        <span class="timer">{{ formatTiempo(tiempoRestante) }}</span>
+      </div>
+      <div class="progress-info">
+        <span>Pregunta {{ preguntaActual?.orden }} de {{ preguntas.length }}</span>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Contenedor principal del examen -->
+  <div class="examen-content">
+    <!-- Panel de pregunta actual -->
+    <mat-card class="pregunta-card" *ngIf="preguntaActual">
+      <mat-card-header>
+        <mat-card-title>
+          Pregunta {{ preguntaActual.orden }}
+          <span class="puntaje">({{ preguntaActual.puntaje }} puntos)</span>
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p class="pregunta-texto">{{ preguntaActual.texto }}</p>
+
+        <!-- Respuestas según el tipo de pregunta -->
+        <div class="respuestas-container" [ngSwitch]="preguntaActual.tipo">
+
+          <!-- Opción múltiple -->
+          <div *ngSwitchCase="'OPCION_MULTIPLE'" class="opciones-multiple">
+            <mat-radio-group class="opciones-grupo" (change)="guardarRespuesta($event.value)">
+              <mat-radio-button *ngFor="let opcion of preguntaActual.opciones"
+                              [value]="opcion.id"
+                              class="opcion-item">
+                {{ opcion.texto }}
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+
+          <!-- Verdadero/Falso -->
+          <div *ngSwitchCase="'VERDADERO_FALSO'" class="opciones-vf">
+            <mat-radio-group class="opciones-grupo" (change)="guardarRespuesta($event.value)">
+              <mat-radio-button value="true" class="opcion-item">Verdadero</mat-radio-button>
+              <mat-radio-button value="false" class="opcion-item">Falso</mat-radio-button>
+            </mat-radio-group>
+          </div>
+
+          <!-- Desarrollo -->
+          <div *ngSwitchCase="'DESARROLLO'" class="desarrollo">
+            <mat-form-field appearance="outline" class="respuesta-desarrollo">
+              <textarea matInput
+                        rows="6"
+                        placeholder="Escribe tu respuesta aquí..."
+                        (blur)="guardarRespuestaTexto($event)">
+              </textarea>
+            </mat-form-field>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Barra de navegación -->
+    <div class="navegacion-container">
+      <button mat-button
+              color="primary"
+              (click)="anterior()"
+              [disabled]="!preguntaActual?.orden || preguntaActual?.orden === 1">
+        <mat-icon>arrow_back</mat-icon>
+        Anterior
+      </button>
+
+      <button mat-button
+              color="primary"
+              (click)="siguiente()"
+              *ngIf="preguntaActual?.orden !== preguntas?.length">
+        Siguiente
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+
+      <button mat-raised-button
+              color="primary"
+              (click)="finalizar()"
+              *ngIf="preguntaActual?.orden === preguntas?.length">
+        Finalizar Examen
+        <mat-icon>check_circle</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
