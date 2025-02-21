@@ -1,3 +1,7 @@
+import { Injectable } from "@angular/core";
+import { IExamen } from "@core/interfaces/examenes/examen.interface";
+import { TipoExamen } from "@shared/interfaces/examen/examen.interface";
+
 @Injectable({
   providedIn: 'root'
 })

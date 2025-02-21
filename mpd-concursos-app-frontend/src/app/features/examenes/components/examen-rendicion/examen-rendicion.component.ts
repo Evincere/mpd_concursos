@@ -11,7 +11,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExamenRendicionService } from '@core/services/examenes/examen-rendicion.service';
 import { ExamenesService } from '@core/services/examenes/examenes.service';
-import { OpcionRespuesta, Pregunta, RespuestaUsuario, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
+import { OpcionRespuesta, Pregunta as PreguntaInterface, RespuestaUsuario, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
 import { Subject, fromEvent, merge } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 import { MatListModule, MatListOption } from '@angular/material/list';
@@ -28,6 +28,7 @@ import {
 import { SECURITY_PROVIDERS } from '../../providers/security.providers';
 import { ExamenValidationService } from '@core/services/examenes/examen-validation.service';
 import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
+import { ComponentWithExam } from '@core/services/examenes/security/guards/exam-navigation.guard';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -71,15 +72,15 @@ import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
     }
   ]
 })
-export class ExamenRendicionComponent implements OnInit, OnDestroy {
-  preguntaActual: Pregunta | null = null;
-  preguntas: Pregunta[] = [];
+export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWithExam {
+  isExamInProgress: boolean = false;
+  preguntaActual: PreguntaLocal | null = null;
+  preguntas: PreguntaLocal[] = [];
   tiempoRestante: number = 0;
   private destroy$ = new Subject<void>();
   opcionesOrdenadas: OpcionRespuesta[] = [];
   private preguntaStartTime: number = 0;
   private fullscreenWarningShown = false;
-
   constructor(
     private examenService: ExamenRendicionService,
     private examenesService: ExamenesService,
@@ -92,29 +93,24 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     private recoveryService: ExamenRecoveryService,
     @Optional() @Inject('SidebarService') private sidebarService?: any
   ) {}
-
   ngOnInit(): void {
     const examenId = this.route.snapshot.params['id'];
     if (!examenId) {
       this.router.navigate(['/dashboard/examenes']);
       return;
     }
-
-    // Activar pantalla completa al iniciar
+  // Activar pantalla completa al iniciar
     this.activarPantallaCompleta();
-
-    // Primero configuramos los observables
+  // Primero configuramos los observables
     this.setupObservables();
-
-    // Luego cargamos las preguntas e iniciamos el examen
+  // Luego cargamos las preguntas e iniciamos el examen
     this.examenesService.getPreguntas(examenId).subscribe(preguntas => {
       this.preguntas = preguntas;
       this.examenService.iniciarExamen(examenId, preguntas);
+      this.isExamInProgress = true;
     });
-
     this.securityService.initializeSecurityMeasures();
-
-    // Registrar inicio del examen
+  // Registrar inicio del examen
     this.activityLogger.logActivity({
       type: ActivityLogType.SYSTEM_EVENT,
       timestamp: Date.now(),
@@ -123,11 +119,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
         examenId: this.route.snapshot.params['id']
       }
     });
-
-    this.setupConnectionMonitoring();
-    this.setupBeforeUnloadWarning();
-  }
-
+  this.setupConnectionMonitoring();
+  this.setupBeforeUnloadWarning();
+}
   private setupObservables(): void {
     this.examenService.getPreguntaActual()
       .pipe(takeUntil(this.destroy$))
@@ -143,12 +137,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         }
       });
-
-    this.examenService.getTiempoRestante()
+  this.examenService.getTiempoRestante()
       .pipe(takeUntil(this.destroy$))
       .subscribe(tiempo => this.tiempoRestante = tiempo);
-
-    this.securityService.getSecurityViolations()
+  this.securityService.getSecurityViolations()
       .pipe(takeUntil(this.destroy$))
       .subscribe(violations => {
         if (violations.length > 0) {
@@ -156,15 +148,12 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           this.handleSecurityViolation(lastViolation);
         }
       });
-  }
-
+}
   private handleSecurityViolation(violation: SecurityViolation): void {
     this.notificationService.showSecurityWarning(violation.type);
-
-    if (violation.severity === 'HIGH') {
+  if (violation.severity === 'HIGH') {
       const examenId = this.route.snapshot.params['id'];
-
-      // Nos suscribimos al Observable para obtener el valor actual
+  // Nos suscribimos al Observable para obtener el valor actual
       this.examenService.getExamenEnCurso()
         .pipe(takeUntil(this.destroy$))
         .subscribe(examen => {
@@ -174,33 +163,27 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
         });
     }
   }
-
   ngOnDestroy(): void {
     this.securityService.cleanup();
     this.activityLogger.cleanup();
     this.destroy$.next();
     this.destroy$.complete();
   }
-
   guardarRespuestaTexto(event: Event): void {
     const target = event.target as HTMLTextAreaElement;
     if (target) {
       this.guardarRespuesta(target.value);
     }
   }
-
   guardarRespuesta(respuesta: string | string[]): void {
     if (!this.preguntaActual) return;
-
-    const respuestaUsuario: RespuestaUsuario = {
+  const respuestaUsuario: RespuestaUsuario = {
       preguntaId: this.preguntaActual.id,
       respuesta,
       timestamp: new Date().toISOString()
     };
-
-    this.examenService.guardarRespuesta(respuestaUsuario);
-
-    this.activityLogger.logActivity({
+  this.examenService.guardarRespuesta(respuestaUsuario);
+  this.activityLogger.logActivity({
       type: ActivityLogType.USER_INTERACTION,
       timestamp: Date.now(),
       details: {
@@ -209,70 +192,48 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   siguiente(): void {
     this.examenService.siguientePregunta();
   }
-
   anterior(): void {
     this.examenService.preguntaAnterior();
   }
-
   async finalizar(): Promise<void> {
     const confirmed = await this.notificationService.confirmAction('finalizar');
     if (confirmed) {
+      this.isExamInProgress = false;
       this.examenService.finalizarExamen();
       this.router.navigate(['/dashboard/examenes']);
     }
   }
-
   formatTiempo(segundos: number): string {
     if (!segundos || isNaN(segundos)) {
       return '00:00:00';
     }
-
-    const horas = Math.floor(segundos / 3600);
+  const horas = Math.floor(segundos / 3600);
     const minutos = Math.floor((segundos % 3600) / 60);
     const segs = Math.floor(segundos % 60);
-
-    const horasFormateadas = Math.min(horas, 99).toString().padStart(2, '0');
+  const horasFormateadas = Math.min(horas, 99).toString().padStart(2, '0');
     const minutosFormateados = Math.min(minutos, 59).toString().padStart(2, '0');
     const segsFormateados = Math.min(segs, 59).toString().padStart(2, '0');
-
-    return `${horasFormateadas}:${minutosFormateados}:${segsFormateados}`;
-  }
-
+  return `${horasFormateadas}:${minutosFormateados}:${segsFormateados}`;
+}
   guardarRespuestaMultiple(seleccionadas: MatListOption[]): void {
     if (!this.preguntaActual) return;
-
-    const respuestas = seleccionadas.map(option => option.value);
+  const respuestas = seleccionadas.map(option => option.value);
     this.guardarRespuesta(respuestas);
   }
-
   trackByOpcion(index: number, opcion: OpcionRespuesta): string {
     return opcion.id;
   }
-
-  drop(event: CdkDragDrop<OpcionRespuesta[]>): void {
-    if (!this.preguntaActual) return;
-
-    // Crear una copia del array
-    const opcionesActualizadas = this.opcionesOrdenadas.slice();
-
-    // Realizar el movimiento
-    moveItemInArray(opcionesActualizadas, event.previousIndex, event.currentIndex);
-
-    // Actualizar el estado
-    this.opcionesOrdenadas = opcionesActualizadas;
-
-    // Forzar actualización de la vista
-    this.cdr.detectChanges();
-
-    // Guardar la respuesta
-    const respuesta = this.opcionesOrdenadas.map(opcion => opcion.id);
-    this.guardarRespuesta(respuesta);
+  drop(event: CdkDragDrop<any[]>): void {
+    moveItemInArray(this.opcionesOrdenadas, event.previousIndex, event.currentIndex);
+    this.guardarRespuestaOrdenada();
   }
-
+  guardarRespuestaOrdenada(): void {
+    if (!this.preguntaActual) return;
+    this.preguntaActual.respuesta = this.opcionesOrdenadas.map(opcion => opcion.id);
+  }
   private setupConnectionMonitoring(): void {
     merge(
       fromEvent(window, 'online'),
@@ -283,17 +244,14 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       this.notificationService.showConnectionWarning(navigator.onLine);
     });
   }
-
   private setupBeforeUnloadWarning(): void {
     let currentExamen: boolean = false;
-
-    this.examenService.getExamenEnCurso()
+  this.examenService.getExamenEnCurso()
       .pipe(takeUntil(this.destroy$))
       .subscribe(examen => {
         currentExamen = !!examen;
       });
-
-    window.addEventListener('beforeunload', (e) => {
+  window.addEventListener('beforeunload', (e) => {
       if (currentExamen) {
         e.preventDefault();
         return '';
@@ -301,16 +259,13 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       return undefined;  // Retornar undefined cuando no hay examen activo
     });
   }
-
   @HostListener('paste', ['$event'])
   async onPaste(event: ClipboardEvent): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
-
-    // Primero mostrar la advertencia
+  // Primero mostrar la advertencia
     this.notificationService.showClipboardWarning('paste');
-
-    // Luego registrar la violación
+  // Luego registrar la violación
     this.securityService.reportSecurityViolation(
       SecurityViolationType.CLIPBOARD_OPERATION,
       {
@@ -320,14 +275,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       }
     );
   }
-
   @HostListener('copy', ['$event'])
   async onCopy(event: ClipboardEvent): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
-
-    this.notificationService.showClipboardWarning('copy');
-
+  this.notificationService.showClipboardWarning('copy');
     this.securityService.reportSecurityViolation(
       SecurityViolationType.CLIPBOARD_OPERATION,
       {
@@ -337,14 +289,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       }
     );
   }
-
   @HostListener('cut', ['$event'])
   async onCut(event: ClipboardEvent): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
-
-    this.notificationService.showClipboardWarning('cut');
-
+  this.notificationService.showClipboardWarning('cut');
     this.securityService.reportSecurityViolation(
       SecurityViolationType.CLIPBOARD_OPERATION,
       {
@@ -354,13 +303,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       }
     );
   }
-
   @HostListener('document:fullscreenchange', ['$event'])
   async onFullscreenChange(event: Event): Promise<void> {
     if (!document.fullscreenElement) {
       event.preventDefault();
-
-      const shouldExit = await this.notificationService.showFullscreenWarning();
+  const shouldExit = await this.notificationService.showFullscreenWarning();
       if (!shouldExit) {
         await this.activarPantallaCompleta();
       } else {
@@ -371,18 +318,14 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       }
     }
   }
-
   private async activarPantallaCompleta(): Promise<void> {
     try {
       if (this.sidebarService?.collapse) {
         this.sidebarService.collapse();
       }
-
-      if (!document.fullscreenElement) {
-        const element = document.documentElement;
+  const element = document.documentElement;
         await element.requestFullscreen();
-
-        // Mostrar mensaje solo la primera vez
+  // Mostrar mensaje solo la primera vez
         if (!this.fullscreenWarningShown) {
           this.notificationService.showSecurityWarning(
             SecurityViolationType.FULLSCREEN_REQUIRED,
@@ -390,13 +333,22 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           );
           this.fullscreenWarningShown = true;
         }
+      } catch (error) {
+        console.error('Error al activar pantalla completa:', error);
+        this.securityService.reportSecurityViolation(
+          SecurityViolationType.FULLSCREEN_DENIED,
+          { error: 'Usuario denegó el modo pantalla completa' }
+        );
       }
-    } catch (error) {
-      console.error('Error al activar pantalla completa:', error);
-      this.securityService.reportSecurityViolation(
-        SecurityViolationType.FULLSCREEN_DENIED,
-        { error: 'Usuario denegó el modo pantalla completa' }
-      );
-    }
   }
+}
+
+interface PreguntaLocal {
+  id: string;
+  orden: number;
+  texto: string;
+  puntaje: number;
+  tipo: TipoPregunta;
+  opciones?: OpcionRespuesta[];
+  respuesta?: string[];
 }

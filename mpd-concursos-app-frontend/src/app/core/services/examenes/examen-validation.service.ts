@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { ExamenSecurityService } from './security/examen-security.service';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
-import * as CryptoJS from 'crypto-js';
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +11,21 @@ export class ExamenValidationService {
     private securityService: ExamenSecurityService
   ) {}
 
-  validarRespuesta(respuesta: RespuestaUsuario, examenId: string): boolean {
-    const esValida = this.validarHash(respuesta);
+  async generarHash(respuesta: RespuestaUsuario): Promise<string> {
+    const content = `${respuesta.preguntaId}|${respuesta.respuesta}|${respuesta.timestamp}|${respuesta.tiempoRespuesta || 0}`;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content);
+    
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    return hashHex;
+  }
+
+  async validarRespuesta(respuesta: RespuestaUsuario, examenId: string): Promise<boolean> {
+    const hash = await this.generarHash(respuesta);
+    const esValida = hash === respuesta.hash;
 
     if (!esValida) {
       this.securityService.reportSecurityViolation(
@@ -23,16 +35,6 @@ export class ExamenValidationService {
     }
 
     return esValida;
-  }
-
-  private validarHash(respuesta: RespuestaUsuario): boolean {
-    const hash = this.generarHash(respuesta);
-    return hash === respuesta.hash;
-  }
-
-  generarHash(respuesta: RespuestaUsuario): string {
-    const datos = `${respuesta.preguntaId}|${JSON.stringify(respuesta.respuesta)}|${respuesta.timestamp}`;
-    return CryptoJS.SHA256(datos).toString();
   }
 
   limpiarHistorial(examenId: string): void {

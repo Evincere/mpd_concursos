@@ -79,42 +79,28 @@ export class ExamenRendicionService {
     if (!examen) return;
 
     // Generar hash para la respuesta
-    respuesta.hash = this.validationService.generarHash(respuesta);
+    this.validationService.generarHash(respuesta).then(hash => {
+      respuesta.hash = hash;
 
-    // Validar la respuesta
-    if (!this.validationService.validarRespuesta(respuesta, examen.examenId)) {
-      // Si la respuesta no es válida, se registra pero se marca como sospechosa
-      this.securityService.reportSecurityViolation(
-        SecurityViolationType.SUSPICIOUS_ANSWER,
-        { respuesta }
-      );
-    }
+      // Validar la respuesta
+      if (!this.validationService.validarRespuesta(respuesta, examen.examenId)) {
+        this.securityService.reportSecurityViolation(SecurityViolationType.SUSPICIOUS_ANSWER, { respuesta });
+      }
 
-    // Continuar con el guardado normal...
-    const respuestas = [...examen.respuestas];
-    const index = respuestas.findIndex(r => r.preguntaId === respuesta.preguntaId);
+      // Continuar con el guardado normal...
+      const respuestas = [...examen.respuestas];
+      const index = respuestas.findIndex(r => r.preguntaId === respuesta.preguntaId);
 
-    if (index >= 0) {
-      respuestas[index] = {
-        ...respuesta,
-        intentos: (respuestas[index].intentos || 0) + 1
-      };
-    } else {
-      respuestas.push({
-        ...respuesta,
-        intentos: 1
-      });
-    }
+      if (index >= 0) {
+        respuestas[index] = { ...respuesta, intentos: (respuestas[index].intentos || 0) + 1 };
+      } else {
+        respuestas.push({ ...respuesta, intentos: 1 });
+      }
 
-    this.examenEnCurso.next({
-      ...examen,
-      respuestas
-    });
+      this.examenEnCurso.next({ ...examen, respuestas });
 
-    // Guardar backup
-    this.recoveryService.saveToLocalBackup(examen.examenId, {
-      ...examen,
-      respuestas
+      // Guardar backup
+      this.recoveryService.saveToLocalBackup(examen.examenId, { ...examen, respuestas });
     });
   }
 
