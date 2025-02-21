@@ -46,6 +46,30 @@ export class ExamenNotificationService {
     }
   }
 
+  private getSecurityMessage(type: SecurityViolationType): string {
+    const messages: Record<SecurityViolationType, string> = {
+      FULLSCREEN_EXIT: 'No se permite salir del modo pantalla completa',
+      FULLSCREEN_DENIED: 'Debe permitir el modo pantalla completa para continuar',
+      TAB_SWITCH: 'No se permite cambiar de pestaña durante el examen',
+      KEYBOARD_SHORTCUT: 'Atajo de teclado no permitido',
+      CLIPBOARD_OPERATION: 'Operaciones de copiar/pegar no permitidas',
+      INACTIVITY_TIMEOUT: 'Sesión inactiva por mucho tiempo',
+      NETWORK_VIOLATION: 'Violación de seguridad de red detectada',
+      SUSPICIOUS_BEHAVIOR: 'Se ha detectado comportamiento sospechoso',
+      TIME_MANIPULATION: 'Se ha detectado manipulación del tiempo',
+      TIME_DRIFT: 'Se ha detectado desincronización del tiempo',
+      SUSPICIOUS_ANSWER: 'Respuesta marcada como sospechosa',
+      ANSWER_TOO_FAST: 'Respuesta demasiado rápida, posible comportamiento sospechoso',
+      ANSWER_TOO_SLOW: 'Tiempo de respuesta excedido',
+      SUSPICIOUS_PATTERN: 'Se ha detectado un patrón de respuestas sospechoso',
+      POST_INCIDENT_VALIDATION_FAILED: 'La validación post-incidente ha fallado',
+      FULLSCREEN_REQUIRED: 'El examen debe realizarse en modo pantalla completa',
+      FULLSCREEN_WARNING: 'Está intentando salir del modo pantalla completa'
+    };
+
+    return messages[type] || 'Se ha detectado una violación de seguridad';
+  }
+
   showConnectionWarning(isOnline: boolean): void {
     // Evitar mostrar el mensaje si ya hay uno visible
     this.snackBar.dismiss();
@@ -74,30 +98,6 @@ export class ExamenNotificationService {
     });
 
     return dialogRef.afterClosed().toPromise();
-  }
-
-  private getSecurityMessage(type: SecurityViolationType): string {
-    const messages: Record<SecurityViolationType, string> = {
-      FULLSCREEN_EXIT: 'No se permite salir del modo pantalla completa',
-      FULLSCREEN_DENIED: 'Debe permitir el modo pantalla completa para continuar',
-      TAB_SWITCH: 'No se permite cambiar de pestaña durante el examen',
-      KEYBOARD_SHORTCUT: 'Atajo de teclado no permitido',
-      CLIPBOARD_OPERATION: 'Operaciones de copiar/pegar no permitidas',
-      INACTIVITY_TIMEOUT: 'Sesión inactiva por mucho tiempo',
-      NETWORK_VIOLATION: 'Violación de seguridad de red detectada',
-      SUSPICIOUS_BEHAVIOR: 'Se ha detectado comportamiento sospechoso',
-      TIME_MANIPULATION: 'Se ha detectado manipulación del tiempo',
-      TIME_DRIFT: 'Se ha detectado desincronización del tiempo',
-      SUSPICIOUS_ANSWER: 'Respuesta marcada como sospechosa',
-      ANSWER_TOO_FAST: 'Respuesta demasiado rápida',
-      ANSWER_TOO_SLOW: 'Tiempo de respuesta excedido',
-      SUSPICIOUS_PATTERN: 'Se ha detectado un patrón sospechoso',
-      POST_INCIDENT_VALIDATION_FAILED: 'La validación post-incidente ha fallado',
-      FULLSCREEN_REQUIRED: 'El examen debe realizarse en modo pantalla completa',
-      FULLSCREEN_WARNING: 'Está intentando salir del modo pantalla completa'
-    };
-
-    return messages[type] || 'Se ha detectado una violación de seguridad';
   }
 
   private showFinalWarningDialog(type: SecurityViolationType): void {
