@@ -8,7 +8,6 @@ import { PerfilComponent } from '@features/perfil/components/perfil.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { ConcursosComponent } from '@features/concursos/concursos.component';
-import { EXAMENES_ROUTES } from '@features/examenes/examenes.routes';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, data: { animation: 'login' } },
@@ -25,7 +24,8 @@ export const routes: Routes = [
       { path: 'perfil', component: PerfilComponent },
       {
         path: 'examenes',
-        children: EXAMENES_ROUTES
+        loadChildren: () => import('./features/examenes/examenes.routes')
+          .then(m => m.EXAMENES_ROUTES)
       }
     ]
   },

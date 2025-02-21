@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
-import { ExamenSecurityService } from './examen-security.service';
+import { ExamenSecurityService } from './security/examen-security.service';
 import { ExamenTimeService } from './examen-time.service';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import * as CryptoJS from 'crypto-js';
@@ -21,7 +21,6 @@ export class ExamenValidationService {
 
   validarRespuesta(respuesta: RespuestaUsuario, examenId: string): boolean {
     const esValida = this.validarHash(respuesta) &&
-                    this.validarTiempoRespuesta(respuesta) &&
                     this.validarPatrones(respuesta, examenId);
 
     if (!esValida) {
@@ -42,30 +41,6 @@ export class ExamenValidationService {
   generarHash(respuesta: RespuestaUsuario): string {
     const datos = `${respuesta.preguntaId}|${JSON.stringify(respuesta.respuesta)}|${respuesta.timestamp}`;
     return CryptoJS.SHA256(datos).toString();
-  }
-
-  private validarTiempoRespuesta(respuesta: RespuestaUsuario): boolean {
-    const tiempoActual = this.timeService.getCurrentServerTime();
-    const tiempoRespuesta = new Date(respuesta.timestamp).getTime();
-    const tiempoTranscurrido = tiempoActual - tiempoRespuesta;
-
-    if (tiempoTranscurrido < this.MIN_TIEMPO_RESPUESTA) {
-      this.securityService.reportSecurityViolation(
-        SecurityViolationType.ANSWER_TOO_FAST,
-        { tiempoTranscurrido }
-      );
-      return false;
-    }
-
-    if (tiempoTranscurrido > this.MAX_TIEMPO_RESPUESTA) {
-      this.securityService.reportSecurityViolation(
-        SecurityViolationType.ANSWER_TOO_SLOW,
-        { tiempoTranscurrido }
-      );
-      return false;
-    }
-
-    return true;
   }
 
   private validarPatrones(respuesta: RespuestaUsuario, examenId: string): boolean {

@@ -3,14 +3,12 @@ import { BehaviorSubject, Observable, timer, interval } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Pregunta, ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { ExamenTimeService } from './examen-time.service';
-import { ExamenSecurityService } from './examen-security.service';
+import { ExamenSecurityService } from './security/examen-security.service';
 import { ExamenRecoveryService } from './examen-recovery.service';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ExamenValidationService } from './examen-validation.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class ExamenRendicionService {
   private examenEnCurso = new BehaviorSubject<ExamenEnCurso | null>(null);
   private preguntas = new BehaviorSubject<Pregunta[]>([]);
@@ -60,7 +58,8 @@ export class ExamenRendicionService {
     const intervalo = timer(0, 1000).pipe(
       map(() => {
         const ahora = new Date();
-        return Math.max(0, Math.floor((fechaLimite.getTime() - ahora.getTime()) / 1000));
+        const tiempoRestante = Math.max(0, Math.floor((fechaLimite.getTime() - ahora.getTime()) / 1000));
+        return tiempoRestante;
       }),
       takeUntil(timer(fechaLimite.getTime() - Date.now()))
     );
@@ -190,16 +189,7 @@ export class ExamenRendicionService {
   }
 
   getTiempoRestante(): Observable<number> {
-    return interval(1000).pipe(
-      map(() => {
-        const tiempoFin = this.examenEnCurso.value?.fechaLimite;
-        if (!tiempoFin) return 0;
-
-        const tiempoRestante = this.timeService.getTimeRemaining(new Date(tiempoFin).getTime());
-        // Asegurarnos que no devolvemos valores negativos
-        return Math.max(0, Math.floor(tiempoRestante / 1000));
-      })
-    );
+    return this.tiempoRestante.asObservable();
   }
 
   private emitPreguntaActual(): void {

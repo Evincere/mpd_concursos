@@ -274,3 +274,76 @@
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }
 }
+
+::ng-deep {
+  .security-dialog {
+    .mat-dialog-container {
+      padding: 24px;
+      border-radius: 8px;
+      background-color: #2d2d2d;
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    .mat-dialog-title {
+      color: #ff4444;
+      margin-bottom: 16px;
+      font-size: 1.5em;
+      font-weight: 500;
+    }
+
+    .mat-dialog-content {
+      margin: 0;
+      padding: 16px 0;
+      color: #ffffff;
+      font-size: 1.1em;
+      line-height: 1.5;
+    }
+
+    .mat-dialog-actions {
+      padding: 16px 0 0;
+      margin-bottom: 0;
+      justify-content: flex-end;
+      gap: 12px;
+
+      button {
+        min-width: 100px;
+        padding: 8px 16px;
+
+        &.mat-primary {
+          background-color: #ff4444;
+          color: white;
+        }
+      }
+    }
+  }
+
+  .warning-snackbar {
+    background: #ff9800;
+    color: white;
+
+    .mat-simple-snackbar-action {
+      color: white;
+    }
+  }
+
+  .severe-snackbar {
+    background: #f44336;
+    color: white;
+
+    .mat-simple-snackbar-action {
+      color: white;
+    }
+  }
+
+  .clipboard-warning {
+    background-color: #ff9800 !important;
+    color: white !important;
+    font-weight: 500;
+
+    .mat-simple-snackbar-action {
+      color: white;
+      font-weight: bold;
+    }
+  }
+}

@@ -174,4 +174,13 @@ export class ExamenRecoveryService {
     // También limpiar en el servidor
     this.http.delete(`${environment.apiUrl}/examenes/${examenId}/backup`).subscribe();
   }
+
+  saveExamenState(examen: ExamenEnCurso): void {
+    // Implementar lógica de guardado
+  }
+
+  recoverExamenState(): ExamenEnCurso | null {
+    // Implementar lógica de recuperación
+    return null;
+  }
 }

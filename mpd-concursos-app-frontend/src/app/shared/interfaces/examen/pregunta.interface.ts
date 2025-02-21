@@ -24,7 +24,7 @@ export interface RespuestaUsuario {
   preguntaId: string;
   respuesta: string | string[];
   timestamp: string;
-  tiempoRespuesta: number;
+  tiempoRespuesta?: number;
   hash?: string;
   intentos?: number;
 }

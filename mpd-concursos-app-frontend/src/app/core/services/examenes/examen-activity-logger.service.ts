@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, fromEvent } from 'rxjs';
 import { debounceTime, buffer, map, filter } from 'rxjs/operators';
 import { environment } from '@env/environment';
+import { ActivityLogType } from '@core/interfaces/examenes/monitoring/activity-log.interface';
 
 export interface ActivityLog {
   type: ActivityLogType;
@@ -11,14 +12,6 @@ export interface ActivityLog {
   resourceUsage?: SystemResourceInfo;
   networkInfo?: NetworkActivityInfo;
   userContext?: UserContextInfo;
-}
-
-export enum ActivityLogType {
-  USER_INTERACTION = 'USER_INTERACTION',
-  SYSTEM_EVENT = 'SYSTEM_EVENT',
-  NETWORK_ACTIVITY = 'NETWORK_ACTIVITY',
-  RESOURCE_USAGE = 'RESOURCE_USAGE',
-  SECURITY_EVENT = 'SECURITY_EVENT'
 }
 
 interface SystemResourceInfo {
@@ -230,16 +223,32 @@ export class ExamenActivityLoggerService {
     });
   }
 
-  logActivity(log: ActivityLog): void {
-    // Agregar contexto del usuario
-    log.userContext = this.getUserContext();
+  logActivity(log: ActivityLog | ActivityLogType, description?: string): void {
+    if (log instanceof Object && 'type' in log) {
+      // Es un ActivityLog completo
+      this.handleActivityLog(log as ActivityLog);
+    } else {
+      // Es un ActivityLogType con descripción
+      this.handleSimpleLog(log as ActivityLogType, description!);
+    }
+  }
 
+  private handleActivityLog(log: ActivityLog): void {
+    log.userContext = this.getUserContext();
     this.activityLogs.push(log);
 
-    // Mantener el tamaño del buffer controlado
     if (this.activityLogs.length > this.MAX_LOGS_IN_MEMORY) {
       this.syncLogs(true);
     }
+  }
+
+  private handleSimpleLog(type: ActivityLogType, description: string): void {
+    console.log(`[${type}] ${description}`);
+    this.handleActivityLog({
+      type,
+      timestamp: Date.now(),
+      details: { description }
+    });
   }
 
   private getUserContext(): UserContextInfo {

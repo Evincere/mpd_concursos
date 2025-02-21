@@ -13,13 +13,18 @@ export enum SecurityViolationType {
   ANSWER_TOO_FAST = 'ANSWER_TOO_FAST',
   ANSWER_TOO_SLOW = 'ANSWER_TOO_SLOW',
   SUSPICIOUS_PATTERN = 'SUSPICIOUS_PATTERN',
-  POST_INCIDENT_VALIDATION_FAILED = 'POST_INCIDENT_VALIDATION_FAILED'
+  POST_INCIDENT_VALIDATION_FAILED = 'POST_INCIDENT_VALIDATION_FAILED',
+  FULLSCREEN_REQUIRED = 'FULLSCREEN_REQUIRED',
+  FULLSCREEN_WARNING = 'FULLSCREEN_WARNING'
 }
+
+export type SecuritySeverity = 'LOW' | 'MEDIUM' | 'HIGH';
+export type SecurityAction = 'LOG' | 'WARN' | 'BLOCK';
 
 export interface SecurityViolation {
   type: SecurityViolationType;
   timestamp: string;
   details?: any;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH';
-  actionTaken?: string;
+  severity: SecuritySeverity;
+  actionTaken: SecurityAction;
 }

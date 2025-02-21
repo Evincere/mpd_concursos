@@ -4,7 +4,7 @@
     <div class="header-content">
       <div class="timer-container" [ngClass]="{'warning': tiempoRestante < 300}">
         <mat-icon>timer</mat-icon>
-        <span class="timer">{{ formatTiempo(tiempoRestante) }}</span>
+        <span class="timer">{{ tiempoRestante | formatTiempo }}</span>
       </div>
       <div class="progress-info">
         <span>Pregunta {{ preguntaActual?.orden }} de {{ preguntas.length }}</span>
@@ -86,6 +86,9 @@
               <textarea matInput
                         rows="6"
                         placeholder="Escribe tu respuesta aquí..."
+                        (paste)="onPaste($event)"
+                        (copy)="onCopy($event)"
+                        (cut)="onCut($event)"
                         (blur)="guardarRespuestaTexto($event)">
               </textarea>
             </mat-form-field>
