@@ -1,8 +1,10 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, OnDestroy, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { SidebarService } from '../../../../core/services/sidebar/sidebar.service';
+import { SidebarService } from '@core/services/sidebar/sidebar.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-sidebar',
@@ -11,17 +13,20 @@ import { SidebarService } from '../../../../core/services/sidebar/sidebar.servic
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
-export class SidebarComponent {
-  @Output() collapseChange = new EventEmitter<boolean>();
+export class SidebarComponent implements OnInit, OnDestroy {
   isCollapsed = false;
+  private destroy$ = new Subject<void>();
+  @Output() sidebarCollapsed = new EventEmitter<boolean>();
 
-  constructor(private authService: AuthService, private sidebarService: SidebarService) {
-    this.sidebarService.isCollapsed$.subscribe(
-      collapsed => {
-        this.isCollapsed = collapsed;
-        this.collapseChange.emit(collapsed); // Emitir el evento cuando cambia el estado
-      }
-    );
+  constructor(private authService: AuthService, private sidebarService: SidebarService) {}
+
+  ngOnInit() {
+    this.sidebarService.isCollapsed$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(state => {
+        this.isCollapsed = state;
+        this.sidebarCollapsed.emit(state);
+      });
   }
 
   logout() {
@@ -31,5 +36,10 @@ export class SidebarComponent {
 
   toggleSidebar() {
     this.sidebarService.toggleSidebar();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

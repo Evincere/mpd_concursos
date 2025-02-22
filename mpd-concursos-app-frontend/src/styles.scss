@@ -983,50 +983,56 @@ main.mat-app-background,
   z-index: 9999;
 }
 
-// Variables para Snackbars
-$snackbar-success: rgba(76, 175, 80, 0.85);
-$snackbar-error: rgba(244, 67, 54, 0.85);
-$snackbar-info: rgba(33, 150, 243, 0.85);
-$snackbar-text: rgba(255, 255, 255, 0.95);
-$snackbar-action: rgba(255, 255, 255, 0.7);
+// Variables para Snackbars (mantener estas definiciones en un solo lugar)
+$snackbar-success: rgba(76, 175, 80, 0.95);
+$snackbar-error: rgba(244, 67, 54, 0.95);
+$snackbar-warning: rgba(255, 193, 7, 0.95);
+$snackbar-info: rgba(33, 150, 243, 0.95);
+$snackbar-text: #ffffff;
+$snackbar-action: rgba(255, 255, 255, 0.9);
 
-// Mixin para efecto glassmorphism
-@mixin glassmorphism {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
-}
-
-// Mixin para estilos comunes de snackbar
+// Unificar el mixin de snackbar
 @mixin snackbar-base($bg-color) {
   .mdc-snackbar__surface {
-    background: $bg-color !important;
-    @include glassmorphism;
-    min-height: 40px !important;
-    padding: 6px 12px !important;
+    background-color: $bg-color !important;
+    color: $snackbar-text !important;
+    min-height: 48px !important;
+    padding: 8px 16px !important;
     border-radius: 8px !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
   .mdc-snackbar__label {
     color: $snackbar-text !important;
     font-size: 14px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.25px !important;
     padding: 0 !important;
+
+    &::before {
+      font-family: 'Font Awesome 5 Free' !important;
+      font-weight: 900 !important;
+      margin-right: 8px !important;
+    }
   }
 
-  .mat-simple-snackbar-action {
-    padding-inline-start: 12px !important;
+  .mat-mdc-snack-bar-actions {
+    padding-inline-start: 16px !important;
+    margin-inline-end: -8px !important;
 
     button {
-      color: $snackbar-text !important;
+      color: $snackbar-action !important;
       font-size: 13px !important;
-      font-weight: 400 !important;
+      font-weight: 500 !important;
       text-transform: uppercase !important;
       letter-spacing: 0.5px !important;
-      padding: 0 8px !important;
-      min-width: auto !important;
-      height: 28px !important;
-      line-height: 28px !important;
+      padding: 0 12px !important;
+      height: 32px !important;
       border-radius: 4px !important;
       background: rgba(255, 255, 255, 0.1) !important;
 
@@ -1037,44 +1043,47 @@ $snackbar-action: rgba(255, 255, 255, 0.7);
   }
 }
 
-// Estilos para Snackbars
+// Estilos unificados para todos los tipos de snackbar
 .success-snackbar {
   @include snackbar-base($snackbar-success);
+  .mdc-snackbar__label::before { content: '\f058'; }
 }
 
 .error-snackbar {
   @include snackbar-base($snackbar-error);
+  .mdc-snackbar__label::before { content: '\f057'; }
+}
+
+.warning-snackbar {
+  @include snackbar-base($snackbar-warning);
+  .mdc-snackbar__label::before { content: '\f071'; }
 }
 
 .info-snackbar {
   @include snackbar-base($snackbar-info);
+  .mdc-snackbar__label::before { content: '\f05a'; }
 }
 
-// Ajustes generales para el contenedor del snackbar
-.mat-mdc-snack-bar-container {
-  &.success-snackbar, &.error-snackbar, &.info-snackbar {
-    margin: 16px !important;
+// Alias para mantener compatibilidad con código existente
+.severe-snackbar { @extend .error-snackbar; }
+.clipboard-warning { @extend .warning-snackbar; }
 
-    .mat-mdc-snack-bar-actions {
-      margin-inline-end: -8px !important;
-    }
-  }
-}
-
-// Animaciones para snackbars
-@keyframes snackbarFadeIn {
+// Animación unificada para snackbars
+@keyframes snackbarSlideIn {
   from {
+    transform: translateY(100%);
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
+    opacity: 1;
   }
 }
 
+// Contenedor de snackbar
 .mat-mdc-snack-bar-container {
-  animation: snackbarFadeIn 0.3s ease-out;
+  animation: snackbarSlideIn 0.3s ease-out;
+  margin: 16px !important;
 }
 
 // Estilos para diálogos
@@ -1110,4 +1119,21 @@ $snackbar-action: rgba(255, 255, 255, 0.7);
             border-top: 1px solid var(--card-border);
         }
     }
+}
+
+// Estilo para snackbar persistente durante penalización
+.persistent-snackbar {
+  .mdc-snackbar__surface {
+    border-left: 4px solid $snackbar-error !important;
+  }
+
+  .mdc-snackbar__label {
+    color: $snackbar-text !important;
+    font-weight: 500 !important;
+  }
+
+  .mat-mdc-snack-bar-actions button {
+    color: $snackbar-text !important;
+    font-weight: 500 !important;
+  }
 }

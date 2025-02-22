@@ -2,7 +2,7 @@
     <div class="sidebar" [class.collapsed]="isCollapsed">
         <nav class="nav-menu">
             <div class="nav-item">
-                <a routerLink="/dashboard" 
+                <a routerLink="/dashboard"
                    routerLinkActive="active"
                    [routerLinkActiveOptions]="{exact: true}">
                     <i class="fas fa-home"></i>
@@ -35,7 +35,7 @@
             </div>
         </nav>
 
-        <div class="section-divider"></div>  
+        <div class="section-divider"></div>
 
         <nav class="nav-menu">
             <div class="nav-item">
@@ -58,10 +58,10 @@
             </div>
         </nav>
     </div>
-    
+
     <div class="sidebar-tab" (click)="toggleSidebar()" [class.collapsed]="isCollapsed">
         <div class="tab-line"></div>
-        <i class="fas fa-chevron-left"></i>
+        <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
         <div class="tab-line"></div>
     </div>
 </div>

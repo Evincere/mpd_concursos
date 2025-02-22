@@ -10,10 +10,10 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ar.gov.mpd</groupId>
-	<artifactId>concurso-backend</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>concurso-backend</name>
-	<description>Demo project for Spring Boot</description>
+	<artifactId>mpd-concursos-app-backend</artifactId>
+	<version>0.0.1</version>
+	<name>mpd-concursos-app-backend</name>
+	<description>App para concursos de MPD</description>
 	<properties>
 		<java.version>21</java.version>
 		<maven.compiler.source>21</maven.compiler.source>

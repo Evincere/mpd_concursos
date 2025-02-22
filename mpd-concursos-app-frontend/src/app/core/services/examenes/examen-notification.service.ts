@@ -3,47 +3,172 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
+import { BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ExamenNotificationService {
-  private warningCount = 0;
   private readonly MAX_WARNINGS = 3;
-  private lastWarningTime: number = 0;
-  private readonly MIN_WARNING_INTERVAL = 2000; // 2 segundos entre advertencias
+  private readonly MIN_WARNING_INTERVAL = 2000;
+  private readonly PENALTY_DURATION = 300000; // 5 minutos de penalización
+
+  private warningCount = 0;
+  private lastWarningTime = 0;
+  private penaltyEndTime = 0;
+
+  // Observable para el estado de las infracciones
+  private securityStateSubject = new BehaviorSubject<{
+    warningCount: number;
+    isPenalized: boolean;
+    remainingPenaltyTime: number;
+  }>({ warningCount: 0, isPenalized: false, remainingPenaltyTime: 0 });
+
+  public securityState$ = this.securityStateSubject.asObservable();
 
   constructor(
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
-  ) {}
+    private dialog: MatDialog,
+    private router: Router
+  ) {
+    this.loadSecurityState();
+    this.startPenaltyTimer();
+    this.logSecurityState(); // Para debugging
+  }
+
+  private loadSecurityState(): void {
+    const savedState = localStorage.getItem('securityState');
+    if (savedState) {
+      const state = JSON.parse(savedState);
+      this.warningCount = state.warningCount;
+      this.penaltyEndTime = state.penaltyEndTime;
+      this.updateSecurityState();
+    }
+  }
+
+  private saveSecurityState(): void {
+    localStorage.setItem('securityState', JSON.stringify({
+      warningCount: this.warningCount,
+      penaltyEndTime: this.penaltyEndTime
+    }));
+  }
+
+  private startPenaltyTimer(): void {
+    setInterval(() => {
+      if (this.penaltyEndTime > 0) {
+        const remaining = this.penaltyEndTime - Date.now();
+        if (remaining <= 0) {
+          this.penaltyEndTime = 0;
+          this.warningCount = 0; // Reset después de cumplir la penalización
+        }
+        this.updateSecurityState();
+        this.saveSecurityState();
+      }
+    }, 1000);
+  }
+
+  private updateSecurityState(): void {
+    const now = Date.now();
+    const isPenalized = this.penaltyEndTime > now;
+    const remainingPenaltyTime = Math.max(0, this.penaltyEndTime - now);
+
+    this.securityStateSubject.next({
+      warningCount: this.warningCount,
+      isPenalized,
+      remainingPenaltyTime
+    });
+  }
+
+  private logSecurityState(): void {
+    this.securityState$.subscribe(state => {
+      console.log('Estado de seguridad:', state);
+    });
+  }
 
   showSecurityWarning(type: SecurityViolationType, details?: string): void {
     const now = Date.now();
-    // Evitar spam de notificaciones
+
+    // Verificar si está en penalización
+    if (this.penaltyEndTime > now) {
+      this.showPenaltyMessage(Math.ceil((this.penaltyEndTime - now) / 1000));
+      return;
+    }
+
+    // Anti-spam check con mensaje
     if (now - this.lastWarningTime < this.MIN_WARNING_INTERVAL) {
+      console.log('Advertencia ignorada por anti-spam');
       return;
     }
 
     this.lastWarningTime = now;
     this.warningCount++;
 
-    const severity = this.warningCount >= this.MAX_WARNINGS ? 'severe' : 'warning';
-    const message = this.getSecurityMessage(type);
+    // Logging para debug
+    console.log(`Advertencia ${this.warningCount} de ${this.MAX_WARNINGS}`);
+
+    const severity = this.warningCount >= this.MAX_WARNINGS ? 'error-snackbar' : 'warning-snackbar';
+    const message = `${this.getSecurityMessage(type)} (Advertencia ${this.warningCount}/${this.MAX_WARNINGS})`;
     const action = this.warningCount >= this.MAX_WARNINGS ? 'Entiendo' : 'OK';
 
     this.snackBar.open(message, action, {
       duration: 6000,
-      panelClass: [`${severity}-snackbar`],
+      panelClass: [severity],
       horizontalPosition: 'center',
-      verticalPosition: 'top'
+      verticalPosition: 'bottom'
     });
 
     if (this.warningCount >= this.MAX_WARNINGS) {
-      this.showFinalWarningDialog(type);
-      // Resetear el contador después de la advertencia final
-      this.resetWarningCount();
+      this.applyPenalty();
     }
+
+    this.updateSecurityState();
+    this.saveSecurityState();
+  }
+
+  private applyPenalty(): void {
+    this.penaltyEndTime = Date.now() + this.PENALTY_DURATION;
+
+    // Mostrar diálogo de penalización
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: {
+        title: '🚫 Penalización por Infracciones',
+        message: `Has alcanzado el límite de advertencias permitidas.
+                 Tu examen será bloqueado durante 5 minutos como medida de seguridad.
+                 Si las infracciones continúan, el examen podría ser finalizado automáticamente.`,
+        confirmText: 'Entiendo',
+        cancelText: null,
+        type: 'error'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // Actualizar estado y UI
+      this.updateSecurityState();
+      this.saveSecurityState();
+
+      // Opcional: redirigir a una página de penalización
+      // this.router.navigate(['/examen/penalizacion']);
+    });
+  }
+
+  private showPenaltyMessage(remainingSeconds: number): void {
+    const minutes = Math.floor(remainingSeconds / 60);
+    const seconds = remainingSeconds % 60;
+    const timeFormat = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    this.snackBar.open(
+      `🚫 Acceso bloqueado por infracciones múltiples. Tiempo restante: ${timeFormat}`,
+      'Entiendo',
+      {
+        duration: undefined, // El mensaje permanece hasta que termine la penalización
+        panelClass: ['error-snackbar', 'persistent-snackbar'],
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
+      }
+    );
   }
 
   private getSecurityMessage(type: SecurityViolationType): string {
@@ -80,7 +205,9 @@ export class ExamenNotificationService {
 
     this.snackBar.open(message, 'OK', {
       duration: isOnline ? 3000 : undefined,
-      panelClass: isOnline ? 'success-snackbar' : 'warning-snackbar'
+      panelClass: isOnline ? 'success-snackbar' : 'warning-snackbar',
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
     });
   }
 
@@ -100,7 +227,7 @@ export class ExamenNotificationService {
     return dialogRef.afterClosed().toPromise();
   }
 
-  private showFinalWarningDialog(type: SecurityViolationType): void {
+  private showFinalWarningDialog(type?: SecurityViolationType): void {
     this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       disableClose: true,
@@ -147,7 +274,7 @@ export class ExamenNotificationService {
       disableClose: true,
       backdropClass: 'dark-backdrop',
       data: {
-        title: '⚠️ Advertencia de Seguridad',
+        title: 'Advertencia de Seguridad',
         message: 'Salir del modo pantalla completa se registrará como una infracción de seguridad. ¿Está seguro que desea continuar?',
         confirmText: 'Sí, salir',
         cancelText: 'Cancelar',
@@ -184,7 +311,7 @@ export class ExamenNotificationService {
       'Entiendo',
       {
         duration: 6000,
-        panelClass: ['warning-snackbar', 'clipboard-warning'],
+        panelClass: ['warning-snackbar'], // Simplificamos para usar solo la clase principal
         horizontalPosition: 'center',
         verticalPosition: 'top'
       }

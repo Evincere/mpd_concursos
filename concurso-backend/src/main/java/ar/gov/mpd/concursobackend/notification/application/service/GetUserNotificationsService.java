@@ -25,7 +25,7 @@ public class GetUserNotificationsService implements GetUserNotificationsUseCase 
     private final INotificationRepository notificationRepository;
     private final IAuthenticationFacade authenticationFacade;
     private final NotificationMapper notificationMapper;
-    private final UserService userService;
+    private final UserService userService; 
     private final JwtProvider jwtProvider;
 
     @Override

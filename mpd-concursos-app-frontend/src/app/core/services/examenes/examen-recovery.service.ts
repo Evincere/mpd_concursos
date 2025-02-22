@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, interval, fromEvent, merge } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged, retry, catchError } from 'rxjs/operators';
 import { ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { environment } from '@env/environment';
+import { ExamenNotificationService } from './examen-notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,10 @@ export class ExamenRecoveryService {
   private pendingChanges$ = new BehaviorSubject<boolean>(false);
   private lastSyncTimestamp: number = 0;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private notificationService: ExamenNotificationService
+  ) {
     this.setupConnectivityMonitoring();
   }
 
@@ -67,13 +71,29 @@ export class ExamenRecoveryService {
       .pipe(
         retry(this.MAX_RETRIES),
         catchError(error => {
-          console.error('Error al sincronizar con el servidor:', error);
-          return [];
+          if (error.status === 500) {
+            // Asegurarnos de que el backup local existe
+            const backupKey = this.BACKUP_KEY_PREFIX + examenId;
+            if (!localStorage.getItem(backupKey)) {
+              localStorage.setItem(backupKey, JSON.stringify(backup));
+            }
+
+            console.warn('Error del servidor al sincronizar, guardando localmente');
+            this.notificationService.showConnectionWarning(false);
+            this.pendingChanges$.next(true);
+            return [];
+          }
+          throw error;
         })
       )
-      .subscribe(() => {
-        this.lastSyncTimestamp = Date.now();
-        this.pendingChanges$.next(false);
+      .subscribe({
+        next: () => {
+          this.lastSyncTimestamp = Date.now();
+          this.pendingChanges$.next(false);
+        },
+        error: () => {
+          this.pendingChanges$.next(true);
+        }
       });
   }
 

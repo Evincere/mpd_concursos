@@ -317,33 +317,4 @@
       }
     }
   }
-
-  .warning-snackbar {
-    background: #ff9800;
-    color: white;
-
-    .mat-simple-snackbar-action {
-      color: white;
-    }
-  }
-
-  .severe-snackbar {
-    background: #f44336;
-    color: white;
-
-    .mat-simple-snackbar-action {
-      color: white;
-    }
-  }
-
-  .clipboard-warning {
-    background-color: #ff9800 !important;
-    color: white !important;
-    font-weight: 500;
-
-    .mat-simple-snackbar-action {
-      color: white;
-      font-weight: bold;
-    }
-  }
 }

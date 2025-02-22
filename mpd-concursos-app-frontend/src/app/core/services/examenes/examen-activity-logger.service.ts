@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, Subject, fromEvent } from 'rxjs';
 import { debounceTime, buffer, map, filter } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { ActivityLogType } from '@core/interfaces/examenes/monitoring/activity-log.interface';
+import { TokenService } from '@core/services/auth/token.service';
 
 export interface ActivityLog {
   type: ActivityLogType;
@@ -68,7 +69,7 @@ export class ExamenActivityLoggerService {
   private mouseEvents$ = new Subject<MouseEvent>();
   private keyboardEvents$ = new Subject<KeyboardEvent>();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private tokenService: TokenService) {
     this.initializeMonitoring();
   }
 
@@ -267,6 +268,10 @@ export class ExamenActivityLoggerService {
   }
 
   private syncLogs(force: boolean = false): void {
+    if (!this.tokenService.getToken()) {
+      return; // No intentamos sincronizar si no hay token
+    }
+
     if (this.activityLogs.length === 0) return;
 
     if (force || this.activityLogs.length >= this.BATCH_SIZE) {

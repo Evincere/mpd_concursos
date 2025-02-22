@@ -11,4 +11,16 @@ export class SidebarService {
     toggleSidebar() {
         this.isCollapsed.next(!this.isCollapsed.value);
     }
-} 
+
+    collapse() {
+        this.isCollapsed.next(true);
+    }
+
+    expand() {
+        this.isCollapsed.next(false);
+    }
+
+    getCurrentState(): boolean {
+        return this.isCollapsed.value;
+    }
+}

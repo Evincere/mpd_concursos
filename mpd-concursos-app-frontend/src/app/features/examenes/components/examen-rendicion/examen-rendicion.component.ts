@@ -29,6 +29,7 @@ import { SECURITY_PROVIDERS } from '../../providers/security.providers';
 import { ExamenValidationService } from '@core/services/examenes/examen-validation.service';
 import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
 import { ComponentWithExam } from '@core/services/examenes/security/guards/exam-navigation.guard';
+import { SidebarService } from '@core/services/sidebar/sidebar.service';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -57,19 +58,7 @@ import { ComponentWithExam } from '@core/services/examenes/security/guards/exam-
     ExamenActivityLoggerService,
     ExamenRecoveryService,
     ExamenNotificationService,
-    ExamenValidationService,
-    {
-      provide: 'SidebarService',
-      useValue: {
-        collapse: () => {
-          // Implementación del colapso del sidebar
-          const sidebar = document.querySelector('.sidebar');
-          if (sidebar) {
-            sidebar.classList.add('collapsed');
-          }
-        }
-      }
-    }
+    ExamenValidationService
   ]
 })
 export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWithExam {
@@ -91,7 +80,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     private activityLogger: ExamenActivityLoggerService,
     private notificationService: ExamenNotificationService,
     private recoveryService: ExamenRecoveryService,
-    @Optional() @Inject('SidebarService') private sidebarService?: any
+    private sidebarService: SidebarService
   ) {}
   ngOnInit(): void {
     const examenId = this.route.snapshot.params['id'];
@@ -320,26 +309,26 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   }
   private async activarPantallaCompleta(): Promise<void> {
     try {
-      if (this.sidebarService?.collapse) {
-        this.sidebarService.collapse();
-      }
-  const element = document.documentElement;
-        await element.requestFullscreen();
-  // Mostrar mensaje solo la primera vez
-        if (!this.fullscreenWarningShown) {
-          this.notificationService.showSecurityWarning(
-            SecurityViolationType.FULLSCREEN_REQUIRED,
-            'El examen debe realizarse en modo pantalla completa. Salir de este modo se considerará una infracción de seguridad.'
-          );
-          this.fullscreenWarningShown = true;
-        }
-      } catch (error) {
-        console.error('Error al activar pantalla completa:', error);
-        this.securityService.reportSecurityViolation(
-          SecurityViolationType.FULLSCREEN_DENIED,
-          { error: 'Usuario denegó el modo pantalla completa' }
+      this.sidebarService.collapse();
+
+      const element = document.documentElement;
+      await element.requestFullscreen();
+
+      // Mostrar mensaje solo la primera vez
+      if (!this.fullscreenWarningShown) {
+        this.notificationService.showSecurityWarning(
+          SecurityViolationType.FULLSCREEN_REQUIRED,
+          'El examen debe realizarse en modo pantalla completa. Salir de este modo se considerará una infracción de seguridad.'
         );
+        this.fullscreenWarningShown = true;
       }
+    } catch (error) {
+      console.error('Error al activar pantalla completa:', error);
+      this.securityService.reportSecurityViolation(
+        SecurityViolationType.FULLSCREEN_DENIED,
+        { error: 'Usuario denegó el modo pantalla completa' }
+      );
+    }
   }
 }
 
