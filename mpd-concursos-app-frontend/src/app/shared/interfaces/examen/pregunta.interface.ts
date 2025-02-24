@@ -36,5 +36,5 @@ export interface ExamenEnCurso {
   fechaLimite: string;
   respuestas: RespuestaUsuario[];
   preguntaActual: number;
-  estado: 'EN_CURSO' | 'PAUSADO' | 'FINALIZADO';
+  estado: 'EN_CURSO' | 'PAUSADO' | 'FINALIZADO' | 'ANULADO';
 }

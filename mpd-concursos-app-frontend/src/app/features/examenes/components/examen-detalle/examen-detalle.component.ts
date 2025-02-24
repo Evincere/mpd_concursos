@@ -8,7 +8,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule, Router } from '@angular/router';
 
-import { Examen, TipoExamen, EstadoExamen } from '@shared/interfaces/examen/examen.interface';
+import { Examen, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 
 @Component({
   selector: 'app-examen-detalle',
@@ -27,13 +27,15 @@ import { Examen, TipoExamen, EstadoExamen } from '@shared/interfaces/examen/exam
   ]
 })
 export class ExamenDetalleComponent implements OnInit {
+  readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
+
   examen: Examen = {
     id: '1',
     titulo: 'Examen Técnico Jurídico 2024',
     tipo: TipoExamen.TECNICO_JURIDICO,
     fechaInicio: '2024-03-15T10:00:00',
     fechaFin: '2024-03-15T12:00:00',
-    estado: EstadoExamen.PENDIENTE,
+    estado: ESTADO_EXAMEN.DISPONIBLE,
     descripcion: `Este examen evaluará conocimientos jurídicos generales necesarios para el desempeño en el Ministerio Público de la Defensa.
 
     Temas principales:
@@ -73,14 +75,14 @@ export class ExamenDetalleComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  obtenerClaseEstado(): string {
+  getEstadoClass(): string {
     const clases = {
-      [EstadoExamen.PENDIENTE]: 'estado-pendiente',
-      [EstadoExamen.EN_CURSO]: 'estado-en-curso',
-      [EstadoExamen.COMPLETADO]: 'estado-completado',
-      [EstadoExamen.VENCIDO]: 'estado-vencido'
+      [ESTADO_EXAMEN.DISPONIBLE]: 'estado-disponible',
+      [ESTADO_EXAMEN.EN_CURSO]: 'estado-en-curso',
+      [ESTADO_EXAMEN.FINALIZADO]: 'estado-finalizado',
+      [ESTADO_EXAMEN.ANULADO]: 'estado-anulado'
     };
-    return clases[this.examen.estado];
+    return clases[this.examen.estado] || '';
   }
 
   obtenerClaseTipo(): string {

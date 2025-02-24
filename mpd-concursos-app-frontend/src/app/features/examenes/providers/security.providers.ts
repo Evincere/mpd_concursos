@@ -1,5 +1,5 @@
 import { EnvironmentProviders, makeEnvironmentProviders, Provider } from '@angular/core';
-import { FullscreenSecurityStrategy } from '@core/services/examenes/security/strategies/fullscreen.strategy';
+import { FullscreenStrategy } from '@core/services/examenes/security/strategies/fullscreen.strategy';
 import { KeyboardSecurityStrategy } from '@core/services/examenes/security/strategies/keyboard.strategy';
 import { TabSwitchSecurityStrategy } from '@core/services/examenes/security/strategies/tab-switch.strategy';
 import { ExamenTimeService } from '@core/services/examenes/examen-time.service';
@@ -8,14 +8,14 @@ import { ExamenSecurityService } from '@core/services/examenes/security/examen-s
 
 export function provideSecurityStrategies(): EnvironmentProviders {
   return makeEnvironmentProviders([
-    FullscreenSecurityStrategy,
+    FullscreenStrategy,
     KeyboardSecurityStrategy,
     TabSwitchSecurityStrategy,
     ExamenSecurityService,
     {
       provide: 'SecurityStrategies',
       useFactory: (
-        fullscreenStrategy: FullscreenSecurityStrategy,
+        fullscreenStrategy: FullscreenStrategy,
         keyboardStrategy: KeyboardSecurityStrategy,
         tabSwitchStrategy: TabSwitchSecurityStrategy,
       ) => [
@@ -24,7 +24,7 @@ export function provideSecurityStrategies(): EnvironmentProviders {
         tabSwitchStrategy,
       ],
       deps: [
-        FullscreenSecurityStrategy,
+        FullscreenStrategy,
         KeyboardSecurityStrategy,
         TabSwitchSecurityStrategy,
       ]
@@ -42,17 +42,17 @@ export function provideSecurityStrategies(): EnvironmentProviders {
 }
 
 export const SECURITY_PROVIDERS: Provider[] = [
-  FullscreenSecurityStrategy,
+  FullscreenStrategy,
   KeyboardSecurityStrategy,
   TabSwitchSecurityStrategy,
   ExamenSecurityService,
   {
     provide: 'SecurityStrategies',
     useFactory: (
-      fullscreen: FullscreenSecurityStrategy,
+      fullscreen: FullscreenStrategy,
       keyboard: KeyboardSecurityStrategy,
       tabSwitch: TabSwitchSecurityStrategy
     ) => [fullscreen, keyboard, tabSwitch],
-    deps: [FullscreenSecurityStrategy, KeyboardSecurityStrategy, TabSwitchSecurityStrategy]
+    deps: [FullscreenStrategy, KeyboardSecurityStrategy, TabSwitchSecurityStrategy]
   }
 ];

@@ -1,9 +1,23 @@
-DROP TABLE IF EXISTS notifications CASCADE;
-DROP TABLE IF EXISTS contests CASCADE;
-DROP TABLE IF EXISTS user_entity CASCADE;
+-- Deshabilitar verificación de foreign keys
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Eliminar tablas en orden
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS user_roles;
+DROP TABLE IF EXISTS experiencias;
+DROP TABLE IF EXISTS educacion;
+DROP TABLE IF EXISTS habilidades;
+DROP TABLE IF EXISTS contests;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS user_entity;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS inscriptions;
+
+-- Habilitar verificación de foreign keys
+SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE user_entity (
-    id UUID PRIMARY KEY,
+    id BINARY(16) PRIMARY KEY,
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -16,87 +30,87 @@ CREATE TABLE user_entity (
 );
 
 CREATE TABLE contests (
-    id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     department VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('DRAFT', 'ACTIVE', 'IN_PROGRESS', 'CLOSED', 'CANCELLED')),
+    status VARCHAR(20) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    CHECK (end_date >= start_date)
+    CONSTRAINT check_status CHECK (status IN ('DRAFT', 'ACTIVE', 'IN_PROGRESS', 'CLOSED', 'CANCELLED')),
+    CONSTRAINT check_dates CHECK (end_date >= start_date)
 );
 
 CREATE TABLE notifications (
-    id UUID PRIMARY KEY,
-    recipient_id UUID NOT NULL,
+    id BINARY(16) PRIMARY KEY,
+    recipient_id BINARY(16) NOT NULL,
     subject VARCHAR(200) NOT NULL,
-    content VARCHAR(5000) NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'SENT', 'READ', 'ACKNOWLEDGED')),
-    sent_at TIMESTAMP,
-    read_at TIMESTAMP,
-    acknowledged_at TIMESTAMP,
+    content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    sent_at TIMESTAMP NULL,
+    read_at TIMESTAMP NULL,
+    acknowledged_at TIMESTAMP NULL,
     acknowledgement_level VARCHAR(50) NOT NULL DEFAULT 'NONE',
     signature_type VARCHAR(50),
-    signature_value CLOB,
-    signature_metadata CLOB,
+    signature_value TEXT,
+    signature_metadata TEXT,
     version BIGINT NOT NULL DEFAULT 0,
-    type VARCHAR(20) NOT NULL CHECK (type IN ('INSCRIPTION', 'SYSTEM', 'CONTEST', 'GENERAL')),
+    type VARCHAR(20) NOT NULL,
+    CONSTRAINT check_notification_status CHECK (status IN ('PENDING', 'SENT', 'READ', 'ACKNOWLEDGED')),
+    CONSTRAINT check_notification_type CHECK (type IN ('INSCRIPTION', 'SYSTEM', 'CONTEST', 'GENERAL')),
     FOREIGN KEY (recipient_id) REFERENCES user_entity(id)
 );
 
--- Tabla de usuarios
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    dni VARCHAR(8) UNIQUE NOT NULL,
-    cuit VARCHAR(13) UNIQUE NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    telefono VARCHAR(20),
-    direccion TEXT,
-    created_at TIMESTAMP NOT NULL
-);
-
--- Tabla de roles
-CREATE TABLE IF NOT EXISTS roles (
-    id UUID PRIMARY KEY,
+CREATE TABLE roles (
+    id BINARY(16) PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
--- Tabla de relación usuarios-roles
-CREATE TABLE IF NOT EXISTS user_roles (
-    user_id UUID REFERENCES users(id),
-    role_id UUID REFERENCES roles(id),
-    PRIMARY KEY (user_id, role_id)
+CREATE TABLE user_roles (
+    user_id BINARY(16),
+    role_id BINARY(16),
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES user_entity(id),
+    FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
--- Tabla de experiencias
-CREATE TABLE IF NOT EXISTS experiencias (
-    id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
+CREATE TABLE experiencias (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16),
     empresa VARCHAR(100) NOT NULL,
     cargo VARCHAR(100) NOT NULL,
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE,
-    descripcion TEXT
+    descripcion TEXT,
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
 );
 
--- Tabla de educación
-CREATE TABLE IF NOT EXISTS educacion (
-    id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
+CREATE TABLE educacion (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16),
     institucion VARCHAR(100) NOT NULL,
     titulo VARCHAR(100) NOT NULL,
     descripcion TEXT,
     fecha_inicio DATE NOT NULL,
-    fecha_fin DATE
+    fecha_fin DATE,
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
 );
 
--- Tabla de habilidades
-CREATE TABLE IF NOT EXISTS habilidades (
-    id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
+CREATE TABLE habilidades (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16),
     nombre VARCHAR(100) NOT NULL,
-    nivel VARCHAR(50) NOT NULL
+    nivel VARCHAR(50) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
+);
+
+CREATE TABLE inscriptions (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16) NOT NULL,
+    contest_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    inscription_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT check_inscription_status CHECK (status IN ('PENDING', 'ACTIVE', 'CANCELLED')),
+    FOREIGN KEY (user_id) REFERENCES user_entity(id),
+    FOREIGN KEY (contest_id) REFERENCES contests(id)
 );

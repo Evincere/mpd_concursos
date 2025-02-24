@@ -3,4 +3,6 @@ import { SecurityViolationType } from '@core/interfaces/security/security-violat
 export interface ISecurityStrategy {
   getType(): SecurityViolationType;
   handleViolation(details?: any): void;
+  activate(): Promise<void>;
+  deactivate(): void;
 }

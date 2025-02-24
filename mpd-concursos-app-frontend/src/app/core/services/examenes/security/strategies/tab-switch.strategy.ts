@@ -18,4 +18,18 @@ export class TabSwitchSecurityStrategy implements ISecurityStrategy {
       SecurityViolationType.TAB_SWITCH
     );
   }
+
+  async activate(): Promise<void> {
+    document.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
+  }
+
+  deactivate(): void {
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
+  }
+
+  private handleVisibilityChange(): void {
+    if (document.hidden) {
+      this.handleViolation();
+    }
+  }
 }

@@ -1,12 +1,13 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { ExamenesStateService } from '@core/services/examenes/examenes-state.service';
-import { Examen } from '@shared/interfaces/examen/examen.interface';
+import { Examen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { Subject, takeUntil } from 'rxjs';
 import { RouterModule, Router } from '@angular/router';
+import { ExamenSecurityService } from '@core/services/examenes/security/examen-security.service';
 
 @Component({
   selector: 'app-examenes',
@@ -26,10 +27,13 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   private destroy$ = new Subject<void>();
+  readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
 
   constructor(
     private examenesState: ExamenesStateService,
-    private router: Router
+    private router: Router,
+    private examenSecurity: ExamenSecurityService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -63,7 +67,19 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     // Implementar filtros
   }
 
-  iniciarExamen(examenId: string): void {
-    this.router.navigate([`/dashboard/examenes/${examenId}/rendir`]);
+  async iniciarExamen(examenId: string): Promise<void> {
+    try {
+      // Primero activamos el modo seguro
+      await this.examenSecurity.activateSecureMode();
+
+      // Luego navegamos al examen
+      await this.router.navigate([`/dashboard/examenes/${examenId}/rendir`]);
+
+      // Forzamos la detección de cambios
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error al iniciar el examen:', error);
+      // Manejar el error apropiadamente
+    }
   }
 }

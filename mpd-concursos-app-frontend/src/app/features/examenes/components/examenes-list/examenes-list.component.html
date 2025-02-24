@@ -1,4 +1,68 @@
-<!-- En la tarjeta o botón que lleva al detalle -->
-<button mat-button [routerLink]="['/examenes', examen.id]">
-  Ver Detalle
-</button> 
+<div class="examenes-list-container">
+  <mat-card *ngFor="let examen of examenes"
+            [ngClass]="{'examen-anulado': examen.estado === ESTADO_EXAMEN.ANULADO}"
+            class="examen-card">
+    <mat-card-header>
+      <mat-card-title>{{ examen.titulo }}</mat-card-title>
+      <mat-card-subtitle>
+        <span class="estado-badge" [ngClass]="getEstadoClass(examen.estado)">
+          {{ getEstadoLabel(examen.estado) }}
+        </span>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <p>{{ examen.descripcion }}</p>
+
+      <div class="examen-info">
+        <div class="info-item">
+          <mat-icon>event</mat-icon>
+          <span>Fecha: {{ examen.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-item">
+          <mat-icon>timer</mat-icon>
+          <span>Duración: {{ examen.duracion }} minutos</span>
+        </div>
+        <div class="info-item">
+          <mat-icon>star</mat-icon>
+          <span>Puntaje máximo: {{ examen.puntajeMaximo }}</span>
+        </div>
+      </div>
+
+      <!-- Mostrar información de anulación si corresponde -->
+      <div *ngIf="examen.estado === 'ANULADO'" class="anulacion-info">
+        <mat-divider></mat-divider>
+        <h3>
+          <mat-icon color="warn">warning</mat-icon>
+          Examen Anulado
+        </h3>
+        <p class="anulacion-fecha">
+          Fecha de anulación: {{ examen.motivoAnulacion?.fecha | date:'dd/MM/yyyy HH:mm' }}
+        </p>
+        <div class="infracciones-list">
+          <h4>Infracciones cometidas:</h4>
+          <ul>
+            <li *ngFor="let infraccion of examen.motivoAnulacion?.infracciones">
+              {{ getInfraccionLabel(infraccion) }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-button color="primary"
+              [routerLink]="['/examenes', examen.id]"
+              [disabled]="examen.estado === 'ANULADO'">
+        <mat-icon>visibility</mat-icon>
+        Ver Detalle
+      </button>
+      <button mat-button color="accent"
+              *ngIf="examen.estado === 'DISPONIBLE'"
+              [routerLink]="['/examenes', examen.id, 'rendir']">
+        <mat-icon>play_arrow</mat-icon>
+        Iniciar Examen
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

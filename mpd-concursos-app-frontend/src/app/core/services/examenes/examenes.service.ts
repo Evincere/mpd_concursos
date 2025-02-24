@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { Examen, TipoExamen, EstadoExamen } from '@shared/interfaces/examen/examen.interface';
+import { Examen, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 import { environment } from '@env/environment';
 import { Pregunta, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
 
@@ -19,7 +19,7 @@ export class ExamenesService {
       tipo: TipoExamen.TECNICO_JURIDICO,
       fechaInicio: '2024-03-15T10:00:00',
       fechaFin: '2024-03-15T12:00:00',
-      estado: EstadoExamen.PENDIENTE,
+      estado: ESTADO_EXAMEN.DISPONIBLE,
       descripcion: 'Evaluación de conocimientos jurídicos generales',
       duracion: 120,
       puntajeMaximo: 100,
@@ -31,7 +31,7 @@ export class ExamenesService {
       tipo: TipoExamen.TECNICO_ADMINISTRATIVO,
       fechaInicio: '2024-03-20T14:00:00',
       fechaFin: '2024-03-20T16:00:00',
-      estado: EstadoExamen.PENDIENTE,
+      estado: ESTADO_EXAMEN.DISPONIBLE,
       duracion: 120,
       puntajeMaximo: 100,
       intentosPermitidos: 1

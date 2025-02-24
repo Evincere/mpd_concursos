@@ -13,7 +13,7 @@ import { ExamenRendicionService } from '@core/services/examenes/examen-rendicion
 import { ExamenesService } from '@core/services/examenes/examenes.service';
 import { OpcionRespuesta, Pregunta as PreguntaInterface, RespuestaUsuario, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
 import { Subject, fromEvent, merge } from 'rxjs';
-import { takeUntil, debounceTime } from 'rxjs/operators';
+import { takeUntil, debounceTime, take } from 'rxjs/operators';
 import { MatListModule, MatListOption } from '@angular/material/list';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { SecurityViolation, SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
@@ -30,6 +30,7 @@ import { ExamenValidationService } from '@core/services/examenes/examen-validati
 import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
 import { ComponentWithExam } from '@core/services/examenes/security/guards/exam-navigation.guard';
 import { SidebarService } from '@core/services/sidebar/sidebar.service';
+import { ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -70,6 +71,8 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   opcionesOrdenadas: OpcionRespuesta[] = [];
   private preguntaStartTime: number = 0;
   private fullscreenWarningShown = false;
+  private isInitialFullscreenActivation = true;
+  readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
   constructor(
     private examenService: ExamenRendicionService,
     private examenesService: ExamenesService,
@@ -88,29 +91,30 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       this.router.navigate(['/dashboard/examenes']);
       return;
     }
-  // Activar pantalla completa al iniciar
-    this.activarPantallaCompleta();
-  // Primero configuramos los observables
+
+    // Configuramos los observables
     this.setupObservables();
-  // Luego cargamos las preguntas e iniciamos el examen
-    this.examenesService.getPreguntas(examenId).subscribe(preguntas => {
-      this.preguntas = preguntas;
-      this.examenService.iniciarExamen(examenId, preguntas);
-      this.isExamInProgress = true;
-    });
-    this.securityService.initializeSecurityMeasures();
-  // Registrar inicio del examen
-    this.activityLogger.logActivity({
-      type: ActivityLogType.SYSTEM_EVENT,
-      timestamp: Date.now(),
-      details: {
-        event: 'EXAMEN_INICIADO',
-        examenId: this.route.snapshot.params['id']
+
+    // Primero solicitamos permiso para pantalla completa
+    this.notificationService.showConfirmDialog(
+      'Iniciar Examen',
+      'Para comenzar el examen, necesitamos activar el modo pantalla completa. ¿Desea continuar?'
+    ).then(async (confirmed) => {
+      if (confirmed) {
+        try {
+          // Solo después de la confirmación, activamos la pantalla completa
+          await this.activarPantallaCompleta();
+          // Y luego cargamos el examen
+          this.cargarExamen(examenId);
+        } catch (error) {
+          console.error('Error al activar pantalla completa:', error);
+          this.router.navigate(['/dashboard/examenes']);
+        }
+      } else {
+        this.router.navigate(['/dashboard/examenes']);
       }
     });
-  this.setupConnectionMonitoring();
-  this.setupBeforeUnloadWarning();
-}
+  }
   private setupObservables(): void {
     this.examenService.getPreguntaActual()
       .pipe(takeUntil(this.destroy$))
@@ -140,9 +144,67 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
 }
   private handleSecurityViolation(violation: SecurityViolation): void {
     this.notificationService.showSecurityWarning(violation.type);
-  if (violation.severity === 'HIGH') {
+
+    if (this.notificationService.isExamenAnulado()) {
       const examenId = this.route.snapshot.params['id'];
-  // Nos suscribimos al Observable para obtener el valor actual
+
+      this.examenService.getExamenEnCurso()
+        .pipe(
+          take(1),
+          takeUntil(this.destroy$)
+        )
+        .subscribe(async examen => {
+          if (examen) {
+            // Guardamos el backup local
+            await this.recoveryService.saveToLocalBackup(examenId, examen);
+
+            const examenAnulado = {
+              ...examen,
+              estado: ESTADO_EXAMEN.ANULADO as 'ANULADO',
+              motivoAnulacion: {
+                fecha: new Date().toISOString(),
+                infracciones: this.notificationService.getInfracciones()
+              }
+            };
+
+            try {
+              // Finalizamos el examen y esperamos a que se complete
+              await this.examenService.finalizarExamen(examenAnulado).toPromise();
+
+              // Registramos la actividad
+              this.activityLogger.logActivity({
+                type: ActivityLogType.SYSTEM_EVENT,
+                timestamp: Date.now(),
+                details: {
+                  event: 'EXAMEN_ANULADO',
+                  examenId: examenId,
+                  infracciones: this.notificationService.getInfracciones()
+                }
+              });
+
+              // Mostramos el diálogo de anulación
+              await this.notificationService.showConfirmDialog(
+                'Examen Anulado',
+                `El examen ha sido anulado debido a múltiples infracciones de seguridad.
+                 \nInfracciones detectadas:\n${this.notificationService.getInfracciones()
+                   .map(inf => `- ${this.notificationService.getSecurityMessage(inf)}`)
+                   .join('\n')}`
+              );
+
+              // Redirigimos al listado de exámenes
+              this.router.navigate(['/dashboard/examenes']);
+            } catch (error) {
+              console.error('Error al anular el examen:', error);
+              // Mostramos un mensaje de error si algo falla
+              this.notificationService.showSecurityWarning(
+                SecurityViolationType.POST_INCIDENT_VALIDATION_FAILED,
+                'Error al procesar la anulación del examen'
+              );
+            }
+          }
+        });
+    } else if (violation.severity === 'HIGH') {
+      const examenId = this.route.snapshot.params['id'];
       this.examenService.getExamenEnCurso()
         .pipe(takeUntil(this.destroy$))
         .subscribe(examen => {
@@ -157,6 +219,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     this.activityLogger.cleanup();
     this.destroy$.next();
     this.destroy$.complete();
+
+    // Asegurarnos de salir del modo pantalla completa al destruir el componente
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(console.error);
+    }
   }
   guardarRespuestaTexto(event: Event): void {
     const target = event.target as HTMLTextAreaElement;
@@ -294,10 +361,17 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   }
   @HostListener('document:fullscreenchange', ['$event'])
   async onFullscreenChange(event: Event): Promise<void> {
-    if (!document.fullscreenElement) {
-      event.preventDefault();
-  const shouldExit = await this.notificationService.showFullscreenWarning();
+    // Ignoramos el primer evento de activación
+    if (this.isInitialFullscreenActivation) {
+      this.isInitialFullscreenActivation = false;
+      return;
+    }
+
+    // Solo manejamos el evento de salida cuando el examen está en progreso
+    if (this.isExamInProgress && !document.fullscreenElement) {
+      const shouldExit = await this.notificationService.showFullscreenWarning();
       if (!shouldExit) {
+        this.isInitialFullscreenActivation = true; // Resetear el flag para la nueva activación
         await this.activarPantallaCompleta();
       } else {
         this.securityService.reportSecurityViolation(
@@ -309,12 +383,14 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   }
   private async activarPantallaCompleta(): Promise<void> {
     try {
+      // Primero colapsamos la barra lateral
       this.sidebarService.collapse();
 
+      // Intentamos activar la pantalla completa
       const element = document.documentElement;
       await element.requestFullscreen();
 
-      // Mostrar mensaje solo la primera vez
+      // Solo mostramos el mensaje de advertencia después de activar exitosamente
       if (!this.fullscreenWarningShown) {
         this.notificationService.showSecurityWarning(
           SecurityViolationType.FULLSCREEN_REQUIRED,
@@ -324,11 +400,31 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       }
     } catch (error) {
       console.error('Error al activar pantalla completa:', error);
-      this.securityService.reportSecurityViolation(
-        SecurityViolationType.FULLSCREEN_DENIED,
-        { error: 'Usuario denegó el modo pantalla completa' }
-      );
+      throw error;
     }
+  }
+  private cargarExamen(examenId: string): void {
+    // Cargamos las preguntas e iniciamos el examen
+    this.examenesService.getPreguntas(examenId).subscribe(preguntas => {
+      this.preguntas = preguntas;
+      this.examenService.iniciarExamen(examenId, preguntas);
+      this.isExamInProgress = true;
+
+      this.securityService.initializeSecurityMeasures();
+
+      // Registrar inicio del examen
+      this.activityLogger.logActivity({
+        type: ActivityLogType.SYSTEM_EVENT,
+        timestamp: Date.now(),
+        details: {
+          event: 'EXAMEN_INICIADO',
+          examenId: examenId
+        }
+      });
+
+      this.setupConnectionMonitoring();
+      this.setupBeforeUnloadWarning();
+    });
   }
 }
 

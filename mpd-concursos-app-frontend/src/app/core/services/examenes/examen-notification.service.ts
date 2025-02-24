@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { BehaviorSubject } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Injectable({
@@ -17,15 +18,18 @@ export class ExamenNotificationService {
   private warningCount = 0;
   private lastWarningTime = 0;
   private penaltyEndTime = 0;
+  private examenAnulado = false;
 
   // Observable para el estado de las infracciones
   private securityStateSubject = new BehaviorSubject<{
     warningCount: number;
-    isPenalized: boolean;
-    remainingPenaltyTime: number;
-  }>({ warningCount: 0, isPenalized: false, remainingPenaltyTime: 0 });
+    isAnulado: boolean;
+    infracciones: SecurityViolationType[];
+  }>({ warningCount: 0, isAnulado: false, infracciones: [] });
 
   public securityState$ = this.securityStateSubject.asObservable();
+
+  private infracciones: SecurityViolationType[] = [];
 
   constructor(
     private snackBar: MatSnackBar,
@@ -37,21 +41,65 @@ export class ExamenNotificationService {
     this.logSecurityState(); // Para debugging
   }
 
+  private getCurrentUserId(): string | null {
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        return userData.id || null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  private getSecurityStateKey(): string {
+    const userId = this.getCurrentUserId();
+    const examenId = localStorage.getItem('currentExamenId') || 'unknown';
+    return `security_state_${userId}_${examenId}`;
+  }
+
   private loadSecurityState(): void {
-    const savedState = localStorage.getItem('securityState');
+    const savedState = localStorage.getItem(this.getSecurityStateKey());
     if (savedState) {
-      const state = JSON.parse(savedState);
-      this.warningCount = state.warningCount;
-      this.penaltyEndTime = state.penaltyEndTime;
-      this.updateSecurityState();
+      try {
+        const state = JSON.parse(savedState);
+        this.warningCount = state.warningCount;
+        this.examenAnulado = state.isAnulado;
+        this.infracciones = state.infracciones || [];
+        this.updateSecurityState();
+      } catch (e) {
+        console.error('Error al cargar el estado de seguridad:', e);
+        this.resetSecurityState();
+      }
     }
   }
 
+  resetSecurityState(): void {
+    this.warningCount = 0;
+    this.examenAnulado = false;
+    this.infracciones = [];
+    this.penaltyEndTime = 0;
+    this.lastWarningTime = 0;
+
+    // Limpiar el estado del localStorage para el usuario actual
+    localStorage.removeItem(this.getSecurityStateKey());
+
+    // Actualizar el estado observable
+    this.updateSecurityState();
+
+    // Cerrar cualquier snackbar abierto
+    this.snackBar.dismiss();
+  }
+
   private saveSecurityState(): void {
-    localStorage.setItem('securityState', JSON.stringify({
+    const state = {
       warningCount: this.warningCount,
-      penaltyEndTime: this.penaltyEndTime
-    }));
+      isAnulado: this.examenAnulado,
+      infracciones: this.infracciones
+    };
+    localStorage.setItem(this.getSecurityStateKey(), JSON.stringify(state));
   }
 
   private startPenaltyTimer(): void {
@@ -59,24 +107,20 @@ export class ExamenNotificationService {
       if (this.penaltyEndTime > 0) {
         const remaining = this.penaltyEndTime - Date.now();
         if (remaining <= 0) {
-          this.penaltyEndTime = 0;
-          this.warningCount = 0; // Reset después de cumplir la penalización
+          this.resetSecurityState();
+        } else {
+          this.updateSecurityState();
+          this.saveSecurityState();
         }
-        this.updateSecurityState();
-        this.saveSecurityState();
       }
     }, 1000);
   }
 
   private updateSecurityState(): void {
-    const now = Date.now();
-    const isPenalized = this.penaltyEndTime > now;
-    const remainingPenaltyTime = Math.max(0, this.penaltyEndTime - now);
-
     this.securityStateSubject.next({
       warningCount: this.warningCount,
-      isPenalized,
-      remainingPenaltyTime
+      isAnulado: this.examenAnulado,
+      infracciones: this.infracciones
     });
   }
 
@@ -88,6 +132,11 @@ export class ExamenNotificationService {
 
   showSecurityWarning(type: SecurityViolationType, details?: string): void {
     const now = Date.now();
+
+    // Verificar si el examen ya está anulado
+    if (this.examenAnulado) {
+      return;
+    }
 
     // Verificar si está en penalización
     if (this.penaltyEndTime > now) {
@@ -103,6 +152,7 @@ export class ExamenNotificationService {
 
     this.lastWarningTime = now;
     this.warningCount++;
+    this.infracciones.push(type);
 
     // Logging para debug
     console.log(`Advertencia ${this.warningCount} de ${this.MAX_WARNINGS}`);
@@ -119,11 +169,42 @@ export class ExamenNotificationService {
     });
 
     if (this.warningCount >= this.MAX_WARNINGS) {
-      this.applyPenalty();
+      this.anularExamen();
     }
 
     this.updateSecurityState();
     this.saveSecurityState();
+  }
+
+  private anularExamen(): void {
+    this.examenAnulado = true;
+
+    // Mostrar diálogo de anulación
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: {
+        title: '🚫 Examen Anulado por Infracciones',
+        message: `Se ha alcanzado el límite de advertencias permitidas.
+                 Tu examen ha sido anulado debido a múltiples infracciones de seguridad.
+                 Serás redirigido al listado de exámenes.
+
+                 Infracciones cometidas:
+                 ${this.infracciones.map(inf => `- ${this.getSecurityMessage(inf)}`).join('\n')}`,
+        confirmText: 'Entiendo',
+        cancelText: null,
+        type: 'error'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      // Actualizar estado y UI
+      this.updateSecurityState();
+      this.saveSecurityState();
+
+      // Redirigir al listado de exámenes
+      this.router.navigate(['/examenes']);
+    });
   }
 
   private applyPenalty(): void {
@@ -171,28 +252,27 @@ export class ExamenNotificationService {
     );
   }
 
-  private getSecurityMessage(type: SecurityViolationType): string {
-    const messages: Record<SecurityViolationType, string> = {
-      FULLSCREEN_EXIT: 'No se permite salir del modo pantalla completa',
-      FULLSCREEN_DENIED: 'Debe permitir el modo pantalla completa para continuar',
-      TAB_SWITCH: 'No se permite cambiar de pestaña durante el examen',
-      KEYBOARD_SHORTCUT: 'Atajo de teclado no permitido',
-      CLIPBOARD_OPERATION: 'Operaciones de copiar/pegar no permitidas',
-      INACTIVITY_TIMEOUT: 'Sesión inactiva por mucho tiempo',
-      NETWORK_VIOLATION: 'Violación de seguridad de red detectada',
-      SUSPICIOUS_BEHAVIOR: 'Se ha detectado comportamiento sospechoso',
-      TIME_MANIPULATION: 'Se ha detectado manipulación del tiempo',
-      TIME_DRIFT: 'Se ha detectado desincronización del tiempo',
-      SUSPICIOUS_ANSWER: 'Respuesta marcada como sospechosa',
-      ANSWER_TOO_FAST: 'Respuesta demasiado rápida, posible comportamiento sospechoso',
+  getSecurityMessage(type: SecurityViolationType): string {
+    const messages: { [key in SecurityViolationType]: string } = {
+      TAB_SWITCH: 'Has cambiado de pestaña o aplicación',
+      FULLSCREEN_EXIT: 'Has intentado salir del modo pantalla completa',
+      CLIPBOARD_OPERATION: 'Se ha detectado un intento de copiar o pegar contenido',
+      NETWORK_VIOLATION: 'Se ha detectado un cambio en la conexión',
+      SUSPICIOUS_BEHAVIOR: 'Se han detectado múltiples pantallas',
+      KEYBOARD_SHORTCUT: 'Se ha detectado el uso de herramientas de desarrollo',
+      INACTIVITY_TIMEOUT: 'La ventana del examen ha perdido visibilidad',
+      POST_INCIDENT_VALIDATION_FAILED: 'Validación de integridad fallida',
+      TIME_MANIPULATION: 'Manipulación del tiempo detectada',
+      TIME_DRIFT: 'Desincronización del tiempo',
+      SUSPICIOUS_ANSWER: 'Respuesta sospechosa',
+      ANSWER_TOO_FAST: 'Respuesta demasiado rápida',
       ANSWER_TOO_SLOW: 'Tiempo de respuesta excedido',
-      SUSPICIOUS_PATTERN: 'Se ha detectado un patrón de respuestas sospechoso',
-      POST_INCIDENT_VALIDATION_FAILED: 'La validación post-incidente ha fallado',
-      FULLSCREEN_REQUIRED: 'El examen debe realizarse en modo pantalla completa',
-      FULLSCREEN_WARNING: 'Está intentando salir del modo pantalla completa'
+      SUSPICIOUS_PATTERN: 'Patrón de respuestas sospechoso',
+      FULLSCREEN_DENIED: 'Modo pantalla completa denegado',
+      FULLSCREEN_REQUIRED: 'Pantalla completa requerida',
+      FULLSCREEN_WARNING: 'Advertencia de pantalla completa'
     };
-
-    return messages[type] || 'Se ha detectado una violación de seguridad';
+    return messages[type] || 'Violación de seguridad detectada';
   }
 
   showConnectionWarning(isOnline: boolean): void {
@@ -224,7 +304,7 @@ export class ExamenNotificationService {
       }
     });
 
-    return dialogRef.afterClosed().toPromise();
+    return firstValueFrom(dialogRef.afterClosed());
   }
 
   private showFinalWarningDialog(type?: SecurityViolationType): void {
@@ -316,5 +396,29 @@ export class ExamenNotificationService {
         verticalPosition: 'top'
       }
     );
+  }
+
+  async showConfirmDialog(title: string, message: string): Promise<boolean> {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: {
+        title,
+        message,
+        confirmText: 'Aceptar',
+        cancelText: 'Cancelar',
+        type: 'info'
+      }
+    });
+
+    return dialogRef.afterClosed().toPromise();
+  }
+
+  public isExamenAnulado(): boolean {
+    return this.examenAnulado;
+  }
+
+  public getInfracciones(): SecurityViolationType[] {
+    return [...this.infracciones];
   }
 }

@@ -54,6 +54,15 @@ interface UserContextInfo {
   timestamp: number;
 }
 
+interface FormattedActivityLog {
+  type: ActivityLogType;
+  timestamp: string;
+  details: string;
+  userContext?: string;
+  resourceUsage?: string;
+  networkInfo?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -269,23 +278,76 @@ export class ExamenActivityLoggerService {
 
   private syncLogs(force: boolean = false): void {
     if (!this.tokenService.getToken()) {
-      return; // No intentamos sincronizar si no hay token
+      console.debug('No hay token disponible para sincronizar logs');
+      return;
     }
 
-    if (this.activityLogs.length === 0) return;
+    if (this.activityLogs.length === 0) {
+      console.debug('No hay logs para sincronizar');
+      return;
+    }
+
+    // No sincronizar si solo hay eventos de sistema o interacción básica
+    if (!force && !this.hasSignificantActivity()) {
+      console.debug('No hay actividad significativa para sincronizar');
+      return;
+    }
 
     if (force || this.activityLogs.length >= this.BATCH_SIZE) {
       const logsToSync = this.activityLogs.splice(0, this.BATCH_SIZE);
 
-      this.http.post(`${environment.apiUrl}/activity-logs`, logsToSync)
+      // Formatear los logs según el formato esperado por el backend
+      const formattedLogs = logsToSync.map(log => {
+        // Objeto base con campos requeridos
+        const formattedLog: FormattedActivityLog = {
+          type: log.type,
+          timestamp: new Date(log.timestamp).toISOString(),
+          details: typeof log.details === 'string' ? log.details : JSON.stringify(log.details)
+        };
+
+        // Solo agregar campos opcionales si existen y tienen valor
+        if (log.userContext) {
+          formattedLog.userContext = JSON.stringify(log.userContext);
+        }
+        if (log.resourceUsage) {
+          formattedLog.resourceUsage = JSON.stringify(log.resourceUsage);
+        }
+        if (log.networkInfo) {
+          formattedLog.networkInfo = JSON.stringify(log.networkInfo);
+        }
+
+        return formattedLog;
+      });
+
+      // Validar que todos los logs tengan el formato correcto antes de enviar
+      const isValidFormat = formattedLogs.every(log =>
+        log.type &&
+        log.timestamp &&
+        typeof log.details === 'string'
+      );
+
+      if (!isValidFormat) {
+        console.warn('Se detectaron logs con formato inválido, se descartarán');
+        return;
+      }
+
+      console.debug('Enviando logs al servidor:', formattedLogs);
+
+      this.http.post(`${environment.apiUrl}/activity-logs`, formattedLogs)
         .subscribe({
           next: () => {
-            console.log(`Synchronized ${logsToSync.length} logs`);
+            console.debug(`Sincronizados ${logsToSync.length} logs correctamente`);
           },
           error: (error) => {
-            console.error('Error syncing logs:', error);
-            // Reintentar más tarde
-            this.activityLogs.unshift(...logsToSync);
+            if (error.status === 400) {
+              console.error('Error de formato en los logs:', error);
+              // No reintentar si es un error de formato
+              console.warn('Los logs fueron descartados debido a un error de formato');
+            } else {
+              console.error('Error al sincronizar logs:', error);
+              // Solo reintentar si no es un error de formato
+              this.activityLogs.unshift(...logsToSync);
+            }
           }
         });
     }
@@ -302,6 +364,21 @@ export class ExamenActivityLoggerService {
     if (this.performanceObserver) {
       this.performanceObserver.disconnect();
     }
-    this.syncLogs(true);
+
+    // Solo sincronizar logs si hay actividad significativa
+    if (this.activityLogs.length > 0 && this.hasSignificantActivity()) {
+      this.syncLogs(true);
+    } else {
+      // Limpiar los logs sin enviarlos si no hay actividad significativa
+      this.activityLogs = [];
+    }
+  }
+
+  private hasSignificantActivity(): boolean {
+    // Verificar si hay logs que valgan la pena enviar
+    return this.activityLogs.some(log =>
+      log.type !== ActivityLogType.SYSTEM_EVENT &&
+      log.type !== ActivityLogType.USER_INTERACTION
+    );
   }
 }

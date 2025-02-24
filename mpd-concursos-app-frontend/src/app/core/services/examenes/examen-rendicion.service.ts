@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, timer, interval } from 'rxjs';
+import { BehaviorSubject, Observable, timer, interval, of } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Pregunta, ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { ExamenTimeService } from './examen-time.service';
@@ -23,6 +23,9 @@ export class ExamenRendicionService {
   ) {}
 
   async iniciarExamen(examenId: string, preguntas: Pregunta[]): Promise<void> {
+    // Reiniciar estado de seguridad al iniciar un nuevo examen
+    this.securityService.resetSecurityState();
+
     // Intentar recuperar examen en progreso
     const examenRecuperado = await this.recoveryService.recoverExamen(examenId);
 
@@ -33,7 +36,7 @@ export class ExamenRendicionService {
       // Crear nuevo examen
       const examen: ExamenEnCurso = {
         examenId,
-        usuarioId: 'USER_ID',
+        usuarioId: this.getCurrentUserId(), // Obtener el ID del usuario actual
         fechaInicio: new Date().toISOString(),
         fechaLimite: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
         respuestas: [],
@@ -126,21 +129,24 @@ export class ExamenRendicionService {
     });
   }
 
-  finalizarExamen(): void {
-    const examen = this.examenEnCurso.value;
-    if (!examen) return;
+  finalizarExamen(examenAnulado?: ExamenEnCurso): Observable<void> {
+    const examen = examenAnulado || this.examenEnCurso.value;
+    if (!examen) return of(void 0);
 
-    // Validar integridad post-incidente
-    const esValido = this.recoveryService.validatePostIncident(
-      examen.examenId,
-      examen.respuestas
-    );
-
-    if (!esValido) {
-      this.securityService.reportSecurityViolation(
-        SecurityViolationType.POST_INCIDENT_VALIDATION_FAILED,
-        { examen }
+    // Si el examen fue anulado, no validamos integridad
+    if (!examenAnulado) {
+      // Validar integridad post-incidente
+      const esValido = this.recoveryService.validatePostIncident(
+        examen.examenId,
+        examen.respuestas
       );
+
+      if (!esValido) {
+        this.securityService.reportSecurityViolation(
+          SecurityViolationType.POST_INCIDENT_VALIDATION_FAILED,
+          { examen }
+        );
+      }
     }
 
     // Limpiar backups
@@ -149,11 +155,22 @@ export class ExamenRendicionService {
     // Limpiar historial de validación
     this.validationService.limpiarHistorial(examen.examenId);
 
-    this.examenEnCurso.next({
+    // Si el examen fue anulado, mantenemos el estado ANULADO
+    const examenFinalizado = examenAnulado || {
       ...examen,
-      estado: 'FINALIZADO'
-    });
-    // Aquí se enviarían las respuestas al backend
+      estado: 'FINALIZADO' as const
+    };
+
+    this.examenEnCurso.next(examenFinalizado);
+
+    // Enviar al backend el estado final del examen
+    return this.enviarEstadoFinal(examenFinalizado);
+  }
+
+  private enviarEstadoFinal(examen: ExamenEnCurso): Observable<void> {
+    // TODO: Implementar llamada real al backend
+    console.log('Enviando estado final del examen:', examen);
+    return of(void 0);
   }
 
   // Observables públicos
@@ -187,5 +204,18 @@ export class ExamenRendicionService {
         this.preguntaActual$.next(preguntaActual);
       }
     }
+  }
+
+  private getCurrentUserId(): string {
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        return userData.id;
+      } catch (e) {
+        console.error('Error al obtener el ID del usuario:', e);
+      }
+    }
+    return 'anonymous';
   }
 }

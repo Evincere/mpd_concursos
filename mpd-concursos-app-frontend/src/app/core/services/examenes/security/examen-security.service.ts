@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, NgZone } from '@angular/core';
 import { Observable, BehaviorSubject, fromEvent, merge, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SecurityViolation, SecurityViolationType, SecuritySeverity, SecurityAction } from '@core/interfaces/security/security-violation.interface';
@@ -6,21 +6,49 @@ import { ISecurityService } from '@core/interfaces/examenes/security/security.in
 import { ISecurityStrategy } from '@core/interfaces/examenes/security/security-strategy.interface';
 import { ExamenNotificationService } from '../examen-notification.service';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class ExamenSecurityService implements ISecurityService {
   private securityStrategies: Map<SecurityViolationType, ISecurityStrategy>;
   private violations$ = new BehaviorSubject<SecurityViolation[]>([]);
+  private isSecureModeActive = new BehaviorSubject<boolean>(false);
 
   constructor(
     @Inject(ExamenNotificationService) private notificationService: ExamenNotificationService,
-    @Inject('SecurityStrategies') private strategies: ISecurityStrategy[]
+    @Inject('SecurityStrategies') private strategies: ISecurityStrategy[],
+    private ngZone: NgZone
   ) {
     this.securityStrategies = new Map();
     this.initializeStrategies(strategies);
   }
 
   initializeSecurityMeasures(): void {
-    // Implementación de inicialización
+    // Reiniciar el estado de seguridad
+    this.resetSecurityState();
+
+    // Activar el modo seguro sin activar la pantalla completa
+    this.activateSecureMode().catch(error => {
+      console.error('Error al inicializar medidas de seguridad:', error);
+      this.notificationService.showSecurityWarning(
+        SecurityViolationType.FULLSCREEN_DENIED,
+        'No se pudieron inicializar las medidas de seguridad'
+      );
+    });
+  }
+
+  resetSecurityState(): void {
+    // Reiniciar el estado de las violaciones
+    this.violations$.next([]);
+
+    // Reiniciar el estado de seguridad en el servicio de notificaciones
+    this.notificationService.resetSecurityState();
+
+    // Desactivar y volver a activar todas las estrategias
+    this.deactivateSecureMode();
+
+    // Reiniciar el estado del modo seguro
+    this.isSecureModeActive.next(false);
   }
 
   private initializeStrategies(strategies: ISecurityStrategy[]): void {
@@ -105,5 +133,40 @@ export class ExamenSecurityService implements ISecurityService {
 
   private getActionForViolation(type: SecurityViolationType): SecurityAction {
     return this.ACTION_MAP[type] ?? 'LOG' as SecurityAction;
+  }
+
+  async activateSecureMode(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.ngZone.run(async () => {
+        try {
+          // Activar todas las estrategias de seguridad excepto fullscreen
+          for (const strategy of this.strategies) {
+            if (strategy.getType() !== SecurityViolationType.FULLSCREEN_REQUIRED) {
+              await strategy.activate();
+            }
+          }
+
+          this.isSecureModeActive.next(true);
+          resolve();
+        } catch (error) {
+          console.error('Error activando modo seguro:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  deactivateSecureMode(): void {
+    this.ngZone.run(() => {
+      // Desactivar todas las estrategias
+      for (const strategy of this.strategies) {
+        strategy.deactivate();
+      }
+      this.isSecureModeActive.next(false);
+    });
+  }
+
+  isSecureMode(): Observable<boolean> {
+    return this.isSecureModeActive.asObservable();
   }
 }

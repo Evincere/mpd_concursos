@@ -54,7 +54,7 @@
           <div class="examen-actions">
             <button mat-flat-button
                     color="primary"
-                    [disabled]="examen.estado !== 'PENDIENTE'"
+                    [disabled]="examen.estado !== ESTADO_EXAMEN.DISPONIBLE || loading"
                     (click)="iniciarExamen(examen.id)"
                     class="action-button">
               <i class="fas fa-play"></i>

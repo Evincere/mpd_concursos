@@ -15,7 +15,7 @@
             <span class="etiqueta" [ngClass]="obtenerClaseTipo()">
               {{examen.tipo | titlecase}}
             </span>
-            <span class="etiqueta" [ngClass]="obtenerClaseEstado()">
+            <span class="etiqueta" [ngClass]="getEstadoClass()">
               {{examen.estado | titlecase}}
             </span>
           </div>
@@ -105,7 +105,8 @@
 
     <mat-card-actions align="end">
       <button mat-raised-button color="primary" (click)="iniciarExamen()" 
-              [disabled]="examen.estado !== 'PENDIENTE'"
+              [disabled]="examen.estado !== ESTADO_EXAMEN.DISPONIBLE"
+              [class]="getEstadoClass()"
               matTooltip="Iniciar el examen">
         <mat-icon>play_circle</mat-icon>
         Iniciar Examen
