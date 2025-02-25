@@ -5,7 +5,9 @@ import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.RoleEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IRoleSpringRepository;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,13 +15,16 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper {
 
+    @Autowired
+    private IRoleSpringRepository roleSpringRepository;
+
     public UserEntity toEntity(User user) {
         if (user == null) {
             return null;
         }
 
         UserEntity entity = new UserEntity();
-        
+
         if (user.getId() != null) {
             entity.setId(user.getId().value());
         }
@@ -45,12 +50,8 @@ public class UserMapper {
         entity.setLastName(user.getLastName());
         if (user.getRoles() != null) {
             entity.setRoles(user.getRoles().stream()
-                    .map(rol -> {
-                        RoleEntity roleEntity = new RoleEntity();
-                        roleEntity.setId(rol.getId());
-                        roleEntity.setRole(rol.getRole());
-                        return roleEntity;
-                    })
+                    .map(rol -> roleSpringRepository.findByRole(rol.getRole())
+                            .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado: " + rol.getRole())))
                     .collect(Collectors.toSet()));
         }
 

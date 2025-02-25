@@ -28,14 +28,14 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     @NotNull
-    @Column(unique=true)
+    @Column(unique = true)
     private String username;
     @NotNull
     private String password;
     @NotNull
-    @Column(unique=true)
+    @Column(unique = true)
     private String email;
-    @Column(unique=true)
+    @Column(unique = true)
     @NotNull
     private String dni;
     @Column(unique = true)
@@ -48,8 +48,7 @@ public class UserEntity {
     @Column(name = "last_name")
     private String lastName;
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_rol", joinColumns = @JoinColumn(name = "user_id"), 
-    inverseJoinColumns = @JoinColumn(name =  "rol_id"))
+    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     @NotNull
     private Set<RoleEntity> roles;
     @NotNull
@@ -62,7 +61,8 @@ public class UserEntity {
         this.createdAt = LocalDateTime.now();
     }
 
-    public UserEntity(String username, String password, String email, String dni, String cuit, String firstName, String lastName) {
+    public UserEntity(String username, String password, String email, String dni, String cuit, String firstName,
+            String lastName) {
         this();
         this.username = username;
         this.password = password;

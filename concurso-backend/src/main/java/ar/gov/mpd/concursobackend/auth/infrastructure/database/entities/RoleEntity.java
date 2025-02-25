@@ -9,11 +9,12 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity(name = "ROLE_ENTITY")
+@Entity(name = "roles")
 @Getter
 @Setter
 public class RoleEntity {
@@ -23,14 +24,14 @@ public class RoleEntity {
     private UUID id;
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(name = "name")
     private RoleEnum role;
 
-    
     public RoleEntity() {
     }
 
     public RoleEntity(RoleEnum role) {
         this.role = role;
     }
-    
+
 }

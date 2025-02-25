@@ -136,23 +136,18 @@ export class ExamenSecurityService implements ISecurityService {
   }
 
   async activateSecureMode(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.ngZone.run(async () => {
-        try {
-          // Activar todas las estrategias de seguridad excepto fullscreen
-          for (const strategy of this.strategies) {
-            if (strategy.getType() !== SecurityViolationType.FULLSCREEN_REQUIRED) {
-              await strategy.activate();
-            }
-          }
-
-          this.isSecureModeActive.next(true);
-          resolve();
-        } catch (error) {
-          console.error('Error activando modo seguro:', error);
-          reject(error);
-        }
-      });
+    return this.ngZone.run(async () => {
+      try {
+        await Promise.all(
+          this.strategies
+            .filter(strategy => strategy.getType() !== SecurityViolationType.FULLSCREEN_REQUIRED)
+            .map(strategy => strategy.activate())
+        );
+        this.isSecureModeActive.next(true);
+      } catch (error) {
+        console.error('Error activando modo seguro:', error);
+        throw error;
+      }
     });
   }
 

@@ -7,7 +7,7 @@
 	"settings": {
 		"java.compile.nullAnalysis.mode": "automatic",
 		"java.configuration.updateBuildConfiguration": "automatic",
-		"terminal.integrated.accessibleViewFocusOnCommandExecution": true,
+		"terminal.integrated.accessibleViewFocusOnCommandExecution": false,
 		"terminal.integrated.automationProfile.windows": {
 		
 		},
