@@ -31,6 +31,7 @@ import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
 import { ComponentWithExam } from '@core/services/examenes/security/guards/exam-navigation.guard';
 import { SidebarService } from '@core/services/sidebar/sidebar.service';
 import { ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
+import { FullscreenStrategy } from '@core/services/examenes/security/strategies/fullscreen.strategy';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -361,19 +362,25 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   }
   @HostListener('document:fullscreenchange', ['$event'])
   async onFullscreenChange(event: Event): Promise<void> {
-    // Ignoramos el primer evento de activación
-    if (this.isInitialFullscreenActivation) {
-      this.isInitialFullscreenActivation = false;
+    // Si el examen no está en progreso, ignoramos el evento
+    if (!this.isExamInProgress) {
       return;
     }
 
-    // Solo manejamos el evento de salida cuando el examen está en progreso
-    if (this.isExamInProgress && !document.fullscreenElement) {
+    const isInFullscreen = Boolean(document.fullscreenElement);
+    const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
+
+    // Dejamos que la estrategia maneje el cambio de estado
+    const shouldContinue = await fullscreenStrategy.handleFullscreenChange(isInFullscreen);
+
+    if (!shouldContinue && !fullscreenStrategy.isInViolatedState()) {
+      // Mostrar advertencia solo si no estamos en estado violado
       const shouldExit = await this.notificationService.showFullscreenWarning();
       if (!shouldExit) {
-        this.isInitialFullscreenActivation = true; // Resetear el flag para la nueva activación
+        // El usuario decidió cancelar la salida, volvemos a activar pantalla completa
         await this.activarPantallaCompleta();
       } else {
+        // El usuario confirmó que quiere salir, reportamos la infracción
         this.securityService.reportSecurityViolation(
           SecurityViolationType.FULLSCREEN_EXIT,
           { timestamp: new Date().toISOString() }
@@ -386,12 +393,14 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       // Primero colapsamos la barra lateral
       this.sidebarService.collapse();
 
-      // Intentamos activar la pantalla completa
-      const element = document.documentElement;
-      await element.requestFullscreen();
+      // Obtenemos la estrategia de pantalla completa
+      const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
+      
+      // Activamos la pantalla completa a través de la estrategia
+      await fullscreenStrategy.activate();
 
-      // Solo mostramos el mensaje de advertencia después de activar exitosamente
-      if (!this.fullscreenWarningShown) {
+      // Solo mostramos el mensaje de advertencia si no estamos en fase inicial
+      if (!fullscreenStrategy.isInInitialPhase() && !this.fullscreenWarningShown) {
         this.notificationService.showSecurityWarning(
           SecurityViolationType.FULLSCREEN_REQUIRED,
           'El examen debe realizarse en modo pantalla completa. Salir de este modo se considerará una infracción de seguridad.'
@@ -400,6 +409,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       }
     } catch (error) {
       console.error('Error al activar pantalla completa:', error);
+      // Notificar al usuario del error
+      this.notificationService.showSecurityWarning(
+        SecurityViolationType.FULLSCREEN_DENIED,
+        'No se pudo activar el modo pantalla completa. Verifique los permisos del navegador.'
+      );
       throw error;
     }
   }

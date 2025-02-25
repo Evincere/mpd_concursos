@@ -169,4 +169,9 @@ export class ExamenSecurityService implements ISecurityService {
   isSecureMode(): Observable<boolean> {
     return this.isSecureModeActive.asObservable();
   }
+
+  // Método para obtener una estrategia específica
+  getStrategy(type: SecurityViolationType): ISecurityStrategy | undefined {
+    return this.securityStrategies.get(type);
+  }
 }
