@@ -72,6 +72,7 @@ ar\gov\mpd\concursobackend\auth\domain\model\User.class
 ar\gov\mpd\concursobackend\notification\application\command\NotificationCommand.class
 ar\gov\mpd\concursobackend\auth\domain\exception\NombreObligatorioException.class
 ar\gov\mpd\concursobackend\auth\domain\model\Rol.class
+ar\gov\mpd\concursobackend\auth\application\usecase\role\FixUsersWithoutRoles.class
 ar\gov\mpd\concursobackend\auth\domain\model\Educacion.class
 ar\gov\mpd\concursobackend\auth\domain\model\UserAuthority.class
 ar\gov\mpd\concursobackend\examination\application\port\output\SecurityValidationPort.class
@@ -127,6 +128,7 @@ ar\gov\mpd\concursobackend\notification\application\port\in\GetUserNotifications
 ar\gov\mpd\concursobackend\notification\application\command\NotificationCommand$NotificationCommandBuilder.class
 ar\gov\mpd\concursobackend\examination\application\port\input\StartExaminationUseCase$StartExaminationCommand.class
 ar\gov\mpd\concursobackend\filter\domain\model\ContestFilter.class
+ar\gov\mpd\concursobackend\auth\infrastructure\config\RoleInitializer.class
 ar\gov\mpd\concursobackend\examination\domain\model\Question$QuestionOption$QuestionOptionBuilder.class
 ar\gov\mpd\concursobackend\auth\application\dto\ExperienciaDto$ExperienciaDtoBuilder.class
 ar\gov\mpd\concursobackend\examination\infrastructure\controller\ActivityLogRequest.class
@@ -146,6 +148,7 @@ ar\gov\mpd\concursobackend\auth\infrastructure\mapper\RolMapper.class
 ar\gov\mpd\concursobackend\filter\domain\model\valueobjects\ContestId.class
 ar\gov\mpd\concursobackend\inscription\infrastructure\persistence\mapper\InscriptionEntityMapperImpl.class
 ar\gov\mpd\concursobackend\notification\application\mapper\NotificationMapper.class
+ar\gov\mpd\concursobackend\auth\infrastructure\config\UserRoleDiagnosticConfig.class
 ar\gov\mpd\concursobackend\inscription\infrastructure\persistence\adapter\InscriptionPersistenceAdapter.class
 ar\gov\mpd\concursobackend\inscription\application\port\in\command\CreateInscriptionCommand.class
 ar\gov\mpd\concursobackend\examination\domain\model\Question.class
@@ -210,7 +213,6 @@ ar\gov\mpd\concursobackend\inscription\application\dto\InscriptionDetailResponse
 ar\gov\mpd\concursobackend\examination\domain\model\Examination.class
 ar\gov\mpd\concursobackend\filter\domain\model\exceptions\InvalidPositionException.class
 ar\gov\mpd\concursobackend\contest\application\port\in\ContestQueryUseCase.class
-ar\gov\mpd\concursobackend\auth\application\dto\LoginUserDto.class
 ar\gov\mpd\concursobackend\auth\infrastructure\database\entities\UserEntity.class
 ar\gov\mpd\concursobackend\filter\application\dto\ContestFilterCommand.class
 ar\gov\mpd\concursobackend\inscription\application\port\in\FindInscriptionsUseCase.class
@@ -234,6 +236,7 @@ ar\gov\mpd\concursobackend\examination\infrastructure\persistence\mapper\Examina
 ar\gov\mpd\concursobackend\examination\domain\enums\AnswerStatus.class
 ar\gov\mpd\concursobackend\inscription\application\service\UpdateInscriptionStatusService.class
 ar\gov\mpd\concursobackend\examination\infrastructure\persistence\entity\ExaminationSessionEntity.class
+ar\gov\mpd\concursobackend\auth\infrastructure\listener\UserRoleListener.class
 ar\gov\mpd\concursobackend\inscription\domain\model\exceptions\InscriptionNotFoundException.class
 ar\gov\mpd\concursobackend\notification\domain\enums\NotificationType.class
 ar\gov\mpd\concursobackend\auth\application\dto\UserProfileUpdateRequest$UserProfileUpdateRequestBuilder.class

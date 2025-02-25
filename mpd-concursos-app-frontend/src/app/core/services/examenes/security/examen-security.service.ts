@@ -72,10 +72,6 @@ export class ExamenSecurityService implements ISecurityService {
     return this.violations$.asObservable();
   }
 
-  cleanup(): void {
-    this.violations$.complete();
-  }
-
   private logViolation(type: SecurityViolationType, details?: any): void {
     const violations = this.violations$.value;
     const violation: SecurityViolation = {
@@ -136,18 +132,23 @@ export class ExamenSecurityService implements ISecurityService {
   }
 
   async activateSecureMode(): Promise<void> {
-    return this.ngZone.run(async () => {
-      try {
-        await Promise.all(
-          this.strategies
-            .filter(strategy => strategy.getType() !== SecurityViolationType.FULLSCREEN_REQUIRED)
-            .map(strategy => strategy.activate())
-        );
-        this.isSecureModeActive.next(true);
-      } catch (error) {
-        console.error('Error activando modo seguro:', error);
-        throw error;
-      }
+    return new Promise<void>((resolve, reject) => {
+      this.ngZone.run(async () => {
+        try {
+          // Activar todas las estrategias de seguridad excepto fullscreen
+          for (const strategy of this.strategies) {
+            if (strategy.getType() !== SecurityViolationType.FULLSCREEN_REQUIRED) {
+              await strategy.activate();
+            }
+          }
+
+          this.isSecureModeActive.next(true);
+          resolve();
+        } catch (error) {
+          console.error('Error activando modo seguro:', error);
+          reject(error);
+        }
+      });
     });
   }
 
@@ -163,5 +164,15 @@ export class ExamenSecurityService implements ISecurityService {
 
   isSecureMode(): Observable<boolean> {
     return this.isSecureModeActive.asObservable();
+  }
+
+  // Método para obtener una estrategia específica
+  getStrategy(type: SecurityViolationType): ISecurityStrategy | undefined {
+    return this.securityStrategies.get(type);
+  }
+
+  cleanup(): void {
+    this.deactivateSecureMode();
+    this.resetSecurityState();
   }
 }

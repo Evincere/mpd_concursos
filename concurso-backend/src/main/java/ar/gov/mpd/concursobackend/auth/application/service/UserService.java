@@ -28,6 +28,7 @@ import jakarta.transaction.Transactional;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +91,18 @@ public class UserService implements IUserService, IUserRoleManager {
     roles.add(userRole);
     user.setRoles(roles);
 
-    return userCreate.run(user);
+    logger.info("Creando usuario con username: {} y roles: {}",
+        dto.getUsername(),
+        roles.stream().map(rol -> rol.getRole().name()).collect(Collectors.joining(", ")));
+
+    User createdUser = userCreate.run(user);
+
+    logger.info("Usuario creado con ID: {}, Username: {} y roles: {}",
+        createdUser.getId().value(),
+        createdUser.getUsername().value(),
+        createdUser.getRoles().stream().map(rol -> rol.getRole().name()).collect(Collectors.joining(", ")));
+
+    return createdUser;
   }
 
   private void validateNewUserCredentials(UserCreateDto dto) {

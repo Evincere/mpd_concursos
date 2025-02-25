@@ -11,8 +11,10 @@ import ar.gov.mpd.concursobackend.auth.infrastructure.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryUserRepository implements IUserRepository {
@@ -52,5 +54,12 @@ public class InMemoryUserRepository implements IUserRepository {
     @Override
     public boolean existsByDni(UserDni dni) {
         return userSpringRepository.existsByDni(dni.value());
+    }
+
+    @Override
+    public List<User> findAll() {
+        return userSpringRepository.findAll().stream()
+                .map(userMapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

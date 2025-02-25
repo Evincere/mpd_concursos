@@ -24,7 +24,7 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
     private final UserService userService;
-    
+
     public AuthController(UserService userService) {
         this.userService = userService;
     }
@@ -41,7 +41,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UserLogin userLogin, BindingResult bindingResult) {
         logger.info("Intento de login para usuario: {}", userLogin.getUsername());
-        
+
         if (validateBindingResult(bindingResult)) {
             logger.error("Errores de validación en el login");
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
@@ -54,13 +54,14 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("Error en el login para usuario {}: {}", userLogin.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Error de autenticación", e.getMessage()));
+                    .body(new ErrorResponse("Error de autenticación", e.getMessage()));
         }
     }
 
     private boolean validateBindingResult(BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            bindingResult.getAllErrors().forEach(error -> logger.error("Validation error: " + error.getDefaultMessage()));
+            bindingResult.getAllErrors()
+                    .forEach(error -> logger.error("Validation error: " + error.getDefaultMessage()));
             return true;
         }
         return false;
@@ -76,8 +77,13 @@ public class AuthController {
         }
 
         @SuppressWarnings("unused")
-        public String getError() { return error; }
+        public String getError() {
+            return error;
+        }
+
         @SuppressWarnings("unused")
-        public String getMessage() { return message; }
+        public String getMessage() {
+            return message;
+        }
     }
-} 
+}

@@ -9,11 +9,15 @@ import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class UserMapper {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserMapper.class);
 
     @Autowired
     private IRoleSpringRepository roleSpringRepository;
@@ -48,11 +52,34 @@ public class UserMapper {
         }
         entity.setFirstName(user.getFirstName());
         entity.setLastName(user.getLastName());
-        if (user.getRoles() != null) {
-            entity.setRoles(user.getRoles().stream()
-                    .map(rol -> roleSpringRepository.findByRole(rol.getRole())
-                            .orElseThrow(() -> new RuntimeException("Error: Rol no encontrado: " + rol.getRole())))
-                    .collect(Collectors.toSet()));
+
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            logger.info("Mapeando {} roles para el usuario {}", user.getRoles().size(), user.getUsername().value());
+
+            try {
+                Set<RoleEntity> roleEntities = user.getRoles().stream()
+                        .map(rol -> {
+                            logger.debug("Buscando rol {} en la base de datos", rol.getRole());
+                            return roleSpringRepository.findByRole(rol.getRole())
+                                    .orElseThrow(() -> {
+                                        logger.error("Rol {} no encontrado en la base de datos", rol.getRole());
+                                        return new RuntimeException("Error: Rol no encontrado: " + rol.getRole());
+                                    });
+                        })
+                        .collect(Collectors.toSet());
+
+                logger.info("Se encontraron {} roles en la base de datos para asignar al usuario {}",
+                        roleEntities.size(), user.getUsername().value());
+
+                entity.setRoles(roleEntities);
+            } catch (Exception e) {
+                logger.error("Error al mapear roles para el usuario {}: {}",
+                        user.getUsername().value(), e.getMessage(), e);
+                throw e;
+            }
+        } else {
+            logger.warn("El usuario {} no tiene roles asignados", user.getUsername().value());
+            entity.setRoles(Set.of());
         }
 
         return entity;

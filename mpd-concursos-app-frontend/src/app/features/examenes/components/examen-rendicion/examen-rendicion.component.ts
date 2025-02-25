@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener, Inject, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatButtonModule } from '@angular/material/button';
@@ -11,14 +11,15 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExamenRendicionService } from '@core/services/examenes/examen-rendicion.service';
 import { ExamenesService } from '@core/services/examenes/examenes.service';
-import { OpcionRespuesta, RespuestaUsuario, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
-import { Subject, firstValueFrom, fromEvent, merge } from 'rxjs';
+import { OpcionRespuesta, Pregunta as PreguntaInterface, RespuestaUsuario, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
+import { Subject, fromEvent, merge } from 'rxjs';
 import { takeUntil, debounceTime, take } from 'rxjs/operators';
 import { MatListModule, MatListOption } from '@angular/material/list';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { SecurityViolation, SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ActivityLogType } from '@core/interfaces/examenes/monitoring/activity-log.interface';
 import {
+  ExamenTimeService,
   ExamenActivityLoggerService,
   ExamenRecoveryService,
   ExamenSecurityService,
@@ -30,6 +31,7 @@ import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
 import { ComponentWithExam } from '@core/services/examenes/security/guards/exam-navigation.guard';
 import { SidebarService } from '@core/services/sidebar/sidebar.service';
 import { ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
+import { FullscreenStrategy } from '@core/services/examenes/security/strategies/fullscreen.strategy';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -68,6 +70,8 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   tiempoRestante: number = 0;
   private destroy$ = new Subject<void>();
   opcionesOrdenadas: OpcionRespuesta[] = [];
+  private preguntaStartTime: number = 0;
+  private fullscreenWarningShown = false;
   private isInitialFullscreenActivation = true;
   readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
   constructor(
@@ -118,6 +122,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       .subscribe(pregunta => {
         if (pregunta) {
           this.preguntaActual = pregunta;
+          this.preguntaStartTime = Date.now();
 
           if (pregunta.tipo === TipoPregunta.ORDENAMIENTO) {
             this.opcionesOrdenadas = pregunta.opciones ?
@@ -165,7 +170,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
 
             try {
               // Finalizamos el examen y esperamos a que se complete
-              await firstValueFrom(this.examenService.finalizarExamen(examenAnulado));
+              await this.examenService.finalizarExamen(examenAnulado).toPromise();
 
               // Registramos la actividad
               this.activityLogger.logActivity({
@@ -356,24 +361,31 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     );
   }
   @HostListener('document:fullscreenchange', ['$event'])
-  async onFullscreenChange(): Promise<void> {
-    // Solo manejamos el evento cuando el examen está en progreso
-    // y cuando no es la activación inicial
-    if (this.isExamInProgress && !this.isInitialFullscreenActivation && !document.fullscreenElement) {
+  async onFullscreenChange(event: Event): Promise<void> {
+    // Si el examen no está en progreso, ignoramos el evento
+    if (!this.isExamInProgress) {
+      return;
+    }
+
+    const isInFullscreen = Boolean(document.fullscreenElement);
+    const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
+
+    // Dejamos que la estrategia maneje el cambio de estado
+    const shouldContinue = await fullscreenStrategy.handleFullscreenChange(isInFullscreen);
+
+    if (!shouldContinue && !fullscreenStrategy.isInViolatedState()) {
+      // Mostrar advertencia solo si no estamos en estado violado
       const shouldExit = await this.notificationService.showFullscreenWarning();
       if (!shouldExit) {
+        // El usuario decidió cancelar la salida, volvemos a activar pantalla completa
         await this.activarPantallaCompleta();
       } else {
+        // El usuario confirmó que quiere salir, reportamos la infracción
         this.securityService.reportSecurityViolation(
           SecurityViolationType.FULLSCREEN_EXIT,
           { timestamp: new Date().toISOString() }
         );
       }
-    }
-
-    // Desactivamos el flag de activación inicial después del primer cambio
-    if (this.isInitialFullscreenActivation) {
-      this.isInitialFullscreenActivation = false;
     }
   }
   private async activarPantallaCompleta(): Promise<void> {
@@ -381,11 +393,27 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       // Primero colapsamos la barra lateral
       this.sidebarService.collapse();
 
-      // Intentamos activar la pantalla completa
-      const element = document.documentElement;
-      await element.requestFullscreen();
+      // Obtenemos la estrategia de pantalla completa
+      const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
+
+      // Activamos la pantalla completa a través de la estrategia
+      await fullscreenStrategy.activate();
+
+      // Solo mostramos el mensaje de advertencia si no estamos en fase inicial
+      if (!fullscreenStrategy.isInInitialPhase() && !this.fullscreenWarningShown) {
+        this.notificationService.showSecurityWarning(
+          SecurityViolationType.FULLSCREEN_REQUIRED,
+          'El examen debe realizarse en modo pantalla completa. Salir de este modo se considerará una infracción de seguridad.'
+        );
+        this.fullscreenWarningShown = true;
+      }
     } catch (error) {
       console.error('Error al activar pantalla completa:', error);
+      // Notificar al usuario del error
+      this.notificationService.showSecurityWarning(
+        SecurityViolationType.FULLSCREEN_DENIED,
+        'No se pudo activar el modo pantalla completa. Verifique los permisos del navegador.'
+      );
       throw error;
     }
   }
@@ -396,7 +424,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       this.examenService.iniciarExamen(examenId, preguntas);
       this.isExamInProgress = true;
 
-      // this.securityService.initializeSecurityMeasures();
+      this.securityService.initializeSecurityMeasures();
 
       // Registrar inicio del examen
       this.activityLogger.logActivity({

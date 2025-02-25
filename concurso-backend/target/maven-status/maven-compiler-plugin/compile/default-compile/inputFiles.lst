@@ -16,7 +16,6 @@ B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concur
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\domain\jwt\JwtTokenFilter.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\inscription\domain\model\valueobjects\UserId.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\inscription\application\mapper\InscriptionMapper.java
-B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\application\dto\LoginUserDto.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\inscription\application\port\out\SaveInscriptionPort.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\shared\application\service\SecurityService.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\shared\domain\model\PageResponse.java
@@ -56,6 +55,7 @@ B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concur
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\domain\exception\InvalidCuitException.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\inscription\domain\model\exceptions\InscriptionNotFoundException.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\domain\valueObject\user\UserDni.java
+B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\infrastructure\config\RoleInitializer.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\inscription\application\dto\InscriptionRequest.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\inscription\application\port\in\UpdateInscriptionStatusUseCase.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\infrastructure\controller\UserController.java
@@ -66,6 +66,7 @@ B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concur
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\infrastructure\config\CorsConfig.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\examination\application\port\output\SecurityValidationPort.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\domain\exception\UserAlreadyExistsException.java
+B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\infrastructure\listener\UserRoleListener.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\application\usecase\user\UserGetByUsername.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\shared\infrastructure\security\SecurityUtils.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\shared\infrastructure\config\SecurityConstants.java
@@ -112,6 +113,7 @@ B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concur
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\notification\application\dto\NotificationRequest.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\domain\exception\ApellidoObligatorioException.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\notification\infrastructure\persistence\repository\NotificationRepositoryImpl.java
+B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\application\usecase\role\FixUsersWithoutRoles.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\ConcursoBackendApplication.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\contest\infrastructure\database\entities\ContestEntity.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\inscription\domain\model\exceptions\InvalidInscriptionStatusException.java
@@ -138,6 +140,7 @@ B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concur
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\notification\application\mapper\NotificationMapper.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\contest\application\service\CreateContestInscriptionService.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\filter\application\mapper\ContestMapper.java
+B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\infrastructure\config\UserRoleDiagnosticConfig.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\infrastructure\database\repository\spring\IUserSpringRepository.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\auth\application\usecase\role\RoleGetByRole.java
 B:\CODE\PROYECTOS\concursos-mpd\concurso-backend\src\main\java\ar\gov\mpd\concursobackend\shared\security\AuthenticationFacade.java
