@@ -28,6 +28,9 @@ export class ExamenNotificationService {
   public securityState$ = this.securityStateSubject.asObservable();
   private infracciones: SecurityViolationType[] = [];
 
+  // Bandera para controlar si se permiten mostrar notificaciones
+  private allowNotifications = false;
+
   constructor(
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
@@ -84,6 +87,8 @@ export class ExamenNotificationService {
     this.infracciones = [];
     localStorage.removeItem(this.getSecurityStateKey());
     this.updateSecurityState();
+    // Cerrar cualquier snackbar abierto
+    this.snackBar.dismiss();
   }
 
   private saveSecurityState(): void {
@@ -128,6 +133,12 @@ export class ExamenNotificationService {
   }
 
   public showSecurityWarning(type: SecurityViolationType, details?: string): void {
+    // Si las notificaciones están deshabilitadas, no mostramos nada
+    if (!this.allowNotifications) {
+      console.log('Notificación de seguridad ignorada porque las notificaciones están deshabilitadas:', type);
+      return;
+    }
+
     const now = Date.now();
 
     // Registrar la infracción
@@ -299,6 +310,12 @@ export class ExamenNotificationService {
   }
 
   async showFullscreenWarning(): Promise<boolean> {
+    // Si las notificaciones están deshabilitadas, no mostramos nada
+    if (!this.allowNotifications) {
+      console.log('Advertencia de pantalla completa ignorada porque las notificaciones están deshabilitadas');
+      return false;
+    }
+    
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       panelClass: 'security-dialog',
@@ -371,5 +388,75 @@ export class ExamenNotificationService {
 
   public getInfracciones(): SecurityViolationType[] {
     return [...this.infracciones];
+  }
+
+  /**
+   * Limpia todas las notificaciones y diálogos, y reinicia el estado de seguridad.
+   * Debe llamarse cuando se navega fuera del examen o cuando se quiere limpiar
+   * completamente el estado de las notificaciones.
+   */
+  public cleanupNotifications(): void {
+    // Cerrar cualquier snackbar abierto
+    this.snackBar.dismiss();
+    
+    // Cerrar todos los diálogos abiertos
+    this.dialog.closeAll();
+    
+    // Reiniciar el estado de seguridad
+    this.resetSecurityState();
+    
+    // Eliminamos todas las claves relacionadas con seguridad del localStorage
+    this.cleanupLocalStorage();
+    
+    console.log('Notificaciones y estado de seguridad limpiados correctamente');
+  }
+
+  /**
+   * Limpia todas las claves relacionadas con seguridad del localStorage
+   */
+  private cleanupLocalStorage(): void {
+    // Eliminar todas las claves que coincidan con el patrón de seguridad
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('securityState_') || key.includes('security') || key.includes('infraccion'))) {
+        console.log('Eliminando clave de localStorage:', key);
+        localStorage.removeItem(key);
+        // Decrementar el índice ya que se ha eliminado un elemento
+        i--;
+      }
+    }
+    
+    // Eliminar específicamente las claves relacionadas con seguridad
+    localStorage.removeItem(this.getSecurityStateKey());
+    localStorage.removeItem('examenSecurityState');
+    localStorage.removeItem('lastWarnings');
+    
+    // Reiniciar variables internas
+    this.warningCount = 0;
+    this.lastWarningTime = 0;
+    this.penaltyEndTime = 0;
+    this.infracciones = [];
+    
+    // Actualizar el estado
+    this.updateSecurityState();
+  }
+
+  /**
+   * Habilita las notificaciones de seguridad
+   */
+  public enableNotifications(): void {
+    this.allowNotifications = true;
+    console.log('Notificaciones de seguridad habilitadas');
+  }
+
+  /**
+   * Deshabilita las notificaciones de seguridad
+   */
+  public disableNotifications(): void {
+    this.allowNotifications = false;
+    console.log('Notificaciones de seguridad deshabilitadas');
+    
+    // Cerrar notificaciones existentes
+    this.cleanupNotifications();
   }
 }

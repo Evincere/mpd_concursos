@@ -147,6 +147,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
         }
       });
     });
+    
+    // Habilitamos las notificaciones de seguridad al iniciar el componente
+    this.notificationService.enableNotifications();
+    console.log('Notificaciones habilitadas en el componente de rendición de examen');
   }
   
   // Método para verificar si el navegador soporta pantalla completa
@@ -227,6 +231,18 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
                 }
               });
 
+              // Desactivamos todas las estrategias de seguridad antes de mostrar el diálogo
+              this.securityService.deactivateSecureMode();
+              console.log('Medidas de seguridad desactivadas por anulación de examen');
+              
+              // Limpiamos todas las notificaciones anteriores
+              this.notificationService.cleanupNotifications();
+              
+              // Deshabilitamos explícitamente las notificaciones
+              this.notificationService.disableNotifications();
+              
+              console.log('Medidas de seguridad desactivadas por anulación de examen');
+              
               // Mostramos el diálogo de anulación
               await this.notificationService.showConfirmDialog(
                 'Examen Anulado',
@@ -260,6 +276,16 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     }
   }
   ngOnDestroy(): void {
+    // Desactivamos todas las estrategias de seguridad explícitamente
+    this.securityService.deactivateSecureMode();
+    
+    // Limpiamos todas las notificaciones y diálogos
+    this.notificationService.cleanupNotifications();
+    
+    // Deshabilitamos explícitamente las notificaciones
+    this.notificationService.disableNotifications();
+    
+    // Limpiamos los recursos
     this.securityService.cleanup();
     this.activityLogger.cleanup();
     this.destroy$.next();
@@ -452,12 +478,76 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
           console.error('Error al restablecer pantalla completa:', error);
         }
       } else {
-        console.log('Usuario confirmó salir de pantalla completa, reportando infracción');
-        // El usuario confirmó que quiere salir, reportamos la infracción
+        console.log('Usuario confirmó salir de pantalla completa, anulando el examen');
+        
+        // El usuario confirmó que quiere salir, registramos la infracción
         this.securityService.reportSecurityViolation(
           SecurityViolationType.FULLSCREEN_EXIT,
           { timestamp: new Date().toISOString() }
         );
+        
+        // Obtenemos el ID del examen actual
+        const examenId = this.route.snapshot.paramMap.get('id');
+        if (!examenId) {
+          console.error('No se pudo obtener el ID del examen para anularlo');
+          return;
+        }
+        
+        // Anulamos el examen por infracción de pantalla completa
+        this.examenService.getExamenEnCurso()
+          .pipe(
+            take(1),
+            takeUntil(this.destroy$)
+          )
+          .subscribe(async examen => {
+            if (examen) {
+              // Guardamos el backup local con el estado actual
+              await this.recoveryService.saveToLocalBackup(examenId, examen);
+              
+              // Creamos el objeto examen anulado con el motivo correspondiente
+              const examenAnulado = {
+                ...examen,
+                estado: ESTADO_EXAMEN.ANULADO as 'ANULADO',
+                motivoAnulacion: {
+                  fecha: new Date().toISOString(),
+                  infracciones: [SecurityViolationType.FULLSCREEN_EXIT]
+                }
+              };
+              
+              try {
+                // Finalizamos el examen con estado anulado
+                await this.examenService.finalizarExamen(examenAnulado).toPromise();
+                console.log('Examen anulado correctamente por salir de pantalla completa');
+                
+                // Desactivamos todas las medidas de seguridad antes de redirigir
+                this.securityService.deactivateSecureMode();
+                
+                // Limpiamos todas las notificaciones y diálogos
+                this.notificationService.cleanupNotifications();
+                
+                // Deshabilitamos explícitamente las notificaciones
+                this.notificationService.disableNotifications();
+                
+                console.log('Medidas de seguridad desactivadas');
+                
+                // Registramos la actividad
+                this.activityLogger.logActivity({
+                  type: ActivityLogType.SYSTEM_EVENT,
+                  timestamp: Date.now(),
+                  details: {
+                    event: 'EXAMEN_ANULADO',
+                    examenId: examenId,
+                    motivo: 'Salida de modo pantalla completa'
+                  }
+                });
+                
+                // Redireccionamos al listado de exámenes sin mostrar ningún mensaje
+                this.router.navigate(['/dashboard/examenes']);
+              } catch (error) {
+                console.error('Error al anular el examen:', error);
+              }
+            }
+          });
       }
     }
   }

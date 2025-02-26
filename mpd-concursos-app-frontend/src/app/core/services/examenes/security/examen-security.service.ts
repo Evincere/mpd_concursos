@@ -182,5 +182,8 @@ export class ExamenSecurityService implements ISecurityService {
   cleanup(): void {
     this.deactivateSecureMode();
     this.resetSecurityState();
+    
+    // Asegurarse de que el servicio de notificaciones también limpie sus recursos
+    this.notificationService.cleanupNotifications();
   }
 }
