@@ -41,8 +41,7 @@ public class UserEntity {
     @Column(unique = true)
     @NotNull
     private String dni;
-    @Column(unique = true)
-    @NotNull
+    @Column(unique = true, nullable = true)
     private String cuit;
     @NotNull
     @Column(name = "first_name")

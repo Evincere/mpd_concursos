@@ -7,7 +7,6 @@ import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.auth.domain.port.IRoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,19 +53,35 @@ public class FixUsersWithoutRoles {
         int fixedCount = 0;
 
         for (User user : users) {
-            if (user.getRoles() == null || user.getRoles().isEmpty()) {
-                logger.warn("Usuario {} no tiene roles asignados. Asignando ROLE_USER...",
-                        user.getUsername().value());
-
-                if (user.getRoles() == null) {
-                    user.setRoles(new HashSet<>());
+            try {
+                // Validar que el usuario tenga un nombre de usuario válido
+                if (user.getUsername() == null) {
+                    logger.warn("Usuario sin nombre de usuario válido, ignorando...");
+                    continue;
                 }
 
-                user.getRoles().add(userRole.get());
-                userRepository.create(user);
+                if (user.getRoles() == null || user.getRoles().isEmpty()) {
+                    logger.warn("Usuario {} no tiene roles asignados. Asignando ROLE_USER...",
+                            user.getUsername().value());
 
-                logger.info("Rol ROLE_USER asignado al usuario {}", user.getUsername().value());
-                fixedCount++;
+                    if (user.getRoles() == null) {
+                        user.setRoles(new HashSet<>());
+                    }
+
+                    user.getRoles().add(userRole.get());
+                    try {
+                        userRepository.create(user);
+                        logger.info("Rol ROLE_USER asignado al usuario {}", user.getUsername().value());
+                        fixedCount++;
+                    } catch (Exception e) {
+                        logger.error("Error al guardar usuario {} con nuevo rol: {}",
+                                user.getUsername().value(), e.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error al procesar usuario {}: {}",
+                        user.getUsername() != null ? user.getUsername().value() : "unknown",
+                        e.getMessage());
             }
         }
 

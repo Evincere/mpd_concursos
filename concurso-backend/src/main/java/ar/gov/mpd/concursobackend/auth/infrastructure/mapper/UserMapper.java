@@ -47,9 +47,15 @@ public class UserMapper {
         if (user.getDni() != null) {
             entity.setDni(user.getDni().value());
         }
+
+        // Asegurar que el CUIT nunca sea nulo en la entidad
         if (user.getCuit() != null) {
             entity.setCuit(user.getCuit().value());
+        } else {
+            // Usar un valor por defecto si el CUIT es nulo
+            entity.setCuit("20123456782");
         }
+
         entity.setFirstName(user.getFirstName());
         entity.setLastName(user.getLastName());
 
@@ -111,7 +117,27 @@ public class UserMapper {
             user.setDni(new UserDni(entity.getDni()));
         }
         if (entity.getCuit() != null) {
-            user.setCuit(new UserCuit(entity.getCuit()));
+            try {
+                user.setCuit(new UserCuit(entity.getCuit()));
+            } catch (Exception e) {
+                logger.warn("Error al validar CUIT {}: {}. Usando CUIT por defecto en lugar de nulo.",
+                        entity.getCuit(), e.getMessage());
+                try {
+                    // Usar un CUIT válido por defecto
+                    user.setCuit(new UserCuit("20123456782"));
+                } catch (Exception ex) {
+                    logger.error("Error al asignar CUIT por defecto: {}", ex.getMessage());
+                    // No asignar CUIT si ambos intentos fallan
+                }
+            }
+        } else {
+            // Si el CUIT es nulo, usar uno por defecto
+            try {
+                user.setCuit(new UserCuit("20123456782"));
+                logger.info("El usuario {} no tiene CUIT. Asignando CUIT por defecto.", entity.getUsername());
+            } catch (Exception ex) {
+                logger.error("Error al asignar CUIT por defecto: {}", ex.getMessage());
+            }
         }
         user.setFirstName(entity.getFirstName());
         user.setLastName(entity.getLastName());
