@@ -9,3 +9,8 @@ concurso-backend/src/main/resources/static/concursosH2bd/concursosbd.trace.db
 concurso-backend/data/concursosH2bd.*
 *.mv.db
 *.trace.db
+
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/

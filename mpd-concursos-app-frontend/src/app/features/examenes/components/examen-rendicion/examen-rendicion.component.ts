@@ -87,34 +87,78 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     private sidebarService: SidebarService
   ) {}
   ngOnInit(): void {
-    const examenId = this.route.snapshot.params['id'];
+    const examenId = this.route.snapshot.paramMap.get('id');
+    console.log('ExamenRendicionComponent inicializado con ID:', examenId);
+
     if (!examenId) {
       this.router.navigate(['/dashboard/examenes']);
       return;
     }
 
-    // Configuramos los observables
+    // Configuramos los observables y otras preparaciones
     this.setupObservables();
-
-    // Primero solicitamos permiso para pantalla completa
-    this.notificationService.showConfirmDialog(
-      'Iniciar Examen',
-      'Para comenzar el examen, necesitamos activar el modo pantalla completa. ¿Desea continuar?'
-    ).then(async (confirmed) => {
-      if (confirmed) {
-        try {
-          // Solo después de la confirmación, activamos la pantalla completa
-          await this.activarPantallaCompleta();
-          // Y luego cargamos el examen
-          this.cargarExamen(examenId);
-        } catch (error) {
-          console.error('Error al activar pantalla completa:', error);
+    
+    // Verificamos si el navegador soporta pantalla completa
+    this.verificarSoportePantallaCompleta().then(soportado => {
+      if (!soportado) {
+        this.notificationService.showSecurityWarning(
+          SecurityViolationType.FULLSCREEN_DENIED,
+          'Su navegador no soporta el modo pantalla completa. No podrá realizar el examen.'
+        );
+        this.router.navigate(['/dashboard/examenes']);
+        return;
+      }
+      
+      // Primero solicitamos permiso para pantalla completa
+      this.notificationService.showConfirmDialog(
+        'Iniciar Examen',
+        'Para comenzar el examen, necesitamos activar el modo pantalla completa. ¿Desea continuar?'
+      ).then(async (confirmed) => {
+        if (confirmed) {
+          try {
+            console.log('Usuario confirmó iniciar examen en pantalla completa');
+            
+            // Inicializamos el objeto fullscreenStrategy antes de usarlo
+            const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
+            if (!fullscreenStrategy) {
+              throw new Error('No se pudo obtener la estrategia de pantalla completa');
+            }
+            
+            // Verificamos que estamos en estado INITIAL antes de solicitar pantalla completa
+            console.log('Estado de la estrategia antes de activar:', fullscreenStrategy.getCurrentState());
+            
+            // Activar pantalla completa antes de cargar el examen
+            await this.activarPantallaCompleta();
+            console.log('Pantalla completa activada correctamente, cargando examen...');
+            
+            // Y luego cargamos el examen
+            this.cargarExamen(examenId);
+          } catch (error) {
+            console.error('Error al activar pantalla completa:', error);
+            this.notificationService.showSecurityWarning(
+              SecurityViolationType.FULLSCREEN_DENIED,
+              'No se pudo activar el modo pantalla completa. Por favor, verifique los permisos del navegador.'
+            );
+            this.router.navigate(['/dashboard/examenes']);
+          }
+        } else {
+          console.log('Usuario canceló iniciar examen');
           this.router.navigate(['/dashboard/examenes']);
         }
-      } else {
-        this.router.navigate(['/dashboard/examenes']);
-      }
+      });
     });
+  }
+  
+  // Método para verificar si el navegador soporta pantalla completa
+  private async verificarSoportePantallaCompleta(): Promise<boolean> {
+    const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
+    
+    if (!fullscreenStrategy) {
+      console.error('No se pudo obtener la estrategia de pantalla completa');
+      return false;
+    }
+    
+    return fullscreenStrategy.checkFullscreenSupport();
   }
   private setupObservables(): void {
     this.examenService.getPreguntaActual()
@@ -362,24 +406,53 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   }
   @HostListener('document:fullscreenchange', ['$event'])
   async onFullscreenChange(event: Event): Promise<void> {
+    console.log('Evento fullscreenchange detectado, isExamInProgress:', this.isExamInProgress);
+    
+    const isInFullscreen = Boolean(document.fullscreenElement);
+    console.log('¿Está en pantalla completa?:', isInFullscreen);
+    
+    // Verificación crucial: si el examen no está en progreso y estamos entrando en pantalla completa,
+    // ignoramos completamente este evento para evitar que se detecte como violación
+    if (!this.isExamInProgress && isInFullscreen) {
+      console.log('Ignorando evento de entrada a pantalla completa porque el examen aún no está en progreso');
+      return;
+    }
+    
     // Si el examen no está en progreso, ignoramos el evento
     if (!this.isExamInProgress) {
+      console.log('Examen no en progreso, ignorando evento fullscreenchange');
       return;
     }
 
-    const isInFullscreen = Boolean(document.fullscreenElement);
     const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
+    
+    if (!fullscreenStrategy) {
+      console.error('No se pudo obtener la estrategia de pantalla completa en el evento fullscreenchange');
+      return;
+    }
+    
+    console.log('Estado actual antes de manejar el cambio:', fullscreenStrategy.getCurrentState());
 
     // Dejamos que la estrategia maneje el cambio de estado
     const shouldContinue = await fullscreenStrategy.handleFullscreenChange(isInFullscreen);
+    console.log('Resultado del manejo del cambio de estado:', shouldContinue);
 
+    // Si no debemos continuar y no estamos en estado VIOLATED, mostramos advertencia
     if (!shouldContinue && !fullscreenStrategy.isInViolatedState()) {
-      // Mostrar advertencia solo si no estamos en estado violado
+      console.log('Mostrando advertencia de pantalla completa...');
       const shouldExit = await this.notificationService.showFullscreenWarning();
+      
       if (!shouldExit) {
-        // El usuario decidió cancelar la salida, volvemos a activar pantalla completa
-        await this.activarPantallaCompleta();
+        console.log('Usuario decidió cancelar la salida de pantalla completa');
+        try {
+          // El usuario decidió cancelar la salida, volvemos a activar pantalla completa
+          await this.activarPantallaCompleta();
+          console.log('Se restableció la pantalla completa correctamente');
+        } catch (error) {
+          console.error('Error al restablecer pantalla completa:', error);
+        }
       } else {
+        console.log('Usuario confirmó salir de pantalla completa, reportando infracción');
         // El usuario confirmó que quiere salir, reportamos la infracción
         this.securityService.reportSecurityViolation(
           SecurityViolationType.FULLSCREEN_EXIT,
@@ -390,25 +463,39 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   }
   private async activarPantallaCompleta(): Promise<void> {
     try {
-      // Primero colapsamos la barra lateral
-      this.sidebarService.collapse();
-
-      // Obtenemos la estrategia de pantalla completa
+      console.log('Solicitando activación de pantalla completa...');
+      // Obtenemos la estrategia específica para pantalla completa
       const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
-
-      // Activamos la pantalla completa a través de la estrategia
-      await fullscreenStrategy.activate();
-
-      // Solo mostramos el mensaje de advertencia si no estamos en fase inicial
-      if (!fullscreenStrategy.isInInitialPhase() && !this.fullscreenWarningShown) {
-        this.notificationService.showSecurityWarning(
-          SecurityViolationType.FULLSCREEN_REQUIRED,
-          'El examen debe realizarse en modo pantalla completa. Salir de este modo se considerará una infracción de seguridad.'
-        );
-        this.fullscreenWarningShown = true;
+      
+      if (!fullscreenStrategy) {
+        console.error('No se pudo obtener la estrategia de pantalla completa');
+        throw new Error('No se pudo obtener la estrategia de pantalla completa');
+      }
+      
+      console.log('Estado de fullscreenStrategy antes de activar:', fullscreenStrategy.getCurrentState());
+      
+      // Comprobamos si el navegador no soporta API de pantalla completa
+      if (!fullscreenStrategy.checkFullscreenSupport()) {
+        console.error('Este navegador no soporta la API de pantalla completa');
+        throw new Error('Navegador no compatible con pantalla completa');
+      }
+      
+      // Si ya estamos en pantalla completa, no necesitamos volver a activarla
+      if (document.fullscreenElement) {
+        console.log('Ya estamos en pantalla completa, no se necesita activar de nuevo');
+        return;
+      }
+      
+      // Solicitamos pantalla completa utilizando la API estándar
+      try {
+        await document.documentElement.requestFullscreen();
+        console.log('Pantalla completa activada exitosamente');
+      } catch (fsError) {
+        console.error('Error al solicitar pantalla completa:', fsError);
+        throw fsError;
       }
     } catch (error) {
-      console.error('Error al activar pantalla completa:', error);
+      console.error('Error en método activarPantallaCompleta:', error);
       // Notificar al usuario del error
       this.notificationService.showSecurityWarning(
         SecurityViolationType.FULLSCREEN_DENIED,
@@ -422,8 +509,13 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     this.examenesService.getPreguntas(examenId).subscribe(preguntas => {
       this.preguntas = preguntas;
       this.examenService.iniciarExamen(examenId, preguntas);
+      
+      // Primero marcamos que el examen está en progreso ANTES de inicializar las medidas de seguridad
       this.isExamInProgress = true;
-
+      
+      // A continuación inicializamos las medidas de seguridad
+      // Excluyendo la pantalla completa que ya se activó previamente
+      console.log('Inicializando medidas de seguridad, excluyendo pantalla completa...');
       this.securityService.initializeSecurityMeasures();
 
       // Registrar inicio del examen

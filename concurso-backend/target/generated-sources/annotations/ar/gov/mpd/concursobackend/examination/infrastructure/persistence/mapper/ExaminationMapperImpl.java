@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-02-25T20:44:30-0300",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 21.0.6 (Oracle Corporation)"
+    date = "2025-02-26T07:41:06-0300",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.41.0.z20250115-2156, environment: Java 21.0.5 (Eclipse Adoptium)"
 )
 @Component
 public class ExaminationMapperImpl implements ExaminationMapper {
@@ -32,14 +32,14 @@ public class ExaminationMapperImpl implements ExaminationMapper {
 
         ExaminationEntity examinationEntity = new ExaminationEntity();
 
-        examinationEntity.setDuration( domain.getDuration() );
-        examinationEntity.setId( map( domain.getId() ) );
-        examinationEntity.setTitle( domain.getTitle() );
         examinationEntity.setDescription( domain.getDescription() );
-        examinationEntity.setStatus( domain.getStatus() );
-        examinationEntity.setStartTime( domain.getStartTime() );
         examinationEntity.setEndTime( domain.getEndTime() );
+        examinationEntity.setId( map( domain.getId() ) );
+        examinationEntity.setStartTime( domain.getStartTime() );
+        examinationEntity.setStatus( domain.getStatus() );
+        examinationEntity.setTitle( domain.getTitle() );
         examinationEntity.setType( domain.getType() );
+        examinationEntity.setDuration( domain.getDuration() );
 
         examinationEntity.setDurationMinutes( domain.getDuration().toMinutes() );
 
@@ -57,12 +57,12 @@ public class ExaminationMapperImpl implements ExaminationMapper {
         Examination.ExaminationBuilder examination = Examination.builder();
 
         examination.type( entity.getType() );
-        examination.id( map( entity.getId() ) );
-        examination.title( entity.getTitle() );
         examination.description( entity.getDescription() );
-        examination.status( entity.getStatus() );
-        examination.startTime( entity.getStartTime() );
         examination.endTime( entity.getEndTime() );
+        examination.id( map( entity.getId() ) );
+        examination.startTime( entity.getStartTime() );
+        examination.status( entity.getStatus() );
+        examination.title( entity.getTitle() );
 
         examination.duration( java.time.Duration.ofMinutes(entity.getDurationMinutes()) );
 
@@ -77,14 +77,14 @@ public class ExaminationMapperImpl implements ExaminationMapper {
 
         ExaminationSessionEntity examinationSessionEntity = new ExaminationSessionEntity();
 
-        examinationSessionEntity.setId( domain.getId() );
-        examinationSessionEntity.setExaminationId( domain.getExaminationId() );
-        examinationSessionEntity.setUserId( domain.getUserId() );
-        examinationSessionEntity.setStartTime( domain.getStartTime() );
-        examinationSessionEntity.setDeadline( domain.getDeadline() );
         examinationSessionEntity.setAnswers( answerListToAnswerEntityList( domain.getAnswers() ) );
         examinationSessionEntity.setCurrentQuestionIndex( domain.getCurrentQuestionIndex() );
+        examinationSessionEntity.setDeadline( domain.getDeadline() );
+        examinationSessionEntity.setExaminationId( domain.getExaminationId() );
+        examinationSessionEntity.setId( domain.getId() );
+        examinationSessionEntity.setStartTime( domain.getStartTime() );
         examinationSessionEntity.setStatus( domain.getStatus() );
+        examinationSessionEntity.setUserId( domain.getUserId() );
 
         return examinationSessionEntity;
     }
@@ -97,14 +97,14 @@ public class ExaminationMapperImpl implements ExaminationMapper {
 
         ExaminationSession.ExaminationSessionBuilder examinationSession = ExaminationSession.builder();
 
-        examinationSession.id( entity.getId() );
-        examinationSession.examinationId( entity.getExaminationId() );
-        examinationSession.userId( entity.getUserId() );
-        examinationSession.startTime( entity.getStartTime() );
-        examinationSession.deadline( entity.getDeadline() );
         examinationSession.answers( answerEntityListToAnswerList( entity.getAnswers() ) );
         examinationSession.currentQuestionIndex( entity.getCurrentQuestionIndex() );
+        examinationSession.deadline( entity.getDeadline() );
+        examinationSession.examinationId( entity.getExaminationId() );
+        examinationSession.id( entity.getId() );
+        examinationSession.startTime( entity.getStartTime() );
         examinationSession.status( entity.getStatus() );
+        examinationSession.userId( entity.getUserId() );
 
         return examinationSession.build();
     }
@@ -118,13 +118,13 @@ public class ExaminationMapperImpl implements ExaminationMapper {
         Answer.AnswerBuilder answer = Answer.builder();
 
         answer.sessionId( entitySessionId( entity ) );
+        answer.attempts( entity.getAttempts() );
+        answer.hash( entity.getHash() );
         answer.id( entity.getId() );
         answer.questionId( entity.getQuestionId() );
-        answer.timestamp( entity.getTimestamp() );
         answer.responseTimeInMillis( entity.getResponseTimeInMillis() );
-        answer.hash( entity.getHash() );
-        answer.attempts( entity.getAttempts() );
         answer.status( entity.getStatus() );
+        answer.timestamp( entity.getTimestamp() );
 
         answer.response( responseToArray(entity.getResponse()) );
 
@@ -139,13 +139,13 @@ public class ExaminationMapperImpl implements ExaminationMapper {
 
         AnswerEntity answerEntity = new AnswerEntity();
 
+        answerEntity.setAttempts( domain.getAttempts() );
+        answerEntity.setHash( domain.getHash() );
         answerEntity.setId( domain.getId() );
         answerEntity.setQuestionId( domain.getQuestionId() );
-        answerEntity.setTimestamp( domain.getTimestamp() );
         answerEntity.setResponseTimeInMillis( domain.getResponseTimeInMillis() );
-        answerEntity.setHash( domain.getHash() );
-        answerEntity.setAttempts( domain.getAttempts() );
         answerEntity.setStatus( domain.getStatus() );
+        answerEntity.setTimestamp( domain.getTimestamp() );
 
         answerEntity.setResponse( arrayToResponse(domain.getResponse()) );
 
@@ -161,11 +161,11 @@ public class ExaminationMapperImpl implements ExaminationMapper {
         QuestionEntity questionEntity = new QuestionEntity();
 
         questionEntity.setId( domain.getId() );
+        questionEntity.setOptions( questionOptionListToQuestionOptionEntityList( domain.getOptions() ) );
+        questionEntity.setOrderIndex( domain.getOrderIndex() );
+        questionEntity.setPoints( domain.getPoints() );
         questionEntity.setText( domain.getText() );
         questionEntity.setType( questionTypeToQuestionType( domain.getType() ) );
-        questionEntity.setOptions( questionOptionListToQuestionOptionEntityList( domain.getOptions() ) );
-        questionEntity.setPoints( domain.getPoints() );
-        questionEntity.setOrderIndex( domain.getOrderIndex() );
 
         linkQuestionOptions( questionEntity, domain );
 
@@ -182,10 +182,10 @@ public class ExaminationMapperImpl implements ExaminationMapper {
 
         question.options( questionOptionEntityListToQuestionOptionList( entity.getOptions() ) );
         question.id( entity.getId() );
+        question.orderIndex( entity.getOrderIndex() );
+        question.points( entity.getPoints() );
         question.text( entity.getText() );
         question.type( questionTypeToQuestionType1( entity.getType() ) );
-        question.points( entity.getPoints() );
-        question.orderIndex( entity.getOrderIndex() );
 
         return question.build();
     }
@@ -212,9 +212,9 @@ public class ExaminationMapperImpl implements ExaminationMapper {
 
         QuestionOptionEntity questionOptionEntity = new QuestionOptionEntity();
 
+        questionOptionEntity.setCorrect( domain.isCorrect() );
         questionOptionEntity.setId( domain.getId() );
         questionOptionEntity.setText( domain.getText() );
-        questionOptionEntity.setCorrect( domain.isCorrect() );
 
         return questionOptionEntity;
     }
@@ -275,6 +275,19 @@ public class ExaminationMapperImpl implements ExaminationMapper {
         return id;
     }
 
+    protected List<QuestionOptionEntity> questionOptionListToQuestionOptionEntityList(List<Question.QuestionOption> list) {
+        if ( list == null ) {
+            return null;
+        }
+
+        List<QuestionOptionEntity> list1 = new ArrayList<QuestionOptionEntity>( list.size() );
+        for ( Question.QuestionOption questionOption : list ) {
+            list1.add( toEntity( questionOption ) );
+        }
+
+        return list1;
+    }
+
     protected ar.gov.mpd.concursobackend.examination.domain.enums.QuestionType questionTypeToQuestionType(QuestionType questionType) {
         if ( questionType == null ) {
             return null;
@@ -297,19 +310,6 @@ public class ExaminationMapperImpl implements ExaminationMapper {
         }
 
         return questionType1;
-    }
-
-    protected List<QuestionOptionEntity> questionOptionListToQuestionOptionEntityList(List<Question.QuestionOption> list) {
-        if ( list == null ) {
-            return null;
-        }
-
-        List<QuestionOptionEntity> list1 = new ArrayList<QuestionOptionEntity>( list.size() );
-        for ( Question.QuestionOption questionOption : list ) {
-            list1.add( toEntity( questionOption ) );
-        }
-
-        return list1;
     }
 
     protected List<Question.QuestionOption> questionOptionEntityListToQuestionOptionList(List<QuestionOptionEntity> list) {
