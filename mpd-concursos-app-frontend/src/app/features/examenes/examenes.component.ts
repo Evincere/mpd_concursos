@@ -8,6 +8,7 @@ import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { Subject, takeUntil } from 'rxjs';
 import { RouterModule, Router } from '@angular/router';
 import { ExamenSecurityService } from '@core/services/examenes/security/examen-security.service';
+import { ExamenNotificationService } from '@core/services/examenes/examen-notification.service';
 
 @Component({
   selector: 'app-examenes',
@@ -33,10 +34,24 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     private examenesState: ExamenesStateService,
     private router: Router,
     private examenSecurity: ExamenSecurityService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private notificationService: ExamenNotificationService
   ) {}
 
   ngOnInit(): void {
+    // Nos aseguramos de que todas las estrategias de seguridad estén desactivadas
+    // al entrar al listado de exámenes
+    this.examenSecurity.deactivateSecureMode();
+    this.examenSecurity.resetSecurityState();
+    
+    // Limpiamos todas las notificaciones y diálogos abiertos
+    this.notificationService.cleanupNotifications();
+    
+    // Deshabilitamos explícitamente las notificaciones de seguridad
+    this.notificationService.disableNotifications();
+    
+    console.log('Estrategias de seguridad y notificaciones desactivadas en el listado de exámenes');
+    
     // Suscribirse a los cambios de estado
     this.examenesState.getExamenes()
       .pipe(takeUntil(this.destroy$))

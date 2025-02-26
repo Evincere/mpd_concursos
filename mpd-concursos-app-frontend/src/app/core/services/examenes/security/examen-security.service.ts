@@ -27,7 +27,7 @@ export class ExamenSecurityService implements ISecurityService {
     // Reiniciar el estado de seguridad
     this.resetSecurityState();
 
-    // Activar el modo seguro sin activar la pantalla completa
+    // Activar el modo seguro excluyendo la estrategia de pantalla completa
     this.activateSecureMode().catch(error => {
       console.error('Error al inicializar medidas de seguridad:', error);
       this.notificationService.showSecurityWarning(
@@ -52,9 +52,11 @@ export class ExamenSecurityService implements ISecurityService {
   }
 
   private initializeStrategies(strategies: ISecurityStrategy[]): void {
-    strategies.forEach(strategy => {
-      this.securityStrategies.set(strategy.getType(), strategy);
-    });
+    for (const strategy of strategies) {
+      const type = strategy.getType();
+      this.securityStrategies.set(type, strategy);
+      console.log(`Estrategia registrada: ${type}`);
+    }
   }
 
   reportSecurityViolation(type: SecurityViolationType, details?: any): void {
@@ -135,14 +137,20 @@ export class ExamenSecurityService implements ISecurityService {
     return new Promise<void>((resolve, reject) => {
       this.ngZone.run(async () => {
         try {
-          // Activar todas las estrategias de seguridad excepto fullscreen
+          console.log('Activando modo seguro...');
+          // Activar todas las estrategias de seguridad
           for (const strategy of this.strategies) {
+            // La estrategia de pantalla completa se maneja de forma separada en ExamenRendicionComponent
             if (strategy.getType() !== SecurityViolationType.FULLSCREEN_REQUIRED) {
+              console.log(`Activando estrategia: ${strategy.getType()}`);
               await strategy.activate();
+            } else {
+              console.log('Saltando activación de pantalla completa, se manejará en el componente');
             }
           }
 
           this.isSecureModeActive.next(true);
+          console.log('Modo seguro activado correctamente');
           resolve();
         } catch (error) {
           console.error('Error activando modo seguro:', error);
@@ -174,5 +182,8 @@ export class ExamenSecurityService implements ISecurityService {
   cleanup(): void {
     this.deactivateSecureMode();
     this.resetSecurityState();
+    
+    // Asegurarse de que el servicio de notificaciones también limpie sus recursos
+    this.notificationService.cleanupNotifications();
   }
 }
