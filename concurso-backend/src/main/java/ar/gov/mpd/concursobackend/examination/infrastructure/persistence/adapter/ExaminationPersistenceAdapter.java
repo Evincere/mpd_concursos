@@ -5,20 +5,22 @@ import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Component;
 
+import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupResponse;
 import ar.gov.mpd.concursobackend.examination.application.port.output.ExaminationPersistencePort;
 import ar.gov.mpd.concursobackend.examination.domain.exception.ExaminationException;
 import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
 import ar.gov.mpd.concursobackend.examination.domain.model.Examination;
 import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSession;
 import ar.gov.mpd.concursobackend.examination.domain.model.Question;
+import ar.gov.mpd.concursobackend.examination.infrastructure.mapper.ExaminationMapper;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.AnswerEntity;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.ExaminationEntity;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.ExaminationSessionEntity;
-import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.mapper.ExaminationMapper;
-import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.repository.ExaminationJpaRepository;
+import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.repository.ExaminationRepository;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.repository.ExaminationSessionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,21 +30,21 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @Component
 @RequiredArgsConstructor
 public class ExaminationPersistenceAdapter implements ExaminationPersistencePort {
-    private final ExaminationJpaRepository examinationRepository;
+    private final ExaminationRepository examinationRepository;
     private final ExaminationSessionJpaRepository sessionRepository;
-    private final ExaminationMapper mapper;
+    private final ExaminationMapper examinationMapper;
 
     @Override
     public ExaminationSession saveSession(ExaminationSession session) {
-        ExaminationSessionEntity entity = mapper.toEntity(session);
+        ExaminationSessionEntity entity = examinationMapper.toEntity(session);
         entity = sessionRepository.save(entity);
-        return mapper.toDomain(entity);
+        return examinationMapper.toDomain(entity);
     }
 
     @Override
     public ExaminationSession findSession(UUID sessionId) {
         return sessionRepository.findById(sessionId)
-            .map(mapper::toDomain)
+            .map(examinationMapper::toDomain)
             .orElseThrow(() -> new ExaminationException("Session not found"));
     }
 
@@ -51,18 +53,18 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
         ExaminationSessionEntity session = sessionRepository.findById(answer.getSessionId())
             .orElseThrow(() -> new ExaminationException("Session not found"));
             
-        AnswerEntity entity = mapper.toEntity(answer);
+        AnswerEntity entity = examinationMapper.toEntity(answer);
         entity.setSession(session);
         session.getAnswers().add(entity);
         
         sessionRepository.save(session);
-        return mapper.toDomain(entity);
+        return examinationMapper.toDomain(entity);
     }
 
     @Override
     public Examination findExamination(UUID examinationId) {
         return examinationRepository.findById(examinationId)
-            .map(mapper::toDomain)
+            .map(examinationMapper::toDomain)
             .orElseThrow(() -> new ExaminationException("Examination not found"));
     }
 
@@ -70,7 +72,7 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
     public List<Question> findQuestions(UUID examinationId) {
         ExaminationEntity examination = examinationRepository.findById(examinationId)
             .orElseThrow(() -> new ExaminationException("Examination not found"));
-        return mapper.toDomainQuestions(examination.getQuestions());
+        return examinationMapper.toDomainQuestions(examination.getQuestions());
     }
 
     @Override
@@ -114,5 +116,33 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
         } catch (Exception e) {
             throw new ExaminationException("Error saving answers: " + e.getMessage());
         }
+    }
+
+    @Override
+    public List<Examination> findAllExaminations() {
+        return examinationRepository.findAll()
+                .stream()
+                .map(examinationMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ExaminationBackupResponse getBackup(UUID id) {
+        ExaminationEntity entity = examinationRepository.findById(id)
+                .orElseThrow(() -> new ExaminationException("Examination not found"));
+        
+        return ExaminationBackupResponse.builder()
+                .answers(entity.getAnswers())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    public void saveBackup(UUID id, String answers) {
+        ExaminationEntity entity = examinationRepository.findById(id)
+                .orElseThrow(() -> new ExaminationException("Examination not found"));
+        
+        entity.setAnswers(answers);
+        examinationRepository.save(entity);
     }
 } 

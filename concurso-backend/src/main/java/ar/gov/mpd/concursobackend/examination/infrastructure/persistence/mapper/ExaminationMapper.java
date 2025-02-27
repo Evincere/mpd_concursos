@@ -22,11 +22,14 @@ public interface ExaminationMapper {
     
     @Mapping(target = "questions", ignore = true)
     @Mapping(target = "durationMinutes", expression = "java(domain.getDuration().toMinutes())")
+    @Mapping(target = "answers", ignore = true)
     ExaminationEntity toEntity(Examination domain);
     
     @Mapping(target = "questions", ignore = true)
     @Mapping(target = "duration", expression = "java(java.time.Duration.ofMinutes(entity.getDurationMinutes()))")
     @Mapping(target = "type", source = "type")
+    @Mapping(target = "maxAttempts", constant = "1")
+    @Mapping(target = "maxScore", expression = "java(calculateMaxScore(entity.getQuestions()))")
     Examination toDomain(ExaminationEntity entity);
     
     ExaminationSessionEntity toEntity(ExaminationSession domain);
@@ -42,25 +45,25 @@ public interface ExaminationMapper {
     AnswerEntity toEntity(Answer domain);
     
     @Mapping(target = "examination", ignore = true)
+    @Mapping(target = "options", ignore = true)
     QuestionEntity toEntity(Question domain);
     
-    @Mapping(target = "options", source = "options")
+    @Mapping(target = "options", ignore = true)
     Question toDomain(QuestionEntity entity);
     
     List<Question> toDomainQuestions(List<QuestionEntity> entities);
     
     @Mapping(target = "question", ignore = true)
-    QuestionOptionEntity toEntity(Question.QuestionOption domain);
+    OptionEntity toEntity(Option domain);
     
-    @Mapping(target = "isCorrect", source = "correct")
-    Question.QuestionOption toDomain(QuestionOptionEntity entity);
+    Option toDomain(OptionEntity entity);
     
     @AfterMapping
     default void linkQuestionOptions(@MappingTarget QuestionEntity target, Question source) {
         if (source.getOptions() != null) {
             target.setOptions(source.getOptions().stream()
                 .map(option -> {
-                    QuestionOptionEntity entity = toEntity(option);
+                    OptionEntity entity = toEntity(option);
                     entity.setQuestion(target);
                     return entity;
                 })
@@ -95,5 +98,12 @@ public interface ExaminationMapper {
 
     default UUID map(Long value) {
         return value == null ? null : new UUID(0, value);
+    }
+
+    default int calculateMaxScore(List<QuestionEntity> questions) {
+        if (questions == null) return 0;
+        return questions.stream()
+                .mapToInt(QuestionEntity::getScore)
+                .sum();
     }
 } 

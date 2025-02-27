@@ -1,68 +1,96 @@
 <div class="examenes-list-container">
-  <mat-card *ngFor="let examen of examenes"
-            [ngClass]="{'examen-anulado': examen.estado === ESTADO_EXAMEN.ANULADO}"
-            class="examen-card">
-    <mat-card-header>
-      <mat-card-title>{{ examen.titulo }}</mat-card-title>
-      <mat-card-subtitle>
-        <span class="estado-badge" [ngClass]="getEstadoClass(examen.estado)">
-          {{ getEstadoLabel(examen.estado) }}
-        </span>
-      </mat-card-subtitle>
-    </mat-card-header>
+  <div class="header">
+    <h1>Mis Exámenes</h1>
+    <div class="filters">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <input matInput placeholder="Buscar examen..." [(ngModel)]="searchText">
+        <button *ngIf="searchText" matSuffix mat-icon-button aria-label="Clear" (click)="searchText=''">
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
 
-    <mat-card-content>
-      <p>{{ examen.descripcion }}</p>
+      <mat-button-toggle-group class="filter-toggle" [(ngModel)]="estadoFilter" aria-label="Filtro por estado">
+        <mat-button-toggle value="TODOS">Todos</mat-button-toggle>
+        <mat-button-toggle value="DISPONIBLE">Disponibles</mat-button-toggle>
+        <mat-button-toggle value="FINALIZADO">Finalizados</mat-button-toggle>
+        <mat-button-toggle value="ANULADO">Anulados</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
 
-      <div class="examen-info">
-        <div class="info-item">
-          <mat-icon>event</mat-icon>
-          <span>Fecha: {{ examen.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</span>
-        </div>
-        <div class="info-item">
-          <mat-icon>timer</mat-icon>
-          <span>Duración: {{ examen.duracion }} minutos</span>
-        </div>
-        <div class="info-item">
-          <mat-icon>star</mat-icon>
-          <span>Puntaje máximo: {{ examen.puntajeMaximo }}</span>
-        </div>
-      </div>
+  <div class="examenes-grid">
+    <mat-card *ngFor="let examen of examenesFiltrados()" class="examen-card"
+      [ngClass]="{'examen-anulado': esExamenAnulado(examen)}" [routerLink]="['/dashboard/examenes', examen.id]">
 
-      <!-- Mostrar información de anulación si corresponde -->
-      <div *ngIf="examen.estado === 'ANULADO'" class="anulacion-info">
-        <mat-divider></mat-divider>
-        <h3>
-          <mat-icon color="warn">warning</mat-icon>
-          Examen Anulado
-        </h3>
-        <p class="anulacion-fecha">
-          Fecha de anulación: {{ examen.motivoAnulacion?.fecha | date:'dd/MM/yyyy HH:mm' }}
-        </p>
-        <div class="infracciones-list">
-          <h4>Infracciones cometidas:</h4>
-          <ul>
-            <li *ngFor="let infraccion of examen.motivoAnulacion?.infracciones">
-              {{ getInfraccionLabel(infraccion) }}
-            </li>
-          </ul>
-        </div>
-      </div>
-    </mat-card-content>
+      <!-- Cinta de ANULADO para exámenes anulados -->
+      <div class="cinta-anulado" *ngIf="esExamenAnulado(examen)">ANULADO</div>
 
-    <mat-card-actions align="end">
-      <button mat-button color="primary"
-              [routerLink]="['/examenes', examen.id]"
-              [disabled]="examen.estado === 'ANULADO'">
-        <mat-icon>visibility</mat-icon>
-        Ver Detalle
-      </button>
-      <button mat-button color="accent"
-              *ngIf="examen.estado === 'DISPONIBLE'"
-              [routerLink]="['/examenes', examen.id, 'rendir']">
-        <mat-icon>play_arrow</mat-icon>
-        Iniciar Examen
-      </button>
-    </mat-card-actions>
-  </mat-card>
+      <mat-card-header>
+        <div class="card-header-content">
+          <div class="titulo-tipo">
+            <h2 class="examen-titulo">{{ examen.titulo }}</h2>
+            <span class="examen-tipo" [ngClass]="getTipoClass(examen.tipo)">
+              {{ examen.tipo }}
+            </span>
+          </div>
+          <div class="estado-badge" [ngClass]="getEstadoClass(examen.estado)">
+            {{ examen.estado }}
+          </div>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="examen-info">
+          <div class="info-item">
+            <mat-icon>event</mat-icon>
+            <span>{{ examen.fechaInicio | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="info-item">
+            <mat-icon>schedule</mat-icon>
+            <span>{{ examen.duracion }} min</span>
+          </div>
+          <div class="info-item">
+            <mat-icon>stars</mat-icon>
+            <span>{{ examen.puntajeMaximo }} pts</span>
+          </div>
+        </div>
+
+        <!-- Información adicional para exámenes anulados -->
+        <div class="anulado-info" *ngIf="esExamenAnulado(examen)">
+          <mat-icon color="warn">gpp_bad</mat-icon>
+          <div class="anulado-text">
+            <p>Este examen ha sido anulado debido a infracciones detectadas.</p>
+            <p class="anulado-fecha" *ngIf="examen.motivoAnulacion?.fecha">
+              <mat-icon class="small-icon">access_time</mat-icon>
+              {{ examen.motivoAnulacion?.fecha | date:'dd/MM/yyyy HH:mm' }}
+            </p>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <!-- Botón Ver Detalle - lo mostramos siempre -->
+        <button mat-button color="primary" [routerLink]="['/dashboard/examenes', examen.id]">
+          <mat-icon>visibility</mat-icon>
+          Ver Detalle
+        </button>
+
+        <!-- Botón Iniciar Examen - solo se muestra si se puede iniciar -->
+        <button mat-button color="accent" *ngIf="mostrarBotonIniciarExamen(examen)"
+          [routerLink]="['/dashboard/examenes', examen.id, 'rendir']">
+          <mat-icon>play_arrow</mat-icon>
+          Iniciar Examen
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Mensaje cuando no hay exámenes que coincidan con la búsqueda -->
+  <div class="no-examenes" *ngIf="examenesFiltrados().length === 0">
+    <mat-icon>search_off</mat-icon>
+    <h3>No se encontraron exámenes</h3>
+    <p>Intenta con otros términos de búsqueda o cambia los filtros aplicados.</p>
+  </div>
 </div>

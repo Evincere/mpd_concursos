@@ -7,6 +7,7 @@ import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
 import ar.gov.mpd.concursobackend.examination.domain.model.Examination;
 import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSession;
 import ar.gov.mpd.concursobackend.examination.domain.model.Question;
+import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupResponse;
 
 public interface ExaminationPersistencePort {
     ExaminationSession saveSession(ExaminationSession session);
@@ -16,4 +17,7 @@ public interface ExaminationPersistencePort {
     List<Question> findQuestions(UUID examinationId);
     String getAnswers(Long examinationId);
     void saveAnswers(Long examinationId, String answers);
+    List<Examination> findAllExaminations();
+    ExaminationBackupResponse getBackup(UUID id);
+    void saveBackup(UUID id, String answers);
 } 

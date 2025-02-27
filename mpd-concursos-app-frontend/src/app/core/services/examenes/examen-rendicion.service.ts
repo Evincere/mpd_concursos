@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, timer, interval, of } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Pregunta, ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
@@ -7,15 +8,18 @@ import { ExamenSecurityService } from './security/examen-security.service';
 import { ExamenRecoveryService } from './examen-recovery.service';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ExamenValidationService } from './examen-validation.service';
+import { environment } from '@env/environment';
 
 @Injectable()
 export class ExamenRendicionService {
+  private apiUrl = `${environment.apiUrl}/examenes`;
   private examenEnCurso = new BehaviorSubject<ExamenEnCurso | null>(null);
   private preguntas = new BehaviorSubject<Pregunta[]>([]);
   private tiempoRestante = new BehaviorSubject<number>(0);
   private preguntaActual$ = new BehaviorSubject<Pregunta | null>(null);
 
   constructor(
+    private http: HttpClient,
     private timeService: ExamenTimeService,
     private securityService: ExamenSecurityService,
     private validationService: ExamenValidationService,
@@ -165,6 +169,14 @@ export class ExamenRendicionService {
 
     // Enviar al backend el estado final del examen
     return this.enviarEstadoFinal(examenFinalizado);
+  }
+
+  anularExamen(examenId: string, motivo: { fecha: string; infracciones: SecurityViolationType[] }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${examenId}/anular`, motivo);
+  }
+
+  finalizarExamenApi(examenId: string, datos: { respuestas: { [key: string]: string | string[] }; tiempoUtilizado: number }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${examenId}/finalizar`, datos);
   }
 
   private enviarEstadoFinal(examen: ExamenEnCurso): Observable<void> {

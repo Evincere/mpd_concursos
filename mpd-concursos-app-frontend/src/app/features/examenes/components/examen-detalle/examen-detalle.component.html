@@ -1,4 +1,4 @@
-<div class="examen-detalle-container">
+<div class="examen-detalle-container" [ngClass]="{'anulado-container': examen.estado === ESTADO_EXAMEN.ANULADO}">
   <div class="header-actions">
     <button mat-button color="primary" [routerLink]="['/dashboard/examenes']" class="back-button">
       <mat-icon>arrow_back</mat-icon>
@@ -6,7 +6,7 @@
     </button>
   </div>
 
-  <mat-card class="examen-card">
+  <mat-card class="examen-card" [ngClass]="{'examen-anulado': examen.estado === ESTADO_EXAMEN.ANULADO}">
     <mat-card-header>
       <div class="header-content">
         <div class="titulo-estado">
@@ -16,7 +16,7 @@
               {{examen.tipo | titlecase}}
             </span>
             <span class="etiqueta" [ngClass]="getEstadoClass()">
-              {{examen.estado | titlecase}}
+              {{getEstadoLabel(examen.estado)}}
             </span>
           </div>
         </div>
@@ -42,7 +42,58 @@
     </mat-card-header>
 
     <mat-card-content>
-      <mat-tab-group animationDuration="300ms">
+      <!-- Información de anulación si corresponde -->
+      <div *ngIf="examen.estado === ESTADO_EXAMEN.ANULADO" class="anulacion-detalle">
+        <div class="anulacion-header">
+          <mat-icon color="warn" class="anulacion-icon">gpp_bad</mat-icon>
+          <h2>Examen Anulado</h2>
+        </div>
+        
+        <div class="anulacion-info">
+          <p class="anulacion-descripcion">
+            Este examen ha sido anulado debido a infracciones detectadas durante su rendición.
+          </p>
+          <p class="anulacion-fecha">
+            <mat-icon color="warn" class="small-icon">access_time</mat-icon>
+            Fecha de anulación: {{ examen.motivoAnulacion?.fecha | date:'dd/MM/yyyy HH:mm' }}
+          </p>
+        </div>
+
+        <mat-divider></mat-divider>
+        
+        <div class="infracciones-container">
+          <h3>
+            <mat-icon color="warn" class="small-icon">warning</mat-icon>
+            Infracciones detectadas:
+          </h3>
+          <ul class="infracciones-list">
+            <li *ngFor="let infraccion of examen.motivoAnulacion?.infracciones">
+              <mat-icon class="infraccion-icon" color="warn">{{ getInfraccionIcono(infraccion) }}</mat-icon>
+              <span>{{ getInfraccionLabel(infraccion) }}</span>
+            </li>
+          </ul>
+        </div>
+        
+        <mat-divider></mat-divider>
+        
+        <div class="apelacion-container">
+          <h3>
+            <mat-icon color="primary" class="small-icon">gavel</mat-icon>
+            Recurso de Apelación
+          </h3>
+          <p>
+            Si considera que la anulación de este examen es incorrecta, puede presentar un recurso 
+            de apelación dentro de los próximos 5 días hábiles a partir de la fecha de anulación.
+          </p>
+          <button mat-raised-button color="primary" (click)="presentarRecurso()" class="apelacion-button">
+            <mat-icon>description</mat-icon>
+            Presentar Recurso
+          </button>
+        </div>
+      </div>
+
+      <!-- Pestañas con detalles del examen -->
+      <mat-tab-group animationDuration="300ms" *ngIf="examen.estado !== ESTADO_EXAMEN.ANULADO">
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon class="tab-icon">description</mat-icon>
@@ -103,7 +154,8 @@
       </mat-tab-group>
     </mat-card-content>
 
-    <mat-card-actions align="end">
+    <!-- Botón para iniciar examen solo si no está anulado -->
+    <mat-card-actions align="end" *ngIf="examen.estado !== ESTADO_EXAMEN.ANULADO">
       <button mat-raised-button color="primary" (click)="iniciarExamen()" 
               [disabled]="examen.estado !== ESTADO_EXAMEN.DISPONIBLE"
               [class]="getEstadoClass()"
@@ -113,4 +165,4 @@
       </button>
     </mat-card-actions>
   </mat-card>
-</div> 
+</div>

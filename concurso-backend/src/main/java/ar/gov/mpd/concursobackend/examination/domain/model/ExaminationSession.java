@@ -8,17 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
+
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class ExaminationSession {
     UUID id;
-    Long examinationId;
+    UUID examinationId;
     UUID userId;
     LocalDateTime startTime;
     LocalDateTime deadline;
     @Builder.Default
     List<Answer> answers = new ArrayList<>();
-    int currentQuestionIndex;
+    Integer currentQuestionIndex;
     ExaminationSessionStatus status;
     
     public boolean isValid() {

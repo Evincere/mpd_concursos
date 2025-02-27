@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationType;
-import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationStatus;
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,24 +16,32 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.CollectionTable;
 
 @Entity
 @Table(name = "examinations")
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExaminationEntity {
     @Id
     private UUID id;
     
     private String title;
+    
     private String description;
     
     @Column(name = "duration_minutes")
     private Long durationMinutes;
     
     @OneToMany(mappedBy = "examination", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<QuestionEntity> questions = new ArrayList<>();
     
     @Enumerated(EnumType.STRING)
@@ -47,6 +55,21 @@ public class ExaminationEntity {
 
     @Enumerated(EnumType.STRING)
     private ExaminationType type;
+    
+    @Column(name = "cancellation_date")
+    private LocalDateTime cancellationDate;
+    
+    @Column(name = "cancellation_reason")
+    private String cancellationReason;
+    
+    @ElementCollection
+    @CollectionTable(name = "examination_security_violations")
+    @Column(name = "violation")
+    @Builder.Default
+    private List<String> securityViolations = new ArrayList<>();
+
+    @Column(columnDefinition = "TEXT")
+    private String answers;
 
     public Duration getDuration() {
         return Duration.ofMinutes(durationMinutes);

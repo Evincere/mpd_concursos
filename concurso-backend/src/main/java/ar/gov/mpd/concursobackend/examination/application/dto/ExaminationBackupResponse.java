@@ -1,12 +1,13 @@
 package ar.gov.mpd.concursobackend.examination.application.dto;
 
-import lombok.Data;
 import lombok.Builder;
+import lombok.Value;
 
-@Data
+import java.time.LocalDateTime;
+
+@Value
 @Builder
 public class ExaminationBackupResponse {
-    private Long examinationId;
-    private String answers;  // JSON string con las respuestas
-    private Long timestamp;
+    String answers;
+    LocalDateTime timestamp;
 } 

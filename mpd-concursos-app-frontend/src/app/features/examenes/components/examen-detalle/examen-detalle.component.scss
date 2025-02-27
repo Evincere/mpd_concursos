@@ -5,138 +5,312 @@
 }
 
 .examen-detalle-container {
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 1rem;
+
+  &.anulado-container {
+    background-color: rgba(244, 67, 54, 0.05);
+    position: relative;
+  }
 
   .header-actions {
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
 
     .back-button {
-      background-color: #2d2d2d;
-      padding: 8px 16px;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      color: #fff;
-
-      mat-icon {
-        margin-right: 8px;
-      }
-
-      &:hover {
-        background-color: #3d3d3d;
-      }
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
   }
 
   .examen-card {
-    background-color: #2d2d2d;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    
+    &.examen-anulado {
+      border: 2px solid #f44336;
+      position: relative;
+      overflow: hidden;
 
-    mat-card-header {
-      background-color: #333333;
-      border-radius: 8px 8px 0 0;
-      padding: 24px;
-      border-bottom: 1px solid #404040;
+      &::before {
+        content: "ANULADO";
+        position: absolute;
+        top: 20px;
+        right: -35px;
+        background-color: #f44336;
+        color: white;
+        padding: 5px 40px;
+        transform: rotate(45deg);
+        font-weight: bold;
+        font-size: 0.8rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+      }
     }
 
     .header-content {
+      display: flex;
+      flex-direction: column;
       width: 100%;
-      
+      gap: 1rem;
+
       .titulo-estado {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-
+        flex-direction: column;
+        
         h1 {
-          margin: 0;
-          font-size: 28px;
-          font-weight: 500;
-          color: #fff;
+          margin-bottom: 0.5rem;
+          font-size: 1.8rem;
         }
 
         .etiquetas {
           display: flex;
-          gap: 12px;
+          gap: 0.5rem;
+
+          .etiqueta {
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: white;
+
+            &.tipo-juridico {
+              background-color: #3f51b5;
+            }
+
+            &.tipo-administrativo {
+              background-color: #2196f3;
+            }
+
+            &.tipo-auxiliar {
+              background-color: #009688;
+            }
+
+            &.estado-disponible {
+              background-color: #4caf50;
+            }
+
+            &.estado-en-curso {
+              background-color: #ff9800;
+            }
+
+            &.estado-finalizado {
+              background-color: #607d8b;
+            }
+
+            &.estado-anulado {
+              background-color: #f44336;
+            }
+          }
         }
       }
 
       .info-general {
         display: flex;
         flex-wrap: wrap;
-        gap: 32px;
+        gap: 1.5rem;
+        margin-top: 0.5rem;
 
         .info-item {
           display: flex;
           align-items: center;
-          gap: 8px;
-          background-color: #333333;
-          padding: 8px 16px;
-          border-radius: 4px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+          gap: 0.5rem;
+          color: #555;
 
           mat-icon {
-            color: #64b5f6;
-          }
-
-          span {
-            font-size: 15px;
-            color: #fff;
+            font-size: 1.25rem;
+            height: 1.25rem;
+            width: 1.25rem;
           }
         }
       }
     }
+
+    mat-card-content {
+      padding-top: 1rem;
+
+      .tab-content {
+        padding: 1rem 0;
+
+        .descripcion {
+          white-space: pre-line;
+          line-height: 1.6;
+        }
+
+        h3 {
+          margin-bottom: 1rem;
+          color: #333;
+        }
+      }
+
+      // Estilos para la sección de anulación
+      .anulacion-detalle {
+        padding: 1.5rem;
+        background-color: rgba(244, 67, 54, 0.1);
+        border-radius: 8px;
+        border-left: 5px solid #f44336;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        margin-bottom: 1.5rem;
+        
+        .anulacion-header {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 1.5rem;
+          border-bottom: 2px solid rgba(244, 67, 54, 0.25);
+          padding-bottom: 1rem;
+
+          .anulacion-icon {
+            font-size: 2.4rem;
+            height: 2.4rem;
+            width: 2.4rem;
+            color: #f44336;
+          }
+
+          h2 {
+            color: #f44336;
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.6rem;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+          }
+        }
+
+        .anulacion-info {
+          margin-bottom: 1.5rem;
+          
+          .anulacion-descripcion {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: rgba(0, 0, 0, 0.87);
+            font-weight: 500;
+          }
+
+          .anulacion-fecha {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(0, 0, 0, 0.75);
+            font-size: 1rem;
+            font-weight: 500;
+            
+            .small-icon {
+              color: #f44336;
+              opacity: 0.9;
+            }
+          }
+        }
+
+        mat-divider {
+          margin: 1.5rem 0;
+          background-color: rgba(244, 67, 54, 0.3);
+          height: 2px;
+        }
+
+        .infracciones-container {
+          h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(0, 0, 0, 0.8);
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            font-size: 1.2rem;
+            
+            .small-icon {
+              color: #f44336;
+            }
+          }
+          
+          .infracciones-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            
+            li {
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+              padding: 0.85rem 1.2rem;
+              margin-bottom: 0.85rem;
+              background-color: rgba(244, 67, 54, 0.08);
+              border-radius: 6px;
+              transition: all 0.2s ease;
+              border-left: 3px solid #f44336;
+              font-weight: 500;
+              
+              &:hover {
+                background-color: rgba(244, 67, 54, 0.15);
+                transform: translateX(3px);
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+              }
+              
+              .infraccion-icon {
+                color: #f44336;
+                font-size: 1.3rem;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    mat-card-actions {
+      padding: 1rem;
+      display: flex;
+      justify-content: flex-end;
+      
+      button {
+        &.estado-disponible {
+          // Estilos específicos para botones de exámenes disponibles
+          background-color: #4caf50;
+          color: white;
+        }
+      }
+    }
   }
+}
 
-  mat-card-content {
-    padding: 0;
-    background-color: #2d2d2d;
+// Estilos específicos para los tabs
+::ng-deep .mat-mdc-tab {
+  .mat-mdc-tab-label-content {
+    display: flex;
+    align-items: center;
+    
+    .tab-icon {
+      margin-right: 8px;
+    }
+  }
+}
 
-    .tab-content {
-      padding: 24px;
+// Ajustes para dispositivos móviles
+@media (max-width: 768px) {
+  .examen-detalle-container {
+    padding: 0.5rem;
 
-      .descripcion {
-        white-space: pre-line;
-        line-height: 1.8;
-        color: #fff;
-        font-size: 16px;
-        background-color: #333333;
-        padding: 16px;
-        border-radius: 4px;
-        border-left: 4px solid #64b5f6;
-      }
-
-      h3 {
-        margin-bottom: 20px;
-        color: #64b5f6;
-        font-size: 20px;
-        font-weight: 500;
-      }
-
-      mat-list {
-        padding: 0;
-      }
-
-      mat-list-item {
-        margin-bottom: 12px;
-        background-color: #333333;
-        border-radius: 4px;
-        transition: all 0.3s ease;
-
-        &:hover {
-          background-color: #404040;
-          transform: translateX(4px);
+    .examen-card {
+      .header-content {
+        .titulo-estado {
+          h1 {
+            font-size: 1.5rem;
+          }
         }
 
-        mat-icon {
-          color: #64b5f6;
+        .info-general {
+          flex-direction: column;
+          gap: 0.75rem;
         }
+      }
 
-        span {
-          color: #fff;
-          font-size: 15px;
+      mat-card-content {
+        .anulacion-detalle {
+          padding: 1rem;
         }
       }
     }
@@ -261,4 +435,4 @@ mat-card-actions {
       }
     }
   }
-} 
+}

@@ -1,23 +1,26 @@
 export enum TipoPregunta {
-  OPCION_MULTIPLE = 'OPCION_MULTIPLE',
-  VERDADERO_FALSO = 'VERDADERO_FALSO',
-  DESARROLLO = 'DESARROLLO',
-  SELECCION_MULTIPLE = 'SELECCION_MULTIPLE',
-  ORDENAMIENTO = 'ORDENAMIENTO'
+  OPCION_MULTIPLE = 'MULTIPLE_CHOICE',
+  SELECCION_MULTIPLE = 'MULTIPLE_SELECT',
+  VERDADERO_FALSO = 'TRUE_FALSE',
+  DESARROLLO = 'ESSAY',
+  ORDENAMIENTO = 'ORDERING'
 }
 
-export interface OpcionRespuesta {
+export interface Opcion {
   id: string;
   texto: string;
+  orden: number;
 }
 
 export interface Pregunta {
   id: string;
   texto: string;
   tipo: TipoPregunta;
-  opciones?: OpcionRespuesta[];
+  opciones?: Opcion[];
   puntaje: number;
   orden: number;
+  respuestaCorrecta?: string; // Para preguntas V/F
+  respuestasCorrectas?: string[]; // Para preguntas de selección múltiple
 }
 
 export interface RespuestaUsuario {
@@ -37,4 +40,20 @@ export interface ExamenEnCurso {
   respuestas: RespuestaUsuario[];
   preguntaActual: number;
   estado: 'EN_CURSO' | 'PAUSADO' | 'FINALIZADO' | 'ANULADO';
+}
+
+// Tipos de respuesta del backend
+export interface PreguntaDTO {
+  id: string;
+  text: string;
+  type: string;
+  options: {
+    id: string;
+    text: string;
+    order: number;
+  }[];
+  score: number;
+  order: number;
+  correctAnswer?: string;
+  correctAnswers?: string[];
 }

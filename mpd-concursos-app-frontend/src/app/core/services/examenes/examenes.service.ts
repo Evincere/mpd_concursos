@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { Examen, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
+import { Observable, throwError } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { Examen, ExamenDTO, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
+import { Pregunta, PreguntaDTO, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
 import { environment } from '@env/environment';
-import { Pregunta, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
+import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -11,95 +13,107 @@ import { Pregunta, TipoPregunta } from '@shared/interfaces/examen/pregunta.inter
 export class ExamenesService {
   private apiUrl = `${environment.apiUrl}/examenes`;
 
-  // Datos mockeados para desarrollo
-  private examenesMock: Examen[] = [
-    {
-      id: '1',
-      titulo: 'Examen Técnico Jurídico 2024',
-      tipo: TipoExamen.TECNICO_JURIDICO,
-      fechaInicio: '2024-03-15T10:00:00',
-      fechaFin: '2024-03-15T12:00:00',
-      estado: ESTADO_EXAMEN.DISPONIBLE,
-      descripcion: 'Evaluación de conocimientos jurídicos generales',
-      duracion: 120,
-      puntajeMaximo: 100,
-      intentosPermitidos: 1
-    },
-    {
-      id: '2',
-      titulo: 'Evaluación Técnico Administrativa',
-      tipo: TipoExamen.TECNICO_ADMINISTRATIVO,
-      fechaInicio: '2024-03-20T14:00:00',
-      fechaFin: '2024-03-20T16:00:00',
-      estado: ESTADO_EXAMEN.DISPONIBLE,
-      duracion: 120,
-      puntajeMaximo: 100,
-      intentosPermitidos: 1
-    }
-  ];
-
   constructor(private http: HttpClient) {}
 
   getExamenes(): Observable<Examen[]> {
-    // Por ahora retornamos datos mockeados
-    return of(this.examenesMock);
+    return this.http.get<ExamenDTO[]>(this.apiUrl).pipe(
+      map(examenes => examenes.map(examen => this.mapExamenFromDTO(examen))),
+      catchError(error => {
+        console.error('Error al obtener exámenes:', error);
+        return throwError(() => new Error('No se pudieron cargar los exámenes'));
+      })
+    );
+  }
+
+  getExamen(id: string): Observable<Examen> {
+    return this.http.get<ExamenDTO>(`${this.apiUrl}/${id}`).pipe(
+      map(examen => this.mapExamenFromDTO(examen)),
+      catchError(error => {
+        console.error(`Error al obtener examen ${id}:`, error);
+        return throwError(() => new Error('No se pudo cargar el examen'));
+      })
+    );
   }
 
   getPreguntas(examenId: string): Observable<Pregunta[]> {
-    return of([
-      {
-        id: '1',
-        texto: '¿Cuál es el principio fundamental del debido proceso?',
-        tipo: TipoPregunta.OPCION_MULTIPLE,
-        opciones: [
-          { id: 'a', texto: 'Derecho a ser oído' },
-          { id: 'b', texto: 'Derecho a la defensa' },
-          { id: 'c', texto: 'Presunción de inocencia' },
-          { id: 'd', texto: 'Todas las anteriores' }
-        ],
-        puntaje: 10,
-        orden: 1
-      },
-      {
-        id: '2',
-        texto: 'El habeas corpus es un recurso que protege la libertad física o ambulatoria.',
-        tipo: TipoPregunta.VERDADERO_FALSO,
-        puntaje: 5,
-        orden: 2
-      },
-      {
-        id: '3',
-        texto: 'Explique los principios básicos del sistema acusatorio y sus diferencias con el sistema inquisitivo.',
-        tipo: TipoPregunta.DESARROLLO,
-        puntaje: 15,
-        orden: 3
-      },
-      {
-        id: '4',
-        texto: 'Seleccione todas las garantías constitucionales que aplican al proceso penal:',
-        tipo: TipoPregunta.SELECCION_MULTIPLE,
-        opciones: [
-          { id: 'a', texto: 'Juez natural' },
-          { id: 'b', texto: 'Defensa en juicio' },
-          { id: 'c', texto: 'Non bis in idem' },
-          { id: 'd', texto: 'Debido proceso' }
-        ],
-        puntaje: 12,
-        orden: 4
-      },
-      {
-        id: '5',
-        texto: 'Ordene cronológicamente las etapas del proceso penal:',
-        tipo: TipoPregunta.ORDENAMIENTO,
-        opciones: [
-          { id: 'a', texto: 'Investigación preliminar' },
-          { id: 'b', texto: 'Elevación a juicio' },
-          { id: 'c', texto: 'Debate oral' },
-          { id: 'd', texto: 'Sentencia' }
-        ],
-        puntaje: 8,
-        orden: 5
-      }
-    ]);
+    return this.http.get<PreguntaDTO[]>(`${this.apiUrl}/${examenId}/questions`).pipe(
+      map(preguntas => preguntas.map(pregunta => this.mapPreguntaFromDTO(pregunta))),
+      catchError(error => {
+        console.error(`Error al obtener preguntas del examen ${examenId}:`, error);
+        return throwError(() => new Error('No se pudieron cargar las preguntas'));
+      })
+    );
+  }
+
+  private mapExamenFromDTO(dto: ExamenDTO): Examen {
+    return {
+      id: dto.id,
+      titulo: dto.title,
+      descripcion: dto.description || undefined,
+      tipo: this.mapTipoExamen(dto.type),
+      estado: this.mapEstadoExamen(dto.status),
+      fechaInicio: dto.startTime,
+      fechaFin: dto.endTime,
+      duracion: dto.durationMinutes,
+      puntajeMaximo: dto.maxScore,
+      intentosPermitidos: dto.maxAttempts,
+      intentosRealizados: dto.attemptsUsed,
+      requisitos: dto.requirements,
+      reglasExamen: dto.examRules,
+      materialesPermitidos: dto.allowedMaterials,
+      motivoAnulacion: dto.cancellationDetails ? {
+        fecha: dto.cancellationDetails.cancellationDate,
+        infracciones: dto.cancellationDetails.violations,
+        motivo: dto.cancellationDetails.reason || undefined
+      } : undefined
+    };
+  }
+
+  private mapPreguntaFromDTO(dto: PreguntaDTO): Pregunta {
+    return {
+      id: dto.id,
+      texto: dto.text,
+      tipo: this.mapTipoPregunta(dto.type),
+      opciones: dto.options?.map(opt => ({
+        id: opt.id,
+        texto: opt.text,
+        orden: opt.order
+      })),
+      puntaje: dto.score,
+      orden: dto.order,
+      respuestaCorrecta: dto.correctAnswer,
+      respuestasCorrectas: dto.correctAnswers
+    };
+  }
+
+  private mapTipoExamen(type: string): TipoExamen {
+    const mapping: { [key: string]: TipoExamen } = {
+      'TECHNICAL_LEGAL': TipoExamen.TECNICO_JURIDICO,
+      'TECHNICAL_ADMINISTRATIVE': TipoExamen.TECNICO_ADMINISTRATIVO,
+      'PSYCHOLOGICAL': TipoExamen.PSICOLOGICO
+    };
+    return mapping[type] || TipoExamen.TECNICO_JURIDICO;
+  }
+
+  private mapEstadoExamen(status: string): ESTADO_EXAMEN {
+    const mapping: { [key: string]: ESTADO_EXAMEN } = {
+      'DRAFT': ESTADO_EXAMEN.BORRADOR,
+      'SCHEDULED': ESTADO_EXAMEN.DISPONIBLE,
+      'ACTIVE': ESTADO_EXAMEN.EN_CURSO,
+      'FINISHED': ESTADO_EXAMEN.FINALIZADO,
+      'CANCELLED': ESTADO_EXAMEN.ANULADO
+    };
+    return mapping[status] || ESTADO_EXAMEN.BORRADOR;
+  }
+
+  private mapTipoPregunta(type: string): TipoPregunta {
+    const mapping: { [key: string]: TipoPregunta } = {
+      'MULTIPLE_CHOICE': TipoPregunta.OPCION_MULTIPLE,
+      'MULTIPLE_SELECT': TipoPregunta.SELECCION_MULTIPLE,
+      'TRUE_FALSE': TipoPregunta.VERDADERO_FALSO,
+      'ESSAY': TipoPregunta.DESARROLLO,
+      'ORDERING': TipoPregunta.ORDENAMIENTO
+    };
+    return mapping[type] || TipoPregunta.OPCION_MULTIPLE;
   }
 }

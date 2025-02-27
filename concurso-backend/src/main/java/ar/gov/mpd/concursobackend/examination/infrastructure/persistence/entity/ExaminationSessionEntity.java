@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSessionStatus;
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

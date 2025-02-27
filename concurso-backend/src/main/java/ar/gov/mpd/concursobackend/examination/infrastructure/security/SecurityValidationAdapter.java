@@ -1,9 +1,8 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.security;
 
 import ar.gov.mpd.concursobackend.examination.application.port.output.SecurityValidationPort;
+import ar.gov.mpd.concursobackend.examination.application.port.input.SubmitAnswerUseCase.SubmitAnswerCommand;
 import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
-import ar.gov.mpd.concursobackend.examination.domain.model.SecurityValidation;
-import ar.gov.mpd.concursobackend.examination.domain.enums.SecurityViolationType;
 import org.springframework.stereotype.Component;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
@@ -13,12 +12,9 @@ import java.util.Base64;
 public class SecurityValidationAdapter implements SecurityValidationPort {
     
     @Override
-    public SecurityValidation validateAnswer(Answer answer) {
-        return SecurityValidation.builder()
-            .valid(true)
-            .violationType(SecurityViolationType.NONE)
-            .message("Validación exitosa")
-            .build();
+    public boolean validateAnswer(SubmitAnswerCommand command) {
+        // Implementar validaciones de seguridad aquí
+        return true;
     }
 
     @Override
