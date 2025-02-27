@@ -12,24 +12,19 @@ import { Router } from '@angular/router';
 export class ExamenNotificationService {
   private readonly MAX_WARNINGS = 3;
   private readonly MIN_WARNING_INTERVAL = 2000;
-  private readonly PENALTY_DURATION = 300000; // 5 minutos de penalización
 
   private warningCount = 0;
   private lastWarningTime = 0;
-  private penaltyEndTime = 0;
+  private infracciones: SecurityViolationType[] = [];
+  private allowNotifications = false;
 
   // Observable para el estado de las infracciones
   private securityStateSubject = new BehaviorSubject<{
     warningCount: number;
-    isPenalized: boolean;
-    remainingPenaltyTime: number;
-  }>({ warningCount: 0, isPenalized: false, remainingPenaltyTime: 0 });
+    infracciones: SecurityViolationType[];
+  }>({ warningCount: 0, infracciones: [] });
 
   public securityState$ = this.securityStateSubject.asObservable();
-  private infracciones: SecurityViolationType[] = [];
-
-  // Bandera para controlar si se permiten mostrar notificaciones
-  private allowNotifications = false;
 
   constructor(
     private snackBar: MatSnackBar,
@@ -37,26 +32,20 @@ export class ExamenNotificationService {
     private router: Router
   ) {
     this.loadSecurityState();
-    this.startPenaltyTimer();
-    this.logSecurityState(); // Para debugging
   }
 
   private getCurrentUserId(): string | null {
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        return userData.id || null;
-      } catch (e) {
-        return null;
-      }
+    try {
+      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      return user.id || null;
+    } catch {
+      return null;
     }
-    return null;
   }
 
   private getSecurityStateKey(): string {
     const userId = this.getCurrentUserId();
-    return userId ? `securityState_${userId}` : 'securityState_anonymous';
+    return userId ? `securityState_${userId}` : 'securityState';
   }
 
   private loadSecurityState(): void {
@@ -64,14 +53,8 @@ export class ExamenNotificationService {
     if (savedState) {
       try {
         const state = JSON.parse(savedState);
-        // Solo cargar el estado si la penalización no ha expirado
-        if (state.penaltyEndTime > Date.now()) {
-          this.warningCount = state.warningCount;
-          this.penaltyEndTime = state.penaltyEndTime;
-        } else {
-          // Si la penalización ha expirado, reiniciar el estado
-          this.resetSecurityState();
-        }
+        this.warningCount = state.warningCount;
+        this.infracciones = state.infracciones || [];
         this.updateSecurityState();
       } catch (e) {
         console.error('Error al cargar el estado de seguridad:', e);
@@ -82,67 +65,39 @@ export class ExamenNotificationService {
 
   public resetSecurityState(): void {
     this.warningCount = 0;
-    this.penaltyEndTime = 0;
     this.lastWarningTime = 0;
     this.infracciones = [];
     localStorage.removeItem(this.getSecurityStateKey());
     this.updateSecurityState();
-    // Cerrar cualquier snackbar abierto
     this.snackBar.dismiss();
   }
 
   private saveSecurityState(): void {
     const state = {
       warningCount: this.warningCount,
-      penaltyEndTime: this.penaltyEndTime,
-      lastWarningTime: this.lastWarningTime
+      infracciones: this.infracciones
     };
     localStorage.setItem(this.getSecurityStateKey(), JSON.stringify(state));
   }
 
-  private startPenaltyTimer(): void {
-    setInterval(() => {
-      if (this.penaltyEndTime > 0) {
-        const remaining = this.penaltyEndTime - Date.now();
-        if (remaining <= 0) {
-          this.resetSecurityState();
-        } else {
-          this.updateSecurityState();
-          this.saveSecurityState();
-        }
-      }
-    }, 1000);
-  }
-
   private updateSecurityState(): void {
-    const now = Date.now();
-    const isPenalized = this.penaltyEndTime > now;
-    const remainingPenaltyTime = Math.max(0, this.penaltyEndTime - now);
-
     this.securityStateSubject.next({
       warningCount: this.warningCount,
-      isPenalized,
-      remainingPenaltyTime
+      infracciones: this.infracciones
     });
   }
 
-  private logSecurityState(): void {
-    this.securityState$.subscribe(state => {
-      console.log('Estado de seguridad:', state);
-    });
-  }
-
-  public showSecurityWarning(type: SecurityViolationType, details?: string): void {
-    // Si las notificaciones están deshabilitadas, no mostramos nada
-    if (!this.allowNotifications) {
-      console.log('Notificación de seguridad ignorada porque las notificaciones están deshabilitadas:', type);
-      return;
+  public showSecurityWarning(violationType: SecurityViolationType, customMessage?: string): void {
+    // Si las notificaciones están deshabilitadas y no es una violación crítica, ignoramos
+    if (!this.allowNotifications && !this.isViolacionCritica(violationType)) {
+        console.log('Notificación de seguridad ignorada porque las notificaciones están deshabilitadas:', violationType);
+        return;
     }
 
     const now = Date.now();
 
     // Registrar la infracción
-    this.infracciones.push(type);
+    this.infracciones.push(violationType);
 
     // Incrementar el contador de advertencias si ha pasado suficiente tiempo
     if (now - this.lastWarningTime >= this.MIN_WARNING_INTERVAL) {
@@ -153,14 +108,13 @@ export class ExamenNotificationService {
       this.updateSecurityState();
       this.saveSecurityState();
 
-      // Mostrar mensaje según la gravedad
+      // Mostrar mensaje según la cantidad de advertencias
       if (this.warningCount >= this.MAX_WARNINGS) {
-        this.applyPenalty();
-      } else if (this.warningCount === this.MAX_WARNINGS - 1) {
-        this.showFinalWarningDialog(type);
+        this.showFinalWarningDialog();
       } else {
+        const remaining = this.MAX_WARNINGS - this.warningCount;
         this.snackBar.open(
-          this.getSecurityMessage(type),
+          `${this.getSecurityMessage(violationType)}. ${remaining} advertencia${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''} antes de anular el examen.`,
           'Entendido',
           { duration: 5000 }
         );
@@ -168,49 +122,31 @@ export class ExamenNotificationService {
     }
   }
 
-  private applyPenalty(): void {
-    this.penaltyEndTime = Date.now() + this.PENALTY_DURATION;
+  private showFinalWarningDialog(): Promise<void> {
+    // Aseguramos que las notificaciones estén habilitadas
+    this.enableNotifications();
 
-    // Mostrar diálogo de penalización
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      disableClose: true,
       data: {
-        title: 'Penalización por Infracciones',
-        message: `Has alcanzado el límite de advertencias permitidas.
-                 Tu examen será bloqueado durante 5 minutos como medida de seguridad.
-                 Si las infracciones continúan, el examen podría ser finalizado automáticamente.`,
-        confirmText: 'Entiendo',
-        cancelText: null,
-        type: 'error'
+        title: 'Examen Anulado',
+        message: `El examen ha sido anulado debido a múltiples infracciones de seguridad.
+                 \nInfracciones detectadas:\n${this.infracciones
+                   .map(inf => `- ${this.getSecurityMessage(inf)}`)
+                   .join('\n')}`,
+        confirmText: 'Aceptar',
+        showCancel: false
       }
     });
 
-    dialogRef.afterClosed().subscribe(() => {
-      // Actualizar estado y UI
-      this.updateSecurityState();
-      this.saveSecurityState();
-
-      // Opcional: redirigir a una página de penalización
-      // this.router.navigate(['/examen/penalizacion']);
+    return new Promise((resolve) => {
+      dialogRef.afterClosed().subscribe(() => {
+        // Deshabilitamos las notificaciones solo después de mostrar el diálogo
+        this.disableNotifications();
+        // Redirigir al listado de exámenes
+        this.router.navigate(['/dashboard/examenes']);
+        resolve();
+      });
     });
-  }
-
-  private showPenaltyMessage(remainingSeconds: number): void {
-    const minutes = Math.floor(remainingSeconds / 60);
-    const seconds = remainingSeconds % 60;
-    const timeFormat = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-    this.snackBar.open(
-      `🚫 Acceso bloqueado por infracciones múltiples. Tiempo restante: ${timeFormat}`,
-      'Entiendo',
-      {
-        duration: undefined, // El mensaje permanece hasta que termine la penalización
-        panelClass: ['error-snackbar', 'persistent-snackbar'],
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom'
-      }
-    );
   }
 
   public getSecurityMessage(type: SecurityViolationType): string {
@@ -269,24 +205,6 @@ export class ExamenNotificationService {
     return dialogRef.afterClosed().toPromise();
   }
 
-  private showFinalWarningDialog(type?: SecurityViolationType): void {
-    this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      disableClose: true,
-      data: {
-        title: 'Advertencia Final',
-        message: 'Has recibido múltiples advertencias de seguridad. ' +
-                'La próxima violación podría resultar en la finalización del examen.',
-        confirmText: 'Entiendo',
-        cancelText: null
-      }
-    });
-  }
-
-  resetWarningCount(): void {
-    this.warningCount = 0;
-  }
-
   private getConfirmTitle(action: string): string {
     switch (action) {
       case 'pantalla-completa':
@@ -315,7 +233,7 @@ export class ExamenNotificationService {
       console.log('Advertencia de pantalla completa ignorada porque las notificaciones están deshabilitadas');
       return false;
     }
-    
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       panelClass: 'security-dialog',
@@ -398,16 +316,16 @@ export class ExamenNotificationService {
   public cleanupNotifications(): void {
     // Cerrar cualquier snackbar abierto
     this.snackBar.dismiss();
-    
+
     // Cerrar todos los diálogos abiertos
     this.dialog.closeAll();
-    
+
     // Reiniciar el estado de seguridad
     this.resetSecurityState();
-    
+
     // Eliminamos todas las claves relacionadas con seguridad del localStorage
     this.cleanupLocalStorage();
-    
+
     console.log('Notificaciones y estado de seguridad limpiados correctamente');
   }
 
@@ -425,18 +343,17 @@ export class ExamenNotificationService {
         i--;
       }
     }
-    
+
     // Eliminar específicamente las claves relacionadas con seguridad
     localStorage.removeItem(this.getSecurityStateKey());
     localStorage.removeItem('examenSecurityState');
     localStorage.removeItem('lastWarnings');
-    
+
     // Reiniciar variables internas
     this.warningCount = 0;
     this.lastWarningTime = 0;
-    this.penaltyEndTime = 0;
     this.infracciones = [];
-    
+
     // Actualizar el estado
     this.updateSecurityState();
   }
@@ -455,8 +372,15 @@ export class ExamenNotificationService {
   public disableNotifications(): void {
     this.allowNotifications = false;
     console.log('Notificaciones de seguridad deshabilitadas');
-    
+
     // Cerrar notificaciones existentes
     this.cleanupNotifications();
+  }
+
+  private isViolacionCritica(violationType: SecurityViolationType): boolean {
+    return [
+        SecurityViolationType.FULLSCREEN_EXIT,
+        SecurityViolationType.FULLSCREEN_DENIED
+    ].includes(violationType);
   }
 }

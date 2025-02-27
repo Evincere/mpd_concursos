@@ -49,6 +49,73 @@
         }
       }
 
+      .progress-container {
+        flex: 1;
+        margin: 0 24px;
+
+        .progress-bar {
+          height: 8px;
+          background-color: #333333;
+          border-radius: 4px;
+          overflow: hidden;
+          position: relative;
+          margin-bottom: 8px;
+
+          .progress-segments {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 2px;
+
+            .progress-segment {
+              flex: 1;
+              height: 100%;
+              padding: 0;
+              border: none;
+              background-color: #333333;
+              cursor: pointer;
+              transition: all 0.2s ease;
+              min-width: 8px;
+
+              &.answered {
+                background-color: #64b5f6;
+              }
+
+              &.marked {
+                background-color: #ffd740;
+              }
+
+              &.current {
+                box-shadow: 0 0 0 2px #fff;
+                z-index: 1;
+              }
+
+              &:hover {
+                transform: scaleY(1.5);
+                box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+              }
+            }
+          }
+        }
+
+        .progress-info {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: #fff;
+          font-size: 0.9rem;
+
+          .progress-text {
+            color: #64b5f6;
+          }
+
+          .progress-marked-text {
+            color: #ffd740;
+            margin-left: 8px;
+          }
+        }
+      }
+
       .progress-info {
         color: #fff;
         font-size: 1rem;

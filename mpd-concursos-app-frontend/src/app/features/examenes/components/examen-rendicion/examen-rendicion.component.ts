@@ -7,6 +7,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExamenRendicionService } from '@core/services/examenes/examen-rendicion.service';
@@ -45,6 +46,7 @@ import { FullscreenStrategy } from '@core/services/examenes/security/strategies/
     MatCheckboxModule,
     MatInputModule,
     MatIconModule,
+    MatTooltipModule,
     FormsModule,
     ReactiveFormsModule,
     MatListModule,
@@ -74,6 +76,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   private fullscreenWarningShown = false;
   private isInitialFullscreenActivation = true;
   readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
+
+  // Propiedades para el seguimiento del progreso
+  preguntasRespondidas: Set<string> = new Set<string>();
+  preguntasMarcadas: Set<string> = new Set<string>();
+
   constructor(
     private examenService: ExamenRendicionService,
     private examenesService: ExamenesService,
@@ -86,6 +93,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     private recoveryService: ExamenRecoveryService,
     private sidebarService: SidebarService
   ) {}
+
   ngOnInit(): void {
     const examenId = this.route.snapshot.paramMap.get('id');
     console.log('ExamenRendicionComponent inicializado con ID:', examenId);
@@ -97,7 +105,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
 
     // Configuramos los observables y otras preparaciones
     this.setupObservables();
-    
+
     // Verificamos si el navegador soporta pantalla completa
     this.verificarSoportePantallaCompleta().then(soportado => {
       if (!soportado) {
@@ -108,7 +116,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
         this.router.navigate(['/dashboard/examenes']);
         return;
       }
-      
+
       // Primero solicitamos permiso para pantalla completa
       this.notificationService.showConfirmDialog(
         'Iniciar Examen',
@@ -117,20 +125,20 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
         if (confirmed) {
           try {
             console.log('Usuario confirmó iniciar examen en pantalla completa');
-            
+
             // Inicializamos el objeto fullscreenStrategy antes de usarlo
             const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
             if (!fullscreenStrategy) {
               throw new Error('No se pudo obtener la estrategia de pantalla completa');
             }
-            
+
             // Verificamos que estamos en estado INITIAL antes de solicitar pantalla completa
             console.log('Estado de la estrategia antes de activar:', fullscreenStrategy.getCurrentState());
-            
+
             // Activar pantalla completa antes de cargar el examen
             await this.activarPantallaCompleta();
             console.log('Pantalla completa activada correctamente, cargando examen...');
-            
+
             // Y luego cargamos el examen
             this.cargarExamen(examenId);
           } catch (error) {
@@ -147,21 +155,42 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
         }
       });
     });
-    
+
     // Habilitamos las notificaciones de seguridad al iniciar el componente
     this.notificationService.enableNotifications();
     console.log('Notificaciones habilitadas en el componente de rendición de examen');
+
+    this.initializeProgress();
   }
-  
+
+  private initializeProgress(): void {
+    // Inicializar conjuntos de seguimiento
+    this.preguntasRespondidas = new Set<string>();
+    this.preguntasMarcadas = new Set<string>();
+
+    // Cargar respuestas guardadas si existen
+    this.examenService.getExamenEnCurso().pipe(
+      take(1)
+    ).subscribe(examen => {
+      if (examen && examen.respuestas) {
+        examen.respuestas.forEach((respuesta: RespuestaUsuario) => {
+          if (respuesta.respuesta && respuesta.respuesta.length > 0) {
+            this.preguntasRespondidas.add(respuesta.preguntaId);
+          }
+        });
+      }
+    });
+  }
+
   // Método para verificar si el navegador soporta pantalla completa
   private async verificarSoportePantallaCompleta(): Promise<boolean> {
     const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
-    
+
     if (!fullscreenStrategy) {
       console.error('No se pudo obtener la estrategia de pantalla completa');
       return false;
     }
-    
+
     return fullscreenStrategy.checkFullscreenSupport();
   }
   private setupObservables(): void {
@@ -192,99 +221,108 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       });
 }
   private handleSecurityViolation(violation: SecurityViolation): void {
-    this.notificationService.showSecurityWarning(violation.type);
-
     if (this.notificationService.isExamenAnulado()) {
       const examenId = this.route.snapshot.params['id'];
+
+      // Primero desactivamos las medidas de seguridad y notificaciones
+      this.securityService.deactivateSecureMode();
+      this.notificationService.disableNotifications();
+      this.isExamInProgress = false;
 
       this.examenService.getExamenEnCurso()
         .pipe(
           take(1),
           takeUntil(this.destroy$)
         )
-        .subscribe(async examen => {
-          if (examen) {
-            // Guardamos el backup local
-            await this.recoveryService.saveToLocalBackup(examenId, examen);
+        .subscribe({
+          next: async (examen) => {
+            if (examen) {
+              try {
+                // Guardamos el backup local
+                await this.recoveryService.saveToLocalBackup(examenId, examen);
 
-            const examenAnulado = {
-              ...examen,
-              estado: ESTADO_EXAMEN.ANULADO as 'ANULADO',
-              motivoAnulacion: {
-                fecha: new Date().toISOString(),
-                infracciones: this.notificationService.getInfracciones()
+                const examenAnulado = {
+                  ...examen,
+                  estado: ESTADO_EXAMEN.ANULADO as 'ANULADO',
+                  motivoAnulacion: {
+                    fecha: new Date().toISOString(),
+                    infracciones: this.notificationService.getInfracciones()
+                  }
+                };
+
+                // Finalizamos el examen
+                await this.examenService.finalizarExamen(examenAnulado).toPromise();
+
+                // Registramos la actividad
+                this.activityLogger.logActivity({
+                  type: ActivityLogType.SYSTEM_EVENT,
+                  timestamp: Date.now(),
+                  details: {
+                    event: 'EXAMEN_ANULADO',
+                    examenId: examenId,
+                    infracciones: this.notificationService.getInfracciones()
+                  }
+                });
+
+                // Mostramos el diálogo de anulación
+                await this.notificationService.showConfirmDialog(
+                  'Examen Anulado',
+                  `El examen ha sido anulado debido a múltiples infracciones de seguridad.
+                   \nInfracciones detectadas:\n${this.notificationService.getInfracciones()
+                     .map(inf => `- ${this.notificationService.getSecurityMessage(inf)}`)
+                     .join('\n')}`
+                );
+
+                // Redirigimos al listado de exámenes después de mostrar el diálogo
+                this.router.navigate(['/dashboard/examenes']);
+
+              } catch (error) {
+                console.error('Error al anular el examen:', error);
+                this.notificationService.showSecurityWarning(
+                  SecurityViolationType.POST_INCIDENT_VALIDATION_FAILED,
+                  'Error al procesar la anulación del examen'
+                );
+                // En caso de error, intentamos redirigir de todos modos
+                this.router.navigate(['/dashboard/examenes']);
               }
-            };
-
-            try {
-              // Finalizamos el examen y esperamos a que se complete
-              await this.examenService.finalizarExamen(examenAnulado).toPromise();
-
-              // Registramos la actividad
-              this.activityLogger.logActivity({
-                type: ActivityLogType.SYSTEM_EVENT,
-                timestamp: Date.now(),
-                details: {
-                  event: 'EXAMEN_ANULADO',
-                  examenId: examenId,
-                  infracciones: this.notificationService.getInfracciones()
-                }
-              });
-
-              // Desactivamos todas las estrategias de seguridad antes de mostrar el diálogo
-              this.securityService.deactivateSecureMode();
-              console.log('Medidas de seguridad desactivadas por anulación de examen');
-              
-              // Limpiamos todas las notificaciones anteriores
-              this.notificationService.cleanupNotifications();
-              
-              // Deshabilitamos explícitamente las notificaciones
-              this.notificationService.disableNotifications();
-              
-              console.log('Medidas de seguridad desactivadas por anulación de examen');
-              
-              // Mostramos el diálogo de anulación
-              await this.notificationService.showConfirmDialog(
-                'Examen Anulado',
-                `El examen ha sido anulado debido a múltiples infracciones de seguridad.
-                 \nInfracciones detectadas:\n${this.notificationService.getInfracciones()
-                   .map(inf => `- ${this.notificationService.getSecurityMessage(inf)}`)
-                   .join('\n')}`
-              );
-
-              // Redirigimos al listado de exámenes
-              this.router.navigate(['/dashboard/examenes']);
-            } catch (error) {
-              console.error('Error al anular el examen:', error);
-              // Mostramos un mensaje de error si algo falla
-              this.notificationService.showSecurityWarning(
-                SecurityViolationType.POST_INCIDENT_VALIDATION_FAILED,
-                'Error al procesar la anulación del examen'
-              );
             }
+          },
+          error: (error) => {
+            console.error('Error al obtener el examen en curso:', error);
+            this.notificationService.showSecurityWarning(
+              SecurityViolationType.POST_INCIDENT_VALIDATION_FAILED,
+              'Error al procesar la anulación del examen'
+            );
+            // En caso de error, intentamos redirigir de todos modos
+            this.router.navigate(['/dashboard/examenes']);
           }
         });
-    } else if (violation.severity === 'HIGH') {
-      const examenId = this.route.snapshot.params['id'];
-      this.examenService.getExamenEnCurso()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(examen => {
-          if (examen) {
-            this.recoveryService.saveToLocalBackup(examenId, examen);
-          }
-        });
+    } else {
+      // Solo mostramos la advertencia si el examen no está anulado
+      this.notificationService.showSecurityWarning(violation.type);
+
+      if (violation.severity === 'HIGH') {
+        const examenId = this.route.snapshot.params['id'];
+        this.examenService.getExamenEnCurso()
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(examen => {
+            if (examen) {
+              this.recoveryService.saveToLocalBackup(examenId, examen);
+            }
+          });
+      }
     }
   }
   ngOnDestroy(): void {
     // Desactivamos todas las estrategias de seguridad explícitamente
     this.securityService.deactivateSecureMode();
-    
+
     // Limpiamos todas las notificaciones y diálogos
     this.notificationService.cleanupNotifications();
-    
+
     // Deshabilitamos explícitamente las notificaciones
     this.notificationService.disableNotifications();
-    
+
     // Limpiamos los recursos
     this.securityService.cleanup();
     this.activityLogger.cleanup();
@@ -304,13 +342,24 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   }
   guardarRespuesta(respuesta: string | string[]): void {
     if (!this.preguntaActual) return;
-  const respuestaUsuario: RespuestaUsuario = {
+
+    const tieneRespuesta = Array.isArray(respuesta)
+      ? respuesta.length > 0
+      : respuesta.trim().length > 0;
+
+    if (tieneRespuesta) {
+      this.preguntasRespondidas.add(this.preguntaActual.id);
+    } else {
+      this.preguntasRespondidas.delete(this.preguntaActual.id);
+    }
+
+    const respuestaUsuario: RespuestaUsuario = {
       preguntaId: this.preguntaActual.id,
       respuesta,
       timestamp: new Date().toISOString()
     };
-  this.examenService.guardarRespuesta(respuestaUsuario);
-  this.activityLogger.logActivity({
+    this.examenService.guardarRespuesta(respuestaUsuario);
+    this.activityLogger.logActivity({
       type: ActivityLogType.USER_INTERACTION,
       timestamp: Date.now(),
       details: {
@@ -433,17 +482,17 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
   @HostListener('document:fullscreenchange', ['$event'])
   async onFullscreenChange(event: Event): Promise<void> {
     console.log('Evento fullscreenchange detectado, isExamInProgress:', this.isExamInProgress);
-    
+
     const isInFullscreen = Boolean(document.fullscreenElement);
     console.log('¿Está en pantalla completa?:', isInFullscreen);
-    
+
     // Verificación crucial: si el examen no está en progreso y estamos entrando en pantalla completa,
     // ignoramos completamente este evento para evitar que se detecte como violación
     if (!this.isExamInProgress && isInFullscreen) {
       console.log('Ignorando evento de entrada a pantalla completa porque el examen aún no está en progreso');
       return;
     }
-    
+
     // Si el examen no está en progreso, ignoramos el evento
     if (!this.isExamInProgress) {
       console.log('Examen no en progreso, ignorando evento fullscreenchange');
@@ -451,12 +500,12 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     }
 
     const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
-    
+
     if (!fullscreenStrategy) {
       console.error('No se pudo obtener la estrategia de pantalla completa en el evento fullscreenchange');
       return;
     }
-    
+
     console.log('Estado actual antes de manejar el cambio:', fullscreenStrategy.getCurrentState());
 
     // Dejamos que la estrategia maneje el cambio de estado
@@ -467,7 +516,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     if (!shouldContinue && !fullscreenStrategy.isInViolatedState()) {
       console.log('Mostrando advertencia de pantalla completa...');
       const shouldExit = await this.notificationService.showFullscreenWarning();
-      
+
       if (!shouldExit) {
         console.log('Usuario decidió cancelar la salida de pantalla completa');
         try {
@@ -479,20 +528,20 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
         }
       } else {
         console.log('Usuario confirmó salir de pantalla completa, anulando el examen');
-        
+
         // El usuario confirmó que quiere salir, registramos la infracción
         this.securityService.reportSecurityViolation(
           SecurityViolationType.FULLSCREEN_EXIT,
           { timestamp: new Date().toISOString() }
         );
-        
+
         // Obtenemos el ID del examen actual
         const examenId = this.route.snapshot.paramMap.get('id');
         if (!examenId) {
           console.error('No se pudo obtener el ID del examen para anularlo');
           return;
         }
-        
+
         // Anulamos el examen por infracción de pantalla completa
         this.examenService.getExamenEnCurso()
           .pipe(
@@ -503,7 +552,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
             if (examen) {
               // Guardamos el backup local con el estado actual
               await this.recoveryService.saveToLocalBackup(examenId, examen);
-              
+
               // Creamos el objeto examen anulado con el motivo correspondiente
               const examenAnulado = {
                 ...examen,
@@ -513,23 +562,23 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
                   infracciones: [SecurityViolationType.FULLSCREEN_EXIT]
                 }
               };
-              
+
               try {
                 // Finalizamos el examen con estado anulado
                 await this.examenService.finalizarExamen(examenAnulado).toPromise();
                 console.log('Examen anulado correctamente por salir de pantalla completa');
-                
+
                 // Desactivamos todas las medidas de seguridad antes de redirigir
                 this.securityService.deactivateSecureMode();
-                
+
                 // Limpiamos todas las notificaciones y diálogos
                 this.notificationService.cleanupNotifications();
-                
+
                 // Deshabilitamos explícitamente las notificaciones
                 this.notificationService.disableNotifications();
-                
+
                 console.log('Medidas de seguridad desactivadas');
-                
+
                 // Registramos la actividad
                 this.activityLogger.logActivity({
                   type: ActivityLogType.SYSTEM_EVENT,
@@ -540,7 +589,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
                     motivo: 'Salida de modo pantalla completa'
                   }
                 });
-                
+
                 // Redireccionamos al listado de exámenes sin mostrar ningún mensaje
                 this.router.navigate(['/dashboard/examenes']);
               } catch (error) {
@@ -556,26 +605,26 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       console.log('Solicitando activación de pantalla completa...');
       // Obtenemos la estrategia específica para pantalla completa
       const fullscreenStrategy = this.securityService.getStrategy(SecurityViolationType.FULLSCREEN_REQUIRED) as FullscreenStrategy;
-      
+
       if (!fullscreenStrategy) {
         console.error('No se pudo obtener la estrategia de pantalla completa');
         throw new Error('No se pudo obtener la estrategia de pantalla completa');
       }
-      
+
       console.log('Estado de fullscreenStrategy antes de activar:', fullscreenStrategy.getCurrentState());
-      
+
       // Comprobamos si el navegador no soporta API de pantalla completa
       if (!fullscreenStrategy.checkFullscreenSupport()) {
         console.error('Este navegador no soporta la API de pantalla completa');
         throw new Error('Navegador no compatible con pantalla completa');
       }
-      
+
       // Si ya estamos en pantalla completa, no necesitamos volver a activarla
       if (document.fullscreenElement) {
         console.log('Ya estamos en pantalla completa, no se necesita activar de nuevo');
         return;
       }
-      
+
       // Solicitamos pantalla completa utilizando la API estándar
       try {
         await document.documentElement.requestFullscreen();
@@ -599,10 +648,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
     this.examenesService.getPreguntas(examenId).subscribe(preguntas => {
       this.preguntas = preguntas;
       this.examenService.iniciarExamen(examenId, preguntas);
-      
+
       // Primero marcamos que el examen está en progreso ANTES de inicializar las medidas de seguridad
       this.isExamInProgress = true;
-      
+
       // A continuación inicializamos las medidas de seguridad
       // Excluyendo la pantalla completa que ya se activó previamente
       console.log('Inicializando medidas de seguridad, excluyendo pantalla completa...');
@@ -621,6 +670,38 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy, ComponentWit
       this.setupConnectionMonitoring();
       this.setupBeforeUnloadWarning();
     });
+  }
+
+  marcarParaRevisar(): void {
+    if (!this.preguntaActual) return;
+
+    if (this.preguntasMarcadas.has(this.preguntaActual.id)) {
+      this.preguntasMarcadas.delete(this.preguntaActual.id);
+    } else {
+      this.preguntasMarcadas.add(this.preguntaActual.id);
+    }
+  }
+
+  getEstadoPregunta(pregunta: PreguntaLocal): string {
+    let estado = '';
+    if (this.preguntasRespondidas.has(pregunta.id)) {
+      estado = ' (Respondida)';
+    }
+    if (this.preguntasMarcadas.has(pregunta.id)) {
+      estado += ' (Marcada para revisión)';
+    }
+    if (!this.preguntasRespondidas.has(pregunta.id) && !this.preguntasMarcadas.has(pregunta.id)) {
+      estado = ' (Pendiente)';
+    }
+    return estado;
+  }
+
+  irAPregunta(orden: number): void {
+    const preguntaDestino = this.preguntas.find(p => p.orden === orden);
+    if (preguntaDestino) {
+      this.preguntaActual = preguntaDestino;
+      this.opcionesOrdenadas = [...(preguntaDestino.opciones || [])];
+    }
   }
 }
 

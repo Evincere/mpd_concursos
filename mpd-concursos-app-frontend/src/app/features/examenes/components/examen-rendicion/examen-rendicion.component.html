@@ -6,6 +6,25 @@
         <mat-icon>timer</mat-icon>
         <span class="timer">{{ tiempoRestante | formatTiempo }}</span>
       </div>
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-segments">
+            <button *ngFor="let pregunta of preguntas; let i = index"
+                    class="progress-segment"
+                    [class.answered]="preguntasRespondidas.has(pregunta.id)"
+                    [class.marked]="preguntasMarcadas.has(pregunta.id)"
+                    [class.current]="preguntaActual?.id === pregunta.id"
+                    [matTooltip]="'Pregunta ' + (i + 1) + getEstadoPregunta(pregunta)"
+                    matTooltipPosition="above"
+                    (click)="irAPregunta(i + 1)">
+            </button>
+          </div>
+        </div>
+        <div class="progress-info">
+          <span class="progress-text">{{ preguntasRespondidas.size }}/{{ preguntas.length }} respondidas</span>
+          <span class="progress-marked-text" *ngIf="preguntasMarcadas.size > 0">({{ preguntasMarcadas.size }} marcadas)</span>
+        </div>
+      </div>
       <div class="progress-info">
         <span>Pregunta {{ preguntaActual?.orden }} de {{ preguntas.length }}</span>
       </div>
@@ -105,6 +124,15 @@
               [disabled]="!preguntaActual?.orden || preguntaActual?.orden === 1">
         <mat-icon>arrow_back</mat-icon>
         Anterior
+      </button>
+
+      <button mat-button
+              [color]="preguntasMarcadas.has(preguntaActual.id || '') ? 'warn' : 'accent'"
+              (click)="marcarParaRevisar()"
+              [matTooltip]="preguntasMarcadas.has(preguntaActual.id || '') ? 'Desmarcar para revisión' : 'Marcar para revisión'"
+              *ngIf="preguntaActual">
+        <mat-icon>{{ preguntasMarcadas.has(preguntaActual.id || '') ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+        {{ preguntasMarcadas.has(preguntaActual.id || '') ? 'Marcada' : 'Marcar' }}
       </button>
 
       <button mat-button
