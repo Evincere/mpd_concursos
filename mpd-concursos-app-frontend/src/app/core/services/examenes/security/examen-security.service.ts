@@ -1,6 +1,6 @@
 import { Injectable, Inject, NgZone } from '@angular/core';
 import { Observable, BehaviorSubject, fromEvent, merge, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
 import { SecurityViolation, SecurityViolationType, SecuritySeverity, SecurityAction } from '@core/interfaces/security/security-violation.interface';
 import { ISecurityService } from '@core/interfaces/examenes/security/security.interface';
 import { ISecurityStrategy } from '@core/interfaces/examenes/security/security-strategy.interface';
@@ -13,6 +13,7 @@ export class ExamenSecurityService implements ISecurityService {
   private securityStrategies: Map<SecurityViolationType, ISecurityStrategy>;
   private violations$ = new BehaviorSubject<SecurityViolation[]>([]);
   private isSecureModeActive = new BehaviorSubject<boolean>(false);
+  private destroy$ = new Subject<void>();
 
   constructor(
     @Inject(ExamenNotificationService) private notificationService: ExamenNotificationService,
@@ -182,8 +183,26 @@ export class ExamenSecurityService implements ISecurityService {
   cleanup(): void {
     this.deactivateSecureMode();
     this.resetSecurityState();
-    
+
     // Asegurarse de que el servicio de notificaciones también limpie sus recursos
     this.notificationService.cleanupNotifications();
+  }
+
+  detenerMonitoreo(): void {
+    this.deactivateSecureMode();
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  iniciarMonitoreo(): Observable<SecurityViolationType | null> {
+    this.initializeSecurityMeasures();
+    return this.violations$.pipe(
+      map(violations => {
+        const criticalViolations = violations.filter(v =>
+          this.getViolationSeverity(v.type) === 'HIGH'
+        );
+        return criticalViolations.length > 0 ? criticalViolations[0].type : null;
+      })
+    );
   }
 }

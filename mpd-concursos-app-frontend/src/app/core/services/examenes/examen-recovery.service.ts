@@ -203,4 +203,48 @@ export class ExamenRecoveryService {
     // Implementar lógica de recuperación
     return null;
   }
+
+  guardarRespuestas(examenId: string, respuestas: { [key: string]: string | string[] }): void {
+    const key = `${this.BACKUP_KEY_PREFIX}${examenId}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(respuestas));
+      this.pendingChanges$.next(true);
+      this.sincronizarConServidor(examenId, respuestas);
+    } catch (error) {
+      console.error('Error al guardar respuestas localmente:', error);
+      this.notificationService.mostrarError('Error al guardar las respuestas');
+    }
+  }
+
+  recuperarRespuestas(examenId: string): { [key: string]: string | string[] } | null {
+    const key = `${this.BACKUP_KEY_PREFIX}${examenId}`;
+    try {
+      const respuestasGuardadas = localStorage.getItem(key);
+      return respuestasGuardadas ? JSON.parse(respuestasGuardadas) : null;
+    } catch (error) {
+      console.error('Error al recuperar respuestas:', error);
+      this.notificationService.mostrarError('Error al recuperar las respuestas guardadas');
+      return null;
+    }
+  }
+
+  private sincronizarConServidor(examenId: string, respuestas: { [key: string]: string | string[] }): void {
+    if (!this.isOnline$.value) {
+      console.log('Sin conexión, los cambios se sincronizarán cuando haya conexión');
+      return;
+    }
+
+    this.http.post(`${environment.apiUrl}/examenes/${examenId}/respuestas`, respuestas)
+      .pipe(
+        retry(this.MAX_RETRIES),
+        catchError(error => {
+          console.error('Error al sincronizar con el servidor:', error);
+          return [];
+        })
+      )
+      .subscribe(() => {
+        this.lastSyncTimestamp = Date.now();
+        this.pendingChanges$.next(false);
+      });
+  }
 }

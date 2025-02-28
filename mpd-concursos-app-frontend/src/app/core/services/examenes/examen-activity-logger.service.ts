@@ -381,4 +381,15 @@ export class ExamenActivityLoggerService {
       log.type !== ActivityLogType.USER_INTERACTION
     );
   }
+
+  registrarActividad(tipo: string): void {
+    this.logActivity({
+      type: ActivityLogType.USER_INTERACTION,
+      timestamp: Date.now(),
+      details: {
+        type: 'examen_activity',
+        action: tipo
+      }
+    });
+  }
 }

@@ -1,7 +1,17 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatSelectionList } from '@angular/material/list';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatListModule, MatSelectionList } from '@angular/material/list';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
 import { ExamenesService } from '@core/services/examenes/examenes.service';
 import { ExamenStateService } from '@core/services/examenes/state/examen-state.service';
 import { ExamenSecurityService } from '@core/services/examenes/security/examen-security.service';
@@ -14,13 +24,31 @@ import { ExamenRendicionService } from '@core/services/examenes/examen-rendicion
 import { Examen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 import { Pregunta, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
+import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-examen-rendicion',
   templateUrl: './examen-rendicion.component.html',
-  styleUrls: ['./examen-rendicion.component.scss']
+  styleUrls: ['./examen-rendicion.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    DragDropModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatRadioModule,
+    MatListModule,
+    MatTooltipModule,
+    FormatTiempoPipe
+  ]
 })
 export class ExamenRendicionComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -29,7 +57,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   preguntaActual: Pregunta | null = null;
   indicePreguntaActual = 0;
   respuestas: { [key: string]: string | string[] } = {};
-  tiempoRestante = '';
+  tiempoRestante: number = 0;
   estadoExamen = ESTADO_EXAMEN.DISPONIBLE;
   readonly TIPO_PREGUNTA = TipoPregunta;
 
@@ -124,6 +152,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
+  finalizar(): void {
+    this.finalizarExamen('FINALIZADO_USUARIO');
+  }
+
   getEstadoPregunta(pregunta: Pregunta): string {
     let estado = '';
     if (this.preguntasRespondidas.has(pregunta.id)) {
@@ -142,6 +174,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       const orden = this.opcionesOrdenadas.map(opcion => opcion.id);
       this.guardarRespuesta(orden);
     }
+  }
+
+  trackByOpcion(index: number, opcion: any): string {
+    return opcion.id;
   }
 
   // Security methods
@@ -163,6 +199,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   private cargarExamen(id: string): void {
     this.examenesService.getExamen(id).subscribe({
       next: (examen) => {
+        if (examen.estado === ESTADO_EXAMEN.ANULADO) {
+          this.notificationService.mostrarError('Este examen ha sido anulado y no puede ser rendido');
+          this.router.navigate(['/dashboard/examenes']);
+          return;
+        }
         this.examen = examen;
         this.cargarPreguntas(id);
         this.iniciarExamen();
@@ -195,7 +236,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     this.timeService.iniciar(this.examen.duracion * 60).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: (tiempo) => {
+      next: (tiempo: number) => {
         this.tiempoRestante = tiempo;
       },
       complete: () => {
@@ -207,7 +248,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   private iniciarMonitoreo(): void {
     this.securityService.iniciarMonitoreo().pipe(
       takeUntil(this.destroy$)
-    ).subscribe((violacion) => {
+    ).subscribe((violacion: SecurityViolationType | null) => {
       if (violacion) {
         this.anularExamen(violacion);
       }
@@ -244,11 +285,24 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       infracciones: [violacion]
     }).subscribe({
       next: () => {
-        this.notificationService.mostrarError('El examen ha sido anulado por una violación de seguridad');
-        this.router.navigate(['/dashboard/examenes']);
+        // Finalizar el examen con estado anulado
+        this.rendicionService.finalizarExamenApi(this.examen!.id, {
+          respuestas: this.respuestas,
+          tiempoUtilizado: this.timeService.getTiempoUtilizado()
+        }).subscribe({
+          next: () => {
+            this.notificationService.mostrarError('El examen ha sido anulado por una violación de seguridad');
+            this.router.navigate(['/dashboard/examenes']);
+          },
+          error: (error) => {
+            console.error('Error al finalizar el examen anulado:', error);
+            this.notificationService.mostrarError('Error al finalizar el examen anulado');
+          }
+        });
       },
       error: (error) => {
         console.error('Error al anular el examen:', error);
+        this.notificationService.mostrarError('Error al anular el examen');
       }
     });
   }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, interval } from 'rxjs';
+import { BehaviorSubject, Observable, interval, Subject } from 'rxjs';
 import { map, takeUntil, catchError } from 'rxjs/operators';
 import { environment } from '@env/environment';
 
@@ -13,6 +13,9 @@ export class ExamenTimeService {
   private serverOffset = 0;
   private lastSyncTime = 0;
   private timeChecks: number[] = [];
+  private startTime: number = 0;
+  private destroy$ = new Subject<void>();
+  private tiempoRestante$ = new BehaviorSubject<number>(0);
 
   private serverTime$ = new BehaviorSubject<number>(Date.now());
 
@@ -25,7 +28,9 @@ export class ExamenTimeService {
     this.syncWithServer();
 
     // Sincronización periódica
-    interval(this.SYNC_INTERVAL).subscribe(() => {
+    interval(this.SYNC_INTERVAL).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
       this.syncWithServer();
       this.detectTimeDrift();
     });
@@ -99,5 +104,30 @@ export class ExamenTimeService {
 
     // Permitir una diferencia máxima de 5 segundos
     return timeDiff <= this.MAX_TIME_DRIFT;
+  }
+
+  detener(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  getTiempoUtilizado(): number {
+    return this.getCurrentServerTime() - this.startTime;
+  }
+
+  iniciar(duracionSegundos: number): Observable<number> {
+    this.startTime = this.getCurrentServerTime();
+    const tiempoFinal = this.startTime + (duracionSegundos * 1000);
+
+    interval(1000).pipe(
+      takeUntil(this.destroy$),
+      map(() => {
+        const tiempoRestante = Math.max(0, Math.floor((tiempoFinal - this.getCurrentServerTime()) / 1000));
+        this.tiempoRestante$.next(tiempoRestante);
+        return tiempoRestante;
+      })
+    ).subscribe();
+
+    return this.tiempoRestante$.asObservable();
   }
 }

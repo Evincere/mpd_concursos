@@ -383,4 +383,22 @@ export class ExamenNotificationService {
         SecurityViolationType.FULLSCREEN_DENIED
     ].includes(violationType);
   }
+
+  mostrarError(mensaje: string, duracion: number = 5000): void {
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: duracion,
+      panelClass: ['error-snackbar'],
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
+    });
+  }
+
+  mostrarExito(mensaje: string, duracion: number = 3000): void {
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: duracion,
+      panelClass: ['success-snackbar'],
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
+    });
+  }
 }
