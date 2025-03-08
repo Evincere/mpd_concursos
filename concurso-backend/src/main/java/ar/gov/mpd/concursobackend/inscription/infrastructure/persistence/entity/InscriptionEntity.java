@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "inscriptions")
@@ -13,16 +12,22 @@ import java.util.UUID;
 @Setter
 public class InscriptionEntity {
     @Id
-    private UUID id;
-    
+    @Column(name = "id", columnDefinition = "BINARY(16)")
+    private byte[] id;
+
+    @Column(name = "contest_id")
     private Long contestId;
-    
-    @Column(columnDefinition = "uuid")
-    private UUID userId;
-    
+
+    @Column(name = "user_id", columnDefinition = "BINARY(16)")
+    private byte[] userId;
+
     @Enumerated(EnumType.STRING)
+    @Column(name = "status")
     private InscriptionStatus status;
-    
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "inscription_date")
     private LocalDateTime inscriptionDate;
 }

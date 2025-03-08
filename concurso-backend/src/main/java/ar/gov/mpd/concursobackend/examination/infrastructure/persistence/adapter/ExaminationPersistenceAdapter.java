@@ -44,19 +44,19 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
     @Override
     public ExaminationSession findSession(UUID sessionId) {
         return sessionRepository.findById(sessionId)
-            .map(examinationMapper::toDomain)
-            .orElseThrow(() -> new ExaminationException("Session not found"));
+                .map(examinationMapper::toDomain)
+                .orElseThrow(() -> new ExaminationException("Session not found"));
     }
 
     @Override
     public Answer saveAnswer(Answer answer) {
         ExaminationSessionEntity session = sessionRepository.findById(answer.getSessionId())
-            .orElseThrow(() -> new ExaminationException("Session not found"));
-            
+                .orElseThrow(() -> new ExaminationException("Session not found"));
+
         AnswerEntity entity = examinationMapper.toEntity(answer);
         entity.setSession(session);
         session.getAnswers().add(entity);
-        
+
         sessionRepository.save(session);
         return examinationMapper.toDomain(entity);
     }
@@ -64,37 +64,37 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
     @Override
     public Examination findExamination(UUID examinationId) {
         return examinationRepository.findById(examinationId)
-            .map(examinationMapper::toDomain)
-            .orElseThrow(() -> new ExaminationException("Examination not found"));
+                .map(examinationMapper::toDomain)
+                .orElseThrow(() -> new ExaminationException("Examination not found"));
     }
 
     @Override
     public List<Question> findQuestions(UUID examinationId) {
         ExaminationEntity examination = examinationRepository.findById(examinationId)
-            .orElseThrow(() -> new ExaminationException("Examination not found"));
+                .orElseThrow(() -> new ExaminationException("Examination not found"));
         return examinationMapper.toDomainQuestions(examination.getQuestions());
     }
 
     @Override
-    public String getAnswers(Long examinationId) {
+    public String getAnswers(UUID examinationId) {
         try {
             ExaminationSessionEntity session = sessionRepository.findByExaminationId(examinationId)
-                .orElseThrow(() -> new ExaminationException("Session not found"));
-                
+                    .orElseThrow(() -> new ExaminationException("Session not found"));
+
             List<AnswerEntity> answers = session.getAnswers();
-            
+
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             List<Map<String, Object>> simplifiedAnswers = answers.stream()
-                .map(answer -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", answer.getId());
-                    map.put("response", answer.getResponse());
-                    map.put("questionId", answer.getQuestionId());
-                    return map;
-                })
-                .collect(Collectors.toList());
+                    .map(answer -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", answer.getId());
+                        map.put("response", answer.getResponse());
+                        map.put("questionId", answer.getQuestionId());
+                        return map;
+                    })
+                    .collect(Collectors.toList());
             return mapper.writeValueAsString(simplifiedAnswers);
         } catch (Exception e) {
             return "[]";
@@ -102,14 +102,14 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
     }
 
     @Override
-    public void saveAnswers(Long examinationId, String answers) {
+    public void saveAnswers(UUID examinationId, String answers) {
         ExaminationSessionEntity session = sessionRepository.findByExaminationId(examinationId)
-            .orElseThrow(() -> new ExaminationException("Session not found"));
+                .orElseThrow(() -> new ExaminationException("Session not found"));
         try {
             ObjectMapper mapper = new ObjectMapper();
-            List<AnswerEntity> answerEntities = mapper.readValue(answers, 
-                mapper.getTypeFactory().constructCollectionType(List.class, AnswerEntity.class));
-            
+            List<AnswerEntity> answerEntities = mapper.readValue(answers,
+                    mapper.getTypeFactory().constructCollectionType(List.class, AnswerEntity.class));
+
             session.getAnswers().clear();
             session.getAnswers().addAll(answerEntities);
             sessionRepository.save(session);
@@ -130,7 +130,7 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
     public ExaminationBackupResponse getBackup(UUID id) {
         ExaminationEntity entity = examinationRepository.findById(id)
                 .orElseThrow(() -> new ExaminationException("Examination not found"));
-        
+
         return ExaminationBackupResponse.builder()
                 .answers(entity.getAnswers())
                 .timestamp(LocalDateTime.now())
@@ -141,8 +141,8 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
     public void saveBackup(UUID id, String answers) {
         ExaminationEntity entity = examinationRepository.findById(id)
                 .orElseThrow(() -> new ExaminationException("Examination not found"));
-        
+
         entity.setAnswers(answers);
         examinationRepository.save(entity);
     }
-} 
+}

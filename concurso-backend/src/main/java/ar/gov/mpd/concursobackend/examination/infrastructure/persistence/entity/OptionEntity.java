@@ -18,12 +18,12 @@ public class OptionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    
+
     private String text;
-    
-    private Integer order;
-    
+
+    private Integer order_number;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private QuestionEntity question;
-} 
+}

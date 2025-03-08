@@ -24,24 +24,24 @@ import lombok.Setter;
 public class ExaminationSessionEntity {
     @Id
     private UUID id;
-    
+
     @Column(name = "examination_id")
-    private Long examinationId;
-    
+    private UUID examinationId;
+
     @Column(name = "user_id")
     private UUID userId;
-    
+
     @Column(name = "start_time")
     private LocalDateTime startTime;
-    
+
     private LocalDateTime deadline;
-    
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     private List<AnswerEntity> answers = new ArrayList<>();
-    
+
     @Column(name = "current_question_index")
     private int currentQuestionIndex;
-    
+
     @Enumerated(EnumType.STRING)
     private ExaminationSessionStatus status;
-} 
+}

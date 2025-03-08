@@ -1,0 +1,20 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "build",
+			"command": "mvn",
+			"args": [
+				"clean",
+				"install"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/concurso-backend"
+			},
+			"presentation": {
+				"reveal": "silent"
+			}
+		}
+	]
+}

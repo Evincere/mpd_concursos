@@ -3,23 +3,24 @@ SET SQL_SAFE_UPDATES = 0;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpiar datos existentes
+DELETE FROM answers;
+DELETE FROM question_options;
+DELETE FROM questions;
+DELETE FROM examination_sessions;
+DELETE FROM examinations;
 DELETE FROM inscriptions;
 DELETE FROM user_roles;
 DELETE FROM roles;
 DELETE FROM user_entity;
 DELETE FROM contests;
-DELETE FROM examenes;
-DELETE FROM preguntas;
-DELETE FROM opciones;
 
 -- Habilitar verificación de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Insertar roles iniciales
-INSERT INTO roles (id, name) 
-VALUES 
-(UUID_TO_BIN(UUID()), 'ROLE_ADMIN'),
-(UUID_TO_BIN(UUID()), 'ROLE_USER');
+-- Insertar roles de prueba
+INSERT INTO roles (id, name) VALUES
+(UUID_TO_BIN(UUID()), 'ROLE_USER'),
+(UUID_TO_BIN(UUID()), 'ROLE_ADMIN');
 
 -- Insertar usuario administrador por defecto
 INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at) 
@@ -29,7 +30,7 @@ VALUES (
     '$2a$10$TpVxkJXgPR9h9z1h8YbPm.vg5eJcKSn7TZIRMJxeGDFxYBrqXV7Uy', -- password: admin
     'admin@mpd.gov.ar',
     '20000000',
-    '20200000001',
+    '20123456783',
     'Admin',
     'MPD',
     CURRENT_TIMESTAMP
@@ -39,17 +40,15 @@ VALUES (
 INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES
 (UUID_TO_BIN(UUID()), 'usuario1', '$2a$10$TpVxkJXgPR9h9z1h8YbPm.vg5eJcKSn7TZIRMJxeGDFxYBrqXV7Uy', 
-'usuario1@test.com', '20111111', '20201111111', 'Usuario', 'Uno', CURRENT_TIMESTAMP),
+'usuario1@test.com', '20111111', '20234567894', 'Usuario', 'Uno', CURRENT_TIMESTAMP),
 (UUID_TO_BIN(UUID()), 'usuario2', '$2a$10$TpVxkJXgPR9h9z1h8YbPm.vg5eJcKSn7TZIRMJxeGDFxYBrqXV7Uy', 
-'usuario2@test.com', '20222222', '20202222221', 'Usuario', 'Dos', CURRENT_TIMESTAMP);
+'usuario2@test.com', '20222222', '20345678905', 'Usuario', 'Dos', CURRENT_TIMESTAMP);
 
--- Asignar roles a usuarios
-INSERT INTO user_roles (user_id, role_id)
-SELECT u.id, r.id 
-FROM user_entity u 
-CROSS JOIN roles r 
-WHERE (u.username = 'admin' AND r.name = 'ROLE_ADMIN')
-   OR (u.username IN ('usuario1', 'usuario2') AND r.name = 'ROLE_USER');
+-- Insertar exámenes de prueba
+INSERT INTO examinations (id, title, description, duration_minutes, status, start_time, end_time, type)
+VALUES
+(UUID_TO_BIN(UUID()), 'Examen de Ingreso - Defensor Penal', 'Examen para el cargo de Defensor Penal', 120, 'PUBLISHED', '2025-03-01 09:00:00', '2025-03-01 11:00:00', 'MULTIPLE_CHOICE'),
+(UUID_TO_BIN(UUID()), 'Examen de Defensoría Civil', 'Examen para el cargo de Defensoría Civil', 120, 'PUBLISHED', '2025-03-01 09:00:00', '2025-03-01 11:00:00', 'MULTIPLE_CHOICE');
 
 -- Insertar concursos
 INSERT INTO contests (id, department, position, status, start_date, end_date)
@@ -58,98 +57,48 @@ VALUES
 (2, 'DEFENSORÍAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'ACTIVE', '2025-01-15', '2025-03-15'),
 (3, 'SECRETARÍA LEGAL Y TÉCNICA', 'Asesor/a Legal', 'ACTIVE', '2025-02-10', '2025-05-10'),
 (4, 'DESARROLLO TECNOLÓGICO', 'Analista Programador/a', 'ACTIVE', '2025-02-05', '2025-04-05'),
-(5, 'CODEFENSORÍAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'ACTIVE', '2025-01-20', '2025-03-20'),
-(6, 'ADMINISTRATIVO/CONTABLE', 'Contador/a Público', 'IN_PROGRESS', '2024-12-15', '2025-02-15'),
-(7, 'RECURSOS HUMANOS', 'Analista de RRHH', 'IN_PROGRESS', '2024-12-01', '2025-02-28'),
-(8, 'DEFENSORÍAS PENALES JUVENILES', 'Defensor/a Penal Juvenil - Segunda C.J.', 'IN_PROGRESS', '2024-11-15', '2025-02-20'),
-(9, 'ASESORÍAS DE NNAPPCF', 'Asesor/a - Tercera C.J.', 'CLOSED', '2024-09-01', '2024-12-31'),
-(10, 'SERVICIOS GENERALES', 'Chofer', 'CLOSED', '2024-08-15', '2024-11-30'),
-(11, 'INFORMÁTICA', 'Técnico/a en Soporte IT', 'DRAFT', '2025-03-01', '2025-05-31'),
-(12, 'CONTROL DE GESTIÓN', 'Analista de Control de Gestión', 'DRAFT', '2025-03-15', '2025-06-15');
-
--- Insertar inscripciones
-INSERT INTO inscriptions (id, user_id, contest_id, status, inscription_date, created_at, documentacion_completa)
-SELECT 
-    UUID_TO_BIN(UUID()),
-    u.id,
-    c.id,
-    CASE c.id
-        WHEN 1 THEN 'PENDING'
-        WHEN 2 THEN 'APPROVED'
-        WHEN 3 THEN 'PENDING'
-        WHEN 4 THEN 'REJECTED'
-        WHEN 5 THEN 'CANCELLED'
-    END,
-    CASE c.id
-        WHEN 1 THEN CURRENT_TIMESTAMP
-        WHEN 2 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 5 DAY)
-        WHEN 3 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY)
-        WHEN 4 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY)
-        WHEN 5 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY)
-    END,
-    CASE c.id
-        WHEN 1 THEN CURRENT_TIMESTAMP
-        WHEN 2 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 5 DAY)
-        WHEN 3 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY)
-        WHEN 4 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY)
-        WHEN 5 THEN DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY)
-    END,
-    CASE c.id
-        WHEN 1 THEN FALSE
-        WHEN 2 THEN TRUE
-        WHEN 3 THEN FALSE
-        WHEN 4 THEN TRUE
-        WHEN 5 THEN FALSE
-    END
-FROM user_entity u
-CROSS JOIN contests c
-WHERE u.username IN ('admin', 'usuario1', 'usuario2')
-AND c.id IN (1, 2, 3, 4, 5);
-
--- Insertar exámenes de prueba
-DELETE FROM examenes;
-INSERT INTO examenes (id, titulo, descripcion, tipo, estado, duracion, puntaje_maximo, fecha_inicio, fecha_fin)
-VALUES 
-(UUID_TO_BIN(UUID()), 'Examen de Ingreso - Defensor Penal', 'Examen para el cargo de Defensor Penal', 'INGRESO', 'DISPONIBLE', 120, 100.00, '2025-03-01 09:00:00', '2025-03-01 11:00:00'),
-(UUID_TO_BIN(UUID()), 'Evaluación de Conocimientos Jurídicos', 'Evaluación general de derecho penal', 'EVALUACION', 'BORRADOR', 90, 80.00, '2025-03-15 14:00:00', '2025-03-15 15:30:00'),
-(UUID_TO_BIN(UUID()), 'Práctica de Examen', 'Examen de práctica para familiarizarse con el sistema', 'PRACTICA', 'DISPONIBLE', 30, 50.00, '2025-02-28 10:00:00', '2025-02-28 10:30:00');
+(5, 'CODEFENSORÍAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'ACTIVE', '2025-01-20', '2025-03-20');
 
 -- Insertar preguntas para el primer examen
-SET @examen1_id = (SELECT id FROM examenes WHERE titulo = 'Examen de Ingreso - Defensor Penal' LIMIT 1);
+SET @examen1_id = (SELECT id FROM examinations WHERE title = 'Examen de Ingreso - Defensor Penal' LIMIT 1);
 
-INSERT INTO preguntas (id, examen_id, texto, tipo, puntaje, orden)
+INSERT INTO questions (id, examination_id, text, type, score, order_number)
 VALUES
-(UUID_TO_BIN(UUID()), @examen1_id, '¿Cuál es el principio fundamental del debido proceso?', 'OPCION_MULTIPLE', 20.00, 1),
-(UUID_TO_BIN(UUID()), @examen1_id, 'Seleccione las garantías constitucionales aplicables al proceso penal', 'SELECCION_MULTIPLE', 30.00, 2),
-(UUID_TO_BIN(UUID()), @examen1_id, 'Ordene cronológicamente las etapas del proceso penal', 'ORDENAMIENTO', 25.00, 3),
-(UUID_TO_BIN(UUID()), @examen1_id, 'La prisión preventiva es una medida cautelar', 'VERDADERO_FALSO', 10.00, 4),
-(UUID_TO_BIN(UUID()), @examen1_id, 'Desarrolle los fundamentos de la teoría del delito', 'DESARROLLO', 15.00, 5);
+(UUID_TO_BIN(UUID()), @examen1_id, '¿Cuál es el principio fundamental del debido proceso?', 'SINGLE_CHOICE', 20, 1),
+(UUID_TO_BIN(UUID()), @examen1_id, 'Seleccione las garantías constitucionales aplicables al proceso penal', 'MULTIPLE_CHOICE', 30, 2),
+(UUID_TO_BIN(UUID()), @examen1_id, 'La prisión preventiva es una medida cautelar', 'TRUE_FALSE', 10, 3),
+(UUID_TO_BIN(UUID()), @examen1_id, 'Desarrolle los fundamentos de la teoría del delito', 'TEXT', 15, 4);
 
 -- Insertar opciones para las preguntas
-SET @pregunta1_id = (SELECT id FROM preguntas WHERE examen_id = @examen1_id AND orden = 1);
-SET @pregunta2_id = (SELECT id FROM preguntas WHERE examen_id = @examen1_id AND orden = 2);
-SET @pregunta3_id = (SELECT id FROM preguntas WHERE examen_id = @examen1_id AND orden = 3);
+SET @pregunta1_id = (SELECT id FROM questions WHERE examination_id = @examen1_id AND order_number = 1);
+SET @pregunta2_id = (SELECT id FROM questions WHERE examination_id = @examen1_id AND order_number = 2);
 
--- Opciones para pregunta 1
-INSERT INTO opciones (id, pregunta_id, texto, es_correcta, orden)
+-- Opciones para pregunta 1 (SINGLE_CHOICE)
+INSERT INTO question_options (id, question_id, text, is_correct)
 VALUES
-(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho a ser oído', TRUE, 1),
-(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho a la propiedad', FALSE, 2),
-(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho a la salud', FALSE, 3),
-(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho al trabajo', FALSE, 4);
+(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho a ser oído', true),
+(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho a la propiedad', false),
+(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho a la salud', false),
+(UUID_TO_BIN(UUID()), @pregunta1_id, 'Derecho al trabajo', false);
 
--- Opciones para pregunta 2
-INSERT INTO opciones (id, pregunta_id, texto, es_correcta, orden)
+-- Opciones para pregunta 2 (MULTIPLE_CHOICE)
+INSERT INTO question_options (id, question_id, text, is_correct)
 VALUES
-(UUID_TO_BIN(UUID()), @pregunta2_id, 'Presunción de inocencia', TRUE, 1),
-(UUID_TO_BIN(UUID()), @pregunta2_id, 'Defensa en juicio', TRUE, 2),
-(UUID_TO_BIN(UUID()), @pregunta2_id, 'Juez natural', TRUE, 3),
-(UUID_TO_BIN(UUID()), @pregunta2_id, 'Derecho a la vivienda', FALSE, 4);
+(UUID_TO_BIN(UUID()), @pregunta2_id, 'Presunción de inocencia', true),
+(UUID_TO_BIN(UUID()), @pregunta2_id, 'Defensa en juicio', true),
+(UUID_TO_BIN(UUID()), @pregunta2_id, 'Juez natural', true),
+(UUID_TO_BIN(UUID()), @pregunta2_id, 'Derecho a la vivienda', false);
 
--- Opciones para pregunta 3
-INSERT INTO opciones (id, pregunta_id, texto, es_correcta, orden)
+-- Crear una sesión de examen para el usuario1
+SET @user1_id = (SELECT id FROM user_entity WHERE username = 'usuario1' LIMIT 1);
+
+INSERT INTO examination_sessions (id, examination_id, user_id, start_time, deadline, status, current_question_index)
+VALUES (UUID_TO_BIN(UUID()), @examen1_id, @user1_id, CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 HOUR), 'IN_PROGRESS', 0);
+
+-- Insertar algunas respuestas para el usuario1
+SET @session_id = (SELECT id FROM examination_sessions WHERE user_id = @user1_id LIMIT 1);
+SET @question1_id = (SELECT id FROM questions WHERE examination_id = @examen1_id AND order_number = 1);
+
+INSERT INTO answers (id, question_id, response, response_time_ms, status, timestamp, session_id)
 VALUES
-(UUID_TO_BIN(UUID()), @pregunta3_id, 'Investigación preliminar', TRUE, 1),
-(UUID_TO_BIN(UUID()), @pregunta3_id, 'Instrucción formal', TRUE, 2),
-(UUID_TO_BIN(UUID()), @pregunta3_id, 'Elevación a juicio', TRUE, 3),
-(UUID_TO_BIN(UUID()), @pregunta3_id, 'Debate oral', TRUE, 4);
+(UUID_TO_BIN(UUID()), @question1_id, 'Derecho a ser oído', 30000, 'SUBMITTED', CURRENT_TIMESTAMP, @session_id);

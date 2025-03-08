@@ -14,8 +14,19 @@ public class Question {
     String text;
     QuestionType type;
     Integer score;
-    Integer order;
+    Integer order_number;
     String correctAnswer;
     List<String> correctAnswers;
     List<Option> options;
-} 
+
+    public Integer getOrder_number() {
+        return order_number;
+    }
+
+    public static class QuestionBuilder {
+        public QuestionBuilder order_number(Integer order_number) {
+            this.order_number = order_number;
+            return this;
+        }
+    }
+}

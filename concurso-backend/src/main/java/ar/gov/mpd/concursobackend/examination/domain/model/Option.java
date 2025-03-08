@@ -10,5 +10,9 @@ import java.util.UUID;
 public class Option {
     UUID id;
     String text;
-    Integer order;
-} 
+    Integer order_number;
+
+    public Integer getOrder_number() {
+        return order_number;
+    }
+}

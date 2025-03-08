@@ -11,13 +11,22 @@ import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupR
 
 public interface ExaminationPersistencePort {
     ExaminationSession saveSession(ExaminationSession session);
+
     ExaminationSession findSession(UUID sessionId);
+
     Answer saveAnswer(Answer answer);
+
     Examination findExamination(UUID examinationId);
+
     List<Question> findQuestions(UUID examinationId);
-    String getAnswers(Long examinationId);
-    void saveAnswers(Long examinationId, String answers);
+
+    String getAnswers(UUID examinationId);
+
+    void saveAnswers(UUID examinationId, String answers);
+
     List<Examination> findAllExaminations();
+
     ExaminationBackupResponse getBackup(UUID id);
+
     void saveBackup(UUID id, String answers);
-} 
+}

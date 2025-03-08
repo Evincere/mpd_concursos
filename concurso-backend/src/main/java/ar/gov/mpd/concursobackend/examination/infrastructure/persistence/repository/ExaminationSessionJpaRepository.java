@@ -10,5 +10,5 @@ import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.
 
 @Repository
 public interface ExaminationSessionJpaRepository extends JpaRepository<ExaminationSessionEntity, UUID> {
-    Optional<ExaminationSessionEntity> findByExaminationId(Long examinationId);
-} 
+    Optional<ExaminationSessionEntity> findByExaminationId(UUID examinationId);
+}

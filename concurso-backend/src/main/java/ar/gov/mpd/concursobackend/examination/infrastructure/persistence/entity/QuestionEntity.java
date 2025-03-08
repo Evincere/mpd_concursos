@@ -20,25 +20,25 @@ public class QuestionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    
+
     private String text;
-    
+
     @Enumerated(EnumType.STRING)
     private QuestionType type;
-    
+
     private Integer score;
-    
-    private Integer order;
-    
+
+    private Integer order_number;
+
     private String correctAnswer;
-    
+
     @ElementCollection
     @CollectionTable(name = "question_correct_answers")
     private List<String> correctAnswers;
-    
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OptionEntity> options;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "examination_id")
     private ExaminationEntity examination;
