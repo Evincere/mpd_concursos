@@ -20,7 +20,8 @@ export class KeyboardSecurityStrategy implements ISecurityStrategy {
 
   handleViolation(details?: any): void {
     this.notificationService.showSecurityWarning(
-      SecurityViolationType.KEYBOARD_SHORTCUT
+      SecurityViolationType.KEYBOARD_SHORTCUT,
+      `Atajo de teclado no permitido${details?.key ? `: ${details.key}` : ''}`
     );
   }
 

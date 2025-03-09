@@ -15,7 +15,8 @@ export class TabSwitchSecurityStrategy implements ISecurityStrategy {
 
   handleViolation(details?: any): void {
     this.notificationService.showSecurityWarning(
-      SecurityViolationType.TAB_SWITCH
+      SecurityViolationType.TAB_SWITCH,
+      'No se permite cambiar de pestaña durante el examen'
     );
   }
 

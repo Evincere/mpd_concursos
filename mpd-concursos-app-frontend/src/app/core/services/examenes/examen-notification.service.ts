@@ -1,137 +1,68 @@
-import { Injectable, HostListener } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
-import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
-import { BehaviorSubject } from 'rxjs';
+import { SecurityViolation, SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
+import { ICleanupService } from '@core/interfaces/examenes/cleanup/cleanup.interface';
 import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ExamenNotificationService {
-  private readonly MAX_WARNINGS = 3;
-  private readonly MIN_WARNING_INTERVAL = 2000;
-
-  private warningCount = 0;
-  private lastWarningTime = 0;
-  private infracciones: SecurityViolationType[] = [];
-  private allowNotifications = false;
-
-  // Observable para el estado de las infracciones
-  private securityStateSubject = new BehaviorSubject<{
-    warningCount: number;
-    infracciones: SecurityViolationType[];
-  }>({ warningCount: 0, infracciones: [] });
-
-  public securityState$ = this.securityStateSubject.asObservable();
+export class ExamenNotificationService implements ICleanupService {
+  private allowNotifications = true;
 
   constructor(
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private router: Router
-  ) {
-    this.loadSecurityState();
-  }
+  ) {}
 
-  private getCurrentUserId(): string | null {
-    try {
-      const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      return user.id || null;
-    } catch {
-      return null;
+  public showSecurityWarning(violationType: SecurityViolationType, message?: string): void {
+    if (!this.allowNotifications) {
+      console.log('Notificación de seguridad ignorada porque las notificaciones están deshabilitadas:', violationType);
+      return;
     }
+
+    const finalMessage = message || this.getSecurityMessage(violationType);
+    this.snackBar.open(
+      finalMessage,
+      'Entendido',
+      { duration: 5000 }
+    );
   }
 
-  private getSecurityStateKey(): string {
-    const userId = this.getCurrentUserId();
-    return userId ? `securityState_${userId}` : 'securityState';
-  }
+  public mostrarError(mensaje: string): void {
+    if (!this.allowNotifications) return;
 
-  private loadSecurityState(): void {
-    const savedState = localStorage.getItem(this.getSecurityStateKey());
-    if (savedState) {
-      try {
-        const state = JSON.parse(savedState);
-        this.warningCount = state.warningCount;
-        this.infracciones = state.infracciones || [];
-        this.updateSecurityState();
-      } catch (e) {
-        console.error('Error al cargar el estado de seguridad:', e);
-        this.resetSecurityState();
-      }
-    }
-  }
-
-  public resetSecurityState(): void {
-    this.warningCount = 0;
-    this.lastWarningTime = 0;
-    this.infracciones = [];
-    localStorage.removeItem(this.getSecurityStateKey());
-    this.updateSecurityState();
-    this.snackBar.dismiss();
-  }
-
-  private saveSecurityState(): void {
-    const state = {
-      warningCount: this.warningCount,
-      infracciones: this.infracciones
-    };
-    localStorage.setItem(this.getSecurityStateKey(), JSON.stringify(state));
-  }
-
-  private updateSecurityState(): void {
-    this.securityStateSubject.next({
-      warningCount: this.warningCount,
-      infracciones: this.infracciones
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 5000,
+      panelClass: ['error-snackbar'],
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
     });
   }
 
-  public showSecurityWarning(violationType: SecurityViolationType, customMessage?: string): void {
-    // Si las notificaciones están deshabilitadas y no es una violación crítica, ignoramos
-    if (!this.allowNotifications && !this.isViolacionCritica(violationType)) {
-        console.log('Notificación de seguridad ignorada porque las notificaciones están deshabilitadas:', violationType);
-        return;
-    }
+  public mostrarExito(mensaje: string): void {
+    if (!this.allowNotifications) return;
 
-    const now = Date.now();
-
-    // Registrar la infracción
-    this.infracciones.push(violationType);
-
-    // Incrementar el contador de advertencias si ha pasado suficiente tiempo
-    if (now - this.lastWarningTime >= this.MIN_WARNING_INTERVAL) {
-      this.warningCount++;
-      this.lastWarningTime = now;
-
-      // Actualizar el estado
-      this.updateSecurityState();
-      this.saveSecurityState();
-
-      // Mostrar mensaje según la cantidad de advertencias
-      if (this.warningCount >= this.MAX_WARNINGS) {
-        this.showFinalWarningDialog();
-      } else {
-        const remaining = this.MAX_WARNINGS - this.warningCount;
-        this.snackBar.open(
-          `${this.getSecurityMessage(violationType)}. ${remaining} advertencia${remaining !== 1 ? 's' : ''} restante${remaining !== 1 ? 's' : ''} antes de anular el examen.`,
-          'Entendido',
-          { duration: 5000 }
-        );
-      }
-    }
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 3000,
+      panelClass: ['success-snackbar'],
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
+    });
   }
 
-  private showFinalWarningDialog(): Promise<void> {
-    // Aseguramos que las notificaciones estén habilitadas
-    this.enableNotifications();
+  public showFinalWarningDialog(violations: SecurityViolation[]): Promise<void> {
+    this.allowNotifications = true;
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Examen Anulado',
         message: `El examen ha sido anulado debido a múltiples infracciones de seguridad.
-                 \nInfracciones detectadas:\n${this.infracciones
-                   .map(inf => `- ${this.getSecurityMessage(inf)}`)
+                 \nInfracciones detectadas:\n${violations
+                   .map(v => `- ${this.getSecurityMessage(v.type)}`)
                    .join('\n')}`,
         confirmText: 'Aceptar',
         showCancel: false
@@ -140,9 +71,7 @@ export class ExamenNotificationService {
 
     return new Promise((resolve) => {
       dialogRef.afterClosed().subscribe(() => {
-        // Deshabilitamos las notificaciones solo después de mostrar el diálogo
-        this.disableNotifications();
-        // Redirigir al listado de exámenes
+        this.allowNotifications = false;
         this.router.navigate(['/dashboard/examenes']);
         resolve();
       });
@@ -174,7 +103,6 @@ export class ExamenNotificationService {
   }
 
   showConnectionWarning(isOnline: boolean): void {
-    // Evitar mostrar el mensaje si ya hay uno visible
     this.snackBar.dismiss();
 
     const message = isOnline
@@ -228,7 +156,6 @@ export class ExamenNotificationService {
   }
 
   async showFullscreenWarning(): Promise<boolean> {
-    // Si las notificaciones están deshabilitadas, no mostramos nada
     if (!this.allowNotifications) {
       console.log('Advertencia de pantalla completa ignorada porque las notificaciones están deshabilitadas');
       return false;
@@ -251,154 +178,28 @@ export class ExamenNotificationService {
     return dialogRef.afterClosed().toPromise();
   }
 
-  @HostListener('window:keydown', ['$event'])
-  async handleKeyPress(event: KeyboardEvent): Promise<void> {
-    if (event.key === 'Escape' && document.fullscreenElement) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      const shouldExit = await this.showFullscreenWarning();
-      if (!shouldExit) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }
-  }
-
-  showClipboardWarning(operation: 'copy' | 'cut' | 'paste'): void {
-    const operationMap = {
-      copy: 'copiar',
-      cut: 'cortar',
-      paste: 'pegar'
-    };
-
-    this.snackBar.open(
-      `⚠️ No está permitido ${operationMap[operation]} contenido durante el examen. Esta acción será registrada como posible intento de fraude.`,
-      'Entiendo',
-      {
-        duration: 6000,
-        panelClass: ['warning-snackbar'], // Simplificamos para usar solo la clase principal
-        horizontalPosition: 'center',
-        verticalPosition: 'top'
-      }
-    );
-  }
-
-  async showConfirmDialog(title: string, message: string): Promise<boolean> {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      disableClose: true,
-      data: {
-        title,
-        message,
-        confirmText: 'Aceptar',
-        cancelText: 'Cancelar',
-        type: 'info'
-      }
-    });
-
-    return dialogRef.afterClosed().toPromise();
-  }
-
-  public isExamenAnulado(): boolean {
-    return this.warningCount >= this.MAX_WARNINGS;
-  }
-
-  public getInfracciones(): SecurityViolationType[] {
-    return [...this.infracciones];
-  }
-
-  /**
-   * Limpia todas las notificaciones y diálogos, y reinicia el estado de seguridad.
-   * Debe llamarse cuando se navega fuera del examen o cuando se quiere limpiar
-   * completamente el estado de las notificaciones.
-   */
-  public cleanupNotifications(): void {
-    // Cerrar cualquier snackbar abierto
-    this.snackBar.dismiss();
-
-    // Cerrar todos los diálogos abiertos
-    this.dialog.closeAll();
-
-    // Reiniciar el estado de seguridad
-    this.resetSecurityState();
-
-    // Eliminamos todas las claves relacionadas con seguridad del localStorage
-    this.cleanupLocalStorage();
-
-    console.log('Notificaciones y estado de seguridad limpiados correctamente');
-  }
-
-  /**
-   * Limpia todas las claves relacionadas con seguridad del localStorage
-   */
-  private cleanupLocalStorage(): void {
-    // Eliminar todas las claves que coincidan con el patrón de seguridad
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('securityState_') || key.includes('security') || key.includes('infraccion'))) {
-        console.log('Eliminando clave de localStorage:', key);
-        localStorage.removeItem(key);
-        // Decrementar el índice ya que se ha eliminado un elemento
-        i--;
-      }
-    }
-
-    // Eliminar específicamente las claves relacionadas con seguridad
-    localStorage.removeItem(this.getSecurityStateKey());
-    localStorage.removeItem('examenSecurityState');
-    localStorage.removeItem('lastWarnings');
-
-    // Reiniciar variables internas
-    this.warningCount = 0;
-    this.lastWarningTime = 0;
-    this.infracciones = [];
-
-    // Actualizar el estado
-    this.updateSecurityState();
-  }
-
-  /**
-   * Habilita las notificaciones de seguridad
-   */
-  public enableNotifications(): void {
+  enableNotifications(): void {
     this.allowNotifications = true;
-    console.log('Notificaciones de seguridad habilitadas');
+  }
+
+  disableNotifications(): void {
+    this.allowNotifications = false;
   }
 
   /**
-   * Deshabilita las notificaciones de seguridad
+   * Limpia todas las notificaciones y diálogos activos
    */
-  public disableNotifications(): void {
+  cleanup(): void {
+    this.snackBar.dismiss();
+    this.dialog.closeAll();
     this.allowNotifications = false;
-    console.log('Notificaciones de seguridad deshabilitadas');
-
-    // Cerrar notificaciones existentes
-    this.cleanupNotifications();
   }
 
-  private isViolacionCritica(violationType: SecurityViolationType): boolean {
-    return [
-        SecurityViolationType.FULLSCREEN_EXIT,
-        SecurityViolationType.FULLSCREEN_DENIED
-    ].includes(violationType);
-  }
-
-  mostrarError(mensaje: string, duracion: number = 5000): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: duracion,
-      panelClass: ['error-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
-    });
-  }
-
-  mostrarExito(mensaje: string, duracion: number = 3000): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: duracion,
-      panelClass: ['success-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
-    });
+  /**
+   * Reinicia el estado de las notificaciones
+   */
+  reset(): void {
+    this.cleanup();
+    this.allowNotifications = true;
   }
 }

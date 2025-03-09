@@ -128,7 +128,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.timeService.detener();
-    this.securityService.detenerMonitoreo();
+    this.securityService.deactivateSecureMode();
+    this.securityService.cleanup();
+    this.notificationService.cleanup();
   }
 
   // Navigation methods
@@ -262,75 +264,40 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   }
 
   private iniciarExamen(): void {
-    if (!this.examen || !this.preguntas.length) return;
+    if (!this.examen) return;
 
-    console.log('Iniciando examen con duración:', this.examen.duracion, 'minutos');
-
-    // Registrar actividad de inicio de examen
-    this.activityLogger.logActivity({
-      type: 'EXAMEN_INICIADO' as ActivityLogType,
-      timestamp: Date.now(),
-      details: {
-        examenId: this.examen.id,
-        titulo: this.examen.titulo
-      }
+    // Inicializar el estado del examen
+    this.stateService.initializeState({
+      examenId: this.examen.id,
+      estado: 'EN_CURSO',
+      fechaInicio: new Date().toISOString(),
+      fechaLimite: this.calcularFechaLimite(),
+      preguntaActual: 0,
+      respuestas: [],
+      usuarioId: this.getCurrentUserId()
     });
 
-    // Iniciar servicios de seguridad y monitoreo
-    this.securityService.iniciarMonitoreo();
-    this.notificationService.enableNotifications();
+    // Registrar inicio del examen
+    this.activityLogger.registrarActividad('EXAMEN_INICIADO');
 
-    // Iniciar examen a través del servicio de rendición
-    this.rendicionService.iniciarExamen(this.examen.id, this.preguntas)
-      .then(() => {
-        console.log('Examen iniciado correctamente');
-
-        // Suscribirse a los cambios del examen en curso
-        this.rendicionService.getExamenEnCurso().pipe(
-          takeUntil(this.destroy$)
-        ).subscribe(examenEnCurso => {
-          if (examenEnCurso) {
-            console.log('Estado del examen actualizado:', examenEnCurso);
-            this.indicePreguntaActual = examenEnCurso.preguntaActual;
-            this.preguntaActual = this.preguntas[this.indicePreguntaActual];
-
-            // Actualizar las respuestas desde el estado del examen
-            examenEnCurso.respuestas.forEach(resp => {
-              if (this.respuestas && resp.preguntaId) {
-                this.respuestas[resp.preguntaId] = resp.respuesta;
-                this.preguntasRespondidas.add(resp.preguntaId);
-              }
-            });
-          }
-        });
-
-        // Iniciar el temporizador
-        if (this.examen && this.examen.duracion) {
-          console.log('Iniciando temporizador con duración:', this.examen.duracion * 60, 'segundos');
-          this.timeService.iniciar(this.examen.duracion * 60).pipe(
-            takeUntil(this.destroy$)
-          ).subscribe({
-            next: (tiempo: number) => {
-              console.log('Tiempo restante actualizado:', tiempo, 'segundos');
-              this.tiempoRestante = tiempo;
-            },
-            error: (error) => {
-              console.error('Error en el temporizador:', error);
-            },
-            complete: () => {
-              console.log('Temporizador completado - tiempo agotado');
-              this.finalizarExamen('TIEMPO_AGOTADO');
-            }
-          });
-        } else {
-          console.warn('No se pudo iniciar el temporizador - duración no definida');
+    // Iniciar el temporizador
+    if (this.examen && this.examen.duracion) {
+      console.log('Iniciando temporizador con duración:', this.examen.duracion, 'minutos');
+      this.timeService.iniciar(this.examen.duracion).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (tiempo: number) => {
+          this.tiempoRestante = tiempo;
+        },
+        error: (error) => {
+          console.error('Error en el temporizador:', error);
+        },
+        complete: () => {
+          console.log('Temporizador completado, finalizando examen automáticamente');
+          this.finalizarExamen('FINALIZADO_TIEMPO');
         }
-      })
-      .catch(error => {
-        console.error('Error al iniciar el examen:', error);
-        this.notificationService.mostrarError('No se pudo iniciar el examen. Intente nuevamente más tarde.');
-        this.router.navigate(['/dashboard/examenes']);
       });
+    }
   }
 
   private iniciarMonitoreo(): void {
@@ -411,5 +378,30 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
         this.notificationService.mostrarError('Error al finalizar el examen');
       }
     });
+  }
+
+  // Método para calcular la fecha límite basada en la duración del examen
+  private calcularFechaLimite(): string {
+    if (!this.examen || !this.examen.duracion) {
+      return new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora por defecto
+    }
+
+    // Calcular fecha límite basada en la duración en minutos
+    const fechaLimite = new Date(Date.now() + this.examen.duracion * 60 * 1000);
+    return fechaLimite.toISOString();
+  }
+
+  // Método para obtener el ID del usuario actual
+  private getCurrentUserId(): string {
+    try {
+      const userData = localStorage.getItem('currentUser');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.id || 'anonymous';
+      }
+    } catch (error) {
+      console.error('Error al obtener el ID del usuario:', error);
+    }
+    return 'anonymous';
   }
 }

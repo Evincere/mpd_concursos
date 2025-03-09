@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, timer, interval, of } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 import { Pregunta, ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { ExamenTimeService } from './examen-time.service';
 import { ExamenSecurityService } from './security/examen-security.service';
@@ -9,38 +8,40 @@ import { ExamenRecoveryService } from './examen-recovery.service';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ExamenValidationService } from './examen-validation.service';
 import { environment } from '@env/environment';
+import { ExamenStateService } from './state/examen-state.service';
+import { ExamenNotificationService } from './examen-notification.service';
 
 @Injectable()
 export class ExamenRendicionService {
   private apiUrl = `${environment.apiUrl}/examenes`;
-  private examenEnCurso = new BehaviorSubject<ExamenEnCurso | null>(null);
-  private preguntas = new BehaviorSubject<Pregunta[]>([]);
-  private tiempoRestante = new BehaviorSubject<number>(0);
-  private preguntaActual$ = new BehaviorSubject<Pregunta | null>(null);
 
   constructor(
     private http: HttpClient,
     private timeService: ExamenTimeService,
     private securityService: ExamenSecurityService,
     private validationService: ExamenValidationService,
-    private recoveryService: ExamenRecoveryService
+    private recoveryService: ExamenRecoveryService,
+    private stateService: ExamenStateService,
+    private notificationService: ExamenNotificationService
   ) {}
 
   async iniciarExamen(examenId: string, preguntas: Pregunta[]): Promise<void> {
     // Reiniciar estado de seguridad al iniciar un nuevo examen
-    this.securityService.resetSecurityState();
+    this.securityService.reset();
+    this.notificationService.reset();
 
     // Intentar recuperar examen en progreso
     const examenRecuperado = await this.recoveryService.recoverExamen(examenId);
 
     if (examenRecuperado) {
-      this.examenEnCurso.next(examenRecuperado);
-      this.preguntas.next(preguntas);
+      // Inicializar el estado con el examen recuperado
+      this.stateService.initializeState(examenRecuperado);
+      this.stateService.setPreguntas(preguntas);
     } else {
       // Crear nuevo examen
       const examen: ExamenEnCurso = {
         examenId,
-        usuarioId: this.getCurrentUserId(), // Obtener el ID del usuario actual
+        usuarioId: this.getCurrentUserId(),
         fechaInicio: new Date().toISOString(),
         fechaLimite: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
         respuestas: [],
@@ -48,12 +49,10 @@ export class ExamenRendicionService {
         estado: 'EN_CURSO'
       };
 
-      this.preguntas.next(preguntas);
-      this.examenEnCurso.next(examen);
+      // Inicializar el estado con el nuevo examen
+      this.stateService.initializeState(examen);
+      this.stateService.setPreguntas(preguntas);
     }
-
-    // Asegurarnos de que la primera pregunta se emita
-    this.emitPreguntaActual();
 
     // Iniciar autoguardado y temporizador
     this.recoveryService.initializeAutoSave(examenId);
@@ -61,114 +60,129 @@ export class ExamenRendicionService {
   }
 
   private iniciarTemporizador(): void {
-    const fechaLimite = new Date(this.examenEnCurso.value?.fechaLimite || '');
-    const intervalo = timer(0, 1000).pipe(
-      map(() => {
-        const ahora = new Date();
-        const tiempoRestante = Math.max(0, Math.floor((fechaLimite.getTime() - ahora.getTime()) / 1000));
-        return tiempoRestante;
-      }),
-      takeUntil(timer(fechaLimite.getTime() - Date.now()))
-    );
+    // Obtener el examen actual del estado centralizado
+    this.stateService.getExamenEnCurso().subscribe(examen => {
+      if (!examen) return;
 
-    intervalo.subscribe({
-      next: (tiempo) => {
-        this.tiempoRestante.next(tiempo);
-        if (tiempo === 0) {
-          this.finalizarExamen();
+      // Calcular duración en minutos desde fechaInicio hasta fechaLimite
+      const fechaInicioExamen = new Date(examen.fechaInicio);
+      const fechaLimiteExamen = new Date(examen.fechaLimite);
+      const duracionMinutos = (fechaLimiteExamen.getTime() - fechaInicioExamen.getTime()) / (1000 * 60);
+
+      // Delegar la gestión del tiempo al ExamenTimeService
+      this.timeService.iniciar(duracionMinutos).subscribe({
+        next: (tiempoRestante) => {
+          // Actualizar el tiempo restante en el estado centralizado
+          this.stateService.actualizarTiempoRestante(tiempoRestante);
+
+          if (tiempoRestante === 0) {
+            this.finalizarExamen();
+          }
+        },
+        error: (error) => {
+          console.error('Error en el temporizador:', error);
         }
-      }
+      });
     });
   }
 
   guardarRespuesta(respuesta: RespuestaUsuario): void {
-    const examen = this.examenEnCurso.value;
-    if (!examen) return;
+    // Obtener el examen actual del estado centralizado
+    this.stateService.getExamenEnCurso().subscribe(examen => {
+      if (!examen) return;
 
-    // Generar hash para la respuesta
-    this.validationService.generarHash(respuesta).then(hash => {
-      respuesta.hash = hash;
+      // Generar hash para la respuesta
+      this.validationService.generarHash(respuesta).then(hash => {
+        respuesta.hash = hash;
 
-      // Validar la respuesta
-      if (!this.validationService.validarRespuesta(respuesta, examen.examenId)) {
-        this.securityService.reportSecurityViolation(SecurityViolationType.SUSPICIOUS_ANSWER, { respuesta });
-      }
+        // Validar la respuesta con el contexto
+        const context = {
+          examenId: examen.examenId,
+          timestamp: Date.now(),
+          tiempoRespuesta: respuesta.tiempoRespuesta
+        };
 
-      // Continuar con el guardado normal...
-      const respuestas = [...examen.respuestas];
-      const index = respuestas.findIndex(r => r.preguntaId === respuesta.preguntaId);
+        this.validationService.validarRespuesta(respuesta, context).then(result => {
+          if (!result.isValid && result.violationType) {
+            this.securityService.reportSecurityViolation(result.violationType, result.details);
+          }
 
-      if (index >= 0) {
-        respuestas[index] = { ...respuesta, intentos: (respuestas[index].intentos || 0) + 1 };
-      } else {
-        respuestas.push({ ...respuesta, intentos: 1 });
-      }
+          // Guardar la respuesta en el estado centralizado
+          this.stateService.guardarRespuesta(respuesta);
 
-      this.examenEnCurso.next({ ...examen, respuestas });
-
-      // Guardar backup
-      this.recoveryService.saveToLocalBackup(examen.examenId, { ...examen, respuestas });
+          // Guardar backup
+          this.recoveryService.saveToLocalBackup(examen.examenId, examen);
+        });
+      });
     });
   }
 
   siguientePregunta(): void {
-    const examen = this.examenEnCurso.value;
-    if (!examen) return;
+    this.stateService.getExamenEnCurso().subscribe(examen => {
+      if (!examen) return;
 
-    if (examen.preguntaActual < this.preguntas.value.length - 1) {
-      this.examenEnCurso.next({
-        ...examen,
-        preguntaActual: examen.preguntaActual + 1
+      this.stateService.getPreguntas().subscribe(preguntas => {
+        if (examen.preguntaActual < preguntas.length - 1) {
+          this.stateService.setPreguntaActual(examen.preguntaActual + 1);
+        }
       });
-    }
+    });
   }
 
   preguntaAnterior(): void {
-    const examen = this.examenEnCurso.value;
-    if (!examen || examen.preguntaActual === 0) return;
+    this.stateService.getExamenEnCurso().subscribe(examen => {
+      if (!examen || examen.preguntaActual === 0) return;
 
-    this.examenEnCurso.next({
-      ...examen,
-      preguntaActual: examen.preguntaActual - 1
+      this.stateService.setPreguntaActual(examen.preguntaActual - 1);
     });
   }
 
   finalizarExamen(examenAnulado?: ExamenEnCurso): Observable<void> {
-    const examen = examenAnulado || this.examenEnCurso.value;
-    if (!examen) return of(void 0);
+    return new Observable(observer => {
+      this.stateService.getExamenEnCurso().subscribe(examen => {
+        if (!examen) {
+          observer.next();
+          observer.complete();
+          return;
+        }
 
-    // Si el examen fue anulado, no validamos integridad
-    if (!examenAnulado) {
-      // Validar integridad post-incidente
-      const esValido = this.recoveryService.validatePostIncident(
-        examen.examenId,
-        examen.respuestas
-      );
+        // Si el examen fue anulado, no validamos integridad
+        if (!examenAnulado) {
+          // Obtener backup y validar integridad
+          const backup = this.recoveryService.getLatestBackup(examen.examenId);
+          if (backup) {
+            const validationResult = this.validationService.validarIntegridadPostIncidente(
+              examen.respuestas,
+              backup.examen.respuestas
+            );
 
-      if (!esValido) {
-        this.securityService.reportSecurityViolation(
-          SecurityViolationType.POST_INCIDENT_VALIDATION_FAILED,
-          { examen }
-        );
-      }
-    }
+            if (!validationResult.isValid && validationResult.violationType) {
+              this.securityService.reportSecurityViolation(
+                validationResult.violationType,
+                validationResult.details
+              );
+            }
+          }
+        }
 
-    // Limpiar backups
-    this.recoveryService.cleanupBackups(examen.examenId);
+        // Limpiar todos los recursos
+        this.securityService.cleanup();
+        this.recoveryService.cleanupBackups(examen.examenId);
+        this.stateService.cambiarEstadoExamen('FINALIZADO');
 
-    // Limpiar historial de validación
-    this.validationService.limpiarHistorial(examen.examenId);
-
-    // Si el examen fue anulado, mantenemos el estado ANULADO
-    const examenFinalizado = examenAnulado || {
-      ...examen,
-      estado: 'FINALIZADO' as const
-    };
-
-    this.examenEnCurso.next(examenFinalizado);
-
-    // Enviar al backend el estado final del examen
-    return this.enviarEstadoFinal(examenFinalizado);
+        // Enviar al backend el estado final del examen
+        this.enviarEstadoFinal(examenAnulado || examen).subscribe({
+          next: () => {
+            observer.next();
+            observer.complete();
+          },
+          error: (error) => {
+            console.error('Error al finalizar examen:', error);
+            observer.error(error);
+          }
+        });
+      });
+    });
   }
 
   anularExamen(examenId: string, motivo: { fecha: string; infracciones: SecurityViolationType[] }): Observable<any> {
@@ -185,37 +199,21 @@ export class ExamenRendicionService {
     return of(void 0);
   }
 
-  // Observables públicos
+  // Métodos para acceder al estado (ahora delegados al ExamenStateService)
   getExamenEnCurso(): Observable<ExamenEnCurso | null> {
-    return this.examenEnCurso.asObservable();
+    return this.stateService.getExamenEnCurso();
   }
 
   getPreguntas(): Observable<Pregunta[]> {
-    return this.preguntas.asObservable();
+    return this.stateService.getPreguntas();
   }
 
   getPreguntaActual(): Observable<Pregunta | null> {
-    return this.examenEnCurso.pipe(
-      map(examen => {
-        if (!examen) return null;
-        return this.preguntas.value[examen.preguntaActual] || null;
-      })
-    );
+    return this.stateService.getPreguntaActual();
   }
 
   getTiempoRestante(): Observable<number> {
-    return this.tiempoRestante.asObservable();
-  }
-
-  private emitPreguntaActual(): void {
-    const examen = this.examenEnCurso.value;
-    const preguntas = this.preguntas.value;
-    if (examen && preguntas.length > 0) {
-      const preguntaActual = preguntas[examen.preguntaActual];
-      if (preguntaActual) {
-        this.preguntaActual$.next(preguntaActual);
-      }
-    }
+    return this.stateService.getTiempoRestante();
   }
 
   private getCurrentUserId(): string {

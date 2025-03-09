@@ -44,10 +44,10 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     // Nos aseguramos de que todas las estrategias de seguridad estén desactivadas
     // al entrar al listado de exámenes
     this.examenSecurity.deactivateSecureMode();
-    this.examenSecurity.resetSecurityState();
+    this.examenSecurity.reset();
 
     // Limpiamos todas las notificaciones y diálogos abiertos
-    this.notificationService.cleanupNotifications();
+    this.notificationService.cleanup();
 
     // Deshabilitamos explícitamente las notificaciones de seguridad
     this.notificationService.disableNotifications();
