@@ -35,6 +35,9 @@ public class ExaminationMapper {
                 .cancellationDate(entity.getCancellationDate())
                 .cancellationReason(entity.getCancellationReason())
                 .securityViolations(entity.getSecurityViolations())
+                .requirements(entity.getRequirements())
+                .rules(entity.getRules())
+                .allowedMaterials(entity.getAllowedMaterials())
                 .build();
     }
 
@@ -55,6 +58,9 @@ public class ExaminationMapper {
         entity.setCancellationDate(domain.getCancellationDate());
         entity.setCancellationReason(domain.getCancellationReason());
         entity.setSecurityViolations(domain.getSecurityViolations());
+        entity.setRequirements(domain.getRequirements());
+        entity.setRules(domain.getRules());
+        entity.setAllowedMaterials(domain.getAllowedMaterials());
         return entity;
     }
 
@@ -186,6 +192,9 @@ public class ExaminationMapper {
                 .durationMinutes(entity.getDurationMinutes())
                 .maxScore(calculateMaxScore(entity.getQuestions()))
                 .maxAttempts(1)
+                .requirements(entity.getRequirements())
+                .rules(entity.getRules())
+                .allowedMaterials(entity.getAllowedMaterials())
                 .cancellationDetails(mapCancellationDetails(entity))
                 .build();
     }
@@ -254,6 +263,16 @@ public class ExaminationMapper {
                 .durationMinutes(domain.getDuration().toMinutes())
                 .maxScore(domain.getMaxScore())
                 .maxAttempts(domain.getMaxAttempts())
+                .requirements(domain.getRequirements())
+                .rules(domain.getRules())
+                .allowedMaterials(domain.getAllowedMaterials())
+                .cancellationDetails(domain.getCancellationDate() != null ? CancellationDetailsDTO.builder()
+                        .cancellationDate(domain.getCancellationDate())
+                        .violations(domain.getSecurityViolations().stream()
+                                .map(SecurityViolationType::valueOf)
+                                .collect(Collectors.toList()))
+                        .reason(domain.getCancellationReason())
+                        .build() : null)
                 .build();
     }
 

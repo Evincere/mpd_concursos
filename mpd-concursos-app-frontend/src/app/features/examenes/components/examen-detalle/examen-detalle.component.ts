@@ -1,13 +1,15 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Examen, ESTADO_EXAMEN, TipoExamen } from '@shared/interfaces/examen/examen.interface';
+import { ExamenesService } from '@core/services/examenes/examenes.service';
 
 @Component({
   selector: 'app-examen-detalle',
@@ -22,14 +24,47 @@ import { Examen, ESTADO_EXAMEN, TipoExamen } from '@shared/interfaces/examen/exa
     MatIconModule,
     MatDividerModule,
     MatTabsModule,
-    MatListModule
+    MatListModule,
+    MatProgressSpinnerModule
   ]
 })
-export class ExamenDetalleComponent {
-  @Input() examen!: Examen;
+export class ExamenDetalleComponent implements OnInit {
+  examen?: Examen;
   readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
+  loading = true;
+  error?: string;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private examenesService: ExamenesService
+  ) {}
+
+  ngOnInit(): void {
+    const examenId = this.route.snapshot.paramMap.get('id');
+    if (!examenId) {
+      this.error = 'ID de examen no válido';
+      this.loading = false;
+      return;
+    }
+
+    this.examenesService.getExamen(examenId).subscribe({
+      next: (examen) => {
+        console.log('Examen recibido en el componente:', {
+          requisitos: examen.requisitos,
+          reglasExamen: examen.reglasExamen,
+          materialesPermitidos: examen.materialesPermitidos
+        });
+        this.examen = examen;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar el examen:', error);
+        this.error = 'No se pudo cargar el examen';
+        this.loading = false;
+      }
+    });
+  }
 
   iniciarExamen(): void {
     if (this.examen && this.examen.id) {

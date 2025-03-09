@@ -18,6 +18,10 @@ DROP TABLE IF EXISTS examination_sessions;
 DROP TABLE IF EXISTS questions;
 DROP TABLE IF EXISTS examinations;
 DROP TABLE IF EXISTS question_correct_answers;
+DROP TABLE IF EXISTS examination_requirements;
+DROP TABLE IF EXISTS examination_rules;
+DROP TABLE IF EXISTS examination_allowed_materials;
+DROP TABLE IF EXISTS examination_security_violations;
 
 -- Habilitar verificación de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;
@@ -60,7 +64,7 @@ CREATE TABLE examinations (
     end_time DATETIME,
     cancellation_date DATETIME,
     cancellation_reason VARCHAR(255),
-    type ENUM('MULTIPLE_CHOICE', 'WRITTEN', 'ORAL', 'MIXED') NOT NULL,
+    type ENUM('TECHNICAL_LEGAL', 'TECHNICAL_ADMINISTRATIVE', 'PSYCHOLOGICAL') NOT NULL,
     answers TEXT
 );
 
@@ -151,5 +155,29 @@ CREATE TABLE question_correct_answers (
     correct_answers VARCHAR(255),
     FOREIGN KEY (question_entity_id) REFERENCES questions(id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE examination_requirements (
+    examination_id BINARY(16) NOT NULL,
+    requirement TEXT NOT NULL,
+    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+);
+
+CREATE TABLE examination_rules (
+    examination_id BINARY(16) NOT NULL,
+    rule TEXT NOT NULL,
+    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+);
+
+CREATE TABLE examination_allowed_materials (
+    examination_id BINARY(16) NOT NULL,
+    material TEXT NOT NULL,
+    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+);
+
+CREATE TABLE examination_security_violations (
+    examination_id BINARY(16) NOT NULL,
+    violation VARCHAR(255) NOT NULL,
+    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+);
 
 

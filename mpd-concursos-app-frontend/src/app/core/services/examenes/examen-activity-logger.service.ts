@@ -297,27 +297,16 @@ export class ExamenActivityLoggerService {
       const logsToSync = this.activityLogs.splice(0, this.BATCH_SIZE);
 
       // Formatear los logs según el formato esperado por el backend
-      const formattedLogs = logsToSync.map(log => {
-        // Objeto base con campos requeridos
-        const formattedLog: FormattedActivityLog = {
-          type: log.type,
-          timestamp: new Date(log.timestamp).toISOString(),
-          details: typeof log.details === 'string' ? log.details : JSON.stringify(log.details)
-        };
-
-        // Solo agregar campos opcionales si existen y tienen valor
-        if (log.userContext) {
-          formattedLog.userContext = JSON.stringify(log.userContext);
-        }
-        if (log.resourceUsage) {
-          formattedLog.resourceUsage = JSON.stringify(log.resourceUsage);
-        }
-        if (log.networkInfo) {
-          formattedLog.networkInfo = JSON.stringify(log.networkInfo);
-        }
-
-        return formattedLog;
-      });
+      const formattedLogs = logsToSync.map(log => ({
+        type: log.type,
+        timestamp: new Date(log.timestamp).toISOString(),
+        details: JSON.stringify({
+          ...log.details,
+          userContext: log.userContext,
+          resourceUsage: log.resourceUsage,
+          networkInfo: log.networkInfo
+        })
+      }));
 
       // Validar que todos los logs tengan el formato correcto antes de enviar
       const isValidFormat = formattedLogs.every(log =>
@@ -333,23 +322,25 @@ export class ExamenActivityLoggerService {
 
       console.debug('Enviando logs al servidor:', formattedLogs);
 
-      this.http.post(`${environment.apiUrl}/activity-logs`, formattedLogs)
-        .subscribe({
-          next: () => {
-            console.debug(`Sincronizados ${logsToSync.length} logs correctamente`);
-          },
-          error: (error) => {
-            if (error.status === 400) {
-              console.error('Error de formato en los logs:', error);
-              // No reintentar si es un error de formato
-              console.warn('Los logs fueron descartados debido a un error de formato');
-            } else {
-              console.error('Error al sincronizar logs:', error);
-              // Solo reintentar si no es un error de formato
-              this.activityLogs.unshift(...logsToSync);
+      // Enviar los logs uno por uno para evitar problemas de tamaño
+      formattedLogs.forEach(log => {
+        this.http.post(`${environment.apiUrl}/activity-logs`, log)
+          .subscribe({
+            next: () => {
+              console.debug('Log sincronizado correctamente:', log);
+            },
+            error: (error) => {
+              if (error.status === 400) {
+                console.error('Error de formato en el log:', error);
+                console.warn('El log fue descartado debido a un error de formato');
+              } else {
+                console.error('Error al sincronizar log:', error);
+                // Solo reintentar si no es un error de formato
+                this.activityLogs.unshift(logsToSync[formattedLogs.indexOf(log)]);
+              }
             }
-          }
-        });
+          });
+      });
     }
   }
 

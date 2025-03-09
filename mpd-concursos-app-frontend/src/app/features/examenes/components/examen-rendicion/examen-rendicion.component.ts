@@ -27,6 +27,10 @@ import { SecurityViolationType } from '@core/interfaces/security/security-violat
 import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ActivityLogType } from '@core/interfaces/examenes/monitoring/activity-log.interface';
+import { FullscreenStrategy } from '@core/services/examenes/security/strategies/fullscreen.strategy';
+import { KeyboardSecurityStrategy } from '@core/services/examenes/security/strategies/keyboard.strategy';
+import { TabSwitchSecurityStrategy } from '@core/services/examenes/security/strategies/tab-switch.strategy';
 
 @Component({
   selector: 'app-examen-rendicion',
@@ -48,6 +52,33 @@ import { takeUntil } from 'rxjs/operators';
     MatListModule,
     MatTooltipModule,
     FormatTiempoPipe
+  ],
+  providers: [
+    FullscreenStrategy,
+    KeyboardSecurityStrategy,
+    TabSwitchSecurityStrategy,
+    ExamenSecurityService,
+    ExamenTimeService,
+    ExamenValidationService,
+    ExamenActivityLoggerService,
+    ExamenNotificationService,
+    ExamenRecoveryService,
+    ExamenRendicionService,
+    {
+      provide: 'SecurityStrategies',
+      useFactory: (
+        fullscreen: FullscreenStrategy,
+        keyboard: KeyboardSecurityStrategy,
+        tabSwitch: TabSwitchSecurityStrategy
+      ) => [fullscreen, keyboard, tabSwitch],
+      deps: [FullscreenStrategy, KeyboardSecurityStrategy, TabSwitchSecurityStrategy]
+    },
+    {
+      provide: 'ExamenEnCurso',
+      useFactory: () => ({
+        estado: 'INICIAL'
+      })
+    }
   ]
 })
 export class ExamenRendicionComponent implements OnInit, OnDestroy {
@@ -231,18 +262,75 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   }
 
   private iniciarExamen(): void {
-    if (!this.examen) return;
+    if (!this.examen || !this.preguntas.length) return;
 
-    this.timeService.iniciar(this.examen.duracion * 60).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (tiempo: number) => {
-        this.tiempoRestante = tiempo;
-      },
-      complete: () => {
-        this.finalizarExamen('TIEMPO_AGOTADO');
+    console.log('Iniciando examen con duración:', this.examen.duracion, 'minutos');
+
+    // Registrar actividad de inicio de examen
+    this.activityLogger.logActivity({
+      type: 'EXAMEN_INICIADO' as ActivityLogType,
+      timestamp: Date.now(),
+      details: {
+        examenId: this.examen.id,
+        titulo: this.examen.titulo
       }
     });
+
+    // Iniciar servicios de seguridad y monitoreo
+    this.securityService.iniciarMonitoreo();
+    this.notificationService.enableNotifications();
+
+    // Iniciar examen a través del servicio de rendición
+    this.rendicionService.iniciarExamen(this.examen.id, this.preguntas)
+      .then(() => {
+        console.log('Examen iniciado correctamente');
+
+        // Suscribirse a los cambios del examen en curso
+        this.rendicionService.getExamenEnCurso().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(examenEnCurso => {
+          if (examenEnCurso) {
+            console.log('Estado del examen actualizado:', examenEnCurso);
+            this.indicePreguntaActual = examenEnCurso.preguntaActual;
+            this.preguntaActual = this.preguntas[this.indicePreguntaActual];
+
+            // Actualizar las respuestas desde el estado del examen
+            examenEnCurso.respuestas.forEach(resp => {
+              if (this.respuestas && resp.preguntaId) {
+                this.respuestas[resp.preguntaId] = resp.respuesta;
+                this.preguntasRespondidas.add(resp.preguntaId);
+              }
+            });
+          }
+        });
+
+        // Iniciar el temporizador
+        if (this.examen && this.examen.duracion) {
+          console.log('Iniciando temporizador con duración:', this.examen.duracion * 60, 'segundos');
+          this.timeService.iniciar(this.examen.duracion * 60).pipe(
+            takeUntil(this.destroy$)
+          ).subscribe({
+            next: (tiempo: number) => {
+              console.log('Tiempo restante actualizado:', tiempo, 'segundos');
+              this.tiempoRestante = tiempo;
+            },
+            error: (error) => {
+              console.error('Error en el temporizador:', error);
+            },
+            complete: () => {
+              console.log('Temporizador completado - tiempo agotado');
+              this.finalizarExamen('TIEMPO_AGOTADO');
+            }
+          });
+        } else {
+          console.warn('No se pudo iniciar el temporizador - duración no definida');
+        }
+      })
+      .catch(error => {
+        console.error('Error al iniciar el examen:', error);
+        this.notificationService.mostrarError('No se pudo iniciar el examen. Intente nuevamente más tarde.');
+        this.router.navigate(['/dashboard/examenes']);
+      });
   }
 
   private iniciarMonitoreo(): void {

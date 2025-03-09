@@ -24,10 +24,10 @@
         <div class="examen-card" *ngFor="let examen of examenes">
           <div class="examen-header">
             <span class="examen-tipo" [class]="examen.tipo.toLowerCase()">
-              {{ examen.tipo | titlecase }}
+              {{ getTipoExamenLabel(examen.tipo) }}
             </span>
-            <span class="examen-estado" [class]="examen.estado.toLowerCase()">
-              {{ examen.estado | titlecase }}
+            <span class="estado-pill" [ngClass]="getEstadoClass(examen.estado)">
+              {{ getEstadoLabel(examen.estado) }}
             </span>
           </div>
 
@@ -37,33 +37,39 @@
 
             <div class="examen-info">
               <div class="info-item">
-                <i class="fas fa-clock"></i>
+                <mat-icon>timer</mat-icon>
                 <span>{{ examen.duracion }} minutos</span>
               </div>
               <div class="info-item">
-                <i class="fas fa-star"></i>
+                <mat-icon>stars</mat-icon>
                 <span>{{ examen.puntajeMaximo }} puntos</span>
               </div>
               <div class="info-item">
-                <i class="fas fa-calendar"></i>
+                <mat-icon>event</mat-icon>
                 <span>{{ examen.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</span>
               </div>
+            </div>
+
+            <div class="mensaje-disponibilidad" [ngClass]="{'warning': examen.estado !== ESTADO_EXAMEN.DISPONIBLE}">
+              <mat-icon>{{ examen.estado === ESTADO_EXAMEN.DISPONIBLE ? 'check_circle' : 'info' }}</mat-icon>
+              <span>{{ getMensajeDisponibilidad(examen) }}</span>
             </div>
           </div>
 
           <div class="examen-actions">
             <button mat-flat-button
+                    *ngIf="examen.estado === ESTADO_EXAMEN.DISPONIBLE"
                     color="primary"
-                    [disabled]="examen.estado !== ESTADO_EXAMEN.DISPONIBLE || loading"
                     (click)="iniciarExamen(examen.id)"
                     class="action-button">
-              <i class="fas fa-play"></i>
+              <mat-icon>play_circle</mat-icon>
               <span>Iniciar Examen</span>
             </button>
+
             <button mat-button
                     [routerLink]="['/dashboard/examenes', examen.id]"
                     class="action-button secondary">
-              <i class="fas fa-info-circle"></i>
+              <mat-icon>info</mat-icon>
               <span>Ver Detalle</span>
             </button>
           </div>

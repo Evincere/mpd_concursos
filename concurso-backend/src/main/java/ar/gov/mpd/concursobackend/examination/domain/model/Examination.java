@@ -27,17 +27,20 @@ public class Examination {
     LocalDateTime cancellationDate;
     String cancellationReason;
     List<String> securityViolations;
-    
+    List<String> requirements;
+    List<String> rules;
+    List<String> allowedMaterials;
+
     public boolean canBeStarted() {
         if (status != ExaminationStatus.PUBLISHED) {
             return false;
         }
-        
+
         LocalDateTime now = LocalDateTime.now();
         return now.isAfter(startTime) && now.isBefore(endTime);
     }
-    
+
     public boolean isActive() {
         return status == ExaminationStatus.PUBLISHED || status == ExaminationStatus.IN_PROGRESS;
     }
-} 
+}

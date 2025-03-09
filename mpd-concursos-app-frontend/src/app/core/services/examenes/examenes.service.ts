@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { Examen, ExamenDTO, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
+import { Examen, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
+import { ExamenDTO } from '@core/interfaces/examenes/examen-dto.interface';
 import { Pregunta, PreguntaDTO, TipoPregunta } from '@shared/interfaces/examen/pregunta.interface';
 import { environment } from '@env/environment';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
@@ -46,27 +47,40 @@ export class ExamenesService {
   }
 
   private mapExamenFromDTO(dto: ExamenDTO): Examen {
-    return {
+    console.log('DTO recibido del backend:', {
+      requirements: dto.requirements,
+      rules: dto.rules,
+      allowedMaterials: dto.allowedMaterials
+    });
+
+    const examen: Examen = {
       id: dto.id,
       titulo: dto.title,
-      descripcion: dto.description || undefined,
+      descripcion: dto.description || '',
       tipo: this.mapTipoExamen(dto.type),
-      estado: this.mapEstadoExamen(dto.status),
+      estado: this.mapEstadoExamen(dto.status, dto.startTime),
       fechaInicio: dto.startTime,
-      fechaFin: dto.endTime,
       duracion: dto.durationMinutes,
       puntajeMaximo: dto.maxScore,
       intentosPermitidos: dto.maxAttempts,
       intentosRealizados: dto.attemptsUsed,
-      requisitos: dto.requirements,
-      reglasExamen: dto.examRules,
-      materialesPermitidos: dto.allowedMaterials,
+      requisitos: dto.requirements || [],
+      reglasExamen: dto.rules || [],
+      materialesPermitidos: dto.allowedMaterials || [],
       motivoAnulacion: dto.cancellationDetails ? {
         fecha: dto.cancellationDetails.cancellationDate,
         infracciones: dto.cancellationDetails.violations,
-        motivo: dto.cancellationDetails.reason || undefined
+        motivo: dto.cancellationDetails.reason
       } : undefined
     };
+
+    console.log('Examen mapeado:', {
+      requisitos: examen.requisitos,
+      reglasExamen: examen.reglasExamen,
+      materialesPermitidos: examen.materialesPermitidos
+    });
+
+    return examen;
   }
 
   private mapPreguntaFromDTO(dto: PreguntaDTO): Pregunta {
@@ -95,14 +109,67 @@ export class ExamenesService {
     return mapping[type] || TipoExamen.TECNICO_JURIDICO;
   }
 
-  private mapEstadoExamen(status: string): ESTADO_EXAMEN {
+  private parseLocalDateTime(dateStr: string): Date | null {
+    try {
+      // Si la fecha ya tiene información de zona horaria
+      if (dateStr.includes('Z') || dateStr.includes('+') || dateStr.includes('-')) {
+        const date = new Date(dateStr);
+        // Convertir de UTC a hora local
+        return new Date(
+          date.getUTCFullYear(),
+          date.getUTCMonth(),
+          date.getUTCDate(),
+          date.getUTCHours(),
+          date.getUTCMinutes(),
+          date.getUTCSeconds()
+        );
+      }
+
+      // Para fechas sin zona horaria, mantenerlas en hora local
+      const [datePart, timePart = '00:00:00'] = dateStr.split('T');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hours, minutes, seconds] = timePart.split(':').map(Number);
+
+      const localDate = new Date(year, month - 1, day, hours, minutes, seconds);
+      console.log('Fecha parseada:', {
+        original: dateStr,
+        parsed: localDate.toISOString(),
+        localString: localDate.toLocaleString(),
+        offset: localDate.getTimezoneOffset()
+      });
+
+      return localDate;
+    } catch (error) {
+      console.error('Error parseando fecha:', error, {
+        dateStr,
+        isUTC: dateStr.includes('Z') || dateStr.includes('+') || dateStr.includes('-')
+      });
+      return null;
+    }
+  }
+
+  private mapEstadoExamen(status: string, fechaInicio: string): ESTADO_EXAMEN {
+    const ahora = new Date();
+    const fechaInicioDate = new Date(fechaInicio);
+
+    // Si la fecha ya pasó, el examen debe estar en estado FINALIZADO
+    if (fechaInicioDate < ahora) {
+      return ESTADO_EXAMEN.FINALIZADO;
+    }
+
+    // Mapeo de estados según el backend
     const mapping: { [key: string]: ESTADO_EXAMEN } = {
       'DRAFT': ESTADO_EXAMEN.BORRADOR,
       'SCHEDULED': ESTADO_EXAMEN.DISPONIBLE,
+      'PUBLISHED': ESTADO_EXAMEN.DISPONIBLE,
       'ACTIVE': ESTADO_EXAMEN.EN_CURSO,
+      'IN_PROGRESS': ESTADO_EXAMEN.EN_CURSO,
       'FINISHED': ESTADO_EXAMEN.FINALIZADO,
-      'CANCELLED': ESTADO_EXAMEN.ANULADO
+      'COMPLETED': ESTADO_EXAMEN.FINALIZADO,
+      'CANCELLED': ESTADO_EXAMEN.ANULADO,
+      'EXPIRED': ESTADO_EXAMEN.FINALIZADO
     };
+
     return mapping[status] || ESTADO_EXAMEN.BORRADOR;
   }
 

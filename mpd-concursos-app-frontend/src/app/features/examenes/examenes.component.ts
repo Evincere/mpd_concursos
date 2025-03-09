@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { ExamenesStateService } from '@core/services/examenes/examenes-state.service';
 import { Examen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
@@ -18,6 +19,7 @@ import { ExamenNotificationService } from '@core/services/examenes/examen-notifi
   imports: [
     CommonModule,
     MatButtonModule,
+    MatIconModule,
     SearchHeaderComponent,
     LoaderComponent,
     RouterModule
@@ -43,15 +45,15 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     // al entrar al listado de exámenes
     this.examenSecurity.deactivateSecureMode();
     this.examenSecurity.resetSecurityState();
-    
+
     // Limpiamos todas las notificaciones y diálogos abiertos
     this.notificationService.cleanupNotifications();
-    
+
     // Deshabilitamos explícitamente las notificaciones de seguridad
     this.notificationService.disableNotifications();
-    
+
     console.log('Estrategias de seguridad y notificaciones desactivadas en el listado de exámenes');
-    
+
     // Suscribirse a los cambios de estado
     this.examenesState.getExamenes()
       .pipe(takeUntil(this.destroy$))
@@ -84,17 +86,79 @@ export class ExamenesComponent implements OnInit, OnDestroy {
 
   async iniciarExamen(examenId: string): Promise<void> {
     try {
+      console.log('Iniciando proceso de examen para ID:', examenId);
+
       // Primero activamos el modo seguro
+      console.log('Intentando activar modo seguro...');
       await this.examenSecurity.activateSecureMode();
+      console.log('Modo seguro activado exitosamente');
 
       // Luego navegamos al examen
-      await this.router.navigate([`/dashboard/examenes/${examenId}/rendir`]);
+      console.log('Intentando navegar al examen...');
+      const navigationResult = await this.router.navigate([`/dashboard/examenes/${examenId}/rendir`]);
+      console.log('Resultado de navegación:', navigationResult);
 
       // Forzamos la detección de cambios
       this.cdr.detectChanges();
+      console.log('Detección de cambios forzada');
     } catch (error) {
-      console.error('Error al iniciar el examen:', error);
-      // Manejar el error apropiadamente
+      console.error('Error detallado al iniciar el examen:', error);
+      this.notificationService.mostrarError('No se pudo iniciar el examen. Por favor, intente nuevamente.');
     }
+  }
+
+  getMensajeDisponibilidad(examen: Examen): string {
+    const ahora = new Date();
+    const fechaInicio = new Date(examen.fechaInicio);
+
+    if (fechaInicio > ahora) {
+      return `Examen disponible a partir del ${this.formatearFecha(fechaInicio)}`;
+    } else if (fechaInicio < ahora) {
+      return `Examen finalizado el ${this.formatearFecha(fechaInicio)}`;
+    }
+    return 'Examen no habilitado';
+  }
+
+  getEstadoLabel(estado: ESTADO_EXAMEN): string {
+    const estados: Record<ESTADO_EXAMEN, string> = {
+      [ESTADO_EXAMEN.BORRADOR]: 'Borrador',
+      [ESTADO_EXAMEN.ACTIVO]: 'Activo',
+      [ESTADO_EXAMEN.ANULADO]: 'Anulado',
+      [ESTADO_EXAMEN.FINALIZADO]: 'Finalizado',
+      [ESTADO_EXAMEN.DISPONIBLE]: 'Disponible',
+      [ESTADO_EXAMEN.EN_CURSO]: 'En Curso'
+    };
+    return estados[estado] || estado;
+  }
+
+  getEstadoClass(estado: ESTADO_EXAMEN): string {
+    const clases: Record<ESTADO_EXAMEN, string> = {
+      [ESTADO_EXAMEN.BORRADOR]: 'estado-borrador',
+      [ESTADO_EXAMEN.ACTIVO]: 'estado-activo',
+      [ESTADO_EXAMEN.ANULADO]: 'estado-anulado',
+      [ESTADO_EXAMEN.FINALIZADO]: 'estado-finalizado',
+      [ESTADO_EXAMEN.DISPONIBLE]: 'estado-disponible',
+      [ESTADO_EXAMEN.EN_CURSO]: 'estado-en-curso'
+    };
+    return clases[estado] || '';
+  }
+
+  private formatearFecha(fecha: Date): string {
+    return fecha.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getTipoExamenLabel(tipo: string): string {
+    const tipos: { [key: string]: string } = {
+      'technical_legal': 'Técnico-Jurídico',
+      'technical_administrative': 'Técnico-Administrativo',
+      'psychological': 'Psicológico'
+    };
+    return tipos[tipo.toLowerCase()] || tipo;
   }
 }

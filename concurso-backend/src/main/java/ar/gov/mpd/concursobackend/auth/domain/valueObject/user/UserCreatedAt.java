@@ -12,8 +12,11 @@ public class UserCreatedAt {
     }
 
     private void ensuranceIsValid() {
-        if (this.createdAt.isAfter(LocalDateTime.now())) {
-            throw new ValidationException("La fecha de creación no puede ser futura");
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime maxFutureDate = now.plusDays(1);
+
+        if (this.createdAt.isAfter(maxFutureDate)) {
+            throw new ValidationException("La fecha de creación no puede ser más de 1 día en el futuro");
         }
     }
 

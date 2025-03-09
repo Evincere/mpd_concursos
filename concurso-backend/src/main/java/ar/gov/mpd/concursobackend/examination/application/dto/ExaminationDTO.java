@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Value
@@ -21,5 +22,8 @@ public class ExaminationDTO {
     Long durationMinutes;
     Integer maxScore;
     Integer maxAttempts;
+    List<String> requirements;
+    List<String> rules;
+    List<String> allowedMaterials;
     CancellationDetailsDTO cancellationDetails;
 }

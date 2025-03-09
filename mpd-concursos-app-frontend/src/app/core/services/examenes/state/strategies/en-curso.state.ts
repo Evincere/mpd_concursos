@@ -68,6 +68,6 @@ export class ExamenEnCursoState implements IExamenState {
   }
 
   tiempoDisponible(): Observable<number> {
-    return of(this.timeService.getTimeRemaining(new Date(this.examen.fechaLimite).getTime()));
+    return of(this.timeService.getTimeRemaining());
   }
 }

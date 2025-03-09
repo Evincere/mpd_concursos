@@ -1,4 +1,5 @@
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
+import { ExamenDTO } from '@core/interfaces/examenes/examen-dto.interface';
 
 export enum TipoExamen {
   TECNICO_JURIDICO = 'TECHNICAL_LEGAL',
@@ -7,11 +8,12 @@ export enum TipoExamen {
 }
 
 export enum ESTADO_EXAMEN {
-  BORRADOR = 'DRAFT',
-  DISPONIBLE = 'SCHEDULED',
-  EN_CURSO = 'ACTIVE',
-  FINALIZADO = 'FINISHED',
-  ANULADO = 'CANCELLED'
+  BORRADOR = 'BORRADOR',
+  ACTIVO = 'ACTIVO',
+  ANULADO = 'ANULADO',
+  FINALIZADO = 'FINALIZADO',
+  DISPONIBLE = 'DISPONIBLE',
+  EN_CURSO = 'EN_CURSO'
 }
 
 export interface MotivoAnulacion {
@@ -23,40 +25,22 @@ export interface MotivoAnulacion {
 export interface Examen {
   id: string;
   titulo: string;
-  descripcion?: string;
-  tipo: TipoExamen;
+  descripcion: string;
+  tipo: string;
   estado: ESTADO_EXAMEN;
-  fechaInicio: string;
-  fechaFin: string;
-  duracion: number; // en minutos
+  duracion: number;
   puntajeMaximo: number;
+  fechaInicio: string;
   intentosPermitidos: number;
   intentosRealizados?: number;
-  requisitos?: string[];
-  reglasExamen?: string[];
-  materialesPermitidos?: string[];
-  motivoAnulacion?: MotivoAnulacion;
+  requisitos: string[];
+  reglasExamen: string[];
+  materialesPermitidos: string[];
+  motivoAnulacion?: {
+    fecha: string;
+    infracciones: string[];
+    motivo?: string;
+  };
 }
 
-// Tipos de respuesta del backend
-export interface ExamenDTO {
-  id: string;
-  title: string;
-  description: string | null;
-  type: string;
-  status: string;
-  startTime: string;
-  endTime: string;
-  durationMinutes: number;
-  maxScore: number;
-  maxAttempts: number;
-  attemptsUsed?: number;
-  requirements?: string[];
-  examRules?: string[];
-  allowedMaterials?: string[];
-  cancellationDetails: {
-    cancellationDate: string;
-    violations: SecurityViolationType[];
-    reason: string | null;
-  } | null;
-}
+export type { ExamenDTO };
