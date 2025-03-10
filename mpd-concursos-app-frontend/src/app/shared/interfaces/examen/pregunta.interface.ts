@@ -40,6 +40,7 @@ export interface ExamenEnCurso {
   respuestas: RespuestaUsuario[];
   preguntaActual: number;
   estado: 'EN_CURSO' | 'PAUSADO' | 'FINALIZADO' | 'ANULADO';
+  duracion?: number; // Duración en minutos
 }
 
 // Tipos de respuesta del backend

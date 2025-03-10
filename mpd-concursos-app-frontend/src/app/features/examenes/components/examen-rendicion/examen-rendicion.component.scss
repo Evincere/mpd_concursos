@@ -5,22 +5,23 @@
 }
 
 .examen-rendicion-container {
-  padding: 24px;
+  padding: 20px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   max-width: 1200px;
   margin: 0 auto;
 
   .header-card {
     background-color: #2d2d2d;
     border-radius: 8px;
+    margin-bottom: 20px;
 
     .header-content {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       padding: 16px;
 
       .timer-container {
@@ -28,13 +29,12 @@
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
-        background-color: #333333;
+        background-color: rgba(0, 0, 0, 0.2);
         border-radius: 4px;
-        transition: all 0.3s ease;
 
         &.warning {
-          background-color: rgba(255, 87, 34, 0.2);
-          color: #ff5722;
+          background-color: rgba(244, 67, 54, 0.2);
+          color: #f44336;
           animation: pulse 2s infinite;
         }
 
@@ -53,101 +53,48 @@
         flex: 1;
         margin: 0 24px;
 
-        .progress-bar {
+        mat-progress-bar {
           height: 8px;
-          background-color: #333333;
           border-radius: 4px;
-          overflow: hidden;
-          position: relative;
-          margin-bottom: 8px;
-
-          .progress-segments {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            gap: 2px;
-
-            .progress-segment {
-              flex: 1;
-              height: 100%;
-              padding: 0;
-              border: none;
-              background-color: #333333;
-              cursor: pointer;
-              transition: all 0.2s ease;
-              min-width: 8px;
-
-              &.answered {
-                background-color: #64b5f6;
-              }
-
-              &.marked {
-                background-color: #ffd740;
-              }
-
-              &.current {
-                box-shadow: 0 0 0 2px #fff;
-                z-index: 1;
-              }
-
-              &:hover {
-                transform: scaleY(1.5);
-                box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
-              }
-            }
-          }
         }
 
         .progress-info {
           display: flex;
           justify-content: space-between;
-          align-items: center;
+          margin-top: 8px;
           color: #fff;
-          font-size: 0.9rem;
-
-          .progress-text {
-            color: #64b5f6;
-          }
 
           .progress-marked-text {
             color: #ffd740;
-            margin-left: 8px;
           }
         }
-      }
-
-      .progress-info {
-        color: #fff;
-        font-size: 1rem;
       }
     }
   }
 
   .examen-content {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
     overflow-y: auto;
 
     .pregunta-card {
       background-color: #2d2d2d;
       border-radius: 8px;
+      margin-bottom: 20px;
 
       mat-card-header {
         padding: 16px;
-        border-bottom: 1px solid #404040;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
         mat-card-title {
           color: #fff;
           font-size: 1.2rem;
           display: flex;
           align-items: center;
-          gap: 12px;
 
           .puntaje {
+            margin-left: 10px;
             color: #64b5f6;
-            font-size: 0.9rem;
+            font-size: 0.9em;
           }
         }
       }
@@ -156,102 +103,165 @@
         padding: 24px;
 
         .pregunta-texto {
+          font-size: 1.1em;
           color: #fff;
-          font-size: 1.1rem;
-          line-height: 1.6;
           margin-bottom: 24px;
+          line-height: 1.5;
         }
 
-        .respuestas-container {
-          .opciones-grupo {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-          }
+        // Estilos para opción múltiple y verdadero/falso
+        .opcion-radio {
+          display: block;
+          margin: 12px 0;
 
-          .opcion-item {
-            background-color: #333333;
-            padding: 16px;
+          .mat-radio-label {
+            white-space: normal;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.05);
             border-radius: 4px;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s ease;
 
             &:hover {
-              background-color: #404040;
+              background-color: rgba(255, 255, 255, 0.1);
             }
           }
 
-          .respuesta-desarrollo {
-            width: 100%;
-
-            textarea {
-              background-color: #333333;
-              color: #fff;
-              border-radius: 4px;
-            }
-          }
-        }
-      }
-    }
-
-    .navegacion-container {
-      display: flex;
-      justify-content: space-between;
-      padding: 16px;
-      background-color: #2d2d2d;
-      border-radius: 8px;
-
-      button {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-
-        &[color="primary"] {
-          background-color: rgba(100, 181, 246, 0.1);
-
-          &:hover:not([disabled]) {
+          &.mat-radio-checked .mat-radio-label {
             background-color: rgba(100, 181, 246, 0.2);
           }
         }
 
-        &[disabled] {
-          opacity: 0.5;
+        // Estilos para selección múltiple
+        mat-selection-list {
+          padding: 0;
+
+          mat-list-option {
+            height: auto;
+            padding: 12px;
+            margin: 8px 0;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+
+            &:hover {
+              background-color: rgba(255, 255, 255, 0.1);
+            }
+
+            &.mat-list-option-selected {
+              background-color: rgba(100, 181, 246, 0.2);
+            }
+
+            .mat-list-text {
+              white-space: normal;
+            }
+          }
+        }
+
+        // Estilos para desarrollo
+        .respuesta-desarrollo {
+          width: 100%;
+
+          textarea {
+            min-height: 150px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding: 12px;
+            border-radius: 4px;
+            resize: vertical;
+
+            &::placeholder {
+              color: rgba(255, 255, 255, 0.5);
+            }
+          }
+        }
+
+        // Estilos para ordenamiento
+        .opcion-ordenable {
+          display: flex;
+          align-items: center;
+          padding: 16px;
+          margin: 8px 0;
+          background-color: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          cursor: move;
+          transition: background-color 0.3s ease;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+
+          mat-icon {
+            margin-right: 12px;
+            color: rgba(255, 255, 255, 0.5);
+          }
+
+          &.cdk-drag-preview {
+            box-shadow: 0 5px 5px -3px rgba(0,0,0,0.2),
+                       0 8px 10px 1px rgba(0,0,0,0.14),
+                       0 3px 14px 2px rgba(0,0,0,0.12);
+          }
+
+          &.cdk-drag-placeholder {
+            opacity: 0;
+          }
+
+          &.cdk-drag-animating {
+            transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+          }
+        }
+
+        // Mensaje de error para tipo no reconocido
+        .error-message {
+          color: #f44336;
+          padding: 16px;
+          background-color: rgba(244, 67, 54, 0.1);
+          border-radius: 4px;
+          margin-top: 16px;
+        }
+      }
+
+      mat-card-actions {
+        padding: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        button {
+          &.mat-button {
+            padding: 4px 16px;
+          }
+
+          mat-icon {
+            margin-right: 8px;
+          }
         }
       }
     }
   }
 }
 
+// Animación para el temporizador
 @keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
 }
 
-// Responsive
+// Estilos responsivos
 @media (max-width: 768px) {
   .examen-rendicion-container {
-    padding: 16px;
+    padding: 12px;
 
-    .header-content {
+    .header-card .header-content {
       flex-direction: column;
-      gap: 16px;
-      align-items: flex-start;
-    }
+      gap: 12px;
 
-    .navegacion-container {
-      button {
-        padding: 8px;
-
-        span {
-          display: none;
-        }
+      .timer-container,
+      .progress-container {
+        width: 100%;
+        margin: 0;
       }
     }
   }
@@ -380,6 +390,30 @@
         &.mat-primary {
           background-color: #ff4444;
           color: white;
+        }
+      }
+    }
+  }
+}
+
+// Estilos para el modo oscuro
+:host-context(.dark-theme) {
+  .examen-rendicion-container {
+    .pregunta-card {
+      background: #424242;
+
+      .ordenamiento {
+        .opciones-lista {
+          border-color: #666;
+
+          .opcion-item {
+            background: #484848;
+            border-color: #666;
+
+            &:hover {
+              background: #555;
+            }
+          }
         }
       }
     }

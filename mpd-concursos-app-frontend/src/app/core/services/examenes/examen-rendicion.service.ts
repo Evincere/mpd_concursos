@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError, finalize } from 'rxjs';
 import { Pregunta, ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { ExamenTimeService } from './examen-time.service';
 import { ExamenSecurityService } from './security/examen-security.service';
@@ -10,6 +10,7 @@ import { ExamenValidationService } from './examen-validation.service';
 import { environment } from '@env/environment';
 import { ExamenStateService } from './state/examen-state.service';
 import { ExamenNotificationService } from './examen-notification.service';
+import { retry, timeout, catchError } from 'rxjs/operators';
 
 @Injectable()
 export class ExamenRendicionService {
@@ -186,17 +187,67 @@ export class ExamenRendicionService {
   }
 
   anularExamen(examenId: string, motivo: { fecha: string; infracciones: SecurityViolationType[] }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${examenId}/anular`, motivo);
+    return this.http.post(`${this.apiUrl}/${examenId}/anular`, motivo).pipe(
+      timeout(5000), // 5 segundos máximo de espera
+      retry(2), // Reintentar 2 veces si falla
+      catchError(error => {
+        console.error('Error al anular examen después de reintentos:', error);
+        return throwError(() => new Error('No se pudo anular el examen después de varios intentos'));
+      })
+    );
   }
 
   finalizarExamenApi(examenId: string, datos: { respuestas: { [key: string]: string | string[] }; tiempoUtilizado: number }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${examenId}/finalizar`, datos);
+    console.log('Intentando finalizar examen:', { examenId, datos });
+    
+    return this.http.post(`${this.apiUrl}/${examenId}/finalizar`, datos).pipe(
+      timeout(30000), // 30 segundos
+      retry({
+        count: 3,
+        delay: 1000 // 1 segundo entre reintentos
+      }),
+      catchError((error: HttpErrorResponse) => {
+        console.error('Error al finalizar examen:', error);
+        
+        if (error.status === 404) {
+          // Intentar con endpoint alternativo
+          return this.http.post(`${this.apiUrl}/${examenId}/submit`, datos).pipe(
+            timeout(30000),
+            catchError(err => {
+              console.error('Error en endpoint alternativo:', err);
+              return throwError(() => new Error('No se pudo finalizar el examen. Por favor, contacte al soporte técnico.'));
+            })
+          );
+        }
+        
+        return throwError(() => error);
+      }),
+      finalize(() => {
+        // Limpiar recursos
+        this.timeService.detener();
+        this.securityService.cleanup();
+        this.recoveryService.cleanupBackups(examenId);
+      })
+    );
   }
 
   private enviarEstadoFinal(examen: ExamenEnCurso): Observable<void> {
-    // TODO: Implementar llamada real al backend
-    console.log('Enviando estado final del examen:', examen);
-    return of(void 0);
+    const datosFinalizacion = {
+      respuestas: examen.respuestas,
+      tiempoUtilizado: this.timeService.getTiempoUtilizado(),
+      estado: examen.estado
+    };
+
+    return this.http.post<void>(`${this.apiUrl}/${examen.examenId}/finalizar`, datosFinalizacion).pipe(
+      timeout(30000),
+      retry(3),
+      catchError(error => {
+        console.error('Error al enviar estado final:', error);
+        // Guardar localmente en caso de error
+        this.recoveryService.saveToLocalBackup(examen.examenId, examen);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Métodos para acceder al estado (ahora delegados al ExamenStateService)

@@ -174,34 +174,48 @@ export class ExamenActivityLoggerService {
   }
 
   private setupNetworkMonitoring(): void {
-    this.performanceObserver = new PerformanceObserver(list => {
-      list.getEntries().forEach(entry => {
-        if (entry.entryType === 'resource') {
-          const resourceEntry = entry as PerformanceResourceTiming;
-          this.logNetworkActivity(resourceEntry);
-        }
-      });
-    });
-
-    this.performanceObserver.observe({
-      entryTypes: ['resource', 'navigation', 'network-information']
-    });
-
-    // Monitorear cambios en la conexión
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
-      connection.addEventListener('change', () => {
-        this.logActivity({
-          type: ActivityLogType.NETWORK_ACTIVITY,
-          timestamp: Date.now(),
-          details: {
-            type: 'connection_change',
-            effectiveType: connection.effectiveType,
-            downlink: connection.downlink,
-            rtt: connection.rtt
+    try {
+      this.performanceObserver = new PerformanceObserver(list => {
+        list.getEntries().forEach(entry => {
+          if (entry.entryType === 'resource') {
+            const resourceEntry = entry as PerformanceResourceTiming;
+            this.logNetworkActivity(resourceEntry);
           }
         });
       });
+
+      // Usar solo los tipos de entrada que son ampliamente soportados
+      try {
+        this.performanceObserver.observe({
+          entryTypes: ['resource', 'navigation']
+        });
+      } catch (error) {
+        console.warn('Error al observar entradas de rendimiento:', error);
+      }
+
+      // Monitorear cambios en la conexión
+      if ('connection' in navigator) {
+        try {
+          const connection = (navigator as any).connection;
+          connection.addEventListener('change', () => {
+            this.logActivity({
+              type: ActivityLogType.NETWORK_ACTIVITY,
+              timestamp: Date.now(),
+              details: {
+                event: 'connection-change',
+                effectiveType: connection.effectiveType,
+                downlink: connection.downlink,
+                rtt: connection.rtt,
+                saveData: connection.saveData
+              }
+            });
+          });
+        } catch (error) {
+          console.warn('Error al monitorear cambios de conexión:', error);
+        }
+      }
+    } catch (error) {
+      console.warn('Error al configurar monitoreo de red:', error);
     }
   }
 

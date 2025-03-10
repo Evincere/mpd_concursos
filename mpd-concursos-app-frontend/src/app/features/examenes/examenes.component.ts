@@ -111,12 +111,21 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     const ahora = new Date();
     const fechaInicio = new Date(examen.fechaInicio);
 
-    if (fechaInicio > ahora) {
-      return `Examen disponible a partir del ${this.formatearFecha(fechaInicio)}`;
-    } else if (fechaInicio < ahora) {
-      return `Examen finalizado el ${this.formatearFecha(fechaInicio)}`;
+    // Mensajes según el estado del examen
+    switch (examen.estado) {
+      case ESTADO_EXAMEN.DISPONIBLE:
+        return `Examen disponible para rendir ahora`;
+      case ESTADO_EXAMEN.EN_CURSO:
+        return `Examen en curso`;
+      case ESTADO_EXAMEN.FINALIZADO:
+        return `Examen finalizado el ${this.formatearFecha(fechaInicio)}`;
+      case ESTADO_EXAMEN.ANULADO:
+        return `Examen anulado`;
+      case ESTADO_EXAMEN.BORRADOR:
+        return `Examen en borrador`;
+      default:
+        return `Estado: ${this.getEstadoLabel(examen.estado)}`;
     }
-    return 'Examen no habilitado';
   }
 
   getEstadoLabel(estado: ESTADO_EXAMEN): string {

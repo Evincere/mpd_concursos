@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, interval, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, interval, Subject, of } from 'rxjs';
 import { map, takeUntil, catchError } from 'rxjs/operators';
 import { environment } from '@env/environment';
 
@@ -57,57 +57,51 @@ export class ExamenTimeService {
 
   private syncWithServer(): void {
     console.log('TimeService: Sincronizando con el servidor...');
-    const clientTime = Date.now();
+
+    const requestStartTime = Date.now();
 
     this.http.get<{ timestamp: number }>(`${environment.apiUrl}/time`).pipe(
+      map(response => {
+        const requestEndTime = Date.now();
+        const roundTripTime = requestEndTime - requestStartTime;
+        const serverTime = response?.timestamp;
+
+        // Si el timestamp es undefined o null, usar el tiempo local
+        if (serverTime === undefined || serverTime === null) {
+          console.warn('TimeService: Timestamp del servidor no proporcionado, usando tiempo local');
+          return { timestamp: Date.now(), offset: 0 };
+        }
+
+        // Validar que el timestamp del servidor sea válido
+        if (!this.isValidTimestamp(serverTime)) {
+          console.warn('TimeService: Timestamp del servidor inválido:', serverTime);
+          return { timestamp: Date.now(), offset: 0 };
+        }
+
+        // Calcular el offset aproximado considerando la latencia
+        const clientTime = requestStartTime + (roundTripTime / 2);
+        const newOffset = serverTime - clientTime;
+
+        // Si el offset es muy grande, podría indicar un problema
+        if (Math.abs(newOffset) > 24 * 60 * 60 * 1000) { // 24 horas
+          console.warn('TimeService: Offset demasiado grande:', newOffset);
+          return { timestamp: Date.now(), offset: 0 };
+        }
+
+        return { timestamp: serverTime, offset: newOffset };
+      }),
       catchError(error => {
-        console.error('TimeService: Error al sincronizar tiempo, usando tiempo local:', error);
-        return [{ timestamp: Date.now() }];
+        console.error('TimeService: Error en la sincronización:', error);
+        return of({ timestamp: Date.now(), offset: 0 });
       })
     ).subscribe({
-      next: (response) => {
-        try {
-          // Convertir de segundos a milisegundos
-          const serverTime = response.timestamp * 1000;
-
-          if (!this.isValidTimestamp(serverTime)) {
-            console.warn('TimeService: Timestamp del servidor inválido, usando tiempo local');
-            this.serverOffset = 0;
-            this.lastSyncTime = Date.now();
-            this.serverTime$.next(Date.now());
-            return;
-          }
-
-          const roundTripTime = Date.now() - clientTime;
-          const estimatedServerTime = serverTime + (roundTripTime / 2);
-
-          this.serverOffset = estimatedServerTime - Date.now();
-          this.lastSyncTime = Date.now();
-          this.serverTime$.next(this.getCurrentServerTime());
-
-          console.log('TimeService: Sincronización completada', {
-            serverTime: this.formatDate(serverTime),
-            currentTime: this.formatDate(this.getCurrentServerTime()),
-            offset: this.serverOffset,
-            roundTripTime
-          });
-
-          this.timeChecks.push(this.serverOffset);
-          if (this.timeChecks.length > 10) {
-            this.timeChecks.shift();
-          }
-        } catch (error) {
-          console.error('TimeService: Error procesando tiempo del servidor:', error);
-          this.serverOffset = 0;
-          this.lastSyncTime = Date.now();
-          this.serverTime$.next(Date.now());
+      next: (result) => {
+        if ('offset' in result) {
+          this.serverOffset = result.offset ?? 0;
+          console.log('TimeService: Nuevo offset:', this.serverOffset);
         }
-      },
-      error: (error) => {
-        console.error('TimeService: Error en la petición de tiempo:', error);
-        this.serverOffset = 0;
         this.lastSyncTime = Date.now();
-        this.serverTime$.next(Date.now());
+        this.serverTime$.next(result.timestamp);
       }
     });
   }

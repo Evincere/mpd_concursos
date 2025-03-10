@@ -166,4 +166,19 @@ export class ExamenStateService {
   private setState(state: IExamenState): void {
     this.currentState$.next(state);
   }
+
+  inicializarExamen(examen: ExamenEnCurso): void {
+    this.examenState$.next(examen);
+
+    // Crear el estado inicial
+    const stateFactory = this.createStateFactory(examen);
+    const initialState = stateFactory.createEnCursoState();
+    this.currentState$.next(initialState);
+
+    // Inicializar otros estados
+    const duracionEnSegundos = (examen.duracion || 0) * 60; // Convertir minutos a segundos
+    this.tiempoRestante$.next(duracionEnSegundos);
+    this.preguntaActual$.next(null);
+    this.preguntas$.next([]);
+  }
 }

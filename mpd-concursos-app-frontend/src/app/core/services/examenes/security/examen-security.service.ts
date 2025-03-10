@@ -73,15 +73,15 @@ export class ExamenSecurityService implements ISecurityService, ICleanupService 
     localStorage.setItem(this.getSecurityStateKey(), JSON.stringify(state));
   }
 
-  initializeSecurityMeasures(): void {
-    this.reset();
-    this.activateSecureMode().catch(error => {
+  async initializeSecurityMeasures(): Promise<void> {
+    try {
+      await this.activateSecureMode();
+      // Las estrategias ya se inicializan en el constructor
+      return Promise.resolve();
+    } catch (error) {
       console.error('Error al inicializar medidas de seguridad:', error);
-      this.notificationService.showSecurityWarning(
-        SecurityViolationType.FULLSCREEN_DENIED,
-        'No se pudieron inicializar las medidas de seguridad'
-      );
-    });
+      return Promise.reject(error);
+    }
   }
 
   reset(): void {
@@ -302,14 +302,33 @@ export class ExamenSecurityService implements ISecurityService, ICleanupService 
   }
 
   iniciarMonitoreo(): Observable<SecurityViolationType | null> {
-    this.initializeSecurityMeasures();
-    return this.violations$.pipe(
-      map(violations => {
-        const criticalViolations = violations.filter(v =>
-          this.getViolationSeverity(v.type) === 'HIGH'
-        );
-        return criticalViolations.length > 0 ? criticalViolations[0].type : null;
-      })
-    );
+    return new Observable<SecurityViolationType | null>(observer => {
+      // Inicializar las estrategias de seguridad
+      this.strategies.forEach(strategy => {
+        strategy.initialize();
+
+        // Suscribirse a las violaciones de cada estrategia
+        strategy.getViolations().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe((violation: SecurityViolationType) => {
+          if (violation) {
+            this.reportSecurityViolation(violation);
+            observer.next(violation);
+          }
+        });
+      });
+
+      // Activar el modo seguro
+      this.activateSecureMode().catch(error => {
+        console.error('Error al activar el modo seguro:', error);
+        observer.error(error);
+      });
+
+      // Cleanup cuando se complete
+      return () => {
+        this.strategies.forEach(strategy => strategy.cleanup());
+        this.deactivateSecureMode();
+      };
+    });
   }
 }

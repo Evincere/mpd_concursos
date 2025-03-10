@@ -2,9 +2,10 @@ import { Injectable, Inject } from '@angular/core';
 import { ISecurityStrategy } from '@core/interfaces/examenes/security/security-strategy.interface';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ExamenNotificationService } from '@core/services/examenes/examen-notification.service';
+import { BaseSecurityStrategy } from './base-security.strategy';
 
 @Injectable()
-export class KeyboardSecurityStrategy implements ISecurityStrategy {
+export class KeyboardSecurityStrategy extends BaseSecurityStrategy {
   private readonly BLOCKED_KEYS = [
     'F12', 'PrintScreen', 'Tab',
     'c', 'v', 'x', // Cuando Ctrl está presionado
@@ -12,17 +13,20 @@ export class KeyboardSecurityStrategy implements ISecurityStrategy {
 
   constructor(
     @Inject(ExamenNotificationService) private notificationService: ExamenNotificationService
-  ) {}
+  ) {
+    super();
+  }
 
-  getType(): SecurityViolationType {
+  override getType(): SecurityViolationType {
     return SecurityViolationType.KEYBOARD_SHORTCUT;
   }
 
-  handleViolation(details?: any): void {
+  override handleViolation(details?: any): void {
     this.notificationService.showSecurityWarning(
       SecurityViolationType.KEYBOARD_SHORTCUT,
       `Atajo de teclado no permitido${details?.key ? `: ${details.key}` : ''}`
     );
+    this.violations$.next(this.getType());
   }
 
   isBlockedKey(event: KeyboardEvent): boolean {
@@ -32,11 +36,11 @@ export class KeyboardSecurityStrategy implements ISecurityStrategy {
     return this.BLOCKED_KEYS.includes(event.key);
   }
 
-  async activate(): Promise<void> {
+  override async activate(): Promise<void> {
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
   }
 
-  deactivate(): void {
+  override deactivate(): void {
     document.removeEventListener('keydown', this.handleKeyDown.bind(this));
   }
 

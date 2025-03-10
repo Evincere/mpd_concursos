@@ -7,25 +7,18 @@
         <span class="timer">{{ tiempoRestante | formatTiempo }}</span>
       </div>
       <div class="progress-container">
-        <div class="progress-bar">
-          <div class="progress-segments">
-            <button *ngFor="let pregunta of preguntas; let i = index"
-                    class="progress-segment"
-                    [class.answered]="preguntasRespondidas.has(pregunta.id)"
-                    [class.marked]="preguntasMarcadas.has(pregunta.id)"
-                    [class.current]="preguntaActual?.id === pregunta.id"
-                    [matTooltip]="'Pregunta ' + (i + 1) + getEstadoPregunta(pregunta)"
-                    matTooltipPosition="above"
-                    (click)="irAPregunta(i + 1)">
-            </button>
-          </div>
-        </div>
+        <mat-progress-bar
+          mode="determinate"
+          [value]="(preguntasRespondidas.size / preguntas.length) * 100">
+        </mat-progress-bar>
         <div class="progress-info">
           <span class="progress-text">{{ preguntasRespondidas.size }}/{{ preguntas.length }} respondidas</span>
-          <span class="progress-marked-text" *ngIf="preguntasMarcadas.size > 0">({{ preguntasMarcadas.size }} marcadas)</span>
+          <span class="progress-marked-text" *ngIf="preguntasMarcadas.size > 0">
+            ({{ preguntasMarcadas.size }} marcadas)
+          </span>
         </div>
       </div>
-      <div class="progress-info">
+      <div class="navigation-info">
         <span>Pregunta {{ preguntaActual?.orden }} de {{ preguntas.length }}</span>
       </div>
     </div>
@@ -46,110 +39,93 @@
         <p class="pregunta-texto">{{ preguntaActual.texto }}</p>
 
         <!-- Respuestas según el tipo de pregunta -->
-        <div class="respuestas-container" [ngSwitch]="preguntaActual.tipo">
-
-          <!-- Opción múltiple -->
-          <div *ngSwitchCase="'OPCION_MULTIPLE'" class="opciones-multiple">
-            <mat-radio-group class="opciones-grupo" (change)="guardarRespuesta($event.value)">
-              <mat-radio-button *ngFor="let opcion of preguntaActual.opciones"
-                              [value]="opcion.id"
-                              class="opcion-item">
+        <div [ngSwitch]="preguntaActual.tipo">
+          <!-- Opción Múltiple -->
+          <div *ngSwitchCase="TIPO_PREGUNTA.OPCION_MULTIPLE">
+            <mat-radio-group [(ngModel)]="respuestas[preguntaActual.id]" (change)="guardarRespuesta($event.value)">
+              <mat-radio-button *ngFor="let opcion of preguntaActual.opciones" [value]="opcion.id" class="opcion-radio">
                 {{ opcion.texto }}
               </mat-radio-button>
             </mat-radio-group>
           </div>
 
-          <!-- Selección múltiple -->
-          <div *ngSwitchCase="'SELECCION_MULTIPLE'" class="seleccion-multiple">
-            <mat-selection-list #seleccionList
-                               (selectionChange)="guardarRespuestaMultiple(seleccionList.selectedOptions.selected)">
-              <mat-list-option *ngFor="let opcion of preguntaActual.opciones"
-                               [value]="opcion.id"
-                               checkboxPosition="before"
-                               class="opcion-item">
+          <!-- Selección Múltiple -->
+          <div *ngSwitchCase="TIPO_PREGUNTA.SELECCION_MULTIPLE">
+            <mat-selection-list #seleccionList (selectionChange)="guardarRespuestaMultiple(seleccionList.selectedOptions.selected)">
+              <mat-list-option *ngFor="let opcion of preguntaActual.opciones" [value]="opcion.id" [selected]="respuestas[preguntaActual.id].includes(opcion.id)">
                 {{ opcion.texto }}
               </mat-list-option>
             </mat-selection-list>
           </div>
 
-          <!-- Ordenamiento -->
-          <div *ngSwitchCase="'ORDENAMIENTO'" class="ordenamiento">
-            <div cdkDropList
-                 class="opciones-lista"
-                 [cdkDropListData]="opcionesOrdenadas"
-                 (cdkDropListDropped)="drop($event)"
-                 cdkDropListOrientation="vertical">
-              <div *ngFor="let opcion of opcionesOrdenadas; let i = index; trackBy: trackByOpcion"
-                   class="opcion-item"
-                   cdkDrag
-                   [cdkDragData]="opcion">
-                <div class="drag-handle" cdkDragHandle>
-                  <mat-icon>drag_indicator</mat-icon>
-                </div>
-                <span class="opcion-texto">{{ opcion.texto }}</span>
-              </div>
-            </div>
-          </div>
-
           <!-- Verdadero/Falso -->
-          <div *ngSwitchCase="'VERDADERO_FALSO'" class="opciones-vf">
-            <mat-radio-group class="opciones-grupo" (change)="guardarRespuesta($event.value)">
-              <mat-radio-button value="true" class="opcion-item">Verdadero</mat-radio-button>
-              <mat-radio-button value="false" class="opcion-item">Falso</mat-radio-button>
+          <div *ngSwitchCase="TIPO_PREGUNTA.VERDADERO_FALSO">
+            <mat-radio-group [(ngModel)]="respuestas[preguntaActual.id]" (change)="guardarRespuesta($event.value)">
+              <mat-radio-button value="true" class="opcion-radio">Verdadero</mat-radio-button>
+              <mat-radio-button value="false" class="opcion-radio">Falso</mat-radio-button>
             </mat-radio-group>
           </div>
 
           <!-- Desarrollo -->
-          <div *ngSwitchCase="'DESARROLLO'" class="desarrollo">
+          <div *ngSwitchCase="TIPO_PREGUNTA.DESARROLLO">
             <mat-form-field appearance="outline" class="respuesta-desarrollo">
-              <textarea matInput
-                        rows="6"
-                        placeholder="Escribe tu respuesta aquí..."
-                        (paste)="onPaste($event)"
-                        (copy)="onCopy($event)"
-                        (cut)="onCut($event)"
-                        (blur)="guardarRespuestaTexto($event)">
-              </textarea>
+              <textarea matInput [(ngModel)]="respuestas[preguntaActual.id]" (input)="guardarRespuestaTexto($event)" rows="6" placeholder="Escriba su respuesta aquí..."></textarea>
             </mat-form-field>
+          </div>
+
+          <!-- Ordenamiento -->
+          <div *ngSwitchCase="TIPO_PREGUNTA.ORDENAMIENTO" cdkDropList (cdkDropListDropped)="drop($event)">
+            <div *ngFor="let opcion of opcionesOrdenadas; trackBy: trackByOpcion" cdkDrag class="opcion-ordenable">
+              <mat-icon cdkDragHandle>drag_indicator</mat-icon>
+              {{ opcion.texto }}
+            </div>
+          </div>
+
+          <!-- Caso por defecto para depuración -->
+          <div *ngSwitchDefault>
+            <p class="error-message">Tipo de pregunta no reconocido: {{ preguntaActual.tipo }}</p>
           </div>
         </div>
       </mat-card-content>
+
+      <mat-card-actions>
+        <button
+          mat-button
+          color="primary"
+          (click)="anterior()"
+          [disabled]="!preguntaActual.orden || preguntaActual.orden === 1">
+          <mat-icon>arrow_back</mat-icon>
+          Anterior
+        </button>
+
+        <button
+          mat-button
+          [color]="preguntasMarcadas.has(preguntaActual.id) ? 'warn' : 'accent'"
+          (click)="marcarParaRevisar()">
+          <mat-icon>
+            {{ preguntasMarcadas.has(preguntaActual.id) ? 'bookmark' : 'bookmark_border' }}
+          </mat-icon>
+          {{ preguntasMarcadas.has(preguntaActual.id) ? 'Marcada' : 'Marcar' }}
+        </button>
+
+        <button
+          mat-button
+          color="primary"
+          (click)="siguiente()"
+          *ngIf="preguntaActual.orden !== preguntas.length">
+          Siguiente
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="finalizar()"
+          *ngIf="preguntaActual.orden === preguntas.length">
+          Finalizar Examen
+          <mat-icon>check_circle</mat-icon>
+        </button>
+      </mat-card-actions>
     </mat-card>
-
-    <!-- Barra de navegación -->
-    <div class="navegacion-container">
-      <button mat-button
-              color="primary"
-              (click)="anterior()"
-              [disabled]="!preguntaActual?.orden || preguntaActual?.orden === 1">
-        <mat-icon>arrow_back</mat-icon>
-        Anterior
-      </button>
-
-      <button mat-button
-              [color]="preguntasMarcadas.has(preguntaActual.id || '') ? 'warn' : 'accent'"
-              (click)="marcarParaRevisar()"
-              [matTooltip]="preguntasMarcadas.has(preguntaActual.id || '') ? 'Desmarcar para revisión' : 'Marcar para revisión'"
-              *ngIf="preguntaActual">
-        <mat-icon>{{ preguntasMarcadas.has(preguntaActual.id || '') ? 'bookmark' : 'bookmark_border' }}</mat-icon>
-        {{ preguntasMarcadas.has(preguntaActual.id || '') ? 'Marcada' : 'Marcar' }}
-      </button>
-
-      <button mat-button
-              color="primary"
-              (click)="siguiente()"
-              *ngIf="preguntaActual?.orden !== preguntas?.length">
-        Siguiente
-        <mat-icon>arrow_forward</mat-icon>
-      </button>
-
-      <button mat-raised-button
-              color="primary"
-              (click)="finalizar()"
-              *ngIf="preguntaActual?.orden === preguntas?.length">
-        Finalizar Examen
-        <mat-icon>check_circle</mat-icon>
-      </button>
-    </div>
   </div>
 </div>

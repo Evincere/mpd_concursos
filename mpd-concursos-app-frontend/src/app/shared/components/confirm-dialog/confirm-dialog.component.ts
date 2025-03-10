@@ -5,10 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 export interface ConfirmDialogData {
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
+  titulo: string;
+  mensaje: string;
+  confirmButtonText: string;
+  cancelButtonText: string;
 }
 
 @Component({
@@ -24,17 +24,17 @@ export interface ConfirmDialogData {
     <div class="confirm-dialog">
       <h2 mat-dialog-title class="dialog-title">
         <mat-icon>warning</mat-icon>
-        {{ data.title }}
+        {{ data.titulo }}
       </h2>
       <mat-dialog-content class="dialog-content">
-        {{ data.message }}
+        {{ data.mensaje }}
       </mat-dialog-content>
       <mat-dialog-actions class="dialog-actions">
-        <button mat-button class="cancel-button" (click)="onNoClick()">
-          {{ data.cancelText || 'Cancelar' }}
+        <button mat-button class="cancel-button" (click)="onCancel()">
+          {{ data.cancelButtonText || 'Cancelar' }}
         </button>
-        <button mat-button class="confirm-button" (click)="onYesClick()">
-          {{ data.confirmText || 'Confirmar' }}
+        <button mat-button class="confirm-button" (click)="onConfirm()">
+          {{ data.confirmButtonText || 'Confirmar' }}
         </button>
       </mat-dialog-actions>
     </div>
@@ -49,11 +49,11 @@ export class ConfirmDialogComponent {
     dialogRef.addPanelClass('confirm-dialog-container');
   }
 
-  onNoClick(): void {
+  onCancel(): void {
     this.dialogRef.close(false);
   }
 
-  onYesClick(): void {
+  onConfirm(): void {
     this.dialogRef.close(true);
   }
 }

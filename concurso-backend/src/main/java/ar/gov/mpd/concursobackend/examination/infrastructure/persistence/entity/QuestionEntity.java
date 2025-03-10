@@ -36,7 +36,7 @@ public class QuestionEntity {
     @CollectionTable(name = "question_correct_answers")
     private List<String> correctAnswers;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OptionEntity> options;
 
     @ManyToOne(fetch = FetchType.LAZY)

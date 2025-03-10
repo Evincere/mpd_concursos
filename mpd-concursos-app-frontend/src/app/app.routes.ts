@@ -29,5 +29,15 @@ export const routes: Routes = [
       }
     ]
   },
+  /* Módulo administrativo temporalmente deshabilitado
+  {
+    path: 'admin',
+    component: DashboardComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { role: 'ROLE_ADMIN' },
+    loadChildren: () => import('./features/admin/admin.module')
+      .then(m => m.AdminModule)
+  },
+  */
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];
