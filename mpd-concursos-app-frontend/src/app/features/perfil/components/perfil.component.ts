@@ -14,6 +14,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
 
 import { ProfileService, UserProfile } from '../../../core/services/profile/profile.service';
+import { DocumentacionTabComponent } from './documentacion-tab/documentacion-tab.component';
 
 @Component({
   selector: 'app-perfil',
@@ -29,7 +30,8 @@ import { ProfileService, UserProfile } from '../../../core/services/profile/prof
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    DocumentacionTabComponent
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }
@@ -47,6 +49,7 @@ export class PerfilComponent implements OnInit {
 
   fotoPerfil: string = 'assets/images/default-avatar.png';
   linkedInConectado = false;
+  linkedInTab = true;
   isEditing = false;
   isLoading = false;
 

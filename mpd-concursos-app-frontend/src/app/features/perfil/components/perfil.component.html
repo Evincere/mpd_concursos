@@ -197,25 +197,8 @@
             </div>
         </mat-tab>
 
-        <!-- Tab Redes Sociales -->
-        <mat-tab label="Redes Sociales">
-            <div class="tab-content">
-                <div class="social-card">
-                    <div class="social-header">
-                        <i class="fab fa-linkedin"></i>
-                        <h3>LinkedIn</h3>
-                    </div>
-                    <p>Conecta tu cuenta de LinkedIn para compartir tus logros y actividades</p>
-                    <button mat-raised-button [color]="linkedInConectado ? 'warn' : 'primary'"
-                        (click)="conectarLinkedIn()">
-                        {{ linkedInConectado ? 'Desconectar' : 'Conectar' }}
-                    </button>
-                </div>
-            </div>
-        </mat-tab>
-
-        <!-- Tab Currículum -->
-        <mat-tab label="Currículum">
+        <!-- Tab Curriculum Vitae -->
+        <mat-tab label="Curriculum Vitae">
             <div class="curriculum-container">
                 <!-- Barra lateral con botones de acción -->
                 <aside class="curriculum-sidebar">
@@ -405,6 +388,30 @@
                         </div>
                     </section>
                 </main>
+            </div>
+        </mat-tab>
+
+        <!-- Nueva Tab Documentación -->
+        <mat-tab label="Documentación">
+            <div class="tab-content">
+                <app-documentacion-tab></app-documentacion-tab>
+            </div>
+        </mat-tab>
+
+        <!-- Tab LinkedIn (si existe) -->
+        <mat-tab label="LinkedIn" *ngIf="linkedInTab">
+            <div class="tab-content">
+                <div class="social-card">
+                    <div class="social-header">
+                        <i class="fab fa-linkedin"></i>
+                        <h3>LinkedIn</h3>
+                    </div>
+                    <p>Conecta tu cuenta de LinkedIn para compartir tus logros y actividades</p>
+                    <button mat-raised-button [color]="linkedInConectado ? 'warn' : 'primary'"
+                        (click)="conectarLinkedIn()">
+                        {{ linkedInConectado ? 'Desconectar' : 'Conectar' }}
+                    </button>
+                </div>
             </div>
         </mat-tab>
     </mat-tab-group>

@@ -22,6 +22,8 @@ DROP TABLE IF EXISTS examination_requirements;
 DROP TABLE IF EXISTS examination_rules;
 DROP TABLE IF EXISTS examination_allowed_materials;
 DROP TABLE IF EXISTS examination_security_violations;
+DROP TABLE IF EXISTS documents;
+DROP TABLE IF EXISTS document_types;
 
 -- Habilitar verificación de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;
@@ -178,6 +180,30 @@ CREATE TABLE examination_security_violations (
     examination_id BINARY(16) NOT NULL,
     violation VARCHAR(255) NOT NULL,
     FOREIGN KEY (examination_id) REFERENCES examinations(id)
+);
+
+-- Tabla de tipos de documento
+CREATE TABLE document_types (
+    id BINARY(16) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    required BOOLEAN NOT NULL DEFAULT FALSE,
+    `order` INT
+);
+
+-- Tabla de documentos
+CREATE TABLE documents (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16) NOT NULL,
+    document_type_id BINARY(16) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    content_type VARCHAR(100) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    comments TEXT,
+    upload_date DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user_entity(id),
+    FOREIGN KEY (document_type_id) REFERENCES document_types(id)
 );
 
 
