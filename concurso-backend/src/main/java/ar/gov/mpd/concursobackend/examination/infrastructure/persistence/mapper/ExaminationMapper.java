@@ -45,6 +45,8 @@ public interface ExaminationMapper {
 
     @Mapping(target = "examination", ignore = true)
     @Mapping(target = "options", ignore = true)
+    @Mapping(target = "correctAnswer", ignore = true)
+    @Mapping(target = "correctAnswers", ignore = true)
     QuestionEntity toEntity(Question domain);
 
     @Mapping(target = "options", ignore = true)

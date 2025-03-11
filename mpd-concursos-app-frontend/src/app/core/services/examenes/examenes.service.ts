@@ -99,15 +99,18 @@ export class ExamenesService {
 
   private mapPreguntaFromDTO(dto: PreguntaDTO): Pregunta {
     console.log('Mapeando DTO:', dto);
+    if (!dto.options) {
+      console.warn('La pregunta no tiene opciones definidas:', dto.id);
+    }
     const pregunta = {
       id: dto.id,
       texto: dto.text,
       tipo: this.mapTipoPregunta(dto.type),
-      opciones: dto.options?.map(opt => ({
+      opciones: Array.isArray(dto.options) ? dto.options.map(opt => ({
         id: opt.id,
         texto: opt.text,
         orden: opt.order
-      })) || [],
+      })).sort((a, b) => a.orden - b.orden) : [],
       puntaje: dto.score,
       orden: dto.order,
       respuestaCorrecta: dto.correctAnswer,

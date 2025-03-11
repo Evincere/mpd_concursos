@@ -15,8 +15,6 @@ public class Question {
     QuestionType type;
     Integer score;
     Integer order_number;
-    String correctAnswer;
-    List<String> correctAnswers;
     List<Option> options;
 
     public Integer getOrder_number() {
