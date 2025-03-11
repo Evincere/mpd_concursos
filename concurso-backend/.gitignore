@@ -36,3 +36,6 @@ build/
 src/main/resources/static/concursosH2bd/concursosbd.mv.db
 concursosH2bd/concursosbd.mv.db
 concurso-backend/src/main/resources/static/concursosH2bd/concursosbd.trace.db
+
+# storage
+/document-storage
