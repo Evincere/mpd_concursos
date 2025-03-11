@@ -44,11 +44,20 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
       method: req.method,
       headers: req.headers.keys()
     });
-    const authReq = req.clone({
-      headers: req.headers
-        .set('Authorization', `Bearer ${token}`)
+
+    // No sobreescribir el Content-Type para peticiones de subida de archivos (FormData)
+    let headers = req.headers.set('Authorization', `Bearer ${token}`);
+
+    // Solo agregar Content-Type si no es una subida de archivo
+    // (las subidas de archivos son detectadas por la URL o por el tipo de contenido)
+    if (!req.url.includes('/upload') && !(req.body instanceof FormData)) {
+      headers = headers
         .set('Content-Type', 'application/json')
-        .set('Accept', 'application/json'),
+        .set('Accept', 'application/json');
+    }
+
+    const authReq = req.clone({
+      headers: headers,
       withCredentials: true
     });
 

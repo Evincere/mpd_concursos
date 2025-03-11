@@ -723,3 +723,10 @@ INSERT INTO examination_allowed_materials (examination_id, material) VALUES
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Código Civil y Comercial'),
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Leyes complementarias de derecho civil'),
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Jurisprudencia relevante (sin anotaciones)');
+
+-- Datos iniciales para tipos de documento
+INSERT INTO document_types (id, name, description, required, `order`) VALUES
+(UUID_TO_BIN(UUID()), 'Documento Nacional de Identidad', 'DNI del postulante', TRUE, 1),
+(UUID_TO_BIN(UUID()), 'Título Universitario', 'Título de grado universitario', TRUE, 2),
+(UUID_TO_BIN(UUID()), 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 3),
+(UUID_TO_BIN(UUID()), 'Curriculum Vitae', 'CV actualizado', FALSE, 4);
