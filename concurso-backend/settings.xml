@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <mirrors>
+        <mirror>
+            <id>central-secure</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <mirrorOf>central</mirrorOf>
+        </mirror>
+    </mirrors>
+    <profiles>
+        <profile>
+            <id>ssl-config</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <https.protocols>TLSv1.2,TLSv1.3</https.protocols>
+                <maven.wagon.http.ssl.trustStore>/etc/ssl/certs/java/cacerts</maven.wagon.http.ssl.trustStore>
+                <maven.wagon.http.ssl.trustStorePassword>changeit</maven.wagon.http.ssl.trustStorePassword>
+                <maven.wagon.http.ssl.provider>jdk</maven.wagon.http.ssl.provider>
+            </properties>
+        </profile>
+    </profiles>
+    <servers>
+        <server>
+            <id>central-secure</id>
+            <configuration>
+                <httpConfiguration>
+                    <all>
+                        <usePreemptive>true</usePreemptive>
+                        <params>
+                            <property>
+                                <name>http.protocol.allow-circular-redirects</name>
+                                <value>true</value>
+                            </property>
+                        </params>
+                    </all>
+                </httpConfiguration>
+            </configuration>
+        </server>
+    </servers>
+</settings>
