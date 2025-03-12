@@ -33,8 +33,8 @@ public class JwtProvider {
 
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
-        logger.info("Clave JWT inicializada con longitud: {}", secret.length());
+        this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        logger.info("Clave JWT inicializada con algoritmo HS256");
     }
 
     public String generateToken(Authentication authentication, User user) {
