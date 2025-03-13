@@ -4,9 +4,12 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mpd-concursos-mysql
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=mpd_concursos
+      - MYSQL_USER=mpd_user
+      - MYSQL_PASSWORD=mpd_password
     ports:
       - "3306:3306"
     volumes:
@@ -29,9 +32,9 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mpd_concursos?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mpd_concursos?allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=mpd_user
+      - SPRING_DATASOURCE_PASSWORD=mpd_password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_SHOW_SQL=true
       - SPRING_MVC_CORS_ALLOWED_ORIGINS=http://vps-4778464-x.dattaweb.com:8000
