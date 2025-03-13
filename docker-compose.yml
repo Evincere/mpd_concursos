@@ -8,15 +8,14 @@ services:
       MYSQL_ROOT_PASSWORD: root1234
       MYSQL_DATABASE: mpd_concursos
     ports:
-      - "3307:3306"
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - mpd-concursos-network
 
@@ -41,6 +40,8 @@ services:
       - document_storage:/app/document-storage
     networks:
       - mpd-concursos-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     build:
@@ -53,6 +54,8 @@ services:
       - "8000:80"
     networks:
       - mpd-concursos-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   mysql_data:
@@ -60,4 +63,4 @@ volumes:
 
 networks:
   mpd-concursos-network:
-    driver: bridge 
+    driver: bridge
