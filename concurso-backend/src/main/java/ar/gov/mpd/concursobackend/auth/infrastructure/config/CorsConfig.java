@@ -13,30 +13,31 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
-        
+
         // Permitir peticiones desde el frontend y h2-console
         config.addAllowedOrigin("http://localhost:4200");
         config.addAllowedOrigin("http://localhost:8080");
-        
+        config.addAllowedOrigin("http://localhost:8000");
+
         // Permitir credenciales
         config.setAllowCredentials(true);
-        
+
         // Permitir métodos HTTP
-        config.addAllowedMethod("*");  
-        
+        config.addAllowedMethod("*");
+
         // Permitir headers
-        config.addAllowedHeader("*");  
-        
+        config.addAllowedHeader("*");
+
         // Exponer headers necesarios
         config.addExposedHeader("Authorization");
         config.addExposedHeader("Access-Control-Allow-Origin");
         config.addExposedHeader("Access-Control-Allow-Credentials");
-        
+
         // Tiempo máximo de cache para las respuestas OPTIONS
         config.setMaxAge(3600L);
-        
+
         source.registerCorsConfiguration("/**", config);
         source.registerCorsConfiguration("/h2-console/**", config);
         return new CorsFilter(source);
     }
-} 
+}
