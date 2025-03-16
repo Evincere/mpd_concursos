@@ -25,7 +25,7 @@ RUN npm install @rollup/rollup-linux-x64-gnu || echo "Continuando sin @rollup/ro
 COPY . .
 
 # Compilar explícitamente con la configuración de producción
-RUN CI=true ng build --configuration production
+RUN CI=true npx ng build --configuration production
 
 # Etapa de producción
 FROM nginx:stable-alpine
