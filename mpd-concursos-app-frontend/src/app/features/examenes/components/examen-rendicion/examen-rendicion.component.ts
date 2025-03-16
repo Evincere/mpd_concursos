@@ -28,7 +28,7 @@ import { Pregunta, TipoPregunta, ExamenEnCurso, Opcion } from '@shared/interface
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
 import { Subject, of } from 'rxjs';
-import { takeUntil, catchError, finalize, map, filter } from 'rxjs/operators';
+import { takeUntil, catchError, finalize, map, filter, timeout } from 'rxjs/operators';
 import { ActivityLogType } from '@core/interfaces/examenes/monitoring/activity-log.interface';
 import { FullscreenStrategy } from '@core/services/examenes/security/strategies/fullscreen.strategy';
 import { TabSwitchSecurityStrategy } from '@core/services/examenes/security/strategies/tab-switch.strategy';
@@ -691,37 +691,55 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   private iniciarExamen(): void {
     console.log('Iniciando examen...');
 
-    // Inicializar medidas de seguridad
+    // Inicializar medidas de seguridad con mejor manejo de errores
     try {
-      this.securityService.initializeSecurityMeasures()
-        .then(() => {
-          console.log('Medidas de seguridad inicializadas correctamente');
+      // Primero iniciamos el temporizador para asegurar que el tiempo se muestre correctamente
+      // incluso si hay problemas con las medidas de seguridad
+      this.timeService.iniciar(this.examen?.duracion || 120);
 
-          // Iniciar el temporizador
-          this.timeService.iniciar(this.examen?.duracion || 120);
+      // Marcar el examen como en progreso
+      this.isExamInProgress = true;
 
-          // Marcar el examen como en progreso
-          this.isExamInProgress = true;
-
-          // Suscribirse a cambios en el estado del examen
-          this.stateService.getExamenEnCurso()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe(examen => {
-              if (examen) {
-                this.estadoExamen = examen.estado as unknown as ESTADO_EXAMEN;
-                console.log('Estado del examen actualizado:', this.estadoExamen);
-              }
-            });
-        })
-        .catch(error => {
-          console.error('Error al inicializar medidas de seguridad:', error);
-          this.notificationService.mostrarError('Error al inicializar medidas de seguridad');
-          this.router.navigate(['/dashboard/examenes']);
+      // Suscribirse a cambios en el estado del examen
+      this.stateService.getExamenEnCurso()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(examen => {
+          if (examen) {
+            this.estadoExamen = examen.estado as unknown as ESTADO_EXAMEN;
+            console.log('Estado del examen actualizado:', this.estadoExamen);
+          }
         });
+
+      // Inicializar las medidas de seguridad con un timeout para evitar bloqueos
+      const securityPromise = new Promise<void>((resolve, reject) => {
+        // Establecer un timeout de 5 segundos para la inicialización de seguridad
+        const timeoutId = setTimeout(() => {
+          console.warn('Timeout al inicializar medidas de seguridad. Continuando con el examen...');
+          resolve(); // Resolvemos la promesa para continuar con el examen
+        }, 5000);
+
+        this.securityService.initializeSecurityMeasures()
+          .then(() => {
+            clearTimeout(timeoutId); // Limpiamos el timeout si todo va bien
+            console.log('Medidas de seguridad inicializadas correctamente');
+            resolve();
+          })
+          .catch(error => {
+            clearTimeout(timeoutId); // Limpiamos el timeout en caso de error
+            console.error('Error al inicializar medidas de seguridad:', error);
+            // Mostramos el error pero no rechazamos la promesa para permitir continuar
+            this.notificationService.mostrarAdvertencia(
+              'No se pudieron inicializar todas las medidas de seguridad. El examen continuará, pero algunas funciones podrían no estar disponibles.'
+            );
+            resolve(); // Resolvemos la promesa para continuar con el examen
+          });
+      });
+
+      // No esperamos a que se complete la promesa para continuar con la UI
     } catch (error) {
-      console.error('Error crítico al inicializar medidas de seguridad:', error);
-      this.notificationService.mostrarError('Error crítico al inicializar el examen');
-      this.router.navigate(['/dashboard/examenes']);
+      console.error('Error crítico al inicializar el examen:', error);
+      this.notificationService.mostrarError('Error crítico al inicializar el examen. Intentando continuar...');
+      // Intentamos continuar con el examen a pesar del error
     }
   }
 
@@ -807,58 +825,121 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   private anularExamen(violacion: SecurityViolationType): void {
     if (!this.examen || this.anulacionEnProgreso) return;
 
+    console.log(`Anulando examen por violación de seguridad: ${violacion}`);
+
     // Detener el temporizador inmediatamente
-    this.timeService.detener();
+    try {
+      this.timeService.detener();
+    } catch (error) {
+      console.error('Error al detener el temporizador:', error);
+    }
 
     // Marcar como anulado y en progreso
     this.anulacionEnProgreso = true;
     this.estadoExamen = ESTADO_EXAMEN.ANULADO;
     this.isExamInProgress = false;
 
-    // Desactivar medidas de seguridad
-    this.securityService.deactivateSecureMode();
-    this.securityService.cleanup();
+    // Desactivar medidas de seguridad con manejo de errores
+    try {
+      this.securityService.deactivateSecureMode();
+    } catch (error) {
+      console.error('Error al desactivar modo seguro:', error);
+    }
 
-    const finalizarAnulacion = () => {
+    try {
+      this.securityService.cleanup();
+    } catch (error) {
+      console.error('Error al limpiar recursos de seguridad:', error);
+    }
+
+    // Mostrar mensaje al usuario antes de continuar
+    this.notificationService.mostrarError(
+      'El examen ha sido anulado por una violación de seguridad: ' +
+      this.getViolationMessage(violacion)
+    );
+
+    // Establecer un timeout para asegurar que la UI se actualice
+    setTimeout(() => {
+      this.finalizarAnulacion(violacion);
+    }, 1000);
+  }
+
+  private finalizarAnulacion(violacion: SecurityViolationType): void {
+    if (!this.examen) return;
+
+    console.log('Finalizando anulación del examen...');
+
+    // Función para completar el proceso independientemente del resultado
+    const completarAnulacion = () => {
       this.anulacionEnProgreso = false;
       // Usar setTimeout para permitir que Angular complete el ciclo actual
       setTimeout(() => {
         this.router.navigate(['/dashboard/examenes']);
-      }, 0);
+      }, 500);
     };
 
+    // Intentar registrar la anulación en el servidor
     this.rendicionService.anularExamen(this.examen.id, {
       fecha: new Date().toISOString(),
       infracciones: [violacion]
     }).pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
+      // Timeout para evitar bloqueos
+      timeout(10000),
+      catchError(error => {
+        console.error('Error al anular el examen en el servidor:', error);
+        return of(null); // Continuamos con el flujo
+      })
     ).subscribe({
       next: () => {
+        // Intentar finalizar el examen
         this.rendicionService.finalizarExamenApi({
           examenId: this.examen!.id,
           respuestas: this.respuestas,
           tiempoUtilizado: this.timeService.getTiempoUtilizado(),
           motivo: 'ANULADO_SEGURIDAD'
         }).pipe(
-          takeUntil(this.destroy$)
+          takeUntil(this.destroy$),
+          // Timeout para evitar bloqueos
+          timeout(10000),
+          catchError(error => {
+            console.error('Error al finalizar el examen anulado:', error);
+            return of(null); // Continuamos con el flujo
+          })
         ).subscribe({
           next: () => {
-            this.notificationService.mostrarError('El examen ha sido anulado por una violación de seguridad');
-            finalizarAnulacion();
+            console.log('Examen anulado y finalizado correctamente');
+            completarAnulacion();
           },
-          error: (error) => {
-            console.error('Error al finalizar el examen anulado:', error);
-            this.notificationService.mostrarError('Error al finalizar el examen anulado');
-            finalizarAnulacion();
+          error: () => {
+            console.error('Error al finalizar el examen anulado');
+            completarAnulacion();
           }
         });
       },
-      error: (error) => {
-        console.error('Error al anular el examen:', error);
-        this.notificationService.mostrarError('Error al anular el examen');
-        finalizarAnulacion();
+      error: () => {
+        console.error('Error al anular el examen');
+        completarAnulacion();
       }
     });
+  }
+
+  // Método auxiliar para obtener un mensaje descriptivo de la violación
+  private getViolationMessage(violacion: SecurityViolationType): string {
+    switch (violacion) {
+      case SecurityViolationType.FULLSCREEN_REQUIRED:
+        return 'Salida del modo pantalla completa';
+      case SecurityViolationType.TAB_SWITCH:
+        return 'Cambio de pestaña o aplicación';
+      case SecurityViolationType.KEYBOARD_SHORTCUT:
+        return 'Uso de atajos de teclado no permitidos';
+      case SecurityViolationType.SUSPICIOUS_BEHAVIOR:
+        return 'Comportamiento sospechoso';
+      case SecurityViolationType.NETWORK_VIOLATION:
+        return 'Violación de red';
+      default:
+        return 'Violación de seguridad desconocida';
+    }
   }
 
   finalizarExamen(motivo: string = 'FINALIZADO_USUARIO') {
@@ -869,7 +950,13 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     // Detener el timer y desactivar seguridad inmediatamente
     this.timeService.detener();
     this.isExamInProgress = false;
-    this.securityService.deactivateSecureMode();
+
+    try {
+      this.securityService.deactivateSecureMode();
+    } catch (error) {
+      console.error('Error al desactivar modo seguro:', error);
+      // Continuar con el proceso a pesar del error
+    }
 
     // Actualizar el estado del examen en el servicio de estado
     this.stateService.cambiarEstadoExamen('FINALIZADO');
@@ -879,7 +966,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       examenId: this.examen.id,
       respuestas: this.respuestas,
       motivo: motivo,
-      usuarioId: this.getCurrentUserId() // Asegurar que se envíe el ID del usuario
+      usuarioId: this.getCurrentUserId(), // Asegurar que se envíe el ID del usuario
+      tiempoUtilizado: this.timeService.getTiempoUtilizado(),
+      fechaFinalizacion: new Date().toISOString()
     };
 
     // Mostrar indicador de carga
@@ -887,71 +976,102 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
 
     console.log('Enviando datos de finalización al servidor:', datosFinalizacion);
 
-    // Intentar finalizar el examen
-    this.rendicionService.finalizarExamenApi(datosFinalizacion).subscribe({
-      next: (response) => {
-        this.cargando = false;
+    // Establecer un timeout para evitar que el usuario espere indefinidamente
+    const timeoutId = setTimeout(() => {
+      if (this.cargando) {
+        console.warn('Timeout alcanzado al finalizar el examen. Guardando localmente...');
+        this.manejarErrorFinalizacion(datosFinalizacion, new Error('Timeout al finalizar el examen'));
+      }
+    }, 30000); // 30 segundos de timeout
 
-        // Verificar si se guardó localmente debido a problemas de conexión
-        if (response && response.guardadoLocal) {
-          this.notificationService.mostrarAdvertencia(
-            'El examen se ha guardado localmente debido a problemas de conexión. ' +
-            'Se enviará automáticamente cuando se restablezca la conexión.'
-          );
-        } else {
-          this.notificationService.mostrarExito('¡Examen finalizado correctamente!');
+    // Intentar finalizar el examen
+    this.rendicionService.finalizarExamenApi(datosFinalizacion)
+      .pipe(
+        finalize(() => {
+          clearTimeout(timeoutId); // Limpiar el timeout en cualquier caso
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.cargando = false;
+
+          // Verificar si se guardó localmente debido a problemas de conexión
+          if (response && response.guardadoLocal) {
+            this.notificationService.mostrarAdvertencia(
+              'El examen se ha guardado localmente debido a problemas de conexión. ' +
+              'Se enviará automáticamente cuando se restablezca la conexión.'
+            );
+          } else {
+            this.notificationService.mostrarExito('¡Examen finalizado correctamente!');
+          }
+
+          // Limpiar recursos
+          this.limpiarRecursos();
+
+          // Navegar de vuelta a la lista de exámenes
+          this.navegarAListaExamenes();
+        },
+        error: (error) => {
+          console.error('Error al finalizar el examen:', error);
+          this.manejarErrorFinalizacion(datosFinalizacion, error);
         }
+      });
+  }
+
+  private manejarErrorFinalizacion(datos: any, error: any): void {
+    this.cargando = false;
+
+    // Intentar guardar localmente en caso de error
+    try {
+      const respuestaLocal = this.rendicionService.guardarExamenLocalStorage(datos);
+
+      if (respuestaLocal && respuestaLocal.guardadoLocal) {
+        this.notificationService.mostrarAdvertencia(
+          'No se pudo enviar el examen al servidor. ' +
+          'Se ha guardado localmente y se enviará automáticamente cuando se restablezca la conexión.'
+        );
 
         // Limpiar recursos
-        if (this.examen) {
-          this.recoveryService.cleanupBackups(this.examen.id);
-        }
+        this.limpiarRecursos();
 
-        // Forzar recarga de la lista de exámenes para reflejar el cambio de estado
-        const examenesState = this.injector.get(ExamenesStateService);
-        examenesState.loadExamenes();
-
-        // Esperar un momento para que Angular complete el ciclo actual
-        setTimeout(() => {
-          this.router.navigate(['/dashboard/examenes']);
-        }, 500);
-      },
-      error: (error) => {
-        console.error('Error al finalizar el examen:', error);
-        this.cargando = false;
-
-        // Intentar guardar localmente en caso de error
-        try {
-          const respuestaLocal = this.rendicionService.guardarExamenLocalStorage(datosFinalizacion);
-
-          if (respuestaLocal && respuestaLocal.guardadoLocal) {
-            this.notificationService.mostrarAdvertencia(
-              'No se pudo enviar el examen al servidor. ' +
-              'Se ha guardado localmente y se enviará automáticamente cuando se restablezca la conexión.'
-            );
-
-            // Limpiar recursos
-            if (this.examen) {
-              this.recoveryService.cleanupBackups(this.examen.id);
-            }
-
-            // Navegar de vuelta a la lista de exámenes
-            setTimeout(() => {
-              this.router.navigate(['/dashboard/examenes']);
-            }, 500);
-          } else {
-            this.notificationService.mostrarError(
-              'Error al finalizar el examen. Por favor, intente nuevamente.'
-            );
-          }
-        } catch (e) {
-          console.error('Error crítico al guardar localmente:', e);
-          this.notificationService.mostrarError(
-            'Error crítico al finalizar el examen. Por favor, contacte al soporte técnico.'
-          );
-        }
+        // Navegar de vuelta a la lista de exámenes
+        this.navegarAListaExamenes();
+      } else {
+        this.notificationService.mostrarError(
+          'Error al finalizar el examen. Por favor, intente nuevamente.'
+        );
       }
-    });
+    } catch (e) {
+      console.error('Error crítico al guardar localmente:', e);
+      this.notificationService.mostrarError(
+        'Error crítico al finalizar el examen. Por favor, contacte al soporte técnico.'
+      );
+    }
+  }
+
+  private limpiarRecursos(): void {
+    if (this.examen) {
+      try {
+        this.recoveryService.cleanupBackups(this.examen.id);
+      } catch (error) {
+        console.error('Error al limpiar backups:', error);
+      }
+    }
+
+    // Forzar recarga de la lista de exámenes para reflejar el cambio de estado
+    try {
+      const examenesState = this.injector.get(ExamenesStateService);
+      examenesState.loadExamenes();
+    } catch (error) {
+      console.error('Error al recargar lista de exámenes:', error);
+    }
+  }
+
+  private navegarAListaExamenes(): void {
+    // Esperar un momento para que Angular complete el ciclo actual
+    setTimeout(() => {
+      this.router.navigate(['/dashboard/examenes']);
+    }, 500);
   }
 
   // Método para calcular la fecha límite basada en la duración del examen
@@ -968,21 +1088,30 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   // Método para obtener el ID del usuario actual
   private getCurrentUserId(): string {
     try {
-      // Usar el servicio de autenticación para obtener el ID del usuario
-      const authService = this.injector.get(AuthService);
-      const userId = authService.getCurrentUserId();
+      // Intentar obtener el ID del usuario desde el servicio de autenticación
+      const userId = this.injector.get(AuthService).getCurrentUserId();
 
-      if (!userId) {
-        console.error('Error: No se pudo obtener el ID del usuario desde el servicio de autenticación');
-        throw new Error('ID de usuario no disponible');
+      if (userId) {
+        console.log('ID de usuario obtenido del servicio de autenticación:', userId);
+        return userId;
       }
 
-      return userId;
+      // Si no se pudo obtener del servicio, intentar obtenerlo del localStorage
+      const userStr = localStorage.getItem('currentUser');
+      if (userStr) {
+        const userData = JSON.parse(userStr);
+        if (userData && userData.id) {
+          console.log('ID de usuario obtenido de localStorage:', userData.id);
+          return userData.id;
+        }
+      }
+
+      // Si no se pudo obtener de ninguna fuente, usar un valor por defecto
+      console.warn('No se pudo obtener el ID del usuario, usando valor por defecto');
+      return 'anonymous-user';
     } catch (error) {
-      console.error('Error crítico al obtener el ID del usuario:', error);
-      this.notificationService.mostrarError('Error de autenticación. Por favor, inicie sesión nuevamente.');
-      this.router.navigate(['/auth/login']);
-      return '';
+      console.error('Error al obtener el ID del usuario:', error);
+      return 'error-user-id';
     }
   }
 }

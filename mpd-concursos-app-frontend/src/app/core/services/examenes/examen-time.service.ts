@@ -161,7 +161,9 @@ export class ExamenTimeService {
   getTimeRemaining(): number {
     if (this.startTime === 0 || this.duracionTotal === 0) {
       console.log('TimeService: No hay tiempo restante (startTime o duracionTotal es 0)');
-      return 0;
+      // En lugar de devolver 0, devolvemos la duración total en segundos
+      // para que el contador comience con el tiempo correcto
+      return this.duracionTotal;
     }
 
     const currentTime = this.getCurrentServerTime();
@@ -172,6 +174,8 @@ export class ExamenTimeService {
       return this.duracionTotal;
     }
 
+    // Asegurarnos de que las unidades sean consistentes
+    // duracionTotal está en segundos, pero tiempoTranscurrido está en milisegundos
     const tiempoRestante = (this.duracionTotal * 1000) - tiempoTranscurrido;
     const tiempoRestanteSegundos = Math.max(0, Math.floor(tiempoRestante / 1000));
 

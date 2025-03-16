@@ -246,6 +246,16 @@ export class ExamenRendicionService {
     // Crear una copia de los datos para evitar problemas de referencia
     const datosEnvio = JSON.parse(JSON.stringify(datos));
 
+    // Formatear las respuestas para asegurar compatibilidad con el backend
+    this.formatearRespuestas(datosEnvio);
+
+    // Añadir información de tiempo si no está presente
+    if (!datosEnvio.tiempoUtilizado) {
+      datosEnvio.tiempoUtilizado = this.timeService.getTiempoUtilizado();
+    }
+
+    console.log('Datos formateados para envío:', datosEnvio);
+
     // Intentar finalizar el examen con el endpoint principal
     return this.http.post(`${this.API_URL}/examenes/${examenId}/finalizar`, datosEnvio)
       .pipe(
@@ -257,21 +267,86 @@ export class ExamenRendicionService {
         catchError((error: HttpErrorResponse) => {
           console.error('Error al finalizar examen (finalizar):', error);
 
-          // Si el endpoint principal falla, intentar con un endpoint alternativo
-          return this.http.post(`${this.API_URL}/examenes/${examenId}/submit`, datosEnvio)
+          // Verificar si es un error de formato de datos
+          if (error.status === 400 || error.status === 500) {
+            console.log('Intentando con formato alternativo de datos...');
+            // Intentar con un formato alternativo
+            const datosAlternativos = this.prepararFormatoAlternativo(datosEnvio);
+
+            return this.http.post(`${this.API_URL}/examenes/${examenId}/finalizar`, datosAlternativos)
+              .pipe(
+                timeout(this.TIMEOUT),
+                catchError(errorAlt => {
+                  console.error('Error con formato alternativo:', errorAlt);
+                  // Si también falla, intentar con el endpoint alternativo
+                  return this.intentarEndpointAlternativo(examenId, datosEnvio);
+                })
+              );
+          }
+
+          // Si es otro tipo de error, intentar con el endpoint alternativo
+          return this.intentarEndpointAlternativo(examenId, datosEnvio);
+        })
+      );
+  }
+
+  private intentarEndpointAlternativo(examenId: string, datos: any): Observable<any> {
+    console.log('Intentando con endpoint alternativo...');
+
+    return this.http.post(`${this.API_URL}/examenes/${examenId}/submit`, datos)
+      .pipe(
+        timeout(this.TIMEOUT),
+        retry({
+          count: this.MAX_RETRIES,
+          delay: 1000
+        }),
+        catchError(error => {
+          console.error('Error al finalizar examen (submit):', error);
+
+          // Intentar con un tercer endpoint como último recurso
+          return this.http.post(`${this.API_URL}/examenes/finalizar/${examenId}`, datos)
             .pipe(
               timeout(this.TIMEOUT),
-              retry({
-                count: this.MAX_RETRIES,
-                delay: 1000
-              }),
-              catchError(error => {
-                console.error('Error al finalizar examen (submit):', error);
-                return of(this.guardarExamenLocalStorage(datosEnvio));
+              catchError(finalError => {
+                console.error('Error en todos los intentos de finalización:', finalError);
+                return of(this.guardarExamenLocalStorage(datos));
               })
             );
         })
       );
+  }
+
+  private formatearRespuestas(datos: any): void {
+    if (!datos.respuestas) return;
+
+    // Convertir el objeto de respuestas a un formato de array que el backend pueda procesar mejor
+    const respuestasArray = Object.entries(datos.respuestas).map(([preguntaId, respuesta]) => {
+      return {
+        preguntaId,
+        respuesta,
+        timestamp: new Date().toISOString()
+      };
+    });
+
+    // Reemplazar el objeto de respuestas con el array
+    datos.respuestasArray = respuestasArray;
+
+    // Mantener el objeto original para compatibilidad
+    // datos.respuestas = datos.respuestas;
+  }
+
+  private prepararFormatoAlternativo(datos: any): any {
+    // Crear un formato alternativo que podría ser compatible con el backend
+    const alternativo = {
+      examenId: datos.examenId,
+      usuarioId: datos.usuarioId,
+      motivo: datos.motivo,
+      tiempoUtilizado: datos.tiempoUtilizado || 0,
+      respuestas: datos.respuestasArray || []
+    };
+
+    console.log('Formato alternativo preparado:', alternativo);
+    return alternativo;
   }
 
   /**
