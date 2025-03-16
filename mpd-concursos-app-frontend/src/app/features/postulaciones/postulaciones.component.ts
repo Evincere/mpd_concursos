@@ -195,11 +195,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   aplicarFiltros(nuevosFiltros?: FiltrosPostulacion): void {
     if (nuevosFiltros) {
       this.filtros = nuevosFiltros;
-      this.filtrosActivos = Object.values(nuevosFiltros).some(valor => valor !== 'todos');
+      this.filtrosActivos = true;
     }
 
     this.postulacionesFiltradas = this.postulaciones.filter(postulacion => {
       let cumpleFiltros = true;
+
+      // Filtrar postulaciones canceladas (no mostrarlas)
+      if (postulacion.estado === PostulationStatus.CANCELLED) {
+        return false;
+      }
 
       // Aplicar filtros solo si están activos
       if (this.filtrosActivos) {
@@ -328,7 +333,17 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
               this.snackBar.open('Postulación cancelada con éxito', 'Cerrar', {
                 duration: 3000
               });
-              this.cargarPostulaciones();
+
+              // Actualizar el estado de la postulación en la lista local
+              const index = this.postulaciones.findIndex(p => p.id === postulacion.id);
+              if (index !== -1) {
+                this.postulaciones[index].estado = PostulationStatus.CANCELLED;
+                // Aplicar filtros para actualizar la vista
+                this.aplicarFiltros();
+              } else {
+                // Si no se encuentra en la lista local, recargar todas las postulaciones
+                this.cargarPostulaciones();
+              }
             },
             error: (error) => {
               console.error('Error al cancelar postulación:', error);

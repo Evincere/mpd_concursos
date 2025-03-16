@@ -36,6 +36,10 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
     @PostConstruct
     public void init() {
         try {
+            // Eliminar espacios en blanco al inicio y al final
+            storageLocation = storageLocation.trim();
+            log.info("Using document storage location: '{}'", storageLocation);
+
             Path storagePath = Paths.get(storageLocation);
             if (!Files.exists(storagePath)) {
                 Files.createDirectories(storagePath);
