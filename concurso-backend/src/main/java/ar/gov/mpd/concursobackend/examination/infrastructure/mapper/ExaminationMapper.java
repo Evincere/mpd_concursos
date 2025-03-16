@@ -107,6 +107,7 @@ public class ExaminationMapper {
                 .type(entity.getType())
                 .score(entity.getScore())
                 .order_number(entity.getOrder_number())
+                .options(toDomainOptions(entity.getOptions()))
                 .build();
     }
 
@@ -294,6 +295,7 @@ public class ExaminationMapper {
                 .type(domain.getType())
                 .score(domain.getScore())
                 .order(domain.getOrder_number())
+                .options(toOptionDTOListFromDomain(domain.getOptions()))
                 .build();
     }
 
@@ -380,6 +382,25 @@ public class ExaminationMapper {
             return null;
         return domains.stream()
                 .map(this::toEntity)
+                .collect(Collectors.toList());
+    }
+
+    public Option toDomainOption(OptionEntity entity) {
+        if (entity == null)
+            return null;
+
+        return Option.builder()
+                .id(entity.getId())
+                .text(entity.getText())
+                .order_number(entity.getOrder_number())
+                .build();
+    }
+
+    public List<Option> toDomainOptions(List<OptionEntity> entities) {
+        if (entities == null)
+            return null;
+        return entities.stream()
+                .map(this::toDomainOption)
                 .collect(Collectors.toList());
     }
 }

@@ -13,6 +13,7 @@ import ar.gov.mpd.concursobackend.examination.infrastructure.mapper.ExaminationM
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -45,20 +46,20 @@ public class ExaminationService implements StartExaminationUseCase, SubmitAnswer
     @Transactional
     public ExaminationSession startExamination(StartExaminationCommand command) {
         Examination examination = persistencePort.findExamination(command.getExaminationId());
-        
+
         if (!examination.canBeStarted()) {
             throw new ExaminationException("Examination cannot be started");
         }
 
         ExaminationSession session = ExaminationSession.builder()
-            .id(UUID.randomUUID())
-            .examinationId(examination.getId())
-            .userId(command.getUserId())
-            .startTime(LocalDateTime.now())
-            .deadline(LocalDateTime.now().plus(examination.getDuration()))
-            .status(ExaminationSessionStatus.IN_PROGRESS)
-            .currentQuestionIndex(0)
-            .build();
+                .id(UUID.randomUUID())
+                .examinationId(examination.getId())
+                .userId(command.getUserId())
+                .startTime(LocalDateTime.now())
+                .deadline(LocalDateTime.now().plus(examination.getDuration()))
+                .status(ExaminationSessionStatus.IN_PROGRESS)
+                .currentQuestionIndex(0)
+                .build();
 
         return persistencePort.saveSession(session);
     }
@@ -67,7 +68,7 @@ public class ExaminationService implements StartExaminationUseCase, SubmitAnswer
     @Transactional
     public Answer submitAnswer(SubmitAnswerCommand command) {
         ExaminationSession session = persistencePort.findSession(command.getSessionId());
-        
+
         if (!session.isValid()) {
             throw new ExaminationException("Invalid examination session");
         }
@@ -78,14 +79,14 @@ public class ExaminationService implements StartExaminationUseCase, SubmitAnswer
         }
 
         Answer answer = Answer.builder()
-            .id(UUID.randomUUID())
-            .sessionId(session.getId())
-            .questionId(command.getQuestionId())
-            .response(command.getResponse())
-            .timestamp(LocalDateTime.now())
-            .responseTimeInMillis(command.getResponseTimeInMillis())
-            .status(AnswerStatus.SUBMITTED)
-            .build();
+                .id(UUID.randomUUID())
+                .sessionId(session.getId())
+                .questionId(command.getQuestionId())
+                .response(command.getResponse())
+                .timestamp(LocalDateTime.now())
+                .responseTimeInMillis(command.getResponseTimeInMillis())
+                .status(AnswerStatus.SUBMITTED)
+                .build();
 
         return persistencePort.saveAnswer(answer);
     }
@@ -96,5 +97,57 @@ public class ExaminationService implements StartExaminationUseCase, SubmitAnswer
 
     public void saveBackup(UUID id, String answers) {
         persistencePort.saveBackup(id, answers);
+    }
+
+    /**
+     * Verifica si un examen ya fue realizado por un usuario específico
+     * 
+     * @param examenId ID del examen
+     * @param userId   ID del usuario
+     * @return true si el examen ya fue realizado, false en caso contrario
+     */
+    @Transactional(readOnly = true)
+    public boolean verificarExamenRealizado(UUID examenId, UUID userId) {
+        return persistencePort.existsFinishedSessionByExaminationIdAndUserId(examenId, userId);
+    }
+
+    /**
+     * Finaliza un examen
+     * 
+     * @param examenId ID del examen
+     * @param userId   ID del usuario
+     * @param request  Datos de finalización del examen
+     */
+    @Transactional
+    public void finalizarExamen(UUID examenId, UUID userId, FinalizarExamenRequest request) {
+        // Buscar la sesión del examen
+        ExaminationSession session = persistencePort.findSessionByExaminationIdAndUserId(examenId, userId)
+                .orElseThrow(
+                        () -> new ExaminationException("No se encontró una sesión de examen activa para este usuario"));
+
+        // Verificar que la sesión esté en progreso
+        if (session.getStatus() != ExaminationSessionStatus.IN_PROGRESS) {
+            throw new ExaminationException("La sesión de examen no está en progreso");
+        }
+
+        // Actualizar el estado de la sesión
+        ExaminationSession updatedSession = session.toBuilder()
+                .status(ExaminationSessionStatus.FINISHED)
+                .build();
+
+        // Guardar la sesión actualizada
+        persistencePort.saveSession(updatedSession);
+
+        // Guardar las respuestas
+        if (request.getRespuestas() != null && !request.getRespuestas().isEmpty()) {
+            // Convertir las respuestas a formato JSON
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                String respuestasJson = objectMapper.writeValueAsString(request.getRespuestas());
+                persistencePort.saveAnswers(examenId, respuestasJson);
+            } catch (Exception e) {
+                throw new ExaminationException("Error al procesar las respuestas del examen: " + e.getMessage());
+            }
+        }
     }
 }

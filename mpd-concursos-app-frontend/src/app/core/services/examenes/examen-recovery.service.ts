@@ -57,15 +57,41 @@ export class ExamenRecoveryService {
   }
 
   saveToLocalBackup(examenId: string, examen?: ExamenEnCurso): void {
-    if (examen) {
+    try {
+      if (!examen) {
+        // Usar el último valor conocido del examen en curso
+        let currentExamen: ExamenEnCurso | null = null;
+        this.stateService.getExamenEnCurso().subscribe(value => {
+          currentExamen = value;
+        }).unsubscribe();
+
+        if (!currentExamen) {
+          console.warn('No hay examen para guardar en backup local');
+          return;
+        }
+        examen = currentExamen;
+      }
+
+      const timestamp = Date.now();
       const backup = {
         examen,
-        timestamp: Date.now(),
+        timestamp,
         version: 1
       };
-      localStorage.setItem(this.BACKUP_KEY_PREFIX + examenId, JSON.stringify(backup));
-      this.pendingChanges$.next(true);
-      this.syncWithServer(examenId, backup);
+
+      // Incluir el ID del usuario en la clave para evitar colisiones
+      const userId = examen.usuarioId;
+      const backupKey = `${this.BACKUP_KEY_PREFIX}${userId}_${examenId}`;
+
+      try {
+        localStorage.setItem(backupKey, JSON.stringify(backup));
+        console.log(`Backup local guardado para usuario ${userId}, examen ${examenId} a las ${new Date(timestamp).toLocaleTimeString()}`);
+        this.pendingChanges$.next(true);
+      } catch (storageError) {
+        console.error('Error al guardar en localStorage:', storageError);
+      }
+    } catch (error) {
+      console.error('Error en saveToLocalBackup:', error);
     }
   }
 
@@ -188,7 +214,22 @@ export class ExamenRecoveryService {
   }
 
   getLatestBackup(examenId: string): { examen: ExamenEnCurso; timestamp: number; version: number; } | null {
-    const localBackup = localStorage.getItem(this.BACKUP_KEY_PREFIX + examenId);
+    // Obtener el ID del usuario actual
+    let userId = '';
+    this.stateService.getExamenEnCurso().subscribe(examen => {
+      if (examen) {
+        userId = examen.usuarioId;
+      }
+    }).unsubscribe();
+
+    if (!userId) {
+      console.warn('No se pudo obtener el ID del usuario para recuperar el backup');
+      return null;
+    }
+
+    // Buscar el backup con la clave que incluye el ID del usuario
+    const backupKey = `${this.BACKUP_KEY_PREFIX}${userId}_${examenId}`;
+    const localBackup = localStorage.getItem(backupKey);
     return localBackup ? JSON.parse(localBackup) : null;
   }
 
@@ -205,7 +246,23 @@ export class ExamenRecoveryService {
   }
 
   cleanupBackups(examenId: string): void {
-    localStorage.removeItem(this.BACKUP_KEY_PREFIX + examenId);
+    // Obtener el ID del usuario actual
+    let userId = '';
+    this.stateService.getExamenEnCurso().subscribe(examen => {
+      if (examen) {
+        userId = examen.usuarioId;
+      }
+    }).unsubscribe();
+
+    if (!userId) {
+      console.warn('No se pudo obtener el ID del usuario para limpiar el backup');
+      return;
+    }
+
+    // Eliminar el backup con la clave que incluye el ID del usuario
+    const backupKey = `${this.BACKUP_KEY_PREFIX}${userId}_${examenId}`;
+    localStorage.removeItem(backupKey);
+
     // También limpiar en el servidor
     this.http.delete(`${environment.apiUrl}/examenes/${examenId}/backup`).subscribe();
   }
@@ -224,25 +281,52 @@ export class ExamenRecoveryService {
   }
 
   guardarRespuestas(examenId: string, respuestas: { [key: string]: string | string[] }): void {
-    this.stateService.getExamenEnCurso().subscribe(examen => {
-      if (!examen) return;
+    try {
+      console.log('Guardando respuestas para examen:', examenId, respuestas);
+
+      // Crear una copia local para evitar problemas de referencia
+      const respuestasCopy = JSON.parse(JSON.stringify(respuestas));
+
+      // Obtener el examen actual de forma síncrona para evitar problemas de concurrencia
+      let examenActual: ExamenEnCurso | null = null;
+      const subscription = this.stateService.getExamenEnCurso().subscribe(examen => {
+        examenActual = examen;
+      });
+      subscription.unsubscribe();
+
+      if (!examenActual) {
+        console.warn('No hay examen en curso para guardar respuestas');
+        return;
+      }
 
       // Convertir el formato de respuestas al formato esperado por el estado
-      const respuestasUsuario: RespuestaUsuario[] = Object.entries(respuestas).map(([preguntaId, respuesta]) => ({
+      const respuestasUsuario: RespuestaUsuario[] = Object.entries(respuestasCopy).map(([preguntaId, respuesta]) => ({
         preguntaId,
-        respuesta,
+        respuesta: respuesta as string | string[],
         timestamp: new Date().toISOString(),
         intentos: 1
       }));
 
+      console.log('Respuestas procesadas:', respuestasUsuario);
+
       // Guardar cada respuesta en el estado
       respuestasUsuario.forEach(respuesta => {
-        this.stateService.guardarRespuesta(respuesta);
+        try {
+          this.stateService.guardarRespuesta(respuesta);
+        } catch (respError) {
+          console.error('Error al guardar respuesta individual:', respError);
+        }
       });
 
-      // Guardar backup local y sincronizar con el servidor
-      this.saveToLocalBackup(examenId, examen);
-    });
+      // Guardar backup local
+      try {
+        this.saveToLocalBackup(examenId);
+      } catch (backupError) {
+        console.error('Error al guardar backup local:', backupError);
+      }
+    } catch (error) {
+      console.error('Error en guardarRespuestas:', error);
+    }
   }
 
   recuperarRespuestas(examenId: string): { [key: string]: string | string[] } | null {

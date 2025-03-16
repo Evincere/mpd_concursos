@@ -54,6 +54,17 @@ export class ExamenNotificationService implements ICleanupService {
     });
   }
 
+  public mostrarAdvertencia(mensaje: string): void {
+    if (!this.allowNotifications) return;
+
+    this.snackBar.open(mensaje, 'Cerrar', {
+      duration: 5000,
+      panelClass: ['warning-snackbar'],
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
+    });
+  }
+
   public showFinalWarningDialog(violations: SecurityViolation[]): Promise<void> {
     this.allowNotifications = true;
 

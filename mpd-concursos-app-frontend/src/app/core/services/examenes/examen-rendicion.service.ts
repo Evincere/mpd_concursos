@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, of, throwError, finalize } from 'rxjs';
+import { Observable, of, throwError, finalize, retry, timeout, catchError, map, filter, mergeMap, forkJoin } from 'rxjs';
 import { Pregunta, ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { ExamenTimeService } from './examen-time.service';
 import { ExamenSecurityService } from './security/examen-security.service';
@@ -10,11 +10,16 @@ import { ExamenValidationService } from './examen-validation.service';
 import { environment } from '@env/environment';
 import { ExamenStateService } from './state/examen-state.service';
 import { ExamenNotificationService } from './examen-notification.service';
-import { retry, timeout, catchError } from 'rxjs/operators';
+import { AuthService } from '@core/services/auth/auth.service';
+import { Injector } from '@angular/core';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class ExamenRendicionService {
-  private apiUrl = `${environment.apiUrl}/examenes`;
+  private readonly API_URL = environment.apiUrl;
+  private readonly TIMEOUT = 15000; // 15 segundos
+  private readonly MAX_RETRIES = 3;
 
   constructor(
     private http: HttpClient,
@@ -23,7 +28,9 @@ export class ExamenRendicionService {
     private validationService: ExamenValidationService,
     private recoveryService: ExamenRecoveryService,
     private stateService: ExamenStateService,
-    private notificationService: ExamenNotificationService
+    private notificationService: ExamenNotificationService,
+    private authService: AuthService,
+    private injector: Injector
   ) {}
 
   async iniciarExamen(examenId: string, preguntas: Pregunta[]): Promise<void> {
@@ -147,6 +154,9 @@ export class ExamenRendicionService {
           return;
         }
 
+        // Detener el temporizador inmediatamente para evitar validaciones adicionales
+        this.timeService.detener();
+
         // Si el examen fue anulado, no validamos integridad
         if (!examenAnulado) {
           // Obtener backup y validar integridad
@@ -187,48 +197,107 @@ export class ExamenRendicionService {
   }
 
   anularExamen(examenId: string, motivo: { fecha: string; infracciones: SecurityViolationType[] }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${examenId}/anular`, motivo).pipe(
-      timeout(5000), // 5 segundos máximo de espera
-      retry(2), // Reintentar 2 veces si falla
+    return this.http.post(`${this.API_URL}/examenes/${examenId}/anular`, motivo).pipe(
+      timeout(this.TIMEOUT),
+      retry({
+        count: this.MAX_RETRIES,
+        delay: 1000
+      }),
       catchError(error => {
-        console.error('Error al anular examen después de reintentos:', error);
-        return throwError(() => new Error('No se pudo anular el examen después de varios intentos'));
+        console.error('Error al anular examen:', error);
+
+        // Guardar en localStorage como respaldo
+        try {
+          localStorage.setItem(`examen_anulado_${examenId}`, JSON.stringify({
+            datos: motivo,
+            timestamp: new Date().toISOString(),
+            error: error.message
+          }));
+
+          return of({
+            success: true,
+            local: true,
+            message: 'Anulación guardada localmente'
+          });
+        } catch (e) {
+          return throwError(() => new Error('No se pudo anular el examen. Se registrará localmente.'));
+        }
       })
     );
   }
 
-  finalizarExamenApi(examenId: string, datos: { respuestas: { [key: string]: string | string[] }; tiempoUtilizado: number }): Observable<any> {
-    console.log('Intentando finalizar examen:', { examenId, datos });
-    
-    return this.http.post(`${this.apiUrl}/${examenId}/finalizar`, datos).pipe(
-      timeout(30000), // 30 segundos
-      retry({
-        count: 3,
-        delay: 1000 // 1 segundo entre reintentos
-      }),
-      catchError((error: HttpErrorResponse) => {
-        console.error('Error al finalizar examen:', error);
-        
-        if (error.status === 404) {
-          // Intentar con endpoint alternativo
-          return this.http.post(`${this.apiUrl}/${examenId}/submit`, datos).pipe(
-            timeout(30000),
-            catchError(err => {
-              console.error('Error en endpoint alternativo:', err);
-              return throwError(() => new Error('No se pudo finalizar el examen. Por favor, contacte al soporte técnico.'));
-            })
-          );
-        }
-        
-        return throwError(() => error);
-      }),
-      finalize(() => {
-        // Limpiar recursos
-        this.timeService.detener();
-        this.securityService.cleanup();
-        this.recoveryService.cleanupBackups(examenId);
-      })
-    );
+  finalizarExamenApi(datos: any): Observable<any> {
+    console.log('Intentando finalizar examen:', datos);
+
+    // Extraer el ID del examen del objeto de datos
+    const examenId = datos.examenId;
+
+    if (!examenId) {
+      console.error('Error: No se proporcionó un ID de examen válido');
+      return throwError(() => new Error('ID de examen no válido'));
+    }
+
+    // Asegurar que el ID del usuario esté incluido
+    if (!datos.usuarioId) {
+      datos.usuarioId = this.getCurrentUserId();
+      console.log('Añadiendo ID de usuario a la solicitud:', datos.usuarioId);
+    }
+
+    // Crear una copia de los datos para evitar problemas de referencia
+    const datosEnvio = JSON.parse(JSON.stringify(datos));
+
+    // Intentar finalizar el examen con el endpoint principal
+    return this.http.post(`${this.API_URL}/examenes/${examenId}/finalizar`, datosEnvio)
+      .pipe(
+        timeout(this.TIMEOUT),
+        retry({
+          count: this.MAX_RETRIES,
+          delay: 1000
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error('Error al finalizar examen (finalizar):', error);
+
+          // Si el endpoint principal falla, intentar con un endpoint alternativo
+          return this.http.post(`${this.API_URL}/examenes/${examenId}/submit`, datosEnvio)
+            .pipe(
+              timeout(this.TIMEOUT),
+              retry({
+                count: this.MAX_RETRIES,
+                delay: 1000
+              }),
+              catchError(error => {
+                console.error('Error al finalizar examen (submit):', error);
+                return of(this.guardarExamenLocalStorage(datosEnvio));
+              })
+            );
+        })
+      );
+  }
+
+  /**
+   * Guarda los datos del examen en localStorage cuando hay problemas de conexión
+   */
+  guardarExamenLocalStorage(datos: any): any {
+    try {
+      const examenId = datos.examenId;
+      const userId = this.getCurrentUserId();
+
+      // Guardar en localStorage como respaldo, incluyendo el ID del usuario en la clave
+      localStorage.setItem(`examen_${userId}_${examenId}`, JSON.stringify({
+        datos: datos,
+        timestamp: new Date().toISOString(),
+        intentos: 3
+      }));
+
+      return {
+        success: true,
+        guardadoLocal: true,
+        message: 'Guardado localmente debido a errores en la conexión'
+      };
+    } catch (e) {
+      console.error('Error al guardar localmente:', e);
+      throw new Error('No se pudo finalizar el examen ni guardar localmente. Por favor, contacte al soporte técnico.');
+    }
   }
 
   private enviarEstadoFinal(examen: ExamenEnCurso): Observable<void> {
@@ -238,8 +307,8 @@ export class ExamenRendicionService {
       estado: examen.estado
     };
 
-    return this.http.post<void>(`${this.apiUrl}/${examen.examenId}/finalizar`, datosFinalizacion).pipe(
-      timeout(30000),
+    return this.http.post<void>(`${this.API_URL}/examenes/${examen.examenId}/finalizar`, datosFinalizacion).pipe(
+      timeout(this.TIMEOUT),
       retry(3),
       catchError(error => {
         console.error('Error al enviar estado final:', error);
@@ -268,15 +337,70 @@ export class ExamenRendicionService {
   }
 
   private getCurrentUserId(): string {
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        return userData.id;
-      } catch (e) {
-        console.error('Error al obtener el ID del usuario:', e);
+    try {
+      // Usar el servicio de autenticación para obtener el ID del usuario
+      const userId = this.authService.getCurrentUserId();
+
+      if (!userId) {
+        console.error('Error: No se pudo obtener el ID del usuario desde el servicio de autenticación');
+        throw new Error('ID de usuario no disponible');
+      }
+
+      return userId;
+    } catch (error) {
+      console.error('Error crítico al obtener el ID del usuario:', error);
+      return 'anonymous'; // Fallback para evitar errores críticos
+    }
+  }
+
+  sincronizarExamenesFinalizados(): Observable<any> {
+    const examenesFinalizados = this.obtenerExamenesFinalizadosLocalmente();
+
+    if (examenesFinalizados.length === 0) {
+      return of({ success: true, message: 'No hay exámenes para sincronizar' });
+    }
+
+    // Crear un observable para cada examen finalizado
+    const observables = examenesFinalizados.map(examen => {
+      return this.http.post(`${this.API_URL}/examenes/${examen.id}/finalizar`, examen.datos)
+        .pipe(
+          map(() => {
+            // Si tiene éxito, eliminar del localStorage
+            localStorage.removeItem(`examen_finalizado_${examen.id}`);
+            return { id: examen.id, success: true };
+          }),
+          catchError(error => {
+            console.error(`Error al sincronizar examen ${examen.id}:`, error);
+            return of({ id: examen.id, success: false, error: error.message });
+          })
+        );
+    });
+
+    // Combinar todos los observables
+    return forkJoin(observables);
+  }
+
+  private obtenerExamenesFinalizadosLocalmente(): Array<{id: string, datos: any, timestamp: string}> {
+    const examenesFinalizados = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('examen_finalizado_')) {
+        try {
+          const examenId = key.replace('examen_finalizado_', '');
+          const datos = JSON.parse(localStorage.getItem(key) || '{}');
+
+          examenesFinalizados.push({
+            id: examenId,
+            datos: datos.datos,
+            timestamp: datos.timestamp
+          });
+        } catch (e) {
+          console.error('Error al parsear examen finalizado:', e);
+        }
       }
     }
-    return 'anonymous';
+
+    return examenesFinalizados;
   }
 }

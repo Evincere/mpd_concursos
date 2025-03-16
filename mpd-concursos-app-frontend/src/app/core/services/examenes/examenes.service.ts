@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, throwError, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { Examen, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 import { ExamenDTO } from '@core/interfaces/examenes/examen-dto.interface';
@@ -205,8 +205,25 @@ export class ExamenesService {
       'MULTIPLE_SELECT': TipoPregunta.SELECCION_MULTIPLE,
       'TRUE_FALSE': TipoPregunta.VERDADERO_FALSO,
       'ESSAY': TipoPregunta.DESARROLLO,
+      'TEXT': TipoPregunta.DESARROLLO,
       'ORDERING': TipoPregunta.ORDENAMIENTO
     };
     return mapping[type] || TipoPregunta.OPCION_MULTIPLE;
+  }
+
+  /**
+   * Verifica si un examen ya ha sido realizado por el usuario actual
+   * @param examenId ID del examen a verificar
+   * @returns Observable que emite true si el examen ya fue realizado, false en caso contrario
+   */
+  verificarExamenRealizado(examenId: string): Observable<boolean> {
+    return this.http.get<{realizado: boolean}>(`${this.apiUrl}/${examenId}/verificar-realizado`)
+      .pipe(
+        map(response => response.realizado),
+        catchError(error => {
+          console.error(`Error al verificar si el examen ${examenId} fue realizado:`, error);
+          return of(false); // En caso de error, asumimos que no fue realizado
+        })
+      );
   }
 }
