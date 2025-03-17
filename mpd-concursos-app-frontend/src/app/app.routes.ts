@@ -15,8 +15,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [AuthGuard, RoleGuard],
-    data: { role: 'ROLE_USER' },
+    canActivate: [AuthGuard],
     children: [
       { path: '', component: MainComponent },
       { path: 'concursos', component: ConcursosComponent },
@@ -26,18 +25,29 @@ export const routes: Routes = [
         path: 'examenes',
         loadChildren: () => import('./features/examenes/examenes.routes')
           .then(m => m.EXAMENES_ROUTES)
+      },
+      {
+        path: 'configuracion',
+        loadChildren: () => import('./features/admin/admin.routes')
+          .then(m => m.ADMIN_ROUTES),
+        canActivate: [RoleGuard],
+        data: { role: 'ROLE_ADMIN' }
       }
     ]
   },
-  /* Módulo administrativo temporalmente deshabilitado
   {
     path: 'admin',
     component: DashboardComponent,
     canActivate: [AuthGuard, RoleGuard],
     data: { role: 'ROLE_ADMIN' },
-    loadChildren: () => import('./features/admin/admin.module')
-      .then(m => m.AdminModule)
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: '',
+        loadChildren: () => import('./features/admin/admin.routes')
+          .then(m => m.ADMIN_ROUTES)
+      }
+    ]
   },
-  */
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];

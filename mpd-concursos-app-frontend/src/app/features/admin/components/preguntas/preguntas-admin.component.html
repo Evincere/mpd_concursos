@@ -27,12 +27,12 @@
             <mat-form-field appearance="outline" class="w-100">
               <mat-label>Tipo de pregunta</mat-label>
               <mat-select formControlName="tipo">
-                <mat-option *ngFor="let tipo of tiposPregunta" [value]="tipo.valor">
-                  {{ tipo.texto }}
+                <mat-option *ngFor="let tipo of tiposPregunta" [value]="tipo.value">
+                  {{tipo.label}}
                 </mat-option>
               </mat-select>
               <mat-error *ngIf="preguntaForm.get('tipo')?.hasError('required')">
-                El tipo de pregunta es requerido
+                El tipo de pregunta es obligatorio
               </mat-error>
             </mat-form-field>
           </div>

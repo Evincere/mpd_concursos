@@ -1,0 +1,302 @@
+<div class="container">
+  <div class="header">
+    <h1>Reportes y Estadísticas</h1>
+    <div class="export-buttons">
+      <button mat-stroked-button color="primary" (click)="exportarReporte('excel')">
+        <mat-icon>description</mat-icon>
+        Excel
+      </button>
+      <button mat-stroked-button color="primary" (click)="exportarReporte('pdf')">
+        <mat-icon>picture_as_pdf</mat-icon>
+        PDF
+      </button>
+    </div>
+  </div>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)">
+    <!-- Pestaña de Exámenes -->
+    <mat-tab label="Exámenes">
+      <div class="tab-content">
+        <div class="stats-cards">
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>assignment</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{examenes.length}}</span>
+                  <span class="stat-label">Exámenes</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>people</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{getTotalParticipantes()}}</span>
+                  <span class="stat-label">Participantes</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>done_all</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{getTotalCompletados()}}</span>
+                  <span class="stat-label">Completados</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>grade</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{getPromedioCalificacion()}}</span>
+                  <span class="stat-label">Promedio</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="charts-container">
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Participación por Examen</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <!-- Aquí iría el gráfico de barras -->
+              <div class="chart-placeholder">
+                <div class="chart-bar" *ngFor="let examen of examenes; let i = index">
+                  <div class="chart-label">{{examen.titulo.substring(0, 15)}}...</div>
+                  <div class="chart-value-container">
+                    <div class="chart-value participants" [style.width.%]="examen.participantes * 2">
+                      <span>{{examen.participantes}}</span>
+                    </div>
+                    <div class="chart-value approved" [style.width.%]="examen.aprobados * 2">
+                      <span>{{examen.aprobados}}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="chart-legend">
+                  <div class="legend-item">
+                    <div class="legend-color participants"></div>
+                    <span>Participantes</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color approved"></div>
+                    <span>Aprobados</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Resultados Generales</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <!-- Aquí iría el gráfico circular -->
+              <div class="chart-placeholder pie-chart">
+                <div class="pie-segment" style="--percentage: 85%; --color: rgba(25, 118, 210, 0.5);">
+                  <span class="pie-label">Aprobados</span>
+                </div>
+                <div class="pie-segment" style="--percentage: 10%; --color: rgba(244, 67, 54, 0.5);">
+                  <span class="pie-label">Reprobados</span>
+                </div>
+                <div class="pie-segment" style="--percentage: 5%; --color: rgba(255, 152, 0, 0.5);">
+                  <span class="pie-label">No completados</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <h2>Detalle de Exámenes</h2>
+        <div class="exams-list">
+          <mat-card *ngFor="let examen of examenes" class="exam-card" (click)="selectExamen(examen)" [class.selected]="selectedExamen === examen">
+            <mat-card-header>
+              <mat-card-title>{{examen.titulo}}</mat-card-title>
+              <mat-card-subtitle>{{getTipoExamenText(examen.tipo)}}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="exam-stats">
+                <div class="exam-stat">
+                  <span class="stat-label">Participantes:</span>
+                  <span class="stat-value">{{examen.participantes}}</span>
+                </div>
+                <div class="exam-stat">
+                  <span class="stat-label">Completados:</span>
+                  <span class="stat-value">{{examen.completados}}</span>
+                </div>
+                <div class="exam-stat">
+                  <span class="stat-label">Aprobados:</span>
+                  <span class="stat-value">{{examen.aprobados}}</span>
+                </div>
+                <div class="exam-stat">
+                  <span class="stat-label">Promedio:</span>
+                  <span class="stat-value">{{examen.promedioCalificacion}}</span>
+                </div>
+                <div class="exam-stat">
+                  <span class="stat-label">Tiempo Promedio:</span>
+                  <span class="stat-value">{{examen.tiempoPromedio}} min</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div *ngIf="selectedExamen" class="selected-exam-details">
+          <h3>Detalles de {{selectedExamen.titulo}}</h3>
+          <p>Aquí se mostrarían estadísticas detalladas del examen seleccionado, incluyendo distribución de calificaciones, tiempo por pregunta, etc.</p>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña de Usuarios -->
+    <mat-tab label="Usuarios">
+      <div class="tab-content">
+        <div class="stats-cards">
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>people</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{usuarios.total}}</span>
+                  <span class="stat-label">Total Usuarios</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>person_add</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{usuarios.nuevos.enero + usuarios.nuevos.febrero + usuarios.nuevos.marzo + usuarios.nuevos.abril + usuarios.nuevos.mayo}}</span>
+                  <span class="stat-label">Nuevos (2023)</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>admin_panel_settings</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{usuarios.porRol.admin}}</span>
+                  <span class="stat-label">Administradores</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>person_off</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{usuarios.inactivos}}</span>
+                  <span class="stat-label">Inactivos</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="charts-container">
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Nuevos Usuarios por Mes (2023)</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <!-- Aquí iría el gráfico de líneas -->
+              <div class="chart-placeholder">
+                <div class="line-chart">
+                  <div class="line-point" style="--height: 45%; --index: 0;">
+                    <div class="point-value">45</div>
+                  </div>
+                  <div class="line-point" style="--height: 38%; --index: 1;">
+                    <div class="point-value">38</div>
+                  </div>
+                  <div class="line-point" style="--height: 52%; --index: 2;">
+                    <div class="point-value">52</div>
+                  </div>
+                  <div class="line-point" style="--height: 35%; --index: 3;">
+                    <div class="point-value">35</div>
+                  </div>
+                  <div class="line-point" style="--height: 15%; --index: 4;">
+                    <div class="point-value">15</div>
+                  </div>
+                </div>
+                <div class="line-labels">
+                  <div class="line-label">Ene</div>
+                  <div class="line-label">Feb</div>
+                  <div class="line-label">Mar</div>
+                  <div class="line-label">Abr</div>
+                  <div class="line-label">May</div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Distribución por Rol</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <!-- Aquí iría el gráfico circular -->
+              <div class="chart-placeholder pie-chart">
+                <div class="pie-segment" style="--percentage: 15%; --color: rgba(25, 118, 210, 0.5);">
+                  <span class="pie-label">Admin</span>
+                </div>
+                <div class="pie-segment" style="--percentage: 25%; --color: rgba(76, 175, 80, 0.5);">
+                  <span class="pie-label">Evaluador</span>
+                </div>
+                <div class="pie-segment" style="--percentage: 60%; --color: rgba(255, 152, 0, 0.5);">
+                  <span class="pie-label">Usuario</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <h2>Actividad de Usuarios</h2>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let item of actividad">
+            <div class="activity-icon">
+              <mat-icon>
+                {{item.tipo === 'login' ? 'login' :
+                  (item.tipo === 'examen_iniciado' || item.tipo === 'examen_finalizado') ? 'assignment' :
+                  item.tipo === 'perfil_actualizado' ? 'edit' : 'description'}}
+              </mat-icon>
+            </div>
+            <div class="activity-content">
+              <div class="activity-text">
+                {{item.tipo === 'login' ? 'Inicios de sesión' :
+                  item.tipo === 'examen_iniciado' ? 'Exámenes iniciados' :
+                  item.tipo === 'examen_finalizado' ? 'Exámenes finalizados' :
+                  item.tipo === 'perfil_actualizado' ? 'Perfiles actualizados' :
+                  'Postulaciones'}}
+              </div>
+              <div class="activity-time">
+                {{item.cantidad}} usuarios ({{item.porcentaje}}%)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

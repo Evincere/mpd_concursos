@@ -129,7 +129,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     ).subscribe(id => {
       if (id) {
         // Cargar el examen primero
-        this.cargarExamen(id);
+            this.cargarExamen(id);
 
         // Las medidas de seguridad se inicializarán solo después de verificar
         // que hay preguntas disponibles, en el método cargarPreguntas
@@ -142,11 +142,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Detener el temporizador
     this.timeService.detener();
-
+    
     // Limpiar suscripciones
     this.destroy$.next();
     this.destroy$.complete();
-
+    
     // Desactivar modo seguro y limpiar servicios
     try {
       this.securityService.deactivateSecureMode();
@@ -536,7 +536,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
             // Detener el temporizador si está activo
             try {
               if (this.timeService) {
-                this.timeService.detener();
+            this.timeService.detener();
               }
             } catch (err) {
               console.warn('No se pudo detener el temporizador:', err);
@@ -698,7 +698,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       this.timeService.iniciar(this.examen?.duracion || 120);
 
       // Marcar el examen como en progreso
-      this.isExamInProgress = true;
+    this.isExamInProgress = true;
 
       // Suscribirse a cambios en el estado del examen
       this.stateService.getExamenEnCurso()
@@ -829,7 +829,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
 
     // Detener el temporizador inmediatamente
     try {
-      this.timeService.detener();
+    this.timeService.detener();
     } catch (error) {
       console.error('Error al detener el temporizador:', error);
     }
@@ -841,13 +841,13 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
 
     // Desactivar medidas de seguridad con manejo de errores
     try {
-      this.securityService.deactivateSecureMode();
+    this.securityService.deactivateSecureMode();
     } catch (error) {
       console.error('Error al desactivar modo seguro:', error);
     }
 
     try {
-      this.securityService.cleanup();
+    this.securityService.cleanup();
     } catch (error) {
       console.error('Error al limpiar recursos de seguridad:', error);
     }
@@ -946,13 +946,13 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     if (!this.examen) return;
 
     console.log('Iniciando proceso de finalización del examen:', this.examen.id);
-
+    
     // Detener el timer y desactivar seguridad inmediatamente
     this.timeService.detener();
     this.isExamInProgress = false;
 
     try {
-      this.securityService.deactivateSecureMode();
+    this.securityService.deactivateSecureMode();
     } catch (error) {
       console.error('Error al desactivar modo seguro:', error);
       // Continuar con el proceso a pesar del error
@@ -960,7 +960,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
 
     // Actualizar el estado del examen en el servicio de estado
     this.stateService.cambiarEstadoExamen('FINALIZADO');
-
+    
     // Datos para finalizar el examen
     const datosFinalizacion = {
       examenId: this.examen.id,
@@ -970,7 +970,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       tiempoUtilizado: this.timeService.getTiempoUtilizado(),
       fechaFinalizacion: new Date().toISOString()
     };
-
+    
     // Mostrar indicador de carga
     this.cargando = true;
 
@@ -983,7 +983,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
         this.manejarErrorFinalizacion(datosFinalizacion, new Error('Timeout al finalizar el examen'));
       }
     }, 30000); // 30 segundos de timeout
-
+    
     // Intentar finalizar el examen
     this.rendicionService.finalizarExamenApi(datosFinalizacion)
       .pipe(
@@ -992,41 +992,41 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (response) => {
-          this.cargando = false;
-
-          // Verificar si se guardó localmente debido a problemas de conexión
-          if (response && response.guardadoLocal) {
-            this.notificationService.mostrarAdvertencia(
-              'El examen se ha guardado localmente debido a problemas de conexión. ' +
-              'Se enviará automáticamente cuando se restablezca la conexión.'
-            );
-          } else {
-            this.notificationService.mostrarExito('¡Examen finalizado correctamente!');
-          }
-
+      next: (response) => {
+        this.cargando = false;
+        
+        // Verificar si se guardó localmente debido a problemas de conexión
+        if (response && response.guardadoLocal) {
+          this.notificationService.mostrarAdvertencia(
+            'El examen se ha guardado localmente debido a problemas de conexión. ' +
+            'Se enviará automáticamente cuando se restablezca la conexión.'
+          );
+        } else {
+          this.notificationService.mostrarExito('¡Examen finalizado correctamente!');
+        }
+        
           // Limpiar recursos
           this.limpiarRecursos();
 
           // Navegar de vuelta a la lista de exámenes
           this.navegarAListaExamenes();
-        },
-        error: (error) => {
-          console.error('Error al finalizar el examen:', error);
+      },
+      error: (error) => {
+        console.error('Error al finalizar el examen:', error);
           this.manejarErrorFinalizacion(datosFinalizacion, error);
         }
       });
   }
-
+        
   private manejarErrorFinalizacion(datos: any, error: any): void {
     this.cargando = false;
 
     // Intentar guardar localmente en caso de error
-    try {
+        try {
       const respuestaLocal = this.rendicionService.guardarExamenLocalStorage(datos);
 
       if (respuestaLocal && respuestaLocal.guardadoLocal) {
-        this.notificationService.mostrarAdvertencia(
+          this.notificationService.mostrarAdvertencia(
           'No se pudo enviar el examen al servidor. ' +
           'Se ha guardado localmente y se enviará automáticamente cuando se restablezca la conexión.'
         );
@@ -1037,7 +1037,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
         // Navegar de vuelta a la lista de exámenes
         this.navegarAListaExamenes();
       } else {
-        this.notificationService.mostrarError(
+          this.notificationService.mostrarError(
           'Error al finalizar el examen. Por favor, intente nuevamente.'
         );
       }
