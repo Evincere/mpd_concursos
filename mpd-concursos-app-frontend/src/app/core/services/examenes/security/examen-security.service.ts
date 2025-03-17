@@ -303,31 +303,64 @@ export class ExamenSecurityService implements ISecurityService, ICleanupService 
 
   iniciarMonitoreo(): Observable<SecurityViolationType | null> {
     return new Observable<SecurityViolationType | null>(observer => {
-      // Inicializar las estrategias de seguridad
-      this.strategies.forEach(strategy => {
-        strategy.initialize();
+      try {
+        console.log('Iniciando monitoreo de seguridad...');
 
-        // Suscribirse a las violaciones de cada estrategia
-        strategy.getViolations().pipe(
-          takeUntil(this.destroy$)
-        ).subscribe((violation: SecurityViolationType) => {
-          if (violation) {
-            this.reportSecurityViolation(violation);
-            observer.next(violation);
+        // Inicializar las estrategias de seguridad
+        this.strategies.forEach(strategy => {
+          try {
+            strategy.initialize();
+
+            // Suscribirse a las violaciones de cada estrategia
+            strategy.getViolations().pipe(
+              takeUntil(this.destroy$)
+            ).subscribe({
+              next: (violation: SecurityViolationType) => {
+                if (violation) {
+                  console.log(`Violación detectada por estrategia ${strategy.getType()}: ${violation}`);
+                  this.reportSecurityViolation(violation);
+                  observer.next(violation);
+                }
+              },
+              error: (err) => {
+                console.error(`Error en la estrategia ${strategy.getType()}:`, err);
+                // No propagamos el error para evitar que se detenga todo el monitoreo
+              }
+            });
+          } catch (error) {
+            console.error(`Error al inicializar estrategia ${strategy.getType()}:`, error);
+            // Continuamos con las demás estrategias
           }
         });
-      });
 
-      // Activar el modo seguro
-      this.activateSecureMode().catch(error => {
-        console.error('Error al activar el modo seguro:', error);
-        observer.error(error);
-      });
+        // No activamos el modo seguro aquí, ya que se debe haber activado previamente
+        // en el método initializeSecurityMeasures
+
+        // Verificamos si el modo seguro está activo
+        if (!this.isSecureModeActive.value) {
+          console.warn('El modo seguro no está activo. Las violaciones podrían no detectarse correctamente.');
+        }
+
+        console.log('Monitoreo de seguridad iniciado correctamente');
+      } catch (error) {
+        console.error('Error al iniciar el monitoreo de seguridad:', error);
+        // No propagamos el error para evitar que se detenga la aplicación
+      }
 
       // Cleanup cuando se complete
       return () => {
-        this.strategies.forEach(strategy => strategy.cleanup());
-        this.deactivateSecureMode();
+        try {
+          console.log('Limpiando recursos de monitoreo de seguridad');
+          this.strategies.forEach(strategy => {
+            try {
+              strategy.cleanup();
+            } catch (error) {
+              console.error(`Error al limpiar estrategia ${strategy.getType()}:`, error);
+            }
+          });
+        } catch (error) {
+          console.error('Error al limpiar recursos de monitoreo:', error);
+        }
       };
     });
   }

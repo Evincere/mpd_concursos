@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
 import ar.gov.mpd.concursobackend.examination.domain.model.Examination;
 import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSession;
 import ar.gov.mpd.concursobackend.examination.domain.model.Question;
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
 import ar.gov.mpd.concursobackend.examination.infrastructure.mapper.ExaminationMapper;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.AnswerEntity;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.ExaminationEntity;
@@ -46,6 +48,37 @@ public class ExaminationPersistenceAdapter implements ExaminationPersistencePort
         return sessionRepository.findById(sessionId)
                 .map(examinationMapper::toDomain)
                 .orElseThrow(() -> new ExaminationException("Session not found"));
+    }
+
+    @Override
+    public Optional<ExaminationSession> findSessionByExaminationIdAndUserId(UUID examinationId, UUID userId) {
+        return sessionRepository.findByExaminationIdAndUserId(examinationId, userId)
+                .map(examinationMapper::toDomain);
+    }
+
+    @Override
+    public List<ExaminationSession> findSessionsByUserId(UUID userId) {
+        return sessionRepository.findByUserId(userId)
+                .stream()
+                .map(examinationMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<ExaminationSession> findSessionByExaminationIdAndUserIdAndStatus(
+            UUID examinationId,
+            UUID userId,
+            ExaminationSessionStatus status) {
+        return sessionRepository.findByExaminationIdAndUserIdAndStatus(examinationId, userId, status)
+                .map(examinationMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsFinishedSessionByExaminationIdAndUserId(UUID examinationId, UUID userId) {
+        return sessionRepository.existsByExaminationIdAndUserIdAndStatus(
+                examinationId,
+                userId,
+                ExaminationSessionStatus.FINISHED);
     }
 
     @Override

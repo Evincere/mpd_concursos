@@ -42,7 +42,9 @@ RUN for i in 1 2 3; \
 
 # Construir aplicación
 COPY . .
-RUN ng build --configuration production --verbose
+
+# Compilar explícitamente con la configuración de producción
+RUN CI=true npx ng build --configuration production
 
 # Etapa de producción
 FROM nginx:stable-alpine

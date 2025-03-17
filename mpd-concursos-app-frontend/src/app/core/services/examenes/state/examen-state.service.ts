@@ -72,22 +72,29 @@ export class ExamenStateService {
   }
 
   guardarRespuesta(respuesta: RespuestaUsuario): void {
-    const examen = this.examenState$.value;
-    if (!examen) return;
+    try {
+      const examen = this.examenState$.value;
+      if (!examen) {
+        console.warn('No hay examen en curso para guardar respuesta');
+        return;
+      }
 
-    const respuestas = [...examen.respuestas];
-    const index = respuestas.findIndex(r => r.preguntaId === respuesta.preguntaId);
+      const respuestas = [...examen.respuestas];
+      const index = respuestas.findIndex(r => r.preguntaId === respuesta.preguntaId);
 
-    if (index >= 0) {
-      respuestas[index] = { ...respuesta, intentos: (respuestas[index].intentos || 0) + 1 };
-    } else {
-      respuestas.push({ ...respuesta, intentos: 1 });
+      if (index >= 0) {
+        respuestas[index] = { ...respuesta, intentos: (respuestas[index].intentos || 0) + 1 };
+      } else {
+        respuestas.push({ ...respuesta, intentos: 1 });
+      }
+
+      this.examenState$.next({
+        ...examen,
+        respuestas
+      });
+    } catch (error) {
+      console.error('Error al guardar respuesta en el estado:', error);
     }
-
-    this.examenState$.next({
-      ...examen,
-      respuestas
-    });
   }
 
   cambiarEstadoExamen(estado: 'EN_CURSO' | 'PAUSADO' | 'FINALIZADO'): void {

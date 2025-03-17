@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PreguntasService } from '@core/services/examenes/preguntas.service';
@@ -9,11 +9,37 @@ import { ExamenesService } from '@core/services/examenes/examenes.service';
 import { Pregunta, TipoPregunta, Opcion } from '@shared/interfaces/examen/pregunta.interface';
 import { Examen } from '@shared/interfaces/examen/examen.interface';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-preguntas-admin',
   templateUrl: './preguntas-admin.component.html',
-  styleUrls: ['./preguntas-admin.component.scss']
+  styleUrls: ['./preguntas-admin.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatExpansionModule,
+    MatProgressSpinnerModule
+  ]
 })
 export class PreguntasAdminComponent implements OnInit, OnDestroy {
   preguntas: Pregunta[] = [];
@@ -26,11 +52,11 @@ export class PreguntasAdminComponent implements OnInit, OnDestroy {
 
   readonly TIPO_PREGUNTA = TipoPregunta;
   tiposPregunta = [
-    { valor: TipoPregunta.OPCION_MULTIPLE, texto: 'Opción Múltiple' },
-    { valor: TipoPregunta.SELECCION_MULTIPLE, texto: 'Selección Múltiple' },
-    { valor: TipoPregunta.VERDADERO_FALSO, texto: 'Verdadero/Falso' },
-    { valor: TipoPregunta.DESARROLLO, texto: 'Desarrollo' },
-    { valor: TipoPregunta.ORDENAMIENTO, texto: 'Ordenamiento' }
+    { value: TipoPregunta.OPCION_MULTIPLE, label: 'Opción Múltiple' },
+    { value: TipoPregunta.SELECCION_MULTIPLE, label: 'Selección Múltiple' },
+    { value: TipoPregunta.VERDADERO_FALSO, label: 'Verdadero/Falso' },
+    { value: TipoPregunta.DESARROLLO, label: 'Desarrollo' },
+    { value: TipoPregunta.ORDENAMIENTO, label: 'Ordenamiento' }
   ];
 
   private destroy$ = new Subject<void>();
@@ -314,7 +340,7 @@ export class PreguntasAdminComponent implements OnInit, OnDestroy {
 
   // Método para obtener el texto del tipo de pregunta
   getTipoPreguntaTexto(tipo: string): string {
-    const tipoPregunta = this.tiposPregunta.find(t => t.valor === tipo);
-    return tipoPregunta ? tipoPregunta.texto : tipo;
+    const tipoPregunta = this.tiposPregunta.find(t => t.value === tipo);
+    return tipoPregunta ? tipoPregunta.label : tipo;
   }
 }

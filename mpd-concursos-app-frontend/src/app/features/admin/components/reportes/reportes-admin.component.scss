@@ -1,0 +1,487 @@
+@use 'src/styles/variables' as *;
+
+.container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  background-color: $color-background;
+  color: $color-text-primary;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.export-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.tab-content {
+  padding: 1.5rem 0;
+}
+
+// Estilos para las pestañas
+::ng-deep .mat-mdc-tab-header {
+  background-color: $color-surface;
+  border-radius: $border-radius $border-radius 0 0;
+  border: 1px solid $color-border;
+  border-bottom: none;
+}
+
+::ng-deep .mat-mdc-tab-label {
+  color: $color-text-secondary;
+  opacity: 1;
+
+  &.mdc-tab--active {
+    color: $color-primary;
+  }
+}
+
+::ng-deep .mat-mdc-tab-body-content {
+  background-color: $color-surface;
+  border-radius: 0 0 $border-radius $border-radius;
+  border: 1px solid $color-border;
+  border-top: none;
+}
+
+// Estilos para las tarjetas de estadísticas
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  transition: $transition-default;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $box-shadow;
+    background: $color-surface-light;
+  }
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+
+  mat-icon {
+    font-size: 2rem;
+    height: 2rem;
+    width: 2rem;
+    margin-right: 1rem;
+    color: $color-primary;
+  }
+
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: $color-text-primary;
+  }
+
+  .stat-label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+// Estilos para los gráficos
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  transition: $transition-default;
+  overflow: hidden;
+  height: 100%;
+
+  mat-card-header {
+    padding: 1rem 1rem 0;
+    color: $color-text-primary;
+  }
+
+  mat-card-title {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: $color-text-primary;
+  }
+
+  mat-card-content {
+    padding: 1rem;
+  }
+}
+
+// Placeholder para gráficos (simulación visual)
+.chart-placeholder {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem 0;
+}
+
+.chart-bar {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+
+  .chart-label {
+    width: 150px;
+    font-size: $font-size-xs;
+    text-align: right;
+    padding-right: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: $color-text-secondary;
+  }
+
+  .chart-value-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .chart-value {
+    height: 20px;
+    border-radius: $border-radius-sm;
+    display: flex;
+    align-items: center;
+    padding-left: 0.5rem;
+    font-size: $font-size-xs;
+    font-weight: 500;
+    color: $color-text-primary;
+    transition: width 0.3s ease;
+
+    &.participants {
+      background-color: rgba($color-primary, 0.7);
+    }
+
+    &.approved {
+      background-color: rgba($color-accent, 0.7);
+    }
+  }
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+  }
+
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: $border-radius-sm;
+    margin-right: 0.5rem;
+
+    &.participants {
+      background-color: rgba($color-primary, 0.7);
+    }
+
+    &.approved {
+      background-color: rgba($color-accent, 0.7);
+    }
+  }
+}
+
+// Simulación de gráfico circular
+.pie-chart {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: $color-surface-light;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.pie-segment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
+  background: var(--color);
+  transform: rotate(calc(360deg * var(--percentage) / 100));
+  transform-origin: center;
+}
+
+.pie-label {
+  position: absolute;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  white-space: nowrap;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: $color-text-primary;
+}
+
+// Simulación de gráfico de líneas
+.line-chart {
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  position: relative;
+}
+
+.line-point {
+  position: relative;
+  width: 12px;
+  height: calc(var(--height) * 2);
+  background-color: rgba($color-primary, 0.7);
+  border-radius: 4px 4px 0 0;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: rgba($color-primary, 0.7);
+    top: 0;
+    left: calc(100% * var(--index) - 100%);
+    transform: translateX(6px);
+    width: calc(100% * 5);
+  }
+
+  .point-value {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: $font-size-xs;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.line-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.line-label {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  text-align: center;
+  width: 40px;
+}
+
+// Estilos para la lista de exámenes
+.exams-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.exam-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  transition: $transition-default;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $box-shadow;
+    background: $color-surface-light;
+  }
+
+  &.selected {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 1px $color-primary;
+  }
+
+  mat-card-header {
+    padding: 1rem 1rem 0.5rem;
+  }
+
+  mat-card-title {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: $color-text-primary;
+  }
+
+  mat-card-subtitle {
+    color: $color-text-secondary;
+    font-size: $font-size-xs;
+  }
+
+  mat-card-content {
+    padding: 0 1rem 1rem;
+  }
+}
+
+.exam-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.exam-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: $font-size-sm;
+
+  .stat-label {
+    color: $color-text-secondary;
+  }
+
+  .stat-value {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.selected-exam-details {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: $color-text-primary;
+  }
+
+  p {
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+    margin: 0;
+  }
+}
+
+// Estilos para la sección de actividad
+.activity-list {
+  margin-top: 1rem;
+
+  .activity-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background-color: $color-surface;
+    border-radius: $border-radius;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: $color-hover;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba($color-primary, 0.15);
+      margin-right: 1rem;
+
+      mat-icon {
+        color: $color-primary;
+      }
+    }
+
+    .activity-content {
+      flex: 1;
+
+      .activity-text {
+        font-weight: 500;
+        color: $color-text-primary;
+      }
+
+      .activity-time {
+        font-size: 0.85rem;
+        color: $color-text-muted;
+        margin-top: 0.25rem;
+      }
+    }
+  }
+}
+
+// Estilos para los botones
+::ng-deep .mat-mdc-stroked-button {
+  border-color: $color-border;
+  color: $color-text-primary;
+
+  &:hover {
+    background-color: rgba($color-primary, 0.1);
+  }
+}
+
+::ng-deep .mat-mdc-raised-button.mat-primary {
+  background-color: $color-primary;
+}
+
+// Estilos para los títulos
+h2.mat-headline-5 {
+  font-size: $font-size-lg;
+  font-weight: 500;
+  margin: 1.5rem 0 1rem;
+  color: $color-text-primary;
+}

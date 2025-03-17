@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, forwardRef } from '@angular/core';
 import { CanDeactivate } from '@angular/router';
 import { ExamenNotificationService } from '../../examen-notification.service';
 import { ExamenSecurityService } from '../examen-security.service';
@@ -13,38 +13,44 @@ export interface ComponentWithExam {
 })
 export class ExamNavigationGuard implements CanDeactivate<ComponentWithExam> {
   constructor(
-    private notificationService: ExamenNotificationService,
-    private securityService: ExamenSecurityService
+    @Inject(forwardRef(() => ExamenNotificationService)) private notificationService: ExamenNotificationService,
+    @Inject(forwardRef(() => ExamenSecurityService)) private securityService: ExamenSecurityService
   ) {}
 
   async canDeactivate(
     component: ComponentWithExam
   ): Promise<boolean> {
-    if (component.isExamInProgress) {
-      // Mostrar diálogo de advertencia primero
-      await this.notificationService.showSecurityWarning(
-        SecurityViolationType.SUSPICIOUS_BEHAVIOR,
-        'La navegación durante el examen no está permitida. Si decide salir, esto será registrado como una violación de seguridad.'
-      );
+    try {
+      if (component.isExamInProgress) {
+        // Mostrar diálogo de advertencia primero
+        await this.notificationService.showSecurityWarning(
+          SecurityViolationType.SUSPICIOUS_BEHAVIOR,
+          'La navegación durante el examen no está permitida. Si decide salir, esto será registrado como una violación de seguridad.'
+        );
 
-      // Registrar el intento de navegación como una violación de seguridad
-      this.securityService.reportSecurityViolation(
-        SecurityViolationType.SUSPICIOUS_BEHAVIOR,
-        { action: 'NAVIGATION_ATTEMPT', timestamp: new Date().toISOString() }
-      );
-
-      // Mostrar diálogo de confirmación
-      const confirmed = await this.notificationService.confirmAction('salir');
-
-      if (confirmed) {
-        // Registrar la decisión del usuario de salir
+        // Registrar el intento de navegación como una violación de seguridad
         this.securityService.reportSecurityViolation(
           SecurityViolationType.SUSPICIOUS_BEHAVIOR,
-          { action: 'EXAM_ABANDONED', timestamp: new Date().toISOString() }
+          { action: 'NAVIGATION_ATTEMPT', timestamp: new Date().toISOString() }
         );
-      }
 
-      return confirmed;
+        // Mostrar diálogo de confirmación
+        const confirmed = await this.notificationService.confirmAction('salir');
+
+        if (confirmed) {
+          // Registrar la decisión del usuario de salir
+          this.securityService.reportSecurityViolation(
+            SecurityViolationType.SUSPICIOUS_BEHAVIOR,
+            { action: 'EXAM_ABANDONED', timestamp: new Date().toISOString() }
+          );
+        }
+
+        return confirmed;
+      }
+    } catch (error) {
+      console.error('Error en el guard de navegación:', error);
+      // En caso de error, permitir la navegación para evitar bloqueos
+      return true;
     }
 
     return true;

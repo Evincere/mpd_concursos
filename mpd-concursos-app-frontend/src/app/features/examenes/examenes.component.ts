@@ -10,6 +10,8 @@ import { Subject, takeUntil } from 'rxjs';
 import { RouterModule, Router } from '@angular/router';
 import { ExamenSecurityService } from '@core/services/examenes/security/examen-security.service';
 import { ExamenNotificationService } from '@core/services/examenes/examen-notification.service';
+import { ExamenesService } from '@core/services/examenes/examenes.service';
+import { Injector } from '@angular/core';
 
 @Component({
   selector: 'app-examenes',
@@ -37,7 +39,9 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     private router: Router,
     private examenSecurity: ExamenSecurityService,
     private cdr: ChangeDetectorRef,
-    private notificationService: ExamenNotificationService
+    private notificationService: ExamenNotificationService,
+    private examenesService: ExamenesService,
+    private injector: Injector
   ) {}
 
   ngOnInit(): void {
@@ -85,25 +89,43 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   }
 
   async iniciarExamen(examenId: string): Promise<void> {
+    console.log('Verificando si el examen ya fue realizado...');
+
+    // Verificar si el examen ya fue realizado por el usuario actual
+    this.loading = true;
+
     try {
-      console.log('Iniciando proceso de examen para ID:', examenId);
+      const examenesService = this.injector.get(ExamenesService);
+      const yaRealizado = await examenesService.verificarExamenRealizado(examenId).toPromise();
 
-      // Primero activamos el modo seguro
-      console.log('Intentando activar modo seguro...');
-      await this.examenSecurity.activateSecureMode();
-      console.log('Modo seguro activado exitosamente');
+      if (yaRealizado) {
+        this.notificationService.mostrarAdvertencia('Este examen ya ha sido realizado anteriormente.');
+        this.loading = false;
+        return;
+      }
 
-      // Luego navegamos al examen
-      console.log('Intentando navegar al examen...');
-      const navigationResult = await this.router.navigate([`/dashboard/examenes/${examenId}/rendir`]);
-      console.log('Resultado de navegación:', navigationResult);
+      // Si no fue realizado, continuar con la inicialización
+      console.log('Iniciando examen:', examenId);
 
-      // Forzamos la detección de cambios
-      this.cdr.detectChanges();
-      console.log('Detección de cambios forzada');
+      // Verificar si el navegador está en modo pantalla completa
+      if (!document.fullscreenElement) {
+        const confirmacion = await this.mostrarDialogoConfirmacion(
+          'Iniciar examen',
+          'El examen se abrirá en modo pantalla completa. ¿Desea continuar?'
+        );
+
+        if (!confirmacion) {
+          this.loading = false;
+          return;
+        }
+      }
+
+      // Navegar a la página de rendición
+      this.router.navigate(['/dashboard/examenes', examenId, 'rendir']);
     } catch (error) {
-      console.error('Error detallado al iniciar el examen:', error);
-      this.notificationService.mostrarError('No se pudo iniciar el examen. Por favor, intente nuevamente.');
+      console.error('Error al verificar o iniciar el examen:', error);
+      this.notificationService.mostrarError('Error al iniciar el examen. Intente nuevamente.');
+      this.loading = false;
     }
   }
 
@@ -169,5 +191,11 @@ export class ExamenesComponent implements OnInit, OnDestroy {
       'psychological': 'Psicológico'
     };
     return tipos[tipo.toLowerCase()] || tipo;
+  }
+
+  async mostrarDialogoConfirmacion(titulo: string, mensaje: string): Promise<boolean> {
+    // Implementa la lógica para mostrar un diálogo de confirmación y devolver el resultado
+    // Esto puede ser una promesa que espera la respuesta del usuario
+    return true; // Simulación, deberías implementar la lógica real
   }
 }

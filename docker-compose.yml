@@ -4,24 +4,18 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mpd-concursos-mysql
-    command: 
-      - --default-authentication-plugin=caching_sha2_password
-      - --authentication-policy=mysql_native_password
-      - --max-connections=1000
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=mpd_concursos
-      - MYSQL_USER=mpd_user
-      - MYSQL_PASSWORD=mpd_password
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: mpd_concursos
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mpd_user", "-pmpd_password"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
       start_period: 60s
     networks:
       - mpd-concursos-network
@@ -35,31 +29,19 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mpd_concursos?allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=mpd_user
-      - SPRING_DATASOURCE_PASSWORD=mpd_password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=true
-      - SPRING_MVC_CORS_ALLOWED_ORIGINS=http://vps-4778464-x.dattaweb.com:8000
-      - JAVA_OPTS=-Xmx512m -Xms256m
-      - SERVER_TOMCAT_MAX_THREADS=200
-      - SERVER_TOMCAT_MAX_CONNECTIONS=1000
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mpd_concursos?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root1234
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_MVC_CORS_ALLOWED_ORIGINS: http://localhost:8000,http://localhost:4200,http://149.50.132.23:8000
     ports:
       - "8080:8080"
     volumes:
       - document_storage:/app/document-storage
     networks:
       - mpd-concursos-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 1G
 
   frontend:
     build:
@@ -67,22 +49,11 @@ services:
       dockerfile: Dockerfile
     container_name: mpd-concursos-frontend
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     ports:
       - "8000:80"
     networks:
       - mpd-concursos-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
 
 volumes:
   mysql_data:
@@ -90,4 +61,5 @@ volumes:
 
 networks:
   mpd-concursos-network:
-    driver: bridge
+    driver: bridge 
+>>>>>>> b450e2962032e3b688060185ec0294801cb8f4d7

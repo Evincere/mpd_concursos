@@ -1,4 +1,10 @@
 <div class="examen-rendicion-container">
+  <!-- Overlay de carga -->
+  <div class="loading-overlay" *ngIf="cargando">
+    <mat-spinner diameter="50" color="primary"></mat-spinner>
+    <p class="loading-text">Procesando...</p>
+  </div>
+
   <!-- Header con información del examen y temporizador -->
   <mat-card class="header-card">
     <div class="header-content">
@@ -121,9 +127,12 @@
           mat-raised-button
           color="primary"
           (click)="finalizar()"
-          *ngIf="preguntaActual.orden === preguntas.length">
-          Finalizar Examen
-          <mat-icon>check_circle</mat-icon>
+          *ngIf="preguntaActual.orden === preguntas.length"
+          [disabled]="cargando">
+          <span *ngIf="!cargando">Finalizar Examen</span>
+          <span *ngIf="cargando">Finalizando...</span>
+          <mat-icon *ngIf="!cargando">check_circle</mat-icon>
+          <mat-spinner *ngIf="cargando" diameter="20" color="accent"></mat-spinner>
         </button>
       </mat-card-actions>
     </mat-card>

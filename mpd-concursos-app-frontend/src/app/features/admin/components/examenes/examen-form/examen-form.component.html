@@ -1,0 +1,164 @@
+<h2 mat-dialog-title>{{title}}</h2>
+
+<form [formGroup]="examenForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="mat-typography">
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Título</mat-label>
+        <input matInput formControlName="titulo" placeholder="Ingrese el título del examen">
+        <mat-error *ngIf="examenForm.get('titulo')?.hasError('required')">
+          El título es obligatorio
+        </mat-error>
+        <mat-error *ngIf="examenForm.get('titulo')?.hasError('minlength')">
+          El título debe tener al menos 5 caracteres
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Descripción</mat-label>
+        <textarea matInput formControlName="descripcion" placeholder="Ingrese la descripción del examen" rows="3"></textarea>
+        <mat-error *ngIf="examenForm.get('descripcion')?.hasError('required')">
+          La descripción es obligatoria
+        </mat-error>
+        <mat-error *ngIf="examenForm.get('descripcion')?.hasError('minlength')">
+          La descripción debe tener al menos 10 caracteres
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-columns">
+      <mat-form-field appearance="outline">
+        <mat-label>Tipo de Examen</mat-label>
+        <mat-select formControlName="tipo">
+          <mat-option *ngFor="let tipo of tiposExamen" [value]="tipo.value">
+            {{tipo.label}}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="examenForm.get('tipo')?.hasError('required')">
+          El tipo de examen es obligatorio
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fecha de Inicio</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="fechaInicio">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="examenForm.get('fechaInicio')?.hasError('required')">
+          La fecha de inicio es obligatoria
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row three-columns">
+      <mat-form-field appearance="outline">
+        <mat-label>Duración (minutos)</mat-label>
+        <input matInput type="number" formControlName="duracion">
+        <mat-error *ngIf="examenForm.get('duracion')?.hasError('required')">
+          La duración es obligatoria
+        </mat-error>
+        <mat-error *ngIf="examenForm.get('duracion')?.hasError('min')">
+          La duración mínima es de 15 minutos
+        </mat-error>
+        <mat-error *ngIf="examenForm.get('duracion')?.hasError('max')">
+          La duración máxima es de 240 minutos
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Puntaje Máximo</mat-label>
+        <input matInput type="number" formControlName="puntajeMaximo">
+        <mat-error *ngIf="examenForm.get('puntajeMaximo')?.hasError('required')">
+          El puntaje máximo es obligatorio
+        </mat-error>
+        <mat-error *ngIf="examenForm.get('puntajeMaximo')?.hasError('min')">
+          El puntaje mínimo es de 10 puntos
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Intentos Permitidos</mat-label>
+        <input matInput type="number" formControlName="intentosPermitidos">
+        <mat-error *ngIf="examenForm.get('intentosPermitidos')?.hasError('required')">
+          Los intentos permitidos son obligatorios
+        </mat-error>
+        <mat-error *ngIf="examenForm.get('intentosPermitidos')?.hasError('min')">
+          Debe permitir al menos 1 intento
+        </mat-error>
+        <mat-error *ngIf="examenForm.get('intentosPermitidos')?.hasError('max')">
+          El máximo de intentos permitidos es 5
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-section">
+      <h3>Requisitos</h3>
+      <div formArrayName="requisitos">
+        <div *ngFor="let requisito of requisitos.controls; let i = index" class="array-item">
+          <mat-form-field appearance="outline" class="array-field">
+            <mat-label>Requisito {{i + 1}}</mat-label>
+            <input matInput [formControlName]="i" placeholder="Ingrese un requisito">
+            <mat-error *ngIf="requisitos.at(i).hasError('required')">
+              El requisito es obligatorio
+            </mat-error>
+          </mat-form-field>
+          <button type="button" mat-icon-button color="warn" (click)="removeRequisito(i)" [disabled]="requisitos.length <= 1">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+        <button type="button" mat-stroked-button color="primary" (click)="addRequisito()">
+          <mat-icon>add</mat-icon> Agregar Requisito
+        </button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Reglas del Examen</h3>
+      <div formArrayName="reglasExamen">
+        <div *ngFor="let regla of reglasExamen.controls; let i = index" class="array-item">
+          <mat-form-field appearance="outline" class="array-field">
+            <mat-label>Regla {{i + 1}}</mat-label>
+            <input matInput [formControlName]="i" placeholder="Ingrese una regla">
+            <mat-error *ngIf="reglasExamen.at(i).hasError('required')">
+              La regla es obligatoria
+            </mat-error>
+          </mat-form-field>
+          <button type="button" mat-icon-button color="warn" (click)="removeRegla(i)" [disabled]="reglasExamen.length <= 1">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+        <button type="button" mat-stroked-button color="primary" (click)="addRegla()">
+          <mat-icon>add</mat-icon> Agregar Regla
+        </button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Materiales Permitidos</h3>
+      <div formArrayName="materialesPermitidos">
+        <div *ngFor="let material of materialesPermitidos.controls; let i = index" class="array-item">
+          <mat-form-field appearance="outline" class="array-field">
+            <mat-label>Material {{i + 1}}</mat-label>
+            <input matInput [formControlName]="i" placeholder="Ingrese un material permitido">
+            <mat-error *ngIf="materialesPermitidos.at(i).hasError('required')">
+              El material es obligatorio
+            </mat-error>
+          </mat-form-field>
+          <button type="button" mat-icon-button color="warn" (click)="removeMaterial(i)" [disabled]="materialesPermitidos.length <= 1">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+        <button type="button" mat-stroked-button color="primary" (click)="addMaterial()">
+          <mat-icon>add</mat-icon> Agregar Material
+        </button>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancelar</button>
+    <button mat-raised-button color="primary" type="submit">Guardar</button>
+  </mat-dialog-actions>
+</form>

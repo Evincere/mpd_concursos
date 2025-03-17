@@ -1,0 +1,84 @@
+<h2 mat-dialog-title>{{title}}</h2>
+
+<form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="mat-typography">
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Nombre Completo</mat-label>
+        <input matInput formControlName="nombre" placeholder="Ingrese el nombre completo">
+        <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('required')">
+          El nombre es obligatorio
+        </mat-error>
+        <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('minlength')">
+          El nombre debe tener al menos 3 caracteres
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" placeholder="Ingrese el email" type="email">
+        <mat-error *ngIf="usuarioForm.get('email')?.hasError('required')">
+          El email es obligatorio
+        </mat-error>
+        <mat-error *ngIf="usuarioForm.get('email')?.hasError('email')">
+          Ingrese un email válido
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row" *ngIf="mode === 'create' || usuarioForm.get('password')?.value">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Contraseña</mat-label>
+        <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="Ingrese la contraseña">
+        <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
+          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-hint *ngIf="mode === 'edit'">Dejar en blanco para mantener la contraseña actual</mat-hint>
+        <mat-error *ngIf="usuarioForm.get('password')?.hasError('required')">
+          La contraseña es obligatoria
+        </mat-error>
+        <mat-error *ngIf="usuarioForm.get('password')?.hasError('minlength')">
+          La contraseña debe tener al menos 6 caracteres
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Roles</mat-label>
+        <mat-select formControlName="roles" multiple>
+          <mat-option *ngFor="let rol of roles" [value]="rol.value">
+            {{rol.label}}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="usuarioForm.get('roles')?.hasError('required')">
+          Debe seleccionar al menos un rol
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="telefono" placeholder="Ingrese el teléfono (10 dígitos)">
+        <mat-error *ngIf="usuarioForm.get('telefono')?.hasError('pattern')">
+          Ingrese un número de teléfono válido (10 dígitos)
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección</mat-label>
+        <textarea matInput formControlName="direccion" placeholder="Ingrese la dirección" rows="2"></textarea>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancelar</button>
+    <button mat-raised-button color="primary" type="submit">Guardar</button>
+  </mat-dialog-actions>
+</form>
