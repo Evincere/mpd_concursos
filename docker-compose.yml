@@ -4,7 +4,10 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mpd-concursos-mysql
-    command: --default-authentication-plugin=mysql_native_password
+    command: 
+      - --default-authentication-plugin=caching_sha2_password
+      - --authentication-policy=mysql_native_password
+      - --max-connections=1000
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=mpd_concursos
@@ -15,11 +18,11 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "mpd_user", "-pmpd_password"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     networks:
       - mpd-concursos-network
 
@@ -38,20 +41,25 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - SPRING_JPA_SHOW_SQL=true
       - SPRING_MVC_CORS_ALLOWED_ORIGINS=http://vps-4778464-x.dattaweb.com:8000
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - SERVER_TOMCAT_MAX_THREADS=200
+      - SERVER_TOMCAT_MAX_CONNECTIONS=1000
     ports:
       - "8080:8080"
     volumes:
       - document_storage:/app/document-storage
     networks:
       - mpd-concursos-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
 
   frontend:
     build:
@@ -61,18 +69,20 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    environment:
-      - API_URL=http://vps-4778464-x.dattaweb.com:8080
     ports:
       - "8000:80"
     networks:
       - mpd-concursos-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
 volumes:
   mysql_data:

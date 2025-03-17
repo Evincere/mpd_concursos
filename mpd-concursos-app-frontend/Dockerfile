@@ -1,41 +1,65 @@
-# Etapa de construcción
 FROM node:20-slim AS build
 WORKDIR /app
 
-# Instalar Python y herramientas de compilación necesarias
+# Instalar dependencias del sistema y certificados
 RUN apt-get update && apt-get install -y \
     python3 \
     python-is-python3 \
     make \
     g++ \
-    && rm -rf /var/lib/apt/lists/*
+    ca-certificates \
+    openssl \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copiar package*.json para la instalación inicial
+# Configurar npm y certificados
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+ENV PYTHON=/usr/bin/python3
+ENV NPM_CONFIG_PYTHON=/usr/bin/python3
+
+# Configurar npm de forma segura
+RUN npm config set strict-ssl false && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm install -g npm@latest && \
+    npm install -g @angular/cli
+
+# Copiar package.json y realizar instalación de dependencias
 COPY package*.json ./
 
-# Eliminar package-lock.json si existe y hacer una instalación limpia
-RUN rm -f package-lock.json && \
-    npm cache clean --force && \
-    npm install --no-optional
+# Instalar dependencias con retry
+RUN for i in 1 2 3; \
+    do \
+      npm install --no-optional --legacy-peer-deps --force && break || \
+      if [ $i -lt 3 ]; then \
+        sleep 5; \
+        continue; \
+      fi; \
+      exit 1; \
+    done
 
-# Solucionar problema específico de rollup
-RUN npm install @rollup/rollup-linux-x64-gnu || echo "Continuando sin @rollup/rollup-linux-x64-gnu"
-
-# Copiar código fuente
+# Construir aplicación
 COPY . .
-
-# Compilar con CI=true para evitar problemas de interactividad
-RUN CI=true npm run build
+RUN ng build --configuration production --verbose
 
 # Etapa de producción
 FROM nginx:stable-alpine
-COPY --from=build /app/dist/browser /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html
 
-# Configuración de Nginx para Angular (manejo de rutas SPA)
+# Configurar nginx
+RUN apk add --no-cache curl && \
+    chown -R nginx:nginx /usr/share/nginx && \
+    chmod -R 755 /usr/share/nginx
+
+COPY --from=build /app/dist/browser .
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Exponer puerto
+USER nginx
 EXPOSE 80
 
-# Comando para iniciar Nginx
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
 CMD ["nginx", "-g", "daemon off;"]
