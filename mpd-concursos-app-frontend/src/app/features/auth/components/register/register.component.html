@@ -111,31 +111,41 @@
     <mat-error *ngIf="registerForm.get('termsAccepted')?.touched && registerForm.get('termsAccepted')?.errors?.['required']">
       Debe aceptar los términos y condiciones
     </mat-error>
-    <div class="action-container">
-      <button type="submit"
-              [disabled]="!registerForm.valid || !registerForm.get('termsAccepted')?.value"
-              class="submit-button"
-              [class.fade-out]="isLoading || showMessage"
-              *ngIf="!isLoading && !showMessage">
-        Registrarse
-      </button>
-      <div class="loader-container" *ngIf="isLoading">
-        <div class="loader"></div>
+    
+    <div class="form-footer">
+      <div class="action-container">
+        <button type="submit"
+                [disabled]="!registerForm.valid || !registerForm.get('termsAccepted')?.value"
+                class="submit-button"
+                [class.fade-out]="isLoading || showMessage"
+                *ngIf="!isLoading && !showMessage">
+          Registrarse
+        </button>
+        <div class="loader-container" *ngIf="isLoading">
+          <div class="loader"></div>
+        </div>
+        <div class="message-container"
+             *ngIf="showMessage"
+             [class.success]="isSuccess"
+             [class.error]="!isSuccess"
+             [@messageAnimation]>
+          <i class="material-icons icon">
+            {{ isSuccess ? 'check_circle' : 'error' }}
+          </i>
+          <span class="message-text">{{ responseMessage }}</span>
+        </div>
       </div>
-      <div class="message-container"
-           *ngIf="showMessage"
-           [class.success]="isSuccess"
-           [class.error]="!isSuccess"
-           [@messageAnimation]>
-        <i class="material-icons icon">
-          {{ isSuccess ? 'check_circle' : 'error' }}
-        </i>
-        <span class="message-text">{{ responseMessage }}</span>
-      </div>
+      <p>¿Ya tienes una cuenta? <button class="a2" (click)="goToLogin()">Iniciar Sesión</button></p>
+      <p><button class="terms-button" (click)="openTermsModal()">Ver términos y condiciones</button></p>
     </div>
   </form>
-  <p>¿Ya tienes una cuenta? <button class="a2" (click)="goToLogin()">Iniciar Sesión</button></p>
-  <p><button class="terms-button" (click)="openTermsModal()">Ver términos y condiciones</button></p>
+
+  <!-- Indicador de scroll integrado dentro del formulario -->
+  <div class="scroll-indicator" *ngIf="showScrollIndicator" (click)="scrollToBottom()">
+    <span class="material-icons">touch_app</span>
+    <span class="scroll-text">Haga scroll para ver más</span>
+    <span class="material-icons scroll-icon">keyboard_arrow_down</span>
+  </div>
 </div>
 
 <!-- Modal de Términos y Condiciones -->

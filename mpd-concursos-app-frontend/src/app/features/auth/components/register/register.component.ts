@@ -48,6 +48,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   // Variable para controlar la visibilidad del modal de términos y condiciones
   showTermsModal = false;
+  // Variable para controlar la visibilidad del indicador de scroll
+  showScrollIndicator = false;
 
   constructor(
     private fb: FormBuilder,
@@ -71,10 +73,69 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Comprobar si el formulario necesita scroll después de una breve espera para permitir el renderizado
+    setTimeout(() => this.checkFormOverflow(), 500);
+
+    // Añadir listeners para eventos de scroll y redimensionamiento de ventana
+    window.addEventListener('resize', this.checkFormOverflow.bind(this));
+
+    // Mejorar el listener de scroll con un método debounced
+    setTimeout(() => {
+      const registerBox = document.querySelector('.register-box');
+      if (registerBox) {
+        registerBox.addEventListener('scroll', () => {
+          // Utilizar el método checkFormOverflow para manejar tanto el scroll como el inicio
+          this.checkFormOverflow();
+        });
+      }
+    }, 500);
   }
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+
+    // Eliminar listeners para evitar memory leaks
+    window.removeEventListener('resize', this.checkFormOverflow.bind(this));
+    const registerBox = document.querySelector('.register-box');
+    if (registerBox) {
+      registerBox.removeEventListener('scroll', this.checkFormOverflow.bind(this));
+    }
+  }
+
+  // Método para verificar si el contenido del formulario requiere scroll
+  checkFormOverflow(): void {
+    const registerBox = document.querySelector('.register-box');
+    if (!registerBox) return;
+
+    // Calcular la proporción del contenido visible vs. el contenido total
+    const scrollHeight = registerBox.scrollHeight;
+    const visibleHeight = registerBox.clientHeight;
+    const scrollTop = registerBox.scrollTop;
+
+    // Mostrar el indicador si hay contenido oculto abajo Y el usuario está cerca de la parte superior
+    const hasHiddenContent = scrollHeight > visibleHeight + 50; // Añadimos un pequeño margen
+    const isNearTop = scrollTop < 100; // Mostrar en la parte superior del formulario
+
+    // Actualizar la visibilidad del indicador: mostrar cuando hay contenido oculto y estamos en la parte superior
+    this.showScrollIndicator = hasHiddenContent && isNearTop;
+  }
+
+  // Método para hacer scroll al hacer clic en el indicador
+  scrollToBottom(): void {
+    const registerBox = document.querySelector('.register-box');
+    if (registerBox) {
+      // Calcular una posición razonable para desplazarse (un tercio del contenido)
+      const scrollAmount = Math.min(300, (registerBox.scrollHeight - registerBox.clientHeight) / 2);
+
+      // Usar scrollBy para un desplazamiento relativo más natural
+      registerBox.scrollBy({
+        top: scrollAmount,
+        behavior: 'smooth'
+      });
+
+      // Esconder el indicador inmediatamente al hacer clic
+      this.showScrollIndicator = false;
+    }
   }
 
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {

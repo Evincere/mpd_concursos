@@ -16,18 +16,43 @@
 
 .register-box {
   position: relative;
-  width: 400px;
+  width: 90%;
+  max-width: 450px;
   height: auto;
-  min-height: 500px;
+  max-height: 90vh;
   margin: 20px auto;
-  padding: 40px;
+  padding: 40px 40px 40px 40px;
   background: rgba(0,0,0,.9);
   box-shadow: 0 15px 25px rgba(0,0,0,.6);
   border-radius: 10px;
   background: linear-gradient(45deg, #1a1a1a, #2c2c2c);
   border: 1px solid rgba(255,255,255,0.1);
-  scroll-behavior: smooth;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+  scroll-behavior: smooth;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255,255,255,0.4);
+  }
+
+  form {
+    padding-bottom: 20px;
+  }
 
   h2 {
     margin: 0 0 30px;
@@ -37,6 +62,13 @@
     font-size: 1.5rem;
     font-weight: bold;
     letter-spacing: 1px;
+    position: sticky;
+    top: 0;
+    background: linear-gradient(45deg, #1a1a1a, #2c2c2c);
+    padding: 15px 0;
+    z-index: 10;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.3);
   }
 
   .user-box {
@@ -58,7 +90,7 @@
 
     input {
       width: 100%;
-      padding: 10px 0;
+      padding: 12px 0;
       font-size: 16px;
       color: #fff;
       border: none;
@@ -71,7 +103,7 @@
       position: absolute;
       top: 0;
       left: 0;
-      padding: 10px 0;
+      padding: 12px 0;
       font-size: 16px;
       color: #fff;
       pointer-events: none;
@@ -85,12 +117,22 @@
       color: #fff;
       font-size: 12px;
     }
+
+    &:focus-within {
+      transform: translateY(-2px);
+      label {
+        color: #4CAF50;
+      }
+      input {
+        border-color: #4CAF50;
+      }
+    }
   }
 
   .submit-button {
     position: relative;
     display: inline-block;
-    padding: 10px 20px;
+    padding: 12px 30px;
     font-weight: bold;
     color: whitesmoke;
     font-size: 16px;
@@ -98,25 +140,23 @@
     text-transform: uppercase;
     overflow: hidden;
     transition: .5s;
-    margin-top: 40px;
+    margin-top: 20px;
     letter-spacing: 3px;
-    background: transparent;
-    border: none;
+    background: rgba(76, 175, 80, 0.1);
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    border-radius: 5px;
     cursor: pointer;
 
-    &:hover {
-      background: #000;
-      color: green;
-      border-radius: 5px;
+    &:hover:not(:disabled) {
+      background: rgba(76, 175, 80, 0.3);
+      color: white;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
     }
 
-    span {
-      position: absolute;
-      display: block;
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
-
-    // Aquí van las animaciones del botón igual que en login
-    // ... copiar las animaciones del login.component.scss ...
   }
 
   p {
@@ -126,7 +166,7 @@
     text-align: center;
 
     .a2 {
-      color: #fff;
+      color: #7aff84;
       text-decoration: none;
       background: transparent;
       border: none;
@@ -135,10 +175,21 @@
       transition: .3s;
 
       &:hover {
-        color: #aaa;
-        border-radius: 5px;
+        color: white;
       }
     }
+  }
+
+  &::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to top, rgba(44, 44, 44, 1) 0%, rgba(44, 44, 44, 0) 100%);
+    pointer-events: none;
+    z-index: 5;
   }
 }
 
@@ -279,7 +330,6 @@ mat-error {
 }
 
 .submit-button {
-  // ... estilos existentes del botón ...
   &.fade-out {
     opacity: 0;
     transform: scale(0.95);
@@ -551,7 +601,7 @@ input {
 .terms-button {
   background: transparent;
   border: none;
-  color: #fff;
+  color: #7aff84;
   text-decoration: underline;
   cursor: pointer;
   padding: 5px 10px;
@@ -559,6 +609,81 @@ input {
   font-size: 14px;
   
   &:hover {
-    color: #4CAF50;
+    color: white;
   }
+}
+
+// Estilos para el footer con botones de acción
+.form-footer {
+  position: relative;
+  padding: 20px 0;
+  z-index: 5;
+  margin-top: 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  
+  p {
+    margin: 10px 0;
+    text-align: center;
+  }
+  
+  .action-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+}
+
+// Indicador visual de scroll - rediseñado para aparecer dentro del formulario
+.scroll-indicator {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: auto;
+  padding: 12px 15px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.95;
+  transition: all 0.3s ease;
+  animation: gentlePulse 2s infinite;
+  z-index: 20;
+  cursor: pointer;
+  background: linear-gradient(180deg, #1a1a1a, #2c2c2c);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(76, 175, 80, 0.7);
+  
+  &:hover {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.03);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+
+  .scroll-text {
+    color: white;
+    font-size: 14px;
+    margin-right: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .scroll-icon {
+    font-size: 24px;
+    color: #7aff84;
+    animation: bounceDown 2s ease-in-out infinite;
+  }
+}
+
+@keyframes gentlePulse {
+  0% { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), 0 0 0 0 rgba(76, 175, 80, 0.5); }
+  50% { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(76, 175, 80, 0.1); }
+  100% { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5), 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+
+@keyframes bounceDown {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(8px); }
+  60% { transform: translateY(4px); }
 }
