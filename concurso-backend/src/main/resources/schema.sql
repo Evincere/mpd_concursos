@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS user_entity;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS inscriptions;
-DROP TABLE IF EXISTS question_options;
+DROP TABLE IF EXISTS options;
 DROP TABLE IF EXISTS answers;
 DROP TABLE IF EXISTS examination_sessions;
 DROP TABLE IF EXISTS questions;
@@ -93,12 +93,11 @@ CREATE TABLE questions (
     FOREIGN KEY (examination_id) REFERENCES examinations(id)
 ) ENGINE=InnoDB;
 
-CREATE TABLE question_options (
-    id BINARY(16) NOT NULL,
-    question_id BINARY(16),
+CREATE TABLE options (
+    id BINARY(16) PRIMARY KEY,
     text TEXT,
-    is_correct BIT,
-    PRIMARY KEY (id),
+    order_number INTEGER,
+    question_id BINARY(16),
     FOREIGN KEY (question_id) REFERENCES questions(id)
 ) ENGINE=InnoDB;
 

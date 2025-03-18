@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -9,6 +9,7 @@ import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { RegisterService } from '../../../../core/services/auth/register.service';
 import { NewUser } from '../../../../shared/interfaces/auth/new-user.interface';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -26,28 +27,27 @@ import { NewUser } from '../../../../shared/interfaces/auth/new-user.interface';
   animations: [
     trigger('messageAnimation', [
       transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
+        style({ opacity: 0, transform: 'translateY(20px)' }),
         animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
       ]),
       transition(':leave', [
-        animate('300ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+        animate('300ms ease-in', style({ opacity: 0, transform: 'translateY(20px)' }))
       ])
     ])
   ]
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, OnDestroy {
   registerForm: FormGroup;
   fieldErrors: Map<string, string> = new Map();
-  activeErrors: Array<{
-    type: 'error' | 'success' | 'warning',
-    title: string,
-    message: string,
-    id: number
-  }> = [];
+  activeErrors: { type: string; title: string; message: string }[] = [];
   isLoading = false;
   showMessage = false;
   isSuccess = false;
   responseMessage = '';
+  private subscription = new Subscription();
+
+  // Variable para controlar la visibilidad del modal de términos y condiciones
+  showTermsModal = false;
 
   constructor(
     private fb: FormBuilder,
@@ -56,43 +56,112 @@ export class RegisterComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {
     this.registerForm = fb.nonNullable.group({
-      nombre: ['', [Validators.required, Validators.minLength(3)]],
-      apellido: ['', [Validators.required, Validators.minLength(3)]],
       username: ['', [Validators.required, Validators.minLength(4)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
+      confirmPassword: ['', Validators.required],
+      nombre: ['', Validators.required],
+      apellido: ['', Validators.required],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       cuit: ['', [Validators.required, Validators.pattern(/^\d{2}-\d{8}-\d{1}$/)]],
+      termsAccepted: [false, Validators.requiredTrue]
     }, {
       validators: this.passwordMatchValidator
     });
   }
 
-  formatCuit(event: any): void {
-    let value = event.target.value.replace(/\D/g, ''); // Elimina todo excepto números
-    if (value.length <= 11) {
-      if (value.length > 2) {
-        value = value.substring(0, 2) + '-' + value.substring(2);
-      }
-      if (value.length > 10) {
-        value = value.substring(0, 11) + '-' + value.substring(11, 12);
-      }
-      this.registerForm.patchValue({ cuit: value }, { emitEvent: false });
+  ngOnInit(): void {
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
+  passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('password');
+    const confirmPassword = control.get('confirmPassword');
+
+    if (password && confirmPassword && password.value !== confirmPassword.value) {
+      return { mismatch: true };
+    }
+
+    return null;
+  }
+
+  hasFieldError(field: string): boolean {
+    return this.fieldErrors.has(field);
+  }
+
+  getFieldError(field: string): string {
+    return this.fieldErrors.get(field) || '';
+  }
+
+  onInputFocus(event: FocusEvent): void {
+    const inputElement = event.target as HTMLInputElement;
+    const fieldName = inputElement.getAttribute('formcontrolname');
+    if (fieldName && this.fieldErrors.has(fieldName)) {
+      this.fieldErrors.delete(fieldName);
     }
   }
 
+  formatCuit(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+
+    if (value.length > 11) {
+      value = value.slice(0, 11);
+    }
+
+    let formatted = '';
+    if (value.length > 0) {
+      formatted = value.slice(0, 2);
+      if (value.length > 2) {
+        formatted += '-' + value.slice(2, 10);
+        if (value.length > 10) {
+          formatted += '-' + value.slice(10);
+        }
+      }
+    }
+
+    input.value = formatted;
+    this.registerForm.get('cuit')?.setValue(formatted);
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/login']);
+  }
+
   onSubmit(): void {
-    if (this.registerForm.valid) {
-      this.isLoading = true;
-      this.fieldErrors.clear();
+    // Asegurarnos de que los términos sean marcados como tocados si no están aceptados
+    this.ensureTermsFieldTouched();
 
-      const userData: NewUser = {
-        ...this.registerForm.value,
-        cuit: this.registerForm.get('cuit')?.value.replace(/-/g, ''),
-        roles: new Set<string>(['ROLE_USER'])
-      };
+    if (this.registerForm.invalid) {
+      // Marcar todos los campos como tocados para mostrar los errores
+      Object.keys(this.registerForm.controls).forEach(key => {
+        const control = this.registerForm.get(key);
+        control?.markAsTouched();
+      });
+      return;
+    }
 
+    this.isLoading = true;
+    this.fieldErrors.clear();
+    this.activeErrors = [];
+
+    const formValue = this.registerForm.value;
+    const userData: NewUser = {
+      username: formValue.username!,
+      email: formValue.email!,
+      password: formValue.password!,
+      confirmPassword: formValue.confirmPassword!,
+      nombre: formValue.nombre!,
+      apellido: formValue.apellido!,
+      dni: formValue.dni!,
+      cuit: formValue.cuit!.replace(/-/g, ''),
+      roles: new Set<string>(['ROLE_USER'])
+    };
+
+    this.subscription.add(
       this.registerService.register(userData).subscribe({
         next: (response) => {
           this.isLoading = false;
@@ -101,116 +170,90 @@ export class RegisterComponent implements OnInit {
           this.responseMessage = 'Registro exitoso! Redirigiendo al login...';
 
           setTimeout(() => {
-
-            setTimeout(() => {
-              this.router.navigate(['/login']);
-            }, 500);
-          }, 1500);
+            this.router.navigate(['/login']);
+          }, 500);
         },
         error: (error) => {
           this.isLoading = false;
           this.showMessage = true;
           this.isSuccess = false;
 
-          if (error.field === 'general') {
-            this.responseMessage = error.message;
+          if (error.error?.fieldErrors) {
+            this.handleFieldErrors(error.error.fieldErrors);
+            this.responseMessage = 'Error en el registro, verifique los datos ingresados.';
           } else {
-            console.log(`Campo: ${error.field}, Mensaje: ${error.message}`);
-            this.fieldErrors.set(error.field, error.message);
-            this.registerForm.get(error.field)?.setErrors({ serverError: true });
-            this.responseMessage = `Error: ${error.message}`;
-
-            const fieldName = error.field.toLowerCase();
-            const inputElement = document.querySelector(`.user-box input[formControlName="${fieldName}"]`);
-
-            if (inputElement) {
-              console.log(`Elemento de entrada encontrado para el campo: ${fieldName}`);
-              const userBox = inputElement.closest('.user-box');
-              if (userBox) {
-                console.log(`Caja de usuario encontrada para el campo: ${fieldName}`);
-                document.querySelectorAll('.user-box').forEach(box => {
-                  box.classList.remove('error-highlight');
-                });
-
-                userBox.classList.add('error-highlight');
-                console.log(`Error resaltado para el campo: ${fieldName}`);
-                setTimeout(() => {
-                  userBox.classList.remove('error-highlight');
-                  console.log(`Error desresaltado para el campo: ${fieldName}`);
-                }, 5000);
-              }
-            }
+            this.responseMessage = error.error?.message || 'Error en el servidor. Intente más tarde.';
+            this.activeErrors.push({
+              type: 'error',
+              title: 'Error',
+              message: this.responseMessage
+            });
           }
 
           setTimeout(() => {
             this.showMessage = false;
-            console.log('Mensaje de error oculto después de 3 segundos');
           }, 3000);
         }
+      })
+    );
+  }
+
+  handleFieldErrors(fieldErrors: any[]): void {
+    fieldErrors.forEach(fieldError => {
+      this.fieldErrors.set(fieldError.field, fieldError.message);
+
+      this.activeErrors.push({
+        type: 'error',
+        title: this.getErrorTitle(fieldError.field),
+        message: fieldError.message
       });
-    }
+    });
   }
 
-  passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
-    const password = g.get('password');
-    const confirmPassword = g.get('confirmPassword');
-
-    return password && confirmPassword && password.value === confirmPassword.value
-      ? null
-      : { 'mismatch': true };
-  }
-
-  goToLogin(): void {
-    this.router.navigate(['/login']);
-  }
-
-  ngOnInit(): void {
-    // Inicialización del componente
-  }
-
-  onInputFocus(event: FocusEvent): void {
-    const element = event.target as HTMLElement;
-    setTimeout(() => {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest'
-      });
-    }, 100);
-  }
-
-  getFieldError(fieldName: string): string {
-    return this.fieldErrors.get(fieldName) || '';
-  }
-
-  hasFieldError(fieldName: string): boolean {
-    return this.fieldErrors.has(fieldName);
-  }
-
-  showError(message: string, field: string) {
-    const error = {
-      type: 'error' as const,
-      title: this.getErrorTitle(field),
-      message: message,
-      id: Date.now()
-    };
-
-    this.activeErrors.push(error);
-
-    // Remover el mensaje después de 5 segundos
-    setTimeout(() => {
-      this.activeErrors = this.activeErrors.filter(e => e.id !== error.id);
-    }, 5000);
-  }
-
-  private getErrorTitle(field: string): string {
+  getErrorTitle(field: string): string {
     const titles: { [key: string]: string } = {
-      email: 'Error en el Email',
-      username: 'Error en el Usuario',
-      password: 'Error en la Contraseña',
-      general: 'Error en el Registro',
-      // Agregar más campos según necesites
+      username: 'Error en nombre de usuario',
+      email: 'Error en correo electrónico',
+      password: 'Error en contraseña',
+      firstName: 'Error en nombre',
+      lastName: 'Error en apellido',
+      dni: 'Error en DNI',
+      cuit: 'Error en CUIT'
     };
+
     return titles[field] || 'Error de Validación';
+  }
+
+  // Método para mostrar el modal con los términos y condiciones
+  openTermsModal(): void {
+    this.showTermsModal = true;
+  }
+
+  // Método para cerrar el modal
+  closeTermsModal(): void {
+    this.showTermsModal = false;
+  }
+
+  // Método para aceptar los términos y condiciones
+  acceptTerms(): void {
+    this.registerForm.get('termsAccepted')?.setValue(true);
+    this.closeTermsModal();
+  }
+
+  // Método para marcar los términos como tocados para mostrar error visual
+  ensureTermsFieldTouched(): void {
+    const termsControl = this.registerForm.get('termsAccepted');
+    if (termsControl && !termsControl.value) {
+      termsControl.markAsTouched();
+
+      // Añadir animación visual para llamar la atención
+      const termsLabel = document.querySelector('.terms-required');
+      if (termsLabel) {
+        termsLabel.classList.remove('terms-required');
+        setTimeout(() => {
+          termsLabel.classList.add('terms-required');
+        }, 10);
+      }
+    }
   }
 }

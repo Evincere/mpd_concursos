@@ -193,7 +193,7 @@ mat-error {
   color: #ff4444;
   backdrop-filter: blur(5px);
   transition: all 0.3s ease;
-  
+
   &.success {
     background: rgba(76, 175, 80, 0.1);
     border-left-color: #4CAF50;
@@ -214,19 +214,19 @@ mat-error {
   right: 20px;
   z-index: 1000;
   max-width: 350px;
-  
+
   .message {
     margin-bottom: 10px;
     padding: 15px 20px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     animation: slideIn 0.3s ease-out;
-    
+
     &.error {
       background: linear-gradient(45deg, #ff4444, #ff6b6b);
       color: white;
     }
-    
+
     &.success {
       background: linear-gradient(45deg, #4CAF50, #81C784);
       color: white;
@@ -257,7 +257,7 @@ mat-error {
   z-index: 1000;
   max-width: 200px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -387,8 +387,178 @@ input:-webkit-autofill:active {
 input {
     background: transparent !important;
     color: #fff !important;
-    
+
     &::placeholder {
         color: rgba(255, 255, 255, 0.7);
     }
+}
+
+// Estilo para el enlace de términos y condiciones
+.terms-link {
+  color: #3c4043;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 500;
+
+  &:hover {
+    color: #005eb8;
+  }
+}
+
+// Estilos para el modal de términos y condiciones
+.terms-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.terms-modal {
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.terms-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background-color: #003366;
+  color: white;
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: #cccccc;
+    }
+  }
+}
+
+.terms-modal-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex-grow: 1;
+  max-height: 60vh;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+    color: #003366;
+  }
+
+  h4 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    color: #003366;
+  }
+
+  p {
+    margin-bottom: 16px;
+    line-height: 1.6;
+    color: #333;
+  }
+}
+
+.terms-modal-footer {
+  padding: 16px 24px;
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  button {
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .accept-button {
+    background-color: #003366;
+    color: white;
+    border: none;
+
+    &:hover {
+      background-color: #004080;
+    }
+  }
+
+  .cancel-button {
+    background-color: transparent;
+    color: #333;
+    border: 1px solid #ccc;
+
+    &:hover {
+      background-color: #f0f0f0;
+      border-color: #999;
+    }
+  }
+}
+
+// Estilo para resaltar el checkbox de términos cuando no esté aceptado
+.terms-required {
+  animation: termsShake 0.8s ease-in-out;
+  color: #ff4444 !important;
+
+  .terms-link {
+    color: #ff4444;
+    font-weight: bold;
+  }
+
+  .peer {
+    border-color: #ff4444 !important;
+  }
+}
+
+@keyframes termsShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.terms-button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: color 0.3s;
+  font-size: 14px;
+  
+  &:hover {
+    color: #4CAF50;
+  }
 }
