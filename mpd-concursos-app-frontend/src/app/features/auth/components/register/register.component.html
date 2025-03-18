@@ -1,8 +1,8 @@
 <div class="register-box">
   <h2>Registro de Usuario</h2>
   <div class="floating-messages">
-    <div *ngFor="let error of activeErrors" 
-         class="message" 
+    <div *ngFor="let error of activeErrors"
+         class="message"
          [ngClass]="error.type">
       <div class="message-content">
         <strong>{{ error.title }}</strong>
@@ -56,16 +56,16 @@
       </mat-error>
     </div>
     <div class="user-box" [class.error-field]="hasFieldError('email')">
-      <input matInput 
-             type="email" 
-             formControlName="email" 
-             placeholder=" " 
-             required 
+      <input matInput
+             type="email"
+             formControlName="email"
+             placeholder=" "
+             required
              (focus)="onInputFocus($event)"
              [class.error-input]="hasFieldError('email')">
       <label>Email</label>
-      <div class="error-message" 
-           *ngIf="registerForm.get('email')?.touched && 
+      <div class="error-message"
+           *ngIf="registerForm.get('email')?.touched &&
                   (registerForm.get('email')?.errors || hasFieldError('email'))">
         <ng-container *ngIf="registerForm.get('email')?.errors?.['required']">
           El email es requerido
@@ -98,35 +98,96 @@
         Las contraseñas no coinciden
       </mat-error>
     </div>
-    <label class="flex cursor-pointer items-center justify-between p-1 text-slate-400">
-      Acepta los términos de uso
+    <label class="flex cursor-pointer items-center justify-between p-1 text-slate-400"
+           [class.terms-required]="registerForm.get('termsAccepted')?.touched && !registerForm.get('termsAccepted')?.value">
+      <span>Acepta los <button type="button" class="terms-link" (click)="openTermsModal()">términos de uso</button></span>
       <div class="relative inline-block">
-        <input class="peer h-6 w-12 cursor-pointer appearance-none rounded-full border border-gray-300 bg-gary-400 checked:border-green-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2" type="checkbox">
+        <input class="peer h-6 w-12 cursor-pointer appearance-none rounded-full border border-gray-300 bg-gary-400 checked:border-green-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
+               type="checkbox"
+               formControlName="termsAccepted">
         <span class="pointer-events-none absolute left-1 top-1 block h-4 w-4 rounded-full bg-slate-600 transition-all duration-200 peer-checked:left-7 peer-checked:bg-green-300"></span>
       </div>
     </label>
-    <div class="action-container">
-      <button type="submit" 
-              [disabled]="!registerForm.valid" 
-              class="submit-button"
-              [class.fade-out]="isLoading || showMessage"
-              *ngIf="!isLoading && !showMessage">
-        Registrarse
-      </button>
-      <div class="loader-container" *ngIf="isLoading">
-        <div class="loader"></div>
+    <mat-error *ngIf="registerForm.get('termsAccepted')?.touched && registerForm.get('termsAccepted')?.errors?.['required']">
+      Debe aceptar los términos y condiciones
+    </mat-error>
+    
+    <div class="form-footer">
+      <div class="action-container">
+        <button type="submit"
+                [disabled]="!registerForm.valid || !registerForm.get('termsAccepted')?.value"
+                class="submit-button"
+                [class.fade-out]="isLoading || showMessage"
+                *ngIf="!isLoading && !showMessage">
+          Registrarse
+        </button>
+        <div class="loader-container" *ngIf="isLoading">
+          <div class="loader"></div>
+        </div>
+        <div class="message-container"
+             *ngIf="showMessage"
+             [class.success]="isSuccess"
+             [class.error]="!isSuccess"
+             [@messageAnimation]>
+          <i class="material-icons icon">
+            {{ isSuccess ? 'check_circle' : 'error' }}
+          </i>
+          <span class="message-text">{{ responseMessage }}</span>
+        </div>
       </div>
-      <div class="message-container" 
-           *ngIf="showMessage"
-           [class.success]="isSuccess"
-           [class.error]="!isSuccess"
-           [@messageAnimation]>
-        <i class="material-icons icon">
-          {{ isSuccess ? 'check_circle' : 'error' }}
-        </i>
-        <span class="message-text">{{ responseMessage }}</span>
-      </div>
+      <p>¿Ya tienes una cuenta? <button class="a2" (click)="goToLogin()">Iniciar Sesión</button></p>
+      <p><button class="terms-button" (click)="openTermsModal()">Ver términos y condiciones</button></p>
     </div>
   </form>
-  <p>¿Ya tienes una cuenta? <button class="a2" (click)="goToLogin()">Iniciar Sesión</button></p>
+
+  <!-- Indicador de scroll integrado dentro del formulario -->
+  <div class="scroll-indicator" *ngIf="showScrollIndicator" (click)="scrollToBottom()">
+    <span class="material-icons">touch_app</span>
+    <span class="scroll-text">Haga scroll para ver más</span>
+    <span class="material-icons scroll-icon">keyboard_arrow_down</span>
+  </div>
+</div>
+
+<!-- Modal de Términos y Condiciones -->
+<div class="terms-modal-overlay" *ngIf="showTermsModal" [@messageAnimation]>
+  <div class="terms-modal">
+    <div class="terms-modal-header">
+      <h2>Términos y Condiciones</h2>
+      <button type="button" class="close-button" (click)="closeTermsModal()">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="terms-modal-content">
+      <h3>TÉRMINOS Y CONDICIONES DE USO</h3>
+      <p>Bienvenido/a al Sistema de Concursos del Ministerio Público de la Defensa (MPD). Al utilizar esta plataforma, usted acepta cumplir con estos términos y condiciones de uso.</p>
+
+      <h4>1. ALCANCE Y APLICACIÓN</h4>
+      <p>Estos términos y condiciones rigen el uso de la plataforma digital del Sistema de Concursos del MPD, incluyendo el registro de usuarios, la inscripción a concursos y la participación en los procesos de selección.</p>
+
+      <h4>2. REGISTRO DE USUARIOS</h4>
+      <p>Para utilizar el Sistema de Concursos del MPD, es necesario completar el proceso de registro proporcionando información precisa y actualizada. Usted es responsable de mantener la confidencialidad de sus credenciales de acceso y de todas las actividades realizadas bajo su cuenta.</p>
+
+      <h4>3. INFORMACIÓN PERSONAL</h4>
+      <p>El MPD recopilará y tratará sus datos personales de acuerdo con la Ley 25.326 de Protección de Datos Personales. Al registrarse, usted consiente que sus datos sean utilizados para los fines relacionados con los procesos de concursos.</p>
+
+      <h4>4. CONDUCTA DEL USUARIO</h4>
+      <p>Usted se compromete a utilizar el Sistema de Concursos del MPD de manera ética y legal, respetando la integridad del sistema y la privacidad de otros usuarios. Queda prohibido cualquier uso fraudulento o para fines no autorizados.</p>
+
+      <h4>5. PROPIEDAD INTELECTUAL</h4>
+      <p>Todos los contenidos de la plataforma, incluyendo textos, gráficos, logos, iconos, imágenes y software, son propiedad del MPD y están protegidos por las leyes de propiedad intelectual.</p>
+
+      <h4>6. LIMITACIÓN DE RESPONSABILIDAD</h4>
+      <p>El MPD no será responsable por daños directos, indirectos, incidentales o consecuentes que puedan resultar del uso o la imposibilidad de usar el Sistema de Concursos.</p>
+
+      <h4>7. MODIFICACIONES</h4>
+      <p>El MPD se reserva el derecho de modificar estos términos y condiciones en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación en la plataforma.</p>
+
+      <h4>8. LEGISLACIÓN APLICABLE</h4>
+      <p>Estos términos y condiciones se rigen por las leyes de la República Argentina. Cualquier disputa relacionada con su interpretación o cumplimiento será sometida a la jurisdicción de los tribunales competentes.</p>
+    </div>
+    <div class="terms-modal-footer">
+      <button type="button" class="accept-button" (click)="acceptTerms()">Aceptar términos</button>
+      <button type="button" class="cancel-button" (click)="closeTermsModal()">Cerrar</button>
+    </div>
+  </div>
 </div>

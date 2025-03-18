@@ -1,10 +1,18 @@
+-- Establece la codificación de caracteres para asegurar la correcta inserción de texto
+SET NAMES utf8;
+SET CHARACTER SET utf8;
+
+-- Establece la codificación de caracteres para asegurar la correcta inserción de texto
+SET NAMES utf8;
+SET CHARACTER SET utf8;
+
 SET SQL_SAFE_UPDATES = 0;
 -- Deshabilitar verificación de foreign keys temporalmente
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpiar datos existentes
 DELETE FROM answers;
-DELETE FROM question_options;
+DELETE FROM options;
 DELETE FROM questions;
 DELETE FROM examination_sessions;
 DELETE FROM examinations;
@@ -54,8 +62,8 @@ INSERT INTO examinations (id, title, description, duration_minutes, status, star
 VALUES
 -- Examen disponible ahora (PUBLISHED y dentro del rango de fechas)
 (UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 
-'Examen Técnico-Jurídico - Defensor Penal', 
-'Evaluación de conocimientos en derecho penal y procesal penal', 
+'Examen Tecnico-Juridico - Defensor Penal', 
+'Evaluacion de conocimientos en derecho penal y procesal penal', 
 120, 'PUBLISHED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 HOUR), 
@@ -63,8 +71,8 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 HOUR),
 
 -- Examen programado para futuro (PUBLISHED pero fecha futura)
 (UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 
-'Examen Técnico-Administrativo - Defensoría Civil', 
-'Evaluación de procedimientos administrativos y gestión', 
+'Examen Tecnico-Administrativo - Defensoria Civil', 
+'Evaluacion de procedimientos administrativos y gestion', 
 90, 'PUBLISHED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY), 
@@ -72,8 +80,8 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY),
 
 -- Examen en borrador
 (UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 
-'Examen Psicológico - En Preparación', 
-'Evaluación de aptitudes psicológicas para el cargo', 
+'Examen Psicologico - En Preparacion', 
+'Evaluacion de aptitudes psicologicas para el cargo', 
 60, 'DRAFT', 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 DAY), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 11 DAY), 
@@ -81,8 +89,8 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 11 DAY),
 
 -- Examen disponible para rendir ahora (corta duración)
 (UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 
-'Examen Rápido - Conocimientos Generales', 
-'Evaluación rápida de conocimientos generales sobre derecho', 
+'Examen Rapido - Conocimientos Generales', 
+'Evaluacion rapida de conocimientos generales sobre derecho', 
 15, 'PUBLISHED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY), 
@@ -90,8 +98,8 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY),
 
 -- Examen disponible para rendir ahora (duración media)
 (UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 
-'Examen Técnico-Jurídico - Defensoría Penal Juvenil', 
-'Evaluación de conocimientos en derecho penal juvenil', 
+'Examen Tecnico-Juridico - Defensoria Penal Juvenil', 
+'Evaluacion de conocimientos en derecho penal juvenil', 
 45, 'PUBLISHED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 5 DAY), 
@@ -99,8 +107,8 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 5 DAY),
 
 -- Examen disponible para rendir ahora (larga duración)
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
-'Examen Completo - Defensoría Civil y Comercial', 
-'Evaluación exhaustiva de conocimientos en derecho civil y comercial', 
+'Examen Completo - Defensoria Civil y Comercial', 
+'Evaluacion exhaustiva de conocimientos en derecho civil y comercial', 
 120, 'PUBLISHED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 3 DAY), 
@@ -108,8 +116,8 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 3 DAY),
 
 -- Examen finalizado
 (UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 
-'Examen Técnico-Jurídico - Defensoría Penal 2024', 
-'Evaluación finalizada de conocimientos penales', 
+'Examen Tecnico-Juridico - Defensoria Penal 2024', 
+'Evaluacion finalizada de conocimientos penales', 
 120, 'COMPLETED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 48 HOUR), 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 46 HOUR), 
@@ -117,7 +125,7 @@ DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 46 HOUR),
 
 -- Examen anulado
 (UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 
-'Examen Técnico-Administrativo - Anulado', 
+'Examen Tecnico-Administrativo - Anulado', 
 'Este examen fue anulado por irregularidades', 
 90, 'CANCELLED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 HOUR), 
@@ -126,8 +134,8 @@ DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 22 HOUR),
 
 -- Examen en curso (algunos usuarios ya lo están rindiendo)
 (UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 
-'Examen Técnico-Jurídico - Defensoría Civil Actual', 
-'Evaluación de conocimientos en derecho civil y procesal', 
+'Examen Tecnico-Juridico - Defensoria Civil Actual', 
+'Evaluacion de conocimientos en derecho civil y procesal', 
 120, 'IN_PROGRESS', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 MINUTE), 
@@ -135,8 +143,8 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 MINUTE),
 
 -- Otro examen disponible ahora (para tener más opciones)
 (UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 
-'Examen Técnico-Administrativo - Secretaría', 
-'Evaluación de procedimientos y gestión administrativa', 
+'Examen Tecnico-Administrativo - Secretaria', 
+'Evaluacion de procedimientos y gestion administrativa', 
 60, 'PUBLISHED', 
 DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE), 
 DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 45 MINUTE), 
@@ -145,43 +153,23 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 45 MINUTE),
 -- Insertar concursos
 INSERT INTO contests (id, department, position, status, start_date, end_date)
 VALUES 
-(1, 'DEFENSORÍAS PENALES', 'Defensor/a Penal - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(2, 'DEFENSORÍAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(3, 'SECRETARÍA LEGAL Y TÉCNICA', 'Asesor/a Legal', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(4, 'DESARROLLO TECNOLÓGICO', 'Analista Programador/a', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(5, 'CODEFENSORÍAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY));
+(1, 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
+(2, 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
+(3, 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
+(4, 'DESARROLLO TECNOLOGICO', 'Analista Programador/a', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
+(5, 'CODEFENSORIAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY));
 
 -- Insertar preguntas para el primer examen
 SET @examen1_id = UUID_TO_BIN('77777777-7777-7777-7777-777777777777');
 
 INSERT INTO questions (id, examination_id, text, type, score, order_number)
 VALUES
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), @examen1_id, '¿Cuál es el principio fundamental del debido proceso?', 'SINGLE_CHOICE', 20, 1),
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), @examen1_id, 'Seleccione las garantías constitucionales aplicables al proceso penal', 'MULTIPLE_CHOICE', 30, 2),
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), @examen1_id, 'La prisión preventiva es una medida cautelar', 'TRUE_FALSE', 10, 3),
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), @examen1_id, 'Desarrolle los fundamentos de la teoría del delito', 'TEXT', 15, 4);
+(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), @examen1_id, '¿Cual es el principio fundamental del debido proceso?', 'SINGLE_CHOICE', 20, 1),
+(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), @examen1_id, 'Seleccione las garantias constitucionales aplicables al proceso penal', 'MULTIPLE_CHOICE', 30, 2),
+(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), @examen1_id, 'La prision preventiva es una medida cautelar', 'TRUE_FALSE', 10, 3),
+(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), @examen1_id, 'Desarrolle los fundamentos de la teoria del delito', 'TEXT', 15, 4);
 
--- Insertar opciones para las preguntas
-SET @pregunta1_id = UUID_TO_BIN('99999999-9999-9999-9999-999999999999');
-SET @pregunta2_id = UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
-
--- Opciones para pregunta 1 (SINGLE_CHOICE)
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Derecho a ser oído', 1, @pregunta1_id),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Derecho a la propiedad', 2, @pregunta1_id),
-(UUID_TO_BIN('ffffffff-ffff-ffff-ffff-ffffffffffff'), 'Derecho a la salud', 3, @pregunta1_id),
-(UUID_TO_BIN('11111111-1111-1111-1111-111111111112'), 'Derecho al trabajo', 4, @pregunta1_id);
-
--- Opciones para pregunta 2 (MULTIPLE_CHOICE)
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('22222222-2222-2222-2222-222222222223'), 'Presunción de inocencia', 1, @pregunta2_id),
-(UUID_TO_BIN('33333333-3333-3333-3333-333333333334'), 'Defensa en juicio', 2, @pregunta2_id),
-(UUID_TO_BIN('44444444-4444-4444-4444-444444444445'), 'Juez natural', 3, @pregunta2_id),
-(UUID_TO_BIN('55555555-5555-5555-5555-555555555556'), 'Derecho a la vivienda', 4, @pregunta2_id);
-
--- Crear una sesión de examen para el usuario1
+-- Crear una sesion de examen para el usuario1
 SET @user1_id = UUID_TO_BIN('44444444-4444-4444-4444-444444444444');
 
 INSERT INTO examination_sessions (id, examination_id, user_id, start_time, deadline, status, current_question_index)
@@ -189,11 +177,11 @@ VALUES (UUID_TO_BIN('66666666-6666-6666-6666-666666666667'), @examen1_id, @user1
 
 -- Insertar algunas respuestas para el usuario1
 SET @session_id = UUID_TO_BIN('66666666-6666-6666-6666-666666666667');
-SET @question1_id = @pregunta1_id;
+SET @question1_id = UUID_TO_BIN('99999999-9999-9999-9999-999999999999');
 
 INSERT INTO answers (id, question_id, response, response_time_ms, status, timestamp, session_id)
 VALUES
-(UUID_TO_BIN('77777777-7777-7777-7777-777777777778'), @question1_id, 'Derecho a ser oído', 30000, 'SUBMITTED', CURRENT_TIMESTAMP, @session_id);
+(UUID_TO_BIN('77777777-7777-7777-7777-777777777778'), @question1_id, 'Derecho a ser oido', 30000, 'SUBMITTED', CURRENT_TIMESTAMP, @session_id);
 
 -- Asignar roles a usuarios
 INSERT INTO user_roles (user_id, role_id) VALUES
@@ -204,491 +192,114 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 (UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), UUID_TO_BIN('11111111-1111-1111-1111-111111111111')), -- semper ROLE_USER
 (UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), UUID_TO_BIN('22222222-2222-2222-2222-222222222222')); -- semper ROLE_ADMIN
 
--- Insertar requisitos para el examen psicológico
+-- Insertar requisitos para el examen psicologico
 INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Título de Psicólogo/a'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Matrícula profesional vigente'),
+(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Titulo de Psicologo/a'),
+(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Matricula profesional vigente'),
 (UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'No tener antecedentes disciplinarios');
 
--- Insertar reglas para el examen psicológico
+-- Insertar reglas para el examen psicologico
 INSERT INTO examination_rules (examination_id, rule) VALUES
 (UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Mantener la confidencialidad del proceso'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Seguir los protocolos de evaluación establecidos'),
+(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Seguir los protocolos de evaluacion establecidos'),
 (UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Documentar todas las observaciones');
 
--- Insertar materiales permitidos para el examen psicológico
+-- Insertar materiales permitidos para el examen psicologico
 INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Manuales de evaluación psicológica'),
+(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Manuales de evaluacion psicologica'),
 (UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Protocolos de pruebas estandarizadas'),
 (UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Formularios de registro');
 
--- Insertar requisitos para el examen técnico-jurídico finalizado
+-- Insertar requisitos para el examen tecnico-juridico finalizado
 INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Título de Abogado/a con especialización en derecho penal'),
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Experiencia mínima de 5 años en litigación penal'),
+(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Titulo de Abogado/a con especializacion en derecho penal'),
+(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Experiencia minima de 5 anos en litigacion penal'),
 (UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Conocimientos en derecho procesal penal');
 
--- Insertar reglas para el examen técnico-jurídico finalizado
+-- Insertar reglas para el examen tecnico-juridico finalizado
 INSERT INTO examination_rules (examination_id, rule) VALUES
 (UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Responder todas las preguntas'),
 (UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Citar normativa aplicable'),
 (UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Fundamentar cada respuesta');
 
--- Insertar materiales permitidos para el examen técnico-jurídico finalizado
+-- Insertar materiales permitidos para el examen tecnico-juridico finalizado
 INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Códigos actualizados'),
+(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Codigos actualizados'),
 (UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Jurisprudencia relevante'),
 (UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Doctrina seleccionada');
 
--- Insertar requisitos para el examen técnico-administrativo anulado
+-- Insertar requisitos para el examen tecnico-administrativo anulado
 INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Título en Administración o afines'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Experiencia en gestión pública'),
+(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Titulo en Administracion o afines'),
+(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Experiencia en gestion publica'),
 (UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Conocimientos en procedimientos administrativos');
 
--- Insertar reglas para el examen técnico-administrativo anulado
+-- Insertar reglas para el examen tecnico-administrativo anulado
 INSERT INTO examination_rules (examination_id, rule) VALUES
 (UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Seguir el formato establecido'),
 (UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Respetar los tiempos asignados'),
 (UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Mantener el orden en las respuestas');
 
--- Insertar materiales permitidos para el examen técnico-administrativo anulado
+-- Insertar materiales permitidos para el examen tecnico-administrativo anulado
 INSERT INTO examination_allowed_materials (examination_id, material) VALUES
 (UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Manual de procedimientos'),
 (UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Normativa administrativa'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Calculadora básica');
+(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Calculadora basica');
 
--- Insertar requisitos para el examen técnico-jurídico en curso
+-- Insertar requisitos para el examen tecnico-juridico en curso
 INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Título de Abogado/a con orientación en derecho civil'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Experiencia en litigación civil'),
+(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Titulo de Abogado/a con orientacion en derecho civil'),
+(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Experiencia en litigacion civil'),
 (UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Conocimientos en derecho procesal civil');
 
--- Insertar reglas para el examen técnico-jurídico en curso
+-- Insertar reglas para el examen tecnico-juridico en curso
 INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Mantener la cámara encendida'),
+(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Mantener la camara encendida'),
 (UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'No consultar material no autorizado'),
 (UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Fundamentar respuestas con doctrina y jurisprudencia');
 
--- Insertar materiales permitidos para el examen técnico-jurídico en curso
+-- Insertar materiales permitidos para el examen tecnico-juridico en curso
 INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Código Civil y Comercial'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Código Procesal Civil'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Constitución Nacional');
+(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Codigo Civil y Comercial'),
+(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Codigo Procesal Civil'),
+(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Constitucion Nacional');
 
--- Insertar requisitos para el examen técnico-administrativo disponible
+-- Insertar requisitos para el examen tecnico-administrativo disponible
 INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Título universitario en áreas administrativas'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Experiencia en gestión documental'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Manejo de sistemas informáticos');
+(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Titulo universitario en areas administrativas'),
+(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Experiencia en gestion documental'),
+(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Manejo de sistemas informaticos');
 
--- Insertar reglas para el examen técnico-administrativo disponible
+-- Insertar reglas para el examen tecnico-administrativo disponible
 INSERT INTO examination_rules (examination_id, rule) VALUES
 (UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Completar todas las secciones'),
 (UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Seguir el orden establecido'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Respetar los tiempos máximos');
+(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Respetar los tiempos maximos');
 
--- Insertar materiales permitidos para el examen técnico-administrativo disponible
+-- Insertar materiales permitidos para el examen tecnico-administrativo disponible
 INSERT INTO examination_allowed_materials (examination_id, material) VALUES
 (UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Manual de procedimientos administrativos'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Guías de gestión documental'),
+(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Guias de gestion documental'),
 (UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Normativa interna');
 
--- Insertar preguntas de ejemplo para el examen de prueba
--- ID del examen: 88888888-8888-8888-8888-888888888888
-
--- Pregunta 1: Opción múltiple
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES (
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 
-    UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 
-    '¿Cuál es el plazo para presentar un recurso de apelación en un proceso civil?', 
-    'MULTIPLE_CHOICE', 
-    10, 
-    1
-);
-
--- Opciones para la pregunta 1
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('11111111-aaaa-1111-1111-111111111111'), 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 
-    1, 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('11111111-bbbb-1111-1111-111111111111'), 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 
-    2, 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('11111111-cccc-1111-1111-111111111111'), 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 
-    3, 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('11111111-dddd-1111-1111-111111111111'), 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 
-    4, 
-    UUID_TO_BIN('11111111-1111-1111-1111-111111111111')
-);
-
--- Pregunta 2: Desarrollo (texto libre)
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES (
-    UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 
-    UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 
-    'Explique brevemente el principio de legalidad en el derecho penal', 
-    'TEXT', 
-    15, 
-    2
-);
-
--- Pregunta 3: Verdadero/Falso
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES (
-    UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 
-    UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 
-    '¿Es correcto afirmar que la prisión preventiva es una medida cautelar excepcional?', 
-    'TRUE_FALSE', 
-    5, 
-    3
-);
-
--- Opciones para la pregunta 3
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('33333333-aaaa-3333-3333-333333333333'), 
-    UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 
-    1, 
-    UUID_TO_BIN('33333333-3333-3333-3333-333333333333')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('33333333-bbbb-3333-3333-333333333333'), 
-    UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 
-    2, 
-    UUID_TO_BIN('33333333-3333-3333-3333-333333333333')
-);
-
--- Pregunta 4: Opción múltiple
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES (
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 
-    UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 
-    'Según el Código Procesal Penal, ¿cuál es el plazo máximo de la prisión preventiva?', 
-    'MULTIPLE_CHOICE', 
-    10, 
-    4
-);
-
--- Opciones para la pregunta 4
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('44444444-aaaa-4444-4444-444444444444'), 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 
-    1, 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('44444444-bbbb-4444-4444-444444444444'), 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 
-    2, 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('44444444-cccc-4444-4444-444444444444'), 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 
-    3, 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('44444444-dddd-4444-4444-444444444444'), 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 
-    4, 
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444')
-);
-
--- Pregunta 5: Opción única
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES (
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 
-    UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 
-    '¿Quién es el titular de la acción penal pública?', 
-    'SINGLE_CHOICE', 
-    10, 
-    5
-);
-
--- Opciones para la pregunta 5
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('55555555-aaaa-5555-5555-555555555555'), 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 
-    1, 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('55555555-bbbb-5555-5555-555555555555'), 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 
-    2, 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('55555555-cccc-5555-5555-555555555555'), 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 
-    3, 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555')
-);
-
-INSERT INTO options (id, text, order_number, question_id)
-VALUES (
-    UUID_TO_BIN('55555555-dddd-5555-5555-555555555555'), 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 
-    4, 
-    UUID_TO_BIN('55555555-5555-5555-5555-555555555555')
-);
-
--- Insertar preguntas para el examen rápido (aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa)
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES
-(UUID_TO_BIN('a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1'), 
- UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 
- '¿Cuál es el plazo para interponer un recurso de apelación en el proceso civil?', 
- 'MULTIPLE_CHOICE', 
- 5, 
- 1),
-(UUID_TO_BIN('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2'), 
- UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 
- '¿Es correcto afirmar que la prisión preventiva es una pena?', 
- 'TRUE_FALSE', 
- 5, 
- 2),
-(UUID_TO_BIN('a3a3a3a3-a3a3-a3a3-a3a3-a3a3a3a3a3a3'), 
- UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 
- 'Explique brevemente el principio de legalidad en el derecho penal', 
- 'TEXT', 
- 5, 
- 3);
-
--- Opciones para la pregunta 1 del examen rápido
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('a1a1a101-a1a1-a1a1-a1a1-a1a1a1a1a101'), '5 días', 1, UUID_TO_BIN('a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1')),
-(UUID_TO_BIN('a1a1a102-a1a1-a1a1-a1a1-a1a1a1a1a102'), '10 días', 2, UUID_TO_BIN('a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1')),
-(UUID_TO_BIN('a1a1a103-a1a1-a1a1-a1a1-a1a1a1a1a103'), '15 días', 3, UUID_TO_BIN('a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1')),
-(UUID_TO_BIN('a1a1a104-a1a1-a1a1-a1a1-a1a1a1a1a104'), '30 días', 4, UUID_TO_BIN('a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1'));
-
--- Opciones para la pregunta 2 del examen rápido
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('a2a2a201-a2a2-a2a2-a2a2-a2a2a2a2a201'), 'Verdadero', 1, UUID_TO_BIN('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2')),
-(UUID_TO_BIN('a2a2a202-a2a2-a2a2-a2a2-a2a2a2a2a202'), 'Falso', 2, UUID_TO_BIN('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2a2'));
-
--- Insertar preguntas para el examen de duración media (bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb)
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES
-(UUID_TO_BIN('b1b1b1b1-b1b1-b1b1-b1b1-b1b1b1b1b1b1'), 
- UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 
- '¿Cuál es la edad mínima de imputabilidad en el régimen penal juvenil?', 
- 'MULTIPLE_CHOICE', 
- 10, 
- 1),
-(UUID_TO_BIN('b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2'), 
- UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 
- 'Enumere los principios rectores del proceso penal juvenil', 
- 'TEXT', 
- 15, 
- 2),
-(UUID_TO_BIN('b3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3'), 
- UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 
- '¿Es correcto afirmar que las medidas socioeducativas tienen carácter punitivo?', 
- 'TRUE_FALSE', 
- 10, 
- 3),
-(UUID_TO_BIN('b4b4b4b4-b4b4-b4b4-b4b4-b4b4b4b4b4b4'), 
- UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 
- 'Explique la diferencia entre medidas de protección y medidas socioeducativas', 
- 'TEXT', 
- 10, 
- 4);
-
--- Opciones para la pregunta 1 del examen de duración media
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('b1b1b101-b1b1-b1b1-b1b1-b1b1b1b1b101'), '14 años', 1, UUID_TO_BIN('b1b1b1b1-b1b1-b1b1-b1b1-b1b1b1b1b1b1')),
-(UUID_TO_BIN('b1b1b102-b1b1-b1b1-b1b1-b1b1b1b1b102'), '16 años', 2, UUID_TO_BIN('b1b1b1b1-b1b1-b1b1-b1b1-b1b1b1b1b1b1')),
-(UUID_TO_BIN('b1b1b103-b1b1-b1b1-b1b1-b1b1b1b1b103'), '18 años', 3, UUID_TO_BIN('b1b1b1b1-b1b1-b1b1-b1b1-b1b1b1b1b1b1')),
-(UUID_TO_BIN('b1b1b104-b1b1-b1b1-b1b1-b1b1b1b1b104'), '12 años', 4, UUID_TO_BIN('b1b1b1b1-b1b1-b1b1-b1b1-b1b1b1b1b1b1'));
-
--- Opciones para la pregunta 3 del examen de duración media
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('b3b3b301-b3b3-b3b3-b3b3-b3b3b3b3b301'), 'Verdadero', 1, UUID_TO_BIN('b3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3')),
-(UUID_TO_BIN('b3b3b302-b3b3-b3b3-b3b3-b3b3b3b3b302'), 'Falso', 2, UUID_TO_BIN('b3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3'));
-
--- Insertar preguntas para el examen completo (cccccccc-cccc-cccc-cccc-cccccccccccc)
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES
-(UUID_TO_BIN('c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1'), 
- UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
- '¿Cuál es el plazo de prescripción para una acción de daños y perjuicios?', 
- 'MULTIPLE_CHOICE', 
- 20, 
- 1),
-(UUID_TO_BIN('c2c2c2c2-c2c2-c2c2-c2c2-c2c2c2c2c2c2'), 
- UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
- 'Desarrolle los elementos esenciales del contrato de compraventa', 
- 'TEXT', 
- 25, 
- 2),
-(UUID_TO_BIN('c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3'), 
- UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
- '¿Es correcto afirmar que la hipoteca es un derecho real de garantía?', 
- 'TRUE_FALSE', 
- 15, 
- 3),
-(UUID_TO_BIN('c4c4c4c4-c4c4-c4c4-c4c4-c4c4c4c4c4c4'), 
- UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
- 'Explique los efectos de la declaración de nulidad de un acto jurídico', 
- 'TEXT', 
- 20, 
- 4),
-(UUID_TO_BIN('c5c5c5c5-c5c5-c5c5-c5c5-c5c5c5c5c5c5'), 
- UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
- 'Seleccione los derechos reales reconocidos en el Código Civil y Comercial', 
- 'MULTIPLE_CHOICE', 
- 20, 
- 5),
-(UUID_TO_BIN('c6c6c6c6-c6c6-c6c6-c6c6-c6c6c6c6c6c6'), 
- UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
- 'Desarrolle los principios del proceso civil', 
- 'TEXT', 
- 20, 
- 6);
-
--- Opciones para la pregunta 1 del examen completo
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('c1c1c101-c1c1-c1c1-c1c1-c1c1c1c1c101'), '1 año', 1, UUID_TO_BIN('c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1')),
-(UUID_TO_BIN('c1c1c102-c1c1-c1c1-c1c1-c1c1c1c1c102'), '2 años', 2, UUID_TO_BIN('c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1')),
-(UUID_TO_BIN('c1c1c103-c1c1-c1c1-c1c1-c1c1c1c1c103'), '3 años', 3, UUID_TO_BIN('c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1')),
-(UUID_TO_BIN('c1c1c104-c1c1-c1c1-c1c1-c1c1c1c1c104'), '5 años', 4, UUID_TO_BIN('c1c1c1c1-c1c1-c1c1-c1c1-c1c1c1c1c1c1'));
-
--- Opciones para la pregunta 3 del examen completo
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('c3c3c301-c3c3-c3c3-c3c3-c3c3c3c3c301'), 'Verdadero', 1, UUID_TO_BIN('c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3')),
-(UUID_TO_BIN('c3c3c302-c3c3-c3c3-c3c3-c3c3c3c3c302'), 'Falso', 2, UUID_TO_BIN('c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3'));
-
--- Opciones para la pregunta 5 del examen completo
-INSERT INTO options (id, text, order_number, question_id)
-VALUES
-(UUID_TO_BIN('c5c5c501-c5c5-c5c5-c5c5-c5c5c5c5c501'), 'Dominio', 1, UUID_TO_BIN('c5c5c5c5-c5c5-c5c5-c5c5-c5c5c5c5c5c5')),
-(UUID_TO_BIN('c5c5c502-c5c5-c5c5-c5c5-c5c5c5c5c502'), 'Condominio', 2, UUID_TO_BIN('c5c5c5c5-c5c5-c5c5-c5c5-c5c5c5c5c5c5')),
-(UUID_TO_BIN('c5c5c503-c5c5-c5c5-c5c5-c5c5c5c5c503'), 'Usufructo', 3, UUID_TO_BIN('c5c5c5c5-c5c5-c5c5-c5c5-c5c5c5c5c5c5')),
-(UUID_TO_BIN('c5c5c504-c5c5-c5c5-c5c5-c5c5c5c5c504'), 'Contrato', 4, UUID_TO_BIN('c5c5c5c5-c5c5-c5c5-c5c5-c5c5c5c5c5c5')),
-(UUID_TO_BIN('c5c5c505-c5c5-c5c5-c5c5-c5c5c5c5c505'), 'Servidumbre', 5, UUID_TO_BIN('c5c5c5c5-c5c5-c5c5-c5c5-c5c5c5c5c5c5'));
-
--- Asegurarse de que el examen tenga una fecha de inicio válida (pasada)
-UPDATE examinations 
-SET start_time = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY),
-    end_time = DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY)
-WHERE id = UUID_TO_BIN('88888888-8888-8888-8888-888888888888');
-
--- Insertar requisitos, reglas y materiales para los nuevos exámenes
--- Examen rápido
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'Conocimientos básicos de derecho'),
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'Manejo de conceptos jurídicos fundamentales');
+-- Reglas del examen completo
+INSERT INTO examination_rules (examination_id, rule) VALUES
+(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Se debe mantener la camara encendida');
 
 INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'No se permite consultar material durante el examen'),
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'Responder todas las preguntas');
-
--- Examen de duración media
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'Título de abogado'),
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'Conocimientos en derecho penal juvenil'),
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'Experiencia en casos con menores');
+(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'No se permite el uso de dispositivos electronicos adicionales');
 
 INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'Se debe mantener la cámara encendida'),
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'No se permiten interrupciones');
-
-INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'Código Penal Juvenil'),
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'Ley de Protección Integral de Niños, Niñas y Adolescentes');
-
--- Examen completo
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Título de abogado con especialización en derecho civil'),
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Experiencia mínima de 3 años en litigios civiles'),
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Conocimientos de derecho comercial');
-
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Se debe mantener la cámara encendida'),
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'No se permite el uso de dispositivos electrónicos adicionales'),
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Se permite un descanso de 10 minutos a la mitad del examen');
 
 INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Código Civil y Comercial'),
+(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Codigo Civil y Comercial'),
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Leyes complementarias de derecho civil'),
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Jurisprudencia relevante (sin anotaciones)');
-
--- Insertar opciones para la pregunta "¿Cuál es el principio fundamental del debido proceso?"
-INSERT INTO options (id, text, order_number, question_id)
-VALUES 
-(UUID_TO_BIN('d1d1d1d1-d1d1-d1d1-d1d1-d1d1d1d1d1d1'), 'Derecho a ser oído', 1, UUID_TO_BIN('99999999-9999-9999-9999-999999999999')),
-(UUID_TO_BIN('d2d2d2d2-d2d2-d2d2-d2d2-d2d2d2d2d2d2'), 'Presunción de inocencia', 2, UUID_TO_BIN('99999999-9999-9999-9999-999999999999')),
-(UUID_TO_BIN('d3d3d3d3-d3d3-d3d3-d3d3-d3d3d3d3d3d3'), 'Derecho a la defensa', 3, UUID_TO_BIN('99999999-9999-9999-9999-999999999999')),
-(UUID_TO_BIN('d4d4d4d4-d4d4-d4d4-d4d4-d4d4d4d4d4d4'), 'Juez natural', 4, UUID_TO_BIN('99999999-9999-9999-9999-999999999999'));
-
--- Insertar opciones para la pregunta "Seleccione las garantías constitucionales aplicables al proceso penal"
-INSERT INTO options (id, text, order_number, question_id)
-VALUES 
-(UUID_TO_BIN('e1e1e1e1-e1e1-e1e1-e1e1-e1e1e1e1e1e1'), 'Derecho a no declarar contra sí mismo', 1, UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')),
-(UUID_TO_BIN('e2e2e2e2-e2e2-e2e2-e2e2-e2e2e2e2e2e2'), 'Derecho a un juicio público', 2, UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')),
-(UUID_TO_BIN('e3e3e3e3-e3e3-e3e3-e3e3-e3e3e3e3e3e3'), 'Derecho a un juez imparcial', 3, UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')),
-(UUID_TO_BIN('e4e4e4e4-e4e4-e4e4-e4e4-e4e4e4e4e4e4'), 'Derecho a la doble instancia', 4, UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')),
-(UUID_TO_BIN('e5e5e5e5-e5e5-e5e5-e5e5-e5e5e5e5e5e5'), 'Derecho a la asistencia letrada', 5, UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'));
-
--- Insertar opciones para la pregunta "La prisión preventiva es una medida cautelar"
-INSERT INTO options (id, text, order_number, question_id)
-VALUES 
-(UUID_TO_BIN('f1f1f1f1-f1f1-f1f1-f1f1-f1f1f1f1f1f1'), 'Verdadero', 1, UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')),
-(UUID_TO_BIN('f2f2f2f2-f2f2-f2f2-f2f2-f2f2f2f2f2f2'), 'Falso', 2, UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'));
-
--- Insertar opciones para la pregunta "¿Cuál es el plazo para presentar un recurso de apelación en un proceso civil?"
-INSERT INTO options (id, text, order_number, question_id)
-VALUES 
-(UUID_TO_BIN('a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1b1'), '5 días hábiles', 1, UUID_TO_BIN('11111111-1111-1111-1111-111111111111')),
-(UUID_TO_BIN('a2a2a2a2-a2a2-a2a2-a2a2-a2a2a2a2a2b2'), '10 días hábiles', 2, UUID_TO_BIN('11111111-1111-1111-1111-111111111111')),
-(UUID_TO_BIN('a3a3a3a3-a3a3-a3a3-a3a3-a3a3a3a3a3b3'), '15 días hábiles', 3, UUID_TO_BIN('11111111-1111-1111-1111-111111111111')),
-(UUID_TO_BIN('a4a4a4a4-a4a4-a4a4-a4a4-a4a4a4a4a4b4'), '30 días hábiles', 4, UUID_TO_BIN('11111111-1111-1111-1111-111111111111'));
 
 -- Datos iniciales para tipos de documento
 INSERT INTO document_types (id, name, description, required, `order`) VALUES
 (UUID_TO_BIN(UUID()), 'Documento Nacional de Identidad', 'DNI del postulante', TRUE, 1),
-(UUID_TO_BIN(UUID()), 'Título Universitario', 'Título de grado universitario', TRUE, 2),
+(UUID_TO_BIN(UUID()), 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 2),
 (UUID_TO_BIN(UUID()), 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 3),
 (UUID_TO_BIN(UUID()), 'Curriculum Vitae', 'CV actualizado', FALSE, 4);
