@@ -1,8 +1,8 @@
 <div class="register-box">
   <h2>Registro de Usuario</h2>
   <div class="floating-messages">
-    <div *ngFor="let error of activeErrors"
-         class="message"
+    <div *ngFor="let error of activeErrors" 
+         class="message" 
          [ngClass]="error.type">
       <div class="message-content">
         <strong>{{ error.title }}</strong>
@@ -56,16 +56,16 @@
       </mat-error>
     </div>
     <div class="user-box" [class.error-field]="hasFieldError('email')">
-      <input matInput
-             type="email"
-             formControlName="email"
-             placeholder=" "
-             required
+      <input matInput 
+             type="email" 
+             formControlName="email" 
+             placeholder=" " 
+             required 
              (focus)="onInputFocus($event)"
              [class.error-input]="hasFieldError('email')">
       <label>Email</label>
-      <div class="error-message"
-           *ngIf="registerForm.get('email')?.touched &&
+      <div class="error-message" 
+           *ngIf="registerForm.get('email')?.touched && 
                   (registerForm.get('email')?.errors || hasFieldError('email'))">
         <ng-container *ngIf="registerForm.get('email')?.errors?.['required']">
           El email es requerido
@@ -111,29 +111,29 @@
     <mat-error *ngIf="registerForm.get('termsAccepted')?.touched && registerForm.get('termsAccepted')?.errors?.['required']">
       Debe aceptar los términos y condiciones
     </mat-error>
-    
+
     <div class="form-footer">
-      <div class="action-container">
-        <button type="submit"
+    <div class="action-container">
+      <button type="submit" 
                 [disabled]="!registerForm.valid || !registerForm.get('termsAccepted')?.value"
-                class="submit-button"
-                [class.fade-out]="isLoading || showMessage"
-                *ngIf="!isLoading && !showMessage">
-          Registrarse
-        </button>
-        <div class="loader-container" *ngIf="isLoading">
-          <div class="loader"></div>
-        </div>
-        <div class="message-container"
-             *ngIf="showMessage"
-             [class.success]="isSuccess"
-             [class.error]="!isSuccess"
-             [@messageAnimation]>
-          <i class="material-icons icon">
-            {{ isSuccess ? 'check_circle' : 'error' }}
-          </i>
-          <span class="message-text">{{ responseMessage }}</span>
-        </div>
+              class="submit-button"
+              [class.fade-out]="isLoading || showMessage"
+              *ngIf="!isLoading && !showMessage">
+        Registrarse
+      </button>
+      <div class="loader-container" *ngIf="isLoading">
+        <div class="loader"></div>
+      </div>
+      <div class="message-container" 
+           *ngIf="showMessage"
+           [class.success]="isSuccess"
+           [class.error]="!isSuccess"
+           [@messageAnimation]>
+        <i class="material-icons icon">
+          {{ isSuccess ? 'check_circle' : 'error' }}
+        </i>
+        <span class="message-text">{{ responseMessage }}</span>
+      </div>
       </div>
       <p>¿Ya tienes una cuenta? <button class="a2" (click)="goToLogin()">Iniciar Sesión</button></p>
       <p><button class="terms-button" (click)="openTermsModal()">Ver términos y condiciones</button></p>
@@ -159,31 +159,126 @@
     </div>
     <div class="terms-modal-content">
       <h3>TÉRMINOS Y CONDICIONES DE USO</h3>
-      <p>Bienvenido/a al Sistema de Concursos del Ministerio Público de la Defensa (MPD). Al utilizar esta plataforma, usted acepta cumplir con estos términos y condiciones de uso.</p>
+      <p>Bienvenido/a al Sistema de Concursos del Ministerio Público de la Defensa de la República Argentina (en adelante "MPD"). Antes de utilizar esta plataforma, le solicitamos leer detenidamente los siguientes términos y condiciones de uso. El acceso y utilización de este sistema implica la aceptación plena y sin reservas de todas las disposiciones incluidas en el presente documento.</p>
 
       <h4>1. ALCANCE Y APLICACIÓN</h4>
-      <p>Estos términos y condiciones rigen el uso de la plataforma digital del Sistema de Concursos del MPD, incluyendo el registro de usuarios, la inscripción a concursos y la participación en los procesos de selección.</p>
+      <p>Los presentes términos y condiciones rigen el uso de la plataforma digital del Sistema de Concursos del MPD, desarrollada para gestionar los procesos de selección de personal dentro del ámbito del Ministerio Público de la Defensa de la República Argentina. Estas disposiciones son aplicables a todos los usuarios registrados en la plataforma, incluyendo postulantes, evaluadores y administradores del sistema. El Sistema de Concursos MPD está diseñado para facilitar la inscripción, participación y seguimiento de los procedimientos de selección para cargos vacantes en el MPD, de conformidad con la normativa vigente.</p>
 
-      <h4>2. REGISTRO DE USUARIOS</h4>
-      <p>Para utilizar el Sistema de Concursos del MPD, es necesario completar el proceso de registro proporcionando información precisa y actualizada. Usted es responsable de mantener la confidencialidad de sus credenciales de acceso y de todas las actividades realizadas bajo su cuenta.</p>
+      <h4>2. REGISTRO DE USUARIOS Y ACCESO</h4>
+      <p>Para utilizar el Sistema de Concursos del MPD, es necesario completar el proceso de registro proporcionando información precisa, completa y actualizada. Para la creación de su cuenta, deberá proporcionar datos personales como nombre, apellido, DNI, CUIT/CUIL, dirección de correo electrónico y crear credenciales de acceso. Usted se compromete a proporcionar información veraz, mantener la confidencialidad de sus credenciales y asumir plena responsabilidad por todas las actividades realizadas a través de su cuenta. El MPD se reserva el derecho de rechazar cualquier solicitud de registro o de suspender cuentas ante incumplimientos de estos términos.</p>
 
-      <h4>3. INFORMACIÓN PERSONAL</h4>
-      <p>El MPD recopilará y tratará sus datos personales de acuerdo con la Ley 25.326 de Protección de Datos Personales. Al registrarse, usted consiente que sus datos sean utilizados para los fines relacionados con los procesos de concursos.</p>
+      <h4>3. PROTECCIÓN DE DATOS PERSONALES</h4>
+      <p>En cumplimiento de la Ley 25.326 de Protección de Datos Personales, el MPD recopilará y tratará sus datos personales con la finalidad exclusiva de gestionar su participación en los procesos de selección y concursos. Sus datos serán accesibles únicamente por el personal autorizado del MPD involucrado en los procesos de selección. El suministro de los datos solicitados es obligatorio para participar en los procesos. Usted tiene derecho a acceder, rectificar, actualizar y suprimir sus datos personales conforme a la ley. Al registrarse, usted presta su consentimiento libre, expreso e informado para que sus datos personales sean tratados para los fines mencionados y de acuerdo con la política de privacidad del MPD.</p>
 
-      <h4>4. CONDUCTA DEL USUARIO</h4>
-      <p>Usted se compromete a utilizar el Sistema de Concursos del MPD de manera ética y legal, respetando la integridad del sistema y la privacidad de otros usuarios. Queda prohibido cualquier uso fraudulento o para fines no autorizados.</p>
+      <h4>4. OBLIGACIONES Y RESPONSABILIDADES DEL USUARIO</h4>
+      <p>Al utilizar el Sistema de Concursos del MPD, usted se compromete a utilizarlo de manera ética y legal, no realizar conductas que puedan dañar el funcionamiento de la plataforma, no acceder a áreas restringidas sin autorización, no difundir contenidos ilícitos, no suplantar identidades, presentar documentación veraz en su postulación y respetar la confidencialidad de los procesos. El incumplimiento de estas obligaciones podrá dar lugar a la suspensión de su cuenta, sin perjuicio de las acciones legales correspondientes.</p>
 
       <h4>5. PROPIEDAD INTELECTUAL</h4>
-      <p>Todos los contenidos de la plataforma, incluyendo textos, gráficos, logos, iconos, imágenes y software, son propiedad del MPD y están protegidos por las leyes de propiedad intelectual.</p>
+      <p>Todos los contenidos de la plataforma, incluyendo textos, gráficos, logos, iconos, imágenes, software, bases de datos, diseños y códigos, son propiedad exclusiva del MPD y están protegidos por las leyes de propiedad intelectual de Argentina. Queda prohibida su reproducción, distribución, modificación o comunicación pública sin autorización. Los documentos que usted aporte como parte de su postulación permanecerán bajo su titularidad, otorgando al MPD una licencia de uso limitada a los fines de evaluación y selección.</p>
 
       <h4>6. LIMITACIÓN DE RESPONSABILIDAD</h4>
-      <p>El MPD no será responsable por daños directos, indirectos, incidentales o consecuentes que puedan resultar del uso o la imposibilidad de usar el Sistema de Concursos.</p>
+      <p>El MPD adoptará medidas para garantizar el funcionamiento de la plataforma y la seguridad de la información. Sin embargo, no garantiza la disponibilidad ininterrumpida del sistema ni la ausencia de errores técnicos. El MPD no será responsable por interrupciones del servicio derivadas de fallos técnicos, mantenimiento o causas ajenas a su control. Usted asume la responsabilidad exclusiva por la veracidad de la información proporcionada. En ningún caso el MPD será responsable por daños indirectos, incidentales o consecuentes que puedan resultar del uso del Sistema de Concursos.</p>
 
-      <h4>7. MODIFICACIONES</h4>
-      <p>El MPD se reserva el derecho de modificar estos términos y condiciones en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación en la plataforma.</p>
+      <h4>7. MODIFICACIONES A LOS TÉRMINOS Y CONDICIONES</h4>
+      <p>El MPD se reserva el derecho de modificar estos términos y condiciones sin previo aviso para adaptarlos a cambios legislativos o políticas institucionales. Las modificaciones entrarán en vigor tras su publicación en la plataforma. Es su responsabilidad revisar periódicamente estos términos. El uso continuado de la plataforma después de la publicación de cambios constituye la aceptación de los mismos.</p>
 
-      <h4>8. LEGISLACIÓN APLICABLE</h4>
-      <p>Estos términos y condiciones se rigen por las leyes de la República Argentina. Cualquier disputa relacionada con su interpretación o cumplimiento será sometida a la jurisdicción de los tribunales competentes.</p>
+      <h4>8. LEGISLACIÓN APLICABLE Y JURISDICCIÓN</h4>
+      <p>Estos términos y condiciones se rigen por las leyes de la República Argentina, en particular por la Ley 25.326 de Protección de Datos Personales, la Ley 11.723 de Propiedad Intelectual, y demás normativa aplicable. Cualquier controversia será sometida a la jurisdicción de los Tribunales Federales con competencia en la Ciudad Autónoma de Buenos Aires.</p>
+
+      <h4>9. POLÍTICA DE COOKIES Y ALMACENAMIENTO LOCAL</h4>
+      <p>El Sistema de Concursos del MPD utiliza tecnologías de almacenamiento en su dispositivo para mejorar su experiencia de usuario y permitir el funcionamiento de ciertas funcionalidades esenciales. A continuación, se detalla cómo utilizamos estas tecnologías:</p>
+
+      <h5>9.1. Almacenamiento local (localStorage)</h5>
+      <p>La aplicación utiliza principalmente el almacenamiento local de su navegador (localStorage) para:</p>
+      <ul>
+        <li>Almacenar información de autenticación (token JWT) que permite mantener su sesión activa.</li>
+        <li>Guardar temporalmente información sobre su perfil de usuario.</li>
+        <li>Recordar sus preferencias y configuraciones dentro de la plataforma.</li>
+        <li>Facilitar el proceso de participación en concursos y exámenes, permitiendo guardar información de forma temporal para evitar pérdidas de datos.</li>
+      </ul>
+      <p>La información almacenada localmente permanece en su dispositivo y no es accesible por otros sitios web. Puede borrar estos datos en cualquier momento a través de la configuración de su navegador.</p>
+
+      <h5>9.2. Cookies técnicas</h5>
+      <p>El sitio puede utilizar cookies técnicas necesarias para el correcto funcionamiento de la plataforma. Estas cookies son esenciales para navegar por el sitio web y utilizar sus funcionalidades, como el acceso a áreas seguras. Sin estas cookies, ciertos servicios que ha solicitado no pueden ser proporcionados.</p>
+
+      <h5>9.3. Control y configuración</h5>
+      <p>Usted puede configurar su navegador para bloquear o alertar sobre estas tecnologías de almacenamiento, pero esto puede hacer que algunas partes del sitio no funcionen correctamente. La mayoría de los navegadores permiten algún control de la mayoría de las cookies a través de la configuración del navegador. Para saber más sobre las cookies, incluyendo cómo ver qué cookies se han establecido y cómo administrarlas y eliminarlas, visite <a href="http://www.allaboutcookies.org" target="_blank">www.allaboutcookies.org</a>.</p>
+
+      <h5>9.4. Duración del almacenamiento</h5>
+      <p>La información almacenada mediante tokens de autenticación tiene una fecha de caducidad, después de la cual se invalidan automáticamente requiriendo un nuevo inicio de sesión. Otros datos almacenados localmente pueden permanecer hasta que usted los elimine manualmente o hasta que la aplicación los actualice con nueva información.</p>
+
+      <p>Al utilizar el Sistema de Concursos del MPD, usted acepta el uso de estas tecnologías de almacenamiento según lo descrito en esta política.</p>
+
+      <h4>10. CLÁUSULA DE NULIDAD PARCIAL</h4>
+      <p>Si alguna disposición de estos términos y condiciones fuera declarada nula, inválida o inaplicable, total o parcialmente, por cualquier tribunal o autoridad competente, las restantes disposiciones conservarán su validez. Las partes acuerdan sustituir cualquier cláusula declarada nula por otra válida que tenga, en la medida de lo posible, efectos jurídicos y económicos similares a los pretendidos por la cláusula anulada. La nulidad o invalidez de cualquier disposición del presente documento no afectará la validez o aplicabilidad de las demás disposiciones que permanecerán en pleno vigor y efecto.</p>
+
+      <h4>11. SISTEMAS DE MONITOREO Y VIGILANCIA</h4>
+      <p>Durante su uso del Sistema de Concursos del MPD, y especialmente durante la participación en exámenes virtuales, la plataforma implementa diversos sistemas de monitoreo para garantizar la integridad y transparencia de los procesos de selección. Estos sistemas incluyen:</p>
+
+      <h5>11.1. Registro de actividad durante exámenes</h5>
+      <p>Durante los exámenes virtuales, el sistema puede registrar y almacenar datos sobre su interacción con la plataforma, incluyendo movimientos del ratón, uso del teclado, cambios en la conexión de red, y recursos del sistema utilizados. Este monitoreo tiene como finalidad prevenir conductas fraudulentas y asegurar la equidad en los procesos de evaluación.</p>
+
+      <h5>11.2. Medidas de seguridad y prevención de fraude</h5>
+      <p>El sistema implementa mecanismos de detección que pueden incluir:</p>
+      <ul>
+        <li>Control del modo pantalla completa durante exámenes</li>
+        <li>Detección de cambio entre pestañas o aplicaciones</li>
+        <li>Monitoreo de operaciones de copiar/pegar</li>
+        <li>Detección de inactividad prolongada</li>
+        <li>Análisis de patrones de respuesta</li>
+        <li>Validación de tiempo de respuesta</li>
+        <li>Monitoreo de conexión de red</li>
+      </ul>
+
+      <h5>11.3. Uso y almacenamiento de datos de monitoreo</h5>
+      <p>Los datos recopilados durante el monitoreo se utilizan exclusivamente para verificar el cumplimiento de las normas del examen y se almacenan de forma temporal para posibles revisiones en caso de impugnaciones o reclamos. Los datos son tratados con estricta confidencialidad y en cumplimiento con la Ley 25.326 de Protección de Datos Personales.</p>
+
+      <h5>11.4. Avisos y advertencias</h5>
+      <p>El sistema notificará sobre cualquier actividad que pueda considerarse una infracción a las normas del examen mediante avisos y advertencias. La acumulación de infracciones puede derivar en la anulación del examen rendido. Todas las medidas de vigilancia son aplicadas de manera uniforme a todos los participantes, garantizando la equidad del proceso.</p>
+
+      <h5>11.5. Consentimiento</h5>
+      <p>Al aceptar estos términos y condiciones, usted consiente expresamente la implementación de estos mecanismos de monitoreo durante su participación en exámenes virtuales. Antes de cada examen, recibirá información detallada sobre las medidas específicas de monitoreo que serán aplicadas.</p>
+
+      <h4>12. CANCELACIÓN Y DESACTIVACIÓN DE CUENTAS</h4>
+      <p>El Sistema de Concursos del MPD establece los siguientes procedimientos y consideraciones respecto a la gestión, suspensión, desactivación y cancelación de cuentas de usuario:</p>
+
+      <h5>12.1. Desactivación temporal de cuentas</h5>
+      <p>Su cuenta puede ser desactivada temporalmente en los siguientes casos:</p>
+      <ul>
+        <li>A solicitud expresa del usuario titular de la cuenta.</li>
+        <li>Por inactividad prolongada (superior a 12 meses consecutivos).</li>
+        <li>Durante investigaciones sobre posibles incumplimientos de los términos y condiciones.</li>
+        <li>Por razones de seguridad detectadas por los sistemas de monitoreo.</li>
+      </ul>
+      <p>Las cuentas desactivadas pueden ser reactivadas mediante solicitud expresa a la autoridad competente del MPD, quien evaluará cada caso particular.</p>
+
+      <h5>12.2. Bloqueo y suspensión de cuentas</h5>
+      <p>El MPD se reserva el derecho de bloquear o suspender cuentas en los siguientes casos:</p>
+      <ul>
+        <li>Violaciones graves o reiteradas de los términos y condiciones.</li>
+        <li>Detección de actividades fraudulentas o conductas inapropiadas durante los exámenes.</li>
+        <li>Uso indebido de la plataforma que afecte su normal funcionamiento.</li>
+        <li>Por cumplimiento de disposiciones legales o requerimientos judiciales.</li>
+        <li>Cuando se detecte que la información proporcionada es falsa, incompleta o inexacta.</li>
+      </ul>
+      <p>El bloqueo puede ser temporal o permanente, dependiendo de la gravedad de la infracción. En caso de bloqueo temporal, el usuario recibirá una notificación con los motivos y, cuando corresponda, las acciones requeridas para el desbloqueo.</p>
+
+      <h5>12.3. Eliminación definitiva de cuentas</h5>
+      <p>La eliminación definitiva de una cuenta puede ocurrir en las siguientes circunstancias:</p>
+      <ul>
+        <li>A solicitud expresa del usuario titular, previa verificación de identidad.</li>
+        <li>Por decisión administrativa del MPD ante infracciones graves o reiteradas.</li>
+        <li>Por cumplimiento de disposiciones legales o resoluciones judiciales.</li>
+      </ul>
+      <p>La eliminación definitiva implica la supresión de todos los datos personales del usuario conforme a la Ley 25.326, exceptuando aquellos que deban conservarse por obligaciones legales o para la protección de derechos del MPD o terceros, los cuales serán debidamente anonimizados.</p>
+
+      <h5>12.4. Consecuencias de la desactivación o eliminación</h5>
+      <p>La desactivación, bloqueo o eliminación de la cuenta conlleva la imposibilidad de acceder a la plataforma y/o participar en los procesos de concursos activos. En el caso de eliminación definitiva, todos los procesos de concursos en curso en los que el usuario estuviera participando quedarán sin efecto en lo que respecta a dicho usuario, sin posibilidad de reintegración.</p>
+
+      <h5>12.5. Procedimiento para solicitar la eliminación de cuenta</h5>
+      <p>Para solicitar la eliminación de su cuenta, deberá presentar una solicitud formal por escrito a través de los canales oficiales del MPD, acreditando debidamente su identidad. El MPD procesará su solicitud dentro de los plazos establecidos por la Ley 25.326 de Protección de Datos Personales.</p>
+
+      <p>Fecha de última actualización: Junio 2023</p>
     </div>
     <div class="terms-modal-footer">
       <button type="button" class="accept-button" (click)="acceptTerms()">Aceptar términos</button>

@@ -9,13 +9,67 @@ export interface Experiencia {
   fechaInicio: Date;
   fechaFin?: Date;
   descripcion?: string;
+  certificadoId?: string;
+  comentario?: string;
+}
+
+export enum TipoEducacion {
+  NIVEL_SUPERIOR = 'Carrera de Nivel Superior',
+  GRADO = 'Carrera de grado',
+  POSGRADO_ESPECIALIZACION = 'Posgrado: especialización',
+  POSGRADO_MAESTRIA = 'Posgrado: maestría',
+  POSGRADO_DOCTORADO = 'Posgrado: doctorado',
+  DIPLOMATURA = 'Diplomatura',
+  CURSO = 'Curso de Capacitación',
+  ACTIVIDAD_CIENTIFICA = 'Actividad Científica (investigación y/o difusión)'
+}
+
+export enum EstadoEducacion {
+  FINALIZADO = 'finalizado',
+  EN_PROCESO = 'en proceso'
+}
+
+export enum TipoActividadCientifica {
+  INVESTIGACION = 'investigación',
+  PONENCIA = 'ponencia',
+  PUBLICACION = 'publicación'
+}
+
+export enum CaracterActividadCientifica {
+  AYUDANTE = 'ayudante-participante',
+  AUTOR = 'autor-disertante-panelista-exponente'
 }
 
 export interface Educacion {
-  institucion: string;
+  // Campos comunes
+  tipo: TipoEducacion;
+  estado: EstadoEducacion;
   titulo: string;
-  descripcion: string;
-  fechaInicio: Date;
+  institucion: string;
+  fechaEmision?: Date;
+  documentoId?: string;
+  
+  // Campos específicos según el tipo
+  // Para carreras
+  duracionAnios?: number;
+  promedio?: number;
+  
+  // Para posgrados
+  temaTesis?: string;
+  
+  // Para diplomatura y cursos
+  cargaHoraria?: number;
+  evaluacionFinal?: boolean;
+  
+  // Para actividad científica
+  tipoActividad?: TipoActividadCientifica;
+  caracter?: CaracterActividadCientifica;
+  lugarFechaExposicion?: string;
+  comentarios?: string;
+  
+  // Campos para backward compatibility
+  descripcion?: string;
+  fechaInicio?: Date;
   fechaFin?: Date;
 }
 

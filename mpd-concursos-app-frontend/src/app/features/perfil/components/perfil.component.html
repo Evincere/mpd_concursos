@@ -209,6 +209,7 @@
                             Agregar Experiencia
                         </button>
                     </div>
+
                     <div class="action-group">
                         <h3>Educación</h3>
                         <button mat-flat-button color="primary" (click)="agregarEducacion()">
@@ -232,21 +233,25 @@
                                 [formGroupName]="i">
                                 <div class="item-main">
                                     <div class="form-field">
+                                        <label class="field-label" for="cargo">Cargo o Puesto</label>
                                         <mat-form-field appearance="outline">
                                             <mat-label>Cargo o Puesto</mat-label>
                                             <input matInput
-                                                formControlName="puesto"
+                                                id="cargo"
+                                                formControlName="cargo"
                                                 placeholder="Ej: Abogado Senior">
-                                            <mat-error *ngIf="exp.get('puesto')?.errors?.['required']">
+                                            <mat-error *ngIf="exp.get('cargo')?.errors?.['required']">
                                                 Este campo es requerido
                                             </mat-error>
                                         </mat-form-field>
                                     </div>
 
                                     <div class="form-field">
+                                        <label class="field-label" for="empresa">Empresa u Organización</label>
                                         <mat-form-field appearance="outline">
                                             <mat-label>Empresa u Organización</mat-label>
                                             <input matInput
+                                                id="empresa"
                                                 formControlName="empresa"
                                                 placeholder="Ej: Ministerio Público de la Defensa">
                                             <mat-error *ngIf="exp.get('empresa')?.errors?.['required']">
@@ -284,9 +289,11 @@
                                     </div>
 
                                     <div class="form-field">
+                                        <label class="field-label" for="descripcion">Descripción de responsabilidades y logros</label>
                                         <mat-form-field appearance="outline" class="description-field">
                                             <mat-label>Descripción de responsabilidades y logros</mat-label>
                                             <textarea matInput
+                                                id="descripcion"
                                                 formControlName="descripcion"
                                                 rows="3"
                                                 placeholder="Describe tus principales responsabilidades y logros en este puesto">
@@ -295,6 +302,54 @@
                                                 Este campo es requerido
                                             </mat-error>
                                         </mat-form-field>
+                                    </div>
+
+                                    <!-- Nuevo campo: Comentarios sobre el puesto -->
+                                    <div class="form-field">
+                                        <label class="field-label" for="comentario">Comentarios sobre el puesto de trabajo</label>
+                                        <mat-form-field appearance="outline" class="description-field">
+                                            <mat-label>Comentarios sobre el puesto de trabajo</mat-label>
+                                            <textarea matInput
+                                                id="comentario"
+                                                formControlName="comentario"
+                                                rows="2"
+                                                placeholder="Información adicional relevante sobre este puesto">
+                                            </textarea>
+                                        </mat-form-field>
+                                    </div>
+
+                                    <!-- Nuevo campo: Probanza o certificado -->
+                                    <div class="form-field certificado-field">
+                                        <label class="certificado-label">Probanza o certificado (PDF)</label>
+                                        <div class="certificado-container">
+                                            <ng-container *ngIf="exp.get('certificadoId')?.value; else noCertificado">
+                                                <div class="certificado-preview">
+                                                    <span class="certificado-nombre">Certificado cargado</span>
+                                                    <div class="certificado-actions">
+                                                        <button mat-icon-button color="primary" type="button"
+                                                                matTooltip="Ver certificado"
+                                                                (click)="verCertificado(exp.get('certificadoId')?.value)">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button mat-icon-button color="warn" type="button"
+                                                                matTooltip="Eliminar certificado"
+                                                                (click)="eliminarCertificado(i)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </ng-container>
+                                            <ng-template #noCertificado>
+                                                <button mat-stroked-button color="primary" type="button"
+                                                        (click)="cargarCertificado(i)">
+                                                    <i class="fas fa-upload"></i>
+                                                    Subir certificado
+                                                </button>
+                                                <span class="certificado-hint">
+                                                    Sube un certificado o probanza en formato PDF que acredite esta experiencia laboral
+                                                </span>
+                                            </ng-template>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -312,76 +367,231 @@
                     </section>
 
                     <!-- Sección de Educación -->
-                    <section class="cv-section">
-                        <div class="section-header">
-                            <i class="fas fa-graduation-cap"></i>
+                    <section class="cv-section" [formGroup]="perfilForm">
+                        <div class="cv-section-header">
                             <h2>Educación</h2>
+                            <button mat-mini-fab color="primary" (click)="agregarEducacion()" [disabled]="isLoading">
+                                <mat-icon>add</mat-icon>
+                            </button>
                         </div>
 
-                        <div class="cv-items" formArrayName="educacion">
-                            <div class="cv-item" *ngFor="let edu of educacion.controls; let i = index"
-                                [formGroupName]="i">
-                                <div class="item-main">
-                                    <div class="form-field">
-                                        <mat-form-field appearance="outline">
-                                            <mat-label>Título o Certificación</mat-label>
-                                            <input matInput
-                                                formControlName="titulo"
-                                                placeholder="Ej: Abogado">
-                                            <mat-error *ngIf="edu.get('titulo')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
+                        <div formArrayName="educacion">
+                            <div *ngFor="let edu of educacion.controls; let i = index" [formGroupName]="i" class="cv-item">
+                                <!-- Campos comunes -->
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Tipo</mat-label>
+                                        <mat-select formControlName="tipo">
+                                            <mat-option *ngFor="let tipo of tiposEducacion" [value]="tipo.value">
+                                                {{tipo.label}}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error *ngIf="edu.get('tipo')?.errors?.['required']">
+                                            Este campo es requerido
+                                        </mat-error>
+                                    </mat-form-field>
 
-                                    <div class="form-field">
-                                        <mat-form-field appearance="outline">
-                                            <mat-label>Institución</mat-label>
-                                            <input matInput
-                                                formControlName="institucion"
-                                                placeholder="Ej: Universidad de Buenos Aires">
-                                            <mat-error *ngIf="edu.get('institucion')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <div class="form-row">
-                                        <div class="form-field-container">
-                                            <label for="fechaEduInicio" class="form-label">Fecha de Inicio</label>
-                                            <mat-form-field appearance="outline">
-                                                <mat-label>Fecha de Inicio</mat-label>
-                                                <input matInput
-                                                    [matDatepicker]="fechaEduInicioPicker"
-                                                    formControlName="fechaInicio"
-                                                    placeholder="DD/MM/AAAA">
-                                                <mat-datepicker-toggle matSuffix [for]="fechaEduInicioPicker"></mat-datepicker-toggle>
-                                                <mat-datepicker #fechaEduInicioPicker></mat-datepicker>
-                                            </mat-form-field>
-                                        </div>
-
-                                        <div class="form-field-container">
-                                            <label for="fechaEduFin" class="form-label">Fecha de Fin</label>
-                                            <mat-form-field appearance="outline">
-                                                <mat-label>Fecha de Fin</mat-label>
-                                                <input matInput
-                                                    [matDatepicker]="fechaEduFinPicker"
-                                                    formControlName="fechaFin"
-                                                    placeholder="DD/MM/AAAA">
-                                                <mat-datepicker-toggle matSuffix [for]="fechaEduFinPicker"></mat-datepicker-toggle>
-                                                <mat-datepicker #fechaEduFinPicker></mat-datepicker>
-                                            </mat-form-field>
-                                        </div>
-                                    </div>
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Estado</mat-label>
+                                        <mat-select formControlName="estado">
+                                            <mat-option *ngFor="let estado of estadosEducacion" [value]="estado.value">
+                                                {{estado.label}}
+                                            </mat-option>
+                                        </mat-select>
+                                        <mat-error *ngIf="edu.get('estado')?.errors?.['required']">
+                                            Este campo es requerido
+                                        </mat-error>
+                                    </mat-form-field>
                                 </div>
 
-                                <div class="item-actions">
-                                    <button mat-icon-button
-                                        type="button"
-                                        class="delete-button"
-                                        (click)="eliminarEducacion(i)"
-                                        [attr.aria-label]="'Eliminar educación'">
-                                        <i class="fas fa-trash"></i>
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline" class="w-100">
+                                        <mat-label>Título</mat-label>
+                                        <input matInput formControlName="titulo" placeholder="Ingrese título">
+                                        <mat-error *ngIf="edu.get('titulo')?.errors?.['required']">
+                                            Este campo es requerido
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="form-row">
+                                    <mat-form-field appearance="outline" class="w-100">
+                                        <mat-label>Institución</mat-label>
+                                        <input matInput formControlName="institucion" placeholder="Ingrese institución">
+                                        <mat-error *ngIf="edu.get('institucion')?.errors?.['required']">
+                                            Este campo es requerido
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
+
+                                <!-- Campos específicos por tipo -->
+                                <ng-container [ngSwitch]="edu.get('tipo')?.value">
+                                    <!-- Nivel Superior y Grado -->
+                                    <ng-container *ngSwitchCase="'NIVEL_SUPERIOR'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Duración (años)</mat-label>
+                                                <input matInput type="number" formControlName="duracionAnios">
+                                                <mat-error *ngIf="edu.get('duracionAnios')?.errors?.['min']">
+                                                    La duración debe ser mayor a 0
+                                                </mat-error>
+                                            </mat-form-field>
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Promedio</mat-label>
+                                                <input matInput type="number" formControlName="promedio">
+                                                <mat-error *ngIf="edu.get('promedio')?.errors?.['min'] || edu.get('promedio')?.errors?.['max']">
+                                                    El promedio debe estar entre 0 y 10
+                                                </mat-error>
+                                            </mat-form-field>
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="'GRADO'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Duración (años)</mat-label>
+                                                <input matInput type="number" formControlName="duracionAnios">
+                                                <mat-error *ngIf="edu.get('duracionAnios')?.errors?.['min']">
+                                                    La duración debe ser mayor a 0
+                                                </mat-error>
+                                            </mat-form-field>
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Promedio</mat-label>
+                                                <input matInput type="number" formControlName="promedio">
+                                                <mat-error *ngIf="edu.get('promedio')?.errors?.['min'] || edu.get('promedio')?.errors?.['max']">
+                                                    El promedio debe estar entre 0 y 10
+                                                </mat-error>
+                                            </mat-form-field>
+                                        </div>
+                                    </ng-container>
+
+                                    <!-- Posgrados -->
+                                    <ng-container *ngSwitchCase="'POSGRADO_ESPECIALIZACION'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline" class="w-100">
+                                                <mat-label>Tema de tesis</mat-label>
+                                                <input matInput formControlName="temaTesis">
+                                            </mat-form-field>
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="'POSGRADO_MAESTRIA'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline" class="w-100">
+                                                <mat-label>Tema de tesis</mat-label>
+                                                <input matInput formControlName="temaTesis">
+                                            </mat-form-field>
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="'POSGRADO_DOCTORADO'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline" class="w-100">
+                                                <mat-label>Tema de tesis</mat-label>
+                                                <input matInput formControlName="temaTesis">
+                                            </mat-form-field>
+                                        </div>
+                                    </ng-container>
+
+                                    <!-- Diplomatura y Cursos -->
+                                    <ng-container *ngSwitchCase="'DIPLOMATURA'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Carga horaria</mat-label>
+                                                <input matInput type="number" formControlName="cargaHoraria">
+                                                <mat-error *ngIf="edu.get('cargaHoraria')?.errors?.['min']">
+                                                    La carga horaria debe ser mayor a 0
+                                                </mat-error>
+                                            </mat-form-field>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-field">
+                                                <label class="field-label">¿Tuvo evaluación final?</label>
+                                                <mat-radio-group formControlName="evaluacionFinal">
+                                                    <mat-radio-button [value]="true">Sí</mat-radio-button>
+                                                    <mat-radio-button [value]="false">No</mat-radio-button>
+                                                </mat-radio-group>
+                                            </div>
+                                        </div>
+                                    </ng-container>
+
+                                    <ng-container *ngSwitchCase="'CURSO'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Carga horaria</mat-label>
+                                                <input matInput type="number" formControlName="cargaHoraria">
+                                                <mat-error *ngIf="edu.get('cargaHoraria')?.errors?.['min']">
+                                                    La carga horaria debe ser mayor a 0
+                                                </mat-error>
+                                            </mat-form-field>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-field">
+                                                <label class="field-label">¿Tuvo evaluación final?</label>
+                                                <mat-radio-group formControlName="evaluacionFinal">
+                                                    <mat-radio-button [value]="true">Sí</mat-radio-button>
+                                                    <mat-radio-button [value]="false">No</mat-radio-button>
+                                                </mat-radio-group>
+                                            </div>
+                                        </div>
+                                    </ng-container>
+
+                                    <!-- Actividad Científica -->
+                                    <ng-container *ngSwitchCase="'ACTIVIDAD_CIENTIFICA'">
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Tipo de actividad</mat-label>
+                                                <mat-select formControlName="tipoActividad">
+                                                    <mat-option *ngFor="let tipo of tiposActividadCientifica" [value]="tipo.value">
+                                                        {{tipo.label}}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </div>
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Carácter</mat-label>
+                                                <mat-select formControlName="caracter">
+                                                    <mat-option *ngFor="let car of caracteresActividadCientifica" [value]="car.value">
+                                                        {{car.label}}
+                                                    </mat-option>
+                                                </mat-select>
+                                            </mat-form-field>
+                                        </div>
+                                        <div class="form-row">
+                                            <mat-form-field appearance="outline" class="w-100">
+                                                <mat-label>Lugar y fecha de exposición o Publicación</mat-label>
+                                                <input matInput formControlName="lugarFechaExposicion">
+                                            </mat-form-field>
+                                        </div>
+                                    </ng-container>
+                                </ng-container>
+
+                                <!-- Fecha de emisión (para todos excepto Actividad Científica) -->
+                                <div class="form-row" *ngIf="edu.get('tipo')?.value !== 'ACTIVIDAD_CIENTIFICA'">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Fecha de emisión</mat-label>
+                                        <input matInput [matDatepicker]="fechaEmisionPicker" formControlName="fechaEmision">
+                                        <mat-datepicker-toggle matSuffix [for]="fechaEmisionPicker"></mat-datepicker-toggle>
+                                        <mat-datepicker #fechaEmisionPicker></mat-datepicker>
+                                    </mat-form-field>
+                                </div>
+
+                                <!-- Botones de acción -->
+                                <div class="form-row actions">
+                                    <button mat-icon-button color="warn" (click)="eliminarEducacion(i)" matTooltip="Eliminar">
+                                        <mat-icon>delete</mat-icon>
+                                    </button>
+                                    <button mat-icon-button color="primary" (click)="cargarDocumentoEducacion(i)" matTooltip="Cargar documento">
+                                        <mat-icon>upload_file</mat-icon>
+                                    </button>
+                                    <button mat-icon-button color="primary" (click)="verDocumentoEducacion(i)"
+                                            [disabled]="!edu.get('documentoId')?.value" matTooltip="Ver documento">
+                                        <mat-icon>visibility</mat-icon>
+                                    </button>
+                                    <button mat-icon-button color="warn" (click)="eliminarDocumentoEducacion(i)"
+                                            [disabled]="!edu.get('documentoId')?.value" matTooltip="Eliminar documento">
+                                        <mat-icon>delete_forever</mat-icon>
                                     </button>
                                 </div>
                             </div>
