@@ -1,0 +1,143 @@
+<form [formGroup]="educacionForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+  <div *ngIf="isLoading" class="flex justify-center">
+    <mat-spinner diameter="20"></mat-spinner>
+  </div>
+
+  <!-- Campos comunes -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <mat-form-field>
+      <mat-label>Tipo de Educación</mat-label>
+      <mat-select formControlName="tipo" required>
+        <mat-option *ngFor="let tipo of tiposEducacion" [value]="tipo">
+          {{ tipo }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="educacionForm.get('tipo')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Estado</mat-label>
+      <mat-select formControlName="estado" required>
+        <mat-option *ngFor="let estado of estadosEducacion" [value]="estado">
+          {{ estado }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="educacionForm.get('estado')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <mat-form-field>
+      <mat-label>Título</mat-label>
+      <input matInput formControlName="titulo" required>
+      <mat-error *ngIf="educacionForm.get('titulo')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Institución</mat-label>
+      <input matInput formControlName="institucion" required>
+      <mat-error *ngIf="educacionForm.get('institucion')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+  </div>
+
+  <!-- Campos específicos para carreras -->
+  <div *ngIf="educacionForm.get('tipo')?.value === 'Carrera de grado' || educacionForm.get('tipo')?.value === 'Carrera de Nivel Superior'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <mat-form-field>
+      <mat-label>Duración (años)</mat-label>
+      <input matInput type="number" formControlName="duracionAnios" min="1">
+      <mat-error *ngIf="educacionForm.get('duracionAnios')?.hasError('required')">Este campo es requerido</mat-error>
+      <mat-error *ngIf="educacionForm.get('duracionAnios')?.hasError('min')">La duración debe ser mayor a 0</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Promedio</mat-label>
+      <input matInput type="number" formControlName="promedio" min="0" max="10" step="0.01">
+      <mat-error *ngIf="educacionForm.get('promedio')?.hasError('min') || educacionForm.get('promedio')?.hasError('max')">
+        El promedio debe estar entre 0 y 10
+      </mat-error>
+    </mat-form-field>
+  </div>
+
+  <!-- Campos específicos para posgrados -->
+  <div *ngIf="educacionForm.get('tipo')?.value?.includes('Posgrado')" class="grid grid-cols-1 gap-4">
+    <mat-form-field>
+      <mat-label>Tema de Tesis</mat-label>
+      <textarea matInput formControlName="temaTesis" required></textarea>
+      <mat-error *ngIf="educacionForm.get('temaTesis')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+  </div>
+
+  <!-- Campos específicos para diplomatura y cursos -->
+  <div *ngIf="educacionForm.get('tipo')?.value === 'Diplomatura' || educacionForm.get('tipo')?.value === 'Curso de Capacitación'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <mat-form-field>
+      <mat-label>Carga Horaria</mat-label>
+      <input matInput type="number" formControlName="cargaHoraria" min="1">
+      <mat-error *ngIf="educacionForm.get('cargaHoraria')?.hasError('required')">Este campo es requerido</mat-error>
+      <mat-error *ngIf="educacionForm.get('cargaHoraria')?.hasError('min')">La carga horaria debe ser mayor a 0</mat-error>
+    </mat-form-field>
+
+    <div class="flex items-center">
+      <mat-checkbox formControlName="evaluacionFinal">¿Incluye evaluación final?</mat-checkbox>
+    </div>
+  </div>
+
+  <!-- Campos específicos para actividad científica -->
+  <div *ngIf="educacionForm.get('tipo')?.value === 'Actividad Científica (investigación y/o difusión)'" class="grid grid-cols-1 gap-4">
+    <mat-form-field>
+      <mat-label>Tipo de Actividad</mat-label>
+      <mat-select formControlName="tipoActividad" required>
+        <mat-option *ngFor="let tipo of tiposActividadCientifica" [value]="tipo">
+          {{ tipo }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="educacionForm.get('tipoActividad')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Carácter de la Participación</mat-label>
+      <mat-select formControlName="caracter" required>
+        <mat-option *ngFor="let caracter of caracteresActividadCientifica" [value]="caracter">
+          {{ caracter }}
+        </mat-option>
+      </mat-select>
+      <mat-error *ngIf="educacionForm.get('caracter')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Lugar y Fecha de Exposición</mat-label>
+      <input matInput formControlName="lugarFechaExposicion" required>
+      <mat-error *ngIf="educacionForm.get('lugarFechaExposicion')?.hasError('required')">Este campo es requerido</mat-error>
+    </mat-form-field>
+  </div>
+
+  <!-- Campos opcionales comunes -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <mat-form-field>
+      <mat-label>Fecha de Emisión</mat-label>
+      <input matInput [matDatepicker]="fechaEmisionPicker" formControlName="fechaEmision">
+      <mat-datepicker-toggle matSuffix [for]="fechaEmisionPicker"></mat-datepicker-toggle>
+      <mat-datepicker #fechaEmisionPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>ID del Documento</mat-label>
+      <input matInput formControlName="documentoId">
+    </mat-form-field>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4">
+    <mat-form-field>
+      <mat-label>Comentarios</mat-label>
+      <textarea matInput formControlName="comentarios" rows="3"></textarea>
+    </mat-form-field>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="flex justify-end gap-2 mt-4">
+    <button mat-button type="button" (click)="onCancel()" [disabled]="isLoading">Cancelar</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
+      <mat-spinner *ngIf="isLoading" diameter="20" class="mr-2"></mat-spinner>
+      Guardar
+    </button>
+  </div>
+</form>

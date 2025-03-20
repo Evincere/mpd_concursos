@@ -4,7 +4,7 @@ import { RegisterComponent } from '@features/auth/components/register/register.c
 import { DashboardComponent } from '@features/dashboard/dashboard.component';
 import { MainComponent } from '@features/dashboard/components/main/main.component';
 import { PostulacionesComponent } from '@features/postulaciones/postulaciones.component';
-import { PerfilComponent } from '@features/perfil/components/perfil.component';
+import { PerfilComponent } from '@features/perfil/perfil.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { ConcursosComponent } from '@features/concursos/concursos.component';

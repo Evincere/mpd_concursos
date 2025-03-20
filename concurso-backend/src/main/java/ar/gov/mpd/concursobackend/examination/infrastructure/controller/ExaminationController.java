@@ -9,8 +9,6 @@ import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
 import java.util.UUID;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/examenes")
