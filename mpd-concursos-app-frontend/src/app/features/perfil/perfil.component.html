@@ -413,16 +413,15 @@
                                         </mat-form-field>
                                     </div>
 
-                                    <!-- Carga diferida (lazy loading) de los campos adicionales -->
-                                    <!-- Solo se muestra el botón si no están cargados los campos adicionales -->
-                                    <div *ngIf="!edu.get('fechaInicio') && !isLoading" class="text-center my-3">
-                                        <button mat-button color="primary" (click)="cargarCamposAdicionales(i)">
-                                            <i class="fas fa-plus-circle"></i> Cargar campos adicionales
+                                    <!-- Grupo 1: Carga de fechas -->
+                                    <div *ngIf="!edu.get('grupo1Cargado') && !isLoading" class="text-center my-3">
+                                        <button mat-button color="primary" (click)="cargarCamposAdicionales(i, 1)">
+                                            <i class="fas fa-calendar-alt"></i> Agregar fechas
                                         </button>
                                     </div>
 
-                                    <!-- Campos adicionales (se cargan bajo demanda) -->
-                                    <ng-container *ngIf="edu.get('fechaInicio')">
+                                    <!-- Campos del Grupo 1 (Fechas) -->
+                                    <ng-container *ngIf="edu.get('grupo1Cargado')">
                                         <div class="form-row">
                                             <div class="form-field-container">
                                                 <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
@@ -452,7 +451,7 @@
                                         </div>
 
                                         <div class="form-field">
-                                            <label class="field-label" for="tipoEducacion">Tipo de Educación</label>
+                                            <label class="field-label" for="tipo">Tipo de Educación</label>
                                             <mat-form-field appearance="outline">
                                                 <mat-label>Tipo de Educación</mat-label>
                                                 <mat-select formControlName="tipo">
@@ -472,6 +471,148 @@
                                                         {{estado}}
                                                     </mat-option>
                                                 </mat-select>
+                                            </mat-form-field>
+                                        </div>
+
+                                        <!-- Grupo 2: Botón para cargar detalles académicos -->
+                                        <div *ngIf="!edu.get('grupo2Cargado') && !isLoading" class="text-center my-3">
+                                            <button mat-button color="primary" (click)="cargarCamposAdicionales(i, 2)">
+                                                <i class="fas fa-graduation-cap"></i> Agregar detalles académicos
+                                            </button>
+                                        </div>
+                                    </ng-container>
+
+                                    <!-- Campos del Grupo 2 (Detalles académicos) -->
+                                    <ng-container *ngIf="edu.get('grupo2Cargado')">
+                                        <div class="form-row">
+                                            <div class="form-field-container">
+                                                <label for="duracionAnios" class="form-label">Duración (años)</label>
+                                                <mat-form-field appearance="outline">
+                                                    <mat-label>Duración</mat-label>
+                                                    <input matInput
+                                                        type="number"
+                                                        formControlName="duracionAnios"
+                                                        placeholder="Ej: 5">
+                                                    <mat-error *ngIf="edu.get('duracionAnios')?.errors?.['min']">
+                                                        La duración debe ser mayor a 0
+                                                    </mat-error>
+                                                </mat-form-field>
+                                            </div>
+
+                                            <div class="form-field-container">
+                                                <label for="promedio" class="form-label">Promedio</label>
+                                                <mat-form-field appearance="outline">
+                                                    <mat-label>Promedio</mat-label>
+                                                    <input matInput
+                                                        type="number"
+                                                        formControlName="promedio"
+                                                        placeholder="Ej: 8.5">
+                                                    <mat-error *ngIf="edu.get('promedio')?.errors?.['min'] || edu.get('promedio')?.errors?.['max']">
+                                                        El promedio debe estar entre 0 y 10
+                                                    </mat-error>
+                                                </mat-form-field>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-field-container">
+                                                <label for="cargaHoraria" class="form-label">Carga Horaria</label>
+                                                <mat-form-field appearance="outline">
+                                                    <mat-label>Carga Horaria</mat-label>
+                                                    <input matInput
+                                                        type="number"
+                                                        formControlName="cargaHoraria"
+                                                        placeholder="Ej: 120">
+                                                    <mat-error *ngIf="edu.get('cargaHoraria')?.errors?.['min']">
+                                                        La carga horaria debe ser mayor a 0
+                                                    </mat-error>
+                                                </mat-form-field>
+                                            </div>
+
+                                            <div class="form-field-container">
+                                                <label for="evaluacionFinal" class="form-label">¿Tuvo evaluación final?</label>
+                                                <mat-radio-group formControlName="evaluacionFinal" class="radio-group">
+                                                    <mat-radio-button [value]="true">Sí</mat-radio-button>
+                                                    <mat-radio-button [value]="false">No</mat-radio-button>
+                                                </mat-radio-group>
+                                            </div>
+                                        </div>
+
+                                        <!-- Grupo 3: Botón para cargar información descriptiva -->
+                                        <div *ngIf="!edu.get('grupo3Cargado') && !isLoading" class="text-center my-3">
+                                            <button mat-button color="primary" (click)="cargarCamposAdicionales(i, 3)">
+                                                <i class="fas fa-info-circle"></i> Agregar información descriptiva
+                                            </button>
+                                        </div>
+                                    </ng-container>
+
+                                    <!-- Campos del Grupo 3 (Información descriptiva) -->
+                                    <ng-container *ngIf="edu.get('grupo3Cargado')">
+                                        <div class="form-field">
+                                            <label class="field-label" for="temaTesis">Tema de Tesis</label>
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Tema de Tesis</mat-label>
+                                                <input matInput
+                                                    formControlName="temaTesis"
+                                                    placeholder="Si aplica, indique el tema de tesis">
+                                            </mat-form-field>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-field-container">
+                                                <label for="tipoActividad" class="form-label">Tipo de Actividad</label>
+                                                <mat-form-field appearance="outline">
+                                                    <mat-label>Tipo de Actividad</mat-label>
+                                                    <mat-select formControlName="tipoActividad">
+                                                        <mat-option *ngFor="let tipo of tiposActividadCientifica" [value]="tipo.value">
+                                                            {{tipo.label}}
+                                                        </mat-option>
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </div>
+
+                                            <div class="form-field-container">
+                                                <label for="caracter" class="form-label">Carácter</label>
+                                                <mat-form-field appearance="outline">
+                                                    <mat-label>Carácter</mat-label>
+                                                    <mat-select formControlName="caracter">
+                                                        <mat-option *ngFor="let car of caracteresActividadCientifica" [value]="car.value">
+                                                            {{car.label}}
+                                                        </mat-option>
+                                                    </mat-select>
+                                                </mat-form-field>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-field">
+                                            <label class="field-label" for="lugarFechaExposicion">Lugar y fecha de exposición</label>
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Lugar y fecha de exposición</mat-label>
+                                                <input matInput
+                                                    formControlName="lugarFechaExposicion"
+                                                    placeholder="Si aplica, indique lugar y fecha">
+                                            </mat-form-field>
+                                        </div>
+
+                                        <div class="form-field">
+                                            <label class="field-label" for="comentarios">Comentarios</label>
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Comentarios</mat-label>
+                                                <textarea matInput
+                                                    formControlName="comentarios"
+                                                    placeholder="Comentarios adicionales"
+                                                    rows="3"></textarea>
+                                            </mat-form-field>
+                                        </div>
+
+                                        <div class="form-field">
+                                            <label class="field-label" for="descripcion">Descripción</label>
+                                            <mat-form-field appearance="outline">
+                                                <mat-label>Descripción</mat-label>
+                                                <textarea matInput
+                                                    formControlName="descripcion"
+                                                    placeholder="Descripción detallada"
+                                                    rows="3"></textarea>
                                             </mat-form-field>
                                         </div>
                                     </ng-container>
