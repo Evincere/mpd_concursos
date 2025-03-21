@@ -35,9 +35,11 @@ RUN npm cache clean --force && \
     rm -rf node_modules && \
     npm install --legacy-peer-deps
 
-# Copy source files and build
+# Copy source files and build with optimized settings
 COPY . .
-RUN NODE_OPTIONS="--max_old_space_size=4096" npm run build -- --configuration production --progress=false
+RUN npm cache clean --force && \
+    rm -rf /tmp/* && \
+    NODE_OPTIONS="--max_old_space_size=8192" npm run build -- --configuration production --progress=false --optimization=true --aot=true --buildOptimizer=true
 
 # Production stage
 FROM nginx:stable-alpine
