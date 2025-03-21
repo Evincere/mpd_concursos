@@ -45,8 +45,9 @@ RUN npm cache clean --force && \
 FROM nginx:stable-alpine
 WORKDIR /usr/share/nginx/html
 
-# Configure nginx with security best practices and create necessary directories
-RUN apk add --no-cache curl && \
+# Remove default nginx user directive and configure nginx with security best practices
+RUN sed -i '/^user/d' /etc/nginx/nginx.conf && \
+    apk add --no-cache curl && \
     mkdir -p /var/cache/nginx/client_temp \
              /var/cache/nginx/proxy_temp \
              /var/cache/nginx/fastcgi_temp \
@@ -54,16 +55,15 @@ RUN apk add --no-cache curl && \
              /var/cache/nginx/scgi_temp \
              /var/run && \
     touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/cache/nginx /var/run /var/run/nginx.pid && \
-    chmod -R 755 /var/cache/nginx /var/run && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/run/nginx.pid /usr/share/nginx && \
+    chmod -R 755 /var/cache/nginx /var/run /usr/share/nginx && \
     chmod 644 /var/run/nginx.pid && \
-    chown -R nginx:nginx /usr/share/nginx && \
-    chmod -R 755 /usr/share/nginx && \
     rm -rf /var/cache/apk/*
 
 # Copy build artifacts and config
 COPY --from=build /app/dist/browser .
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN chown -R nginx:nginx . && chmod -R 755 .
 
 USER nginx
 EXPOSE 80
