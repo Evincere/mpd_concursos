@@ -25,18 +25,19 @@ RUN npm config set strict-ssl false \
     && npm config set fetch-retries 5 \
     && npm config set fetch-retry-maxtimeout 120000 \
     && npm install -g npm@latest \
-    && npm install -g @angular/cli@18.2.14
+    && npm install -g @angular/cli@latest
 
 # Copy package files for better layer caching
 COPY package*.json ./
 
-# Install dependencies with optimized caching
-RUN npm ci --no-optional --legacy-peer-deps || \
-    (npm cache clean --force && npm install --no-optional --legacy-peer-deps)
+# Clean npm cache and install dependencies
+RUN npm cache clean --force && \
+    rm -rf node_modules && \
+    npm install --legacy-peer-deps
 
 # Copy source files and build
 COPY . .
-RUN CI=true npx ng build --configuration production --progress=false
+RUN NODE_OPTIONS="--max_old_space_size=4096" npm run build -- --configuration production --progress=false
 
 # Production stage
 FROM nginx:stable-alpine
