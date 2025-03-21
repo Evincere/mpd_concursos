@@ -53,8 +53,10 @@ RUN apk add --no-cache curl && \
              /var/cache/nginx/uwsgi_temp \
              /var/cache/nginx/scgi_temp \
              /var/run && \
-    chown -R nginx:nginx /var/cache/nginx /var/run && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/cache/nginx /var/run /var/run/nginx.pid && \
     chmod -R 755 /var/cache/nginx /var/run && \
+    chmod 644 /var/run/nginx.pid && \
     chown -R nginx:nginx /usr/share/nginx && \
     chmod -R 755 /usr/share/nginx && \
     rm -rf /var/cache/apk/*
