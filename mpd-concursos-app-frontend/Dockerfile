@@ -41,41 +41,29 @@ COPY . .
 # Compilación Angular con ajustes específicos
 RUN ng build --configuration production --aot --build-optimizer --vendor-chunk
 
-# Etapa de producción
 FROM nginx:1.24-alpine
 WORKDIR /usr/share/nginx/html
 
+# Configurar permisos y directorios esenciales
 RUN apk add --no-cache curl && \
-    chown -R nginx:nginx /usr/share/nginx && \
-    chmod -R 755 /usr/share/nginx && \
-    rm /etc/nginx/conf.d/default.conf
-
-COPY --from=build /app/dist/browser .
-COPY nginx.conf /etc/nginx/conf.d/
-
-# Etapa de producción modificada
-FROM nginx:1.24-alpine
-WORKDIR /usr/share/nginx/html
-
-# Configurar permisos antes de cambiar de usuario
-RUN apk add --no-cache curl && \
-    mkdir -p /var/cache/nginx /var/run/nginx && \
-    chown -R nginx:nginx /var/cache/nginx /var/run/nginx && \
-    chmod -R 755 /var/cache/nginx /var/run/nginx && \
+    mkdir -p /var/run/nginx /var/cache/nginx /tmp/nginx && \
+    chown -R nginx:nginx /var/run/nginx /var/cache/nginx /tmp/nginx && \
+    chmod -R 755 /var/run/nginx /var/cache/nginx /tmp/nginx && \
     chown -R nginx:nginx /usr/share/nginx && \
     chmod -R 755 /usr/share/nginx && \
     rm -rf /etc/nginx/conf.d/default.conf
 
+# Configuración del PID file alternativo
+RUN echo "pid /tmp/nginx/nginx.pid;" > /etc/nginx/conf.d/pid.conf
+
 COPY --from=build /app/dist/browser .
 COPY nginx.conf /etc/nginx/conf.d/
 
-# Cambiar usuario después de configurar los permisos
 USER nginx
 
 EXPOSE 80
 
-# Healthcheck mejorado
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD nc -z localhost 80 || exit 1
+    CMD curl -fsS http://localhost >/dev/null || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
