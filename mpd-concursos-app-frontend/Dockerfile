@@ -45,8 +45,15 @@ RUN npm cache clean --force && \
 FROM nginx:stable-alpine
 WORKDIR /usr/share/nginx/html
 
-# Configure nginx with security best practices
+# Configure nginx with security best practices and create cache directories
 RUN apk add --no-cache curl && \
+    mkdir -p /var/cache/nginx/client_temp \
+             /var/cache/nginx/proxy_temp \
+             /var/cache/nginx/fastcgi_temp \
+             /var/cache/nginx/uwsgi_temp \
+             /var/cache/nginx/scgi_temp && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chmod -R 755 /var/cache/nginx && \
     chown -R nginx:nginx /usr/share/nginx && \
     chmod -R 755 /usr/share/nginx && \
     rm -rf /var/cache/apk/*
