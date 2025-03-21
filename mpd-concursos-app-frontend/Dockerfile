@@ -53,10 +53,29 @@ RUN apk add --no-cache curl && \
 COPY --from=build /app/dist/browser .
 COPY nginx.conf /etc/nginx/conf.d/
 
+# Etapa de producción modificada
+FROM nginx:1.24-alpine
+WORKDIR /usr/share/nginx/html
+
+# Configurar permisos antes de cambiar de usuario
+RUN apk add --no-cache curl && \
+    mkdir -p /var/cache/nginx /var/run/nginx && \
+    chown -R nginx:nginx /var/cache/nginx /var/run/nginx && \
+    chmod -R 755 /var/cache/nginx /var/run/nginx && \
+    chown -R nginx:nginx /usr/share/nginx && \
+    chmod -R 755 /usr/share/nginx && \
+    rm -rf /etc/nginx/conf.d/default.conf
+
+COPY --from=build /app/dist/browser .
+COPY nginx.conf /etc/nginx/conf.d/
+
+# Cambiar usuario después de configurar los permisos
 USER nginx
+
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost || exit 1
+# Healthcheck mejorado
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD nc -z localhost 80 || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
