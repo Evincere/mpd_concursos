@@ -1044,8 +1044,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
     // Activar indicador de carga
     this.isLoading = true;
     
-    // Usar setTimeout para no bloquear la interfaz de usuario
-    setTimeout(() => {
+    // Usar requestAnimationFrame para sincronizar con el ciclo de renderizado
+    requestAnimationFrame(() => {
       try {
         const formArray = this.perfilForm.get('educacion') as FormArray;
         const educacionItem = formArray.at(index) as FormGroup;
@@ -1053,77 +1053,92 @@ export class PerfilComponent implements OnInit, OnDestroy {
         // Obtener los valores actuales
         const currentValues = educacionItem.value;
         
-        // Dependiendo del grupo, agregar diferentes campos
-        let nuevoFormGroup: FormGroup | null = null;
+        // Crear el nuevo FormGroup de manera asíncrona
+        const crearNuevoFormGroup = () => {
+          let nuevoFormGroup: FormGroup | null = null;
+          
+          // Grupo 1: Fechas (los campos más básicos y comunes)
+          if (grupo === 1) {
+            nuevoFormGroup = this.fb.group({
+              // Campos básicos que ya existen
+              titulo: [currentValues.titulo || '', Validators.required],
+              institucion: [currentValues.institucion || '', Validators.required],
+              tipo: [currentValues.tipo || TipoEducacion.GRADO, Validators.required],
+              estado: [currentValues.estado || EstadoEducacion.FINALIZADO, Validators.required],
+              documentoId: [currentValues.documentoId || null],
+              // Campos de fechas - Grupo 1
+              fechaInicio: [null],
+              fechaFin: [null],
+              fechaEmision: [null],
+              // Flag para saber que grupo 1 está cargado
+              grupo1Cargado: [true]
+            });
+          } 
+          // Grupo 2: Detalles académicos
+          else if (grupo === 2) {
+            nuevoFormGroup = this.fb.group({
+              // Mantener campos existentes
+              ...educacionItem.value,
+              // Nuevos campos - Grupo 2
+              duracionAnios: [null, [Validators.min(1)]],
+              promedio: [null, [Validators.min(0), Validators.max(10)]],
+              cargaHoraria: [null, [Validators.min(1)]],
+              evaluacionFinal: [false],
+              // Flag para saber que grupo 2 está cargado
+              grupo2Cargado: [true]
+            });
+          }
+          // Grupo 3: Información descriptiva
+          else if (grupo === 3) {
+            nuevoFormGroup = this.fb.group({
+              // Mantener campos existentes
+              ...educacionItem.value,
+              // Nuevos campos - Grupo 3
+              temaTesis: [''],
+              tipoActividad: [null],
+              caracter: [null],
+              lugarFechaExposicion: [''],
+              comentarios: [''],
+              descripcion: [''],
+              // Flag para saber que grupo 3 está cargado
+              grupo3Cargado: [true],
+              // Flag para saber que todos los campos están cargados
+              todosCargados: [true]
+            });
+          }
+          // Caso por defecto
+          else {
+            console.warn(`Grupo desconocido: ${grupo}. Utilizando grupo 1 por defecto.`);
+            nuevoFormGroup = this.fb.group({
+              ...educacionItem.value,
+              grupo1Cargado: [true]
+            });
+          }
+          
+          return nuevoFormGroup;
+        };
         
-        // Grupo 1: Fechas (los campos más básicos y comunes)
-        if (grupo === 1) {
-          nuevoFormGroup = this.fb.group({
-            // Campos básicos que ya existen
-            titulo: [currentValues.titulo || '', Validators.required],
-            institucion: [currentValues.institucion || '', Validators.required],
-            tipo: [currentValues.tipo || TipoEducacion.GRADO, Validators.required],
-            estado: [currentValues.estado || EstadoEducacion.FINALIZADO, Validators.required],
-            documentoId: [currentValues.documentoId || null],
-            // Campos de fechas - Grupo 1
-            fechaInicio: [null],
-            fechaFin: [null],
-            fechaEmision: [null],
-            // Flag para saber que grupo 1 está cargado
-            grupo1Cargado: [true]
-          });
-        } 
-        // Grupo 2: Detalles académicos
-        else if (grupo === 2) {
-          nuevoFormGroup = this.fb.group({
-            // Mantener campos existentes
-            ...educacionItem.value,
-            // Nuevos campos - Grupo 2
-            duracionAnios: [null, [Validators.min(1)]],
-            promedio: [null, [Validators.min(0), Validators.max(10)]],
-            cargaHoraria: [null, [Validators.min(1)]],
-            evaluacionFinal: [false],
-            // Flag para saber que grupo 2 está cargado
-            grupo2Cargado: [true]
-          });
-        }
-        // Grupo 3: Información descriptiva
-        else if (grupo === 3) {
-          nuevoFormGroup = this.fb.group({
-            // Mantener campos existentes
-            ...educacionItem.value,
-            // Nuevos campos - Grupo 3
-            temaTesis: [''],
-            tipoActividad: [null],
-            caracter: [null],
-            lugarFechaExposicion: [''],
-            comentarios: [''],
-            descripcion: [''],
-            // Flag para saber que grupo 3 está cargado
-            grupo3Cargado: [true],
-            // Flag para saber que todos los campos están cargados
-            todosCargados: [true]
-          });
-        }
-        // Caso por defecto (para evitar errores si se llama con un valor incorrecto)
-        else {
-          console.warn(`Grupo desconocido: ${grupo}. Utilizando grupo 1 por defecto.`);
-          nuevoFormGroup = this.fb.group({
-            ...educacionItem.value,
-            grupo1Cargado: [true]
-          });
-        }
-        
-        // Reemplazar el FormGroup en el FormArray si tenemos uno válido
-        if (nuevoFormGroup) {
-          formArray.setControl(index, nuevoFormGroup);
-        }
+        // Crear el nuevo FormGroup en un ciclo separado
+        setTimeout(() => {
+          const nuevoFormGroup = crearNuevoFormGroup();
+          
+          // Actualizar el FormArray en otro ciclo
+          if (nuevoFormGroup) {
+            requestAnimationFrame(() => {
+              formArray.setControl(index, nuevoFormGroup);
+              this.cdr.markForCheck();
+            });
+          }
+        }, 0);
         
       } catch (error) {
         console.error('Error al cargar campos adicionales:', error);
       } finally {
-        this.isLoading = false;
+        // Desactivar el indicador de carga en el siguiente ciclo
+        setTimeout(() => {
+          this.isLoading = false;
+        }, 0);
       }
-    }, 0);
+    });
   }
 }

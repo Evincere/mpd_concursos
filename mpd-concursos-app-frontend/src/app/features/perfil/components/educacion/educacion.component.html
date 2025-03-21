@@ -9,7 +9,7 @@
     </div>
 
     <div class="educacion-list" formArrayName="educacion">
-      <div *ngFor="let edu of educacionArray.controls; let i = index" [formGroupName]="i" class="educacion-item">
+      <div *ngFor="let edu of educacionArray.controls; let i = index; trackBy: trackByFn" [formGroupName]="i" class="educacion-item">
         <mat-card>
           <mat-card-content>
             <!-- Campos comunes -->
@@ -39,7 +39,7 @@
             </div>
 
             <!-- Campos específicos según el tipo -->
-            <div [ngSwitch]="edu.get('tipo')?.value">
+            <ng-container [ngSwitch]="edu.get('tipo')?.value">
               <!-- Título -->
               <div *ngSwitchCase="'TITULO'">
                 <div class="form-row">
@@ -62,6 +62,22 @@
                 </div>
                 <div class="form-row">
                   <mat-checkbox formControlName="evaluacionFinal">¿Tuvo evaluación final?</mat-checkbox>
+                </div>
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha de inicio</mat-label>
+                    <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio">
+                    <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerInicio></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha de fin</mat-label>
+                    <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin">
+                    <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerFin></mat-datepicker>
+                  </mat-form-field>
                 </div>
               </div>
 
@@ -94,23 +110,12 @@
                   </mat-form-field>
                 </div>
               </div>
-            </div>
+            </ng-container>
 
             <!-- Botones de acción -->
             <div class="action-buttons">
-              <button mat-icon-button color="warn" (click)="eliminarEducacion(i)" matTooltip="Eliminar">
+              <button mat-icon-button color="warn" (click)="eliminarEducacion(i)" type="button">
                 <mat-icon>delete</mat-icon>
-              </button>
-              <button mat-icon-button color="primary" (click)="cargarDocumentoEducacion(i)" matTooltip="Cargar documento">
-                <mat-icon>upload_file</mat-icon>
-              </button>
-              <button mat-icon-button color="primary" (click)="verDocumentoEducacion(i)"
-                      [disabled]="!edu.get('documentoId')?.value" matTooltip="Ver documento">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="eliminarDocumentoEducacion(i)"
-                      [disabled]="!edu.get('documentoId')?.value" matTooltip="Eliminar documento">
-                <mat-icon>delete_forever</mat-icon>
               </button>
             </div>
           </mat-card-content>
@@ -119,8 +124,8 @@
     </div>
 
     <div class="form-actions">
-      <button mat-raised-button color="primary" (click)="guardarEducacion()" [disabled]="!educacionForm.valid">
-        Guardar Cambios
+      <button mat-raised-button color="primary" (click)="guardarEducacion()" type="button">
+        Guardar
       </button>
     </div>
   </form>

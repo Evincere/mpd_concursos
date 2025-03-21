@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { debounceTime, distinctUntilChanged, switchMap, tap, delay } from 'rxjs/operators';
-import { AbstractControl, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { Component, EventEmitter, Input, OnInit, Output, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, NgZone } from '@angular/core';
+import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import { FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -11,7 +11,9 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { BehaviorSubject, Subscription, of, EMPTY } from 'rxjs';
+import { Subscription } from 'rxjs';
+import { DateAdapter } from '@angular/material/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { Educacion, TipoEducacion, EstadoEducacion, TipoActividadCientifica, CaracterActividadCientifica } from '../../../../core/services/profile/profile.service';
 
 @Component({
@@ -20,6 +22,17 @@ import { Educacion, TipoEducacion, EstadoEducacion, TipoActividadCientifica, Car
   styleUrls: ['./educacion-form.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0, height: '0px' }),
+        animate('200ms ease-out', style({ opacity: 1, height: '*' }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ opacity: 0, height: '0px' }))
+      ])
+    ])
+  ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -34,9 +47,18 @@ import { Educacion, TipoEducacion, EstadoEducacion, TipoActividadCientifica, Car
 })
 export class EducacionFormComponent implements OnInit, OnDestroy {
   private subscription = new Subscription();
+  private formInitialized = false;
+  private datepickerLoaded = false;
+  private readonly destroyRef = new EventEmitter<void>();
+
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
+    this.destroyRef.emit();
+    this.destroyRef.complete();
+    this.educacionForm?.reset();
+    this.cdr.detach();
   }
+
   @Input() educacion?: Educacion;
   @Output() submitEducacion = new EventEmitter<Educacion>();
   @Output() cancelar = new EventEmitter<void>();
@@ -51,88 +73,81 @@ export class EducacionFormComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private cdr: ChangeDetectorRef
-  ) {}
-
-  ngOnInit(): void {
-    this.initializeForm();
-    
-    if (this.educacion) {
-      this.educacionForm.patchValue(this.educacion, { emitEvent: false });
-      this.actualizarValidacionesPorTipo(this.educacion.tipo);
-    }
-
-    const tipoControl = this.educacionForm.get('tipo');
-    if (tipoControl) {
-      this.subscription.add(
-        tipoControl.valueChanges
-          .pipe(
-            debounceTime(100),
-            distinctUntilChanged()
-          )
-          .subscribe(tipo => {
-            if (tipo) {
-              this.actualizarValidacionesPorTipo(tipo);
-            }
-          })
-      );
-    }
+    private cdr: ChangeDetectorRef,
+    private dateAdapter: DateAdapter<Date>,
+    private ngZone: NgZone
+  ) {
+    this.dateAdapter.setLocale('es-ES');
+    this.dateAdapter.getFirstDayOfWeek = () => 1;
   }
 
   private actualizarValidacionesPorTipo(tipo: TipoEducacion): void {
-    if (!tipo) return;
-
-    // Establecer validaciones básicas sin usar queueMicrotask
-    const form = this.educacionForm;
-    
-    // Restablecer validaciones
-    Object.keys(form.controls).forEach(key => {
-      const control = form.get(key);
-      if (control) {
-        control.clearValidators();
-        control.updateValueAndValidity({ emitEvent: false });
+    if (!tipo || !this.formInitialized) return;
+  
+    // Ejecutar las actualizaciones en el siguiente ciclo de detección de cambios
+    Promise.resolve().then(() => {
+      const form = this.educacionForm;
+      const controlsToUpdate = new Map<string, ValidatorFn[]>();
+  
+      // Configuración base de validadores
+      controlsToUpdate.set('tipo', [Validators.required]);
+      controlsToUpdate.set('estado', [Validators.required]);
+      controlsToUpdate.set('titulo', [Validators.required]);
+      controlsToUpdate.set('institucion', [Validators.required]);
+  
+      // Agregar validaciones específicas de manera asíncrona
+      switch (tipo) {
+        case TipoEducacion.GRADO:
+        case TipoEducacion.NIVEL_SUPERIOR:
+          controlsToUpdate.set('duracionAnios', [Validators.required, Validators.min(1)]);
+          break;
+        case TipoEducacion.POSGRADO_ESPECIALIZACION:
+        case TipoEducacion.POSGRADO_MAESTRIA:
+        case TipoEducacion.POSGRADO_DOCTORADO:
+          controlsToUpdate.set('temaTesis', [Validators.required]);
+          break;
+        case TipoEducacion.CURSO:
+        case TipoEducacion.DIPLOMATURA:
+          controlsToUpdate.set('cargaHoraria', [Validators.required, Validators.min(1)]);
+          break;
+        case TipoEducacion.ACTIVIDAD_CIENTIFICA:
+          controlsToUpdate.set('tipoActividad', [Validators.required]);
+          controlsToUpdate.set('caracter', [Validators.required]);
+          break;
       }
-    });
-
-    // Aplicar validaciones comunes
-    form.get('tipo')?.setValidators([Validators.required]);
-    form.get('estado')?.setValidators([Validators.required]);
-    form.get('titulo')?.setValidators([Validators.required]);
-    form.get('institucion')?.setValidators([Validators.required]);
-
-    // Aplicar validaciones específicas
-    switch (tipo) {
-      case TipoEducacion.GRADO:
-      case TipoEducacion.NIVEL_SUPERIOR:
-        form.get('duracionAnios')?.setValidators([Validators.required, Validators.min(1)]);
-        break;
-      case TipoEducacion.POSGRADO_ESPECIALIZACION:
-      case TipoEducacion.POSGRADO_MAESTRIA:
-      case TipoEducacion.POSGRADO_DOCTORADO:
-        form.get('temaTesis')?.setValidators([Validators.required]);
-        break;
-      case TipoEducacion.CURSO:
-      case TipoEducacion.DIPLOMATURA:
-        form.get('cargaHoraria')?.setValidators([Validators.required, Validators.min(1)]);
-        break;
-      case TipoEducacion.ACTIVIDAD_CIENTIFICA:
-        form.get('tipoActividad')?.setValidators([Validators.required]);
-        form.get('caracter')?.setValidators([Validators.required]);
-        break;
-    }
-
-    // Actualizar validaciones sin forzar detección de cambios
-    Object.keys(form.controls).forEach(key => {
-      form.get(key)?.updateValueAndValidity({ emitEvent: false });
+  
+      // Actualizar validadores de manera eficiente
+      this.ngZone.runOutsideAngular(() => {
+        controlsToUpdate.forEach((validators, controlName) => {
+          const control = form.get(controlName);
+          if (control) {
+            control.clearValidators();
+            control.setValidators(validators);
+            control.updateValueAndValidity({ emitEvent: false, onlySelf: true });
+          }
+        });
+  
+        // Forzar la detección de cambios solo una vez después de todas las actualizaciones
+        this.ngZone.run(() => {
+          queueMicrotask(() => this.cdr.markForCheck());
+        });
+      });
     });
   }
 
   private initializeForm(): void {
-    this.educacionForm = this.fb.group({
+    const baseControls = {
       tipo: ['', Validators.required],
       estado: ['', Validators.required],
       titulo: ['', Validators.required],
-      institucion: ['', Validators.required],
+      institucion: ['', Validators.required]
+    };
+  
+    // Initialize only the base form controls initially
+    this.educacionForm = this.fb.group(baseControls);
+  
+    // Lazy initialize additional controls when needed
+    const additionalControls = {
       fechaEmision: [null],
       documentoId: [null],
       duracionAnios: [null],
@@ -146,20 +161,65 @@ export class EducacionFormComponent implements OnInit, OnDestroy {
       comentarios: [null],
       fechaInicio: [null],
       fechaFin: [null]
+    };
+  
+    // Add additional controls asynchronously
+    queueMicrotask(() => {
+      Object.entries(additionalControls).forEach(([key, value]) => {
+        this.educacionForm.addControl(key, this.fb.control(value[0]));
+      });
+      this.cdr.markForCheck();
     });
+  }
+
+  ngOnInit(): void {
+    this.cdr.detach(); // Detach change detector initially
+    
+    // Inicializar el formulario de manera asíncrona
+    Promise.resolve().then(() => {
+      this.initializeForm();
+      
+      if (this.educacion) {
+        this.educacionForm.patchValue(this.educacion, { emitEvent: false });
+        this.actualizarValidacionesPorTipo(this.educacion.tipo);
+      }
+      
+      this.formInitialized = true;
+      this.cdr.reattach(); // Reattach change detector after initialization
+
+      // Suscribirse a los cambios de tipo con debounce
+      const tipoControl = this.educacionForm.get('tipo');
+      if (tipoControl) {
+        this.subscription.add(
+          tipoControl.valueChanges.pipe(
+            debounceTime(300),
+            distinctUntilChanged(),
+            filter(tipo => !!tipo),
+            takeUntil(this.destroyRef)
+          ).subscribe(tipo => {
+            this.actualizarValidacionesPorTipo(tipo);
+          })
+        );
+      }
+    });
+  }
+
+  loadDatepickerResources(): void {
+    if (!this.datepickerLoaded) {
+      this.ngZone.runOutsideAngular(() => {
+        // Defer datepicker initialization
+        setTimeout(() => {
+          this.datepickerLoaded = true;
+          this.ngZone.run(() => this.cdr.markForCheck());
+        }, 0);
+      });
+    }
   }
 
   onSubmit(): void {
     if (this.educacionForm.valid) {
       this.isLoading = true;
-      const educacionData = this.educacionForm.getRawValue();
-      this.submitEducacion.emit(educacionData);
-      this.isLoading = false;
-    } else {
-      this.snackBar.open('Por favor complete todos los campos requeridos', 'Cerrar', {
-        duration: 3000
-      });
-      this.educacionForm.markAllAsTouched();
+      this.submitEducacion.emit(this.educacionForm.value);
     }
   }
 

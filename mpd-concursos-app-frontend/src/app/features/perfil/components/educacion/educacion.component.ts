@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, FormControl } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -14,12 +14,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { DocumentService } from '../../../../shared/services/document.service';
 import { ProfileService } from '@core/services/profile/profile.service';
+import { EducacionFormControls } from '@core/interfaces/educacion/EducacionFormControls.interface';
 
 @Component({
   selector: 'app-educacion',
   templateUrl: './educacion.component.html',
   styleUrls: ['./educacion.component.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -55,10 +57,11 @@ export class EducacionComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private perfilService: ProfileService, // Need to import PerfilService
-    private documentService: DocumentService, // Need to import DocumentService
+    private perfilService: ProfileService,
+    private documentService: DocumentService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {
     this.educacionForm = this.fb.group({
       educacion: this.fb.array([])
@@ -89,59 +92,101 @@ export class EducacionComponent implements OnInit {
     });
   }
 
-  agregarEducacion() {
-    const educacionGroup = this.fb.group({
-      id: [null],
-      tipo: ['', Validators.required],
-      institucion: ['', Validators.required],
-      titulo: ['', Validators.required],
-      fechaEmision: [null],
-      documentoId: [null],
-      cargaHoraria: [null, [Validators.min(1)]],
-      evaluacionFinal: [false],
-      tipoActividad: [null],
-      caracter: [null],
-      lugarFechaExposicion: [null],
-      comentarios: [''],
-      fechaInicio: [null],
-      fechaFin: [null]
-    });
+  private createEducacionFormGroup(tipo: string = ''): FormGroup<EducacionFormControls> {
+    const basicFields = {
+      id: new FormControl<number | null>(null),
+      tipo: new FormControl<string>(tipo, { validators: Validators.required, nonNullable: true }),
+      institucion: new FormControl<string>('', { validators: Validators.required, nonNullable: true }),
+      titulo: new FormControl<string>('', { validators: Validators.required, nonNullable: true }),
+      comentarios: new FormControl<string>('', { nonNullable: true })
+    };
 
-    // Add form group asynchronously to prevent UI blocking
-    setTimeout(() => {
-      this.educacionArray.push(educacionGroup);
-    }, 0);
+    switch (tipo) {
+      case 'TITULO':
+        return this.fb.group<EducacionFormControls>({
+          ...basicFields,
+          fechaEmision: new FormControl<Date | null>(null),
+          documentoId: new FormControl<number | null>(null)
+        });
+      case 'CURSO':
+        return this.fb.group<EducacionFormControls>({
+          ...basicFields,
+          cargaHoraria: new FormControl<number | null>(null, [Validators.min(1)]),
+          evaluacionFinal: new FormControl<boolean>(false, { nonNullable: true }),
+          fechaInicio: new FormControl<Date | null>(null),
+          fechaFin: new FormControl<Date | null>(null)
+        });
+      case 'ACTIVIDAD_CIENTIFICA':
+        return this.fb.group<EducacionFormControls>({
+          ...basicFields,
+          tipoActividad: new FormControl<string | null>(null),
+          caracter: new FormControl<string | null>(null),
+          lugarFechaExposicion: new FormControl<string | null>(null)
+        });
+      default:
+        return this.fb.group<EducacionFormControls>(basicFields);
+    }
+  }
+
+  agregarEducacion() {
+    const formGroup = this.createEducacionFormGroup();
+    
+    Promise.resolve().then(() => {
+      this.educacionArray.push(formGroup);
+      
+      const tipoControl = formGroup.controls['tipo'];
+      if (tipoControl instanceof FormControl) {
+        tipoControl.valueChanges.subscribe((tipo: string | null) => {
+          if (!tipo) return;
+          
+          const index = this.educacionArray.controls.indexOf(formGroup);
+          if (index === -1) return;
+
+          Promise.resolve().then(() => {
+            const newFormGroup = this.createEducacionFormGroup(tipo);
+            Object.keys(formGroup.controls).forEach(key => {
+              const control = newFormGroup.get(key);
+              const value = formGroup.get(key)?.value;
+              if (control && value !== undefined) {
+                control.setValue(value, { emitEvent: false });
+              }
+            });
+
+            this.educacionArray.setControl(index, newFormGroup);
+            this.cdr.markForCheck();
+          });
+        });
+      }
+    });
   }
 
   agregarEducacionExistente(edu: any) {
-    const educacionGroup = this.fb.group({
-      id: [edu.id],
-      tipo: [edu.tipo, Validators.required],
-      institucion: [edu.institucion, Validators.required],
-      titulo: [edu.titulo, Validators.required],
-      fechaEmision: [edu.fechaEmision],
-      documentoId: [edu.documentoId],
-      cargaHoraria: [edu.cargaHoraria, [Validators.min(1)]],
-      evaluacionFinal: [edu.evaluacionFinal],
-      tipoActividad: [edu.tipoActividad],
-      caracter: [edu.caracter],
-      lugarFechaExposicion: [edu.lugarFechaExposicion],
-      comentarios: [edu.comentarios],
-      fechaInicio: [edu.fechaInicio],
-      fechaFin: [edu.fechaFin]
+    const formGroup = this.createEducacionFormGroup(edu.tipo);
+    
+    // Set values for all controls that exist in the form group
+    Object.keys(edu).forEach(key => {
+      if (formGroup.contains(key)) {
+        formGroup.get(key)?.setValue(edu[key], { emitEvent: false });
+      }
     });
 
-    // Add existing education asynchronously
-    setTimeout(() => {
-      this.educacionArray.push(educacionGroup);
-    }, 0);
+    // Add the form group to the array
+    Promise.resolve().then(() => {
+      this.educacionArray.push(formGroup);
+      this.cdr.markForCheck();
+    });
+  }
+
+  trackByFn(index: number, item: any): number {
+    return index;
   }
 
   eliminarEducacion(index: number) {
     // Remove form group asynchronously
-    setTimeout(() => {
+    Promise.resolve().then(() => {
       this.educacionArray.removeAt(index);
-    }, 0);
+      this.cdr.detectChanges();
+    });
   }
 
   guardarEducacion() {
