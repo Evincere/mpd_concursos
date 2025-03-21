@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef,
 import { FormBuilder, FormGroup, FormArray, Validators, FormControl, AbstractControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ProfileService, UserProfile, Experiencia, Educacion, Habilidad, TipoEducacion, EstadoEducacion, TipoActividadCientifica, CaracterActividadCientifica } from '../../core/services/profile/profile.service';
+import { ProfileService, UserProfile, Experiencia, Habilidad } from '../../core/services/profile/profile.service';
 import { DocumentosService } from '../../core/services/documentos/documentos.service';
 import { DocumentoViewerComponent } from './components/documento-viewer/documento-viewer.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -25,7 +25,6 @@ import { DocumentacionTabComponent } from './components/documentacion-tab/docume
 import { DocumentoResponse } from '../../core/models/documento.model';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
-import { EducacionComponent } from './components/educacion/educacion.component';
 
 @Component({
   selector: 'app-perfil',
@@ -47,16 +46,13 @@ import { EducacionComponent } from './components/educacion/educacion.component';
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
-    DocumentacionTabComponent,
-    EducacionComponent
+    DocumentacionTabComponent
   ]
 })
 export class PerfilComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef;
   @ViewChild('fechaInicio') fechaInicio: any;
   @ViewChild('fechaFin') fechaFin: any;
-  @ViewChild('fechaEduInicio') fechaEduInicio: any;
-  @ViewChild('fechaEduFin') fechaEduFin: any;
   perfilForm!: FormGroup;
   userProfile: UserProfile | null = null;
 
@@ -102,7 +98,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
       telefono: [{ value: '', disabled: true }],
       direccion: [{ value: '', disabled: true }],
       experiencias: this.fb.array([]),
-      educacion: this.fb.array([]),
       habilidades: this.fb.array([])
     });
 
@@ -186,8 +181,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     // Usar un enfoque progresivo para actualizar los arrays
     const tareas = [
       () => this.actualizarArrayExperiencias(profile),
-      () => this.actualizarArrayHabilidades(profile),
-      () => this.actualizarArrayEducacion(profile)
+      () => this.actualizarArrayHabilidades(profile)
     ];
 
     // Procesamiento secuencial para evitar bloqueos
@@ -228,7 +222,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
     // Actualizar arrays de forma optimizada
     this.actualizarArrayExperiencias(profile);
-    this.actualizarArrayEducacion(profile);
     this.actualizarArrayHabilidades(profile);
 
     // Actualizar UI
@@ -252,49 +245,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
         this.cdr.reattach();
       }
     }
-  }
-
-  // Método optimizado para actualizar el array de educación
-  private actualizarArrayEducacion(profile: UserProfile): void {
-    console.debug('Inicio actualizarArrayEducacion');
-    const educacionArray = this.perfilForm.get('educacion') as FormArray;
-    
-    // Limpiar el array primero
-    educacionArray.clear();
-    
-    // Si no hay educación, salir tempranamente
-    if (!profile.educacion || !Array.isArray(profile.educacion) || profile.educacion.length === 0) {
-      return;
-    }
-    
-    // Tamaño del lote para procesar
-    const batchSize = 5;
-    const total = profile.educacion.length;
-    const educacionArray2 = [...profile.educacion]; // Copia segura del array
-    
-    // Procesar en lotes para evitar bloquear el hilo principal
-    const processBatch = (startIndex: number) => {
-      const endIndex = Math.min(startIndex + batchSize, total);
-      
-      // Procesar este lote
-      for (let i = startIndex; i < endIndex; i++) {
-        const item = educacionArray2[i];
-        const grupo = this.createEducacionFormGroup(item);
-        educacionArray.push(grupo);
-      }
-      
-      // Si hay más lotes para procesar, programarlos para el siguiente ciclo
-      if (endIndex < total) {
-        setTimeout(() => processBatch(endIndex), 0);
-      } else {
-        console.debug('Educación cargada: ' + educacionArray.length + ' elementos');
-        // Cuando hayamos terminado, desactivar el indicador de carga
-        this.cdr.markForCheck();
-      }
-    };
-    
-    // Iniciar procesamiento por lotes
-    processBatch(0);
   }
 
   // Método optimizado para actualizar el array de habilidades
@@ -352,267 +302,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
     return this.perfilForm.get('experiencias') as FormArray;
   }
 
-  get educacion() {
-    return this.perfilForm.get('educacion') as FormArray;
-  }
-
   get habilidades() {
     return this.perfilForm.get('habilidades') as FormArray;
-  }
-
-  // Método para agregar un nuevo item de educación - versión ultra simplificada
-  agregarEducacion(): void {
-    if (this.isLoading) return;
-
-    // Activar indicador de carga
-    this.isLoading = true;
-    
-    // Usar setTimeout con 0ms para devolver el control inmediatamente al navegador
-    // y evitar bloquear la interfaz de usuario
-    setTimeout(() => {
-      try {
-        // Crear un formulario mínimo (solo con campos requeridos) para reducir la carga inicial
-        const formGroup = this.fb.group({
-          titulo: ['', Validators.required],
-          institucion: ['', Validators.required],
-          tipo: [TipoEducacion.GRADO, Validators.required],
-          estado: [EstadoEducacion.FINALIZADO, Validators.required],
-          documentoId: [null]
-        });
-    
-        // Agregar al FormArray
-        const educacionArray = this.perfilForm.get('educacion') as FormArray;
-        educacionArray.push(formGroup);
-        
-        // Desactivar indicador de carga después de un breve retraso
-        // para permitir que el navegador actualice la UI
-        setTimeout(() => {
-          this.isLoading = false;
-          
-          // Hacer scroll al elemento recién agregado en otro ciclo
-          setTimeout(() => {
-            const elements = document.querySelectorAll('.cv-item');
-            if (elements?.length > 0) {
-              const lastElement = elements[elements.length - 1];
-              lastElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }, 100);
-        }, 50);
-      } catch (error) {
-        console.error('Error al agregar educación:', error);
-        this.isLoading = false;
-      }
-    }, 0);
-  }
-
-  // Versión simplificada para crear un grupo de formulario con campos mínimos o completos
-  createEducacionFormGroup(educacion?: any): FormGroup {
-    console.debug('Creando grupo de educación');
-    
-    // Si tenemos datos completos, crear un formulario completo
-    if (educacion) {
-      return this.fb.group({
-        titulo: [educacion.titulo || '', Validators.required],
-        institucion: [educacion.institucion || '', Validators.required],
-        tipo: [educacion.tipo || TipoEducacion.GRADO, Validators.required],
-        estado: [educacion.estado || EstadoEducacion.FINALIZADO, Validators.required],
-        documentoId: [educacion.documentoId || null],
-        fechaInicio: [educacion.fechaInicio || null],
-        fechaFin: [educacion.fechaFin || null],
-        fechaEmision: [educacion.fechaEmision || null],
-        duracionAnios: [educacion.duracionAnios || null, [Validators.min(1)]],
-        promedio: [educacion.promedio || null, [Validators.min(0), Validators.max(10)]],
-        temaTesis: [educacion.temaTesis || ''],
-        cargaHoraria: [educacion.cargaHoraria || null, [Validators.min(1)]],
-        evaluacionFinal: [educacion.evaluacionFinal || false],
-        tipoActividad: [educacion.tipoActividad || null],
-        caracter: [educacion.caracter || null],
-        lugarFechaExposicion: [educacion.lugarFechaExposicion || ''],
-        comentarios: [educacion.comentarios || ''],
-        descripcion: [educacion.descripcion || '']
-      });
-    } else {
-      // Si es un nuevo elemento, crear solo los campos básicos para mejorar rendimiento
-      return this.fb.group({
-        titulo: ['', Validators.required],
-        institucion: ['', Validators.required],
-        tipo: [TipoEducacion.GRADO, Validators.required],
-        estado: [EstadoEducacion.FINALIZADO, Validators.required],
-        documentoId: [null]
-      });
-    }
-  }
-
-  // Método para cargar documento de educación
-  cargarDocumentoEducacion(index: number): void {
-    if (this.isLoading) return;
-    
-    // Crear un input de tipo file oculto
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'application/pdf';
-    fileInput.style.display = 'none';
-    document.body.appendChild(fileInput);
-
-    // Manejar la selección de archivo
-    fileInput.addEventListener('change', (event: any) => {
-      if (!event.target.files || event.target.files.length === 0) {
-        document.body.removeChild(fileInput);
-        return;
-      }
-      
-      const file = event.target.files[0];
-      // Verificar que sea un PDF
-      if (file.type !== 'application/pdf') {
-        this.snackBar.open('Solo se permiten archivos PDF', 'Cerrar', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-        document.body.removeChild(fileInput);
-        return;
-      }
-
-      // Mostrar indicador de carga
-      this.isLoading = true;
-      this.cdr.markForCheck();
-
-      // Subir el archivo
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // Usar setTimeout para dar tiempo a que la UI se actualice antes de la operación costosa
-      setTimeout(() => {
-        this.documentosService.uploadDocumento(formData).subscribe({
-          next: (response: DocumentoResponse) => {
-            // Actualizar el ID del documento en el formulario de manera segura
-            try {
-              const educacionItem = this.educacion.at(index) as FormGroup;
-              if (educacionItem) {
-                educacionItem.patchValue({
-                  documentoId: response.id
-                });
-              }
-
-              this.snackBar.open('Documento cargado exitosamente', 'Cerrar', {
-                duration: 3000,
-                panelClass: ['success-snackbar']
-              });
-            } catch (error) {
-              console.error('Error al actualizar el formulario:', error);
-            } finally {
-              this.isLoading = false;
-              this.cdr.markForCheck();
-            }
-          },
-          error: (error: any) => {
-            console.error('Error al cargar el documento', error);
-            this.snackBar.open('Error al cargar el documento', 'Cerrar', {
-              duration: 3000,
-              panelClass: ['error-snackbar']
-            });
-            this.isLoading = false;
-            this.cdr.markForCheck();
-          },
-          complete: () => {
-            // Asegurarse de que el input se elimine siempre
-            try {
-              if (document.body.contains(fileInput)) {
-                document.body.removeChild(fileInput);
-              }
-            } catch (e) {
-              console.error('Error al eliminar el input:', e);
-            }
-          }
-        });
-      }, 0);
-    });
-
-    // Disparar el diálogo de selección de archivo
-    fileInput.click();
-  }
-
-  // Método para ver un documento de educación
-  verDocumentoEducacion(index: number): void {
-    const educacionItem = this.educacion.at(index) as FormGroup;
-    const documentoId = educacionItem.get('documentoId')?.value;
-
-    if (!documentoId) {
-      this.snackBar.open('No hay documento para visualizar', 'Cerrar', {
-        duration: 3000,
-        panelClass: ['warning-snackbar']
-      });
-      return;
-    }
-
-    this.dialog.open(DocumentoViewerComponent, {
-      width: '80%',
-      height: '80%',
-      data: { documentoId }
-    });
-  }
-
-  // Método para eliminar un documento de educación
-  eliminarDocumentoEducacion(index: number): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Eliminar documento',
-        message: '¿Está seguro que desea eliminar este documento? Esta acción no se puede deshacer.'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const educacionItem = this.educacion.at(index) as FormGroup;
-        const documentoId = educacionItem.get('documentoId')?.value;
-
-        if (!documentoId) {
-          return;
-        }
-
-        // Eliminar la referencia en el formulario
-        educacionItem.patchValue({
-          documentoId: null
-        });
-
-        this.snackBar.open('Documento eliminado exitosamente', 'Cerrar', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-      }
-    });
-  }
-
-  // Método para obtener los tipos de educación
-  get tiposEducacion(): { value: string, label: string }[] {
-    return Object.entries(TipoEducacion).map(([key, value]) => ({
-      value,
-      label: value
-    }));
-  }
-
-  // Método para obtener los estados de educación
-  get estadosEducacion(): { value: string, label: string }[] {
-    return Object.entries(EstadoEducacion).map(([key, value]) => ({
-      value,
-      label: value
-    }));
-  }
-
-  // Método para obtener los tipos de actividad científica
-  get tiposActividadCientifica(): { value: string, label: string }[] {
-    return Object.entries(TipoActividadCientifica).map(([key, value]) => ({
-      value,
-      label: value
-    }));
-  }
-
-  // Método para obtener los tipos de carácter de actividad científica
-  get caracteresActividadCientifica(): { value: string, label: string }[] {
-    return Object.entries(CaracterActividadCientifica).map(([key, value]) => ({
-      value,
-      label: value
-    }));
   }
 
   // Método para crear un nuevo grupo de habilidad
@@ -635,10 +326,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
   // Métodos para eliminar elementos
   eliminarExperiencia(index: number): void {
     this.experiencias.removeAt(index);
-  }
-
-  eliminarEducacion(index: number): void {
-    this.educacion.removeAt(index);
   }
 
   eliminarHabilidad(index: number): void {
@@ -681,28 +368,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
           descripcion: exp.descripcion,
           comentario: exp.comentario,
           certificadoId: exp.certificadoId
-        })),
-        educacion: (formValues.educacion || []).map((edu: any) => ({
-          tipo: edu.tipo,
-          estado: edu.estado,
-          titulo: edu.titulo,
-          institucion: edu.institucion,
-          fechaEmision: edu.fechaEmision ? new Date(edu.fechaEmision).toISOString().split('T')[0] : null,
-          documentoId: edu.documentoId,
-          // Campos específicos según el tipo
-          duracionAnios: edu.duracionAnios,
-          promedio: edu.promedio,
-          temaTesis: edu.temaTesis,
-          cargaHoraria: edu.cargaHoraria,
-          evaluacionFinal: edu.evaluacionFinal,
-          tipoActividad: edu.tipoActividad,
-          caracter: edu.caracter,
-          lugarFechaExposicion: edu.lugarFechaExposicion,
-          comentarios: edu.comentarios,
-          // Campos para backward compatibility
-          descripcion: edu.descripcion,
-          fechaInicio: edu.fechaInicio ? new Date(edu.fechaInicio).toISOString().split('T')[0] : null,
-          fechaFin: edu.fechaFin ? new Date(edu.fechaFin).toISOString().split('T')[0] : null
         })),
         habilidades: (formValues.habilidades || []).map((hab: any) => ({
           nombre: hab.nombre,
@@ -912,15 +577,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Actualizar educación si existe
-    const educacionArray = this.perfilForm.get('educacion') as FormArray;
-    if (profile.educacion && Array.isArray(profile.educacion)) {
-      educacionArray.clear();
-      profile.educacion.forEach((edu: Educacion) => {
-        educacionArray.push(this.createEducacionFormGroup(edu));
-      });
-    }
-
     // Actualizar habilidades si existen
     const habilidadesArray = this.perfilForm.get('habilidades') as FormArray;
     if (profile.habilidades && Array.isArray(profile.habilidades)) {
@@ -959,171 +615,5 @@ export class PerfilComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions = [];
-  }
-
-  verCertificadoEducacion(certificadoId: string) {
-    if (certificadoId) {
-      this.documentosService.getDocumentoFile(certificadoId).subscribe({
-        next: (documento: Blob) => {
-          this.dialog.open(DocumentoViewerComponent, {
-            data: { documento },
-            width: '80%',
-            height: '80%'
-          });
-        },
-        error: (error: Error) => {
-          this.snackBar.open('Error al cargar el certificado', 'Cerrar', { duration: 3000 });
-        }
-      });
-    }
-  }
-
-  eliminarCertificadoEducacion(index: number) {
-    const educacionArray = this.perfilForm.get('educacion') as FormArray;
-    const educacion = educacionArray.at(index);
-    const certificadoId = educacion.get('certificadoId')?.value;
-
-    if (certificadoId) {
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-        data: { message: '¿Está seguro que desea eliminar el certificado?' }
-      });
-
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.documentosService.deleteDocumento(certificadoId).subscribe({
-            next: () => {
-              educacion.patchValue({ certificadoId: null });
-              this.snackBar.open('Certificado eliminado correctamente', 'Cerrar', { duration: 3000 });
-            },
-            error: (error) => {
-              this.snackBar.open('Error al eliminar el certificado', 'Cerrar', { duration: 3000 });
-            }
-          });
-        }
-      });
-    }
-  }
-
-  cargarCertificadoEducacion(index: number) {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'application/pdf';
-    
-    fileInput.onchange = (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-        if (file.type !== 'application/pdf') {
-          this.snackBar.open('Solo se permiten archivos PDF', 'Cerrar', { duration: 3000 });
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        this.documentosService.uploadDocumento(formData).subscribe(
-          (response: DocumentoResponse) => {
-            const educacionArray = this.perfilForm.get('educacion') as FormArray;
-            const educacion = educacionArray.at(index);
-            educacion.patchValue({ certificadoId: response.id });
-            this.snackBar.open('Certificado cargado correctamente', 'Cerrar', { duration: 3000 });
-          },
-          error => {
-            this.snackBar.open('Error al cargar el certificado', 'Cerrar', { duration: 3000 });
-          }
-        );
-      }
-    };
-
-    fileInput.click();
-  }
-
-  // Método para cargar campos adicionales de educación de forma progresiva
-  cargarCamposAdicionales(index: number, grupo: number = 1): void {
-    if (this.isLoading) return;
-    
-    // Activar indicador de carga
-    this.isLoading = true;
-    
-    // Usar setTimeout para no bloquear la interfaz de usuario
-    setTimeout(() => {
-      try {
-        const formArray = this.perfilForm.get('educacion') as FormArray;
-        const educacionItem = formArray.at(index) as FormGroup;
-        
-        // Obtener los valores actuales
-        const currentValues = educacionItem.value;
-        
-        // Dependiendo del grupo, agregar diferentes campos
-        let nuevoFormGroup: FormGroup | null = null;
-        
-        // Grupo 1: Fechas (los campos más básicos y comunes)
-        if (grupo === 1) {
-          nuevoFormGroup = this.fb.group({
-            // Campos básicos que ya existen
-            titulo: [currentValues.titulo || '', Validators.required],
-            institucion: [currentValues.institucion || '', Validators.required],
-            tipo: [currentValues.tipo || TipoEducacion.GRADO, Validators.required],
-            estado: [currentValues.estado || EstadoEducacion.FINALIZADO, Validators.required],
-            documentoId: [currentValues.documentoId || null],
-            // Campos de fechas - Grupo 1
-            fechaInicio: [null],
-            fechaFin: [null],
-            fechaEmision: [null],
-            // Flag para saber que grupo 1 está cargado
-            grupo1Cargado: [true]
-          });
-        } 
-        // Grupo 2: Detalles académicos
-        else if (grupo === 2) {
-          nuevoFormGroup = this.fb.group({
-            // Mantener campos existentes
-            ...educacionItem.value,
-            // Nuevos campos - Grupo 2
-            duracionAnios: [null, [Validators.min(1)]],
-            promedio: [null, [Validators.min(0), Validators.max(10)]],
-            cargaHoraria: [null, [Validators.min(1)]],
-            evaluacionFinal: [false],
-            // Flag para saber que grupo 2 está cargado
-            grupo2Cargado: [true]
-          });
-        }
-        // Grupo 3: Información descriptiva
-        else if (grupo === 3) {
-          nuevoFormGroup = this.fb.group({
-            // Mantener campos existentes
-            ...educacionItem.value,
-            // Nuevos campos - Grupo 3
-            temaTesis: [''],
-            tipoActividad: [null],
-            caracter: [null],
-            lugarFechaExposicion: [''],
-            comentarios: [''],
-            descripcion: [''],
-            // Flag para saber que grupo 3 está cargado
-            grupo3Cargado: [true],
-            // Flag para saber que todos los campos están cargados
-            todosCargados: [true]
-          });
-        }
-        // Caso por defecto (para evitar errores si se llama con un valor incorrecto)
-        else {
-          console.warn(`Grupo desconocido: ${grupo}. Utilizando grupo 1 por defecto.`);
-          nuevoFormGroup = this.fb.group({
-            ...educacionItem.value,
-            grupo1Cargado: [true]
-          });
-        }
-        
-        // Reemplazar el FormGroup en el FormArray si tenemos uno válido
-        if (nuevoFormGroup) {
-          formArray.setControl(index, nuevoFormGroup);
-        }
-        
-      } catch (error) {
-        console.error('Error al cargar campos adicionales:', error);
-      } finally {
-        this.isLoading = false;
-      }
-    }, 0);
   }
 }
