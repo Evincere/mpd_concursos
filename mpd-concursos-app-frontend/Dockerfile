@@ -41,19 +41,18 @@ COPY . .
 # Compilación Angular con ajustes específicos
 RUN ng build --configuration production --aot --build-optimizer --vendor-chunk
 
+# Etapa de producción
 FROM nginx:1.24-alpine
 WORKDIR /usr/share/nginx/html
 
-# Configurar permisos y directorios esenciales
+# Configurar directorios y permisos
 RUN apk add --no-cache curl && \
     mkdir -p /var/run/nginx /var/cache/nginx /tmp/nginx && \
     chown -R nginx:nginx /var/run/nginx /var/cache/nginx /tmp/nginx && \
     chmod -R 755 /var/run/nginx /var/cache/nginx /tmp/nginx && \
-    chown -R nginx:nginx /usr/share/nginx && \
-    chmod -R 755 /usr/share/nginx && \
     rm -rf /etc/nginx/conf.d/default.conf
 
-# Configuración del PID file alternativo
+# Configurar el PID file alternativo
 RUN echo "pid /tmp/nginx/nginx.pid;" > /etc/nginx/conf.d/pid.conf
 
 COPY --from=build /app/dist/browser .
