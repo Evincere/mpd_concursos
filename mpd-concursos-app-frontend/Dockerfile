@@ -1,68 +1,67 @@
-FROM node:20 AS build
+FROM node:20-slim AS build
 WORKDIR /app
 
-# Instalar dependencias del sistema con arquitectura explícita
+# Instalar dependencias del sistema y certificados
 RUN apt-get update && apt-get install -y \
     python3 \
+    python-is-python3 \
     make \
     g++ \
+    ca-certificates \
+    openssl \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Configurar entorno para compilación multiplataforma
+# Configurar npm y certificados
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV npm_config_arch=x64
-ENV npm_config_platform=linux
-ENV npm_config_target_arch=x64
+ENV PYTHON=/usr/bin/python3
+ENV NPM_CONFIG_PYTHON=/usr/bin/python3
 
-# Forzar instalación limpia de npm
-RUN corepack enable && corepack prepare npm@10.2.4 --activate
+# Configurar npm de forma segura
+RUN npm config set strict-ssl false && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm install -g npm@latest && \
+    npm install -g @angular/cli
 
-# Instalar Angular CLI específico
-RUN npm install -g @angular/cli@16.2.0 --force
+# Copiar package.json y realizar instalación de dependencias
+COPY package*.json ./
 
-# Copiar solo package.json
-COPY package.json .
-
-# Instalación de dependencias con limpieza forzada
-RUN for i in 1 2 3 4 5; do \
-      echo "Intento $i/5"; \
-      rm -rf node_modules package-lock.json && \
-      npm install --legacy-peer-deps --force --no-audit --no-fund --loglevel verbose && \
-      npx ngcc --properties es2015 browser module main && break || \
-      (echo "Falló intento $i" && sleep 20); \
+# Instalar dependencias con retry
+RUN for i in 1 2 3; \
+    do \
+      npm install --no-optional --legacy-peer-deps --force && break || \
+      if [ $i -lt 3 ]; then \
+        sleep 5; \
+        continue; \
+      fi; \
+      exit 1; \
     done
 
-# Copiar código fuente
+# Construir aplicación
 COPY . .
 
-# Compilación Angular con ajustes específicos
-RUN ng build --configuration production --aot --build-optimizer --vendor-chunk
+# Compilar explícitamente con la configuración de producción
+RUN CI=true npx ng build --configuration production
 
 # Etapa de producción
-FROM nginx:1.24-alpine
+FROM nginx:stable-alpine
 WORKDIR /usr/share/nginx/html
 
-# Configurar directorios y permisos
+# Configurar nginx
 RUN apk add --no-cache curl && \
-    mkdir -p /var/run/nginx /var/cache/nginx /tmp/nginx && \
-    chown -R nginx:nginx /var/run/nginx /var/cache/nginx /tmp/nginx && \
-    chmod -R 755 /var/run/nginx /var/cache/nginx /tmp/nginx && \
-    rm -rf /etc/nginx/conf.d/default.conf
-
-# Configurar el PID file alternativo
-RUN echo "pid /tmp/nginx/nginx.pid;" > /etc/nginx/conf.d/pid.conf
+    chown -R nginx:nginx /usr/share/nginx && \
+    chmod -R 755 /usr/share/nginx
 
 COPY --from=build /app/dist/browser .
-COPY nginx.conf /etc/nginx/conf.d/
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 USER nginx
-
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -fsS http://localhost >/dev/null || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
