@@ -24,15 +24,16 @@ RUN npm config set strict-ssl false && \
     npm config set fetch-retries 5 && \
     npm config set fetch-retry-maxtimeout 120000 && \
     npm install -g npm@latest && \
-    npm install -g @angular/cli
+    npm install -g @angular/cli@18.2.14
 
 # Copiar package.json y realizar instalación de dependencias
 COPY package*.json ./
 
-# Instalar dependencias con retry
-RUN for i in 1 2 3; \
+# Instalar dependencias con retry y cache limpio
+RUN npm cache clean --force && \
+    for i in 1 2 3; \
     do \
-      npm install --no-optional --legacy-peer-deps --force && break || \
+      npm install --no-optional --legacy-peer-deps && break || \
       if [ $i -lt 3 ]; then \
         sleep 5; \
         continue; \
@@ -42,9 +43,7 @@ RUN for i in 1 2 3; \
 
 # Construir aplicación
 COPY . .
-
-# Compilar explícitamente con la configuración de producción
-RUN CI=true npx ng build --configuration production
+RUN CI=true npx ng build --configuration production --progress=false
 
 # Etapa de producción
 FROM nginx:stable-alpine
