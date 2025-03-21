@@ -39,7 +39,7 @@ RUN npm cache clean --force && \
 COPY . .
 RUN npm cache clean --force && \
     rm -rf /tmp/* && \
-    NODE_OPTIONS="--max_old_space_size=8192" npm run build -- --configuration production --progress=false --optimization=true --aot=true --buildOptimizer=true
+    NODE_OPTIONS="--max_old_space_size=8192" npm run build -- --configuration production --progress=false --optimization=true --aot=true
 
 # Production stage
 FROM nginx:stable-alpine
