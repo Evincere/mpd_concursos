@@ -61,5 +61,4 @@ volumes:
 
 networks:
   mpd-concursos-network:
-    driver: bridge 
->>>>>>> b450e2962032e3b688060185ec0294801cb8f4d7
+    driver: bridge
