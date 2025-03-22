@@ -1,0 +1,48 @@
+// Mejorar la visualización de los botones en la pantalla de confirmación
+.wizard-footer {
+  // ... existing code ...
+  
+  // Destacar botones en pantalla de confirmación
+  .btn-success {
+    padding: 14px 24px;
+    background-color: #28a745;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+    }
+  }
+  
+  .btn-outline-danger {
+    border-width: 2px;
+    font-weight: 500;
+  }
+}
+
+// Destacar valores de fecha de emisión en la pantalla de resumen
+.resumen-campo.campo-fecha {
+  .campo-valor {
+    font-weight: 500;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 3px 8px;
+    display: inline-block;
+  }
+}
+
+// Mejorar visualización de documentos en la pantalla de resumen
+.resumen-seccion:last-child {
+  .campo-valor {
+    font-style: italic;
+    
+    &:not(:empty) {
+      color: #4caf50;
+      font-style: normal;
+    }
+  }
+} 

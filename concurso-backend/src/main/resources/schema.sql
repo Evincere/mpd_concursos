@@ -5,6 +5,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS experiencias;
+DROP TABLE IF EXISTS education;
 DROP TABLE IF EXISTS educacion;
 DROP TABLE IF EXISTS habilidades;
 DROP TABLE IF EXISTS contests;
@@ -203,6 +204,38 @@ CREATE TABLE documents (
     upload_date DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user_entity(id),
     FOREIGN KEY (document_type_id) REFERENCES document_types(id)
+);
+
+-- Tabla de educación
+CREATE TABLE education (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    institution VARCHAR(255) NOT NULL,
+    issue_date DATE,
+    document_url VARCHAR(500),
+    
+    -- Campos para Carreras de Nivel Superior y Grado
+    duration_years INT,
+    average DOUBLE,
+    
+    -- Campos para Posgrados
+    thesis_topic VARCHAR(255),
+    
+    -- Campos para Diplomaturas y Cursos de Capacitación
+    hourly_load INT,
+    had_final_evaluation BOOLEAN,
+    
+    -- Campos para Actividad Científica
+    activity_type VARCHAR(50),
+    topic VARCHAR(255),
+    activity_role VARCHAR(100),
+    exposition_place_date VARCHAR(255),
+    comments TEXT,
+    
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
 );
 
 
