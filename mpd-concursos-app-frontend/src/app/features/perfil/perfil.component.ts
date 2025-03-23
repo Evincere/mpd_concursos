@@ -29,6 +29,7 @@ import { EducacionModule } from './components/educacion/educacion.module';
 import { EducacionService } from './services/educacion.service';
 import { Educacion } from './models/educacion.model';
 import { TipoEducacion } from './models/educacion.model';
+import { ExperienciaModule } from './components/experiencia/experiencia.module';
 
 @Component({
   selector: 'app-perfil',
@@ -51,7 +52,8 @@ import { TipoEducacion } from './models/educacion.model';
     MatProgressSpinnerModule,
     MatProgressBarModule,
     DocumentacionTabComponent,
-    EducacionModule
+    EducacionModule,
+    ExperienciaModule
   ]
 })
 export class PerfilComponent implements OnInit, OnDestroy {
@@ -75,6 +77,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
   // Variables para el modal de educación
   mostrarModalEducacion = false;
   educacionList: Educacion[] = [];
+
+  // Variables para el modal de experiencia
+  mostrarModalExperiencia = false;
 
   constructor(
     private fb: FormBuilder,
@@ -144,9 +149,12 @@ export class PerfilComponent implements OnInit, OnDestroy {
   // Cargar datos del perfil con mejor gestión de rendimiento
   loadUserProfile(): void {
     this.isLoading = true;
+    console.log('Iniciando carga del perfil de usuario');
 
     this.profileService.getUserProfile().subscribe({
       next: (profile) => {
+        console.log('Perfil recibido:', profile);
+        
         // Guardar la referencia al perfil del usuario
         this.userProfile = profile;
 
@@ -155,23 +163,23 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
         // Cargar los arrays en un segundo ciclo para evitar bloqueos
         window.requestAnimationFrame(() => {
+          console.log('Actualizando arrays de experiencias y habilidades');
           this.cargarDatosAvanzados(profile);
 
           // Cargar educación después de los datos básicos
           if (profile.id) {
-            // Cargar educación con el ID tal cual viene del servidor
             this.educacionService.cargarEducacion(profile.id).subscribe(
               respuesta => {
                 if (respuesta.exito && respuesta.data) {
                   this.educacionList = respuesta.data;
-                  this.cdr.markForCheck();
+                  console.log('Lista de educación actualizada:', this.educacionList);
+                  this.cdr.detectChanges(); // Forzar detección de cambios
                 } else {
                   console.error('Error al cargar educación:', respuesta.error);
                 }
               },
               error => {
                 console.error('Error al cargar educación:', error);
-                // Mostrar mensaje más genérico sin mencionar UUIDs
                 this.snackBar.open('No se pudieron cargar los registros de educación', 'Cerrar', {
                   duration: 5000,
                   horizontalPosition: 'center',
@@ -179,13 +187,12 @@ export class PerfilComponent implements OnInit, OnDestroy {
                 });
               }
             );
-          } else {
-            console.error('Error: ID de usuario no disponible para cargar educación');
           }
         });
 
         // Marcar como no cargando después de cargar los datos básicos
         this.isLoading = false;
+        this.cdr.detectChanges(); // Forzar detección de cambios
       },
       error: (error) => {
         console.error('Error loading user profile', error);
@@ -193,6 +200,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
           duration: 3000
         });
         this.isLoading = false;
+        this.cdr.detectChanges(); // Forzar detección de cambios
       }
     });
   }
@@ -219,31 +227,16 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Cargar datos más complejos del perfil
   private cargarDatosAvanzados(profile: UserProfile): void {
-    // Usar un enfoque progresivo para actualizar los arrays
-    const tareas = [
-      () => this.actualizarArrayExperiencias(profile),
-      () => this.actualizarArrayHabilidades(profile)
-    ];
-
-    // Procesamiento secuencial para evitar bloqueos
-    const procesarSiguienteTarea = (index: number) => {
-      if (index >= tareas.length) {
-        this.isLoading = false;
-        this.cdr.markForCheck();
-        return;
-      }
-
-      // Ejecutar la tarea actual
-      tareas[index]();
-
-      // Programar la siguiente tarea
-      window.requestAnimationFrame(() => {
-        procesarSiguienteTarea(index + 1);
-      });
-    };
-
-    // Iniciar el procesamiento secuencial
-    procesarSiguienteTarea(0);
+    if (!profile) return;
+    
+    console.log('Cargando datos avanzados del perfil');
+    
+    // Actualizar experiencias y habilidades
+    this.actualizarArrayExperiencias(profile);
+    this.actualizarArrayHabilidades(profile);
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   private updateFormWithProfile(profile: UserProfile): void {
@@ -271,21 +264,28 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Método optimizado para actualizar el array de experiencias
   private actualizarArrayExperiencias(profile: UserProfile): void {
+    console.log('Actualizando array de experiencias:', profile.experiencias);
+    
     const experienciasArray = this.perfilForm.get('experiencias') as FormArray;
+    experienciasArray.clear();
 
-    if (profile.experiencias && Array.isArray(profile.experiencias)) {
-      // Desactivar temporalmente cambios
-      this.cdr.detach();
-
-      try {
-        experienciasArray.clear();
-        profile.experiencias.forEach((exp: Experiencia) => {
-          experienciasArray.push(this.createExperienciaFormGroup(exp));
-        });
-      } finally {
-        this.cdr.reattach();
-      }
+    // Asegurarse de que haya un array de experiencias, incluso si viene vacío o undefined
+    const experiencias = profile.experiencias || [];
+    
+    if (experiencias.length > 0) {
+      experiencias.forEach(exp => {
+        experienciasArray.push(this.fb.group({
+          empresa: [exp.empresa],
+          cargo: [exp.cargo],
+          fechaInicio: [exp.fechaInicio],
+          fechaFin: [exp.fechaFin],
+          descripcion: [exp.descripcion],
+          comentario: [exp.comentario]
+        }));
+      });
     }
+    
+    console.log('Array de experiencias actualizado:', experienciasArray.value);
   }
 
   // Método optimizado para actualizar el array de habilidades
@@ -357,7 +357,28 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Métodos para agregar elementos
   agregarExperiencia(): void {
-    this.experiencias.push(this.createExperienciaFormGroup());
+    if (!this.userProfile || !this.userProfile.id) {
+      this.snackBar.open('No se puede agregar experiencia sin datos de usuario. Por favor, espere a que cargue el perfil.', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
+      });
+      return;
+    }
+
+    // El ID puede ser un número o un UUID, ambos son válidos
+    if (!this.esIdUsuarioValido()) {
+      this.snackBar.open('No se puede agregar experiencia: ID de usuario inválido.', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom'
+      });
+      console.error(`ID de usuario inválido: ${this.usuarioId}`);
+      return;
+    }
+
+    this.mostrarModalExperiencia = true;
+    this.cdr.markForCheck();
   }
 
   agregarHabilidad(): void {
@@ -570,24 +591,24 @@ export class PerfilComponent implements OnInit, OnDestroy {
   onEducacionGuardada(educacion: Educacion): void {
     // Log para depuración
     console.log('Educación guardada recibida:', educacion);
-    
+
     // Verificar si la educación es válida antes de añadirla
     if (!educacion) {
       console.error('Error: Se recibió un objeto de educación nulo o indefinido');
       this.snackBar.open('Error al guardar educación: datos inválidos', 'Cerrar', { duration: 3000 });
       return;
     }
-    
+
     // Asegurarse de que el objeto tiene todas las propiedades base necesarias
     if (!educacion.tipo || !educacion.titulo || !educacion.institucion) {
       console.warn('Advertencia: El objeto de educación está incompleto', educacion);
     }
-    
+
     // Actualizar la lista de educación añadiendo el nuevo registro
     if (!this.educacionList) {
       this.educacionList = [];
     }
-    
+
     // Normalizar las propiedades específicas si es necesario antes de añadirlo
     const educacionNormalizada = this.normalizarEducacion(educacion);
     this.educacionList.push(educacionNormalizada);
@@ -602,16 +623,16 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
     // Cerrar el modal
     this.cerrarModalEducacion();
-    
+
     // Forzar detección de cambios
     this.cdr.markForCheck();
   }
-  
+
   /**
    * Verifica si la educación es de tipo Carrera de Nivel Superior o Carrera de Grado
    */
   private esCarreraSuperiorOGrado(educacion: Educacion): boolean {
-    return educacion.tipo === TipoEducacion.CARRERA_NIVEL_SUPERIOR || 
+    return educacion.tipo === TipoEducacion.CARRERA_NIVEL_SUPERIOR ||
            educacion.tipo === TipoEducacion.CARRERA_GRADO;
   }
 
@@ -619,8 +640,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
    * Verifica si la educación es de tipo Posgrado (especialización, maestría o doctorado)
    */
   private esPosgrado(educacion: Educacion): boolean {
-    return educacion.tipo === TipoEducacion.POSGRADO_ESPECIALIZACION || 
-           educacion.tipo === TipoEducacion.POSGRADO_MAESTRIA || 
+    return educacion.tipo === TipoEducacion.POSGRADO_ESPECIALIZACION ||
+           educacion.tipo === TipoEducacion.POSGRADO_MAESTRIA ||
            educacion.tipo === TipoEducacion.POSGRADO_DOCTORADO;
   }
 
@@ -628,7 +649,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
    * Verifica si la educación es de tipo Diplomatura o Curso de Capacitación
    */
   private esDiplomaturaOCurso(educacion: Educacion): boolean {
-    return educacion.tipo === TipoEducacion.DIPLOMATURA || 
+    return educacion.tipo === TipoEducacion.DIPLOMATURA ||
            educacion.tipo === TipoEducacion.CURSO_CAPACITACION;
   }
 
@@ -645,7 +666,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
    */
   private normalizarEducacion(educacion: Educacion): Educacion {
     console.log('Normalizando educación:', educacion);
-    
+
     // Crear un objeto base con todas las propiedades
     const educacionNormalizada: any = {
       id: educacion.id,
@@ -656,28 +677,28 @@ export class PerfilComponent implements OnInit, OnDestroy {
       fechaEmision: educacion.fechaEmision,
       documentoPdf: educacion.documentoPdf
     };
-    
+
     // Copiar todas las propiedades del objeto original que no sean undefined
     Object.keys(educacion).forEach(key => {
-      if (educacion[key as keyof Educacion] !== undefined && 
+      if (educacion[key as keyof Educacion] !== undefined &&
           !['id', 'tipo', 'estado', 'titulo', 'institucion', 'fechaEmision', 'documentoPdf'].includes(key)) {
         (educacionNormalizada as any)[key] = (educacion as any)[key];
       }
     });
-    
+
     // Buscar propiedades adicionales en cualquier campo "datos" o "propiedadesEspecificas"
     if ((educacion as any).datos) {
       Object.assign(educacionNormalizada, (educacion as any).datos);
     }
-    
+
     if ((educacion as any).propiedadesEspecificas) {
       Object.assign(educacionNormalizada, (educacion as any).propiedadesEspecificas);
     }
-    
+
     if ((educacion as any).detalle) {
       Object.assign(educacionNormalizada, (educacion as any).detalle);
     }
-    
+
     console.log('Educación normalizada:', educacionNormalizada);
     return educacionNormalizada as Educacion;
   }
@@ -816,7 +837,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
             if (response.exito) {
               // Filtrar los registros por ID exacto
               this.educacionList = this.educacionList.filter(e => e.id !== id);
-              
+
               this.snackBar.open('Educación eliminada exitosamente', 'Cerrar', {
                 duration: 3000
               });
@@ -898,15 +919,15 @@ export class PerfilComponent implements OnInit, OnDestroy {
     // 3. Búsqueda en objetos anidados conocidos
     const objetosAnidados = ['propiedadesEspecificas', 'detalle', 'datos', 'detalles', 'datosAdicionales'];
     for (const objetoAnidado of objetosAnidados) {
-      if (educacion[objetoAnidado as keyof Educacion] && 
+      if (educacion[objetoAnidado as keyof Educacion] &&
           typeof educacion[objetoAnidado as keyof Educacion] === 'object') {
         const objeto = educacion[objetoAnidado as keyof Educacion] as any;
-        
+
         // Verificar la propiedad original
         if (propiedad in objeto) {
           return objeto[propiedad];
         }
-        
+
         // Verificar la propiedad mapeada
         if (propiedadMapeada && propiedadMapeada in objeto) {
           return objeto[propiedadMapeada];
@@ -922,7 +943,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
         if (prop in obj) {
           return obj[prop];
         }
-        
+
         // Verificar la propiedad mapeada
         const propMapeada = propiedadesMapeadas[prop];
         if (propMapeada && propMapeada in obj) {
@@ -936,7 +957,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
             if (resultado !== undefined) {
               return resultado;
             }
-            
+
             // También buscar con la propiedad mapeada
             if (propMapeada) {
               const resultadoMapeado = buscarPropiedadRecursiva(obj[key], propMapeada);
@@ -983,7 +1004,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
     // Determinar el ID del documento
     let documentoId: string | null = null;
-    
+
     // El documento puede estar como ID (string) o como objeto con ID
     if (typeof educacion.documentoPdf === 'string') {
       documentoId = educacion.documentoPdf;
@@ -1026,10 +1047,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
    * Verifica si un valor es un valor simple (no objeto ni array)
    */
   isSimpleValue(value: any): boolean {
-    return value === null || 
-           value === undefined || 
-           typeof value === 'string' || 
-           typeof value === 'number' || 
+    return value === null ||
+           value === undefined ||
+           typeof value === 'string' ||
+           typeof value === 'number' ||
            typeof value === 'boolean';
   }
 
@@ -1081,13 +1102,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
     // Función recursiva para buscar la propiedad en el objeto
     const buscarPropiedadRecursiva = (o: any, prop: string): boolean => {
       if (!o || typeof o !== 'object') return false;
-      
+
       // Verificar si el objeto tiene la propiedad directamente
       if (prop in o) return true;
-      
+
       // Verificar si el objeto tiene la propiedad alternativa
       if (propAlternativa && propAlternativa in o) return true;
-      
+
       // Buscar recursivamente en las propiedades
       for (const key in o) {
         if (key === prop || (propAlternativa && key === propAlternativa)) return true;
@@ -1101,10 +1122,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
           }
         }
       }
-      
+
       return false;
     };
-    
+
     return buscarPropiedadRecursiva(obj, propName);
   }
 
@@ -1119,16 +1140,16 @@ export class PerfilComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    
+
     try {
       // Intentar crear una copia profunda del objeto
       const datosCrudos = JSON.parse(JSON.stringify(educacion));
-      
+
       // Formatear el JSON para mejor legibilidad
       const datosFormateados = JSON.stringify(datosCrudos, null, 2);
-      
+
       console.log('Mostrando datos crudos de educación:', datosFormateados);
-      
+
       // Abrir diálogo con los datos formateados
       this.dialog.open(ConfirmDialogComponent, {
         width: '80%',
@@ -1146,5 +1167,31 @@ export class PerfilComponent implements OnInit, OnDestroy {
         duration: 3000
       });
     }
+  }
+
+  // Método para cerrar el modal de experiencia
+  cerrarModalExperiencia(): void {
+    this.mostrarModalExperiencia = false;
+    this.cdr.markForCheck();
+  }
+
+  // Método para manejar la experiencia guardada
+  onExperienciaGuardada(perfilActualizado: UserProfile): void {
+    console.log('Evento experienciaGuardada recibido:', perfilActualizado);
+    
+    // Actualizar el perfil local con los nuevos datos
+    this.userProfile = perfilActualizado;
+    
+    // Actualizar el formulario con los nuevos datos
+    this.cargarDatosBasicos(perfilActualizado);
+    this.cargarDatosAvanzados(perfilActualizado);
+    
+    // Cerrar el modal de experiencia
+    this.mostrarModalExperiencia = false;
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+    
+    console.log('Perfil actualizado después de guardar experiencia:', this.userProfile);
   }
 }

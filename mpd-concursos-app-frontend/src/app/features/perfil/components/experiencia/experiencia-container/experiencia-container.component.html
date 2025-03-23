@@ -1,0 +1,226 @@
+<div class="experiencia-container">
+  <div class="wizard-header">
+    <!-- Título dinámico según el paso actual -->
+    <h3 class="wizard-title">
+      <ng-container [ngSwitch]="pasoActual">
+        <ng-container *ngSwitchCase="pasoWizard.INFORMACION_BASICA">Información Básica</ng-container>
+        <ng-container *ngSwitchCase="pasoWizard.INFORMACION_DETALLADA">Información Detallada</ng-container>
+        <ng-container *ngSwitchCase="pasoWizard.DOCUMENTACION">Documentación</ng-container>
+        <ng-container *ngSwitchCase="pasoWizard.RESUMEN">Confirmar Información</ng-container>
+      </ng-container>
+    </h3>
+
+    <!-- Indicador de progreso -->
+    <div class="wizard-steps">
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.INFORMACION_BASICA, 'complete': pasoActual > pasoWizard.INFORMACION_BASICA}">1</div>
+      <div class="step-divider"></div>
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.INFORMACION_DETALLADA, 'complete': pasoActual > pasoWizard.INFORMACION_DETALLADA}">2</div>
+      <div class="step-divider"></div>
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.DOCUMENTACION, 'complete': pasoActual > pasoWizard.DOCUMENTACION}">3</div>
+      <div class="step-divider"></div>
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.RESUMEN, 'complete': pasoActual > pasoWizard.RESUMEN}">4</div>
+    </div>
+  </div>
+
+  <div class="wizard-content">
+    <!-- Paso 1: Información Básica -->
+    <div *ngIf="pasoActual === pasoWizard.INFORMACION_BASICA" class="wizard-step-content">
+      <form [formGroup]="formInformacionBasica">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="cargo">Cargo o Puesto</label>
+            <input type="text"
+                  id="cargo"
+                  class="form-control"
+                  formControlName="cargo"
+                  placeholder="Ej: Abogado Senior">
+            <div *ngIf="formInformacionBasica.get('cargo')?.hasError('required') &&
+                        formInformacionBasica.get('cargo')?.touched"
+                  class="error-message">
+              <i class="fas fa-exclamation-circle"></i> El cargo es requerido
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="empresa">Empresa u Organización</label>
+            <input type="text"
+                  id="empresa"
+                  class="form-control"
+                  formControlName="empresa"
+                  placeholder="Ej: Ministerio Público de la Defensa">
+            <div *ngIf="formInformacionBasica.get('empresa')?.hasError('required') &&
+                        formInformacionBasica.get('empresa')?.touched"
+                  class="error-message">
+              <i class="fas fa-exclamation-circle"></i> La empresa es requerida
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row dates">
+          <div class="form-field">
+            <label for="fechaInicio">Fecha de Inicio</label>
+            <input type="date"
+                  id="fechaInicio"
+                  class="form-control"
+                  formControlName="fechaInicio">
+            <div *ngIf="formInformacionBasica.get('fechaInicio')?.hasError('required') &&
+                        formInformacionBasica.get('fechaInicio')?.touched"
+                  class="error-message">
+              <i class="fas fa-exclamation-circle"></i> La fecha de inicio es requerida
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="fechaFin">Fecha de Fin</label>
+            <input type="date"
+                  id="fechaFin"
+                  class="form-control"
+                  formControlName="fechaFin">
+            <small class="form-text">Dejar en blanco si es su trabajo actual</small>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Paso 2: Información Detallada -->
+    <div *ngIf="pasoActual === pasoWizard.INFORMACION_DETALLADA" class="wizard-step-content">
+      <form [formGroup]="formInformacionDetallada">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="descripcion">Descripción de responsabilidades y logros</label>
+            <textarea id="descripcion"
+                    class="form-control"
+                    formControlName="descripcion"
+                    rows="4"
+                    placeholder="Describe tus principales responsabilidades y logros en este puesto"></textarea>
+            <div *ngIf="formInformacionDetallada.get('descripcion')?.hasError('required') &&
+                        formInformacionDetallada.get('descripcion')?.touched"
+                  class="error-message">
+              <i class="fas fa-exclamation-circle"></i> La descripción es requerida
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="comentario">Comentarios adicionales</label>
+            <textarea id="comentario"
+                    class="form-control"
+                    formControlName="comentario"
+                    rows="3"
+                    placeholder="Información adicional relevante sobre este puesto"></textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Paso 3: Documentación -->
+    <div *ngIf="pasoActual === pasoWizard.DOCUMENTACION" class="wizard-step-content">
+      <form [formGroup]="formDocumentacion">
+        <div class="form-row">
+          <div class="document-section">
+            <h4>Certificado o probanza laboral</h4>
+            <p class="hint">Adjunta un documento que certifique esta experiencia laboral (PDF)</p>
+
+            <input type="file"
+                  id="file-input"
+                  hidden
+                  accept="application/pdf"
+                  (change)="onArchivoSeleccionado($event)">
+
+            <div class="file-upload-container">
+              <div *ngIf="!archivoSeleccionado" class="upload-placeholder">
+                <button mat-raised-button color="primary" type="button" (click)="seleccionarArchivo()">
+                  <i class="fas fa-upload"></i> Seleccionar archivo
+                </button>
+                <p class="upload-hint">Formatos aceptados: PDF</p>
+              </div>
+
+              <div *ngIf="archivoSeleccionado" class="selected-file">
+                <div class="file-info">
+                  <i class="fas fa-file-pdf file-icon"></i>
+                  <span class="file-name">{{ nombreArchivo }}</span>
+                </div>
+                <div class="file-actions">
+                  <button mat-icon-button color="warn" type="button" (click)="eliminarArchivoSeleccionado()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="cargandoArchivo" class="upload-progress">
+              <mat-progress-bar mode="determinate" [value]="progresoCarga"></mat-progress-bar>
+              <span class="progress-text">{{ progresoCarga }}% completado</span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Paso 4: Resumen -->
+    <div *ngIf="pasoActual === pasoWizard.RESUMEN" class="wizard-step-content">
+      <div class="resumen-section">
+        <h4>Resumen de la experiencia laboral</h4>
+
+        <div class="resumen-lista">
+          <ul>
+            <li *ngFor="let item of obtenerResumenExperiencia()">{{ item }}</li>
+          </ul>
+        </div>
+
+        <div class="confirmacion-mensaje">
+          <p>Por favor verifique que todos los datos ingresados sean correctos antes de guardar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de navegación -->
+  <div class="wizard-actions">
+    <button *ngIf="pasoActual > 0"
+           mat-button
+           type="button"
+           (click)="retrocederPaso()"
+           [disabled]="guardando">
+      <i class="fas fa-arrow-left"></i> Anterior
+    </button>
+
+    <div>
+      <button mat-button
+             type="button"
+             (click)="cerrarModal()"
+             [disabled]="guardando">
+        Cancelar
+      </button>
+
+      <button *ngIf="pasoActual < pasoWizard.RESUMEN"
+             mat-raised-button
+             color="primary"
+             type="button"
+             (click)="avanzarPaso()"
+             [disabled]="!validarPasoActual() || guardando">
+        Siguiente <i class="fas fa-arrow-right"></i>
+      </button>
+
+      <button *ngIf="pasoActual === pasoWizard.RESUMEN"
+             mat-raised-button
+             color="primary"
+             type="button"
+             (click)="guardarExperiencia()"
+             [disabled]="guardando">
+        <i class="fas fa-save"></i> Guardar
+      </button>
+    </div>
+  </div>
+
+  <!-- Spinner de carga durante el guardado -->
+  <div *ngIf="guardando" class="loading-overlay">
+    <div class="loading-spinner">
+      <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      <p>Guardando...</p>
+    </div>
+  </div>
+</div>

@@ -2,8 +2,10 @@ package ar.gov.mpd.concursobackend.auth.infrastructure.mapper;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
+import ar.gov.mpd.concursobackend.auth.domain.model.Experiencia;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.RoleEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.ExperienciaEntity;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IRoleSpringRepository;
 
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Component
@@ -59,6 +63,27 @@ public class UserMapper {
 
         entity.setFirstName(user.getFirstName());
         entity.setLastName(user.getLastName());
+        entity.setTelefono(user.getTelefono());
+        entity.setDireccion(user.getDireccion());
+
+        // Mapear experiencias
+        if (user.getExperiencias() != null && !user.getExperiencias().isEmpty()) {
+            List<ExperienciaEntity> experienciasEntities = new ArrayList<>();
+
+            for (Experiencia exp : user.getExperiencias()) {
+                ExperienciaEntity expEntity = new ExperienciaEntity();
+                expEntity.setEmpresa(exp.getEmpresa());
+                expEntity.setCargo(exp.getCargo());
+                expEntity.setFechaInicio(exp.getFechaInicio());
+                expEntity.setFechaFin(exp.getFechaFin());
+                expEntity.setDescripcion(exp.getDescripcion());
+                expEntity.setComentario(exp.getComentario());
+                expEntity.setUser(entity);
+                experienciasEntities.add(expEntity);
+            }
+
+            entity.setExperiencias(experienciasEntities);
+        }
 
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             logger.info("Mapeando {} roles para el usuario {}", user.getRoles().size(), user.getUsername().value());
@@ -128,8 +153,32 @@ public class UserMapper {
         } else {
             logger.info("El usuario {} no tiene CUIT asignado.", entity.getUsername());
         }
+
         user.setFirstName(entity.getFirstName());
         user.setLastName(entity.getLastName());
+        user.setTelefono(entity.getTelefono());
+        user.setDireccion(entity.getDireccion());
+
+        // Mapear experiencias
+        if (entity.getExperiencias() != null && !entity.getExperiencias().isEmpty()) {
+            List<Experiencia> experiencias = new ArrayList<>();
+
+            for (ExperienciaEntity expEntity : entity.getExperiencias()) {
+                Experiencia exp = new Experiencia();
+                exp.setEmpresa(expEntity.getEmpresa());
+                exp.setCargo(expEntity.getCargo());
+                exp.setFechaInicio(expEntity.getFechaInicio());
+                exp.setFechaFin(expEntity.getFechaFin());
+                exp.setDescripcion(expEntity.getDescripcion());
+                exp.setComentario(expEntity.getComentario());
+                experiencias.add(exp);
+            }
+
+            user.setExperiencias(experiencias);
+        } else {
+            user.setExperiencias(new ArrayList<>());
+        }
+
         if (entity.getRoles() != null) {
             Set<Rol> roles = entity.getRoles().stream()
                     .map(roleEntity -> {

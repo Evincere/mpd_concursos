@@ -66,4 +66,31 @@ export class DocumentosService {
     });
     return this.http.put<DocumentoResponse>(`${this.apiUrl}/${documentoId}`, formData, { headers });
   }
+
+  /**
+   * Sube un certificado para una experiencia laboral
+   * @param archivo Archivo a subir (PDF)
+   * @param experienciaId ID de la experiencia asociada
+   */
+  subirDocumentoExperiencia(archivo: File, experienciaId: string | number): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', archivo);
+    formData.append('tipo', 'CERTIFICADO_LABORAL');
+    formData.append('experienciaId', experienciaId.toString());
+
+    return this.http.post(`${this.apiUrl}/upload/experiencia`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    }).pipe(
+      map(event => {
+        if (event.type === HttpEventType.UploadProgress && event.total) {
+          const progreso = Math.round(100 * event.loaded / event.total);
+          return { type: 'progreso', progreso };
+        } else if (event.type === HttpEventType.Response) {
+          return { type: 'completado', response: event.body };
+        }
+        return { type: 'otro' };
+      })
+    );
+  }
 } 

@@ -15,4 +15,5 @@ public class ExperienciaDto {
     private String fechaInicio;
     private String fechaFin;
     private String descripcion;
+    private String comentario;
 }

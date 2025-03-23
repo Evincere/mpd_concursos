@@ -10,4 +10,5 @@ public class Experiencia {
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private String descripcion;
+    private String comentario;
 }

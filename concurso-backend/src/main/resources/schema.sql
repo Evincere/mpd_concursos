@@ -38,6 +38,8 @@ CREATE TABLE user_entity (
     cuit VARCHAR(255) UNIQUE,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
+    telefono VARCHAR(255),
+    direccion VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version BIGINT NOT NULL DEFAULT 0
 );
@@ -46,6 +48,22 @@ CREATE TABLE roles (
     id BINARY(16) PRIMARY KEY,
     name ENUM('ROLE_USER', 'ROLE_ADMIN') NOT NULL
 );
+
+-- Tabla de experiencia para almacenar experiencias laborales
+CREATE TABLE experiencia (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    empresa VARCHAR(255) NOT NULL,
+    cargo VARCHAR(255) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    descripcion TEXT,
+    comentario TEXT,
+    user_id BINARY(16) NOT NULL,
+    CONSTRAINT fk_experiencia_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
+);
+
+-- Crear índice para búsqueda rápida por usuario
+CREATE INDEX idx_experiencia_user_id ON experiencia(user_id);
 
 CREATE TABLE contests (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,

@@ -234,141 +234,57 @@
                             <h2>Experiencia Laboral</h2>
                         </div>
 
-                        <div class="cv-items" formArrayName="experiencias">
-                            <div class="cv-item" *ngFor="let exp of experiencias.controls; let i = index"
-                                [formGroupName]="i">
-                                <div class="item-main">
-                                    <div class="form-field">
-                                        <label class="field-label" for="cargo">Cargo o Puesto</label>
-                                        <mat-form-field appearance="outline">
-                                            <mat-label>Cargo o Puesto</mat-label>
-                                            <input matInput
-                                                id="cargo"
-                                                formControlName="cargo"
-                                                placeholder="Ej: Abogado Senior">
-                                            <mat-error *ngIf="exp.get('cargo')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <div class="form-field">
-                                        <label class="field-label" for="empresa">Empresa u Organización</label>
-                                        <mat-form-field appearance="outline">
-                                            <mat-label>Empresa u Organización</mat-label>
-                                            <input matInput
-                                                id="empresa"
-                                                formControlName="empresa"
-                                                placeholder="Ej: Ministerio Público de la Defensa">
-                                            <mat-error *ngIf="exp.get('empresa')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <div class="form-row">
-                                        <div class="form-field-container">
-                                            <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
-                                            <mat-form-field appearance="outline">
-                                                <mat-label>Fecha de Inicio</mat-label>
-                                                <input matInput
-                                                    [matDatepicker]="fechaInicioPicker"
-                                                    formControlName="fechaInicio"
-                                                    placeholder="DD/MM/AAAA">
-                                                <mat-datepicker-toggle matSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
-                                                <mat-datepicker #fechaInicioPicker></mat-datepicker>
-                                            </mat-form-field>
-                                        </div>
-
-                                        <div class="form-field-container">
-                                            <label for="fechaFin" class="form-label">Fecha de Fin</label>
-                                            <mat-form-field appearance="outline">
-                                                <mat-label>Fecha de Fin</mat-label>
-                                                <input matInput
-                                                    [matDatepicker]="fechaFinPicker"
-                                                    formControlName="fechaFin"
-                                                    placeholder="DD/MM/AAAA">
-                                                <mat-datepicker-toggle matSuffix [for]="fechaFinPicker"></mat-datepicker-toggle>
-                                                <mat-datepicker #fechaFinPicker></mat-datepicker>
-                                            </mat-form-field>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-field">
-                                        <label class="field-label" for="descripcion">Descripción de responsabilidades y logros</label>
-                                        <mat-form-field appearance="outline" class="description-field">
-                                            <mat-label>Descripción de responsabilidades y logros</mat-label>
-                                            <textarea matInput
-                                                id="descripcion"
-                                                formControlName="descripcion"
-                                                rows="3"
-                                                placeholder="Describe tus principales responsabilidades y logros en este puesto">
-                                            </textarea>
-                                            <mat-error *ngIf="exp.get('descripcion')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <!-- Nuevo campo: Comentarios sobre el puesto -->
-                                    <div class="form-field">
-                                        <label class="field-label" for="comentario">Comentarios sobre el puesto de trabajo</label>
-                                        <mat-form-field appearance="outline" class="description-field">
-                                            <mat-label>Comentarios sobre el puesto de trabajo</mat-label>
-                                            <textarea matInput
-                                                id="comentario"
-                                                formControlName="comentario"
-                                                rows="2"
-                                                placeholder="Información adicional relevante sobre este puesto">
-                                            </textarea>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <!-- Nuevo campo: Probanza o certificado -->
-                                    <div class="form-field certificado-field">
-                                        <label class="certificado-label">Probanza o certificado (PDF)</label>
-                                        <div class="certificado-container">
-                                            <ng-container *ngIf="exp.get('certificadoId')?.value; else noCertificado">
-                                                <div class="certificado-preview">
-                                                    <span class="certificado-nombre">Certificado cargado</span>
-                                                    <div class="certificado-actions">
-                                                        <button mat-icon-button color="primary" type="button"
-                                                                matTooltip="Ver certificado"
-                                                                (click)="verCertificado(exp.get('certificadoId')?.value)">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        <button mat-icon-button color="warn" type="button"
-                                                                matTooltip="Eliminar certificado"
-                                                                (click)="eliminarCertificado(i)">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </ng-container>
-                                            <ng-template #noCertificado>
-                                                <button mat-stroked-button color="primary" type="button"
-                                                        (click)="cargarCertificado(i)">
-                                                    <i class="fas fa-upload"></i>
-                                                    Subir certificado
-                                                </button>
-                                                <span class="certificado-hint">
-                                                    Sube un certificado o probanza en formato PDF que acredite esta experiencia laboral
-                                                </span>
-                                            </ng-template>
-                                        </div>
-                                    </div>
+                        <!-- Nueva visualización de experiencias en formato de tarjetas -->
+                        <div *ngIf="experiencias.length > 0" class="experience-list">
+                            <div *ngFor="let exp of experiencias.controls; let i = index" class="experience-item">
+                                <div class="experience-header">
+                                    <h3 class="experience-title">{{ exp.get('cargo')?.value || 'Sin cargo' }}</h3>
+                                    <span class="experience-company">{{ exp.get('empresa')?.value || 'Empresa no especificada' }}</span>
                                 </div>
+                                
+                                <div class="experience-body">
+                                    <!-- Información principal -->
+                                    <div class="experience-main-info">
+                                        <p class="experience-dates">
+                                            <strong>Período:</strong> 
+                                            {{ exp.get('fechaInicio')?.value | date:'dd/MM/yyyy' }} - 
+                                            {{ exp.get('fechaFin')?.value ? (exp.get('fechaFin')?.value | date:'dd/MM/yyyy') : 'Actual' }}
+                                        </p>
+                                        <div class="experience-description">
+                                            <strong>Descripción:</strong>
+                                            <p>{{ exp.get('descripcion')?.value || 'Sin descripción' }}</p>
+                                        </div>
+                                        
+                                        <div *ngIf="exp.get('comentario')?.value" class="experience-comments">
+                                            <strong>Comentarios:</strong>
+                                            <p>{{ exp.get('comentario')?.value }}</p>
+                                        </div>
+                                    </div>
 
-                                <div class="item-actions">
-                                    <button mat-icon-button
-                                        type="button"
-                                        class="delete-button"
-                                        (click)="eliminarExperiencia(i)"
-                                        [attr.aria-label]="'Eliminar experiencia'">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <!-- Documento y acciones -->
+                                    <div class="experience-actions">
+                                        <button *ngIf="exp.get('certificadoId')?.value" 
+                                                mat-stroked-button 
+                                                type="button" 
+                                                class="action-button"
+                                                (click)="verCertificado(exp.get('certificadoId')?.value)">
+                                            <i class="fas fa-file-pdf"></i>
+                                            Ver certificado
+                                        </button>
+                                        <button mat-stroked-button type="button" class="action-button delete-button" (click)="eliminarExperiencia(i)">
+                                            <i class="fas fa-trash"></i>
+                                            Eliminar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Mensaje cuando no hay experiencias -->
+                        <div *ngIf="experiencias.length === 0" class="experience-empty">
+                            <i class="fas fa-briefcase"></i>
+                            <p>No hay registros de experiencia laboral.</p>
+                            <p>Haga clic en "Agregar Experiencia" para comenzar.</p>
                         </div>
                     </section>
 
@@ -670,4 +586,15 @@
             (cerrar)="cerrarModalEducacion()">
         </app-educacion-container>
     </div>
+</div>
+
+<!-- Modal para Agregar Experiencia -->
+<div *ngIf="mostrarModalExperiencia && esIdUsuarioValido()" class="modal-experiencia-overlay">
+  <div class="modal-experiencia-container">
+    <app-experiencia-container
+      [usuarioId]="usuarioId"
+      (experienciaGuardada)="onExperienciaGuardada($event)"
+      (cerrar)="mostrarModalExperiencia = false">
+    </app-experiencia-container>
+  </div>
 </div>
