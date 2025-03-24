@@ -20,8 +20,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.CascadeType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -60,9 +58,6 @@ public class UserEntity {
     @Column
     private String direccion;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ExperienciaEntity> experiencias = new ArrayList<>();
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     @NotNull
@@ -74,7 +69,6 @@ public class UserEntity {
 
     public UserEntity() {
         this.roles = new HashSet<>();
-        this.experiencias = new ArrayList<>();
         this.createdAt = LocalDateTime.now();
     }
 
@@ -88,17 +82,5 @@ public class UserEntity {
         this.cuit = cuit;
         this.firstName = firstName;
         this.lastName = lastName;
-    }
-
-    // Helper method para agregar experiencias
-    public void addExperiencia(ExperienciaEntity experiencia) {
-        experiencias.add(experiencia);
-        experiencia.setUser(this);
-    }
-
-    // Helper method para remover experiencias
-    public void removeExperiencia(ExperienciaEntity experiencia) {
-        experiencias.remove(experiencia);
-        experiencia.setUser(null);
     }
 }

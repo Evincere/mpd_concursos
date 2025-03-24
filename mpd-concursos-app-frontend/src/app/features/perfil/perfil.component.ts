@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, FormArray, Validators, FormControl, AbstractCon
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProfileService, UserProfile, Experiencia, Habilidad } from '../../core/services/profile/profile.service';
+import { ExperienceService } from '../../core/services/experience/experience.service';
 import { DocumentosService } from '../../core/services/documentos/documentos.service';
 import { DocumentoViewerComponent } from './components/documento-viewer/documento-viewer.component';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -25,11 +26,12 @@ import { DocumentacionTabComponent } from './components/documentacion-tab/docume
 import { DocumentoResponse } from '../../core/models/documento.model';
 import { distinctUntilChanged } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
-import { EducacionModule } from './components/educacion/educacion.module';
-import { EducacionService } from './services/educacion.service';
-import { Educacion } from './models/educacion.model';
-import { TipoEducacion } from './models/educacion.model';
-import { ExperienciaModule } from './components/experiencia/experiencia.module';
+import { EducacionContainerComponent } from './components/educacion/educacion-container/educacion-container.component';
+import { ExperienciaContainerComponent } from './components/experiencia/experiencia-container/experiencia-container.component';
+import { EducacionService } from '../../core/services/educacion/educacion.service';
+import { Educacion, TipoEducacion } from '../../core/models/educacion.model';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '@env/environment';
 
 @Component({
   selector: 'app-perfil',
@@ -52,8 +54,8 @@ import { ExperienciaModule } from './components/experiencia/experiencia.module';
     MatProgressSpinnerModule,
     MatProgressBarModule,
     DocumentacionTabComponent,
-    EducacionModule,
-    ExperienciaModule
+    EducacionContainerComponent,
+    ExperienciaContainerComponent
   ]
 })
 export class PerfilComponent implements OnInit, OnDestroy {
@@ -89,7 +91,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
     private profileService: ProfileService,
     private educacionService: EducacionService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private http: HttpClient,
+    private experienceService: ExperienceService
   ) {
     this.initializeForms();
   }
@@ -154,7 +158,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.profileService.getUserProfile().subscribe({
       next: (profile) => {
         console.log('Perfil recibido:', profile);
-        
+
         // Guardar la referencia al perfil del usuario
         this.userProfile = profile;
 
@@ -228,13 +232,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
   // Cargar datos más complejos del perfil
   private cargarDatosAvanzados(profile: UserProfile): void {
     if (!profile) return;
-    
+
     console.log('Cargando datos avanzados del perfil');
-    
+
     // Actualizar experiencias y habilidades
     this.actualizarArrayExperiencias(profile);
     this.actualizarArrayHabilidades(profile);
-    
+
     // Forzar detección de cambios
     this.cdr.detectChanges();
   }
@@ -265,26 +269,29 @@ export class PerfilComponent implements OnInit, OnDestroy {
   // Método optimizado para actualizar el array de experiencias
   private actualizarArrayExperiencias(profile: UserProfile): void {
     console.log('Actualizando array de experiencias:', profile.experiencias);
-    
+
     const experienciasArray = this.perfilForm.get('experiencias') as FormArray;
     experienciasArray.clear();
 
     // Asegurarse de que haya un array de experiencias, incluso si viene vacío o undefined
     const experiencias = profile.experiencias || [];
-    
+
     if (experiencias.length > 0) {
       experiencias.forEach(exp => {
         experienciasArray.push(this.fb.group({
-          empresa: [exp.empresa],
-          cargo: [exp.cargo],
-          fechaInicio: [exp.fechaInicio],
-          fechaFin: [exp.fechaFin],
-          descripcion: [exp.descripcion],
-          comentario: [exp.comentario]
+          id: [exp.id || null],
+          cargo: [exp.cargo || '', Validators.required],
+          empresa: [exp.empresa || '', Validators.required],
+          fechaInicio: [exp.fechaInicio ? new Date(exp.fechaInicio) : null, Validators.required],
+          fechaFin: [exp.fechaFin ? new Date(exp.fechaFin) : null],
+          descripcion: [exp.descripcion || '', Validators.required],
+          comentario: [exp.comentario || ''],
+          certificadoId: [exp.certificadoId || null],
+          documentUrl: [exp.documentUrl || '']
         }));
       });
     }
-    
+
     console.log('Array de experiencias actualizado:', experienciasArray.value);
   }
 
@@ -309,13 +316,15 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   private createExperienciaFormGroup(experiencia?: any): FormGroup {
     return this.fb.group({
-      empresa: [experiencia?.empresa || '', Validators.required],
+      id: [experiencia?.id || null],
       cargo: [experiencia?.cargo || '', Validators.required],
-      fechaInicio: [experiencia?.fechaInicio || null, Validators.required],
-      fechaFin: [experiencia?.fechaFin || null],
-      descripcion: [experiencia?.descripcion || ''],
+      empresa: [experiencia?.empresa || '', Validators.required],
+      fechaInicio: [experiencia?.fechaInicio ? new Date(experiencia.fechaInicio) : null, Validators.required],
+      fechaFin: [experiencia?.fechaFin ? new Date(experiencia.fechaFin) : null],
+      descripcion: [experiencia?.descripcion || '', Validators.required],
       comentario: [experiencia?.comentario || ''],
-      certificadoId: [experiencia?.certificadoId || null]
+      certificadoId: [experiencia?.certificadoId || null],
+      documentUrl: [experiencia?.documentUrl || '']
     });
   }
 
@@ -387,7 +396,44 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Métodos para eliminar elementos
   eliminarExperiencia(index: number): void {
-    this.experiencias.removeAt(index);
+    const experiencias = this.perfilForm.get('experiencias') as FormArray;
+    const experiencia = experiencias.at(index).value;
+
+    if (!experiencia.id) {
+      // Si no tiene ID, es una experiencia nueva que no se ha guardado en el backend
+      experiencias.removeAt(index);
+      this.snackBar.open('Experiencia eliminada', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
+    // Confirmación antes de eliminar
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Confirmar eliminación',
+        message: '¿Está seguro que desea eliminar esta experiencia laboral?',
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Usar el nuevo servicio de experiencia para eliminar
+        this.experienceService.deleteExperience(experiencia.id)
+          .pipe(finalize(() => this.cdr.markForCheck()))
+          .subscribe({
+            next: () => {
+              experiencias.removeAt(index);
+              this.snackBar.open('Experiencia eliminada correctamente', 'Cerrar', { duration: 3000 });
+            },
+            error: (error) => {
+              console.error('Error al eliminar experiencia:', error);
+              this.snackBar.open('Error al eliminar la experiencia', 'Cerrar', { duration: 3000 });
+            }
+          });
+      }
+    });
   }
 
   eliminarHabilidad(index: number): void {
@@ -1150,15 +1196,83 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
       console.log('Mostrando datos crudos de educación:', datosFormateados);
 
+      // Crear una representación HTML formateada y estilizada de los datos
+      const formatearValor = (valor: any): string => {
+        if (valor === null || valor === undefined) {
+          return '<span class="property-value empty">No especificado</span>';
+        }
+
+        if (typeof valor === 'object' && valor !== null) {
+          if (Array.isArray(valor)) {
+            if (valor.length === 0) {
+              return '<span class="property-value empty">Lista vacía</span>';
+            }
+
+            let contenido = '<div style="padding-left: 16px;">';
+            valor.forEach((item, index) => {
+              contenido += `<div class="data-property">
+                <span class="property-name">Elemento ${index + 1}</span>
+                ${formatearValor(item)}
+              </div>`;
+            });
+            contenido += '</div>';
+            return contenido;
+          } else {
+            let contenido = '<div style="padding-left: 16px;">';
+            for (const [key, val] of Object.entries(valor)) {
+              contenido += `<div class="data-property">
+                <span class="property-name">${key}</span>
+                ${formatearValor(val)}
+              </div>`;
+            }
+            contenido += '</div>';
+            return contenido;
+          }
+        }
+
+        // Para valores simples
+        if (typeof valor === 'string' && valor.match(/^\d{4}-\d{2}-\d{2}/) !== null) {
+          // Es una fecha en formato ISO
+          const fecha = new Date(valor);
+          return `<span class="property-value">${fecha.toLocaleDateString('es-AR')}</span>`;
+        }
+
+        return `<span class="property-value">${valor}</span>`;
+      };
+
+      // Construir el HTML estructurado
+      let htmlFormateado = '<div class="json-container">';
+      for (const [key, valor] of Object.entries(datosCrudos)) {
+        htmlFormateado += `
+          <div class="data-property">
+            <span class="property-name">${key}</span>
+            ${formatearValor(valor)}
+          </div>
+        `;
+      }
+      htmlFormateado += '</div>';
+
+      // Vista en formato JSON para desarrolladores (oculta por defecto)
+      htmlFormateado += `
+        <div style="margin-top: 16px;">
+          <details>
+            <summary style="cursor: pointer; color: var(--primary-color); padding: 8px;">Ver formato JSON (para desarrolladores)</summary>
+            <pre>${datosFormateados}</pre>
+          </details>
+        </div>
+      `;
+
       // Abrir diálogo con los datos formateados
       this.dialog.open(ConfirmDialogComponent, {
         width: '80%',
-        maxHeight: '80vh',
+        maxHeight: '90vh',
         data: {
-          titulo: 'Datos completos de Educación',
-          mensaje: `<pre style="max-height: 60vh; overflow: auto; background-color: #f5f5f5; padding: 15px; border-radius: 4px; font-family: monospace;">${datosFormateados}</pre>`,
+          titulo: 'Detalles de Educación',
+          mensaje: htmlFormateado,
           confirmButtonText: 'Cerrar',
-          cancelButtonText: ''
+          cancelButtonText: '',
+          html: true,
+          tipoDatos: 'educacion'
         }
       });
     } catch (error) {
@@ -1176,22 +1290,163 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   // Método para manejar la experiencia guardada
-  onExperienciaGuardada(perfilActualizado: UserProfile): void {
-    console.log('Evento experienciaGuardada recibido:', perfilActualizado);
-    
-    // Actualizar el perfil local con los nuevos datos
-    this.userProfile = perfilActualizado;
-    
-    // Actualizar el formulario con los nuevos datos
-    this.cargarDatosBasicos(perfilActualizado);
-    this.cargarDatosAvanzados(perfilActualizado);
-    
-    // Cerrar el modal de experiencia
+  onExperienciaGuardada(datos: any): void {
+    if (!datos) {
+      console.log('No se recibieron datos de experiencia guardada');
+      this.mostrarModalExperiencia = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    console.log('Experiencia guardada recibida:', datos);
+
+    if (datos.experienciaNueva) {
+      // Añadir la nueva experiencia a la lista
+      const experienciaGuardada = datos.experienciaNueva;
+
+      // Cargar de nuevo las experiencias para asegurarnos de que tenemos los datos más actualizados
+      this.experienceService.getAllExperiencesByUserId(this.usuarioId)
+        .subscribe({
+          next: (experiencias) => {
+            // Actualizar la lista de experiencias en el perfil
+            if (this.userProfile) {
+              this.userProfile.experiencias = experiencias.map(exp => ({
+                id: exp.id,
+                empresa: exp.company,
+                cargo: exp.position,
+                fechaInicio: new Date(exp.startDate),
+                fechaFin: exp.endDate ? new Date(exp.endDate) : undefined,
+                descripcion: exp.description,
+                comentario: exp.comments || '',
+                documentUrl: exp.documentUrl
+              }));
+              this.actualizarArrayExperiencias(this.userProfile);
+              this.cdr.detectChanges();
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar experiencias actualizadas:', error);
+          }
+        });
+    }
+
     this.mostrarModalExperiencia = false;
-    
-    // Forzar detección de cambios
     this.cdr.detectChanges();
-    
-    console.log('Perfil actualizado después de guardar experiencia:', this.userProfile);
+  }
+
+  /**
+   * Método para mostrar los datos crudos de una experiencia
+   */
+  mostrarDatosExperiencia(experiencia: any): void {
+    if (!experiencia) {
+      this.snackBar.open('No hay datos disponibles para mostrar', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    try {
+      // Crear un objeto con todos los valores del control de experiencia
+      const datosCrudos = {
+        id: experiencia.get('id')?.value,
+        cargo: experiencia.get('cargo')?.value,
+        empresa: experiencia.get('empresa')?.value,
+        fechaInicio: experiencia.get('fechaInicio')?.value,
+        fechaFin: experiencia.get('fechaFin')?.value,
+        descripcion: experiencia.get('descripcion')?.value,
+        comentario: experiencia.get('comentario')?.value,
+        certificadoId: experiencia.get('certificadoId')?.value
+      };
+
+      // Formatear el JSON para mejor legibilidad
+      const datosFormateados = JSON.stringify(datosCrudos, null, 2);
+
+      console.log('Mostrando datos crudos de experiencia:', datosFormateados);
+
+      // Crear una representación HTML formateada y estilizada de los datos
+      const formatearValor = (valor: any): string => {
+        if (valor === null || valor === undefined) {
+          return '<span class="property-value empty">No especificado</span>';
+        }
+
+        if (typeof valor === 'object' && valor !== null) {
+          if (Array.isArray(valor)) {
+            if (valor.length === 0) {
+              return '<span class="property-value empty">Lista vacía</span>';
+            }
+
+            let contenido = '<div style="padding-left: 16px;">';
+            valor.forEach((item, index) => {
+              contenido += `<div class="data-property">
+                <span class="property-name">Elemento ${index + 1}</span>
+                ${formatearValor(item)}
+              </div>`;
+            });
+            contenido += '</div>';
+            return contenido;
+          } else {
+            let contenido = '<div style="padding-left: 16px;">';
+            for (const [key, val] of Object.entries(valor)) {
+              contenido += `<div class="data-property">
+                <span class="property-name">${key}</span>
+                ${formatearValor(val)}
+              </div>`;
+            }
+            contenido += '</div>';
+            return contenido;
+          }
+        }
+
+        // Para valores simples
+        if (typeof valor === 'string' && valor.match(/^\d{4}-\d{2}-\d{2}/) !== null) {
+          // Es una fecha en formato ISO
+          const fecha = new Date(valor);
+          return `<span class="property-value">${fecha.toLocaleDateString('es-AR')}</span>`;
+        }
+
+        return `<span class="property-value">${valor}</span>`;
+      };
+
+      // Construir el HTML estructurado
+      let htmlFormateado = '<div class="json-container">';
+      for (const [key, valor] of Object.entries(datosCrudos)) {
+        htmlFormateado += `
+          <div class="data-property">
+            <span class="property-name">${key}</span>
+            ${formatearValor(valor)}
+          </div>
+        `;
+      }
+      htmlFormateado += '</div>';
+
+      // Vista en formato JSON para desarrolladores (oculta por defecto)
+      htmlFormateado += `
+        <div style="margin-top: 16px;">
+          <details>
+            <summary style="cursor: pointer; color: var(--primary-color); padding: 8px;">Ver formato JSON (para desarrolladores)</summary>
+            <pre>${datosFormateados}</pre>
+          </details>
+        </div>
+      `;
+
+      // Abrir diálogo con los datos formateados
+      this.dialog.open(ConfirmDialogComponent, {
+        width: '80%',
+        maxHeight: '90vh',
+        data: {
+          titulo: 'Detalles de Experiencia Laboral',
+          mensaje: htmlFormateado,
+          confirmButtonText: 'Cerrar',
+          cancelButtonText: '',
+          html: true,
+          tipoDatos: 'experiencia'
+        }
+      });
+    } catch (error) {
+      console.error('Error al procesar los datos de experiencia:', error);
+      this.snackBar.open('Error al procesar los datos', 'Cerrar', {
+        duration: 3000
+      });
+    }
   }
 }

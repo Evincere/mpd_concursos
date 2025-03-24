@@ -1,18 +1,22 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter, Output, Input, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subject, EMPTY } from 'rxjs';
-import { takeUntil, finalize, switchMap, catchError } from 'rxjs/operators';
-import { ProfileService } from '../../../../../core/services/profile/profile.service';
-import { DocumentosService } from '../../../../../core/services/documentos/documentos.service';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '@env/environment';
-
-// Interfaz para la respuesta de la API
-interface ExperienciaResponse {
-  id: string;
-  [key: string]: any;
-}
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Subject } from 'rxjs';
+import { takeUntil, finalize } from 'rxjs/operators';
+import { ProfileService, Experiencia } from '../../../../../core/services/profile/profile.service';
+import { ExperienceService, ExperienceRequest } from '../../../../../core/services/experience/experience.service';
+import { HttpEventType } from '@angular/common/http';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 export enum PasoWizard {
   INFORMACION_BASICA = 0,
@@ -25,7 +29,23 @@ export enum PasoWizard {
   selector: 'app-experiencia-container',
   templateUrl: './experiencia-container.component.html',
   styleUrls: ['./experiencia-container.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatDatepickerModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatSnackBarModule
+  ]
 })
 export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   @Input() usuarioId: string = '';
@@ -40,6 +60,11 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   formInformacionBasica: FormGroup;
   formInformacionDetallada: FormGroup;
   formDocumentacion: FormGroup;
+  experienciaForm: FormGroup;
+  infoBasicaForm: FormGroup;
+  infoDetalladaForm: FormGroup;
+  documentacionForm: FormGroup;
+  esNuevo: boolean = true;
 
   // Variables para gestionar la carga de archivos
   archivoSeleccionado: File | null = null;
@@ -53,11 +78,10 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private profileService: ProfileService,
-    private documentosService: DocumentosService,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
-    private http: HttpClient
+    private profileService: ProfileService,
+    private experienceService: ExperienceService
   ) {
     // Inicializar formularios
     this.formInformacionBasica = this.fb.group({
@@ -75,6 +99,35 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
     this.formDocumentacion = this.fb.group({
       tieneCertificado: [false],
       certificadoId: [null]
+    });
+
+    // Inicializar el formulario experiencia principal
+    this.experienciaForm = this.fb.group({
+      id: [null],
+      cargo: ['', Validators.required],
+      empresa: ['', Validators.required],
+      fechaInicio: [null, Validators.required],
+      fechaFin: [null],
+      descripcion: ['', Validators.required],
+      comentario: [''],
+      documentUrl: ['']
+    });
+
+    // Inicializar referencias para los formularios secundarios
+    this.infoBasicaForm = this.fb.group({
+      cargo: this.experienciaForm.get('cargo'),
+      empresa: this.experienciaForm.get('empresa'),
+      fechaInicio: this.experienciaForm.get('fechaInicio'),
+      fechaFin: this.experienciaForm.get('fechaFin')
+    });
+
+    this.infoDetalladaForm = this.fb.group({
+      descripcion: this.experienciaForm.get('descripcion'),
+      comentario: this.experienciaForm.get('comentario')
+    });
+
+    this.documentacionForm = this.fb.group({
+      documentUrl: this.experienciaForm.get('documentUrl')
     });
   }
 
@@ -146,18 +199,32 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   }
 
   // Construcción de la experiencia
-  private construirExperiencia(): any {
+  private construirExperiencia(): ExperienceRequest {
     const valoresBasicos = this.formInformacionBasica.value;
     const valoresDetallados = this.formInformacionDetallada.value;
 
-    return {
-      empresa: valoresBasicos.empresa,
-      cargo: valoresBasicos.cargo,
-      fechaInicio: valoresBasicos.fechaInicio ? new Date(valoresBasicos.fechaInicio).toISOString().split('T')[0] : null,
-      fechaFin: valoresBasicos.fechaFin ? new Date(valoresBasicos.fechaFin).toISOString().split('T')[0] : null,
-      descripcion: valoresDetallados.descripcion,
-      comentario: valoresDetallados.comentario
+    // Adaptar al formato que espera el backend (ExperienceRequestDto)
+    const experiencia: ExperienceRequest = {
+      company: valoresBasicos.empresa,
+      position: valoresBasicos.cargo,
+      startDate: valoresBasicos.fechaInicio ? new Date(valoresBasicos.fechaInicio).toISOString().split('T')[0] : '',
+      description: valoresDetallados.descripcion || '',
+      comments: valoresDetallados.comentario || ''
     };
+
+    // Añadir fecha fin solo si está definida
+    if (valoresBasicos.fechaFin) {
+      experiencia.endDate = new Date(valoresBasicos.fechaFin).toISOString().split('T')[0];
+    }
+
+    // Validar que todas las propiedades requeridas tengan valores
+    if (!experiencia.company || !experiencia.position || !experiencia.startDate) {
+      console.error('Error: La experiencia no tiene todos los campos requeridos', experiencia);
+    } else {
+      console.log('Experiencia construida correctamente:', experiencia);
+    }
+
+    return experiencia;
   }
 
   // Guardar experiencia
@@ -175,48 +242,48 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
     const experiencia = this.construirExperiencia();
     console.log('Guardando experiencia:', experiencia);
 
-    // Obtenemos el perfil completo primero, luego actualizamos las experiencias
-    this.profileService.getUserProfile()
+    // Usar el servicio de experiencia para crear la experiencia
+    this.experienceService.createExperience(this.usuarioId, experiencia)
       .pipe(
         takeUntil(this.destroy$),
-        switchMap(perfil => {
-          console.log('Perfil actual obtenido:', perfil);
-          // Creamos una copia del array de experiencias o inicializamos uno nuevo
-          const experiencias = perfil.experiencias ? [...perfil.experiencias] : [];
-
-          // Agregamos la nueva experiencia
-          experiencias.push(experiencia);
-
-          // Actualizamos el perfil con la nueva experiencia
-          const perfilActualizado = {
-            ...perfil,
-            experiencias: experiencias
-          };
-          console.log('Perfil a actualizar:', perfilActualizado);
-
-          return this.profileService.updateUserProfile(perfilActualizado);
-        }),
         finalize(() => {
           this.guardando = false;
           this.cdr.markForCheck();
         })
       )
       .subscribe({
-        next: (respuesta) => {
-          console.log('Perfil actualizado correctamente:', respuesta);
-          
-          // Emitimos el evento con la respuesta completa
-          this.experienciaGuardada.emit(respuesta);
-          
-          // Mostramos mensaje de éxito
-          this.snackBar.open('Experiencia guardada correctamente', 'Cerrar', {
-            duration: 3000
-          });
+        next: (nuevaExperiencia) => {
+          console.log('Experiencia creada correctamente:', nuevaExperiencia);
 
-          // Si hay un archivo seleccionado, lo subimos
-          if (this.archivoSeleccionado) {
-            this.subirCertificado(this.usuarioId);
+          // Convertir la respuesta al formato que espera el frontend
+          const experienciaMapeada = this.mapearRespuestaBackend(nuevaExperiencia);
+
+          // Verificar que la experiencia tenga ID
+          if (nuevaExperiencia && nuevaExperiencia.id) {
+            console.log(`Nueva experiencia creada con ID: ${nuevaExperiencia.id}`);
+
+            // Mostrar mensaje de éxito
+            this.snackBar.open('Experiencia guardada correctamente', 'Cerrar', {
+              duration: 3000
+            });
+
+            // Emitir la experiencia creada para actualizar la lista en el componente padre
+            if (experienciaMapeada) {
+              this.experienciaGuardada.emit({ experienciaNueva: experienciaMapeada });
+            }
+
+            // Si hay un archivo seleccionado, lo subimos usando el ID de la nueva experiencia
+            if (this.archivoSeleccionado) {
+              console.log(`Subiendo certificado para la nueva experiencia con ID: ${nuevaExperiencia.id}`);
+              this.subirCertificado(nuevaExperiencia.id);
+            } else {
+              this.finalizarGuardado();
+            }
           } else {
+            console.error('La experiencia se creó pero no tiene ID asignado:', nuevaExperiencia);
+            this.snackBar.open('Experiencia guardada parcialmente. Es posible que no se pueda adjuntar el certificado.', 'Cerrar', {
+              duration: 5000
+            });
             this.finalizarGuardado();
           }
         },
@@ -225,14 +292,26 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
           this.snackBar.open('Error al guardar la experiencia', 'Cerrar', {
             duration: 5000
           });
-          this.guardando = false;
-          this.cdr.markForCheck();
         }
       });
   }
 
-  private subirCertificado(experienciaId: string | number): void {
+  private subirCertificado(experienciaId: string): void {
     if (!this.archivoSeleccionado) {
+      console.log('No hay archivo seleccionado para subir');
+      this.finalizarGuardado();
+      return;
+    }
+
+    // Validar archivo
+    if (this.archivoSeleccionado.size > 10 * 1024 * 1024) { // 10MB
+      this.snackBar.open(
+        'El archivo es demasiado grande. El tamaño máximo permitido es 10MB.',
+        'Entendido',
+        { duration: 5000 }
+      );
+      this.cargandoArchivo = false;
+      this.cdr.markForCheck();
       this.finalizarGuardado();
       return;
     }
@@ -241,64 +320,50 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
     this.progresoCarga = 0;
     this.cdr.markForCheck();
 
-    // Verificar si el endpoint existe
-    this.http.head(`${environment.apiUrl}/documentos/upload/experiencia`)
+    // Usar el servicio de experiencia para subir el documento
+    this.experienceService.uploadDocument(experienciaId, this.archivoSeleccionado)
       .pipe(
         takeUntil(this.destroy$),
-        catchError(error => {
-          console.log('El endpoint para subir documentos no está disponible:', error);
-          // Si el endpoint no existe, mostramos un mensaje informativo pero no bloqueante
-          this.snackBar.open('No se pudo subir el certificado porque la funcionalidad no está disponible en este momento', 'Entendido', {
-            duration: 5000
-          });
-          // Continuamos con el flujo normal
-          this.finalizarGuardado();
-          // Devolvemos un observable vacío para que no se continúe con la lógica
-          return EMPTY;
+        finalize(() => {
+          this.cargandoArchivo = false;
+          this.cdr.markForCheck();
         })
       )
-      .subscribe(() => {
-        // Si el endpoint existe, procedemos con la subida
-        this.documentosService.subirDocumentoExperiencia(this.archivoSeleccionado!, experienciaId)
-          .pipe(
-            takeUntil(this.destroy$),
-            finalize(() => {
-              this.cargandoArchivo = false;
-              this.cdr.markForCheck();
-            })
-          )
-          .subscribe({
-            next: (response) => {
-              this.snackBar.open('Certificado subido correctamente', 'Cerrar', {
-                duration: 3000
-              });
-              this.finalizarGuardado();
-            },
-            error: (error) => {
-              console.error('Error al subir el certificado:', error);
-              this.snackBar.open('Error al subir el certificado', 'Cerrar', {
-                duration: 5000
-              });
-              // Aún así finalizamos el proceso
-              this.finalizarGuardado();
+      .subscribe({
+        next: (event: any) => {
+          if (event.type === 'progress') {
+            this.progresoCarga = event.progress;
+            this.cdr.markForCheck();
+          } else if (event.type === 'success') {
+            console.log('Certificado subido correctamente:', event.experience);
+
+            this.snackBar.open('Certificado subido correctamente', 'Cerrar', {
+              duration: 3000
+            });
+
+            // Actualizar experiencia con la URL del documento si es necesario
+            if (event.experience && event.experience.documentUrl) {
+              console.log('URL del documento: ', event.experience.documentUrl);
             }
-          });
+
+            this.finalizarGuardado();
+          }
+        },
+        error: (error) => {
+          console.error('Error al subir el certificado:', error);
+          this.snackBar.open(
+            'Error al subir el certificado: ' + (error.message || 'Error desconocido'),
+            'Cerrar',
+            { duration: 5000 }
+          );
+          this.finalizarGuardado();
+        }
       });
   }
 
   private finalizarGuardado(): void {
-    // Emitir la experiencia guardada para que el componente padre la reciba
-    const experienciaGuardadaObj = this.construirExperiencia();
-    console.log('Emitiendo evento experienciaGuardada con:', experienciaGuardadaObj);
-    
-    // Recargar el perfil para asegurar que tenemos los datos más recientes
-    this.profileService.getUserProfile().subscribe(perfilActualizado => {
-      // Emitir el perfil actualizado para que el componente padre lo reciba
-      this.experienciaGuardada.emit(perfilActualizado);
-      
-      // Cerrar el modal
-      this.cerrarModal();
-    });
+    // Cerrar el modal
+    this.cerrarModal();
   }
 
   // Cerrar el modal
@@ -315,19 +380,19 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
     const resumen: string[] = [];
     const experiencia = this.construirExperiencia();
 
-    resumen.push(`Cargo: ${experiencia.cargo}`);
-    resumen.push(`Empresa: ${experiencia.empresa}`);
+    resumen.push(`Cargo: ${experiencia.position}`);
+    resumen.push(`Empresa: ${experiencia.company}`);
 
-    if (experiencia.fechaInicio) {
-      resumen.push(`Fecha de inicio: ${new Date(experiencia.fechaInicio).toLocaleDateString()}`);
+    if (experiencia.startDate) {
+      resumen.push(`Fecha de inicio: ${new Date(experiencia.startDate).toLocaleDateString()}`);
     }
 
-    if (experiencia.fechaFin) {
-      resumen.push(`Fecha de fin: ${new Date(experiencia.fechaFin).toLocaleDateString()}`);
+    if (experiencia.endDate) {
+      resumen.push(`Fecha de fin: ${new Date(experiencia.endDate).toLocaleDateString()}`);
     }
 
-    if (experiencia.descripcion) {
-      resumen.push(`Descripción: ${experiencia.descripcion.substring(0, 50)}${experiencia.descripcion.length > 50 ? '...' : ''}`);
+    if (experiencia.description) {
+      resumen.push(`Descripción: ${experiencia.description.substring(0, 50)}${experiencia.description.length > 50 ? '...' : ''}`);
     }
 
     if (this.archivoSeleccionado) {
@@ -335,5 +400,73 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
     }
 
     return resumen;
+  }
+
+  actualizarFormulario(experiencia: Experiencia | null): void {
+    if (experiencia) {
+      // Actualizar la experiencia para inclusión en el formulario
+      this.experienciaForm = this.fb.group({
+        id: [experiencia.id],
+        cargo: [experiencia.cargo, Validators.required],
+        empresa: [experiencia.empresa, Validators.required],
+        fechaInicio: [experiencia.fechaInicio ? new Date(experiencia.fechaInicio) : null, Validators.required],
+        fechaFin: [experiencia.fechaFin ? new Date(experiencia.fechaFin) : null],
+        descripcion: [experiencia.descripcion, Validators.required],
+        comentario: [experiencia.comentario],
+        documentUrl: [experiencia.documentUrl] // Añadir campo para URL del documento
+      });
+      this.esNuevo = false;
+      this.pasoActual = this.pasoWizard.INFORMACION_BASICA;
+    } else {
+      // Crear un formulario nuevo
+      this.experienciaForm = this.fb.group({
+        id: [null],
+        cargo: ['', Validators.required],
+        empresa: ['', Validators.required],
+        fechaInicio: [null, Validators.required],
+        fechaFin: [null],
+        descripcion: ['', Validators.required],
+        comentario: [''],
+        documentUrl: [''] // Campo para URL del documento en nuevo registro
+      });
+      this.esNuevo = true;
+      this.pasoActual = this.pasoWizard.INFORMACION_BASICA;
+    }
+
+    this.infoBasicaForm = this.fb.group({
+      cargo: this.experienciaForm.get('cargo'),
+      empresa: this.experienciaForm.get('empresa'),
+      fechaInicio: this.experienciaForm.get('fechaInicio'),
+      fechaFin: this.experienciaForm.get('fechaFin')
+    });
+
+    this.infoDetalladaForm = this.fb.group({
+      descripcion: this.experienciaForm.get('descripcion'),
+      comentario: this.experienciaForm.get('comentario')
+    });
+
+    this.documentacionForm = this.fb.group({
+      documentUrl: this.experienciaForm.get('documentUrl')
+    });
+
+    this.cdr.markForCheck();
+  }
+
+  // Método para mapear la respuesta del backend (en inglés) al formato del frontend (en español)
+  private mapearRespuestaBackend(experienciaBackend: any): Experiencia | null {
+    if (!experienciaBackend) {
+      return null;
+    }
+
+    return {
+      id: experienciaBackend.id,
+      empresa: experienciaBackend.company,
+      cargo: experienciaBackend.position,
+      fechaInicio: experienciaBackend.startDate ? new Date(experienciaBackend.startDate) : new Date(),
+      fechaFin: experienciaBackend.endDate ? new Date(experienciaBackend.endDate) : undefined,
+      descripcion: experienciaBackend.description,
+      comentario: experienciaBackend.comments,
+      documentUrl: experienciaBackend.documentUrl
+    };
   }
 }

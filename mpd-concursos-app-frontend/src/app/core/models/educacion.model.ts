@@ -34,7 +34,7 @@ export interface EducacionBase {
   institucion: string;
   fechaEmision?: Date;
   documentoPdf?: any; // Para manejar el archivo subido
-  
+
   // Propiedades opcionales que pueden venir del backend en inglés
   [key: string]: any; // Permite cualquier propiedad adicional
 }

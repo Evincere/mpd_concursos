@@ -14,6 +14,7 @@ import ar.gov.mpd.concursobackend.education.application.mapper.EducationMapper;
 import ar.gov.mpd.concursobackend.education.domain.model.Education;
 import ar.gov.mpd.concursobackend.education.domain.repository.EducationRepository;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentStorageService;
+import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class EducationServiceImpl implements EducationService {
     private final EducationRepository educationRepository;
     private final EducationMapper educationMapper;
     private final IDocumentStorageService documentStorageService;
+    private final DocumentService documentService;
     
     @Override
     @Transactional(readOnly = true)
@@ -93,24 +95,35 @@ public class EducationServiceImpl implements EducationService {
         Education education = educationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Registro de educación no encontrado con id: " + id));
         
-        // Generar un nombre de archivo único para el documento
-        String uniqueFilename = education.getId() + "_" + filename;
-        
         // Usar documentId como segundo UUID
         UUID documentId = UUID.randomUUID();
+        log.info("ID de documento generado: {}", documentId);
         
-        // Almacenar el archivo usando el servicio de almacenamiento de documentos existente
-        String documentUrl = documentStorageService.storeFile(
-                inputStream, 
-                uniqueFilename, 
-                education.getUserId(), 
-                documentId);
-        
-        // Actualizar el registro de educación con la URL del documento
-        education.setDocumentUrl(documentUrl);
-        Education savedEducation = educationRepository.save(education);
-        
-        log.info("Documento subido para el registro de educación: {}", savedEducation.getId());
-        return educationMapper.toResponseDto(savedEducation);
+        try {
+            // Usar documentService.saveDocument que maneja tanto el almacenamiento físico como los metadatos
+            log.info("Llamando a documentService.saveDocument");
+            String documentUrl = documentService.saveDocument(
+                    inputStream, 
+                    filename, 
+                    documentId,
+                    education.getUserId());
+            
+            if (documentUrl == null || documentUrl.isEmpty()) {
+                log.error("ERROR: La URL del documento retornada por saveDocument es nula o vacía");
+                throw new RuntimeException("Document URL is null or empty");
+            }
+            
+            log.info("URL del documento generada: {}", documentUrl);
+            
+            // Actualizar el registro de educación con la URL del documento
+            education.setDocumentUrl(documentUrl);
+            Education savedEducation = educationRepository.save(education);
+            
+            log.info("Documento subido para el registro de educación: {}", savedEducation.getId());
+            return educationMapper.toResponseDto(savedEducation);
+        } catch (Exception e) {
+            log.error("Error al procesar el documento: {}", e.getMessage(), e);
+            throw new RuntimeException("Error processing document: " + e.getMessage(), e);
+        }
     }
 } 

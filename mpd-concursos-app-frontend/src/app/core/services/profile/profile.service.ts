@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 export interface Experiencia {
+  id?: string;
   empresa: string;
   cargo: string;
   fechaInicio: Date;
@@ -11,6 +12,7 @@ export interface Experiencia {
   descripcion?: string;
   certificadoId?: string;
   comentario?: string;
+  documentUrl?: string;
 }
 
 export enum TipoEducacion {

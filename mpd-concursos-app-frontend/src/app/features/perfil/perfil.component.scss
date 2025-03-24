@@ -1797,20 +1797,35 @@ button,
 
 .debug-button {
   margin-top: 8px;
+  margin-bottom: 12px;
   font-size: 0.85rem;
-  color: rgba(var(--primary-color-rgb), 0.7);
+  color: rgba(var(--primary-color-rgb), 0.8);
   background-color: rgba(var(--primary-color-rgb), 0.1);
   border-radius: 4px;
-  padding: 3px 10px;
-
+  border: 1px solid rgba(var(--primary-color-rgb), 0.2);
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: auto;
+  align-self: center;
+  
   i {
-    margin-right: 4px;
-    font-size: 0.85rem;
+    margin-right: 6px;
+    font-size: 0.9rem;
   }
-
+  
   &:hover {
-    background-color: rgba(var(--primary-color-rgb), 0.2);
-    color: var(--primary-color);
+    background-color: rgba(var(--primary-color-rgb), 0.15);
+    border-color: rgba(var(--primary-color-rgb), 0.3);
+    color: rgba(var(--primary-color-rgb), 1);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
 }
 

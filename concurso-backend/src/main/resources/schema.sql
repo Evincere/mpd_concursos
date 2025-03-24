@@ -5,6 +5,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS experiencias;
+DROP TABLE IF EXISTS experience;
 DROP TABLE IF EXISTS education;
 DROP TABLE IF EXISTS educacion;
 DROP TABLE IF EXISTS habilidades;
@@ -49,7 +50,7 @@ CREATE TABLE roles (
     name ENUM('ROLE_USER', 'ROLE_ADMIN') NOT NULL
 );
 
--- Tabla de experiencia para almacenar experiencias laborales
+-- Tabla antigua de experiencia (por compatibilidad)
 CREATE TABLE experiencia (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     empresa VARCHAR(255) NOT NULL,
@@ -62,8 +63,25 @@ CREATE TABLE experiencia (
     CONSTRAINT fk_experiencia_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
 );
 
--- Crear índice para búsqueda rápida por usuario
+-- Índice para búsqueda rápida por usuario en tabla antigua
 CREATE INDEX idx_experiencia_user_id ON experiencia(user_id);
+
+-- Nueva tabla de experiencia con UUID como clave primaria
+CREATE TABLE experience (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16) NOT NULL,
+    company VARCHAR(255) NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    description TEXT,
+    comments TEXT,
+    document_url VARCHAR(255),
+    CONSTRAINT fk_experience_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
+);
+
+-- Índice para búsqueda rápida por usuario en nueva tabla
+CREATE INDEX idx_experience_user_id ON experience(user_id);
 
 CREATE TABLE contests (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,

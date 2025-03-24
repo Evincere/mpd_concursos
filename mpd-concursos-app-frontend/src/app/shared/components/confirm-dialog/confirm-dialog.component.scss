@@ -55,6 +55,125 @@
           background: darken(#dc3545, 5%);
         }
       }
+      
+      &.data-button {
+        background: var(--primary-color);
+        color: #ffffff;
+
+        &:hover {
+          background: rgba(var(--primary-color-rgb), 0.9);
+        }
+      }
+    }
+  }
+  
+  // Estilos específicos para la vista de datos
+  &.data-view {
+    width: 100%;
+    max-width: 800px;
+    
+    .dialog-title {
+      mat-icon {
+        color: var(--primary-color);
+      }
+    }
+    
+    .dialog-content {
+      max-height: 70vh;
+      overflow-y: auto;
+      
+      // Personalizar la barra de desplazamiento
+      &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: rgba(var(--primary-color-rgb), 0.5);
+        border-radius: 4px;
+      }
+      
+      &::-webkit-scrollbar-thumb:hover {
+        background: rgba(var(--primary-color-rgb), 0.7);
+      }
+      
+      // Estilos para el contenedor de JSON
+      .json-container {
+        background-color: #2A2A2A;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(var(--primary-color-rgb), 0.2);
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        
+        .json-key {
+          color: #9CDCFE;
+        }
+        
+        .json-value {
+          &.json-string {
+            color: #CE9178;
+          }
+          
+          &.json-number {
+            color: #B5CEA8;
+          }
+          
+          &.json-boolean {
+            color: #569CD6;
+          }
+          
+          &.json-null {
+            color: #569CD6;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Estilos específicos para pre y code
+pre {
+  background-color: #2A2A2A !important;
+  color: #e0e0e0 !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  overflow: auto !important;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  border: 1px solid rgba(var(--primary-color-rgb), 0.2) !important;
+  line-height: 1.6 !important;
+  
+  code {
+    font-family: inherit !important;
+  }
+}
+
+// Estilo para datos estructurados
+.data-property {
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+  
+  .property-name {
+    color: var(--primary-color);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .property-value {
+    padding-left: 16px;
+    color: rgba(255, 255, 255, 0.8);
+    
+    &.empty {
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.5);
     }
   }
 }

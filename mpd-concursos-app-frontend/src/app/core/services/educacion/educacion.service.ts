@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, throwError, forkJoin } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError, forkJoin, Subject, EMPTY } from 'rxjs';
 import { catchError, map, tap, finalize, switchMap } from 'rxjs/operators';
-import { Educacion } from '../models/educacion.model';
-import { environment } from 'src/environments/environment';
+import { Educacion } from '../../../core/models/educacion.model';
+import { environment } from '@env/environment';
 
 // Interfaz para las respuestas de operaciones
 export interface OperacionResponse<T> {
@@ -68,10 +68,10 @@ export class EducacionService {
                 // sean accesibles directamente
                 const educacionNormalizada = this.normalizarDatosEducacion(educacionData);
                 console.log('Educación normalizada:', educacionNormalizada);
-                
+
                 this.educacionSubject.next(educacionNormalizada);
                 this.educacionCargada = true;
-                
+
                 return {
                     exito: true,
                     data: educacionNormalizada,
@@ -106,19 +106,19 @@ export class EducacionService {
                 }),
                 catchError(error => {
                     console.error('Error detallado al guardar educación:', error);
-                    
+
                     // Inspeccionar el cuerpo de la respuesta para obtener detalles del error
                     let mensajeDetallado = 'Error al guardar educación';
-                    
+
                     if (error instanceof HttpErrorResponse) {
                         if (error.status === 400) {
                             console.log('Respuesta de error 400:', error.error);
-                            
+
                             // Extraer mensaje de error específico del backend si está disponible
                             if (error.error && typeof error.error === 'object') {
                                 if (error.error.message) {
                                     mensajeDetallado = `Error de validación: ${error.error.message}`;
-                                    
+
                                     // Imprimir detalles adicionales del error para depuración
                                     if (error.error.errors && Array.isArray(error.error.errors)) {
                                         console.log('Errores detallados de validación:');
@@ -126,14 +126,14 @@ export class EducacionService {
                                             console.log(`Error ${index + 1}:`, err);
                                         });
                                     }
-                                    
+
                                 } else if (error.error.error) {
                                     mensajeDetallado = `Error de validación: ${error.error.error}`;
                                 } else {
                                     // Intentar obtener el primer campo con error
-                                    const camposError = Object.keys(error.error).filter(k => 
+                                    const camposError = Object.keys(error.error).filter(k =>
                                         error.error[k] && typeof error.error[k] === 'string');
-                                    
+
                                     if (camposError.length > 0) {
                                         mensajeDetallado = `Error en ${camposError[0]}: ${error.error[camposError[0]]}`;
                                     }
@@ -141,7 +141,7 @@ export class EducacionService {
                             }
                         }
                     }
-                    
+
                     return this.manejarError(error, mensajeDetallado);
                 }),
                 finalize(() => this.loadingSubject.next(false))
@@ -189,11 +189,11 @@ export class EducacionService {
                 // Eliminar del subject solo si existe en la lista
                 const educacionActual = this.educacionSubject.value;
                 const educacionFiltrada = educacionActual.filter(e => e.id !== educacionId);
-                
+
                 console.log(`Educación eliminada correctamente: ${educacionId}`);
                 this.educacionSubject.next(educacionFiltrada);
                 this.mensajeSubject.next('Educación eliminada correctamente');
-                
+
                 return {
                     exito: true,
                     mensaje: 'Educación eliminada correctamente'
@@ -203,20 +203,20 @@ export class EducacionService {
                 // Manejar el caso específico de 404 Not Found
                 if (error.status === 404) {
                     console.log(`Educación con ID ${educacionId} no encontrada en el servidor, pero eliminándola de la lista local`);
-                    
+
                     // Si no está en el servidor, igual la eliminamos de la lista local
                     const educacionActual = this.educacionSubject.value;
                     const educacionFiltrada = educacionActual.filter(e => e.id !== educacionId);
-                    
+
                     this.educacionSubject.next(educacionFiltrada);
                     this.mensajeSubject.next('Educación eliminada correctamente');
-                    
+
                     return of({
                         exito: true,
                         mensaje: 'Educación eliminada correctamente'
                     });
                 }
-                
+
                 return this.manejarError(error, 'Error al eliminar educación');
             }),
             finalize(() => this.loadingSubject.next(false))
@@ -262,18 +262,62 @@ export class EducacionService {
         // Asegurarse de que el ID se utiliza como está, sin intentar convertirlo
         console.log(`Subiendo documento para educación ID: ${educacionId} de tipo ${typeof educacionId}`);
 
-        return this.http.post<any>(`${this.apiUrl}/${educacionId}/documento`, formData).pipe(
-            map(respuesta => {
-                this.mensajeSubject.next('Documento subido correctamente');
-                return {
-                    exito: true,
-                    data: respuesta,
-                    mensaje: 'Documento subido correctamente'
-                };
-            }),
-            catchError(error => this.manejarError(error, 'Error al subir documento')),
-            finalize(() => this.loadingSubject.next(false))
-        );
+        // Lista de posibles endpoints para probar
+        const urls = [
+            `${this.apiUrl}/${educacionId}/documento`,
+            `${this.apiUrl}/documento/${educacionId}`,
+            `${this.apiUrl}/upload/documento/${educacionId}`,
+            `${environment.apiUrl}/documentos/educacion/${educacionId}/documento`
+        ];
+
+        console.log(`Intentando subir documento para educación ID ${educacionId}. Probando múltiples endpoints...`);
+
+        // Crear un Subject para controlar el flujo
+        const resultSubject = new Subject<OperacionResponse<any>>();
+
+        // Intentar los endpoints en secuencia
+        const intentarSiguienteEndpoint = (indice = 0) => {
+            if (indice >= urls.length) {
+                // Hemos agotado todas las opciones
+                resultSubject.next({
+                    exito: false,
+                    error: 'No se pudo subir el documento. La funcionalidad no está disponible actualmente.',
+                    mensaje: 'No se pudo subir el documento. La funcionalidad no está disponible actualmente.'
+                });
+                resultSubject.complete();
+                this.loadingSubject.next(false);
+                return;
+            }
+
+            const currentUrl = urls[indice];
+            console.log(`Intento #${indice + 1}: Probando endpoint ${currentUrl}`);
+
+            this.http.post<any>(currentUrl, formData).pipe(
+                catchError(error => {
+                    console.error(`Error al subir el documento al endpoint ${currentUrl}:`, error);
+                    // Intentar con el siguiente endpoint
+                    intentarSiguienteEndpoint(indice + 1);
+                    return EMPTY;
+                })
+            ).subscribe({
+                next: (respuesta) => {
+                    console.log(`Éxito: Documento subido correctamente al endpoint ${currentUrl}`, respuesta);
+                    this.mensajeSubject.next('Documento subido correctamente');
+                    resultSubject.next({
+                        exito: true,
+                        data: respuesta,
+                        mensaje: 'Documento subido correctamente'
+                    });
+                    resultSubject.complete();
+                    this.loadingSubject.next(false);
+                }
+            });
+        };
+
+        // Comenzar el proceso con el primer endpoint
+        intentarSiguienteEndpoint();
+
+        return resultSubject.asObservable();
     }
 
     // Patrón Facade: Método para guardar educación y subir documento en una operación
@@ -284,7 +328,7 @@ export class EducacionService {
 
         // Log para depurar el objeto de educación antes de enviarlo
         console.log('Objeto para guardar en guardarEducacionCompleta:', JSON.stringify(educacion));
-        
+
         return this.guardarEducacion(educacion, usuarioId).pipe(
             switchMap(respuesta => {
                 // Si no hay éxito en la creación de la educación o no hay archivo, terminar aquí
@@ -373,7 +417,7 @@ export class EducacionService {
         if (error instanceof HttpErrorResponse) {
             // Registrar detalles completos del error
             console.error(`Error HTTP ${error.status} (${error.statusText}) en ${error.url}:`, error);
-            
+
             if (error.status === 0) {
                 mensajeError = 'Error de conexión. Verifique su conexión a internet.';
                 codigoError = ErrorCodigo.ERROR_RED;
@@ -383,9 +427,9 @@ export class EducacionService {
             } else if (error.status === 400) {
                 // Extraer detalles específicos de errores de validación 400 (Bad Request)
                 codigoError = ErrorCodigo.ERROR_VALIDACION;
-                
+
                 console.log('Respuesta de error 400 completa:', error.error);
-                
+
                 if (error.error) {
                     if (error.error.errors && Array.isArray(error.error.errors)) {
                         // Spring Validation devuelve un array de errores
@@ -394,25 +438,25 @@ export class EducacionService {
                             if (e.message) return e.message;
                             return JSON.stringify(e);
                         });
-                        
+
                         mensajeError = `Errores de validación: ${detallesError.slice(0, 3).join(', ')}`;
                         if (detallesError.length > 3) {
                             mensajeError += ` y ${detallesError.length - 3} más`;
                         }
                     } else if (error.error.message) {
                         mensajeError = error.error.message;
-                        
+
                         // Buscar detalles de validación en el mensaje
                         if (mensajeError.includes('Validation failed')) {
                             // Intentar extraer errores específicos
                             const regex = /field \[([^\]]+)\]\: ([^,;\.]+)/g;
                             let match;
                             const errores = [];
-                            
+
                             while ((match = regex.exec(mensajeError)) !== null) {
                                 errores.push(`${match[1]}: ${match[2].trim()}`);
                             }
-                            
+
                             if (errores.length > 0) {
                                 mensajeError = `Validación fallida: ${errores.join(', ')}`;
                             }
@@ -428,7 +472,7 @@ export class EducacionService {
                                 return null;
                             })
                             .filter(Boolean);
-                        
+
                         if (camposError.length > 0) {
                             mensajeError = `Error en validación: ${camposError.join(', ')}`;
                         } else {
@@ -483,7 +527,7 @@ export class EducacionService {
 
         return educacionData.map(item => {
             console.log('Procesando item de educación (objeto completo):', JSON.stringify(item));
-            
+
             // Crear un objeto base con las propiedades comunes
             const educacionBase: any = {
                 id: item.id || '',
@@ -502,7 +546,7 @@ export class EducacionService {
                 if (item.hasOwnProperty(key) && !['id', 'tipo', 'estado', 'titulo', 'institucion', 'fechaEmision', 'documentoPdf'].includes(key)) {
                     if (typeof item[key] === 'object' && item[key] !== null) {
                         console.log(`Propiedad compleja encontrada: ${key}`, item[key]);
-                        
+
                         // Si la propiedad es un objeto, incluir todas sus subpropiedades
                         for (const subKey in item[key]) {
                             if (item[key].hasOwnProperty(subKey)) {
@@ -519,11 +563,11 @@ export class EducacionService {
 
             // Propiedades adicionales específicas por tipo de educación
             const posiblesPropiedadesEspecificas = ['propiedadesEspecificas', 'detalle', 'datos', 'detalles', 'datosAdicionales'];
-            
+
             posiblesPropiedadesEspecificas.forEach(propName => {
                 if (item[propName] && typeof item[propName] === 'object') {
                     console.log(`Objeto de propiedades específicas encontrado en '${propName}':`, item[propName]);
-                    
+
                     // Agregar todas las propiedades del detalle directamente en el objeto base
                     Object.keys(item[propName]).forEach(key => {
                         educacionBase[key] = item[propName][key];
@@ -531,21 +575,21 @@ export class EducacionService {
                     });
                 }
             });
-            
+
             // Si no hay un objeto específico, buscar propiedades conocidas directamente en el item
             const propiedadesEspecificas = [
-                'duracionAnios', 'promedio', 'temaTesis', 'cargaHoraria', 
-                'tuvoEvaluacionFinal', 'tipoActividad', 'tema', 'caracter', 
+                'duracionAnios', 'promedio', 'temaTesis', 'cargaHoraria',
+                'tuvoEvaluacionFinal', 'tipoActividad', 'tema', 'caracter',
                 'lugarFechaExposicion', 'comentarios'
             ];
-            
+
             propiedadesEspecificas.forEach(prop => {
                 if (prop in item) {
                     educacionBase[prop] = item[prop];
                     console.log(`Propiedad específica encontrada directamente: ${prop} = ${item[prop]}`);
                 }
             });
-            
+
             console.log('Item de educación normalizado (resultado final):', educacionBase);
             return educacionBase as Educacion;
         });

@@ -240,6 +240,9 @@
                                 <div class="experience-header">
                                     <h3 class="experience-title">{{ exp.get('cargo')?.value || 'Sin cargo' }}</h3>
                                     <span class="experience-company">{{ exp.get('empresa')?.value || 'Empresa no especificada' }}</span>
+                                    <span *ngIf="exp.get('certificadoId')?.value || exp.get('documentUrl')?.value" class="document-badge" title="Tiene certificado adjunto">
+                                        <i class="fas fa-file-certificate"></i> Certificado adjunto
+                                    </span>
                                 </div>
                                 
                                 <div class="experience-body">
@@ -260,6 +263,14 @@
                                             <p>{{ exp.get('comentario')?.value }}</p>
                                         </div>
                                     </div>
+
+                                    <!-- Botón para ver datos completos -->
+                                    <button 
+                                        type="button" 
+                                        class="debug-button" 
+                                        (click)="mostrarDatosExperiencia(exp); $event.stopPropagation();">
+                                        <i class="fas fa-code"></i> Ver datos completos
+                                    </button>
 
                                     <!-- Documento y acciones -->
                                     <div class="experience-actions">
@@ -598,3 +609,22 @@
     </app-experiencia-container>
   </div>
 </div>
+
+<style>
+/* Estilos para el badge de documento */
+.document-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: #4caf50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.document-badge i {
+    margin-right: 4px;
+}
+</style>

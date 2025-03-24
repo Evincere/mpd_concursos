@@ -6,12 +6,11 @@ import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.Conte
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
+@Component
 public interface ContestEntityMapper {
-
-    ContestEntityMapper INSTANCE = Mappers.getMapper(ContestEntityMapper.class);
 
     @Mapping(target = "id", source = "id")
     @Mapping(target = "status", source = "status", qualifiedByName = "statusToString")

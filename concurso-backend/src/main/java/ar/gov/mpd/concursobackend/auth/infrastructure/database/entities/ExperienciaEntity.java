@@ -5,35 +5,23 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
+/**
+ * Esta clase se ha dejado de utilizar en favor de ExperienceEntity.
+ * Se mantiene por compatibilidad pero ya no se mapea a ninguna tabla.
+ * 
+ * @deprecated usar ExperienceEntity en su lugar
+ */
 @Getter
 @Setter
-@Table(name = "experiencia")
+// Eliminamos el mapeo a la tabla
 public class ExperienciaEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false)
     private String empresa;
-
-    @Column(nullable = false)
     private String cargo;
-
-    @Column(name = "fecha_inicio", nullable = false)
     private LocalDate fechaInicio;
-
-    @Column(name = "fecha_fin")
     private LocalDate fechaFin;
-
-    @Column
     private String descripcion;
-
-    @Column
     private String comentario;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
     private UserEntity user;
 
     public ExperienciaEntity() {

@@ -1,5 +1,6 @@
 package ar.gov.mpd.concursobackend.education.infrastructure.controller;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -96,15 +97,43 @@ public class EducationController {
     @PostMapping(value = "/{id}/documento", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<EducationResponseDto> uploadDocument(
             @PathVariable UUID id,
-            @RequestParam("file") MultipartFile file) throws IOException {
-        log.info("Solicitud para subir un documento para el registro de educación: {}", id);
-        
-        if (file.isEmpty()) {
-            log.warn("Error al subir archivo vacío para el registro de educación: {}", id);
-            return ResponseEntity.badRequest().build();
+            @RequestParam("file") MultipartFile file) {
+        try {
+            log.info("=========== INICIO uploadDocument (Educación) ===========");
+            log.info("Recibiendo solicitud para subir documento para educación con ID: {}", id);
+            log.info("Nombre del archivo: {}, Tamaño: {} bytes, Tipo de contenido: {}, ¿Está vacío?: {}",
+                    file.getOriginalFilename(), file.getSize(), file.getContentType(), file.isEmpty());
+            
+            if (file.isEmpty()) {
+                log.error("Error: El archivo está vacío");
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Crear una copia del archivo en memoria para evitar problemas de streaming
+            byte[] fileBytes = file.getBytes();
+            log.info("Archivo copiado a memoria correctamente. Tamaño en bytes: {}", fileBytes.length);
+            
+            // Usar ByteArrayInputStream en lugar del InputStream original
+            try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(fileBytes)) {
+                // Llamar al servicio para guardar el documento
+                log.info("Llamando a educationService.uploadDocument con ByteArrayInputStream...");
+                EducationResponseDto updatedEducation = educationService.uploadDocument(
+                        id, 
+                        byteArrayInputStream, 
+                        file.getOriginalFilename());
+                
+                log.info("Documento procesado correctamente. URL del documento: {}", 
+                        updatedEducation.getDocumentUrl());
+                log.info("=========== FIN uploadDocument (Educación) ===========");
+                
+                return ResponseEntity.ok(updatedEducation);
+            }
+        } catch (IOException ex) {
+            log.error("Error de E/S al procesar el archivo para la educación con ID: {}", id, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception ex) {
+            log.error("Error inesperado al subir documento para educación con ID: {}", id, ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        
-        EducationResponseDto updatedEducation = educationService.uploadDocument(id, file.getInputStream(), file.getOriginalFilename());
-        return ResponseEntity.ok(updatedEducation);
     }
 } 

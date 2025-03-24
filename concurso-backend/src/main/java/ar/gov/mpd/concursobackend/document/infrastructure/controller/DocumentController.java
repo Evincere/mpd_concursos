@@ -1,7 +1,10 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.core.io.InputStreamResource;
@@ -59,10 +62,53 @@ public class DocumentController {
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<DocumentResponse> uploadDocument(
             @RequestParam("file") MultipartFile file,
-            @RequestParam("tipoDocumentoId") String documentTypeId,
-            @RequestParam(value = "comentarios", required = false) String comments) {
+            @RequestParam(value = "tipoDocumentoId", required = false) String documentTypeId,
+            @RequestParam(value = "comentarios", required = false) String comments,
+            @RequestParam(value = "referenciaId", required = false) String referenciaId,
+            @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia) {
 
         try {
+            log.debug("Recibiendo solicitud para subir documento. Type: {}, Ref: {}, RefType: {}",
+                    documentTypeId, referenciaId, tipoReferencia);
+
+            // Si es un documento de experiencia laboral
+            if (tipoReferencia != null && tipoReferencia.equals("EXPERIENCIA") && referenciaId != null) {
+                try {
+                    UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
+                    UUID experienciaUUID = UUID.fromString(referenciaId);
+
+                    log.debug("Procesando documento de experiencia laboral. userId: {}, experienciaId: {}",
+                            userId, experienciaUUID);
+
+                    // Usar el método saveDocument para documentos de experiencia
+                    String documentUrl = documentService.saveDocument(
+                            file.getInputStream(),
+                            file.getOriginalFilename(),
+                            experienciaUUID,
+                            userId);
+
+                    log.debug("Documento de experiencia guardado correctamente. URL: {}", documentUrl);
+
+                    DocumentResponse response = DocumentResponse.builder()
+                            .id(UUID.randomUUID().toString()) // ID temporal para mantener compatibilidad de respuesta
+                            .mensaje("Documento de experiencia cargado correctamente")
+                            .documento(DocumentDto.builder()
+                                    .nombreArchivo(file.getOriginalFilename())
+                                    .contentType(file.getContentType())
+                                    .estado("UPLOADED")
+                                    .comentarios("Documento de experiencia laboral")
+                                    .fechaCarga(LocalDateTime.now())
+                                    .build())
+                            .build();
+
+                    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+                } catch (Exception e) {
+                    log.error("Error al procesar documento de experiencia", e);
+                    throw e; // Re-lanzar para el catch externo
+                }
+            }
+
+            // Procesamiento normal para otros tipos de documentos
             DocumentUploadRequest request = DocumentUploadRequest.builder()
                     .documentTypeId(documentTypeId)
                     .fileName(file.getOriginalFilename())
@@ -80,6 +126,53 @@ public class DocumentController {
         } catch (IOException e) {
             log.error("Error uploading document", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            log.error("Error inesperado al subir documento", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/experiencias/{experienciaId}/documento")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Map<String, String>> uploadExperienceDocument(
+            @PathVariable("experienciaId") String experienciaId,
+            @RequestParam("file") MultipartFile file) {
+
+        try {
+            log.info("Recibiendo solicitud para subir documento de experiencia con ID: {}", experienciaId);
+
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "El archivo está vacío"));
+            }
+
+            // Obtener el ID del usuario autenticado
+            String userIdStr = securityUtils.getCurrentUserId();
+            if (userIdStr == null) {
+                log.error("No se pudo obtener el ID del usuario actual");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "Usuario no autenticado"));
+            }
+
+            UUID userId = UUID.fromString(userIdStr);
+            log.info("ID de usuario encontrado: {}", userId);
+
+            String documentUrl = documentService.saveDocument(
+                    file.getInputStream(),
+                    file.getOriginalFilename(),
+                    UUID.fromString(experienciaId),
+                    userId);
+
+            log.info("Documento de experiencia subido correctamente: {}", documentUrl);
+
+            return ResponseEntity.ok(Collections.singletonMap("url", documentUrl));
+        } catch (IOException e) {
+            log.error("Error al procesar el archivo: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error al procesar el archivo: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error inesperado al subir documento de experiencia: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error inesperado: " + e.getMessage()));
         }
     }
 
