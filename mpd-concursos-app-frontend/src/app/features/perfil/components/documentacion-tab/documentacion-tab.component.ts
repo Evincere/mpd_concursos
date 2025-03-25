@@ -476,7 +476,57 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   isLoading = true;
   documentosUsuario: DocumentoUsuario[] = [];
   tiposDocumento: TipoDocumento[] = [];
-  documentosRequeridos: TipoDocumento[] = [];
+  documentosRequeridos: TipoDocumento[] = [
+    {
+      id: 'dni-frente',
+      nombre: 'DNI (Frente)',
+      descripcion: 'Documento Nacional de Identidad - Lado frontal',
+      requerido: true,
+      orden: 1
+    },
+    {
+      id: 'dni-dorso',
+      nombre: 'DNI (Dorso)',
+      descripcion: 'Documento Nacional de Identidad - Lado posterior',
+      requerido: true,
+      orden: 2
+    },
+    {
+      id: 'cuil',
+      nombre: 'Constancia de CUIL',
+      descripcion: 'Constancia de CUIL actualizada',
+      requerido: true,
+      orden: 3
+    },
+    {
+      id: 'antecedentes-penales',
+      nombre: 'Certificado de Antecedentes Penales',
+      descripcion: 'Certificado vigente con antigüedad no mayor a 90 días desde su emisión',
+      requerido: true,
+      orden: 4
+    },
+    {
+      id: 'certificado-profesional',
+      nombre: 'Certificado de Ejercicio Profesional',
+      descripcion: 'Certificado expedido por la Oficina de Profesionales de la SCJ o Colegio de Abogados, o certificación de servicios del Poder Judicial. Antigüedad máxima: 6 meses',
+      requerido: true,
+      orden: 5
+    },
+    {
+      id: 'certificado-sanciones',
+      nombre: 'Certificado de Sanciones Disciplinarias',
+      descripcion: 'Certificado que acredite no registrar sanciones disciplinarias y/o en trámite. Antigüedad máxima: 6 meses',
+      requerido: true,
+      orden: 6
+    },
+    {
+      id: 'certificado-ley-micaela',
+      nombre: 'Certificado Ley Micaela',
+      descripcion: 'Certificado de capacitación en Ley Micaela (opcional)',
+      requerido: false,
+      orden: 7
+    }
+  ];
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
   columnas: string[] = ['tipo', 'nombre', 'fecha', 'estado', 'acciones'];
@@ -509,7 +559,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       next: (tipos) => {
         console.log('[DocumentacionTab] Tipos de documento obtenidos:', tipos);
         this.tiposDocumento = tipos;
-        this.documentosRequeridos = tipos.filter(t => t.requerido);
         console.log('[DocumentacionTab] Documentos requeridos:', this.documentosRequeridos);
 
         // Cargar documentos del usuario
