@@ -1,0 +1,442 @@
+<div class="educacion-container">
+  <div class="wizard-header">
+    <!-- Título dinámico según el paso actual -->
+    <h3 class="wizard-title">
+      <ng-container [ngSwitch]="pasoActual">
+        <ng-container *ngSwitchCase="pasoWizard.SELECCION_TIPO">Seleccione Tipo de Educación</ng-container>
+        <ng-container *ngSwitchCase="pasoWizard.INFORMACION_BASICA">Información Básica</ng-container>
+        <ng-container *ngSwitchCase="pasoWizard.INFORMACION_ESPECIFICA">Información Específica</ng-container>
+        <ng-container *ngSwitchCase="pasoWizard.DOCUMENTACION">Documentación</ng-container>
+        <ng-container *ngSwitchCase="pasoWizard.RESUMEN">Confirmar Información</ng-container>
+      </ng-container>
+    </h3>
+
+    <!-- Indicador de progreso -->
+    <div class="wizard-steps">
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.SELECCION_TIPO, 'complete': pasoActual > pasoWizard.SELECCION_TIPO}">1</div>
+      <div class="step-divider"></div>
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.INFORMACION_BASICA, 'complete': pasoActual > pasoWizard.INFORMACION_BASICA}">2</div>
+      <div class="step-divider"></div>
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.INFORMACION_ESPECIFICA, 'complete': pasoActual > pasoWizard.INFORMACION_ESPECIFICA}">3</div>
+      <div class="step-divider"></div>
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.DOCUMENTACION, 'complete': pasoActual > pasoWizard.DOCUMENTACION}">4</div>
+      <div class="step-divider"></div>
+      <div class="step" [ngClass]="{'active': pasoActual >= pasoWizard.RESUMEN, 'complete': pasoActual > pasoWizard.RESUMEN}">5</div>
+    </div>
+  </div>
+
+  <!-- Contenido principal del wizard - Se muestra solo en estado inicial -->
+  <div *ngIf="(estado$ | async) === estadoFormulario.INICIAL" class="wizard-content">
+    <!-- Mostrar mensaje de error si existe -->
+    <div *ngIf="error$ | async as error" class="alert alert-danger">
+      {{ error }}
+    </div>
+
+    <!-- Paso 1: Selección de Tipo -->
+    <div *ngIf="pasoActual === pasoWizard.SELECCION_TIPO && formularioTipo" [formGroup]="formularioTipo" class="step-content">
+      <div class="form-group">
+        <label for="tipoEducacion">Tipo de Educación</label>
+        <select id="tipoEducacion" formControlName="tipo" class="form-select">
+          <option value="">Seleccione un tipo de educación</option>
+          <option *ngFor="let tipo of tiposEducacion" [value]="tipo">{{ tipo }}</option>
+        </select>
+        <div *ngIf="formularioTipo.get('tipo')?.touched && formularioTipo.get('tipo')?.invalid" class="error-message">
+          <span *ngIf="formularioTipo.get('tipo')?.errors?.['required']">Seleccione un tipo de educación</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2: Información Básica -->
+    <div *ngIf="pasoActual === pasoWizard.INFORMACION_BASICA && formularioBase" [formGroup]="formularioBase" class="step-content">
+      <div class="form-group">
+        <label for="estadoEducacion">Estado</label>
+        <div class="estado-wrapper">
+          <select id="estadoEducacion" formControlName="estado" class="form-select" [ngClass]="{'selected': tieneValor(formularioBase, 'estado')}">
+            <option value="">Seleccione el estado</option>
+            <option value="finalizado" class="estado-option">Finalizado</option>
+            <option value="en proceso" class="estado-option">En proceso</option>
+          </select>
+          <div *ngIf="tieneValor(formularioBase, 'estado')" class="estado-indicador" [ngClass]="{'finalizado': getValorFormulario(formularioBase, 'estado') === 'finalizado', 'en-proceso': getValorFormulario(formularioBase, 'estado') === 'en proceso'}">
+            <span>{{getValorFormulario(formularioBase, 'estado')}}</span>
+          </div>
+        </div>
+        <div *ngIf="formularioBase.get('estado')?.touched && formularioBase.get('estado')?.invalid" class="error-message">
+          <span *ngIf="formularioBase.get('estado')?.errors?.['required']">El estado es obligatorio</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="tituloEducacion">Título</label>
+        <input id="tituloEducacion" type="text" formControlName="titulo" class="form-control" placeholder="Ingrese título como figura en diploma y analítico">
+        <div *ngIf="formularioBase.get('titulo')?.touched && formularioBase.get('titulo')?.invalid" class="error-message">
+          <span *ngIf="formularioBase.get('titulo')?.errors?.['required']">El título es obligatorio</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="institucionEducacion">Institución</label>
+        <input id="institucionEducacion" type="text" formControlName="institucion" class="form-control" placeholder="Ingrese nombre de Institución">
+        <div *ngIf="formularioBase.get('institucion')?.touched && formularioBase.get('institucion')?.invalid" class="error-message">
+          <span *ngIf="formularioBase.get('institucion')?.errors?.['required']">La institución es obligatoria</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 3: Información Específica (varía según tipo) -->
+    <div *ngIf="pasoActual === pasoWizard.INFORMACION_ESPECIFICA && formularioEspecifico" [formGroup]="formularioEspecifico" class="step-content">
+      <!-- Campos específicos para Carrera de Nivel Superior y Carrera de Grado -->
+      <ng-container *ngIf="formularioTipo && (formularioTipo.get('tipo')?.value === 'Carrera de Nivel Superior' || formularioTipo.get('tipo')?.value === 'Carrera de grado')">
+        <div class="form-group">
+          <label for="duracionAnios">Duración de carrera (años)</label>
+          <input id="duracionAnios" type="number" formControlName="duracionAnios" class="form-control" placeholder="Ingrese años">
+          <div *ngIf="formularioEspecifico.get('duracionAnios')?.touched && formularioEspecifico.get('duracionAnios')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('duracionAnios')?.errors?.['required']">La duración es obligatoria</span>
+            <span *ngIf="formularioEspecifico.get('duracionAnios')?.errors?.['min']">La duración debe ser mayor a 0</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="promedio">Promedio</label>
+          <input id="promedio" type="number" step="0.01" formControlName="promedio" class="form-control" placeholder="Ingrese promedio de carrera">
+          <div *ngIf="formularioEspecifico.get('promedio')?.touched && formularioEspecifico.get('promedio')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('promedio')?.errors?.['required']">El promedio es obligatorio</span>
+            <span *ngIf="formularioEspecifico.get('promedio')?.errors?.['min']">El promedio debe ser mayor o igual a 0</span>
+            <span *ngIf="formularioEspecifico.get('promedio')?.errors?.['max']">El promedio debe ser menor o igual a 10</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaEmisionCarrera">Fecha de emisión de título</label>
+          <input id="fechaEmisionCarrera" type="date" formControlName="fechaEmision" class="form-control">
+        </div>
+      </ng-container>
+
+      <!-- Campos específicos para Posgrados -->
+      <ng-container *ngIf="formularioTipo && (formularioTipo.get('tipo')?.value === 'Posgrado: especialización' || formularioTipo.get('tipo')?.value === 'Posgrado: maestría' || formularioTipo.get('tipo')?.value === 'Posgrado: doctorado')">
+        <div class="form-group">
+          <label for="temaTesis">Tema de tesis</label>
+          <textarea id="temaTesis" formControlName="temaTesis" class="form-control" placeholder="Ingrese tema de tesis" rows="3"></textarea>
+          <div *ngIf="formularioEspecifico.get('temaTesis')?.touched && formularioEspecifico.get('temaTesis')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('temaTesis')?.errors?.['required']">El tema de tesis es obligatorio</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaEmisionPosgrado">Fecha de emisión de título</label>
+          <input id="fechaEmisionPosgrado" type="date" formControlName="fechaEmision" class="form-control">
+        </div>
+      </ng-container>
+
+      <!-- Campos específicos para Diplomatura y Curso -->
+      <ng-container *ngIf="formularioTipo && (formularioTipo.get('tipo')?.value === 'Diplomatura' || formularioTipo.get('tipo')?.value === 'Curso de Capacitación')">
+        <div class="form-group">
+          <label for="cargaHoraria">Carga horaria</label>
+          <input id="cargaHoraria" type="number" formControlName="cargaHoraria" class="form-control" placeholder="Ingrese cantidad de horas">
+          <div *ngIf="formularioEspecifico.get('cargaHoraria')?.touched && formularioEspecifico.get('cargaHoraria')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('cargaHoraria')?.errors?.['required']">La carga horaria es obligatoria</span>
+            <span *ngIf="formularioEspecifico.get('cargaHoraria')?.errors?.['min']">La carga horaria debe ser mayor a 0</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tuvoEvaluacion">¿Tuvo evaluación final?</label>
+          <div class="form-check">
+            <input id="tuvoEvaluacionSi" type="radio" [value]="true" formControlName="tuvoEvaluacionFinal" class="form-check-input">
+            <label for="tuvoEvaluacionSi" class="form-check-label">Sí</label>
+          </div>
+          <div class="form-check">
+            <input id="tuvoEvaluacionNo" type="radio" [value]="false" formControlName="tuvoEvaluacionFinal" class="form-check-input">
+            <label for="tuvoEvaluacionNo" class="form-check-label">No</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="fechaEmisionCurso">Fecha de emisión de certificado</label>
+          <input id="fechaEmisionCurso" type="date" formControlName="fechaEmision" class="form-control">
+        </div>
+      </ng-container>
+
+      <!-- Campos específicos para Actividad Científica -->
+      <ng-container *ngIf="formularioTipo && formularioTipo.get('tipo')?.value === 'Actividad Científica (investigación y/o difusión)'">
+        <div class="form-group">
+          <label for="tipoActividad">Tipo de actividad</label>
+          <select id="tipoActividad" formControlName="tipoActividad" class="form-control">
+            <option value="">Seleccione tipo de actividad</option>
+            <option value="investigación">Investigación</option>
+            <option value="ponencia">Ponencia</option>
+            <option value="publicación">Publicación</option>
+          </select>
+          <div *ngIf="formularioEspecifico.get('tipoActividad')?.touched && formularioEspecifico.get('tipoActividad')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('tipoActividad')?.errors?.['required']">El tipo de actividad es obligatorio</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="tema">Tema</label>
+          <textarea id="tema" formControlName="tema" class="form-control" placeholder="Ingrese tema" rows="2"></textarea>
+          <div *ngIf="formularioEspecifico.get('tema')?.touched && formularioEspecifico.get('tema')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('tema')?.errors?.['required']">El tema es obligatorio</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="caracter">Carácter</label>
+          <select id="caracter" formControlName="caracter" class="form-control">
+            <option value="">Seleccione carácter</option>
+            <option value="ayudante-participante">Ayudante-participante</option>
+            <option value="autor-disertante-panelista-exponente">Autor-disertante-panelista-exponente</option>
+          </select>
+          <div *ngIf="formularioEspecifico.get('caracter')?.touched && formularioEspecifico.get('caracter')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('caracter')?.errors?.['required']">El carácter es obligatorio</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="lugarFecha">Lugar y fecha de exposición o Publicación</label>
+          <input id="lugarFecha" type="text" formControlName="lugarFechaExposicion" class="form-control">
+          <div *ngIf="formularioEspecifico.get('lugarFechaExposicion')?.touched && formularioEspecifico.get('lugarFechaExposicion')?.invalid" class="error-message">
+            <span *ngIf="formularioEspecifico.get('lugarFechaExposicion')?.errors?.['required']">El lugar y fecha son obligatorios</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="comentarios">Comentarios</label>
+          <textarea id="comentarios" formControlName="comentarios" class="form-control" placeholder="Ingrese comentarios" rows="2"></textarea>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Paso 4: Documentación -->
+    <div *ngIf="pasoActual === pasoWizard.DOCUMENTACION && formularioDocumentos" [formGroup]="formularioDocumentos" class="step-content">
+      <div class="form-group">
+        <label for="documentoPdf">Documento PDF</label>
+        <div class="custom-file">
+          <input type="file" id="documentoPdf" class="custom-file-input" accept=".pdf" (change)="onArchivoSeleccionado($event)">
+          <label class="custom-file-label" for="documentoPdf">
+            {{ archivoSeleccionado ? archivoSeleccionado.name : 'Seleccionar archivo...' }}
+          </label>
+        </div>
+        <small class="form-text text-muted">
+          <ng-container [ngSwitch]="formularioTipo.get('tipo')?.value">
+            <ng-container *ngSwitchCase="'Carrera de Nivel Superior'">Cargar documento PDF con título y analítico / provisorio</ng-container>
+            <ng-container *ngSwitchCase="'Carrera de grado'">Cargar documento PDF con título y analítico / provisorio</ng-container>
+            <ng-container *ngSwitchCase="'Posgrado: especialización'">Cargar documento PDF con título y analítico / provisorio</ng-container>
+            <ng-container *ngSwitchCase="'Posgrado: maestría'">Cargar documento PDF con título y analítico / provisorio</ng-container>
+            <ng-container *ngSwitchCase="'Posgrado: doctorado'">Cargar documento PDF con título y analítico / provisorio</ng-container>
+            <ng-container *ngSwitchCase="'Diplomatura'">Cargar documento PDF con certificado</ng-container>
+            <ng-container *ngSwitchCase="'Curso de Capacitación'">Cargar documento PDF con certificado</ng-container>
+            <ng-container *ngSwitchCase="'Actividad Científica (investigación y/o difusión)'">Cargar documento PDF con probanza</ng-container>
+          </ng-container>
+        </small>
+      </div>
+    </div>
+
+    <!-- Paso 5: Resumen -->
+    <div *ngIf="pasoActual === pasoWizard.RESUMEN" class="step-content">
+      <div class="resumen-educacion">
+        <h4>Resumen de la Información</h4>
+
+        <div class="resumen-seccion">
+          <h5>Tipo de Educación</h5>
+          <p>{{ getTipoSeleccionado() }}</p>
+        </div>
+
+        <div class="resumen-seccion">
+          <h5>Información Básica</h5>
+          <div class="resumen-campo">
+            <span class="campo-label">Estado:</span>
+            <span class="campo-valor">{{ getValorFormulario(formularioBase, 'estado') }}</span>
+          </div>
+          <div class="resumen-campo">
+            <span class="campo-label">Título:</span>
+            <span class="campo-valor">{{ getValorFormulario(formularioBase, 'titulo') }}</span>
+          </div>
+          <div class="resumen-campo">
+            <span class="campo-label">Institución:</span>
+            <span class="campo-valor">{{ getValorFormulario(formularioBase, 'institucion') }}</span>
+          </div>
+        </div>
+
+        <!-- Información específica según tipo -->
+        <div class="resumen-seccion">
+          <h5>Información Específica</h5>
+
+          <!-- Carrera de Nivel Superior y Carrera de Grado -->
+          <ng-container *ngIf="formularioTipo && (formularioTipo.get('tipo')?.value === 'Carrera de Nivel Superior' || formularioTipo.get('tipo')?.value === 'Carrera de grado')">
+            <div class="resumen-campo">
+              <span class="campo-label">Duración (años):</span>
+              <span class="campo-valor campo-duracion">
+                <span class="valor-numerico">{{ getValorFormulario(formularioEspecifico, 'duracionAnios') }}</span>
+                <span *ngIf="getValorFormulario(formularioEspecifico, 'duracionAnios') == 1">año</span>
+                <span *ngIf="getValorFormulario(formularioEspecifico, 'duracionAnios') != 1">años</span>
+              </span>
+            </div>
+            <div class="resumen-campo">
+              <span class="campo-label">Promedio:</span>
+              <span class="campo-valor campo-promedio">
+                <span class="valor-numerico">{{ getValorFormulario(formularioEspecifico, 'promedio') }}</span>
+              </span>
+            </div>
+            <div *ngIf="tieneValor(formularioEspecifico, 'fechaEmision')" class="resumen-campo campo-fecha">
+              <span class="campo-label">Fecha de emisión:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'fechaEmision') | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </ng-container>
+
+          <!-- Posgrados -->
+          <ng-container *ngIf="formularioTipo && (formularioTipo.get('tipo')?.value === 'Posgrado: especialización' || formularioTipo.get('tipo')?.value === 'Posgrado: maestría' || formularioTipo.get('tipo')?.value === 'Posgrado: doctorado')">
+            <div class="resumen-campo">
+              <span class="campo-label">Tema de tesis:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'temaTesis') }}</span>
+            </div>
+            <div *ngIf="tieneValor(formularioEspecifico, 'fechaEmision')" class="resumen-campo">
+              <span class="campo-label">Fecha de emisión:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'fechaEmision') | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </ng-container>
+
+          <!-- Diplomatura y Curso -->
+          <ng-container *ngIf="formularioTipo && (formularioTipo.get('tipo')?.value === 'Diplomatura' || formularioTipo.get('tipo')?.value === 'Curso de Capacitación')">
+            <div class="resumen-campo">
+              <span class="campo-label">Carga horaria:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'cargaHoraria') }} horas</span>
+            </div>
+            <div class="resumen-campo">
+              <span class="campo-label">Evaluación final:</span>
+              <span class="campo-valor">{{ getValorBooleano(formularioEspecifico, 'tuvoEvaluacionFinal') ? 'Sí' : 'No' }}</span>
+            </div>
+            <div *ngIf="tieneValor(formularioEspecifico, 'fechaEmision')" class="resumen-campo">
+              <span class="campo-label">Fecha de emisión:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'fechaEmision') | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </ng-container>
+
+          <!-- Actividad Científica -->
+          <ng-container *ngIf="formularioTipo && formularioTipo.get('tipo')?.value === 'Actividad Científica (investigación y/o difusión)'">
+            <div class="resumen-campo">
+              <span class="campo-label">Tipo de actividad:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'tipoActividad') }}</span>
+            </div>
+            <div class="resumen-campo">
+              <span class="campo-label">Tema:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'tema') }}</span>
+            </div>
+            <div class="resumen-campo">
+              <span class="campo-label">Carácter:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'caracter') }}</span>
+            </div>
+            <div class="resumen-campo">
+              <span class="campo-label">Lugar y fecha:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'lugarFechaExposicion') }}</span>
+            </div>
+            <div *ngIf="tieneValor(formularioEspecifico, 'comentarios')" class="resumen-campo">
+              <span class="campo-label">Comentarios:</span>
+              <span class="campo-valor">{{ getValorFormulario(formularioEspecifico, 'comentarios') }}</span>
+            </div>
+          </ng-container>
+        </div>
+
+        <div class="resumen-seccion">
+          <h5>Documentación</h5>
+          <div class="resumen-campo">
+            <span class="campo-label">Documento:</span>
+            <span class="campo-valor">{{ archivoSeleccionado ? archivoSeleccionado.name : 'No se ha seleccionado documento' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="(estado$ | async) === estadoFormulario.CARGANDO" class="wizard-content estado-cargando">
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <h4>Guardando información de educación</h4>
+      <p>Por favor espere mientras procesamos su solicitud...</p>
+    </div>
+  </div>
+
+  <!-- Estado de éxito -->
+  <div *ngIf="(estado$ | async) === estadoFormulario.GUARDADO_EXITOSO" class="wizard-content estado-exito">
+    <div class="exito-container">
+      <div class="exito-icono">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+        </svg>
+      </div>
+      <h4>¡Educación guardada con éxito!</h4>
+      <p *ngIf="mensajeExito$ | async as mensaje">{{ mensaje }}</p>
+      
+      <div class="resumen-guardado" *ngIf="educacionGuardadaResultado">
+        <h5>Resumen de la información guardada:</h5>
+        <div class="resumen-campo">
+          <span class="campo-label">Tipo:</span>
+          <span class="campo-valor">{{ educacionGuardadaResultado.tipo }}</span>
+        </div>
+        <div class="resumen-campo">
+          <span class="campo-label">Título:</span>
+          <span class="campo-valor">{{ educacionGuardadaResultado.titulo }}</span>
+        </div>
+        <div class="resumen-campo">
+          <span class="campo-label">Estado:</span>
+          <span class="campo-valor">{{ educacionGuardadaResultado.estado }}</span>
+        </div>
+      </div>
+      
+      <div class="acciones-posteriores">
+        <button type="button" class="btn btn-primary" (click)="agregarOtraEducacion()">
+          Agregar otra educación
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="cerrarDespuesDeGuardado()">
+          Volver al perfil
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de error -->
+  <div *ngIf="(estado$ | async) === estadoFormulario.ERROR" class="wizard-content estado-error">
+    <div class="error-container">
+      <div class="error-icono">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+        </svg>
+      </div>
+      <h4>Error al guardar la educación</h4>
+      <p *ngIf="error$ | async as error">{{ error }}</p>
+      
+      <div class="acciones-posteriores">
+        <button type="button" class="btn btn-primary" (click)="reintentar()">
+          Reintentar
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="cerrar.emit()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de navegación - Se muestran solo en estado inicial -->
+  <div *ngIf="(estado$ | async) === estadoFormulario.INICIAL" class="wizard-footer">
+    <div class="button-group">
+      <button *ngIf="pasoActual > 0" type="button" class="btn btn-secondary" (click)="anteriorPaso()">
+        Anterior
+      </button>
+
+      <button *ngIf="pasoActual < pasoWizard.RESUMEN" type="button" class="btn btn-primary" (click)="siguientePaso()">
+        Siguiente
+      </button>
+
+      <button *ngIf="pasoActual === pasoWizard.RESUMEN" type="button" class="btn btn-success" (click)="guardarEducacion()" [disabled]="cargando$ | async">
+        <span *ngIf="cargando$ | async" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Guardar
+      </button>
+    </div>
+
+    <button type="button" class="btn btn-outline-danger" (click)="cancelar()">
+      Cancelar
+    </button>
+  </div>
+</div>

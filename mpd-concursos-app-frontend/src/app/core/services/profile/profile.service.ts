@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 export interface Experiencia {
+  id?: string;
   empresa: string;
   cargo: string;
   fechaInicio: Date;
@@ -11,6 +12,7 @@ export interface Experiencia {
   descripcion?: string;
   certificadoId?: string;
   comentario?: string;
+  documentUrl?: string;
 }
 
 export enum TipoEducacion {
@@ -48,25 +50,25 @@ export interface Educacion {
   institucion: string;
   fechaEmision?: Date;
   documentoId?: string;
-  
+
   // Campos específicos según el tipo
   // Para carreras
   duracionAnios?: number;
   promedio?: number;
-  
+
   // Para posgrados
   temaTesis?: string;
-  
+
   // Para diplomatura y cursos
   cargaHoraria?: number;
   evaluacionFinal?: boolean;
-  
+
   // Para actividad científica
   tipoActividad?: TipoActividadCientifica;
   caracter?: CaracterActividadCientifica;
   lugarFechaExposicion?: string;
   comentarios?: string;
-  
+
   // Campos para backward compatibility
   descripcion?: string;
   fechaInicio?: Date;
@@ -98,7 +100,6 @@ export interface UserProfile {
 })
 export class ProfileService {
   private apiUrl = `${environment.apiUrl}/users/profile`;
-  private perfilApiUrl = `${environment.apiUrl}/api/perfil`;
 
   constructor(private http: HttpClient) { }
 
@@ -107,22 +108,22 @@ export class ProfileService {
   }
 
   updateUserProfile(profile: Partial<UserProfile>): Observable<UserProfile> {
+    // Asegurarse de que las experiencias sean un array
+    if (profile.experiencias === undefined) {
+      profile.experiencias = [];
+    }
+    
+    // Asegurarse de que la educación sea un array
+    if (profile.educacion === undefined) {
+      profile.educacion = [];
+    }
+    
+    // Asegurarse de que las habilidades sean un array
+    if (profile.habilidades === undefined) {
+      profile.habilidades = [];
+    }
+    
+    console.log('Enviando perfil actualizado al servidor:', profile);
     return this.http.put<UserProfile>(this.apiUrl, profile);
-  }
-
-  getEducacion(): Observable<Educacion[]> {
-    return this.http.get<Educacion[]>(`${this.perfilApiUrl}/educacion`);
-  }
-
-  guardarEducacion(educacion: Educacion[]): Observable<any> {
-    return this.http.put(`${this.perfilApiUrl}/educacion`, educacion);
-  }
-
-  updateEducacion(educacion: Educacion[]): Observable<any> {
-    return this.http.put(`${this.perfilApiUrl}/educacion`, educacion);
-  }
-
-  deleteEducacion(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.perfilApiUrl}/educacion/${id}`);
   }
 }

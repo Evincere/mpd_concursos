@@ -1,0 +1,633 @@
+.experiencia-container {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(var(--surface-color-rgb), 0.7);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.wizard-header {
+  padding: 20px;
+  background: linear-gradient(to right, rgba(var(--primary-color-rgb), 0.15), transparent);
+  border-bottom: 1px solid var(--card-border);
+
+  .wizard-title {
+    margin: 0 0 20px 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .wizard-steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 600px;
+    margin: 0 auto;
+
+    .step {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--text-color);
+      position: relative;
+      z-index: 2;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid var(--card-border);
+
+      &.active {
+        background-color: var(--primary-color);
+        color: #fff;
+        transform: scale(1.1);
+        box-shadow: 0 0 12px rgba(var(--primary-color-rgb), 0.5);
+      }
+
+      &.complete {
+        background-color: #28a745;
+        color: #fff;
+      }
+    }
+
+    .step-divider {
+      flex-grow: 1;
+      height: 2px;
+      background-color: rgba(255, 255, 255, 0.1);
+      margin: 0 5px;
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  &:has(+ .wizard-content .wizard-step-content:nth-child(4)) {
+    background: linear-gradient(to right, rgba(var(--primary-color-rgb), 0.2), rgba(var(--primary-color-rgb), 0.05));
+
+    .wizard-title {
+      font-weight: 700;
+      color: white;
+    }
+  }
+}
+
+.wizard-content {
+  padding: 25px 30px;
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: calc(80vh - 180px);
+  color: var(--text-color);
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-color-rgb), 0.5);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(var(--primary-color-rgb), 0.7);
+    }
+  }
+
+  .wizard-step-content {
+    animation: fadeIn 0.3s ease;
+  }
+}
+
+// Mejoras para los campos de formulario
+.form-row {
+  margin-bottom: 20px;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.form-field {
+  width: 100%;
+  margin-bottom: 16px;
+
+  ::ng-deep {
+    .mat-form-field {
+      width: 100%;
+
+      .mat-form-field-wrapper {
+        margin-bottom: 0;
+        padding-bottom: 1.25em;
+      }
+
+      .mat-form-field-flex {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px !important;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.5) !important;
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+      }
+
+      &.mat-focused {
+        .mat-form-field-flex {
+          border-color: rgba(var(--primary-color-rgb), 0.7);
+          box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.25);
+          background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+      }
+
+      // Mensajes de validación
+      .mat-hint {
+        font-size: 0.8rem;
+        margin-top: 4px;
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .mat-error {
+        font-size: 0.8rem;
+        color: #ff5252;
+        background-color: rgba(255, 82, 82, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+        display: block;
+        border-left: 3px solid #ff5252;
+      }
+    }
+
+    // Estilos específicos para textareas
+    textarea.mat-input-element {
+      min-height: 120px !important;
+      line-height: 1.6;
+      padding: 12px 15px !important;
+      margin: 0 !important;
+      background-color: transparent;
+      resize: vertical;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+        font-style: italic;
+      }
+    }
+  }
+}
+
+.dates {
+  display: flex;
+  gap: 16px;
+
+  .form-field {
+    flex: 1;
+
+    ::ng-deep {
+      // Mejora para campos de fecha
+      .mat-form-field-flex {
+        padding: 0 12px !important;
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .mat-form-field-infix {
+        padding: 16px 0 !important;
+        border-top: 0;
+      }
+
+      input.mat-input-element {
+        padding: 8px 0 !important;
+        font-size: 1rem;
+
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.5);
+        }
+      }
+
+      .mat-datepicker-toggle {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.6) !important;
+
+        .mat-datepicker-toggle-default-icon {
+          width: 22px;
+          height: 22px;
+        }
+      }
+
+      // Mensajes de error
+      .mat-error {
+        font-size: 0.8rem;
+        color: #ff5252;
+        background-color: rgba(255, 82, 82, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+        display: block;
+        font-weight: 500;
+
+        i {
+          margin-right: 4px;
+        }
+      }
+
+      // Estilos para campos con error
+      &.mat-form-field-invalid {
+        .mat-form-field-flex {
+          border-color: rgba(255, 82, 82, 0.5);
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.description-field {
+  width: 100%;
+
+  ::ng-deep textarea.mat-input-element {
+    min-height: 100px;
+    line-height: 1.5;
+    padding: 8px 0;
+  }
+}
+
+.document-section {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+
+  h4 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(var(--primary-color-rgb), 0.2);
+  }
+
+  .hint {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid rgba(var(--primary-color-rgb), 0.4);
+  }
+}
+
+.file-upload-container {
+  margin: 15px 0;
+  min-height: 100px;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-color: rgba(var(--primary-color-rgb), 0.3);
+  }
+
+  .upload-hint {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+  }
+
+  button {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 10px 16px;
+    font-weight: 500;
+
+    i {
+      margin-right: 8px;
+    }
+  }
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(var(--primary-color-rgb), 0.2);
+
+  .file-info {
+    display: flex;
+    align-items: center;
+
+    .file-icon {
+      font-size: 1.5rem;
+      color: #f44336;
+      margin-right: 16px;
+    }
+
+    .file-name {
+      font-weight: 500;
+      color: white;
+    }
+  }
+}
+
+.upload-progress {
+  margin-top: 15px;
+
+  .progress-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 8px;
+    display: block;
+    font-weight: 500;
+    text-align: center;
+  }
+}
+
+.resumen-section {
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+
+  h4 {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(var(--primary-color-rgb), 0.2);
+  }
+}
+
+.resumen-lista {
+  margin-bottom: 20px;
+
+  ul {
+    list-style-type: none;
+    padding-left: 0;
+
+    li {
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: white;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      border-left: 3px solid rgba(var(--primary-color-rgb), 0.4);
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        border-left-color: var(--primary-color);
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+.confirmacion-mensaje {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: rgba(40, 167, 69, 0.1);
+  border-left: 4px solid #28a745;
+
+  p {
+    margin: 0;
+    color: #8bc34a;
+    font-weight: 500;
+    text-align: center;
+  }
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  button {
+    margin-left: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 8px 16px;
+    transition: all 0.3s ease;
+
+    &:first-child {
+      margin-left: 0;
+    }
+
+    &[disabled] {
+      opacity: 0.5;
+    }
+
+    &:not([disabled]):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    i {
+      margin-right: 6px;
+      margin-left: 6px;
+    }
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    p {
+      margin-top: 15px;
+      color: white;
+      font-weight: 500;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .experiencia-container {
+    max-height: 95vh;
+    border-radius: 8px;
+  }
+
+  .wizard-header {
+    padding: 15px;
+
+    .wizard-title {
+      font-size: 1.25rem;
+      margin-bottom: 15px;
+    }
+  }
+
+  .wizard-content {
+    padding: 15px;
+    max-height: calc(95vh - 170px);
+  }
+
+  .wizard-steps {
+    .step {
+      width: 30px;
+      height: 30px;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Estilos para inputs nativos tipo date y otros campos form-control
+.form-control {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  &:focus {
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.3);
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+  }
+
+  &[type="date"] {
+    padding-right: 15px;
+    appearance: none;
+    -webkit-appearance: none;
+
+    &::-webkit-calendar-picker-indicator {
+      filter: invert(0.8);
+      opacity: 0.6;
+      cursor: pointer;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+
+  &:is(textarea) {
+    min-height: 120px;
+    line-height: 1.6;
+    resize: vertical;
+    padding: 15px;
+    font-family: inherit;
+  }
+}
+
+// Estilos para labels nativos
+.form-field {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .error-message {
+    color: #ff5252;
+    font-size: 0.8rem;
+    background-color: rgba(255, 82, 82, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: block;
+    border-left: 3px solid #ff5252;
+
+    i {
+      margin-right: 4px;
+    }
+  }
+
+  .form-text {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    display: block;
+    font-style: italic;
+  }
+}

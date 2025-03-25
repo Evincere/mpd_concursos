@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 import ar.gov.mpd.concursobackend.auth.infrastructure.listener.UserRoleListener;
 import jakarta.persistence.Column;
@@ -49,6 +51,13 @@ public class UserEntity {
     @NotNull
     @Column(name = "last_name")
     private String lastName;
+
+    @Column
+    private String telefono;
+
+    @Column
+    private String direccion;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     @NotNull

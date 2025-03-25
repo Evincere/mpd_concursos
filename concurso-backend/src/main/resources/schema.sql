@@ -5,6 +5,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS experiencias;
+DROP TABLE IF EXISTS experience;
+DROP TABLE IF EXISTS education;
 DROP TABLE IF EXISTS educacion;
 DROP TABLE IF EXISTS habilidades;
 DROP TABLE IF EXISTS contests;
@@ -37,6 +39,8 @@ CREATE TABLE user_entity (
     cuit VARCHAR(255) UNIQUE,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
+    telefono VARCHAR(255),
+    direccion VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version BIGINT NOT NULL DEFAULT 0
 );
@@ -45,6 +49,39 @@ CREATE TABLE roles (
     id BINARY(16) PRIMARY KEY,
     name ENUM('ROLE_USER', 'ROLE_ADMIN') NOT NULL
 );
+
+-- Tabla antigua de experiencia (por compatibilidad)
+CREATE TABLE experiencia (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    empresa VARCHAR(255) NOT NULL,
+    cargo VARCHAR(255) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    descripcion TEXT,
+    comentario TEXT,
+    user_id BINARY(16) NOT NULL,
+    CONSTRAINT fk_experiencia_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
+);
+
+-- Índice para búsqueda rápida por usuario en tabla antigua
+CREATE INDEX idx_experiencia_user_id ON experiencia(user_id);
+
+-- Nueva tabla de experiencia con UUID como clave primaria
+CREATE TABLE experience (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16) NOT NULL,
+    company VARCHAR(255) NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    description TEXT,
+    comments TEXT,
+    document_url VARCHAR(255),
+    CONSTRAINT fk_experience_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
+);
+
+-- Índice para búsqueda rápida por usuario en nueva tabla
+CREATE INDEX idx_experience_user_id ON experience(user_id);
 
 CREATE TABLE contests (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -203,6 +240,38 @@ CREATE TABLE documents (
     upload_date DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user_entity(id),
     FOREIGN KEY (document_type_id) REFERENCES document_types(id)
+);
+
+-- Tabla de educación
+CREATE TABLE education (
+    id BINARY(16) PRIMARY KEY,
+    user_id BINARY(16) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    institution VARCHAR(255) NOT NULL,
+    issue_date DATE,
+    document_url VARCHAR(500),
+    
+    -- Campos para Carreras de Nivel Superior y Grado
+    duration_years INT,
+    average DOUBLE,
+    
+    -- Campos para Posgrados
+    thesis_topic VARCHAR(255),
+    
+    -- Campos para Diplomaturas y Cursos de Capacitación
+    hourly_load INT,
+    had_final_evaluation BOOLEAN,
+    
+    -- Campos para Actividad Científica
+    activity_type VARCHAR(50),
+    topic VARCHAR(255),
+    activity_role VARCHAR(100),
+    exposition_place_date VARCHAR(255),
+    comments TEXT,
+    
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
 );
 
 

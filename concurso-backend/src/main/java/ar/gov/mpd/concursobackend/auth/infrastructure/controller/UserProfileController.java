@@ -13,9 +13,13 @@ import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
+import ar.gov.mpd.concursobackend.experience.application.service.ExperienceService;
+import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,6 +31,7 @@ public class UserProfileController {
         private final UserService userService;
         private final SecurityUtils securityUtils;
         private final UserProfileMapper mapper;
+        private final ExperienceService experienceService;
 
         @GetMapping("/profile")
         @PreAuthorize("hasRole('ROLE_USER')")
@@ -39,6 +44,15 @@ public class UserProfileController {
 
                 log.debug("Usuario encontrado: {}", user);
 
+                // Obtener experiencias de la nueva tabla 'experience'
+                List<ExperienceResponseDto> newExperiences = experienceService
+                                .getAllExperiencesByUserId(user.getId().value());
+                log.debug("Experiencias obtenidas de la tabla 'experience': {}", newExperiences.size());
+
+                // Sustituir las experiencias antiguas por las nuevas
+                List<ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto> experienciasConvertidas = convertirNuevasExperiencias(
+                                newExperiences);
+
                 UserProfileResponse response = UserProfileResponse.builder()
                                 .id(user.getId().value().toString())
                                 .username(user.getUsername().value())
@@ -49,13 +63,37 @@ public class UserProfileController {
                                 .lastName(user.getLastName())
                                 .telefono(user.getTelefono())
                                 .direccion(user.getDireccion())
-                                .experiencias(mapper.toExperienciaDtoList(user.getExperiencias()))
+                                .experiencias(experienciasConvertidas)
                                 .educacion(mapper.toEducacionDtoList(user.getEducacion()))
                                 .habilidades(mapper.toHabilidadDtoList(user.getHabilidades()))
                                 .build();
 
                 log.debug("Respuesta construida: {}", response);
                 return ResponseEntity.ok(response);
+        }
+
+        /**
+         * Convierte las experiencias del nuevo formato al formato del DTO de perfil
+         */
+        private List<ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto> convertirNuevasExperiencias(
+                        List<ExperienceResponseDto> newExperiences) {
+
+                List<ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto> result = new ArrayList<>();
+
+                for (ExperienceResponseDto exp : newExperiences) {
+                        ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto dto = ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto
+                                        .builder()
+                                        .empresa(exp.getCompany())
+                                        .cargo(exp.getPosition())
+                                        .fechaInicio(exp.getStartDate() != null ? exp.getStartDate().toString() : null)
+                                        .fechaFin(exp.getEndDate() != null ? exp.getEndDate().toString() : null)
+                                        .descripcion(exp.getDescription())
+                                        .comentario(exp.getComments())
+                                        .build();
+                        result.add(dto);
+                }
+
+                return result;
         }
 
         @PutMapping("/profile")

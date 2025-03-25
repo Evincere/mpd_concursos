@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,13 +6,14 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { DocumentoUsuario, TipoDocumento } from '../../../../core/models/documento.model';
 import { DocumentoUploadComponent } from '../documento-upload/documento-upload.component';
 import { DocumentoViewerComponent } from '../documento-viewer/documento-viewer.component';
 import { finalize } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-documentacion-tab',
@@ -24,7 +25,9 @@ import { finalize } from 'rxjs/operators';
     MatProgressBarModule,
     MatProgressSpinnerModule,
     MatTableModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatDialogModule,
+    MatSnackBarModule
   ],
   template: `
     <div class="documentacion-container">
@@ -38,15 +41,15 @@ import { finalize } from 'rxjs/operators';
           Agregar documento
         </button>
       </div>
-      
+
       <!-- Indicador de progreso -->
       <div class="documentacion-progress">
         <div class="progress-header">
           <span>Estado de tu documentación</span>
           <span class="progress-percentage">{{progresoDocumentacion}}%</span>
         </div>
-        <mat-progress-bar 
-          [value]="progresoDocumentacion" 
+        <mat-progress-bar
+          [value]="progresoDocumentacion"
           [color]="progresoDocumentacion < 50 ? 'warn' : progresoDocumentacion < 100 ? 'accent' : 'primary'">
         </mat-progress-bar>
         <div class="progress-info">
@@ -60,12 +63,12 @@ import { finalize } from 'rxjs/operators';
           </span>
         </div>
       </div>
-      
+
       <!-- Sección de documentos requeridos -->
       <div class="documentos-requeridos">
         <h4>Documentos requeridos</h4>
         <div class="documentos-grid">
-          <div *ngFor="let tipo of documentosRequeridos" class="documento-card" 
+          <div *ngFor="let tipo of documentosRequeridos" class="documento-card"
                [class.completo]="isDocumentoSubido(tipo.id)">
             <div class="documento-icon">
               <i class="fas fa-file-pdf"></i>
@@ -97,15 +100,15 @@ import { finalize } from 'rxjs/operators';
             </div>
             <div class="documento-actions">
               <ng-container *ngIf="isDocumentoSubido(tipo.id); else botonCargar">
-                <button mat-icon-button color="primary" matTooltip="Ver documento" 
+                <button mat-icon-button color="primary" matTooltip="Ver documento"
                         (click)="verDocumento(getDocumentoByTipo(tipo.id))">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button mat-icon-button color="accent" matTooltip="Reemplazar documento" 
+                <button mat-icon-button color="accent" matTooltip="Reemplazar documento"
                         (click)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
                   <i class="fas fa-sync-alt"></i>
                 </button>
-                <button mat-icon-button color="warn" matTooltip="Eliminar documento" 
+                <button mat-icon-button color="warn" matTooltip="Eliminar documento"
                         (click)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
                   <i class="fas fa-trash"></i>
                 </button>
@@ -120,7 +123,7 @@ import { finalize } from 'rxjs/operators';
           </div>
         </div>
       </div>
-      
+
       <!-- Tabla de documentos cargados -->
       <div class="documentos-tabla" *ngIf="documentosUsuario.length > 0">
         <h4>Todos los documentos</h4>
@@ -132,19 +135,19 @@ import { finalize } from 'rxjs/operators';
               {{getTipoDocumentoNombre(documento.tipoDocumentoId)}}
             </td>
           </ng-container>
-          
+
           <!-- Nombre Column -->
           <ng-container matColumnDef="nombre">
             <th mat-header-cell *matHeaderCellDef>Nombre del archivo</th>
             <td mat-cell *matCellDef="let documento">{{documento.nombreArchivo}}</td>
           </ng-container>
-          
+
           <!-- Fecha Column -->
           <ng-container matColumnDef="fecha">
             <th mat-header-cell *matHeaderCellDef>Fecha de carga</th>
             <td mat-cell *matCellDef="let documento">{{documento.fechaCarga | date:'dd/MM/yyyy'}}</td>
           </ng-container>
-          
+
           <!-- Estado Column -->
           <ng-container matColumnDef="estado">
             <th mat-header-cell *matHeaderCellDef>Estado</th>
@@ -155,31 +158,31 @@ import { finalize } from 'rxjs/operators';
               </span>
             </td>
           </ng-container>
-          
+
           <!-- Acciones Column -->
           <ng-container matColumnDef="acciones">
             <th mat-header-cell *matHeaderCellDef>Acciones</th>
             <td mat-cell *matCellDef="let documento">
-              <button mat-icon-button color="primary" matTooltip="Ver documento" 
+              <button mat-icon-button color="primary" matTooltip="Ver documento"
                       (click)="verDocumento(documento)">
                 <i class="fas fa-eye"></i>
               </button>
-              <button mat-icon-button color="accent" matTooltip="Reemplazar documento" 
+              <button mat-icon-button color="accent" matTooltip="Reemplazar documento"
                       (click)="reemplazarDocumento(documento)">
                 <i class="fas fa-sync-alt"></i>
               </button>
-              <button mat-icon-button color="warn" matTooltip="Eliminar documento" 
+              <button mat-icon-button color="warn" matTooltip="Eliminar documento"
                       (click)="eliminarDocumento(documento)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>
           </ng-container>
-          
+
           <tr mat-header-row *matHeaderRowDef="columnas"></tr>
           <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
         </table>
       </div>
-      
+
       <!-- Estado vacío -->
       <div class="empty-state" *ngIf="documentosUsuario.length === 0 && !isLoading">
         <i class="fas fa-folder-open"></i>
@@ -190,7 +193,7 @@ import { finalize } from 'rxjs/operators';
           Cargar documento
         </button>
       </div>
-      
+
       <!-- Loading state -->
       <div class="loading-state" *ngIf="isLoading">
         <mat-spinner diameter="50"></mat-spinner>
@@ -202,13 +205,13 @@ import { finalize } from 'rxjs/operators';
     .documentacion-container {
       padding: 1.5rem;
     }
-    
+
     .documentacion-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
-      
+
       h3 {
         display: flex;
         align-items: center;
@@ -216,49 +219,49 @@ import { finalize } from 'rxjs/operators';
         margin: 0;
         font-size: 1.5rem;
         font-weight: 500;
-        
+
         i {
           color: var(--primary-color);
         }
       }
     }
-    
+
     .documentacion-progress {
       background-color: rgba(var(--surface-color-rgb), 0.5);
       border-radius: 8px;
       padding: 1.5rem;
       margin-bottom: 2rem;
       border: 1px solid var(--card-border);
-      
+
       .progress-header {
         display: flex;
         justify-content: space-between;
         margin-bottom: 0.5rem;
-        
+
         span {
           color: var(--text-color);
           font-weight: 500;
         }
-        
+
         .progress-percentage {
           color: var(--primary-color);
         }
       }
-      
+
       .progress-info {
         margin-top: 0.75rem;
         color: var(--text-secondary);
         font-size: 0.9rem;
-        
+
         i {
           margin-right: 0.5rem;
         }
       }
     }
-    
+
     .documentos-requeridos {
       margin-bottom: 2rem;
-      
+
       h4 {
         font-size: 1.2rem;
         font-weight: 500;
@@ -266,13 +269,13 @@ import { finalize } from 'rxjs/operators';
         color: var(--text-color);
       }
     }
-    
+
     .documentos-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1rem;
     }
-    
+
     .documento-card {
       display: flex;
       align-items: center;
@@ -281,26 +284,26 @@ import { finalize } from 'rxjs/operators';
       border-radius: 8px;
       border: 1px solid var(--card-border);
       transition: all 0.3s ease;
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       }
-      
+
       &.completo {
         border-left: 4px solid var(--primary-color);
       }
     }
-    
+
     .documento-icon {
       position: relative;
       margin-right: 1rem;
-      
+
       i {
         font-size: 2rem;
         color: #f44336;
       }
-      
+
       .estado-badge {
         position: absolute;
         bottom: -5px;
@@ -312,31 +315,31 @@ import { finalize } from 'rxjs/operators';
         display: flex;
         align-items: center;
         justify-content: center;
-        
+
         i {
           font-size: 0.7rem;
           color: white;
         }
       }
     }
-    
+
     .documento-info {
       flex: 1;
-      
+
       h5 {
         margin: 0 0 0.25rem 0;
         font-size: 1rem;
         font-weight: 500;
         color: var(--text-color);
       }
-      
+
       p {
         margin: 0 0 0.5rem 0;
         font-size: 0.85rem;
         color: var(--text-secondary);
       }
     }
-    
+
     .documento-estado {
       .estado-texto {
         display: inline-flex;
@@ -344,90 +347,90 @@ import { finalize } from 'rxjs/operators';
         font-size: 0.85rem;
         padding: 0.25rem 0.5rem;
         border-radius: 4px;
-        
+
         i {
           margin-right: 0.25rem;
         }
-        
+
         &.aprobado {
           background-color: rgba(76, 175, 80, 0.15);
           color: #4caf50;
         }
-        
+
         &.pendiente {
           background-color: rgba(255, 152, 0, 0.15);
           color: #ff9800;
         }
-        
+
         &.rechazado {
           background-color: rgba(244, 67, 54, 0.15);
           color: #f44336;
         }
-        
+
         &.faltante {
           background-color: rgba(158, 158, 158, 0.15);
           color: #9e9e9e;
         }
       }
     }
-    
+
     .documento-actions {
       display: flex;
       gap: 0.5rem;
     }
-    
+
     .documentos-tabla {
       margin-bottom: 2rem;
-      
+
       h4 {
         font-size: 1.2rem;
         font-weight: 500;
         margin-bottom: 1rem;
         color: var(--text-color);
       }
-      
+
       table {
         width: 100%;
         background-color: rgba(var(--surface-color-rgb), 0.5);
-        
+
         th {
           color: var(--text-color);
           font-weight: 500;
         }
-        
+
         td {
           color: var(--text-color);
         }
       }
     }
-    
+
     .estado-badge-tabla {
       display: inline-flex;
       align-items: center;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
       font-size: 0.85rem;
-      
+
       i {
         margin-right: 0.25rem;
       }
-      
+
       &.aprobado {
         background-color: rgba(76, 175, 80, 0.15);
         color: #4caf50;
       }
-      
+
       &.pendiente {
         background-color: rgba(255, 152, 0, 0.15);
         color: #ff9800;
       }
-      
+
       &.rechazado {
         background-color: rgba(244, 67, 54, 0.15);
         color: #f44336;
       }
     }
-    
+
     .empty-state {
       display: flex;
       flex-direction: column;
@@ -435,33 +438,33 @@ import { finalize } from 'rxjs/operators';
       justify-content: center;
       padding: 3rem;
       text-align: center;
-      
+
       i {
         font-size: 4rem;
         color: var(--text-secondary);
         margin-bottom: 1rem;
       }
-      
+
       h4 {
         font-size: 1.2rem;
         font-weight: 500;
         margin: 0 0 0.5rem 0;
         color: var(--text-color);
       }
-      
+
       p {
         margin: 0 0 1.5rem 0;
         color: var(--text-secondary);
       }
     }
-    
+
     .loading-state {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 3rem;
-      
+
       p {
         margin-top: 1rem;
         color: var(--text-color);
@@ -469,7 +472,7 @@ import { finalize } from 'rxjs/operators';
     }
   `]
 })
-export class DocumentacionTabComponent implements OnInit {
+export class DocumentacionTabComponent implements OnInit, OnDestroy {
   isLoading = true;
   documentosUsuario: DocumentoUsuario[] = [];
   tiposDocumento: TipoDocumento[] = [];
@@ -477,78 +480,95 @@ export class DocumentacionTabComponent implements OnInit {
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
   columnas: string[] = ['tipo', 'nombre', 'fecha', 'estado', 'acciones'];
-  
+  private subscription: Subscription | undefined;
+
   constructor(
     private documentosService: DocumentosService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
-  
+
   ngOnInit(): void {
     this.cargarDatos();
+    this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
+      console.log('[DocumentacionTab] Recibida notificación de documento actualizado, recargando documentos...');
+      this.cargarDocumentosUsuario();
+    });
   }
-  
+
+  ngOnDestroy(): void {
+    this.subscription?.unsubscribe();
+  }
+
   cargarDatos(): void {
     this.isLoading = true;
-    
+    console.log('[DocumentacionTab] Iniciando carga de datos...');
+
     // Cargar tipos de documento
     this.documentosService.getTiposDocumento().subscribe({
       next: (tipos) => {
+        console.log('[DocumentacionTab] Tipos de documento obtenidos:', tipos);
         this.tiposDocumento = tipos;
         this.documentosRequeridos = tipos.filter(t => t.requerido);
-        
+        console.log('[DocumentacionTab] Documentos requeridos:', this.documentosRequeridos);
+
         // Cargar documentos del usuario
         this.cargarDocumentosUsuario();
       },
       error: (error) => {
-        console.error('Error al cargar tipos de documento:', error);
+        console.error('[DocumentacionTab] Error al cargar tipos de documento:', error);
         this.isLoading = false;
         this.mostrarError('Error al cargar los tipos de documento');
       }
     });
   }
-  
+
   cargarDocumentosUsuario(): void {
+    console.log('[DocumentacionTab] Cargando documentos del usuario...');
     this.documentosService.getDocumentosUsuario()
-      .pipe(finalize(() => this.isLoading = false))
+      .pipe(finalize(() => {
+        this.isLoading = false;
+        console.log('[DocumentacionTab] Finalizada carga de documentos.');
+      }))
       .subscribe({
         next: (documentos) => {
+          console.log('[DocumentacionTab] Documentos del usuario obtenidos:', documentos);
           this.documentosUsuario = documentos;
           this.calcularProgreso();
         },
         error: (error) => {
-          console.error('Error al cargar documentos del usuario:', error);
+          console.error('[DocumentacionTab] Error al cargar documentos del usuario:', error);
           this.mostrarError('Error al cargar tus documentos');
         }
       });
   }
-  
+
   calcularProgreso(): void {
     if (this.documentosRequeridos.length === 0) {
       this.progresoDocumentacion = 100;
       this.documentosFaltantes = 0;
       return;
     }
-    
-    const documentosRequeridosCargados = this.documentosRequeridos.filter(tipo => 
-      this.documentosUsuario.some(doc => 
+
+    const documentosRequeridosCargados = this.documentosRequeridos.filter(tipo =>
+      this.documentosUsuario.some(doc =>
         doc.tipoDocumentoId === tipo.id && doc.estado !== 'rechazado'
       )
     ).length;
-    
+
     this.progresoDocumentacion = Math.round(
       (documentosRequeridosCargados / this.documentosRequeridos.length) * 100
     );
-    
+
     this.documentosFaltantes = this.documentosRequeridos.length - documentosRequeridosCargados;
   }
-  
+
   abrirDialogoCargaDocumento(tipoDocumentoId?: string): void {
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
       width: '600px',
       data: { tipoDocumentoId }
     });
-    
+
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // Recargar documentos después de una carga exitosa
@@ -556,29 +576,29 @@ export class DocumentacionTabComponent implements OnInit {
       }
     });
   }
-  
+
   cargarDocumentoTipo(tipoDocumentoId: string): void {
     this.abrirDialogoCargaDocumento(tipoDocumentoId);
   }
-  
+
   verDocumento(documento: DocumentoUsuario): void {
     if (!documento || !documento.id) return;
-    
+
     this.dialog.open(DocumentoViewerComponent, {
       width: '800px',
       height: '80vh',
       data: { documentoId: documento.id }
     });
   }
-  
+
   reemplazarDocumento(documento: DocumentoUsuario): void {
     if (!documento || !documento.id) return;
-    
+
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
       width: '600px',
       data: { tipoDocumentoId: documento.tipoDocumentoId }
     });
-    
+
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // Eliminar el documento anterior y recargar
@@ -595,10 +615,10 @@ export class DocumentacionTabComponent implements OnInit {
       }
     });
   }
-  
+
   eliminarDocumento(documento: DocumentoUsuario): void {
     if (!documento || !documento.id) return;
-    
+
     if (confirm('¿Estás seguro de que deseas eliminar este documento?')) {
       this.documentosService.deleteDocumento(documento.id).subscribe({
         next: () => {
@@ -612,25 +632,25 @@ export class DocumentacionTabComponent implements OnInit {
       });
     }
   }
-  
+
   isDocumentoSubido(tipoDocumentoId: string): boolean {
     return this.documentosUsuario.some(doc => doc.tipoDocumentoId === tipoDocumentoId);
   }
-  
+
   getDocumentoByTipo(tipoDocumentoId: string): DocumentoUsuario {
     return this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId)!;
   }
-  
+
   getEstadoDocumento(tipoDocumentoId: string): string {
     const documento = this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId);
     return documento ? documento.estado : '';
   }
-  
+
   getTipoDocumentoNombre(tipoDocumentoId: string): string {
     const tipo = this.tiposDocumento.find(t => t.id === tipoDocumentoId);
     return tipo ? tipo.nombre : 'Desconocido';
   }
-  
+
   getIconForStatus(estado: string): string {
     switch (estado) {
       case 'aprobado': return 'fa-check-circle';
@@ -639,7 +659,7 @@ export class DocumentacionTabComponent implements OnInit {
       default: return 'fa-question-circle';
     }
   }
-  
+
   getEstadoTexto(estado: string): string {
     switch (estado) {
       case 'aprobado': return 'Aprobado';
@@ -648,18 +668,18 @@ export class DocumentacionTabComponent implements OnInit {
       default: return 'Desconocido';
     }
   }
-  
+
   mostrarExito(mensaje: string): void {
     this.snackBar.open(mensaje, 'Cerrar', {
       duration: 3000,
       panelClass: ['success-snackbar']
     });
   }
-  
+
   mostrarError(mensaje: string): void {
     this.snackBar.open(mensaje, 'Cerrar', {
       duration: 3000,
       panelClass: ['error-snackbar']
     });
   }
-} 
+}

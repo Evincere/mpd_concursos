@@ -212,7 +212,7 @@
 
                     <div class="action-group">
                         <h3>Educación</h3>
-                        <button mat-flat-button color="primary" [disabled]="true">
+                        <button mat-flat-button color="primary" (click)="agregarEducacion()">
                             <i class="fas fa-plus"></i>
                             Agregar Educación
                         </button>
@@ -234,141 +234,68 @@
                             <h2>Experiencia Laboral</h2>
                         </div>
 
-                        <div class="cv-items" formArrayName="experiencias">
-                            <div class="cv-item" *ngFor="let exp of experiencias.controls; let i = index"
-                                [formGroupName]="i">
-                                <div class="item-main">
-                                    <div class="form-field">
-                                        <label class="field-label" for="cargo">Cargo o Puesto</label>
-                                        <mat-form-field appearance="outline">
-                                            <mat-label>Cargo o Puesto</mat-label>
-                                            <input matInput
-                                                id="cargo"
-                                                formControlName="cargo"
-                                                placeholder="Ej: Abogado Senior">
-                                            <mat-error *ngIf="exp.get('cargo')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <div class="form-field">
-                                        <label class="field-label" for="empresa">Empresa u Organización</label>
-                                        <mat-form-field appearance="outline">
-                                            <mat-label>Empresa u Organización</mat-label>
-                                            <input matInput
-                                                id="empresa"
-                                                formControlName="empresa"
-                                                placeholder="Ej: Ministerio Público de la Defensa">
-                                            <mat-error *ngIf="exp.get('empresa')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <div class="form-row">
-                                        <div class="form-field-container">
-                                            <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
-                                            <mat-form-field appearance="outline">
-                                                <mat-label>Fecha de Inicio</mat-label>
-                                                <input matInput
-                                                    [matDatepicker]="fechaInicioPicker"
-                                                    formControlName="fechaInicio"
-                                                    placeholder="DD/MM/AAAA">
-                                                <mat-datepicker-toggle matSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
-                                                <mat-datepicker #fechaInicioPicker></mat-datepicker>
-                                            </mat-form-field>
-                                        </div>
-
-                                        <div class="form-field-container">
-                                            <label for="fechaFin" class="form-label">Fecha de Fin</label>
-                                            <mat-form-field appearance="outline">
-                                                <mat-label>Fecha de Fin</mat-label>
-                                                <input matInput
-                                                    [matDatepicker]="fechaFinPicker"
-                                                    formControlName="fechaFin"
-                                                    placeholder="DD/MM/AAAA">
-                                                <mat-datepicker-toggle matSuffix [for]="fechaFinPicker"></mat-datepicker-toggle>
-                                                <mat-datepicker #fechaFinPicker></mat-datepicker>
-                                            </mat-form-field>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-field">
-                                        <label class="field-label" for="descripcion">Descripción de responsabilidades y logros</label>
-                                        <mat-form-field appearance="outline" class="description-field">
-                                            <mat-label>Descripción de responsabilidades y logros</mat-label>
-                                            <textarea matInput
-                                                id="descripcion"
-                                                formControlName="descripcion"
-                                                rows="3"
-                                                placeholder="Describe tus principales responsabilidades y logros en este puesto">
-                                            </textarea>
-                                            <mat-error *ngIf="exp.get('descripcion')?.errors?.['required']">
-                                                Este campo es requerido
-                                            </mat-error>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <!-- Nuevo campo: Comentarios sobre el puesto -->
-                                    <div class="form-field">
-                                        <label class="field-label" for="comentario">Comentarios sobre el puesto de trabajo</label>
-                                        <mat-form-field appearance="outline" class="description-field">
-                                            <mat-label>Comentarios sobre el puesto de trabajo</mat-label>
-                                            <textarea matInput
-                                                id="comentario"
-                                                formControlName="comentario"
-                                                rows="2"
-                                                placeholder="Información adicional relevante sobre este puesto">
-                                            </textarea>
-                                        </mat-form-field>
-                                    </div>
-
-                                    <!-- Nuevo campo: Probanza o certificado -->
-                                    <div class="form-field certificado-field">
-                                        <label class="certificado-label">Probanza o certificado (PDF)</label>
-                                        <div class="certificado-container">
-                                            <ng-container *ngIf="exp.get('certificadoId')?.value; else noCertificado">
-                                                <div class="certificado-preview">
-                                                    <span class="certificado-nombre">Certificado cargado</span>
-                                                    <div class="certificado-actions">
-                                                        <button mat-icon-button color="primary" type="button"
-                                                                matTooltip="Ver certificado"
-                                                                (click)="verCertificado(exp.get('certificadoId')?.value)">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        <button mat-icon-button color="warn" type="button"
-                                                                matTooltip="Eliminar certificado"
-                                                                (click)="eliminarCertificado(i)">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </ng-container>
-                                            <ng-template #noCertificado>
-                                                <button mat-stroked-button color="primary" type="button"
-                                                        (click)="cargarCertificado(i)">
-                                                    <i class="fas fa-upload"></i>
-                                                    Subir certificado
-                                                </button>
-                                                <span class="certificado-hint">
-                                                    Sube un certificado o probanza en formato PDF que acredite esta experiencia laboral
-                                                </span>
-                                            </ng-template>
-                                        </div>
-                                    </div>
+                        <!-- Nueva visualización de experiencias en formato de tarjetas -->
+                        <div *ngIf="experiencias.length > 0" class="experience-list">
+                            <div *ngFor="let exp of experiencias.controls; let i = index" class="experience-item">
+                                <div class="experience-header">
+                                    <h3 class="experience-title">{{ exp.get('cargo')?.value || 'Sin cargo' }}</h3>
+                                    <span class="experience-company">{{ exp.get('empresa')?.value || 'Empresa no especificada' }}</span>
+                                    <span *ngIf="exp.get('certificadoId')?.value || exp.get('documentUrl')?.value" class="document-badge" title="Tiene certificado adjunto">
+                                        <i class="fas fa-file-certificate"></i> Certificado adjunto
+                                    </span>
                                 </div>
+                                
+                                <div class="experience-body">
+                                    <!-- Información principal -->
+                                    <div class="experience-main-info">
+                                        <p class="experience-dates">
+                                            <strong>Período:</strong> 
+                                            {{ exp.get('fechaInicio')?.value | date:'dd/MM/yyyy' }} - 
+                                            {{ exp.get('fechaFin')?.value ? (exp.get('fechaFin')?.value | date:'dd/MM/yyyy') : 'Actual' }}
+                                        </p>
+                                        <div class="experience-description">
+                                            <strong>Descripción:</strong>
+                                            <p>{{ exp.get('descripcion')?.value || 'Sin descripción' }}</p>
+                                        </div>
+                                        
+                                        <div *ngIf="exp.get('comentario')?.value" class="experience-comments">
+                                            <strong>Comentarios:</strong>
+                                            <p>{{ exp.get('comentario')?.value }}</p>
+                                        </div>
+                                    </div>
 
-                                <div class="item-actions">
-                                    <button mat-icon-button
-                                        type="button"
-                                        class="delete-button"
-                                        (click)="eliminarExperiencia(i)"
-                                        [attr.aria-label]="'Eliminar experiencia'">
-                                        <i class="fas fa-trash"></i>
+                                    <!-- Botón para ver datos completos -->
+                                    <button 
+                                        type="button" 
+                                        class="debug-button" 
+                                        (click)="mostrarDatosExperiencia(exp); $event.stopPropagation();">
+                                        <i class="fas fa-code"></i> Ver datos completos
                                     </button>
+
+                                    <!-- Documento y acciones -->
+                                    <div class="experience-actions">
+                                        <button *ngIf="exp.get('certificadoId')?.value" 
+                                                mat-stroked-button 
+                                                type="button" 
+                                                class="action-button"
+                                                (click)="verCertificado(exp.get('certificadoId')?.value)">
+                                            <i class="fas fa-file-pdf"></i>
+                                            Ver certificado
+                                        </button>
+                                        <button mat-stroked-button type="button" class="action-button delete-button" (click)="eliminarExperiencia(i)">
+                                            <i class="fas fa-trash"></i>
+                                            Eliminar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Mensaje cuando no hay experiencias -->
+                        <div *ngIf="experiencias.length === 0" class="experience-empty">
+                            <i class="fas fa-briefcase"></i>
+                            <p>No hay registros de experiencia laboral.</p>
+                            <p>Haga clic en "Agregar Experiencia" para comenzar.</p>
                         </div>
                     </section>
 
@@ -378,8 +305,257 @@
                             <i class="fas fa-graduation-cap"></i>
                             <h2>Educación</h2>
                         </div>
-                        <div class="text-center p-4">
-                            <p>La funcionalidad de educación se encuentra en desarrollo.</p>
+
+                        <!-- Lista de educación con nuevos estilos -->
+                        <div *ngIf="educacionList && educacionList.length > 0" class="education-list">
+                            <div *ngFor="let educacion of educacionList; let i = index" class="education-item">
+                                <div class="education-header">
+                                    <h3 class="education-title">{{ educacion.titulo || educacion['title'] || 'Sin título' }}</h3>
+                                    <span class="education-status" [ngClass]="educacion.estado === 'finalizado' || educacion['status'] === 'Completado' ? 'finalizado' : 'en-proceso'">
+                                        {{ educacion.estado || educacion['status'] || 'Estado no especificado' }}
+                                    </span>
+                                </div>
+                                
+                                <div class="education-body">
+                                    <!-- Información principal siempre visible -->
+                                    <div class="education-main-info">
+                                        <p class="education-subtitle">
+                                            <strong>Institución:</strong> {{ educacion.institucion || educacion['institution'] || 'No especificada' }}
+                                        </p>
+                                        <p class="education-type">
+                                            <strong>Tipo:</strong> {{ educacion.tipo || educacion['type'] || 'No especificado' }}
+                                        </p>
+                                        <p *ngIf="educacion.fechaEmision || educacion['issueDate']" class="education-date">
+                                            <strong>Fecha:</strong> {{ (educacion.fechaEmision || educacion['issueDate']) | date:'dd/MM/yyyy' }}
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Contenido específico según tipo de educación -->
+                                    <div class="education-details">
+                                        <ng-container [ngSwitch]="educacion.tipo || educacion['type']">
+                                            <!-- Carrera de Nivel Superior o Grado -->
+                                            <ng-container *ngSwitchCase="'Carrera de Nivel Superior'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Duración:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'duracionAnios') || getPropiedadEducacion(educacion, 'durationYears') }} años</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Promedio:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'promedio') || getPropiedadEducacion(educacion, 'average') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Carrera de grado'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Duración:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'duracionAnios') || getPropiedadEducacion(educacion, 'durationYears') }} años</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Promedio:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'promedio') || getPropiedadEducacion(educacion, 'average') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <!-- Agregar casos para tipos recibidos del backend -->
+                                            <ng-container *ngSwitchCase="'Título Terciario'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Duración:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'durationYears') }} años</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Promedio:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'average') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Título Universitario'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Duración:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'durationYears') }} años</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Promedio:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'average') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <!-- Posgrados -->
+                                            <ng-container *ngSwitchCase="'Posgrado: especialización'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema de tesis:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'temaTesis') || getPropiedadEducacion(educacion, 'thesisTopic') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Posgrado: maestría'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema de tesis:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'temaTesis') || getPropiedadEducacion(educacion, 'thesisTopic') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Posgrado: doctorado'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema de tesis:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'temaTesis') || getPropiedadEducacion(educacion, 'thesisTopic') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <!-- Casos para tipos recibidos del backend -->
+                                            <ng-container *ngSwitchCase="'Especialización'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema de tesis:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'thesisTopic') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Maestría'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema de tesis:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'thesisTopic') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Doctorado'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema de tesis:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'thesisTopic') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <!-- Diplomatura y Curso -->
+                                            <ng-container *ngSwitchCase="'Diplomatura'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Carga horaria:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'cargaHoraria') || getPropiedadEducacion(educacion, 'hourlyLoad') }} horas</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Evaluación final:</span>
+                                                    <span class="detail-value">{{ (getPropiedadEducacion(educacion, 'tuvoEvaluacionFinal') || getPropiedadEducacion(educacion, 'hadFinalEvaluation')) ? 'Sí' : 'No' }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Curso de Capacitación'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Carga horaria:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'cargaHoraria') || getPropiedadEducacion(educacion, 'hourlyLoad') }} horas</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Evaluación final:</span>
+                                                    <span class="detail-value">{{ (getPropiedadEducacion(educacion, 'tuvoEvaluacionFinal') || getPropiedadEducacion(educacion, 'hadFinalEvaluation')) ? 'Sí' : 'No' }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <!-- Actividad Científica -->
+                                            <ng-container *ngSwitchCase="'Actividad Científica (investigación y/o difusión)'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tipo de actividad:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'tipoActividad') || getPropiedadEducacion(educacion, 'activityType') }}</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'tema') || getPropiedadEducacion(educacion, 'topic') }}</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Carácter:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'caracter') || getPropiedadEducacion(educacion, 'activityRole') }}</span>
+                                                </div>
+                                            </ng-container>
+
+                                            <ng-container *ngSwitchCase="'Actividad Científica'">
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tipo de actividad:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'activityType') }}</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Tema:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'topic') }}</span>
+                                                </div>
+                                                <div class="education-detail">
+                                                    <span class="detail-label">Carácter:</span>
+                                                    <span class="detail-value">{{ getPropiedadEducacion(educacion, 'activityRole') }}</span>
+                                                </div>
+                                            </ng-container>
+                                            
+                                            <!-- Caso por defecto cuando el tipo no coincide con ninguno de los anteriores -->
+                                            <ng-container *ngSwitchDefault>
+                                                <div class="education-detail default-message">
+                                                    <p>Tipo de educación no reconocido: "{{ educacion.tipo || educacion['type'] || 'Sin tipo' }}"</p>
+                                                    
+                                                    <!-- Propiedades generales que todas las educaciones deberían tener -->
+                                                    <div class="education-detail">
+                                                        <span class="detail-label">Título:</span>
+                                                        <span class="detail-value">{{ educacion.titulo || educacion['title'] || 'No especificado' }}</span>
+                                                    </div>
+                                                    <div class="education-detail">
+                                                        <span class="detail-label">Institución:</span>
+                                                        <span class="detail-value">{{ educacion.institucion || educacion['institution'] || 'No especificada' }}</span>
+                                                    </div>
+                                                    <div class="education-detail" *ngIf="educacion.fechaEmision || educacion['issueDate']">
+                                                        <span class="detail-label">Fecha de emisión:</span>
+                                                        <span class="detail-value">{{ (educacion.fechaEmision || educacion['issueDate']) | date:'dd/MM/yyyy' }}</span>
+                                                    </div>
+                                                    
+                                                    <!-- Propiedades comunes específicas -->
+                                                    <div class="common-properties">
+                                                        <div class="education-detail" *ngIf="hasProperty(educacion, 'duracionAnios') || hasProperty(educacion, 'durationYears')">
+                                                            <span class="detail-label">Duración:</span>
+                                                            <span class="detail-value">{{ getPropiedadEducacion(educacion, 'duracionAnios') || getPropiedadEducacion(educacion, 'durationYears') }} años</span>
+                                                        </div>
+                                                        <div class="education-detail" *ngIf="hasProperty(educacion, 'promedio') || hasProperty(educacion, 'average')">
+                                                            <span class="detail-label">Promedio:</span>
+                                                            <span class="detail-value">{{ getPropiedadEducacion(educacion, 'promedio') || getPropiedadEducacion(educacion, 'average') }}</span>
+                                                        </div>
+                                                        <div class="education-detail" *ngIf="hasProperty(educacion, 'temaTesis') || hasProperty(educacion, 'thesisTopic')">
+                                                            <span class="detail-label">Tema de tesis:</span>
+                                                            <span class="detail-value">{{ getPropiedadEducacion(educacion, 'temaTesis') || getPropiedadEducacion(educacion, 'thesisTopic') }}</span>
+                                                        </div>
+                                                        <div class="education-detail" *ngIf="hasProperty(educacion, 'cargaHoraria') || hasProperty(educacion, 'hourlyLoad')">
+                                                            <span class="detail-label">Carga horaria:</span>
+                                                            <span class="detail-value">{{ getPropiedadEducacion(educacion, 'cargaHoraria') || getPropiedadEducacion(educacion, 'hourlyLoad') }} horas</span>
+                                                        </div>
+                                                        <div class="education-detail" *ngIf="hasProperty(educacion, 'tuvoEvaluacionFinal') || hasProperty(educacion, 'hadFinalEvaluation')">
+                                                            <span class="detail-label">Evaluación final:</span>
+                                                            <span class="detail-value">{{ (getPropiedadEducacion(educacion, 'tuvoEvaluacionFinal') || getPropiedadEducacion(educacion, 'hadFinalEvaluation')) ? 'Sí' : 'No' }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </ng-container>
+                                        </ng-container>
+                                    </div>
+
+                                    <!-- Botón para ver datos completos en formato JSON -->
+                                    <button 
+                                        type="button" 
+                                        class="debug-button" 
+                                        (click)="mostrarDatosCrudos(educacion); $event.stopPropagation();">
+                                        <i class="fas fa-code"></i> Ver datos completos
+                                    </button>
+
+                                    <!-- Documento y acciones -->
+                                    <div class="education-actions">
+                                        <button *ngIf="educacion.documentoPdf" 
+                                                mat-stroked-button 
+                                                type="button" 
+                                                class="action-button"
+                                                (click)="verDocumentoEducacion(educacion)">
+                                            <i class="fas fa-file-pdf"></i>
+                                            Ver documento
+                                        </button>
+                                        <button mat-stroked-button type="button" class="action-button delete-button" (click)="eliminarEducacion(educacion.id || '')">
+                                            <i class="fas fa-trash"></i>
+                                            Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mensaje cuando no hay educación -->
+                        <div *ngIf="!educacionList || educacionList.length === 0" class="education-empty">
+                            <i class="fas fa-graduation-cap"></i>
+                            <p>No hay registros de educación.</p>
+                            <p>Haga clic en "Agregar Educación" para comenzar.</p>
                         </div>
                     </section>
                 </main>
@@ -411,3 +587,44 @@
         </mat-tab>
     </mat-tab-group>
 </div>
+
+<!-- Modal para agregar educación -->
+<div *ngIf="mostrarModalEducacion && userProfile && userProfile.id" class="modal-overlay">
+    <div class="modal-container">
+        <app-educacion-container
+            [usuarioId]="usuarioId"
+            (educacionGuardada)="onEducacionGuardada($event)"
+            (cerrar)="cerrarModalEducacion()">
+        </app-educacion-container>
+    </div>
+</div>
+
+<!-- Modal para Agregar Experiencia -->
+<div *ngIf="mostrarModalExperiencia && esIdUsuarioValido()" class="modal-experiencia-overlay">
+  <div class="modal-experiencia-container">
+    <app-experiencia-container
+      [usuarioId]="usuarioId"
+      (experienciaGuardada)="onExperienciaGuardada($event)"
+      (cerrar)="mostrarModalExperiencia = false">
+    </app-experiencia-container>
+  </div>
+</div>
+
+<style>
+/* Estilos para el badge de documento */
+.document-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: #4caf50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.document-badge i {
+    margin-right: 4px;
+}
+</style>

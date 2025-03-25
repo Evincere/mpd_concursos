@@ -298,8 +298,8 @@ INSERT INTO examination_allowed_materials (examination_id, material) VALUES
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Jurisprudencia relevante (sin anotaciones)');
 
 -- Datos iniciales para tipos de documento
-INSERT INTO document_types (id, name, description, required, `order`) VALUES
-(UUID_TO_BIN(UUID()), 'Documento Nacional de Identidad', 'DNI del postulante', TRUE, 1),
-(UUID_TO_BIN(UUID()), 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 2),
-(UUID_TO_BIN(UUID()), 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 3),
-(UUID_TO_BIN(UUID()), 'Curriculum Vitae', 'CV actualizado', FALSE, 4);
+REPLACE INTO document_types (id, name, description, required, `order`) VALUES
+(UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 'Documento Nacional de Identidad', 'DNI del postulante', TRUE, 1),
+(UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 2),
+(UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 3),
+(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'Curriculum Vitae', 'CV actualizado', FALSE, 4);

@@ -2,8 +2,10 @@ package ar.gov.mpd.concursobackend.auth.infrastructure.mapper;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
+import ar.gov.mpd.concursobackend.auth.domain.model.Experiencia;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.RoleEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.ExperienciaEntity;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IRoleSpringRepository;
 
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Component
@@ -59,6 +63,8 @@ public class UserMapper {
 
         entity.setFirstName(user.getFirstName());
         entity.setLastName(user.getLastName());
+        entity.setTelefono(user.getTelefono());
+        entity.setDireccion(user.getDireccion());
 
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             logger.info("Mapeando {} roles para el usuario {}", user.getRoles().size(), user.getUsername().value());
@@ -128,8 +134,16 @@ public class UserMapper {
         } else {
             logger.info("El usuario {} no tiene CUIT asignado.", entity.getUsername());
         }
+
         user.setFirstName(entity.getFirstName());
         user.setLastName(entity.getLastName());
+        user.setTelefono(entity.getTelefono());
+        user.setDireccion(entity.getDireccion());
+
+        // Ya no recuperamos experiencias de la tabla antigua
+        // Ahora se obtienen desde el servicio de experiencias
+        user.setExperiencias(new ArrayList<>());
+
         if (entity.getRoles() != null) {
             Set<Rol> roles = entity.getRoles().stream()
                     .map(roleEntity -> {

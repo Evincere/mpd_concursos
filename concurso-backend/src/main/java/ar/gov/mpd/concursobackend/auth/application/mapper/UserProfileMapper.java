@@ -61,6 +61,7 @@ public class UserProfileMapper {
                 .fechaInicio(experiencia.getFechaInicio().format(DATE_FORMATTER))
                 .fechaFin(experiencia.getFechaFin() != null ? experiencia.getFechaFin().format(DATE_FORMATTER) : null)
                 .descripcion(experiencia.getDescripcion())
+                .comentario(experiencia.getComentario())
                 .build();
     }
 
@@ -71,6 +72,7 @@ public class UserProfileMapper {
         experiencia.setFechaInicio(LocalDate.parse(dto.getFechaInicio(), DATE_FORMATTER));
         experiencia.setFechaFin(dto.getFechaFin() != null ? LocalDate.parse(dto.getFechaFin(), DATE_FORMATTER) : null);
         experiencia.setDescripcion(dto.getDescripcion());
+        experiencia.setComentario(dto.getComentario());
         return experiencia;
     }
 

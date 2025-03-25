@@ -1,138 +1,83 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
-import ar.gov.mpd.concursobackend.document.application.mapper.DocumentMapper;
-import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
-import ar.gov.mpd.concursobackend.document.domain.model.Document;
-import ar.gov.mpd.concursobackend.document.domain.model.DocumentType;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentStorageService;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentTypeRepository;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Service
-@RequiredArgsConstructor
-@Slf4j
-public class DocumentService {
+/**
+ * Service interface for managing documents
+ */
+public interface DocumentService {
 
-    private final IDocumentRepository documentRepository;
-    private final IDocumentTypeRepository documentTypeRepository;
-    private final IDocumentStorageService documentStorageService;
-    private final DocumentMapper documentMapper;
+    /**
+     * Get all documents for a user
+     * 
+     * @param userId User's UUID
+     * @return List of documents
+     */
+    List<DocumentDto> getUserDocuments(UUID userId);
 
-    @Transactional
-    public DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream fileContent, UUID userId) {
-        log.debug("Uploading document for user: {}", userId);
+    /**
+     * Upload a document
+     * 
+     * @param request     Upload request
+     * @param inputStream Document input stream
+     * @param userId      User's UUID
+     * @return Document response
+     * @throws IOException If an I/O error occurs
+     */
+    DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream inputStream, UUID userId) throws IOException;
 
-        DocumentType documentType = documentTypeRepository
-                .findById(new DocumentTypeId(UUID.fromString(request.getDocumentTypeId())))
-                .orElseThrow(() -> new DocumentException("Document type not found"));
+    /**
+     * Get a document's metadata
+     * 
+     * @param documentId Document's UUID as string
+     * @param userId     User's UUID
+     * @return Document metadata
+     */
+    DocumentDto getDocumentMetadata(String documentId, UUID userId);
 
-        Document document = Document.create(
-                userId,
-                documentType,
-                new DocumentName(request.getFileName()),
-                request.getContentType(),
-                null,
-                request.getComments());
+    /**
+     * Get a document's file
+     * 
+     * @param documentId Document's UUID as string
+     * @param userId     User's UUID
+     * @return Document file as input stream
+     * @throws IOException If an I/O error occurs
+     */
+    InputStream getDocumentFile(String documentId, UUID userId) throws IOException;
 
-        // Store the file
-        String filePath = documentStorageService.storeFile(fileContent, request.getFileName(), userId,
-                document.getId().value());
-        document.setFilePath(filePath);
+    /**
+     * Delete a document
+     * 
+     * @param documentId Document's UUID as string
+     * @param userId     User's UUID
+     */
+    void deleteDocument(String documentId, UUID userId);
 
-        // Save document metadata
-        Document savedDocument = documentRepository.save(document);
-        log.debug("Document saved: {}", savedDocument);
-
-        return DocumentResponse.builder()
-                .id(savedDocument.getId().value().toString())
-                .mensaje("Document uploaded successfully")
-                .documento(documentMapper.toDto(savedDocument))
-                .build();
-    }
-
-    @Transactional(readOnly = true)
-    public List<DocumentDto> getUserDocuments(UUID userId) {
-        log.debug("Getting documents for user: {}", userId);
-
-        List<Document> documents = documentRepository.findByUserId(userId);
-        return documentMapper.toDtoList(documents);
-    }
-
-    @Transactional(readOnly = true)
-    public DocumentDto getDocumentMetadata(String documentId, UUID userId) {
-        log.debug("Getting document metadata: {} for user: {}", documentId, userId);
-
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Document not found"));
-
-        // Verify the document belongs to the user
-        if (!document.getUserId().equals(userId)) {
-            throw new DocumentException("Document does not belong to the user");
-        }
-
-        return documentMapper.toDto(document);
-    }
-
-    @Transactional(readOnly = true)
-    public InputStream getDocumentFile(String documentId, UUID userId) {
-        log.debug("Getting document file: {} for user: {}", documentId, userId);
-
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Document not found"));
-
-        // Verify the document belongs to the user
-        if (!document.getUserId().equals(userId)) {
-            throw new DocumentException("Document does not belong to the user");
-        }
-
-        return documentStorageService.getFile(document.getFilePath());
-    }
-
-    @Transactional
-    public void deleteDocument(String documentId, UUID userId) {
-        log.debug("Deleting document: {} for user: {}", documentId, userId);
-
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Document not found"));
-
-        // Verify the document belongs to the user
-        if (!document.getUserId().equals(userId)) {
-            throw new DocumentException("Document does not belong to the user");
-        }
-
-        // Delete the file
-        documentStorageService.deleteFile(document.getFilePath());
-
-        // Delete the document metadata
-        documentRepository.deleteById(document.getId());
-    }
-
-    @Transactional
-    public DocumentDto updateDocumentStatus(String documentId, String status) {
-        log.debug("Updating document status: {} to: {}", documentId, status);
-
-        Document document = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
-                .orElseThrow(() -> new DocumentException("Document not found"));
-
-        document.setStatus(DocumentStatus.valueOf(status.toUpperCase()));
-        Document updatedDocument = documentRepository.save(document);
-
-        return documentMapper.toDto(updatedDocument);
-    }
-}
+    /**
+     * Update a document's status
+     * 
+     * @param documentId Document's UUID as string
+     * @param status     New status
+     * @return Updated document
+     */
+    DocumentDto updateDocumentStatus(String documentId, String status);
+    
+    /**
+     * Save a document and return its URL
+     * 
+     * @param inputStream Document input stream
+     * @param filename    Original filename
+     * @param documentId  Document's UUID
+     * @param userId      User's UUID
+     * @return Document URL
+     * @throws IOException If an I/O error occurs
+     */
+    String saveDocument(InputStream inputStream, String filename, UUID documentId, UUID userId) throws IOException;
+} 
