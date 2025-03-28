@@ -42,6 +42,18 @@ import { Subscription } from 'rxjs';
         </button>
       </div>
 
+      <!-- Mensaje de advertencia sobre formato de archivos -->
+      <div class="documentacion-warning">
+        <i class="fas fa-info-circle"></i>
+        <div class="warning-content">
+          <strong>Importante:</strong>
+          <ul>
+            <li>Solo se permitirán cargar archivos en formato PDF.</li>
+            <li>En caso de tener múltiples páginas o documentos relacionados, por favor únalo en un único archivo PDF antes de cargarlo.</li>
+          </ul>
+        </div>
+      </div>
+
       <!-- Indicador de progreso -->
       <div class="documentacion-progress">
         <div class="progress-header">
@@ -210,7 +222,7 @@ import { Subscription } from 'rxjs';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
 
       h3 {
         display: flex;
@@ -222,6 +234,48 @@ import { Subscription } from 'rxjs';
 
         i {
           color: var(--primary-color);
+        }
+      }
+    }
+
+    .documentacion-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      background-color: rgba(255, 152, 0, 0.1);
+      border: 1px solid rgba(255, 152, 0, 0.3);
+      border-radius: 8px;
+      color: var(--text-color);
+
+      i {
+        color: #ff9800;
+        font-size: 1.2rem;
+        margin-top: 0.2rem;
+      }
+
+      .warning-content {
+        flex: 1;
+
+        strong {
+          display: block;
+          margin-bottom: 0.5rem;
+          color: #ff9800;
+        }
+
+        ul {
+          margin: 0;
+          padding-left: 1.2rem;
+
+          li {
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
         }
       }
     }
