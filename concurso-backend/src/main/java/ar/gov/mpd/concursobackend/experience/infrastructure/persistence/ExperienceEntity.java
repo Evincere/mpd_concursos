@@ -33,8 +33,7 @@ import lombok.Setter;
 public class ExperienceEntity {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 

@@ -11,6 +11,7 @@ import lombok.Setter;
  * 
  * @deprecated usar ExperienceEntity en su lugar
  */
+@Deprecated
 @Getter
 @Setter
 // Eliminamos el mapeo a la tabla

@@ -1,9 +1,10 @@
 package ar.gov.mpd.concursobackend.auth.domain.jwt;
 
-import java.security.Key;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.crypto.SecretKey;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,17 @@ public class JwtProvider {
     @Value("${jwt.expiration}")
     private int expiration;
 
-    private Key key;
+    private SecretKey key;
 
     @PostConstruct
     public void init() {
-        this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-        logger.info("Clave JWT inicializada con algoritmo HS256");
+        try {
+            this.key = Keys.hmacShaKeyFor(secret.getBytes());
+            logger.info("Clave JWT inicializada con HMAC-SHA256");
+        } catch (Exception e) {
+            logger.error("Error al inicializar la clave JWT: {}", e.getMessage());
+            throw new RuntimeException("Error al inicializar la clave JWT", e);
+        }
     }
 
     public String generateToken(Authentication authentication, User user) {
@@ -51,11 +57,11 @@ public class JwtProvider {
         Date expiryDate = new Date(now.getTime() + expiration * 1000);
 
         String token = Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .subject(userDetails.getUsername())
                 .claim("roles", roles)
                 .claim("userId", user.getId().value().toString())
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
+                .issuedAt(now)
+                .expiration(expiryDate)
                 .signWith(key)
                 .compact();
 
@@ -65,11 +71,11 @@ public class JwtProvider {
 
     public String getUsernameFromToken(String token) {
         try {
-            String username = Jwts.parserBuilder()
-                    .setSigningKey(key)
+            String username = Jwts.parser()
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody()
+                    .parseSignedClaims(token)
+                    .getPayload()
                     .getSubject();
 
             logger.debug("Nombre de usuario extraído del token: {}", username);
@@ -82,11 +88,11 @@ public class JwtProvider {
 
     public String getUserIdFromToken(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
 
             String userId = claims.get("userId", String.class);
             logger.debug("ID de usuario extraído del token: {}", userId);
@@ -100,11 +106,11 @@ public class JwtProvider {
     @SuppressWarnings("unchecked")
     public List<String> getRolesFromToken(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
 
             List<String> roles = claims.get("roles", List.class);
             logger.debug("Roles extraídos del token: {}", roles);
@@ -118,11 +124,11 @@ public class JwtProvider {
     public boolean validateToken(String token) {
         try {
             logger.debug("Validando token: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseSignedClaims(token)
+                    .getPayload();
             logger.debug("Token válido. Claims: {}", claims);
             return true;
         } catch (SignatureException e) {
