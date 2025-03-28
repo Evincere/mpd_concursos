@@ -32,10 +32,24 @@ build/
 ### VS Code ###
 .vscode/
 
+### Application Properties ###
+src/main/resources/application-local.properties
+src/main/resources/application-dev.properties
+src/main/resources/application-prod.properties
+
+### Environment Files ###
+.env
+*.env
+.env.*
+
+### Logs ###
+*.log
+logs/
+
+### Document Storage ###
+document-storage/
+
 # H2 Database files
 src/main/resources/static/concursosH2bd/concursosbd.mv.db
 concursosH2bd/concursosbd.mv.db
 concurso-backend/src/main/resources/static/concursosH2bd/concursosbd.trace.db
-
-# storage
-document-storage/
