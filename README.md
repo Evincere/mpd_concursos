@@ -448,4 +448,243 @@ erDiagram
         float puntaje
         string observaciones
     }
+```
+
+## 🔄 Flujos de Datos Detallados
+
+### Autenticación y Autorización
+```mermaid
+sequenceDiagram
+    participant Cliente
+    participant AuthController
+    participant JwtService
+    participant UserService
+    participant Database
+
+    Cliente->>AuthController: POST /auth/login {credentials}
+    AuthController->>UserService: validateCredentials()
+    UserService->>Database: findByUsername()
+    Database-->>UserService: UserEntity
+    UserService->>UserService: validatePassword()
+    UserService-->>AuthController: ValidationResult
+    AuthController->>JwtService: generateToken()
+    JwtService-->>AuthController: JWT
+    AuthController-->>Cliente: {token, user}
+
+    Note over Cliente,AuthController: Protocolo: HTTPS
+    Note over AuthController,Database: Validación: BCrypt
+    Note over JwtService: Algoritmo: HS256
+```
+
+### Gestión de Documentos
+```mermaid
+sequenceDiagram
+    participant Cliente
+    participant DocumentController
+    participant StorageService
+    participant ValidationService
+    participant Database
+    participant FileSystem
+
+    Cliente->>DocumentController: POST /documents/upload
+    Note over Cliente,DocumentController: Multipart/form-data
+    DocumentController->>ValidationService: validateFile()
+    ValidationService-->>DocumentController: ValidationResult
+    DocumentController->>StorageService: storeFile()
+    StorageService->>FileSystem: saveFile()
+    FileSystem-->>StorageService: filePath
+    StorageService->>Database: saveMetadata()
+    Database-->>StorageService: documentId
+    StorageService-->>DocumentController: DocumentDTO
+    DocumentController-->>Cliente: UploadResponse
+
+    Note over Cliente,DocumentController: Max File Size: 10MB
+    Note over StorageService,FileSystem: Storage: Encrypted
+```
+
+## 🧩 Componentes Internos
+
+### Frontend Modules
+```mermaid
+graph TD
+    subgraph "Core Module"
+        A[AuthService]
+        B[HttpInterceptor]
+        C[ErrorHandler]
+        D[GuardService]
+    end
+
+    subgraph "Shared Module"
+        E[Components]
+        F[Directives]
+        G[Pipes]
+        H[Models]
+    end
+
+    subgraph "Feature Modules"
+        subgraph "Contest Module"
+            I[ContestList]
+            J[ContestDetail]
+            K[ContestForm]
+            L[ContestService]
+        end
+
+        subgraph "Profile Module"
+            M[UserProfile]
+            N[DocumentUpload]
+            O[ProfileService]
+        end
+
+        subgraph "Admin Module"
+            P[UserManagement]
+            Q[SystemConfig]
+            R[AdminService]
+        end
+    end
+
+    A --> I
+    A --> M
+    A --> P
+    B --> A
+    L --> B
+    O --> B
+    R --> B
+```
+
+### Backend Components
+```mermaid
+graph TD
+    subgraph "Web Layer"
+        A[Controllers]
+        B[Filters]
+        C[Interceptors]
+        D[ExceptionHandlers]
+    end
+
+    subgraph "Service Layer"
+        E[Services]
+        F[DTOs]
+        G[Mappers]
+        H[Validators]
+    end
+
+    subgraph "Domain Layer"
+        I[Entities]
+        J[ValueObjects]
+        K[Aggregates]
+        L[DomainEvents]
+    end
+
+    subgraph "Infrastructure Layer"
+        M[Repositories]
+        N[ExternalServices]
+        O[Security]
+        P[Persistence]
+    end
+
+    A --> E
+    E --> I
+    I --> M
+    M --> P
+```
+
+## 🔌 Interfaces y Protocolos
+
+### API Endpoints
+```yaml
+auth:
+  login:
+    path: /api/auth/login
+    method: POST
+    content-type: application/json
+    body: {username: string, password: string}
+    response: {token: string, user: UserDTO}
+
+contests:
+  list:
+    path: /api/contests
+    method: GET
+    headers: {Authorization: Bearer token}
+    query-params: {
+      status: string,
+      page: number,
+      size: number,
+      sort: string
+    }
+    response: {
+      content: Contest[],
+      totalElements: number,
+      totalPages: number
+    }
+
+documents:
+  upload:
+    path: /api/documents/upload
+    method: POST
+    headers: {
+      Authorization: Bearer token,
+      Content-Type: multipart/form-data
+    }
+    body: FormData
+    response: {
+      documentId: string,
+      url: string,
+      status: string
+    }
+```
+
+### Protocolos de Comunicación
+```mermaid
+graph TD
+    subgraph "Cliente-Servidor"
+        A[Cliente] -->|HTTPS| B[API Gateway]
+        B -->|HTTP/2| C[Microservicios]
+    end
+
+    subgraph "Seguridad"
+        D[JWT] -->|HS256| E[Auth]
+        F[SSL/TLS] -->|2048-bit| G[Encryption]
+    end
+
+    subgraph "Datos"
+        H[REST] -->|JSON| I[API]
+        J[WebSocket] -->|Events| K[Notifications]
+    end
+
+    subgraph "Storage"
+        L[MySQL] -->|TCP/IP| M[Database]
+        N[File System] -->|NFS| O[Documents]
+    end
+```
+
+### Interfaces de Servicios
+```typescript
+interface IAuthService {
+    login(credentials: LoginDTO): Promise<AuthResponse>;
+    logout(): Promise<void>;
+    refreshToken(): Promise<string>;
+    validateToken(token: string): boolean;
+}
+
+interface IContestService {
+    create(contest: ContestDTO): Promise<Contest>;
+    update(id: string, contest: ContestDTO): Promise<Contest>;
+    delete(id: string): Promise<void>;
+    findById(id: string): Promise<Contest>;
+    findAll(params: FilterParams): Promise<PagedResponse<Contest>>;
+}
+
+interface IDocumentService {
+    upload(file: File, metadata: DocumentMetadata): Promise<Document>;
+    download(id: string): Promise<Blob>;
+    validate(document: Document): Promise<ValidationResult>;
+    delete(id: string): Promise<void>;
+}
+
+interface INotificationService {
+    send(notification: NotificationDTO): Promise<void>;
+    subscribe(userId: string): Observable<Notification>;
+    markAsRead(notificationId: string): Promise<void>;
+    getUnreadCount(): Promise<number>;
+}
 ``` 
