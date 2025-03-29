@@ -13,9 +13,9 @@ function getAssetPath() {
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1000,
-    height: 650,
-    title: "MPD Concursos",
+    width: 1200,
+    height: 800,
+    title: "Defensa Mendoza",
     icon: path.join(__dirname, '../build/icon.png'),
     webPreferences: {
       nodeIntegration: false,

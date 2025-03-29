@@ -40,7 +40,7 @@ export class ConfiguracionAdminComponent implements OnInit {
   // Datos hardcodeados para la demostración
   configData = {
     general: {
-      appName: 'MPD Concursos',
+      appName: 'Defensa Mendoza',
       appLogo: 'assets/images/logo.png',
       appTheme: 'light',
       defaultLanguage: 'es',
@@ -157,7 +157,7 @@ export class ConfiguracionAdminComponent implements OnInit {
     switch (formType) {
       case 'general':
         this.generalForm.reset({
-          appName: 'MPD Concursos',
+          appName: 'Defensa Mendoza',
           appLogo: 'assets/images/logo.png',
           appTheme: 'light',
           defaultLanguage: 'es',

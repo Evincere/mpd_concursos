@@ -86,17 +86,18 @@
     ],
     "asar": true,
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.png"
+      "productName": "Defensa Mendoza",
+      "artifactName": "Defensa-Mendoza-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "uninstallDisplayName": "Desinstalar MPD Concursos",
+      "uninstallDisplayName": "Desinstalar Defensa Mendoza",
       "license": "LICENSE.txt",
       "artifactName": "MPD-Concursos-Setup-${version}.${ext}"
     },
