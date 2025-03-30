@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 @Data
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ContestDateEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
