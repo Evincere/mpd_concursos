@@ -4,7 +4,7 @@ import ar.gov.mpd.concursobackend.contest.application.port.in.ContestQueryUseCas
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.filter.application.dto.ContestFilterCommand;
 import ar.gov.mpd.concursobackend.filter.application.dto.ContestResponse;
-import ar.gov.mpd.concursobackend.filter.application.mapper.ContestMapper;
+import ar.gov.mpd.concursobackend.filter.application.mapper.ContestFilterMapper;
 import ar.gov.mpd.concursobackend.filter.application.port.in.SearchContestUseCase;
 import ar.gov.mpd.concursobackend.filter.domain.model.ContestFilter;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class SearchContestService implements SearchContestUseCase {
     private final ContestQueryUseCase contestQueryUseCase;
-    private final ContestMapper contestMapper;
+    private final ContestFilterMapper contestMapper;
 
-    public SearchContestService(ContestQueryUseCase contestQueryUseCase, ContestMapper contestMapper) {
+    public SearchContestService(ContestQueryUseCase contestQueryUseCase, ContestFilterMapper contestMapper) {
         this.contestQueryUseCase = contestQueryUseCase;
         this.contestMapper = contestMapper;
     }
@@ -35,8 +35,7 @@ public class SearchContestService implements SearchContestUseCase {
     @Override
     public List<ContestResponse> searchContests(ContestFilterCommand command) {
         ContestFilter filter = createFilterFromCommand(command);
-        ContestFilters contestFilters = mapToContestFilters(filter);
-        return contestQueryUseCase.findByFilters(contestFilters).stream()
+        return contestQueryUseCase.findByFilters(mapToContestFilters(filter)).stream()
                 .map(contestMapper::toResponse)
                 .collect(Collectors.toList());
     }

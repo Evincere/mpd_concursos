@@ -26,6 +26,7 @@ DROP TABLE IF EXISTS examination_allowed_materials;
 DROP TABLE IF EXISTS examination_security_violations;
 DROP TABLE IF EXISTS documents;
 DROP TABLE IF EXISTS document_types;
+DROP TABLE IF EXISTS contest_dates;
 
 -- Habilitar verificación de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;
@@ -85,12 +86,28 @@ CREATE INDEX idx_experience_user_id ON experience(user_id);
 
 CREATE TABLE contests (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255),
+    category VARCHAR(255),
+    class_ VARCHAR(255),
+    functions TEXT,
     department VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
     status ENUM('DRAFT', 'ACTIVE', 'IN_PROGRESS', 'CLOSED', 'CANCELLED') NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    bases_url VARCHAR(255),
+    description_url VARCHAR(255),
     CONSTRAINT check_dates CHECK (end_date >= start_date)
+);
+
+CREATE TABLE contest_dates (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    contest_id BIGINT NOT NULL,
+    label VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE
 );
 
 CREATE TABLE examinations (

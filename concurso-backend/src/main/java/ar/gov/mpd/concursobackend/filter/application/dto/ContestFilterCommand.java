@@ -8,11 +8,11 @@ import lombok.Data;
 @Data
 @Builder
 public class ContestFilterCommand {
-    private final String status;
-    private final LocalDate startDate;
-    private final LocalDate endDate;
-    private final String department;
-    private final String position;
+    private String status;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private String department;
+    private String position;
 
     public ContestFilterCommand(String status, LocalDate startDate, LocalDate endDate, 
                               String department, String position) {

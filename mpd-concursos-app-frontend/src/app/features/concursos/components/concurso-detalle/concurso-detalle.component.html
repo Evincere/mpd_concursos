@@ -7,58 +7,91 @@
   </div>
 
   <div class="detalle-content">
-    <div class="seccion">
-      <h3>Información General</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <div class="label">Título</div>
-          <div class="value">{{ concurso.title }}</div>
-        </div>
-        <div class="info-item">
-          <div class="label">Cargo</div>
-          <div class="value">{{ concurso.position }}</div>
-        </div>
-        <div class="info-item">
-          <div class="label">Dependencia</div>
-          <div class="value">{{ concurso.dependencia }}</div>
-        </div>
-        <div class="info-item">
-          <div class="label">Estado</div>
-          <div class="value">
-            <span class="estado-badge" [ngClass]="concurso.status.toLowerCase()">
-              {{ getEstadoConcursoLabel(concurso.status) }}
-            </span>
+    <mat-tab-group>
+      <!-- Pestaña de Información General -->
+      <mat-tab label="Información General">
+        <div class="tab-content">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="label">Cargo</div>
+              <div class="value">{{ concurso.position }}</div>
+            </div>
+            <div class="info-item">
+              <div class="label">Categoría</div>
+              <div class="value">{{ concurso.category }}</div>
+            </div>
+            <div class="info-item">
+              <div class="label">Clase</div>
+              <div class="value">{{ concurso.class }}</div>
+            </div>
+            <div class="info-item">
+              <div class="label">Estado</div>
+              <div class="value">
+                <span class="estado-badge" [ngClass]="concurso.status.toLowerCase()">
+                  {{ getEstadoConcursoLabel(concurso.status) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="funciones-section" *ngIf="concurso.functions">
+            <h3>Funciones</h3>
+            <div class="funciones-content">
+              {{ concurso.functions }}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </mat-tab>
 
-    <div class="seccion">
-      <h3>Fechas</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <div class="label">Fecha de Inicio</div>
-          <div class="value">{{ concurso.startDate | date:'dd/MM/yyyy' }}</div>
+      <!-- Pestaña de Documentación -->
+      <mat-tab label="Documentación">
+        <div class="tab-content">
+          <div class="documentos-grid">
+            <div class="documento-item">
+              <mat-icon>description</mat-icon>
+              <div class="documento-info">
+                <h4>Bases y Condiciones</h4>
+                <a mat-button color="primary" [href]="concurso.basesUrl" target="_blank">
+                  <mat-icon>download</mat-icon>
+                  Descargar PDF
+                </a>
+              </div>
+            </div>
+            <div class="documento-item">
+              <mat-icon>work_outline</mat-icon>
+              <div class="documento-info">
+                <h4>Descripción del Puesto</h4>
+                <a mat-button color="primary" [href]="concurso.descriptionUrl" target="_blank">
+                  <mat-icon>download</mat-icon>
+                  Descargar PDF
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="info-item">
-          <div class="label">Fecha de Fin</div>
-          <div class="value">{{ concurso.endDate | date:'dd/MM/yyyy' }}</div>
-        </div>
-      </div>
-    </div>
+      </mat-tab>
 
-    <div class="seccion" *ngIf="concurso.description">
-      <h3>Descripción</h3>
-      <div class="descripcion">
-        {{ concurso.description }}
-      </div>
-    </div>
+      <!-- Pestaña de Fechas -->
+      <mat-tab label="Fechas">
+        <div class="tab-content">
+          <div class="fechas-timeline">
+            <div class="fecha-item" *ngFor="let fecha of concurso.dates">
+              <div class="fecha-icon">
+                <mat-icon>event</mat-icon>
+              </div>
+              <div class="fecha-content">
+                <h4>{{ fecha.label }}</h4>
+                <p>{{ fecha.startDate | date:'dd/MM/yyyy' }} - {{ fecha.endDate | date:'dd/MM/yyyy' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </div>
 
   <div class="actions-container">
-    <button mat-stroked-button
-            class="volver-btn"
-            (click)="onCerrar()">
+    <button mat-stroked-button class="volver-btn" (click)="onCerrar()">
       <mat-icon>arrow_back</mat-icon>
       Volver
     </button>

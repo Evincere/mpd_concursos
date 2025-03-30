@@ -8,10 +8,10 @@ import lombok.Data;
 
 @Data
 public class ContestFilter {
-    private final ContestStatus status;
-    private final DateRange dateRange;
-    private final Department department;
-    private final Position position;
+    private ContestStatus status;
+    private DateRange dateRange;
+    private Department department;
+    private Position position;
 
     public ContestFilter(ContestStatus status, DateRange dateRange, 
                         Department department, Position position) {
@@ -20,6 +20,4 @@ public class ContestFilter {
         this.department = department;
         this.position = position;
     }
-
-    
 } 

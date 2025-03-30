@@ -319,4 +319,15 @@ export class ConcursosComponent implements OnInit {
     };
     this.cargarConcursos();
   }
+
+  onSeleccionarConcurso(concurso: Concurso): void {
+    // Convertir el concurso al formato Contest
+    const concursoConvertido = {
+      ...concurso,
+      department: concurso.dependencia,
+      class: concurso.category, // Asumimos que la categoría actual se usará como clase
+      category: concurso.category // Mantenemos la categoría actual
+    };
+    this.verDetalle(concursoConvertido);
+  }
 }

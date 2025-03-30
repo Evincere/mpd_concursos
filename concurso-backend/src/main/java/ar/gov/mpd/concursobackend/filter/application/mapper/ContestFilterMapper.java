@@ -8,7 +8,7 @@ import ar.gov.mpd.concursobackend.filter.application.dto.ContestResponse;
  * Mapper para convertir entidades Contest del módulo contest a DTOs ContestResponse del módulo filter
  */
 @Component
-public class ContestMapper {
+public class ContestFilterMapper {
     
     /**
      * Convierte un Contest del módulo contest a un ContestResponse

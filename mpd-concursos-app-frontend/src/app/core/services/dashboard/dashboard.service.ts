@@ -77,7 +77,7 @@ export class DashboardService {
 
         // Tomar los 5 más recientes
         const recentConcursos = sortedConcursos.slice(0, 5).map(c => ({
-          id: c.id,
+          id: String(c.id),
           titulo: c.title,
           fecha: c.startDate,
           estado: this.mapStatus(c.status)
