@@ -31,11 +31,13 @@ export class InscriptionService {
   ) {}
 
   // Métodos públicos
-  createInscription(contestId: number): Observable<IInscriptionResponse> {
+  createInscription(contestId: string | number): Observable<IInscriptionResponse> {
     if (!this.validateAuthentication()) return EMPTY;
 
-    const request: IInscriptionRequest = { contestId };
-    
+    const request: IInscriptionRequest = {
+      contestId: typeof contestId === 'string' ? parseInt(contestId, 10) : contestId
+    };
+
     return this.http.post<IInscriptionResponse>(
       `${this.baseUrl}${this.inscriptionsEndpoint}`,
       request
@@ -85,11 +87,13 @@ export class InscriptionService {
     );
   }
 
-  getInscriptionStatus(contestId: number): Observable<boolean> {
+  getInscriptionStatus(contestId: string | number): Observable<boolean> {
     if (!this.validateAuthentication()) return of(false);
 
+    const numericContestId = typeof contestId === 'string' ? parseInt(contestId, 10) : contestId;
+
     return this.http.get<boolean>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/estado/${contestId}`
+      `${this.baseUrl}${this.inscriptionsEndpoint}/estado/${numericContestId}`
     ).pipe(
       tap(status => console.log('[InscriptionService] Estado de inscripción:', status)),
       catchError(error => {
@@ -166,9 +170,9 @@ export class InscriptionService {
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     console.error('[InscriptionService] Error:', error);
-    
+
     let errorMessage = 'Ha ocurrido un error inesperado';
-    
+
     switch (error.status) {
       case 401:
         errorMessage = 'Su sesión ha expirado. Por favor, vuelva a iniciar sesión.';
@@ -191,4 +195,4 @@ export class InscriptionService {
 
     return throwError(() => new Error(errorMessage));
   }
-} 
+}

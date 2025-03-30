@@ -2,17 +2,19 @@ import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angu
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { finalize } from 'rxjs/operators';
-import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
+import { Concurso, Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
 import { DatePipe } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
+import { ContestDate } from '@shared/interfaces/concurso/contest-date.interface';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -24,14 +26,15 @@ import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/in
     MatCardModule,
     MatDividerModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
     DatePipe,
     InscripcionButtonComponent
-  ],
+],
   templateUrl: './concurso-detalle.component.html',
   styleUrls: ['./concurso-detalle.component.scss']
 })
 export class ConcursoDetalleComponent implements OnInit, OnDestroy {
-  @Input() concurso!: Concurso;
+  @Input() concurso!: Contest;
   @Output() cerrarDetalle = new EventEmitter<void>();
   @Output() inscripcionRealizada = new EventEmitter<Concurso>();
 
@@ -48,6 +51,18 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (this.concurso) {
       this.verificarInscripcion();
+      // Inicializar URLs temporales para los documentos
+      if (!this.concurso.basesUrl) {
+        this.concurso.basesUrl = '#'; // URL temporal
+      }
+      if (!this.concurso.descriptionUrl) {
+        this.concurso.descriptionUrl = '#'; // URL temporal
+      }
+
+      // Inicializar fechas si no existen
+      if (!this.concurso.dates) {
+        this.concurso.dates = this.getDefaultDates();
+      }
     }
   }
 
@@ -63,7 +78,10 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
     }
 
     this.inscripcionLoading = true;
-    this.inscriptionService.getInscriptionStatus(parseInt(this.concurso.id, 10))
+    // Convertir el ID a número
+    const concursoId = typeof this.concurso.id === 'string' ? parseInt(this.concurso.id, 10) : this.concurso.id;
+
+    this.inscriptionService.getInscriptionStatus(concursoId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -90,9 +108,11 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
 
   getEstadoConcursoLabel(status: string): string {
     const estados: { [key: string]: string } = {
-      'PUBLISHED': 'Publicado',
+      'ACTIVE': 'Activo',
+      'CLOSED': 'Cerrado',
+      'IN_PROGRESS': 'En Proceso',
       'DRAFT': 'Borrador',
-      'CLOSED': 'Cerrado'
+      'CANCELLED': 'Cancelado'
     };
     return estados[status] || status;
   }
@@ -107,5 +127,20 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   onInscripcionCompleta(concurso: Concurso): void {
     this.verificarInscripcion();
     this.inscripcionRealizada.emit(concurso);
+  }
+
+  private getDefaultDates(): ContestDate[] {
+    const today = new Date();
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + 15);
+
+    return [
+      {
+        label: 'Fecha de Inscripción',
+        startDate: today,
+        endDate: endDate,
+        type: 'inscription'
+      }
+    ];
   }
 }

@@ -52,26 +52,42 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  overflow: hidden;
+
+  ::ng-deep .mat-tab-group {
+    flex: 1;
+
+    .mat-tab-header {
+      background-color: #2d2d2d;
+      border-bottom: 1px solid #3d3d3d;
+    }
+
+    .mat-tab-label {
+      color: #ffffff;
+      opacity: 0.7;
+
+      &.mat-tab-label-active {
+        opacity: 1;
+      }
+    }
+
+    .mat-tab-body-wrapper {
+      flex: 1;
+    }
+  }
 }
 
-.seccion {
-  margin-bottom: 1.5rem;
-
-  h3 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #3d3d3d;
-  }
+.tab-content {
+  padding: 1.5rem;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .info-item {
@@ -95,29 +111,144 @@
   text-transform: uppercase;
   font-weight: 500;
 
-  &.abierto {
+  &.active {
     background-color: #4caf50;
     color: #ffffff;
   }
 
-  &.cerrado {
+  &.closed {
     background-color: #f44336;
     color: #ffffff;
   }
 
-  &.en_proceso {
+  &.in_progress {
     background-color: #ff9800;
     color: #ffffff;
   }
 }
 
-.descripcion {
-  color: #e0e0e0;
-  line-height: 1.6;
-  font-size: 0.95rem;
-  background-color: #2d2d2d;
+.funciones-section {
+  margin-top: 2rem;
   padding: 1rem;
+  background-color: #2d2d2d;
   border-radius: 4px;
+
+  h3 {
+    color: #ffffff;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #3d3d3d;
+  }
+
+  .funciones-content {
+    color: #e0e0e0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+}
+
+.documentos-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.documento-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #2d2d2d;
+  border-radius: 4px;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  mat-icon {
+    color: #64b5f6;
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .documento-info {
+    flex: 1;
+
+    h4 {
+      margin: 0 0 0.5rem;
+      color: #ffffff;
+      font-size: 1rem;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      mat-icon {
+        font-size: 1.2rem;
+        width: 1.2rem;
+        height: 1.2rem;
+      }
+    }
+  }
+}
+
+.fechas-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fecha-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #2d2d2d;
+  border-radius: 4px;
+  position: relative;
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    bottom: -1.5rem;
+    left: 1.5rem;
+    width: 2px;
+    height: 1.5rem;
+    background-color: #3d3d3d;
+  }
+
+  .fecha-icon {
+    background-color: #3d3d3d;
+    border-radius: 50%;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+      color: #64b5f6;
+    }
+  }
+
+  .fecha-content {
+    flex: 1;
+
+    h4 {
+      margin: 0 0 0.5rem;
+      color: #ffffff;
+      font-size: 1rem;
+    }
+
+    p {
+      margin: 0;
+      color: #9e9e9e;
+      font-size: 0.9rem;
+    }
+  }
 }
 
 .actions-container {
@@ -126,6 +257,7 @@
   gap: 1rem;
   margin-top: auto;
   padding-top: 1.5rem;
+  border-top: 1px solid #3d3d3d;
 
   button {
     min-width: 120px;
@@ -138,64 +270,6 @@
   .volver-btn {
     border-color: rgba(255, 255, 255, 0.12);
     color: #ffffff;
-  }
-
-  .inscribirse-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 160px;
-    padding: 8px 16px;
-    transition: all 0.3s ease;
-
-    &.inscripto {
-      background-color: rgba(76, 175, 80, 0.12) !important;
-      color: #4CAF50 !important;
-      border: 1px solid rgba(76, 175, 80, 0.5) !important;
-      pointer-events: none;
-
-      .mat-icon {
-        color: #4CAF50;
-      }
-
-      &:disabled {
-        opacity: 1 !important;
-        cursor: default;
-      }
-    }
-
-    &:not(.inscripto) {
-      &:hover:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      &:active:not(:disabled) {
-        transform: translateY(0);
-      }
-
-      &:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-      }
-    }
-
-    .mat-icon {
-      margin-right: 8px;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      line-height: 20px;
-    }
-
-    span {
-      margin: 0 4px;
-      font-weight: 500;
-    }
-
-    mat-progress-spinner {
-      margin-left: 8px;
-    }
   }
 }
 

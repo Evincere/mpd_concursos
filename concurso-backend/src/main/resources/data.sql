@@ -151,13 +151,32 @@ DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 45 MINUTE),
 'TECHNICAL_ADMINISTRATIVE');
 
 -- Insertar concursos
-INSERT INTO contests (id, department, position, status, start_date, end_date)
+INSERT INTO contests (id, title, category, class_, functions, department, position, status, start_date, end_date, bases_url, description_url)
 VALUES 
-(1, 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(2, 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(3, 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(4, 'DESARROLLO TECNOLOGICO', 'Analista Programador/a', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
-(5, 'CODEFENSORIAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY));
+(1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia técnica y representación legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/defensor-penal.pdf', 'https://mpd.gov.ar/descripcion/defensor-penal.pdf'),
+(2, 'Concurso Defensor/a Civil', 'JURIDICO', 'B', 'Asistencia técnica y representación legal en causas civiles', 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/defensor-civil.pdf', 'https://mpd.gov.ar/descripcion/defensor-civil.pdf'),
+(3, 'Concurso Asesor/a Legal', 'JURIDICO', 'C', 'Asesoramiento legal y técnico en materia administrativa', 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/asesor-legal.pdf', 'https://mpd.gov.ar/descripcion/asesor-legal.pdf'),
+(4, 'Concurso Analista Programador/a', 'TECNICO', 'D', 'Desarrollo y mantenimiento de sistemas informáticos', 'DESARROLLO TECNOLOGICO', 'Analista Programador/a', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/analista-programador.pdf', 'https://mpd.gov.ar/descripcion/analista-programador.pdf'),
+(5, 'Concurso Defensor/a de Familia', 'JURIDICO', 'A', 'Asistencia técnica y representación legal en causas de familia', 'CODEFENSORIAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/defensor-familia.pdf', 'https://mpd.gov.ar/descripcion/defensor-familia.pdf');
+
+-- Insertar fechas para los concursos
+INSERT INTO contest_dates (contest_id, label, type, start_date, end_date)
+VALUES
+(1, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(1, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(1, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
+(2, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(2, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(2, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
+(3, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(3, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(3, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
+(4, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(4, 'Examen Práctico', 'PRACTICAL_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(4, 'Entrevista Técnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
+(5, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(5, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(5, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
 
 -- Insertar preguntas para el primer examen
 SET @examen1_id = UUID_TO_BIN('77777777-7777-7777-7777-777777777777');

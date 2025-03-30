@@ -10,4 +10,6 @@ public interface ContestRepository {
     List<Contest> findByFilters(ContestFilters filters);
     List<Contest> search(String term);
     Optional<Contest> findById(Long id);
+    Contest save(Contest contest);
+    void deleteById(Long id);
 }

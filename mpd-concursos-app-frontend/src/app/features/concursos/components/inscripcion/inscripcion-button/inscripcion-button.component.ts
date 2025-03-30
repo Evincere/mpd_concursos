@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-inscripcion-button',
@@ -56,7 +57,18 @@ export class InscripcionButtonComponent implements OnInit {
   }
 
   private verificarEstadoInscripcion() {
-    this.inscriptionService.getInscriptionStatus(parseInt(this.concurso.id, 10))
+    if (!this.concurso) {
+      console.warn('No hay concurso seleccionado para verificar inscripción');
+      return;
+    }
+
+    this.loading = true;
+    this.inscriptionService.getInscriptionStatus(this.concurso.id)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        })
+      )
       .subscribe({
         next: (inscripto) => {
           this.inscripcionStateSubject.next(
@@ -76,44 +88,38 @@ export class InscripcionButtonComponent implements OnInit {
   }
 
   onInscribirse() {
-    const dialogRef = this.dialog.open(InscripcionDialogComponent, {
-      width: '500px',
-      data: {
-        concursoId: this.concurso.id,
-        position: this.concurso.position,
-        dependencia: this.concurso.dependencia
-      },
-      disableClose: true
-    });
+    if (!this.concurso) {
+      console.warn('No hay concurso seleccionado para inscribirse');
+      return;
+    }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.loading = true;
-        this.inscriptionService.createInscription(parseInt(this.concurso.id, 10))
-          .subscribe({
-            next: () => {
-              this.inscripcionStateSubject.next(InscripcionState.CONFIRMADA);
-              this.inscripcionCompleta.emit(this.concurso);
-              this.snackBar.open(
-                'Inscripción realizada con éxito',
-                'Cerrar',
-                { duration: 3000 }
-              );
-            },
-            error: (error) => {
-              console.error('Error al realizar inscripción:', error);
-              this.inscripcionStateSubject.next(InscripcionState.NO_INSCRIPTO);
-              this.snackBar.open(
-                error.message || 'Error al realizar la inscripción',
-                'Cerrar',
-                { duration: 3000 }
-              );
-            },
-            complete: () => {
-              this.loading = false;
-            }
-          });
-      }
-    });
+    this.loading = true;
+    this.inscriptionService.createInscription(this.concurso.id)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Inscripción exitosa:', response);
+          this.inscripcionStateSubject.next(InscripcionState.CONFIRMADA);
+          this.inscripcionCompleta.emit(this.concurso);
+          this.snackBar.open(
+            'Te has inscrito exitosamente al concurso',
+            'Cerrar',
+            { duration: 3000 }
+          );
+        },
+        error: (error) => {
+          console.error('Error al inscribirse:', error);
+          this.inscripcionStateSubject.next(InscripcionState.NO_INSCRIPTO);
+          this.snackBar.open(
+            'Error al realizar la inscripción',
+            'Cerrar',
+            { duration: 3000 }
+          );
+        }
+      });
   }
 }
