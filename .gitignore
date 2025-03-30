@@ -17,3 +17,7 @@ target/
 
 # storage
 document-storage/
+
+# Logs
+concurso-backend/logs/
+*.log
