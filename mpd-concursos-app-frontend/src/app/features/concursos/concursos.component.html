@@ -56,8 +56,8 @@
 
             <app-inscripcion-button
               *ngIf="concurso.status === 'ACTIVE'"
-              [concurso]="concurso"
-              (inscripcionComplete)="onInscriptionComplete(concurso)">
+              [contest]="concurso"
+              (inscriptionComplete)="onInscriptionComplete(concurso)">
             </app-inscripcion-button>
           </div>
         </div>
@@ -110,6 +110,6 @@
     *ngIf="concursoSeleccionado"
     [concurso]="concursoSeleccionado"
     (cerrarDetalle)="cerrarDetalle()"
-    (inscripcionRealizada)="onInscriptionComplete($event)">
+    (inscriptionComplete)="onInscriptionComplete(concursoSeleccionado)">
   </app-concurso-detalle>
 </div>

@@ -1,6 +1,5 @@
 package ar.gov.mpd.concursobackend.experience.application.service;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
@@ -11,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.UserRepository;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentStorageService;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceRequestDto;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
 import ar.gov.mpd.concursobackend.experience.application.mapper.ExperienceMapper;
@@ -36,7 +34,6 @@ public class ExperienceServiceImpl implements ExperienceService {
     private final ExperienceMapper experienceMapper;
     private final ExperienceEntityMapper entityMapper;
     private final DocumentService documentService;
-    private final IDocumentStorageService documentStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -193,14 +190,16 @@ public class ExperienceServiceImpl implements ExperienceService {
         ExperienceEntity experienceEntity = experienceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Experience not found with id: " + id));
 
-        log.info("Experiencia encontrada: {}, usuario: {}", experienceEntity.getId(), experienceEntity.getUser().getId());
+        log.info("Experiencia encontrada: {}, usuario: {}", experienceEntity.getId(),
+                experienceEntity.getUser().getId());
 
         // Generate a document ID
         UUID documentId = UUID.randomUUID();
         log.info("ID de documento generado: {}", documentId);
 
         try {
-            // Usar documentService.saveDocument que maneja tanto el almacenamiento físico como los metadatos
+            // Usar documentService.saveDocument que maneja tanto el almacenamiento físico
+            // como los metadatos
             log.info("Llamando a documentService.saveDocument");
             String documentUrl = documentService.saveDocument(
                     inputStream,
@@ -212,13 +211,13 @@ public class ExperienceServiceImpl implements ExperienceService {
                 log.error("ERROR: La URL del documento retornada por saveDocument es nula o vacía");
                 throw new RuntimeException("Document URL is null or empty");
             }
-            
+
             log.info("URL del documento generada: {}", documentUrl);
 
             // Update the experience with the document URL
             experienceEntity.setDocumentUrl(documentUrl);
             log.info("URL del documento establecida en la entidad de experiencia: {}", documentUrl);
-            
+
             // Guardar la entidad con el nuevo URL del documento
             ExperienceEntity updatedEntity = experienceRepository.save(experienceEntity);
             log.info("Experiencia actualizada con la URL del documento");
@@ -232,7 +231,7 @@ public class ExperienceServiceImpl implements ExperienceService {
             // Convert back to domain model and response DTO
             Experience updatedExperience = entityMapper.toDomain(updatedEntity);
             ExperienceResponseDto responseDto = experienceMapper.toResponseDto(updatedExperience);
-            
+
             log.info("Proceso de carga de documento completado exitosamente");
             return responseDto;
 

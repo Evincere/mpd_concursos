@@ -8,7 +8,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { InscripcionDialogComponent } from '../inscripcion-dialog/inscripcion-dialog.component';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
+import { Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { finalize } from 'rxjs/operators';
@@ -23,8 +23,61 @@ import { finalize } from 'rxjs/operators';
     MatProgressSpinnerModule,
     MatSnackBarModule
   ],
-  templateUrl: './inscripcion-button.component.html',
-  styleUrls: ['./inscripcion-button.component.scss'],
+  template: `
+    <ng-container *ngIf="inscripcionState$ | async as estado">
+      <button 
+        mat-flat-button
+        color="primary"
+        class="inscripcion-button"
+        [class.loading]="loading"
+        [class.inscripto]="estado === InscripcionState.CONFIRMADA"
+        [disabled]="loading || estado === InscripcionState.CONFIRMADA"
+        (click)="onInscribirse()">
+        <ng-container *ngIf="!loading && estado !== InscripcionState.CONFIRMADA">
+          <mat-icon>how_to_reg</mat-icon>
+          <span>Inscribirse</span>
+        </ng-container>
+        
+        <ng-container *ngIf="loading">
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Procesando...</span>
+        </ng-container>
+        
+        <ng-container *ngIf="estado === InscripcionState.CONFIRMADA">
+          <mat-icon>check_circle</mat-icon>
+          <span>Inscripto</span>
+        </ng-container>
+      </button>
+    </ng-container>
+  `,
+  styles: [`
+    .inscripcion-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      height: 36px;
+      
+      &.loading {
+        opacity: 0.8;
+        cursor: not-allowed;
+      }
+      
+      &.inscripto {
+        background: rgba(76, 175, 80, 0.12);
+        color: #4CAF50;
+        pointer-events: none;
+
+        mat-icon {
+          color: #4CAF50;
+        }
+      }
+      
+      mat-spinner {
+        margin-right: 8px;
+      }
+    }
+  `],
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
@@ -38,13 +91,12 @@ import { finalize } from 'rxjs/operators';
   ]
 })
 export class InscripcionButtonComponent implements OnInit {
-  @Input() concurso!: Concurso;
-  @Output() inscripcionCompleta = new EventEmitter<Concurso>();
+  @Input() contest!: Contest;
+  @Output() inscriptionComplete = new EventEmitter<Contest>();
 
   loading = false;
+  inscripcionState$ = new BehaviorSubject<InscripcionState>(InscripcionState.NO_INSCRIPTO);
   InscripcionState = InscripcionState;
-  private inscripcionStateSubject = new BehaviorSubject<InscripcionState>(InscripcionState.NO_INSCRIPTO);
-  inscripcionState$ = this.inscripcionStateSubject.asObservable();
 
   constructor(
     private inscriptionService: InscriptionService,
@@ -56,30 +108,48 @@ export class InscripcionButtonComponent implements OnInit {
     this.verificarEstadoInscripcion();
   }
 
-  private verificarEstadoInscripcion() {
-    if (!this.concurso) {
-      console.warn('No hay concurso seleccionado para verificar inscripción');
+  private verificarEstadoInscripcion(): void {
+    if (!this.contest) return;
+
+    this.loading = true;
+    this.inscriptionService.getInscriptionStatus(this.contest.id)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (estado) => {
+          this.inscripcionState$.next(estado);
+          if (estado === InscripcionState.CONFIRMADA) {
+            this.snackBar.open('Ya estás inscrito en este concurso', 'Cerrar', {
+              duration: 3000
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error al verificar estado de inscripción:', error);
+          this.snackBar.open('Error al verificar el estado de inscripción', 'Cerrar', {
+            duration: 3000
+          });
+        }
+      });
+  }
+
+  onInscribirse(): void {
+    if (!this.contest) {
+      console.warn('No hay concurso seleccionado para inscribirse');
       return;
     }
 
     this.loading = true;
-    this.inscriptionService.getInscriptionStatus(this.concurso.id)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-        })
-      )
+    this.inscriptionService.createInscription(this.contest.id)
+      .pipe(finalize(() => this.loading = false))
       .subscribe({
-        next: (inscripto) => {
-          this.inscripcionStateSubject.next(
-            inscripto ? InscripcionState.CONFIRMADA : InscripcionState.NO_INSCRIPTO
-          );
+        next: (response) => {
+          console.log('Inscripción inicial creada:', response);
+          this.abrirDialogoInscripcion();
         },
         error: (error) => {
-          console.error('Error al verificar inscripción:', error);
-          this.inscripcionStateSubject.next(InscripcionState.NO_INSCRIPTO);
+          console.error('Error al crear inscripción:', error);
           this.snackBar.open(
-            'No se pudo verificar el estado de la inscripción',
+            'Error al iniciar el proceso de inscripción',
             'Cerrar',
             { duration: 3000 }
           );
@@ -87,39 +157,27 @@ export class InscripcionButtonComponent implements OnInit {
       });
   }
 
-  onInscribirse() {
-    if (!this.concurso) {
-      console.warn('No hay concurso seleccionado para inscribirse');
-      return;
-    }
+  private abrirDialogoInscripcion(): void {
+    const dialogRef = this.dialog.open(InscripcionDialogComponent, {
+      width: '800px',
+      height: '600px',
+      maxWidth: '100vw',
+      maxHeight: '100vh',
+      panelClass: 'glassmorphism-dialog',
+      disableClose: true,
+      data: this.contest
+    });
 
-    this.loading = true;
-    this.inscriptionService.createInscription(this.concurso.id)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          console.log('Inscripción exitosa:', response);
-          this.inscripcionStateSubject.next(InscripcionState.CONFIRMADA);
-          this.inscripcionCompleta.emit(this.concurso);
-          this.snackBar.open(
-            'Te has inscrito exitosamente al concurso',
-            'Cerrar',
-            { duration: 3000 }
-          );
-        },
-        error: (error) => {
-          console.error('Error al inscribirse:', error);
-          this.inscripcionStateSubject.next(InscripcionState.NO_INSCRIPTO);
-          this.snackBar.open(
-            'Error al realizar la inscripción',
-            'Cerrar',
-            { duration: 3000 }
-          );
-        }
-      });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.inscriptionComplete.emit(this.contest);
+        this.verificarEstadoInscripcion();
+        this.snackBar.open(
+          'Inscripción completada exitosamente',
+          'Cerrar',
+          { duration: 3000 }
+        );
+      }
+    });
   }
 }

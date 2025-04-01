@@ -12,8 +12,11 @@ import {
   IInscriptionRequest,
   IInscriptionResponse,
   IInscriptionStatusResponse,
-  IInscriptionUpdateRequest
+  IInscriptionUpdateRequest,
+  IInscriptionStepRequest
 } from '@shared/interfaces/inscripcion/inscription.interface';
+import { InscriptionStep } from '@shared/enums/inscription-step.enum';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -46,6 +49,39 @@ export class InscriptionService {
         console.log('[InscriptionService] Inscripción creada:', response);
         this.refreshInscriptions();
       }),
+      catchError(this.handleError.bind(this))
+    );
+  }
+
+  updateInscriptionStep(inscriptionId: string, request: IInscriptionStepRequest): Observable<IInscriptionResponse> {
+    if (!this.validateAuthentication()) return EMPTY;
+    if (!inscriptionId) {
+      return throwError(() => new Error('El ID de inscripción es requerido'));
+    }
+
+    return this.http.put<IInscriptionResponse>(
+      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/step`,
+      request
+    ).pipe(
+      tap(response => {
+        console.log('[InscriptionService] Paso de inscripción actualizado:', response);
+        this.refreshInscriptions();
+      }),
+      catchError(this.handleError.bind(this))
+    );
+  }
+
+  getCurrentStep(inscriptionId: string): Observable<InscriptionStep> {
+    if (!this.validateAuthentication()) return EMPTY;
+    if (!inscriptionId) {
+      return throwError(() => new Error('El ID de inscripción es requerido'));
+    }
+
+    return this.http.get<{ step: InscriptionStep }>(
+      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/step`
+    ).pipe(
+      map(response => response.step),
+      tap(step => console.log('[InscriptionService] Paso actual:', step)),
       catchError(this.handleError.bind(this))
     );
   }
@@ -87,18 +123,19 @@ export class InscriptionService {
     );
   }
 
-  getInscriptionStatus(contestId: string | number): Observable<boolean> {
-    if (!this.validateAuthentication()) return of(false);
+  getInscriptionStatus(contestId: string | number): Observable<InscripcionState> {
+    if (!this.validateAuthentication()) return of(InscripcionState.NO_INSCRIPTO);
 
     const numericContestId = typeof contestId === 'string' ? parseInt(contestId, 10) : contestId;
 
     return this.http.get<boolean>(
       `${this.baseUrl}${this.inscriptionsEndpoint}/estado/${numericContestId}`
     ).pipe(
-      tap(status => console.log('[InscriptionService] Estado de inscripción:', status)),
+      map(status => status ? InscripcionState.CONFIRMADA : InscripcionState.NO_INSCRIPTO),
+      tap(state => console.log('[InscriptionService] Estado de inscripción:', state)),
       catchError(error => {
         console.error('[InscriptionService] Error al verificar estado:', error);
-        return of(false);
+        return of(InscripcionState.NO_INSCRIPTO);
       })
     );
   }
@@ -109,12 +146,18 @@ export class InscriptionService {
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
+    console.log('[InscriptionService] Iniciando proceso de cancelación para inscripción:', inscriptionId);
+
     return this.http.delete<void>(
       `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`
     ).pipe(
       tap(() => {
-        console.log('[InscriptionService] Inscripción cancelada:', inscriptionId);
-        this.refreshInscriptions();
+        console.log('[InscriptionService] Inscripción cancelada exitosamente:', inscriptionId);
+        // Agregar delay para asegurar que el backend procese la cancelación
+        setTimeout(() => {
+          console.log('[InscriptionService] Refrescando inscripciones después de cancelación');
+          this.refreshInscriptions();
+        }, 500);
       }),
       catchError(this.handleError.bind(this))
     );

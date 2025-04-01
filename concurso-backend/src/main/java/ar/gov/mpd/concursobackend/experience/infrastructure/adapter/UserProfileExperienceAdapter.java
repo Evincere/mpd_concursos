@@ -112,9 +112,6 @@ public class UserProfileExperienceAdapter {
 
         log.info("Synchronizing {} experiences for user {}", legacyDtos.size(), userId);
 
-        // Get current experiences from the new system
-        List<ExperienceResponseDto> currentExperiences = experienceService.getAllExperiencesByUserId(userId);
-
         // Process each legacy DTO
         List<ExperienceResponseDto> updatedExperiences = new ArrayList<>();
 

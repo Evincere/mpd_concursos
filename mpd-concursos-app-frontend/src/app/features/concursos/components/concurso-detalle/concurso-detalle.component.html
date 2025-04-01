@@ -96,9 +96,9 @@
       Volver
     </button>
     <app-inscripcion-button
-      *ngIf="concurso.status === 'ACTIVE'"
-      [concurso]="concurso"
-      (inscripcionCompleta)="onInscripcionCompleta($event)">
+      *ngIf="concurso.status === 'ACTIVE' && (inscripcionState$ | async) !== InscripcionState.CONFIRMADA"
+      [contest]="concurso"
+      (inscriptionComplete)="onInscriptionComplete(concurso)">
     </app-inscripcion-button>
   </div>
 </div>

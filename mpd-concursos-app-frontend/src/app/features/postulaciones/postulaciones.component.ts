@@ -26,6 +26,8 @@ import { PostulacionDetalleComponent } from './components/postulacion-detalle/po
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { PostulationStatus } from '@shared/interfaces/postulacion/postulacion.interface';
+import { EventsService, EventType } from '@core/services/events/events.service';
+import { DashboardService } from '@core/services/dashboard/dashboard.service';
 
 @Component({
   selector: 'app-postulaciones',
@@ -100,13 +102,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   @ViewChild(MatSort) sort!: MatSort;
 
   primeraConsulta = true; // Nueva variable para controlar si es la primera carga
+  todasCanceladas = false;
 
   constructor(
     private postulacionesService: PostulacionesService,
     private inscriptionService: InscriptionService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private eventsService: EventsService,
+    private dashboardService: DashboardService
   ) { }
 
   ngOnInit(): void {
@@ -143,6 +148,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   cargarPostulaciones(): void {
     this.loading = true;
     this.error = null;
+    this.todasCanceladas = false;
 
     this.postulacionesService.getPostulaciones(
       this.pageIndex,
@@ -153,8 +159,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
       finalize(() => {
         this.loading = false;
-        this.primeraConsulta = false; // Marcamos que ya no es la primera consulta
-        // Asegurarnos de que los filtros estén en su estado inicial
+        this.primeraConsulta = false;
         if (!this.terminoBusqueda && this.filtrosActuales?.estado === 'todos' &&
             this.filtrosActuales?.periodo === 'todos' &&
             this.filtrosActuales?.dependencia === 'todas' &&
@@ -162,18 +167,26 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
           this.filtrosModificados = false;
         }
       })
-    )
-    .subscribe({
+    ).subscribe({
       next: (response) => {
-        this.postulaciones = response.content;
+        // Verificar si todas las postulaciones están canceladas
+        const postulacionesActivas = response.content.filter(p => p.estado !== PostulationStatus.CANCELLED);
+        this.todasCanceladas = response.content.length > 0 && postulacionesActivas.length === 0;
+        
+        // Asignar solo las postulaciones activas
+        this.postulaciones = postulacionesActivas;
         this.aplicarFiltros();
       },
       error: (error) => {
         console.error('Error al cargar las postulaciones:', error);
-        this.snackBar.open('Error al cargar las postulaciones', 'Cerrar', {
-          duration: 3000
-        });
-        this.error = error;
+        this.error = error.status === 0 ? 'connection' : 'server';
+        this.snackBar.open(
+          error.status === 0 
+            ? 'Error de conexión' 
+            : 'Error al cargar las postulaciones',
+          'Cerrar',
+          { duration: 3000 }
+        );
       }
     });
   }
@@ -198,13 +211,12 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       this.filtrosActivos = true;
     }
 
-    this.postulacionesFiltradas = this.postulaciones.filter(postulacion => {
-      let cumpleFiltros = true;
+    // Primero filtrar las postulaciones canceladas
+    let postulacionesFiltradas = this.postulaciones.filter(p => p.estado !== PostulationStatus.CANCELLED);
 
-      // Filtrar postulaciones canceladas (no mostrarlas)
-      if (postulacion.estado === PostulationStatus.CANCELLED) {
-        return false;
-      }
+    // Luego aplicar el resto de los filtros
+    this.postulacionesFiltradas = postulacionesFiltradas.filter(postulacion => {
+      let cumpleFiltros = true;
 
       // Aplicar filtros solo si están activos
       if (this.filtrosActivos) {
@@ -240,6 +252,17 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
     // Actualizar el datasource
     this.dataSource.data = this.postulacionesFiltradas;
+
+    // Si no hay postulaciones después de aplicar los filtros, mostrar mensaje apropiado
+    if (this.postulacionesFiltradas.length === 0 && !this.primeraConsulta) {
+      if (this.filtrosModificados || this.terminoBusqueda) {
+        this.error = 'no-results';
+      } else {
+        this.error = 'empty';
+      }
+    } else {
+      this.error = null;
+    }
   }
 
   private getEstadoApiValue(estadoFiltro: string): string {
@@ -315,45 +338,42 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       return;
     }
 
+    console.log('[PostulacionesComponent] Iniciando proceso de cancelación para postulación:', postulacionId);
+
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
+      panelClass: 'confirm-dialog-container',
       data: {
-        title: 'Cancelar Postulación',
-        message: '¿Está seguro que desea cancelar esta postulación?',
-        confirmText: 'Sí, cancelar',
-        cancelText: 'No, mantener'
+        titulo: 'Cancelar Postulación',
+        mensaje: `¿Está seguro que desea cancelar su postulación para el concurso "${postulacion.concurso?.titulo}"?`,
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No, mantener'
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        console.log('[PostulacionesComponent] Usuario confirmó cancelación de postulación');
         this.inscriptionService.cancelInscription(postulacionId)
           .subscribe({
             next: () => {
-              this.snackBar.open('Postulación cancelada con éxito', 'Cerrar', {
+              console.log('[PostulacionesComponent] Postulación cancelada exitosamente');
+              this.snackBar.open('Postulación cancelada exitosamente', 'Cerrar', {
                 duration: 3000
               });
-
-              // Actualizar el estado de la postulación en la lista local
-              const index = this.postulaciones.findIndex(p => p.id === postulacion.id);
-              if (index !== -1) {
-                this.postulaciones[index].estado = PostulationStatus.CANCELLED;
-                // Aplicar filtros para actualizar la vista
-                this.aplicarFiltros();
-              } else {
-                // Si no se encuentra en la lista local, recargar todas las postulaciones
-                this.cargarPostulaciones();
-              }
+              // Forzar actualización del dashboard
+              console.log('[PostulacionesComponent] Actualizando dashboard después de cancelación');
+              this.dashboardService.getDashboardCards().subscribe();
             },
             error: (error) => {
-              console.error('Error al cancelar postulación:', error);
-              this.snackBar.open(
-                error.message || 'Error al cancelar la postulación',
-                'Cerrar',
-                { duration: 3000 }
-              );
+              console.error('[PostulacionesComponent] Error al cancelar postulación:', error);
+              this.snackBar.open('Error al cancelar la postulación', 'Cerrar', {
+                duration: 3000
+              });
             }
           });
+      } else {
+        console.log('[PostulacionesComponent] Usuario canceló la operación de cancelación');
       }
     });
   }

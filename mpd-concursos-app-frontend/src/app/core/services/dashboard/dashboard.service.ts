@@ -6,6 +6,7 @@ import { InscriptionService } from '../inscripcion/inscription.service';
 import { Card } from '@shared/interfaces/concurso/card.interface';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.interface';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -17,10 +18,11 @@ export class DashboardService {
   ) {}
 
   getDashboardCards(): Observable<Card[]> {
-    console.log('[DashboardService] Iniciando obtención de datos para cards...');
+    console.log('[DashboardService] Iniciando obtención de cards...');
 
     return this.concursosService.getConcursos().pipe(
       map(concursos => {
+        console.log('[DashboardService] Concursos obtenidos:', concursos);
         const concursosActivos = concursos.filter(c => c.status === 'ACTIVE').length;
         const proximosAVencer = concursos.filter(c => {
           const fechaFin = new Date(c.endDate);
@@ -49,19 +51,38 @@ export class DashboardService {
             color: '#FF9800',
           },
         ];
-
         return cards;
       }),
       switchMap(cards => {
-        return this.inscriptionService.getUserInscriptions().pipe(
-          map(response => {
-            cards[1].count = response.content.length;
+        console.log('[DashboardService] Obteniendo inscripciones para actualizar cards');
+        return this.inscriptionService.inscriptions.pipe(
+          map(inscriptions => {
+            console.log('[DashboardService] Inscripciones recibidas:', inscriptions);
+            
+            // Filtrar postulaciones activas (no canceladas ni rechazadas)
+            const postulacionesActivas = inscriptions.filter(p => {
+              const estado = p.state?.toUpperCase();
+              console.log('[DashboardService] Estado de postulación:', estado);
+              const estadosInactivos = [
+                InscripcionState.CANCELLED.toUpperCase(),
+                InscripcionState.REJECTED.toUpperCase(),
+                'CANCELED',
+                'CANCELLED',
+                'CANCELADA',
+                'CANCELADO'
+              ];
+              const esActiva = !estadosInactivos.includes(estado);
+              console.log('[DashboardService] ¿Postulación activa?:', esActiva);
+              return esActiva;
+            });
+
+            console.log('[DashboardService] Postulaciones activas:', postulacionesActivas);
+            cards[1].count = postulacionesActivas.length;
             return cards;
-          }),
-          catchError(() => of(cards)) // Si hay error, retornamos las cards sin modificar
+          })
         );
       }),
-      tap(cards => console.log('[DashboardService] Cards generadas:', cards))
+      tap(cards => console.log('[DashboardService] Cards finales:', cards))
     );
   }
 
@@ -71,17 +92,21 @@ export class DashboardService {
     return this.concursosService.getConcursos().pipe(
       map(concursos => {
         // Ordenar por fecha de inicio, más recientes primero
-        const sortedConcursos = [...concursos].sort((a, b) =>
-          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-        );
-
-        // Tomar los 5 más recientes
-        const recentConcursos = sortedConcursos.slice(0, 5).map(c => ({
-          id: String(c.id),
-          titulo: c.title,
-          fecha: c.startDate,
-          estado: this.mapStatus(c.status)
-        }));
+        const recentConcursos = concursos
+          .sort((a, b) => {
+            const dateA = new Date(a.startDate);
+            const dateB = new Date(b.startDate);
+            return dateB.getTime() - dateA.getTime();
+          })
+          .slice(0, 5)
+          .map(concurso => ({
+            id: concurso.id.toString(),
+            titulo: concurso.title,
+            fecha: typeof concurso.startDate === 'string' 
+              ? concurso.startDate 
+              : concurso.startDate.toISOString().split('T')[0],
+            estado: concurso.status
+          }));
 
         console.log('[DashboardService] Concursos recientes obtenidos:', recentConcursos);
         return recentConcursos;

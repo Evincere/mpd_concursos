@@ -11,6 +11,7 @@ SET SQL_SAFE_UPDATES = 0;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpiar datos existentes
+DELETE FROM inscription_circunscripciones;
 DELETE FROM answers;
 DELETE FROM options;
 DELETE FROM questions;
@@ -201,6 +202,53 @@ SET @question1_id = UUID_TO_BIN('99999999-9999-9999-9999-999999999999');
 INSERT INTO answers (id, question_id, response, response_time_ms, status, timestamp, session_id)
 VALUES
 (UUID_TO_BIN('77777777-7777-7777-7777-777777777778'), @question1_id, 'Derecho a ser oido', 30000, 'SUBMITTED', CURRENT_TIMESTAMP, @session_id);
+
+-- Insertar inscripciones de prueba
+INSERT INTO inscriptions (
+    id, 
+    contest_id, 
+    user_id, 
+    created_at, 
+    updated_at,
+    inscription_date, 
+    status, 
+    current_step,
+    accepted_terms,
+    confirmed_personal_data,
+    terms_acceptance_date,
+    data_confirmation_date
+) VALUES (
+    UUID_TO_BIN('77777777-7777-7777-7777-777777777777'),
+    1,
+    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'),
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'ACTIVE',
+    'COMPLETED',
+    TRUE,
+    TRUE,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+), (
+    UUID_TO_BIN('88888888-8888-8888-8888-888888888888'),
+    2,
+    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'),
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'PENDING',
+    'TERMS_ACCEPTANCE',
+    FALSE,
+    FALSE,
+    NULL,
+    NULL
+);
+
+-- Insertar circunscripciones seleccionadas para la inscripción completada
+INSERT INTO inscription_circunscripciones (inscription_id, circunscripcion) VALUES
+(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 'Primera Circunscripción Judicial'),
+(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 'Segunda Circunscripción Judicial');
 
 -- Asignar roles a usuarios
 INSERT INTO user_roles (user_id, role_id) VALUES

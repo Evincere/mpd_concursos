@@ -7,19 +7,23 @@
     <app-loader *ngIf="loading" [overlay]="true" message="Cargando postulaciones...">
     </app-loader>
 
-    <div class="error-message" *ngIf="error">
-      <i class="fas fa-exclamation-circle"></i>
+    <div class="error-message glassmorphism" *ngIf="error === 'connection'">
+      <div class="error-icon">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
       <div class="error-content">
         <h4>Error al cargar las postulaciones</h4>
-        <p>{{ error.status === 0 ? 'No se pudo conectar con el servidor' : error.error?.message || 'Ocurrió un error inesperado' }}</p>
+        <p>No se pudo establecer conexión con el servidor. Por favor, verifica tu conexión a internet y vuelve a intentarlo.</p>
+        <div class="error-actions">
+          <button mat-stroked-button (click)="retryLoad()">
+            <i class="fas fa-redo"></i>
+            Reintentar
+          </button>
+        </div>
       </div>
-      <button mat-button (click)="retryLoad()">
-        <i class="fas fa-redo"></i>
-        Reintentar
-      </button>
     </div>
 
-    <ng-container *ngIf="!loading && !error">
+    <ng-container *ngIf="!loading && error !== 'connection'">
       <!-- Lista de postulaciones -->
       <div class="postulaciones-list" *ngIf="dataSource.data.length > 0" [ngClass]="{'blurred': postulacionSeleccionada}">
         <div class="postulacion-item" *ngFor="let postulacion of dataSource.data" (click)="verDetalle(postulacion)">
@@ -123,34 +127,45 @@
         </div>
       </div>
 
-      <!-- Mensaje cuando no hay postulaciones -->
-      <div class="empty-state" *ngIf="!loading && !error && dataSource.data.length === 0">
-        <div class="empty-state-content" [ngClass]="{'filtered': hayFiltrosAplicados()}">
-          <ng-container *ngIf="!hayFiltrosAplicados()">
-            <i class="fas fa-user-plus fa-4x"></i>
-            <h3>¡Bienvenido al Sistema de Concursos!</h3>
-            <p>Aún no tienes postulaciones registradas. Comienza explorando los concursos disponibles y postúlate para iniciar tu carrera en el Ministerio Público de la Defensa.</p>
-            <button mat-raised-button (click)="navegarAConcursos()">
-              <i class="fas fa-search"></i>
-              Explorar concursos disponibles
-            </button>
-          </ng-container>
+      <!-- Estados vacíos -->
+      <div class="empty-state" *ngIf="dataSource.data.length === 0">
+        <!-- Sin postulaciones (nuevo usuario) -->
+        <div class="empty-state-content glassmorphism welcome" *ngIf="!hayFiltrosAplicados() && !todasCanceladas">
+          <i class="fas fa-user-plus fa-4x"></i>
+          <h3>¡Bienvenido al Sistema de Concursos!</h3>
+          <p>Aún no tienes postulaciones registradas. Comienza explorando los concursos disponibles y postúlate para iniciar tu carrera en el Ministerio Público de la Defensa.</p>
+          <button mat-raised-button color="primary" (click)="navegarAConcursos()">
+            <i class="fas fa-search"></i>
+            Explorar concursos disponibles
+          </button>
+        </div>
 
-          <ng-container *ngIf="hayFiltrosAplicados()">
-            <i class="fas fa-filter fa-4x"></i>
-            <h3>No se encontraron coincidencias</h3>
-            <p>No hay postulaciones que coincidan con los criterios de búsqueda actuales. Prueba ajustando los filtros o realizando una nueva búsqueda.</p>
-            <div class="actions">
-              <button mat-stroked-button (click)="limpiarFiltros()">
-                <i class="fas fa-times"></i>
-                Limpiar filtros
-              </button>
-              <button mat-raised-button color="primary" (click)="retryLoad()">
-                <i class="fas fa-sync"></i>
-                Actualizar lista
-              </button>
-            </div>
-          </ng-container>
+        <!-- Todas las postulaciones canceladas -->
+        <div class="empty-state-content glassmorphism cancelled" *ngIf="!hayFiltrosAplicados() && todasCanceladas">
+          <i class="fas fa-folder-open fa-4x"></i>
+          <h3>No hay postulaciones activas</h3>
+          <p>Todas tus postulaciones han sido canceladas. Si deseas participar en nuevos concursos, explora las convocatorias disponibles.</p>
+          <button mat-raised-button color="primary" (click)="navegarAConcursos()">
+            <i class="fas fa-search"></i>
+            Ver nuevos concursos
+          </button>
+        </div>
+
+        <!-- Sin resultados de búsqueda -->
+        <div class="empty-state-content glassmorphism filtered" *ngIf="hayFiltrosAplicados()">
+          <i class="fas fa-filter fa-4x"></i>
+          <h3>No se encontraron coincidencias</h3>
+          <p>No hay postulaciones que coincidan con los criterios de búsqueda actuales. Prueba ajustando los filtros o realizando una nueva búsqueda.</p>
+          <div class="actions">
+            <button mat-stroked-button (click)="limpiarFiltros()">
+              <i class="fas fa-times"></i>
+              Limpiar filtros
+            </button>
+            <button mat-raised-button color="primary" (click)="retryLoad()">
+              <i class="fas fa-sync"></i>
+              Actualizar lista
+            </button>
+          </div>
         </div>
       </div>
     </ng-container>

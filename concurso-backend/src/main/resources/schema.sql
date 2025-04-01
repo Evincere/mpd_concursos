@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS contests;
 DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS user_entity;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS inscription_circunscripciones;
 DROP TABLE IF EXISTS inscriptions;
 DROP TABLE IF EXISTS options;
 DROP TABLE IF EXISTS answers;
@@ -198,11 +199,26 @@ CREATE TABLE notifications (
 CREATE TABLE inscriptions (
     id BINARY(16) NOT NULL,
     contest_id BIGINT,
+    user_id BINARY(16),
     created_at DATETIME(6),
+    updated_at DATETIME(6),
     inscription_date DATETIME(6),
     status ENUM('ACTIVE', 'CANCELLED', 'PENDING'),
-    user_id BINARY(16),
-    PRIMARY KEY (id)
+    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DATA_CONFIRMATION', 'COMPLETED'),
+    accepted_terms BOOLEAN DEFAULT FALSE,
+    confirmed_personal_data BOOLEAN DEFAULT FALSE,
+    terms_acceptance_date DATETIME(6),
+    data_confirmation_date DATETIME(6),
+    PRIMARY KEY (id),
+    FOREIGN KEY (contest_id) REFERENCES contests(id),
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE inscription_circunscripciones (
+    inscription_id BINARY(16) NOT NULL,
+    circunscripcion VARCHAR(100) NOT NULL,
+    PRIMARY KEY (inscription_id, circunscripcion),
+    FOREIGN KEY (inscription_id) REFERENCES inscriptions(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE question_correct_answers (

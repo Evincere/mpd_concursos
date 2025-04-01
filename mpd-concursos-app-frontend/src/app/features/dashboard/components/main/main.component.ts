@@ -8,6 +8,7 @@ import { DashboardService } from '@core/services/dashboard/dashboard.service';
 import { Card } from '@shared/interfaces/concurso/card.interface';
 import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.interface';
 import { Subscription } from 'rxjs';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 
 @Component({
   selector: 'app-main',
@@ -26,9 +27,28 @@ export class MainComponent implements OnInit, OnDestroy {
   recentConcursos: RecentConcurso[] = [];
   private subscription: Subscription = new Subscription();
 
-  constructor(private dashboardService: DashboardService) {}
+  constructor(
+    private dashboardService: DashboardService,
+    private inscriptionService: InscriptionService
+  ) {}
 
   ngOnInit(): void {
+    this.cargarDatos();
+
+    // Suscribirse a cambios en las inscripciones
+    this.subscription.add(
+      this.inscriptionService.inscriptions.subscribe(() => {
+        console.log('[MainComponent] Cambios detectados en inscripciones, recargando datos...');
+        this.cargarDatos();
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
+  private cargarDatos(): void {
     // Suscripción a las cards
     this.subscription.add(
       this.dashboardService.getDashboardCards().subscribe({
@@ -54,9 +74,5 @@ export class MainComponent implements OnInit, OnDestroy {
         }
       })
     );
-  }
-
-  ngOnDestroy(): void {
-    this.subscription.unsubscribe();
   }
 }

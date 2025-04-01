@@ -2,10 +2,8 @@ package ar.gov.mpd.concursobackend.auth.infrastructure.mapper;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
-import ar.gov.mpd.concursobackend.auth.domain.model.Experiencia;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.RoleEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
-import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.ExperienciaEntity;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IRoleSpringRepository;
 
@@ -14,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 

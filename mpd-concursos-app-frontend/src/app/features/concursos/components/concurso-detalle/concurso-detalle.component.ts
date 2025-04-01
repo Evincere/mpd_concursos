@@ -15,6 +15,8 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
 import { ContestDate } from '@shared/interfaces/concurso/contest-date.interface';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -29,18 +31,19 @@ import { ContestDate } from '@shared/interfaces/concurso/contest-date.interface'
     MatTabsModule,
     DatePipe,
     InscripcionButtonComponent
-],
+  ],
   templateUrl: './concurso-detalle.component.html',
   styleUrls: ['./concurso-detalle.component.scss']
 })
 export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   @Input() concurso!: Contest;
   @Output() cerrarDetalle = new EventEmitter<void>();
-  @Output() inscripcionRealizada = new EventEmitter<Concurso>();
+  @Output() inscriptionComplete = new EventEmitter<Concurso>();
 
   closing = false;
   inscripcionLoading = false;
-  estaInscripto = false;
+  inscripcionState$ = new BehaviorSubject<InscripcionState>(InscripcionState.NO_INSCRIPTO);
+  InscripcionState = InscripcionState;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -90,13 +93,13 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (inscripto) => {
-          console.log('Estado de inscripción actualizado:', inscripto);
-          this.estaInscripto = inscripto;
+        next: (estado) => {
+          console.log('Estado de inscripción actualizado:', estado);
+          this.inscripcionState$.next(estado);
         },
         error: (error) => {
           console.error('Error al verificar inscripción:', error);
-          this.estaInscripto = false;
+          this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
           this.snackBar.open(
             'No se pudo verificar el estado de la inscripción',
             'Cerrar',
@@ -124,9 +127,9 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
     }, 300);
   }
 
-  onInscripcionCompleta(concurso: Concurso): void {
+  onInscriptionComplete(concurso: Concurso): void {
     this.verificarInscripcion();
-    this.inscripcionRealizada.emit(concurso);
+    this.inscriptionComplete.emit(concurso);
   }
 
   private getDefaultDates(): ContestDate[] {

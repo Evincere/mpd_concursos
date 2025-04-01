@@ -3,8 +3,6 @@ package ar.gov.mpd.concursobackend.experience.infrastructure.persistence;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

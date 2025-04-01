@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
-import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
 import ar.gov.mpd.concursobackend.experience.application.service.ExperienceService;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +81,8 @@ public class ExperienceDocumentController {
             try {
                 log.info("Llamando a experienceService.uploadDocument para guardar el documento de experiencia");
 
-                // Guardar el archivo como un array de bytes para evitar problemas de streams cerrados
+                // Guardar el archivo como un array de bytes para evitar problemas de streams
+                // cerrados
                 byte[] fileBytes = file.getBytes();
                 log.info("Archivo convertido a bytes correctamente. Tamaño: {} bytes", fileBytes.length);
 

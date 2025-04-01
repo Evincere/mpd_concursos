@@ -25,9 +25,7 @@ export interface ConfirmDialogData {
   template: `
     <div class="confirm-dialog" [ngClass]="{'data-view': data.tipoDatos}">
       <h2 mat-dialog-title class="dialog-title">
-        <mat-icon *ngIf="!data.tipoDatos">warning</mat-icon>
-        <mat-icon *ngIf="data.tipoDatos === 'educacion'">school</mat-icon>
-        <mat-icon *ngIf="data.tipoDatos === 'experiencia'">work</mat-icon>
+        <mat-icon>warning</mat-icon>
         {{ data.titulo }}
       </h2>
       <mat-dialog-content class="dialog-content">
@@ -36,15 +34,15 @@ export interface ConfirmDialogData {
       </mat-dialog-content>
       <mat-dialog-actions class="dialog-actions">
         <button 
-          *ngIf="data.cancelButtonText" 
           mat-button 
           class="cancel-button" 
-          (click)="onCancel()">
+          (click)="onCancel()"
+          *ngIf="data.cancelButtonText">
           {{ data.cancelButtonText }}
         </button>
         <button 
           mat-button 
-          [ngClass]="{'confirm-button': !data.tipoDatos, 'data-button': data.tipoDatos}" 
+          class="confirm-button"
           (click)="onConfirm()">
           {{ data.confirmButtonText || 'Confirmar' }}
         </button>
@@ -58,8 +56,6 @@ export class ConfirmDialogComponent {
     public dialogRef: MatDialogRef<ConfirmDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ConfirmDialogData
   ) {
-    dialogRef.addPanelClass('confirm-dialog-container');
-    
     // Asegurar que html es verdadero si se proporciona tipoDatos
     if (this.data.tipoDatos && !this.data.html) {
       this.data.html = true;

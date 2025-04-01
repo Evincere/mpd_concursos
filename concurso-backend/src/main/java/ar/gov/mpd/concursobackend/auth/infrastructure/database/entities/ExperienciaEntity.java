@@ -1,7 +1,6 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.database.entities;
 
 import java.time.LocalDate;
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 

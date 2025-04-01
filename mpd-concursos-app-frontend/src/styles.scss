@@ -1137,3 +1137,33 @@ $snackbar-action: rgba(255, 255, 255, 0.9);
     font-weight: 500 !important;
   }
 }
+
+// Estilos para diálogos con glassmorphism
+.glassmorphism-dialog {
+  .mat-mdc-dialog-container {
+    --mdc-dialog-container-color: transparent !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .mdc-dialog__surface {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+}
+
+// Backdrop con blur para diálogos
+.cdk-overlay-dark-backdrop {
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}

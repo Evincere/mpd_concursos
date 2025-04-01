@@ -5,6 +5,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -30,6 +31,7 @@ import { FiltersService } from '@core/services/filters/filters.service';
     RouterModule,
     MatButtonModule,
     MatIconModule,
+    MatCardModule,
     MatProgressSpinnerModule,
     InscripcionButtonComponent,
     SearchHeaderComponent,
