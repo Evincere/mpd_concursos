@@ -29,6 +29,9 @@ public class DocumentEntityMapper {
         document.setStatus(mapStatus(entity.getStatus()));
         document.setComments(entity.getComments());
         document.setUploadDate(entity.getUploadDate());
+        document.setValidatedBy(entity.getValidatedBy());
+        document.setValidatedAt(entity.getValidatedAt());
+        document.setRejectionReason(entity.getRejectionReason());
 
         return document;
     }
@@ -40,10 +43,13 @@ public class DocumentEntityMapper {
 
         DocumentType documentType = new DocumentType();
         documentType.setId(new DocumentTypeId(entity.getId()));
+        documentType.setCode(entity.getCode());
         documentType.setName(entity.getName());
         documentType.setDescription(entity.getDescription());
         documentType.setRequired(entity.isRequired());
         documentType.setOrder(entity.getOrder());
+        documentType.setParent(toDomain(entity.getParent()));
+        documentType.setActive(entity.isActive());
 
         return documentType;
     }
@@ -63,6 +69,9 @@ public class DocumentEntityMapper {
         entity.setStatus(mapStatus(domain.getStatus()));
         entity.setComments(domain.getComments());
         entity.setUploadDate(domain.getUploadDate());
+        entity.setValidatedBy(domain.getValidatedBy());
+        entity.setValidatedAt(domain.getValidatedAt());
+        entity.setRejectionReason(domain.getRejectionReason());
 
         return entity;
     }
@@ -74,10 +83,13 @@ public class DocumentEntityMapper {
 
         DocumentTypeEntity entity = new DocumentTypeEntity();
         entity.setId(domain.getId().value());
+        entity.setCode(domain.getCode());
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());
         entity.setRequired(domain.isRequired());
         entity.setOrder(domain.getOrder());
+        entity.setParent(domain.getParent() != null ? toEntity(domain.getParent()) : null);
+        entity.setActive(domain.isActive());
 
         return entity;
     }

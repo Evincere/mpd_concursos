@@ -32,6 +32,14 @@ public class DocumentTypeService {
     }
 
     @Transactional(readOnly = true)
+    public List<DocumentTypeDto> getAllActiveDocumentTypes() {
+        log.debug("Getting all active document types");
+
+        List<DocumentType> documentTypes = documentTypeRepository.findAllActive();
+        return documentMapper.toTypeDtoList(documentTypes);
+    }
+
+    @Transactional(readOnly = true)
     public DocumentTypeDto getDocumentTypeById(String id) {
         log.debug("Getting document type by id: {}", id);
 
@@ -46,6 +54,8 @@ public class DocumentTypeService {
         log.debug("Creating document type: {}", documentTypeDto);
 
         DocumentType documentType = DocumentType.create(
+                documentTypeDto.getCode() != null ? documentTypeDto.getCode()
+                        : generateCode(documentTypeDto.getNombre()),
                 documentTypeDto.getNombre(),
                 documentTypeDto.getDescripcion(),
                 documentTypeDto.isRequerido(),
@@ -53,6 +63,31 @@ public class DocumentTypeService {
 
         DocumentType savedDocumentType = documentTypeRepository.save(documentType);
         return documentMapper.toTypeDto(savedDocumentType);
+    }
+
+    /**
+     * Generate a code from a name
+     *
+     * @param name Document type name
+     * @return Code
+     */
+    private String generateCode(String name) {
+        if (name == null || name.isEmpty()) {
+            return "doc-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+
+        // Convert to lowercase, replace spaces with hyphens, remove special characters
+        String code = name.toLowerCase()
+                .replaceAll("\\s+", "-")
+                .replaceAll("[^a-z0-9-]", "")
+                .replaceAll("-+", "-");
+
+        // Ensure the code is unique
+        if (documentTypeRepository.existsByCode(code)) {
+            code = code + "-" + UUID.randomUUID().toString().substring(0, 4);
+        }
+
+        return code;
     }
 
     @Transactional

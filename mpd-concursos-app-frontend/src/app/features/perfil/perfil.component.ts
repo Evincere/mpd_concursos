@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef, NgZone, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, FormControl, AbstractControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -32,6 +32,8 @@ import { EducacionService } from '../../core/services/educacion/educacion.servic
 import { Educacion, TipoEducacion } from '../../core/models/educacion.model';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
+import { ActivatedRoute } from '@angular/router';
+import { MatTabGroup } from '@angular/material/tabs';
 
 @Component({
   selector: 'app-perfil',
@@ -58,10 +60,11 @@ import { environment } from '@env/environment';
     ExperienciaContainerComponent
   ]
 })
-export class PerfilComponent implements OnInit, OnDestroy {
+export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
   @ViewChild('fechaInicio') fechaInicio: any;
   @ViewChild('fechaFin') fechaFin: any;
+  @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
   perfilForm!: FormGroup;
   userProfile: UserProfile | null = null;
 
@@ -93,7 +96,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private http: HttpClient,
-    private experienceService: ExperienceService
+    private experienceService: ExperienceService,
+    private route: ActivatedRoute
   ) {
     this.initializeForms();
   }
@@ -104,6 +108,30 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
     // Cargar el perfil de usuario
     this.loadUserProfile();
+  }
+
+  ngAfterViewInit(): void {
+    // Verificar si hay un parámetro activeTab en la URL
+    this.route.queryParams.subscribe(params => {
+      if (params['activeTab']) {
+        console.log('[PerfilComponent] Parámetro activeTab detectado:', params['activeTab']);
+
+        // Buscar el índice de la pestaña por su etiqueta
+        const tabLabels = ['Información Personal', 'Curriculum Vitae', 'Documentación', 'LinkedIn'];
+        const tabIndex = tabLabels.findIndex(label => label === params['activeTab']);
+
+        if (tabIndex !== -1 && this.tabGroup) {
+          console.log(`[PerfilComponent] Activando pestaña ${params['activeTab']} (índice ${tabIndex})`);
+          // Usar setTimeout para asegurar que el componente esté completamente inicializado
+          setTimeout(() => {
+            this.tabGroup.selectedIndex = tabIndex;
+            this.cdr.detectChanges();
+          }, 100);
+        } else {
+          console.warn(`[PerfilComponent] No se encontró la pestaña '${params['activeTab']}' o tabGroup no está disponible`);
+        }
+      }
+    });
   }
 
   private initializeForms() {

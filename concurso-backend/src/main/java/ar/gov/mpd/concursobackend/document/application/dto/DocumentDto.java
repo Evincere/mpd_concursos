@@ -20,4 +20,7 @@ public class DocumentDto {
     private String estado;
     private String comentarios;
     private LocalDateTime fechaCarga;
+    private String validadoPor;
+    private LocalDateTime fechaValidacion;
+    private String motivoRechazo;
 }

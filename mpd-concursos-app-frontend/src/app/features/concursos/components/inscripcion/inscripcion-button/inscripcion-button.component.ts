@@ -1,17 +1,19 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog } from '@angular/material/dialog';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { InscripcionDialogComponent } from '../inscripcion-dialog/inscripcion-dialog.component';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
-import { finalize } from 'rxjs/operators';
+import { finalize, takeUntil } from 'rxjs/operators';
+import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 
 @Component({
   selector: 'app-inscripcion-button',
@@ -25,24 +27,30 @@ import { finalize } from 'rxjs/operators';
   ],
   template: `
     <ng-container *ngIf="inscripcionState$ | async as estado">
-      <button 
+      <button
         mat-flat-button
         color="primary"
         class="inscripcion-button"
         [class.loading]="loading"
         [class.inscripto]="estado === InscripcionState.CONFIRMADA"
-        [disabled]="loading || estado === InscripcionState.CONFIRMADA"
+        [class.pending]="estado === InscripcionState.PENDING"
+        [disabled]="loading || estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDING"
         (click)="onInscribirse()">
-        <ng-container *ngIf="!loading && estado !== InscripcionState.CONFIRMADA">
+        <ng-container *ngIf="!loading && estado !== InscripcionState.CONFIRMADA && estado !== InscripcionState.PENDING">
           <mat-icon>how_to_reg</mat-icon>
           <span>Inscribirse</span>
         </ng-container>
-        
+
         <ng-container *ngIf="loading">
           <mat-spinner diameter="20"></mat-spinner>
           <span>Procesando...</span>
         </ng-container>
-        
+
+        <ng-container *ngIf="estado === InscripcionState.PENDING">
+          <mat-icon>pending</mat-icon>
+          <span>En proceso</span>
+        </ng-container>
+
         <ng-container *ngIf="estado === InscripcionState.CONFIRMADA">
           <mat-icon>check_circle</mat-icon>
           <span>Inscripto</span>
@@ -57,12 +65,12 @@ import { finalize } from 'rxjs/operators';
       gap: 8px;
       padding: 0 16px;
       height: 36px;
-      
+
       &.loading {
         opacity: 0.8;
         cursor: not-allowed;
       }
-      
+
       &.inscripto {
         background: rgba(76, 175, 80, 0.12);
         color: #4CAF50;
@@ -72,7 +80,17 @@ import { finalize } from 'rxjs/operators';
           color: #4CAF50;
         }
       }
-      
+
+      &.pending {
+        background: rgba(255, 193, 7, 0.12);
+        color: #FFC107;
+        pointer-events: none;
+
+        mat-icon {
+          color: #FFC107;
+        }
+      }
+
       mat-spinner {
         margin-right: 8px;
       }
@@ -90,22 +108,48 @@ import { finalize } from 'rxjs/operators';
     ])
   ]
 })
-export class InscripcionButtonComponent implements OnInit {
+export class InscripcionButtonComponent implements OnInit, OnDestroy {
   @Input() contest!: Contest;
   @Output() inscriptionComplete = new EventEmitter<Contest>();
 
   loading = false;
   inscripcionState$ = new BehaviorSubject<InscripcionState>(InscripcionState.NO_INSCRIPTO);
   InscripcionState = InscripcionState;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private inscriptionService: InscriptionService,
+    private inscriptionStateService: InscriptionStateService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     this.verificarEstadoInscripcion();
+
+    // Verificar si hay una inscripción en progreso para este concurso
+    const savedInscription = this.inscriptionStateService.getInProgressInscription();
+    if (savedInscription && savedInscription.contestId === this.contest.id) {
+      console.log('[InscripcionButton] Encontrada inscripción en progreso para este concurso:', savedInscription);
+
+      // Verificar si venimos de la pestaña de documentación
+      const redirectId = this.inscriptionStateService.getRedirectFromInscription();
+      if (redirectId && redirectId === savedInscription.id) {
+        console.log('[InscripcionButton] Detectada redirección desde documentación, abriendo diálogo automáticamente');
+
+        // Abrir el diálogo automáticamente
+        setTimeout(() => {
+          this.abrirDialogoInscripcion();
+          // Limpiar la redirección para evitar que se abra nuevamente
+          this.inscriptionStateService.clearRedirectFromInscription();
+        }, 500); // Pequeño retraso para asegurar que la UI esté lista
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private verificarEstadoInscripcion(): void {
@@ -148,11 +192,26 @@ export class InscripcionButtonComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al crear inscripción:', error);
-          this.snackBar.open(
-            'Error al iniciar el proceso de inscripción',
-            'Cerrar',
-            { duration: 3000 }
-          );
+
+          // Verificar si es un error de inscripción cancelada
+          if (error.message && error.message.includes('Ya existe una inscripción')) {
+            this.snackBar.open(
+              'Ya existe una inscripción para este concurso. Actualizando estado...',
+              'Cerrar',
+              { duration: 5000 }
+            );
+
+            // Forzar actualización del estado
+            setTimeout(() => {
+              this.verificarEstadoInscripcion();
+            }, 2000);
+          } else {
+            this.snackBar.open(
+              'Error al iniciar el proceso de inscripción: ' + (error.message || 'Error desconocido'),
+              'Cerrar',
+              { duration: 5000 }
+            );
+          }
         }
       });
   }

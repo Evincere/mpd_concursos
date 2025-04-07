@@ -62,22 +62,33 @@ export class DashboardService {
             // Filtrar postulaciones activas (no canceladas ni rechazadas)
             const postulacionesActivas = inscriptions.filter(p => {
               const estado = p.state?.toUpperCase();
-              console.log('[DashboardService] Estado de postulación:', estado);
+              console.log('[DashboardService] Estado de postulación:', estado, 'ID:', p.id);
+              
+              if (!estado) {
+                console.log('[DashboardService] Estado no definido, considerando como inactiva');
+                return false;
+              }
+
               const estadosInactivos = [
                 InscripcionState.CANCELLED.toUpperCase(),
                 InscripcionState.REJECTED.toUpperCase(),
                 'CANCELED',
                 'CANCELLED',
                 'CANCELADA',
-                'CANCELADO'
+                'CANCELADO',
+                'REJECTED',
+                'RECHAZADA',
+                'RECHAZADO'
               ];
+              
               const esActiva = !estadosInactivos.includes(estado);
-              console.log('[DashboardService] ¿Postulación activa?:', esActiva);
+              console.log('[DashboardService] ¿Postulación activa?:', esActiva, 'ID:', p.id);
               return esActiva;
             });
 
             console.log('[DashboardService] Postulaciones activas:', postulacionesActivas);
             cards[1].count = postulacionesActivas.length;
+            console.log('[DashboardService] Cards actualizados:', cards);
             return cards;
           })
         );

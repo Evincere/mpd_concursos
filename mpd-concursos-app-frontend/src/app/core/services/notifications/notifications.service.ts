@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, Subscription, throwError, timer, of } from 'rxjs';
+import { Observable, BehaviorSubject, interval, Subscription, throwError, timer, of, fromEvent } from 'rxjs';
 import { map, tap, startWith, switchMap, catchError, retry, retryWhen, delay, filter } from 'rxjs/operators';
 import {
     Notification,
@@ -21,6 +21,9 @@ export class NotificationsService implements OnDestroy {
     private pollingSubscription: Subscription = new Subscription();
     notifications$ = this.notificationsSubject.asObservable();
 
+    private visibilitySubscription: Subscription = new Subscription();
+    private isTabActive = true;
+
     constructor(
         private http: HttpClient,
         private tokenService: TokenService,
@@ -35,10 +38,24 @@ export class NotificationsService implements OnDestroy {
                 this.notificationsSubject.next([]);
             }
         });
+
+        // Monitorear si la pestaña está activa o no
+        this.visibilitySubscription = fromEvent(document, 'visibilitychange').subscribe(() => {
+            this.isTabActive = !document.hidden;
+            console.log('[NotificationsService] Estado de visibilidad cambiado:', this.isTabActive ? 'activo' : 'inactivo');
+
+            // Si la pestaña se vuelve activa, forzar una actualización inmediata
+            if (this.isTabActive && this.authService.isAuthenticated()) {
+                this.loadNotifications().subscribe();
+            }
+        });
     }
 
     ngOnDestroy(): void {
         this.stopPolling();
+        if (this.visibilitySubscription) {
+            this.visibilitySubscription.unsubscribe();
+        }
     }
 
     private startPolling(): void {
@@ -46,10 +63,14 @@ export class NotificationsService implements OnDestroy {
             this.stopPolling();
         }
 
-        // Cargar inmediatamente y luego cada 10 segundos
-        this.pollingSubscription = timer(0, 10000)
+        // Cargar inmediatamente y luego cada 60 segundos (reducido de 10 segundos para disminuir la carga)
+        this.pollingSubscription = timer(0, 60000)
             .pipe(
-                filter(() => this.authService.isAuthenticated()),
+                filter(() => {
+                    // Solo realizar polling si el usuario está autenticado y la pestaña está activa
+                    const isAuthenticated = this.authService.isAuthenticated();
+                    return isAuthenticated && this.isTabActive;
+                }),
                 switchMap(() => this.loadNotifications().pipe(
                     catchError(error => {
                         if (error instanceof HttpErrorResponse && error.status === 401) {

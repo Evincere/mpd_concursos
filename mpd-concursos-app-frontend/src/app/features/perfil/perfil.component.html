@@ -6,7 +6,7 @@
         </h2>
     </header>
 
-    <mat-tab-group class="perfil-tabs">
+    <mat-tab-group class="perfil-tabs" #tabGroup>
         <!-- Tab Información Personal -->
         <mat-tab label="Información Personal">
             <div class="tab-content">
@@ -244,20 +244,20 @@
                                         <i class="fas fa-file-certificate"></i> Certificado adjunto
                                     </span>
                                 </div>
-                                
+
                                 <div class="experience-body">
                                     <!-- Información principal -->
                                     <div class="experience-main-info">
                                         <p class="experience-dates">
-                                            <strong>Período:</strong> 
-                                            {{ exp.get('fechaInicio')?.value | date:'dd/MM/yyyy' }} - 
+                                            <strong>Período:</strong>
+                                            {{ exp.get('fechaInicio')?.value | date:'dd/MM/yyyy' }} -
                                             {{ exp.get('fechaFin')?.value ? (exp.get('fechaFin')?.value | date:'dd/MM/yyyy') : 'Actual' }}
                                         </p>
                                         <div class="experience-description">
                                             <strong>Descripción:</strong>
                                             <p>{{ exp.get('descripcion')?.value || 'Sin descripción' }}</p>
                                         </div>
-                                        
+
                                         <div *ngIf="exp.get('comentario')?.value" class="experience-comments">
                                             <strong>Comentarios:</strong>
                                             <p>{{ exp.get('comentario')?.value }}</p>
@@ -265,18 +265,18 @@
                                     </div>
 
                                     <!-- Botón para ver datos completos -->
-                                    <button 
-                                        type="button" 
-                                        class="debug-button" 
+                                    <button
+                                        type="button"
+                                        class="debug-button"
                                         (click)="mostrarDatosExperiencia(exp); $event.stopPropagation();">
                                         <i class="fas fa-code"></i> Ver datos completos
                                     </button>
 
                                     <!-- Documento y acciones -->
                                     <div class="experience-actions">
-                                        <button *ngIf="exp.get('certificadoId')?.value" 
-                                                mat-stroked-button 
-                                                type="button" 
+                                        <button *ngIf="exp.get('certificadoId')?.value"
+                                                mat-stroked-button
+                                                type="button"
                                                 class="action-button"
                                                 (click)="verCertificado(exp.get('certificadoId')?.value)">
                                             <i class="fas fa-file-pdf"></i>
@@ -315,7 +315,7 @@
                                         {{ educacion.estado || educacion['status'] || 'Estado no especificado' }}
                                     </span>
                                 </div>
-                                
+
                                 <div class="education-body">
                                     <!-- Información principal siempre visible -->
                                     <div class="education-main-info">
@@ -329,7 +329,7 @@
                                             <strong>Fecha:</strong> {{ (educacion.fechaEmision || educacion['issueDate']) | date:'dd/MM/yyyy' }}
                                         </p>
                                     </div>
-                                    
+
                                     <!-- Contenido específico según tipo de educación -->
                                     <div class="education-details">
                                         <ng-container [ngSwitch]="educacion.tipo || educacion['type']">
@@ -476,12 +476,12 @@
                                                     <span class="detail-value">{{ getPropiedadEducacion(educacion, 'activityRole') }}</span>
                                                 </div>
                                             </ng-container>
-                                            
+
                                             <!-- Caso por defecto cuando el tipo no coincide con ninguno de los anteriores -->
                                             <ng-container *ngSwitchDefault>
                                                 <div class="education-detail default-message">
                                                     <p>Tipo de educación no reconocido: "{{ educacion.tipo || educacion['type'] || 'Sin tipo' }}"</p>
-                                                    
+
                                                     <!-- Propiedades generales que todas las educaciones deberían tener -->
                                                     <div class="education-detail">
                                                         <span class="detail-label">Título:</span>
@@ -495,7 +495,7 @@
                                                         <span class="detail-label">Fecha de emisión:</span>
                                                         <span class="detail-value">{{ (educacion.fechaEmision || educacion['issueDate']) | date:'dd/MM/yyyy' }}</span>
                                                     </div>
-                                                    
+
                                                     <!-- Propiedades comunes específicas -->
                                                     <div class="common-properties">
                                                         <div class="education-detail" *ngIf="hasProperty(educacion, 'duracionAnios') || hasProperty(educacion, 'durationYears')">
@@ -525,18 +525,18 @@
                                     </div>
 
                                     <!-- Botón para ver datos completos en formato JSON -->
-                                    <button 
-                                        type="button" 
-                                        class="debug-button" 
+                                    <button
+                                        type="button"
+                                        class="debug-button"
                                         (click)="mostrarDatosCrudos(educacion); $event.stopPropagation();">
                                         <i class="fas fa-code"></i> Ver datos completos
                                     </button>
 
                                     <!-- Documento y acciones -->
                                     <div class="education-actions">
-                                        <button *ngIf="educacion.documentoPdf" 
-                                                mat-stroked-button 
-                                                type="button" 
+                                        <button *ngIf="educacion.documentoPdf"
+                                                mat-stroked-button
+                                                type="button"
                                                 class="action-button"
                                                 (click)="verDocumentoEducacion(educacion)">
                                             <i class="fas fa-file-pdf"></i>

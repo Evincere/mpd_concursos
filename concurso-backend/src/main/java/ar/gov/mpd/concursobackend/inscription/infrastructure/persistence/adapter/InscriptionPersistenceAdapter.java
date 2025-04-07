@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.adapte
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.repository.InscriptionJpaRepository;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper.InscriptionEntityMapper;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +53,9 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
 
     @Override
     public Optional<Inscription> findByContestIdAndUserId(Long contestId, UUID userId) {
-        return repository.findByContestIdAndUserId(contestId, uuidToBytes(userId))
+        // Usamos el método que excluye las inscripciones canceladas
+        return repository
+                .findByContestIdAndUserIdAndStatusNot(contestId, uuidToBytes(userId), InscriptionStatus.CANCELLED)
                 .map(mapper::toDomain);
     }
 }

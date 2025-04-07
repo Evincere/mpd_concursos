@@ -8,10 +8,12 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ActivatedRoute } from '@angular/router';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { DocumentoUsuario, TipoDocumento } from '../../../../core/models/documento.model';
 import { DocumentoUploadComponent } from '../documento-upload/documento-upload.component';
 import { DocumentoViewerComponent } from '../documento-viewer/documento-viewer.component';
+import { ReturnToInscriptionBannerComponent } from './return-to-inscription-banner/return-to-inscription-banner.component';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -27,10 +29,14 @@ import { Subscription } from 'rxjs';
     MatTableModule,
     MatTooltipModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    ReturnToInscriptionBannerComponent
   ],
   template: `
     <div class="documentacion-container">
+      <!-- Banner para volver a la inscripción -->
+      <app-return-to-inscription-banner></app-return-to-inscription-banner>
+
       <div class="documentacion-header">
         <h3>
           <i class="fas fa-file-alt"></i>
@@ -533,52 +539,68 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   documentosRequeridos: TipoDocumento[] = [
     {
       id: 'dni-frente',
+      code: 'dni-frente',
       nombre: 'DNI (Frente)',
       descripcion: 'Documento Nacional de Identidad - Lado frontal',
       requerido: true,
-      orden: 1
+      orden: 1,
+      parentId: 'dni',
+      activo: true
     },
     {
       id: 'dni-dorso',
+      code: 'dni-dorso',
       nombre: 'DNI (Dorso)',
       descripcion: 'Documento Nacional de Identidad - Lado posterior',
       requerido: true,
-      orden: 2
+      orden: 2,
+      parentId: 'dni',
+      activo: true
     },
     {
       id: 'cuil',
+      code: 'cuil',
       nombre: 'Constancia de CUIL',
       descripcion: 'Constancia de CUIL actualizada',
       requerido: true,
-      orden: 3
+      orden: 3,
+      activo: true
     },
     {
       id: 'antecedentes-penales',
+      code: 'antecedentes-penales',
       nombre: 'Certificado de Antecedentes Penales',
       descripcion: 'Certificado vigente con antigüedad no mayor a 90 días desde su emisión',
       requerido: true,
-      orden: 4
+      orden: 4,
+      activo: true
     },
     {
       id: 'certificado-profesional',
+      code: 'certificado-profesional',
       nombre: 'Certificado de Ejercicio Profesional',
       descripcion: 'Certificado expedido por la Oficina de Profesionales de la SCJ o Colegio de Abogados, o certificación de servicios del Poder Judicial. Antigüedad máxima: 6 meses',
       requerido: true,
-      orden: 5
+      orden: 5,
+      activo: true
     },
     {
       id: 'certificado-sanciones',
+      code: 'certificado-sanciones',
       nombre: 'Certificado de Sanciones Disciplinarias',
       descripcion: 'Certificado que acredite no registrar sanciones disciplinarias y/o en trámite. Antigüedad máxima: 6 meses',
       requerido: true,
-      orden: 6
+      orden: 6,
+      activo: true
     },
     {
       id: 'certificado-ley-micaela',
+      code: 'certificado-ley-micaela',
       nombre: 'Certificado Ley Micaela',
       descripcion: 'Certificado de capacitación en Ley Micaela (opcional)',
       requerido: false,
-      orden: 7
+      orden: 7,
+      activo: true
     }
   ];
   progresoDocumentacion = 0;
@@ -589,7 +611,8 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   constructor(
     private documentosService: DocumentosService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -638,6 +661,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           console.log('[DocumentacionTab] Documentos del usuario obtenidos:', documentos);
           this.documentosUsuario = documentos;
           this.calcularProgreso();
+          this.actualizarEstadoDocumentos();
         },
         error: (error) => {
           console.error('[DocumentacionTab] Error al cargar documentos del usuario:', error);
@@ -646,27 +670,97 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Actualiza el estado de los documentos en la interfaz
+   * Esto ayuda a sincronizar las tarjetas con la tabla de documentos
+   */
+  actualizarEstadoDocumentos(): void {
+    console.log('[DocumentacionTab] Actualizando estado de documentos en la interfaz...');
+
+    // Imprimir todos los documentos del usuario para depuración
+    console.log('[DocumentacionTab] Documentos del usuario:', this.documentosUsuario);
+
+    // Imprimir todos los tipos de documento para depuración
+    console.log('[DocumentacionTab] Tipos de documento:', this.tiposDocumento);
+
+    // Verificar cada tipo de documento requerido
+    this.documentosRequeridos.forEach(tipoDoc => {
+      // Verificar si el documento está cargado
+      const documentoCargado = this.isDocumentoSubido(tipoDoc.id);
+      console.log(`[DocumentacionTab] Documento ${tipoDoc.nombre} (${tipoDoc.id}): ${documentoCargado ? 'CARGADO' : 'PENDIENTE'}`);
+
+      // Obtener el documento si está cargado
+      if (documentoCargado) {
+        const documento = this.getDocumentoByTipo(tipoDoc.id);
+        console.log(`[DocumentacionTab] Detalles del documento cargado:`, documento);
+      }
+    });
+
+    // Forzar detección de cambios
+    setTimeout(() => {
+      console.log('[DocumentacionTab] Forzando actualización de la interfaz...');
+      // La actualización ocurrirá en el siguiente ciclo de detección de cambios de Angular
+
+      // Verificar nuevamente el estado de los documentos después de la actualización
+      this.documentosRequeridos.forEach(tipoDoc => {
+        const documentoCargado = this.isDocumentoSubido(tipoDoc.id);
+        console.log(`[DocumentacionTab] (Después de actualizar) Documento ${tipoDoc.nombre} (${tipoDoc.id}): ${documentoCargado ? 'CARGADO' : 'PENDIENTE'}`);
+      });
+    }, 500);
+  }
+
   calcularProgreso(): void {
+    console.log('[DocumentacionTab] Calculando progreso de documentación...');
+
     if (this.documentosRequeridos.length === 0) {
       this.progresoDocumentacion = 100;
       this.documentosFaltantes = 0;
+      console.log('[DocumentacionTab] No hay documentos requeridos, progreso 100%');
       return;
     }
 
-    const documentosRequeridosCargados = this.documentosRequeridos.filter(tipo =>
-      this.documentosUsuario.some(doc =>
-        doc.tipoDocumentoId === tipo.id && doc.estado !== 'rechazado'
-      )
-    ).length;
+    // Contar documentos requeridos que están cargados
+    let documentosRequeridosCargados = 0;
+    let documentosRequeridos = this.documentosRequeridos;
 
+    // Verificar cada documento requerido
+    for (let i = 0; i < documentosRequeridos.length; i++) {
+      const tipoDoc = documentosRequeridos[i];
+      // Verificar si el documento está cargado usando el método isDocumentoSubido
+      const documentoSubido = this.isDocumentoSubido(tipoDoc.id);
+
+      if (documentoSubido) {
+        documentosRequeridosCargados++;
+      }
+
+      console.log(`[DocumentacionTab] Documento ${tipoDoc.nombre} (${tipoDoc.id}): ${documentoSubido ? 'CARGADO' : 'PENDIENTE'}`);
+    }
+
+    // Calcular el porcentaje de progreso
     this.progresoDocumentacion = Math.round(
-      (documentosRequeridosCargados / this.documentosRequeridos.length) * 100
+      (documentosRequeridosCargados / documentosRequeridos.length) * 100
     );
 
-    this.documentosFaltantes = this.documentosRequeridos.length - documentosRequeridosCargados;
+    // Calcular cuántos documentos faltan
+    this.documentosFaltantes = documentosRequeridos.length - documentosRequeridosCargados;
+
+    console.log(`[DocumentacionTab] Progreso calculado: ${this.progresoDocumentacion}% (${documentosRequeridosCargados}/${documentosRequeridos.length} documentos cargados)`);
   }
 
   abrirDialogoCargaDocumento(tipoDocumentoId?: string): void {
+    console.log(`[DocumentacionTab] Abriendo diálogo de carga para tipo: ${tipoDocumentoId || 'ninguno'}`);
+
+    // Si tenemos un ID de tipo de documento, verificar si existe en los tipos requeridos
+    if (tipoDocumentoId) {
+      const tipoDocumento = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
+      if (tipoDocumento) {
+        console.log(`[DocumentacionTab] Tipo de documento encontrado: ${tipoDocumento.nombre}`);
+      } else {
+        console.warn(`[DocumentacionTab] Tipo de documento no encontrado en la lista de requeridos: ${tipoDocumentoId}`);
+        console.log('[DocumentacionTab] Documentos requeridos:', this.documentosRequeridos);
+      }
+    }
+
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
       width: '600px',
       data: { tipoDocumentoId }
@@ -674,8 +768,21 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        // Mostrar mensaje de éxito
+        this.mostrarExito('Documento cargado exitosamente');
+
         // Recargar documentos después de una carga exitosa
         this.cargarDocumentosUsuario();
+
+        // Notificar al servicio que se ha actualizado un documento
+        this.documentosService.notificarDocumentoActualizado();
+
+        // Forzar actualización de la interfaz después de un breve retraso
+        // Esto ayuda a sincronizar el estado entre las tarjetas y la tabla
+        setTimeout(() => {
+          console.log('[DocumentacionTab] Forzando actualización después de cargar documento...');
+          this.actualizarEstadoDocumentos();
+        }, 500);
       }
     });
   }
@@ -684,8 +791,11 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     this.abrirDialogoCargaDocumento(tipoDocumentoId);
   }
 
-  verDocumento(documento: DocumentoUsuario): void {
-    if (!documento || !documento.id) return;
+  verDocumento(documento: DocumentoUsuario | undefined): void {
+    if (!documento || !documento.id) {
+      this.mostrarError('No se pudo encontrar el documento');
+      return;
+    }
 
     this.dialog.open(DocumentoViewerComponent, {
       width: '800px',
@@ -694,8 +804,11 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     });
   }
 
-  reemplazarDocumento(documento: DocumentoUsuario): void {
-    if (!documento || !documento.id) return;
+  reemplazarDocumento(documento: DocumentoUsuario | undefined): void {
+    if (!documento || !documento.id) {
+      this.mostrarError('No se pudo encontrar el documento');
+      return;
+    }
 
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
       width: '600px',
@@ -707,7 +820,16 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
         // Eliminar el documento anterior y recargar
         this.documentosService.deleteDocumento(documento.id!).subscribe({
           next: () => {
+            this.mostrarExito('Documento reemplazado correctamente');
             this.cargarDocumentosUsuario();
+
+            // Notificar al servicio que se ha actualizado un documento
+            this.documentosService.notificarDocumentoActualizado();
+
+            // Forzar actualización de la interfaz después de un breve retraso
+            setTimeout(() => {
+              this.actualizarEstadoDocumentos();
+            }, 500);
           },
           error: (error) => {
             console.error('Error al reemplazar documento:', error);
@@ -719,14 +841,25 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     });
   }
 
-  eliminarDocumento(documento: DocumentoUsuario): void {
-    if (!documento || !documento.id) return;
+  eliminarDocumento(documento: DocumentoUsuario | undefined): void {
+    if (!documento || !documento.id) {
+      this.mostrarError('No se pudo encontrar el documento');
+      return;
+    }
 
     if (confirm('¿Estás seguro de que deseas eliminar este documento?')) {
       this.documentosService.deleteDocumento(documento.id).subscribe({
         next: () => {
           this.mostrarExito('Documento eliminado correctamente');
           this.cargarDocumentosUsuario();
+
+          // Notificar al servicio que se ha actualizado un documento
+          this.documentosService.notificarDocumentoActualizado();
+
+          // Forzar actualización de la interfaz después de un breve retraso
+          setTimeout(() => {
+            this.actualizarEstadoDocumentos();
+          }, 500);
         },
         error: (error) => {
           console.error('Error al eliminar documento:', error);
@@ -737,51 +870,174 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 
   isDocumentoSubido(tipoDocumentoId: string): boolean {
-    return this.documentosUsuario.some(doc => doc.tipoDocumentoId === tipoDocumentoId);
+    console.log(`[DocumentacionTab] Verificando si el documento ${tipoDocumentoId} está subido...`);
+
+    // Verificar si hay algún documento con el ID exacto
+    const documentoExacto = this.documentosUsuario.some(doc => doc.tipoDocumentoId === tipoDocumentoId);
+
+    if (documentoExacto) {
+      console.log(`[DocumentacionTab] Documento con ID exacto encontrado: ${tipoDocumentoId}`);
+      return true;
+    }
+
+    // Verificar si hay algún documento con el código exacto
+    const documentoPorCodigo = this.documentosUsuario.some(doc =>
+      doc.tipoDocumento && doc.tipoDocumento.code === tipoDocumentoId
+    );
+
+    if (documentoPorCodigo) {
+      console.log(`[DocumentacionTab] Documento con código exacto encontrado: ${tipoDocumentoId}`);
+      return true;
+    }
+
+    // Buscar por coincidencia parcial en el nombre
+    const tipoRequerido = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
+    if (tipoRequerido) {
+      const nombreTipoDocumento = tipoRequerido.nombre.toLowerCase();
+
+      // Verificar si hay algún documento cuyo tipo coincida con el nombre del tipo requerido
+      for (const doc of this.documentosUsuario) {
+        // Obtener el nombre del tipo de documento
+        let nombreDocTipo = '';
+
+        // Si el documento tiene un objeto tipoDocumento, usamos su nombre
+        if (doc.tipoDocumento && doc.tipoDocumento.nombre) {
+          nombreDocTipo = doc.tipoDocumento.nombre.toLowerCase();
+        }
+
+        // Si no pudimos obtener el nombre, continuamos con el siguiente documento
+        if (!nombreDocTipo) {
+          continue;
+        }
+
+        // Verificar si hay coincidencia entre los nombres
+        const coincidenciaNombre = nombreDocTipo.includes(nombreTipoDocumento) ||
+                                  nombreTipoDocumento.includes(nombreDocTipo);
+
+        if (coincidenciaNombre) {
+          console.log(`[DocumentacionTab] Documento encontrado por nombre: ${nombreTipoDocumento} coincide con ${nombreDocTipo}`);
+          return true;
+        }
+      }
+    }
+
+    // Si llegamos aquí, no se encontró el documento
+    console.log(`[DocumentacionTab] Documento ${tipoDocumentoId} NO encontrado`);
+    return false;
   }
 
-  getDocumentoByTipo(tipoDocumentoId: string): DocumentoUsuario {
-    return this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId)!;
+  getDocumentoByTipo(tipoDocumentoId: string): DocumentoUsuario | undefined {
+    const documentoExacto = this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId);
+    if (documentoExacto) {
+      console.log(`[DocumentacionTab] getDocumentoByTipo: Documento con ID exacto encontrado: ${tipoDocumentoId}`);
+      return documentoExacto;
+    }
+
+    const documentoPorCodigo = this.documentosUsuario.find(doc =>
+      doc.tipoDocumento && doc.tipoDocumento.code === tipoDocumentoId
+    );
+    if (documentoPorCodigo) {
+      console.log(`[DocumentacionTab] getDocumentoByTipo: Documento con código exacto encontrado: ${tipoDocumentoId}`);
+      return documentoPorCodigo;
+    }
+
+    if (tipoDocumentoId === 'dni-frente' || tipoDocumentoId === 'dni-dorso') {
+      const dniEspecifico = this.documentosUsuario.find(doc => {
+        if (doc.tipoDocumento && doc.tipoDocumento.code === tipoDocumentoId) {
+          console.log(`[DocumentacionTab] getDocumentoByTipo: Documento DNI específico encontrado por código: ${tipoDocumentoId}`);
+          return true;
+        }
+
+        const nombre = doc.tipoDocumento?.nombre?.toLowerCase() || '';
+        const esFrente = tipoDocumentoId === 'dni-frente' &&
+          (nombre.includes('dni') || nombre.includes('documento') || nombre.includes('identidad')) &&
+          (nombre.includes('frente') || nombre.includes('anverso'));
+        const esDorso = tipoDocumentoId === 'dni-dorso' &&
+          (nombre.includes('dni') || nombre.includes('documento') || nombre.includes('identidad')) &&
+          (nombre.includes('dorso') || nombre.includes('reverso'));
+
+        if (esFrente || esDorso) {
+          console.log(`[DocumentacionTab] getDocumentoByTipo: Documento DNI específico encontrado por nombre: ${nombre} para ${tipoDocumentoId}`);
+          return true;
+        }
+        return false;
+      });
+
+      if (dniEspecifico) {
+        return dniEspecifico;
+      }
+    }
+
+    const tipoDocumento = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
+    if (!tipoDocumento) {
+      return undefined;
+    }
+
+    const nombreTipoDocumento = tipoDocumento.nombre.toLowerCase();
+    for (const doc of this.documentosUsuario) {
+      const tipoEncontrado = this.tiposDocumento.find(tipo => tipo.id === doc.tipoDocumentoId);
+      if (!tipoEncontrado) continue;
+
+      const nombreDocTipo = tipoEncontrado.nombre.toLowerCase();
+      const coincidenciaNombre = nombreDocTipo.includes(nombreTipoDocumento) ||
+        nombreTipoDocumento.includes(nombreDocTipo);
+
+      if (coincidenciaNombre) {
+        console.log(`[DocumentacionTab] Documento encontrado por nombre: ${nombreTipoDocumento} coincide con ${nombreDocTipo}`);
+        return doc;
+      }
+    }
+
+    return undefined;
   }
 
   getEstadoDocumento(tipoDocumentoId: string): string {
-    const documento = this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId);
-    return documento ? documento.estado : '';
+    const documento = this.getDocumentoByTipo(tipoDocumentoId);
+    if (!documento) return 'pendiente';
+    return documento.estado.toLowerCase();
   }
 
   getTipoDocumentoNombre(tipoDocumentoId: string): string {
     const tipo = this.tiposDocumento.find(t => t.id === tipoDocumentoId);
-    return tipo ? tipo.nombre : 'Desconocido';
+    return tipo?.nombre || 'Documento';
   }
 
   getIconForStatus(estado: string): string {
-    switch (estado) {
-      case 'aprobado': return 'fa-check-circle';
-      case 'pendiente': return 'fa-clock';
-      case 'rechazado': return 'fa-times-circle';
-      default: return 'fa-question-circle';
+    switch (estado.toLowerCase()) {
+      case 'aprobado':
+        return 'fa-check-circle';
+      case 'pendiente':
+        return 'fa-clock';
+      case 'rechazado':
+        return 'fa-times-circle';
+      default:
+        return 'fa-question-circle';
     }
   }
 
   getEstadoTexto(estado: string): string {
-    switch (estado) {
-      case 'aprobado': return 'Aprobado';
-      case 'pendiente': return 'Pendiente de revisión';
-      case 'rechazado': return 'Rechazado';
-      default: return 'Desconocido';
+    switch (estado.toLowerCase()) {
+      case 'aprobado':
+        return 'Aprobado';
+      case 'pendiente':
+        return 'Pendiente de revisión';
+      case 'rechazado':
+        return 'Rechazado';
+      default:
+        return 'Estado desconocido';
     }
   }
 
   mostrarExito(mensaje: string): void {
     this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 3000,
+      duration: 5000,
       panelClass: ['success-snackbar']
     });
   }
 
   mostrarError(mensaje: string): void {
     this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 3000,
+      duration: 5000,
       panelClass: ['error-snackbar']
     });
   }

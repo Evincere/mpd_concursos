@@ -11,8 +11,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DocumentTypeDto {
     private String id;
+    private String code;
     private String nombre;
     private String descripcion;
     private boolean requerido;
     private Integer orden;
+    private String parentId;
+    private boolean activo;
 }

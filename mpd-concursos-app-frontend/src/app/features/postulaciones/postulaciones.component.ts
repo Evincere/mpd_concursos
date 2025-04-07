@@ -361,6 +361,22 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
               this.snackBar.open('Postulación cancelada exitosamente', 'Cerrar', {
                 duration: 3000
               });
+              
+              // Actualizar el listado de postulaciones
+              this.postulaciones = this.postulaciones.filter(p => p.id !== postulacion.id);
+              this.postulacionesFiltradas = this.postulacionesFiltradas.filter(p => p.id !== postulacion.id);
+              this.dataSource.data = this.postulacionesFiltradas;
+
+              // Si no quedan postulaciones, mostrar mensaje de bienvenida
+              if (this.postulaciones.length === 0) {
+                this.error = 'empty';
+              }
+
+              // Si hay una postulación seleccionada, cerrar el detalle
+              if (this.postulacionSeleccionada?.id === postulacion.id) {
+                this.postulacionSeleccionada = null;
+              }
+
               // Forzar actualización del dashboard
               console.log('[PostulacionesComponent] Actualizando dashboard después de cancelación');
               this.dashboardService.getDashboardCards().subscribe();

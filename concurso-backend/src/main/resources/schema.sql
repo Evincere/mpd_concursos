@@ -254,10 +254,14 @@ CREATE TABLE examination_security_violations (
 -- Tabla de tipos de documento
 CREATE TABLE document_types (
     id BINARY(16) PRIMARY KEY,
+    code VARCHAR(50) UNIQUE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     required BOOLEAN NOT NULL DEFAULT FALSE,
-    `order` INT
+    `order` INT,
+    parent_id BINARY(16),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (parent_id) REFERENCES document_types(id)
 );
 
 -- Tabla de documentos
@@ -271,8 +275,12 @@ CREATE TABLE documents (
     status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     comments TEXT,
     upload_date DATETIME NOT NULL,
+    validated_by BINARY(16),
+    validated_at DATETIME,
+    rejection_reason TEXT,
     FOREIGN KEY (user_id) REFERENCES user_entity(id),
-    FOREIGN KEY (document_type_id) REFERENCES document_types(id)
+    FOREIGN KEY (document_type_id) REFERENCES document_types(id),
+    FOREIGN KEY (validated_by) REFERENCES user_entity(id)
 );
 
 -- Tabla de educación
@@ -285,25 +293,25 @@ CREATE TABLE education (
     institution VARCHAR(255) NOT NULL,
     issue_date DATE,
     document_url VARCHAR(500),
-    
+
     -- Campos para Carreras de Nivel Superior y Grado
     duration_years INT,
     average DOUBLE,
-    
+
     -- Campos para Posgrados
     thesis_topic VARCHAR(255),
-    
+
     -- Campos para Diplomaturas y Cursos de Capacitación
     hourly_load INT,
     had_final_evaluation BOOLEAN,
-    
+
     -- Campos para Actividad Científica
     activity_type VARCHAR(50),
     topic VARCHAR(255),
     activity_role VARCHAR(100),
     exposition_place_date VARCHAR(255),
     comments TEXT,
-    
+
     FOREIGN KEY (user_id) REFERENCES user_entity(id)
 );
 

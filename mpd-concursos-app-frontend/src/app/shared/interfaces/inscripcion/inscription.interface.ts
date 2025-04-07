@@ -29,10 +29,10 @@ export interface IInscriptionResponse {
   id: string;
   contestId: number;
   userId: string;
-  state: InscripcionState;
-  inscriptionDate: Date;
-  currentStep: InscriptionStep;
-  preferences?: IInscriptionPreferences;
+  status: string;
+  inscriptionDate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IInscriptionStatusResponse {
@@ -43,6 +43,7 @@ export interface IInscriptionStatusResponse {
 export interface IInscriptionUpdateRequest {
   state: InscripcionState;
   observations?: string;
+  currentStep?: InscriptionStep;
 }
 
 export interface IInscriptionStepRequest {
@@ -50,4 +51,4 @@ export interface IInscriptionStepRequest {
   selectedCircunscripciones?: string[];
   acceptedTerms?: boolean;
   confirmedPersonalData?: boolean;
-} 
+}

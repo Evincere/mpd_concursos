@@ -27,6 +27,9 @@ public class DocumentMapper {
                 .estado(document.getStatus().name())
                 .comentarios(document.getComments())
                 .fechaCarga(document.getUploadDate())
+                .validadoPor(document.getValidatedBy() != null ? document.getValidatedBy().toString() : null)
+                .fechaValidacion(document.getValidatedAt())
+                .motivoRechazo(document.getRejectionReason())
                 .build();
     }
 
@@ -37,10 +40,13 @@ public class DocumentMapper {
 
         return DocumentTypeDto.builder()
                 .id(documentType.getId().value().toString())
+                .code(documentType.getCode())
                 .nombre(documentType.getName())
                 .descripcion(documentType.getDescription())
                 .requerido(documentType.isRequired())
                 .orden(documentType.getOrder())
+                .parentId(documentType.getParent() != null ? documentType.getParent().getId().value().toString() : null)
+                .activo(documentType.isActive())
                 .build();
     }
 

@@ -11,9 +11,15 @@ public interface IDocumentTypeRepository {
 
     Optional<DocumentType> findById(DocumentTypeId id);
 
+    Optional<DocumentType> findByCode(String code);
+
     List<DocumentType> findAll();
+
+    List<DocumentType> findAllActive();
 
     void deleteById(DocumentTypeId id);
 
     boolean existsById(DocumentTypeId id);
+
+    boolean existsByCode(String code);
 }

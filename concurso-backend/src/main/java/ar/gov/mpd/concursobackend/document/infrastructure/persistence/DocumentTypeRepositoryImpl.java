@@ -34,8 +34,22 @@ public class DocumentTypeRepositoryImpl implements IDocumentTypeRepository {
     }
 
     @Override
+    public Optional<DocumentType> findByCode(String code) {
+        return documentTypeSpringRepository.findByCode(code)
+                .map(documentEntityMapper::toDomain);
+    }
+
+    @Override
     public List<DocumentType> findAll() {
         return documentTypeSpringRepository.findAll()
+                .stream()
+                .map(documentEntityMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DocumentType> findAllActive() {
+        return documentTypeSpringRepository.findByIsActiveTrue()
                 .stream()
                 .map(documentEntityMapper::toDomain)
                 .collect(Collectors.toList());
@@ -49,5 +63,10 @@ public class DocumentTypeRepositoryImpl implements IDocumentTypeRepository {
     @Override
     public boolean existsById(DocumentTypeId id) {
         return documentTypeSpringRepository.existsById(id.value());
+    }
+
+    @Override
+    public boolean existsByCode(String code) {
+        return documentTypeSpringRepository.existsByCode(code);
     }
 }

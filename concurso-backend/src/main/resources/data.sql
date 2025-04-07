@@ -2,10 +2,6 @@
 SET NAMES utf8;
 SET CHARACTER SET utf8;
 
--- Establece la codificación de caracteres para asegurar la correcta inserción de texto
-SET NAMES utf8;
-SET CHARACTER SET utf8;
-
 SET SQL_SAFE_UPDATES = 0;
 -- Deshabilitar verificación de foreign keys temporalmente
 SET FOREIGN_KEY_CHECKS = 0;
@@ -32,7 +28,7 @@ INSERT INTO roles (id, name) VALUES
 (UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 'ROLE_ADMIN');
 
 -- Insertar usuario administrador por defecto
-INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at) 
+INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES (
     UUID_TO_BIN('33333333-3333-3333-3333-333333333333'),
     'admin',
@@ -48,112 +44,112 @@ VALUES (
 -- Insertar usuarios de prueba con IDs fijos
 INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES
-(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'usuario1', 
-'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW', 
+(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'usuario1',
+'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
 'usuario1@test.com', '20111111', '20201111118', 'Usuario', 'Uno', CURRENT_TIMESTAMP),
-(UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 'usuario2', 
-'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW', 
+(UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 'usuario2',
+'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
 'usuario2@test.com', '20222222', '20202222229', 'Usuario', 'Dos', CURRENT_TIMESTAMP),
-(UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), 'semper', 
-'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW', 
+(UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), 'semper',
+'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
 'semper@test.com', '26598410', '20265984107', 'Sebastian', 'Pereyra', CURRENT_TIMESTAMP);
 
 -- Insertar exámenes de prueba con diferentes estados y fechas
 INSERT INTO examinations (id, title, description, duration_minutes, status, start_time, end_time, type)
 VALUES
 -- Examen disponible ahora (PUBLISHED y dentro del rango de fechas)
-(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 
-'Examen Tecnico-Juridico - Defensor Penal', 
-'Evaluacion de conocimientos en derecho penal y procesal penal', 
-120, 'PUBLISHED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 HOUR), 
+(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'),
+'Examen Tecnico-Juridico - Defensor Penal',
+'Evaluacion de conocimientos en derecho penal y procesal penal',
+120, 'PUBLISHED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 HOUR),
 'TECHNICAL_LEGAL'),
 
 -- Examen programado para futuro (PUBLISHED pero fecha futura)
-(UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 
-'Examen Tecnico-Administrativo - Defensoria Civil', 
-'Evaluacion de procedimientos administrativos y gestion', 
-90, 'PUBLISHED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY), 
+(UUID_TO_BIN('88888888-8888-8888-8888-888888888888'),
+'Examen Tecnico-Administrativo - Defensoria Civil',
+'Evaluacion de procedimientos administrativos y gestion',
+90, 'PUBLISHED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY),
 'TECHNICAL_ADMINISTRATIVE'),
 
 -- Examen en borrador
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 
-'Examen Psicologico - En Preparacion', 
-'Evaluacion de aptitudes psicologicas para el cargo', 
-60, 'DRAFT', 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 DAY), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 11 DAY), 
+(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'),
+'Examen Psicologico - En Preparacion',
+'Evaluacion de aptitudes psicologicas para el cargo',
+60, 'DRAFT',
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 DAY),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 11 DAY),
 'PSYCHOLOGICAL'),
 
 -- Examen disponible para rendir ahora (corta duración)
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 
-'Examen Rapido - Conocimientos Generales', 
-'Evaluacion rapida de conocimientos generales sobre derecho', 
-15, 'PUBLISHED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY), 
+(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+'Examen Rapido - Conocimientos Generales',
+'Evaluacion rapida de conocimientos generales sobre derecho',
+15, 'PUBLISHED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY),
 'TECHNICAL_LEGAL'),
 
 -- Examen disponible para rendir ahora (duración media)
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 
-'Examen Tecnico-Juridico - Defensoria Penal Juvenil', 
-'Evaluacion de conocimientos en derecho penal juvenil', 
-45, 'PUBLISHED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 5 DAY), 
+(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+'Examen Tecnico-Juridico - Defensoria Penal Juvenil',
+'Evaluacion de conocimientos en derecho penal juvenil',
+45, 'PUBLISHED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 5 DAY),
 'TECHNICAL_LEGAL'),
 
 -- Examen disponible para rendir ahora (larga duración)
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 
-'Examen Completo - Defensoria Civil y Comercial', 
-'Evaluacion exhaustiva de conocimientos en derecho civil y comercial', 
-120, 'PUBLISHED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 3 DAY), 
+(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'),
+'Examen Completo - Defensoria Civil y Comercial',
+'Evaluacion exhaustiva de conocimientos en derecho civil y comercial',
+120, 'PUBLISHED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 3 DAY),
 'TECHNICAL_LEGAL'),
 
 -- Examen finalizado
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 
-'Examen Tecnico-Juridico - Defensoria Penal 2024', 
-'Evaluacion finalizada de conocimientos penales', 
-120, 'COMPLETED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 48 HOUR), 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 46 HOUR), 
+(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'),
+'Examen Tecnico-Juridico - Defensoria Penal 2024',
+'Evaluacion finalizada de conocimientos penales',
+120, 'COMPLETED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 48 HOUR),
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 46 HOUR),
 'TECHNICAL_LEGAL'),
 
 -- Examen anulado
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 
-'Examen Tecnico-Administrativo - Anulado', 
-'Este examen fue anulado por irregularidades', 
-90, 'CANCELLED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 HOUR), 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 22 HOUR), 
+(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'),
+'Examen Tecnico-Administrativo - Anulado',
+'Este examen fue anulado por irregularidades',
+90, 'CANCELLED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 HOUR),
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 22 HOUR),
 'TECHNICAL_ADMINISTRATIVE'),
 
 -- Examen en curso (algunos usuarios ya lo están rindiendo)
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 
-'Examen Tecnico-Juridico - Defensoria Civil Actual', 
-'Evaluacion de conocimientos en derecho civil y procesal', 
-120, 'IN_PROGRESS', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 MINUTE), 
+(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'),
+'Examen Tecnico-Juridico - Defensoria Civil Actual',
+'Evaluacion de conocimientos en derecho civil y procesal',
+120, 'IN_PROGRESS',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 MINUTE),
 'TECHNICAL_LEGAL'),
 
 -- Otro examen disponible ahora (para tener más opciones)
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 
-'Examen Tecnico-Administrativo - Secretaria', 
-'Evaluacion de procedimientos y gestion administrativa', 
-60, 'PUBLISHED', 
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE), 
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 45 MINUTE), 
+(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'),
+'Examen Tecnico-Administrativo - Secretaria',
+'Evaluacion de procedimientos y gestion administrativa',
+60, 'PUBLISHED',
+DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE),
+DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 45 MINUTE),
 'TECHNICAL_ADMINISTRATIVE');
 
 -- Insertar concursos
 INSERT INTO contests (id, title, category, class_, functions, department, position, status, start_date, end_date, bases_url, description_url)
-VALUES 
+VALUES
 (1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia técnica y representación legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/defensor-penal.pdf', 'https://mpd.gov.ar/descripcion/defensor-penal.pdf'),
 (2, 'Concurso Defensor/a Civil', 'JURIDICO', 'B', 'Asistencia técnica y representación legal en causas civiles', 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/defensor-civil.pdf', 'https://mpd.gov.ar/descripcion/defensor-civil.pdf'),
 (3, 'Concurso Asesor/a Legal', 'JURIDICO', 'C', 'Asesoramiento legal y técnico en materia administrativa', 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'ACTIVE', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), 'https://mpd.gov.ar/bases/asesor-legal.pdf', 'https://mpd.gov.ar/descripcion/asesor-legal.pdf'),
@@ -188,67 +184,6 @@ VALUES
 (UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), @examen1_id, 'Seleccione las garantias constitucionales aplicables al proceso penal', 'MULTIPLE_CHOICE', 30, 2),
 (UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), @examen1_id, 'La prision preventiva es una medida cautelar', 'TRUE_FALSE', 10, 3),
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), @examen1_id, 'Desarrolle los fundamentos de la teoria del delito', 'TEXT', 15, 4);
-
--- Crear una sesion de examen para el usuario1
-SET @user1_id = UUID_TO_BIN('44444444-4444-4444-4444-444444444444');
-
-INSERT INTO examination_sessions (id, examination_id, user_id, start_time, deadline, status, current_question_index)
-VALUES (UUID_TO_BIN('66666666-6666-6666-6666-666666666667'), @examen1_id, @user1_id, CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 HOUR), 'IN_PROGRESS', 0);
-
--- Insertar algunas respuestas para el usuario1
-SET @session_id = UUID_TO_BIN('66666666-6666-6666-6666-666666666667');
-SET @question1_id = UUID_TO_BIN('99999999-9999-9999-9999-999999999999');
-
-INSERT INTO answers (id, question_id, response, response_time_ms, status, timestamp, session_id)
-VALUES
-(UUID_TO_BIN('77777777-7777-7777-7777-777777777778'), @question1_id, 'Derecho a ser oido', 30000, 'SUBMITTED', CURRENT_TIMESTAMP, @session_id);
-
--- Insertar inscripciones de prueba
-INSERT INTO inscriptions (
-    id, 
-    contest_id, 
-    user_id, 
-    created_at, 
-    updated_at,
-    inscription_date, 
-    status, 
-    current_step,
-    accepted_terms,
-    confirmed_personal_data,
-    terms_acceptance_date,
-    data_confirmation_date
-) VALUES (
-    UUID_TO_BIN('77777777-7777-7777-7777-777777777777'),
-    1,
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'),
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP,
-    'ACTIVE',
-    'COMPLETED',
-    TRUE,
-    TRUE,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-), (
-    UUID_TO_BIN('88888888-8888-8888-8888-888888888888'),
-    2,
-    UUID_TO_BIN('44444444-4444-4444-4444-444444444444'),
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP,
-    'PENDING',
-    'TERMS_ACCEPTANCE',
-    FALSE,
-    FALSE,
-    NULL,
-    NULL
-);
-
--- Insertar circunscripciones seleccionadas para la inscripción completada
-INSERT INTO inscription_circunscripciones (inscription_id, circunscripcion) VALUES
-(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 'Primera Circunscripción Judicial'),
-(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 'Segunda Circunscripción Judicial');
 
 -- Asignar roles a usuarios
 INSERT INTO user_roles (user_id, role_id) VALUES
@@ -365,8 +300,25 @@ INSERT INTO examination_allowed_materials (examination_id, material) VALUES
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Jurisprudencia relevante (sin anotaciones)');
 
 -- Datos iniciales para tipos de documento
-REPLACE INTO document_types (id, name, description, required, `order`) VALUES
-(UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 'Documento Nacional de Identidad', 'DNI del postulante', TRUE, 1),
-(UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 2),
-(UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 3),
-(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'Curriculum Vitae', 'CV actualizado', FALSE, 4);
+-- Primero, actualizar el documento de identidad existente como documento padre
+REPLACE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+(UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
+
+-- Insertar los tipos de documentos para DNI frente y dorso
+REPLACE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES
+(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'dni-frente', 'DNI (Frente)', 'Documento Nacional de Identidad - Lado frontal', UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), TRUE, 1, TRUE),
+(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), TRUE, 2, TRUE);
+
+-- Actualizar e insertar otros tipos de documentos
+REPLACE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+(UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 'titulo-universitario', 'Título Universitario', 'Título de grado universitario', TRUE, 3, TRUE),
+(UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 4, TRUE),
+(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', FALSE, 5, TRUE);
+
+-- Insertar nuevos tipos de documentos requeridos
+REPLACE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+(UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', TRUE, 6, TRUE),
+(UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', TRUE, 7, TRUE),
+(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', TRUE, 8, TRUE),
+(UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 'certificado-sanciones', 'Certificado de Sanciones Disciplinarias', 'Certificado que acredita la ausencia de sanciones disciplinarias', TRUE, 9, TRUE),
+(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'certificado-ley-micaela', 'Certificado Ley Micaela', 'Certificado de capacitación en Ley Micaela', FALSE, 10, TRUE);

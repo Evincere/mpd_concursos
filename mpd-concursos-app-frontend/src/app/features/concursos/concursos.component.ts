@@ -227,8 +227,16 @@ export class ConcursosComponent implements OnInit {
   }
 
   onInscriptionComplete(concurso: Concurso): void {
+    console.log('[ConcursosComponent] Inscripción completada para concurso:', concurso.id);
+
+    // Forzar una actualización de las inscripciones del usuario
+    this.inscriptionService.refreshInscriptions();
+
     // Actualizar la lista de concursos después de una inscripción exitosa
-    this.cargarConcursos();
+    // Agregamos un pequeño delay para dar tiempo a que se actualice el estado en el backend
+    setTimeout(() => {
+      this.cargarConcursos();
+    }, 1000);
 
     // Mostrar mensaje de éxito
     this.snackBar.open(

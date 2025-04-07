@@ -44,9 +44,8 @@ public class DocumentServiceImpl implements DocumentService {
             throws IOException {
         log.debug("Uploading document for user: {}", userId);
 
-        DocumentType documentType = documentTypeRepository
-                .findById(new DocumentTypeId(UUID.fromString(request.getDocumentTypeId())))
-                .orElseThrow(() -> new DocumentException("Document type not found"));
+        // Try to find document type by ID or code
+        DocumentType documentType = findDocumentType(request.getDocumentTypeId());
 
         Document document = Document.create(
                 userId,
@@ -79,6 +78,37 @@ public class DocumentServiceImpl implements DocumentService {
 
         List<Document> documents = documentRepository.findByUserId(userId);
         return documentMapper.toDtoList(documents);
+    }
+
+    /**
+     * Find a document type by ID or code
+     *
+     * @param documentTypeIdOrCode Document type ID or code
+     * @return Document type
+     * @throws DocumentException if document type not found
+     */
+    private DocumentType findDocumentType(String documentTypeIdOrCode) {
+        log.debug("Finding document type with ID or code: {}", documentTypeIdOrCode);
+
+        // First try to find by ID
+        try {
+            UUID id = UUID.fromString(documentTypeIdOrCode);
+            return documentTypeRepository.findById(new DocumentTypeId(id))
+                    .orElseThrow(() -> {
+                        log.warn("Document type not found with ID: {}", documentTypeIdOrCode);
+                        return new DocumentException("Document type not found with ID: " + documentTypeIdOrCode);
+                    });
+        } catch (IllegalArgumentException e) {
+            // Not a valid UUID, try to find by code
+            log.debug("Not a valid UUID, trying to find document type by code: {}", documentTypeIdOrCode);
+        }
+
+        // Try to find by code
+        return documentTypeRepository.findByCode(documentTypeIdOrCode)
+                .orElseThrow(() -> {
+                    log.warn("Document type not found with code: {}", documentTypeIdOrCode);
+                    return new DocumentException("Document type not found with code: " + documentTypeIdOrCode);
+                });
     }
 
     @Override
@@ -174,37 +204,23 @@ public class DocumentServiceImpl implements DocumentService {
                 throw new DocumentException("Error al leer el InputStream", e);
             }
 
-            // Crear o recuperar el tipo de documento para certificados laborales
+            // Obtener el tipo de documento para certificados laborales
             DocumentType documentType;
             try {
-                log.debug("Buscando tipo de documento 'Certificado Laboral'");
-                // En lugar de intentar convertir un string a UUID, mejor buscar por nombre
-                // directamente
-                documentType = documentTypeRepository.findAll().stream()
-                        .filter(type -> "Certificado Laboral".equals(type.getName()))
-                        .findFirst()
-                        .orElseGet(() -> {
-                            // Crear nuevo tipo de documento con los valores adecuados
-                            log.debug("Tipo de documento 'Certificado Laboral' no encontrado, creando uno nuevo");
-                            DocumentType newType = new DocumentType(
-                                    "Certificado Laboral",
-                                    "Certificado de experiencia laboral",
-                                    false,
-                                    1);
-                            return documentTypeRepository.save(newType);
-                        });
-                log.debug("Tipo de documento encontrado/creado: {}", documentType);
-            } catch (Exception e) {
-                log.error("Error al obtener el tipo de documento: {}", e.getMessage(), e);
-                // Crear un nuevo tipo de documento como fallback
-                log.debug("Creando un nuevo tipo de documento como fallback debido al error");
-                DocumentType newType = new DocumentType(
+                log.debug("Buscando tipo de documento 'certificado-laboral'");
+                documentType = findDocumentType("certificado-laboral");
+                log.debug("Tipo de documento encontrado: {}", documentType);
+            } catch (DocumentException e) {
+                log.warn("Tipo de documento 'certificado-laboral' no encontrado, creando uno nuevo");
+                // Crear un nuevo tipo de documento
+                DocumentType newType = DocumentType.create(
+                        "certificado-laboral",
                         "Certificado Laboral",
                         "Certificado de experiencia laboral",
                         false,
                         1);
                 documentType = documentTypeRepository.save(newType);
-                log.debug("Tipo de documento fallback creado: {}", documentType);
+                log.debug("Tipo de documento creado: {}", documentType);
             }
 
             // Create document entity
@@ -222,7 +238,7 @@ public class DocumentServiceImpl implements DocumentService {
                 log.debug("Estableciendo ID personalizado para el documento: {}", documentId);
                 document.setId(new DocumentId(documentId));
             }
-            
+
             log.info("ID del documento que se va a guardar: {}", document.getId().value());
 
             // Store the file
@@ -250,20 +266,20 @@ public class DocumentServiceImpl implements DocumentService {
                     // AHORA SI guardamos en el disco
                     filePath = documentStorageService.storeFile(copiedStream, filename, userId,
                             document.getId().value());
-                    
+
                     if (filePath == null || filePath.isEmpty()) {
                         log.error("ERROR: La ruta del archivo retornada por storeFile es nula o vacía");
                         throw new DocumentException("Error al guardar el archivo: ruta vacía");
                     }
-                    
+
                     log.info("Archivo almacenado correctamente en: {}", filePath);
-                    
+
                     // Verificar que el archivo realmente existe en el disco
                     Path storagePath = Paths.get(filePath);
                     if (!Files.exists(storagePath)) {
                         log.error("ERROR: El archivo no existe en la ruta especificada: {}", storagePath);
                     } else {
-                        log.info("VERIFICADO: El archivo existe en disco: {}, tamaño: {} bytes", 
+                        log.info("VERIFICADO: El archivo existe en disco: {}, tamaño: {} bytes",
                                 storagePath, Files.size(storagePath));
                     }
                 }

@@ -59,6 +59,15 @@ public class DocumentEntity {
     @Column(name = "upload_date")
     private LocalDateTime uploadDate;
 
+    @Column(name = "validated_by")
+    private UUID validatedBy;
+
+    @Column(name = "validated_at")
+    private LocalDateTime validatedAt;
+
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
     public enum DocumentStatusEnum {
         PENDING, APPROVED, REJECTED
     }

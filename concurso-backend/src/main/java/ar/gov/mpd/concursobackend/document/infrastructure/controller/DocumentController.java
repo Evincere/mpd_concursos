@@ -48,7 +48,8 @@ public class DocumentController {
     @GetMapping("/tipos")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<DocumentTypeDto>> getDocumentTypes() {
-        return ResponseEntity.ok(documentTypeService.getAllDocumentTypes());
+        log.debug("REST request to get all active document types");
+        return ResponseEntity.ok(documentTypeService.getAllActiveDocumentTypes());
     }
 
     @GetMapping("/usuario")

@@ -19,6 +19,9 @@ public class Document {
     private DocumentStatus status;
     private String comments;
     private LocalDateTime uploadDate;
+    private UUID validatedBy;
+    private LocalDateTime validatedAt;
+    private String rejectionReason;
 
     public Document() {
         this.id = new DocumentId(UUID.randomUUID());
@@ -36,5 +39,19 @@ public class Document {
         document.setFilePath(filePath);
         document.setComments(comments);
         return document;
+    }
+
+    public void approve(UUID adminId) {
+        this.setStatus(DocumentStatus.APPROVED);
+        this.validatedBy = adminId;
+        this.validatedAt = LocalDateTime.now();
+        this.rejectionReason = null;
+    }
+
+    public void reject(UUID adminId, String reason) {
+        this.setStatus(DocumentStatus.REJECTED);
+        this.validatedBy = adminId;
+        this.validatedAt = LocalDateTime.now();
+        this.rejectionReason = reason;
     }
 }
