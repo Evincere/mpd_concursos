@@ -24,7 +24,11 @@ import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enu
 export class InscriptionService {
   private readonly baseUrl = environment.apiUrl;
   private readonly inscriptionsEndpoint = '/inscripciones';
+  private readonly contestsEndpoint = '/contests';
   private inscriptions$ = new BehaviorSubject<IInscription[]>([]);
+
+  // Estado temporal de inscripciones en progreso
+  private inProgressInscriptions: Map<string, any> = new Map();
 
   constructor(
     private http: HttpClient,
@@ -677,5 +681,35 @@ export class InscriptionService {
         console.warn('[InscriptionService] Estado desconocido:', status);
         return InscripcionState.PENDING;
     }
+  }
+
+  /**
+   * Guarda el estado del formulario de inscripción en memoria
+   * @param inscriptionId ID de la inscripción
+   * @param formState Estado del formulario
+   */
+  saveFormState(inscriptionId: string, formState: any): void {
+    console.log('[InscriptionService] Guardando estado del formulario:', { inscriptionId, formState });
+    this.inProgressInscriptions.set(inscriptionId, formState);
+  }
+
+  /**
+   * Recupera el estado del formulario de inscripción desde la memoria
+   * @param inscriptionId ID de la inscripción
+   * @returns Estado del formulario o null si no existe
+   */
+  getFormState(inscriptionId: string): any {
+    const state = this.inProgressInscriptions.get(inscriptionId);
+    console.log('[InscriptionService] Recuperando estado del formulario:', { inscriptionId, state });
+    return state || null;
+  }
+
+  /**
+   * Limpia el estado del formulario de inscripción
+   * @param inscriptionId ID de la inscripción
+   */
+  clearFormState(inscriptionId: string): void {
+    console.log('[InscriptionService] Limpiando estado del formulario:', inscriptionId);
+    this.inProgressInscriptions.delete(inscriptionId);
   }
 }

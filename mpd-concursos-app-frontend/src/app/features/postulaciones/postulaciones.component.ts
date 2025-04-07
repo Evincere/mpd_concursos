@@ -20,11 +20,14 @@ import { SearchHeaderComponent } from '@shared/components/search-header/search-h
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { FiltrosPostulacionesComponent } from './components/filtros-postulaciones/filtros-postulaciones.component';
 import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { InscriptionStateService, IInscriptionFormState } from '@core/services/inscripcion/inscription-state.service';
+import { InscriptionRecoveryService } from '@core/services/inscripcion/inscription-recovery.service';
 import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaciones.interface';
 import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interface';
 import { PostulacionDetalleComponent } from './components/postulacion-detalle/postulacion-detalle.component';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
-import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { PostulationStatus } from '@shared/interfaces/postulacion/postulacion.interface';
 import { EventsService, EventType } from '@core/services/events/events.service';
 import { DashboardService } from '@core/services/dashboard/dashboard.service';
@@ -107,6 +110,8 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   constructor(
     private postulacionesService: PostulacionesService,
     private inscriptionService: InscriptionService,
+    private inscriptionStateService: InscriptionStateService,
+    private inscriptionRecoveryService: InscriptionRecoveryService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router,
@@ -172,7 +177,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         // Verificar si todas las postulaciones están canceladas
         const postulacionesActivas = response.content.filter(p => p.estado !== PostulationStatus.CANCELLED);
         this.todasCanceladas = response.content.length > 0 && postulacionesActivas.length === 0;
-        
+
         // Asignar solo las postulaciones activas
         this.postulaciones = postulacionesActivas;
         this.aplicarFiltros();
@@ -181,8 +186,8 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         console.error('Error al cargar las postulaciones:', error);
         this.error = error.status === 0 ? 'connection' : 'server';
         this.snackBar.open(
-          error.status === 0 
-            ? 'Error de conexión' 
+          error.status === 0
+            ? 'Error de conexión'
             : 'Error al cargar las postulaciones',
           'Cerrar',
           { duration: 3000 }
@@ -316,16 +321,34 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   getEstadoPostulacionLabel(estado: string | undefined): string {
     if (!estado) return 'Desconocido';
 
+    // Si es una inscripción en proceso, mostrar "En proceso" en lugar de "Pendiente"
+    if (estado === 'PENDING') {
+      const postulacion = this.dataSource.data.find(p => p.estado === estado);
+      if (postulacion && this.esInscripcionEnProceso(postulacion)) {
+        return 'En proceso';
+      }
+    }
+
     const labels: { [key: string]: string } = {
       'PENDING': 'Pendiente',
       'APPROVED': 'Aprobada',
-      'REJECTED': 'Rechazada'
+      'REJECTED': 'Rechazada',
+      'CANCELLED': 'Cancelada'
     };
     return labels[estado] || estado;
   }
 
   getEstadoPostulacionClass(estado: string | undefined): string {
     if (!estado) return 'pending';
+
+    // Si es una inscripción en proceso, usar la clase "in-progress"
+    if (estado === 'PENDING') {
+      const postulacion = this.dataSource.data.find(p => p.estado === estado);
+      if (postulacion && this.esInscripcionEnProceso(postulacion)) {
+        return 'in-progress';
+      }
+    }
+
     return estado.toLowerCase();
   }
 
@@ -361,7 +384,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
               this.snackBar.open('Postulación cancelada exitosamente', 'Cerrar', {
                 duration: 3000
               });
-              
+
               // Actualizar el listado de postulaciones
               this.postulaciones = this.postulaciones.filter(p => p.id !== postulacion.id);
               this.postulacionesFiltradas = this.postulacionesFiltradas.filter(p => p.id !== postulacion.id);
@@ -406,5 +429,108 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     // Solo se puede cancelar si está en estado PENDING o ACCEPTED
     return postulacion.estado === PostulationStatus.PENDING ||
            postulacion.estado === PostulationStatus.ACCEPTED;
+  }
+
+  /**
+   * Verifica si una postulación está en proceso y puede ser continuada
+   */
+  puedesContinuarInscripcion(postulacion: Postulacion): boolean {
+    // Solo se puede continuar si está en estado PENDING y es una inscripción en proceso
+    return postulacion.estado === PostulationStatus.PENDING && this.esInscripcionEnProceso(postulacion);
+  }
+
+  /**
+   * Verifica si una postulación es una inscripción en proceso (no completada)
+   * @param postulacion La postulación a verificar
+   * @returns true si es una inscripción en proceso, false si es una inscripción completada
+   */
+  esInscripcionEnProceso(postulacion: Postulacion): boolean {
+    // Verificar si hay un estado guardado para esta inscripción
+    if (!postulacion.id) return false;
+
+    // Intentar obtener el estado desde el servicio de inscripción
+    const formState = this.inscriptionService.getFormState(postulacion.id.toString());
+    if (formState) return true;
+
+    // Intentar obtener el estado desde localStorage
+    const savedState = this.inscriptionStateService.getInscriptionState(postulacion.id.toString());
+    if (savedState) return true;
+
+    // Si no hay estado guardado, no es una inscripción en proceso
+    return false;
+  }
+
+  /**
+   * Navega al detalle del concurso para continuar la inscripción
+   */
+  continuarInscripcion(postulacion: Postulacion): void {
+    console.log('[PostulacionesComponent] Continuando inscripción:', postulacion);
+
+    // Verificar si hay un ID de postulación
+    if (!postulacion.id) {
+      this.snackBar.open('No se puede continuar la inscripción: ID no disponible', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    const inscriptionId = postulacion.id.toString();
+    const contestId = postulacion.contestId || postulacion.concurso?.id;
+
+    if (!contestId) {
+      this.snackBar.open('No se puede continuar la inscripción: ID de concurso no disponible', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    // Intentar obtener el estado guardado desde el servicio de inscripción
+    const formState = this.inscriptionService.getFormState(inscriptionId);
+
+    // Si hay estado guardado en el servicio, usarlo
+    if (formState) {
+      console.log('[PostulacionesComponent] Estado encontrado en el servicio:', formState);
+
+      // Navegar al detalle del concurso con parámetros para continuar la inscripción
+      this.router.navigate(['/dashboard/concursos', contestId], {
+        queryParams: {
+          continueInscription: 'true',
+          inscriptionId: inscriptionId
+        }
+      });
+
+      this.snackBar.open('Continuando inscripción...', 'Cerrar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    // Intentar obtener el estado guardado desde localStorage
+    const savedState = this.inscriptionStateService.getInscriptionState(inscriptionId);
+
+    if (savedState) {
+      console.log('[PostulacionesComponent] Estado encontrado en localStorage:', savedState);
+
+      // Navegar al detalle del concurso con parámetros para continuar la inscripción
+      this.router.navigate(['/dashboard/concursos', contestId], {
+        queryParams: {
+          continueInscription: 'true',
+          inscriptionId: inscriptionId
+        }
+      });
+
+      this.snackBar.open('Continuando inscripción...', 'Cerrar', {
+        duration: 3000
+      });
+    } else {
+      console.log('[PostulacionesComponent] No se encontró estado guardado para la inscripción:', inscriptionId);
+
+      // Si no hay estado guardado, simplemente navegar al detalle del concurso
+      this.router.navigate(['/dashboard/concursos', contestId]);
+
+      this.snackBar.open('Continuando inscripción sin estado guardado...', 'Cerrar', {
+        duration: 3000
+      });
+    }
   }
 }

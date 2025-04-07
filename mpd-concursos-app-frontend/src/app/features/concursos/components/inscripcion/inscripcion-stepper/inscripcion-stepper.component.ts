@@ -1198,6 +1198,8 @@ import { IInscription } from '@shared/interfaces/inscripcion/inscription.interfa
 export class InscripcionStepperComponent implements OnInit {
   @Input() contest!: Contest;
   @Input() initialStep = 1; // Paso inicial por defecto
+  @Input() inscriptionId: string | null = null; // ID de la inscripción si ya existe
+  @Input() formData: any = null; // Datos del formulario guardados previamente
   @Output() inscriptionCompleted = new EventEmitter<void>();
 
   currentStep = 1; // Se inicializa con 1, pero se actualiza en ngOnInit si hay un initialStep
@@ -1241,6 +1243,48 @@ export class InscripcionStepperComponent implements OnInit {
     this.concursoId = typeof this.contest.id === 'string' ? parseInt(this.contest.id, 10) : this.contest.id;
 
     console.log('[InscripcionStepper] Concurso seleccionado:', this.contest);
+
+    // Si hay datos de formulario guardados, restaurarlos
+    if (this.formData) {
+      console.log('[InscripcionStepper] Restaurando datos del formulario desde input:', this.formData);
+      this.restoreFormData();
+    } else if (this.inscriptionId) {
+      // Intentar recuperar el estado desde el servicio de inscripción
+      const savedState = this.inscriptionService.getFormState(this.inscriptionId);
+      if (savedState) {
+        console.log('[InscripcionStepper] Restaurando datos del formulario desde servicio:', savedState);
+        this.formData = savedState;
+        this.restoreFormData();
+
+        // Si el estado guardado tiene un paso actual, actualizarlo
+        if (savedState.currentStep) {
+          this.currentStep = savedState.currentStep;
+          console.log(`[InscripcionStepper] Restaurando paso: ${this.currentStep}`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Restaura los datos del formulario guardados previamente
+   */
+  private restoreFormData(): void {
+    if (!this.formData) return;
+
+    // Restaurar los valores de los formularios
+    if (this.formData.termsAccepted !== undefined) {
+      this.termsForm.patchValue({ acceptedTerms: this.formData.termsAccepted });
+    }
+
+    if (this.formData.selectedCircunscripciones) {
+      this.locationForm.patchValue({ selectedCircunscripciones: this.formData.selectedCircunscripciones });
+    }
+
+    if (this.formData.confirmedPersonalData !== undefined) {
+      this.confirmationForm.patchValue({ confirmedPersonalData: this.formData.confirmedPersonalData });
+    }
+
+    console.log('[InscripcionStepper] Datos del formulario restaurados');
   }
 
   /**
@@ -1589,22 +1633,34 @@ export class InscripcionStepperComponent implements OnInit {
    * para que pueda cargar los documentos faltantes
    */
   irADocumentacion(): void {
+    console.log('[InscripcionStepper] Navegando a la sección de documentación...');
+
     // Guardar el estado de la inscripción actual para poder retomar después
     if (this.inscriptionId) {
-      // Guardar la inscripción en progreso
-      const inscriptionData: IInscription = {
-        id: this.inscriptionId || '',
+      // Obtener los valores actuales de los formularios
+      const formData = {
+        termsAccepted: this.termsForm.get('acceptedTerms')?.value,
+        selectedCircunscripciones: this.locationForm.get('selectedCircunscripciones')?.value || [],
+        confirmedPersonalData: this.confirmationForm.get('confirmedPersonalData')?.value,
+        currentStep: this.currentStep,
         contestId: this.concursoId,
-        userId: '', // No necesitamos el userId para esto
-        state: InscripcionState.PENDING,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        currentStep: InscriptionStep.DATA_CONFIRMATION
+        contestTitle: this.contest.title || this.contest.position
       };
 
-      this.inscriptionStateService.saveInProgressInscription(inscriptionData);
+      // 1. Guardar en el servicio de inscripción (memoria)
+      this.inscriptionService.saveFormState(this.inscriptionId, formData);
+      console.log('[InscripcionStepper] Estado guardado en el servicio de inscripción:', formData);
 
-      // Marcar que venimos de la inscripción
+      // 2. Guardar en el servicio de estado (localStorage)
+      this.inscriptionStateService.saveInscriptionState(
+        this.inscriptionId,
+        this.concursoId,
+        this.currentStep as unknown as InscriptionStep,
+        formData,
+        this.contest.title || this.contest.position
+      );
+
+      // 3. Marcar que venimos de la inscripción
       this.inscriptionStateService.setRedirectFromInscription(this.inscriptionId);
 
       console.log('[InscripcionStepper] Estado de inscripción guardado para retomar después');
@@ -1755,6 +1811,9 @@ export class InscripcionStepperComponent implements OnInit {
 
   nextStep(): void {
     if (this.canProceed()) {
+      // Guardar el estado actual antes de avanzar
+      this.saveCurrentState();
+
       this.currentStep++;
       setTimeout(() => {
         const stepContent = document.querySelector('.step-content');
@@ -1767,6 +1826,9 @@ export class InscripcionStepperComponent implements OnInit {
 
   previousStep(): void {
     if (this.currentStep > 1) {
+      // Guardar el estado actual antes de retroceder
+      this.saveCurrentState();
+
       this.currentStep--;
       setTimeout(() => {
         const stepContent = document.querySelector('.step-content');
@@ -1777,11 +1839,46 @@ export class InscripcionStepperComponent implements OnInit {
     }
   }
 
+  /**
+   * Guarda el estado actual del formulario
+   */
+  saveCurrentState(): void {
+    if (!this.inscriptionId) return;
+
+    // Obtener los valores actuales de los formularios
+    const formData = {
+      termsAccepted: this.termsForm.get('acceptedTerms')?.value,
+      selectedCircunscripciones: this.locationForm.get('selectedCircunscripciones')?.value || [],
+      confirmedPersonalData: this.confirmationForm.get('confirmedPersonalData')?.value,
+      currentStep: this.currentStep,
+      contestId: this.concursoId,
+      contestTitle: this.contest.title || this.contest.position
+    };
+
+    // Guardar el estado en ambos servicios para mayor seguridad
+    // 1. En el servicio de estado (localStorage)
+    this.inscriptionStateService.saveInscriptionState(
+      this.inscriptionId,
+      this.concursoId,
+      this.currentStep as unknown as InscriptionStep,
+      formData,
+      this.contest.title || this.contest.position
+    );
+
+    // 2. En el servicio de inscripción (memoria)
+    this.inscriptionService.saveFormState(this.inscriptionId, formData);
+
+    console.log('[InscripcionStepper] Estado guardado:', {
+      inscriptionId: this.inscriptionId,
+      currentStep: this.currentStep,
+      formData
+    });
+  }
+
   // Variable para evitar múltiples envíos simultáneos
   private isSubmitting = false;
 
-  // Variables para guardar el ID de la inscripción y el concurso
-  inscriptionId: string | null = null;
+  // Variables para guardar el ID del concurso
   concursoId: number = 0;
 
   finish(): void {

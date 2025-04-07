@@ -7,13 +7,15 @@ import { MatDialog } from '@angular/material/dialog';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { InscripcionDialogComponent } from '../inscripcion-dialog/inscripcion-dialog.component';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
-import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
+import { InscriptionStateService, IInscriptionFormState } from '@core/services/inscripcion/inscription-state.service';
+import { InscriptionRecoveryService } from '@core/services/inscripcion/inscription-recovery.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
+import { ContinueInscriptionDialogComponent } from '../continue-inscription-dialog/continue-inscription-dialog.component';
 
 @Component({
   selector: 'app-inscripcion-button',
@@ -120,6 +122,7 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
   constructor(
     private inscriptionService: InscriptionService,
     private inscriptionStateService: InscriptionStateService,
+    private inscriptionRecoveryService: InscriptionRecoveryService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -128,9 +131,39 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
     this.verificarEstadoInscripcion();
 
     // Verificar si hay una inscripción en progreso para este concurso
+    // Primero verificamos con el nuevo método
+    const incompleteInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
+    const incompleteInscription = incompleteInscriptions.find(ins =>
+      ins.contestId === (typeof this.contest.id === 'string' ? parseInt(this.contest.id, 10) : this.contest.id)
+    );
+
+    if (incompleteInscription) {
+      console.log('[InscripcionButton] Encontrada inscripción incompleta para este concurso:', incompleteInscription);
+
+      // Verificar si venimos de la pestaña de documentación
+      const redirectId = this.inscriptionStateService.getRedirectFromInscription();
+      if (redirectId && redirectId === incompleteInscription.inscriptionId) {
+        console.log('[InscripcionButton] Detectada redirección desde documentación, abriendo diálogo automáticamente');
+
+        // Abrir el diálogo automáticamente
+        setTimeout(() => {
+          this.abrirDialogoInscripcion(incompleteInscription.inscriptionId, true);
+          // Limpiar la redirección para evitar que se abra nuevamente
+          this.inscriptionStateService.clearRedirectFromInscription();
+        }, 500); // Pequeño retraso para asegurar que la UI esté lista
+      } else {
+        // Si no venimos de documentación pero hay una inscripción incompleta, mostrar diálogo para continuar
+        setTimeout(() => {
+          this.mostrarDialogoContinuarInscripcion(incompleteInscription);
+        }, 1000);
+      }
+      return;
+    }
+
+    // Método antiguo como fallback
     const savedInscription = this.inscriptionStateService.getInProgressInscription();
     if (savedInscription && savedInscription.contestId === this.contest.id) {
-      console.log('[InscripcionButton] Encontrada inscripción en progreso para este concurso:', savedInscription);
+      console.log('[InscripcionButton] Encontrada inscripción en progreso para este concurso (método antiguo):', savedInscription);
 
       // Verificar si venimos de la pestaña de documentación
       const redirectId = this.inscriptionStateService.getRedirectFromInscription();
@@ -139,12 +172,36 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
 
         // Abrir el diálogo automáticamente
         setTimeout(() => {
-          this.abrirDialogoInscripcion();
+          this.abrirDialogoInscripcion(savedInscription.id);
           // Limpiar la redirección para evitar que se abra nuevamente
           this.inscriptionStateService.clearRedirectFromInscription();
         }, 500); // Pequeño retraso para asegurar que la UI esté lista
       }
     }
+  }
+
+  /**
+   * Muestra un diálogo para continuar una inscripción incompleta
+   */
+  private mostrarDialogoContinuarInscripcion(inscription: IInscriptionFormState): void {
+    const dialogRef = this.dialog.open(ContinueInscriptionDialogComponent, {
+      width: '400px',
+      data: {
+        contestId: inscription.contestId,
+        contestTitle: inscription.contestTitle || this.contest.title || this.contest.position,
+        inscriptionId: inscription.inscriptionId
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Si el usuario quiere continuar, abrir el diálogo de inscripción
+        this.abrirDialogoInscripcion(inscription.inscriptionId, true);
+      } else {
+        // Si no quiere continuar, limpiar el estado guardado
+        this.inscriptionStateService.clearInscriptionState(inscription.inscriptionId);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -216,7 +273,37 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
       });
   }
 
-  private abrirDialogoInscripcion(): void {
+  private abrirDialogoInscripcion(inscriptionId?: string, continueInscription: boolean = false): void {
+    console.log('[InscripcionButton] Abriendo diálogo de inscripción:', { inscriptionId, continueInscription });
+
+    // Obtener la inscripción guardada si no se proporcionó un ID
+    if (!inscriptionId) {
+      // Intentar obtener desde el servicio de inscripción
+      let inscripcionActual: any = null;
+
+      // Obtener las inscripciones actuales
+      this.inscriptionService.inscriptions.subscribe(inscripciones => {
+        inscripcionActual = inscripciones.find((ins: any) =>
+          ins.contestId === (typeof this.contest.id === 'string' ? parseInt(this.contest.id, 10) : this.contest.id) &&
+          ins.state === InscripcionState.PENDING
+        );
+      }).unsubscribe(); // Desuscribirse inmediatamente
+
+      if (inscripcionActual) {
+        console.log('[InscripcionButton] Encontrada inscripción pendiente en el servicio:', inscripcionActual);
+        inscriptionId = inscripcionActual.id;
+        continueInscription = true;
+      } else {
+        // Intentar obtener desde el localStorage (método antiguo)
+        const savedInscription = this.inscriptionStateService.getInProgressInscription();
+        if (savedInscription && savedInscription.contestId === this.contest.id) {
+          console.log('[InscripcionButton] Encontrada inscripción pendiente en localStorage:', savedInscription);
+          inscriptionId = savedInscription.id;
+          continueInscription = true;
+        }
+      }
+    }
+
     const dialogRef = this.dialog.open(InscripcionDialogComponent, {
       width: '800px',
       height: '600px',
@@ -224,7 +311,11 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
       maxHeight: '100vh',
       panelClass: 'glassmorphism-dialog',
       disableClose: true,
-      data: this.contest
+      data: {
+        contest: this.contest,
+        inscriptionId: inscriptionId,
+        continueInscription: continueInscription
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {

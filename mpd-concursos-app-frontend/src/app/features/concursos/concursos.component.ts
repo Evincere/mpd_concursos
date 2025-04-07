@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 import { ConcursosService } from '@core/services/concursos/concursos.service';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
@@ -60,7 +62,7 @@ import { FiltersService } from '@core/services/filters/filters.service';
     ])
   ]
 })
-export class ConcursosComponent implements OnInit {
+export class ConcursosComponent implements OnInit, OnDestroy {
   concursos: Concurso[] = [];
   loading = false;
   error: any = null;
@@ -76,16 +78,58 @@ export class ConcursosComponent implements OnInit {
   concursosSinFiltrar: Concurso[] = [];
   searchTerm: string = '';
   primeraConsulta = true;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private concursosService: ConcursosService,
     private inscriptionService: InscriptionService,
     private snackBar: MatSnackBar,
-    private filtersService: FiltersService
+    private filtersService: FiltersService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.cargarConcursos();
+
+    // Suscribirse a los cambios en los parámetros de la URL
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        console.log('[ConcursosComponent] Parámetros de URL detectados:', params);
+
+        // Si hay un ID de concurso en la URL, seleccionarlo
+        const concursoId = this.route.snapshot.paramMap.get('id');
+        if (concursoId) {
+          console.log('[ConcursosComponent] ID de concurso detectado en la URL:', concursoId);
+          this.seleccionarConcursoPorId(parseInt(concursoId, 10));
+        }
+
+        // Si hay parámetros para continuar una inscripción, procesarlos
+        if (params['continueInscription'] === 'true' && params['inscriptionId']) {
+          console.log('[ConcursosComponent] Parámetros para continuar inscripción detectados:', {
+            continueInscription: params['continueInscription'],
+            inscriptionId: params['inscriptionId']
+          });
+
+          // Esperar a que se carguen los concursos
+          setTimeout(() => {
+            if (this.concursoSeleccionado) {
+              // Forzar la apertura del diálogo de inscripción
+              const inscripcionButton = document.querySelector('app-inscripcion-button button') as HTMLButtonElement;
+              if (inscripcionButton && params['openDialog'] === 'true') {
+                console.log('[ConcursosComponent] Forzando clic en botón de inscripción');
+                inscripcionButton.click();
+              }
+            }
+          }, 1000);
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   cargarConcursos(): void {
@@ -339,5 +383,36 @@ export class ConcursosComponent implements OnInit {
       category: concurso.category // Mantenemos la categoría actual
     };
     this.verDetalle(concursoConvertido);
+  }
+
+  /**
+   * Selecciona un concurso por su ID
+   * @param id ID del concurso a seleccionar
+   */
+  seleccionarConcursoPorId(id: number): void {
+    console.log('[ConcursosComponent] Buscando concurso con ID:', id);
+
+    // Si ya tenemos los concursos cargados, buscar el concurso
+    if (this.concursos.length > 0) {
+      const concurso = this.concursos.find(c => c.id === id);
+      if (concurso) {
+        console.log('[ConcursosComponent] Concurso encontrado:', concurso);
+        this.onSeleccionarConcurso(concurso);
+      } else {
+        console.log('[ConcursosComponent] Concurso no encontrado en la lista actual');
+      }
+    } else {
+      // Si no tenemos los concursos cargados, esperar a que se carguen
+      console.log('[ConcursosComponent] Esperando a que se carguen los concursos...');
+      setTimeout(() => {
+        const concurso = this.concursos.find(c => c.id === id);
+        if (concurso) {
+          console.log('[ConcursosComponent] Concurso encontrado después de esperar:', concurso);
+          this.onSeleccionarConcurso(concurso);
+        } else {
+          console.log('[ConcursosComponent] Concurso no encontrado después de esperar');
+        }
+      }, 1000);
+    }
   }
 }

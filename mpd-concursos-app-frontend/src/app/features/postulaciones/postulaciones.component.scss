@@ -131,6 +131,11 @@
               background: rgba(158, 158, 158, 0.15);
               color: #9e9e9e;
             }
+
+            &.in-progress {
+              background: rgba(33, 150, 243, 0.15);
+              color: #2196f3;
+            }
           }
 
           .actions {
@@ -417,7 +422,7 @@
       max-width: 600px;
       padding: 3rem;
       border-radius: 16px;
-      
+
       &.glassmorphism {
         background: rgba(45, 45, 45, 0.5);
         backdrop-filter: blur(10px);
@@ -494,7 +499,7 @@
           background: linear-gradient(135deg, rgba(63, 81, 181, 0.9) 0%, rgba(63, 81, 181, 0.7) 100%);
           color: white;
           border: 1px solid rgba(255, 255, 255, 0.1);
-          
+
           &:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 16px rgba(63, 81, 181, 0.3);
@@ -640,7 +645,7 @@
             background: linear-gradient(135deg, rgba(63, 81, 181, 0.9) 0%, rgba(63, 81, 181, 0.7) 100%);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            
+
             &:hover {
               transform: translateY(-2px);
               box-shadow: 0 8px 16px rgba(63, 81, 181, 0.3);

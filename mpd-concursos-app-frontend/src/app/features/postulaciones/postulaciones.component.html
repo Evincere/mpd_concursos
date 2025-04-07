@@ -29,13 +29,27 @@
         <div class="postulacion-item" *ngFor="let postulacion of dataSource.data" (click)="verDetalle(postulacion)">
           <!-- Acciones -->
           <div class="actions">
+            <!-- Botón para cancelar postulación -->
             <button mat-icon-button
                     color="warn"
                     matTooltip="Cancelar postulación"
                     [disabled]="!puedesCancelarPostulacion(postulacion)"
-                    (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)">
+                    (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
+                    *ngIf="postulacion.estado !== 'CANCELLED'">
               <mat-icon>cancel</mat-icon>
             </button>
+
+            <!-- Botón para continuar inscripción (solo para inscripciones en proceso) -->
+            <button mat-icon-button
+                    color="primary"
+                    matTooltip="Continuar inscripción"
+                    [disabled]="!puedesContinuarInscripcion(postulacion)"
+                    (click)="$event.stopPropagation(); continuarInscripcion(postulacion)"
+                    *ngIf="postulacion.estado === 'PENDING' && esInscripcionEnProceso(postulacion)">
+              <mat-icon>play_arrow</mat-icon>
+            </button>
+
+            <!-- Botón para ver detalle -->
             <button mat-icon-button
                     matTooltip="Ver detalle"
                     (click)="verDetalle(postulacion)">
