@@ -257,24 +257,32 @@ export class InscriptionService {
 
   /**
    * Mapea los estados del frontend a los estados aceptados por el backend
-   * El backend solo acepta: ACTIVE, PENDING, CANCELLED
+   * El backend solo acepta: ACTIVE, PENDING, CANCELLED, REJECTED, IN_PROCESS
    */
   private mapFrontendStateToBackend(state: InscripcionState): string {
     switch (state) {
-      case InscripcionState.CONFIRMADA:
+      // Estados estandarizados
+      case InscripcionState.PENDIENTE:
         return 'PENDING'; // Inscripción completada por el usuario, pendiente de validación
       case InscripcionState.INSCRIPTO:
-      case InscripcionState.APPROVED:
-        return 'ACTIVE'; // Inscripción validada por el administrador
-      case InscripcionState.PENDING:
-        return 'PENDING'; // Inscripción en proceso (interrumpida)
+        return 'ACTIVE';  // Inscripción validada por el administrador
+      case InscripcionState.IN_PROCESS:
+        return 'IN_PROCESS'; // Inscripción en proceso (interrumpida)
       case InscripcionState.CANCELLED:
-        return 'CANCELLED';
+        return 'CANCELLED'; // Inscripción cancelada
       case InscripcionState.REJECTED:
-        return 'REJECTED'; // Inscripción rechazada por el administrador
+        return 'REJECTED';  // Inscripción rechazada por el administrador
+
+      // Estados antiguos (mantenidos por compatibilidad)
+      case InscripcionState.CONFIRMADA:
+        return 'PENDING';   // Equivalente a PENDIENTE
+      case InscripcionState.APPROVED:
+        return 'ACTIVE';    // Equivalente a INSCRIPTO
+      case InscripcionState.PENDING:
+        return 'IN_PROCESS'; // Equivalente a IN_PROCESS
       case InscripcionState.NO_INSCRIPTO:
       default:
-        return 'PENDING'; // Por defecto, usar PENDING
+        return 'PENDING';   // Por defecto, usar PENDING
     }
   }
 
@@ -657,29 +665,34 @@ export class InscriptionService {
   private mapStatusToState(status: string): InscripcionState {
     if (!status) {
       console.warn('[InscriptionService] Estado nulo o indefinido');
-      return InscripcionState.PENDING;
+      return InscripcionState.IN_PROCESS; // Cambiado de PENDING a IN_PROCESS
     }
 
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
+      // Mapeo de estados del backend a los nuevos estados estandarizados
       case 'ACTIVE':
-        return InscripcionState.INSCRIPTO; // Cambiado de CONFIRMADA a INSCRIPTO para mayor claridad
+        return InscripcionState.INSCRIPTO; // Inscripción validada por el administrador
       case 'PENDING':
-        return InscripcionState.CONFIRMADA; // Cambiado de PENDING a CONFIRMADA para reflejar que está pendiente de validación
+        return InscripcionState.PENDIENTE; // Inscripción completada por el usuario, pendiente de validación
+      case 'IN_PROCESS':
+        return InscripcionState.IN_PROCESS; // Inscripción en proceso (interrumpida)
       case 'CANCELLED':
       case 'CANCELED':
       case 'CANCELADA':
       case 'CANCELADO':
-        return InscripcionState.CANCELLED;
+        return InscripcionState.CANCELLED; // Inscripción cancelada
       case 'REJECTED':
       case 'RECHAZADA':
       case 'RECHAZADO':
-        return InscripcionState.REJECTED;
+        return InscripcionState.REJECTED; // Inscripción rechazada
+
+      // Compatibilidad con estados antiguos
       case 'CONFIRMADA':
-        return InscripcionState.CONFIRMADA;
+        return InscripcionState.PENDIENTE; // Ahora mapeado a PENDIENTE
       default:
         console.warn('[InscriptionService] Estado desconocido:', status);
-        return InscripcionState.PENDING;
+        return InscripcionState.IN_PROCESS; // Cambiado de PENDING a IN_PROCESS
     }
   }
 

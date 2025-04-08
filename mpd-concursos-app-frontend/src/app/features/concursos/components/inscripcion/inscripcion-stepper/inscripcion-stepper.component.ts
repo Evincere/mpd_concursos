@@ -1916,12 +1916,13 @@ export class InscripcionStepperComponent implements OnInit {
 
             console.log('[InscripcionStepper] Actualizando estado de inscripción:', inscription.id);
 
-            // Actualizamos el estado de la inscripción a CONFIRMADA
+            // Actualizamos el estado de la inscripción a PENDIENTE (nuevo estado estandarizado)
+            // que reemplaza al anterior estado CONFIRMADA
             this.inscriptionService.updateInscriptionStatus(inscription.id, {
-              state: InscripcionState.CONFIRMADA
+              state: InscripcionState.PENDIENTE
             }).subscribe({
               next: () => {
-                console.log('[InscripcionStepper] Estado de inscripción actualizado a CONFIRMADA');
+                console.log('[InscripcionStepper] Estado de inscripción actualizado a PENDIENTE');
                 // Actualizamos también el paso de la inscripción
                 this.updateInscriptionStep(inscription.id);
                 // Mostrar mensaje de éxito

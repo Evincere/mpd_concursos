@@ -34,10 +34,10 @@ import { ContinueInscriptionDialogComponent } from '../continue-inscription-dial
         color="primary"
         class="inscripcion-button"
         [class.loading]="loading"
-        [class.inscripto]="estado === InscripcionState.INSCRIPTO"
-        [class.confirmada]="estado === InscripcionState.CONFIRMADA"
-        [class.pending]="estado === InscripcionState.PENDING"
-        [disabled]="loading || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDING"
+        [class.inscripto]="estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED"
+        [class.confirmada]="estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE"
+        [class.pending]="estado === InscripcionState.PENDING || estado === InscripcionState.IN_PROCESS"
+        [disabled]="loading || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED || estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE || estado === InscripcionState.REJECTED || estado === InscripcionState.CANCELLED"
         (click)="onInscribirse()">
         <ng-container *ngIf="!loading && estado === InscripcionState.NO_INSCRIPTO">
           <mat-icon>how_to_reg</mat-icon>
@@ -49,12 +49,12 @@ import { ContinueInscriptionDialogComponent } from '../continue-inscription-dial
           <span>Procesando...</span>
         </ng-container>
 
-        <ng-container *ngIf="estado === InscripcionState.PENDING">
+        <ng-container *ngIf="estado === InscripcionState.PENDING || estado === InscripcionState.IN_PROCESS">
           <mat-icon>pending</mat-icon>
           <span>En proceso</span>
         </ng-container>
 
-        <ng-container *ngIf="estado === InscripcionState.CONFIRMADA">
+        <ng-container *ngIf="estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE">
           <mat-icon>hourglass_top</mat-icon>
           <span>Pendiente</span>
         </ng-container>

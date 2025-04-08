@@ -7,6 +7,7 @@ import { InscriptionStateService } from '@core/services/inscripcion/inscription-
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { IInscription } from '@shared/interfaces/inscripcion/inscription.interface';
 
@@ -177,31 +178,35 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
     if (inscriptionId) {
       console.log('[ReturnToInscriptionBanner] ID de inscripción encontrado:', inscriptionId);
 
-      // Verificar si la inscripción está realmente en proceso
+      // Mostrar el banner independientemente del estado de la inscripción
+      // Este cambio garantiza que el usuario siempre pueda volver al proceso de inscripción
+      this.showBanner = true;
+
+      // Verificar el estado de la inscripción solo para propósitos de logging
       this.inscriptionService.inscriptions.subscribe(inscripciones => {
         const inscripcionActual = inscripciones.find(ins => ins.id === inscriptionId);
 
         if (inscripcionActual) {
           console.log('[ReturnToInscriptionBanner] Estado de la inscripción:', inscripcionActual.state);
 
-          // Solo mostrar el banner si la inscripción está en estado PENDING
-          if (inscripcionActual.state === InscripcionState.PENDING) {
-            this.showBanner = true;
-          } else {
-            console.log('[ReturnToInscriptionBanner] La inscripción no está en proceso, no se muestra el banner');
-            // Limpiar la marca de redirección si la inscripción ya no está en proceso
-            this.inscriptionStateService.clearRedirectFromInscription();
-            this.showBanner = false;
+          // Verificar si la inscripción está en algún estado que permita continuar
+          const estadosValidos = [
+            InscripcionState.IN_PROCESS,
+            InscripcionState.PENDING,
+            InscripcionState.PENDIENTE,
+            InscripcionState.CONFIRMADA
+          ];
+
+          if (!estadosValidos.includes(inscripcionActual.state)) {
+            console.log('[ReturnToInscriptionBanner] La inscripción está en un estado que no permite continuar, pero se muestra el banner de todos modos');
           }
         } else {
           // Verificar en el localStorage como respaldo
           const formState = this.inscriptionService.getFormState(inscriptionId);
-          if (formState && formState.currentStep < 3) {
-            this.showBanner = true;
+          if (formState) {
+            console.log('[ReturnToInscriptionBanner] Estado del formulario encontrado en localStorage');
           } else {
-            console.log('[ReturnToInscriptionBanner] No se encontró información de la inscripción o ya está completa');
-            this.inscriptionStateService.clearRedirectFromInscription();
-            this.showBanner = false;
+            console.log('[ReturnToInscriptionBanner] No se encontró información de la inscripción, pero se muestra el banner de todos modos');
           }
         }
       });
@@ -233,56 +238,84 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Obtener las inscripciones actuales
-    let inscripciones: IInscription[] = [];
-    this.inscriptionService.inscriptions.subscribe((inscripcionesList: IInscription[]) => {
-      inscripciones = [...inscripcionesList];
-    }).unsubscribe();
+    // Obtener las inscripciones actuales usando pipe y take(1) para asegurar que se complete
+    this.inscriptionService.inscriptions.pipe(
+      take(1)
+    ).subscribe((inscripciones: IInscription[]) => {
+      const inscripcionActual = inscripciones.find((ins: IInscription) => ins.id === inscriptionId);
 
-    const inscripcionActual = inscripciones.find((ins: IInscription) => ins.id === inscriptionId);
+      if (inscripcionActual) {
+        console.log('[ReturnToInscriptionBanner] Inscripción encontrada:', inscripcionActual);
 
-    if (inscripcionActual) {
-      console.log('[ReturnToInscriptionBanner] Inscripción encontrada:', inscripcionActual);
+        // Verificar si la inscripción ya está completada o en un estado que no permite continuar
+        // Solo los estados finales no permiten modificaciones
+        const estadosNoModificables = [
+          InscripcionState.INSCRIPTO,  // Inscripción aprobada
+          InscripcionState.APPROVED,   // Estado anterior equivalente a INSCRIPTO
+          InscripcionState.REJECTED,   // Inscripción rechazada
+          InscripcionState.CANCELLED   // Inscripción cancelada
+        ];
 
-      // Verificar si la inscripción ya está completada
-      if (inscripcionActual.state === InscripcionState.CONFIRMADA || inscripcionActual.state === InscripcionState.INSCRIPTO) {
-        console.log('[ReturnToInscriptionBanner] La inscripción ya está completada');
-        this.inscriptionStateService.clearRedirectFromInscription();
-        this.router.navigate(['/dashboard/mis-postulaciones']);
-        this.snackBar.open('La inscripción ya ha sido completada. Puede verla en sus postulaciones.', 'Cerrar', {
-          duration: 3000
-        });
-        return;
-      }
+        // Los estados PENDIENTE y CONFIRMADA son estados intermedios que sí permiten continuar
+        // Los estados IN_PROCESS y PENDING son estados de inscripción interrumpida que sí permiten continuar
 
-      // Si la inscripción está en proceso, continuar con ella
-      if (inscripcionActual.contestId) {
-        console.log('[ReturnToInscriptionBanner] Redirigiendo a concurso:', inscripcionActual.contestId);
+        if (estadosNoModificables.includes(inscripcionActual.state)) {
+          console.log(`[ReturnToInscriptionBanner] La inscripción está en estado ${inscripcionActual.state} que no permite modificaciones`);
+          this.inscriptionStateService.clearRedirectFromInscription();
 
-        // Guardar el ID de inscripción en el servicio para que el componente de inscripción lo detecte
-        // Usar el objeto inscripcionActual que ya tiene todos los campos necesarios
-        this.inscriptionStateService.saveInProgressInscription(inscripcionActual);
-
-        // Limpiar la marca de redirección para evitar ciclos
-        this.inscriptionStateService.clearRedirectFromInscription();
-
-        // Navegar al concurso con parámetros especiales
-        this.router.navigate(['/dashboard/concursos', inscripcionActual.contestId], {
-          queryParams: {
-            continueInscription: 'true',
-            inscriptionId: inscriptionId,
-            openDialog: 'true',
-            forceOpen: 'true',
-            timestamp: new Date().getTime()
+          // Si está inscripta (aprobada), redirigir a mis postulaciones
+          if (inscripcionActual.state === InscripcionState.INSCRIPTO ||
+              inscripcionActual.state === InscripcionState.APPROVED) {
+            this.router.navigate(['/dashboard/mis-postulaciones']);
+            this.snackBar.open('La inscripción ya ha sido aprobada. Puede verla en sus postulaciones.', 'Cerrar', {
+              duration: 3000
+            });
+          } else {
+            // Si está rechazada o cancelada, informar al usuario
+            this.router.navigate(['/dashboard/concursos']);
+            this.snackBar.open(`La inscripción no puede ser modificada debido a su estado actual (${inscripcionActual.state}).`, 'Cerrar', {
+              duration: 5000
+            });
           }
-        });
+          return;
+        }
 
-        this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
-          duration: 3000
-        });
-        return;
+        // Si la inscripción está en proceso o pendiente, continuar con ella
+        if (inscripcionActual.contestId) {
+          console.log('[ReturnToInscriptionBanner] Redirigiendo a concurso:', inscripcionActual.contestId);
+
+          // Guardar el ID de inscripción en el servicio para que el componente de inscripción lo detecte
+          // Usar el objeto inscripcionActual que ya tiene todos los campos necesarios
+          this.inscriptionStateService.saveInProgressInscription(inscripcionActual);
+
+          // Limpiar la marca de redirección para evitar ciclos
+          this.inscriptionStateService.clearRedirectFromInscription();
+
+          // Navegar al concurso con parámetros especiales
+          this.router.navigate(['/dashboard/concursos', inscripcionActual.contestId], {
+            queryParams: {
+              continueInscription: 'true',
+              inscriptionId: inscriptionId,
+              openDialog: 'true',
+              forceOpen: 'true',
+              timestamp: new Date().getTime()
+            }
+          }).then(success => {
+            console.log('[ReturnToInscriptionBanner] Resultado de la navegación:', success);
+            if (success) {
+              this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
+                duration: 3000
+              });
+            } else {
+              this.snackBar.open('Error al navegar al concurso. Intente nuevamente.', 'Cerrar', {
+                duration: 3000
+              });
+            }
+          });
+          return;
+        }
       }
-    }
+    });
 
     // Si no encontramos la inscripción en el servicio, intentar obtener el estado del formulario
     const formState = this.inscriptionService.getFormState(inscriptionId);
@@ -302,10 +335,17 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
           forceOpen: 'true',
           timestamp: new Date().getTime()
         }
-      });
-
-      this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
-        duration: 3000
+      }).then(success => {
+        console.log('[ReturnToInscriptionBanner] Resultado de la navegación (formState):', success);
+        if (success) {
+          this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
+            duration: 3000
+          });
+        } else {
+          this.snackBar.open('Error al navegar al concurso. Intente nuevamente.', 'Cerrar', {
+            duration: 3000
+          });
+        }
       });
       return;
     }
@@ -328,10 +368,17 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
           forceOpen: 'true',
           timestamp: new Date().getTime()
         }
-      });
-
-      this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
-        duration: 3000
+      }).then(success => {
+        console.log('[ReturnToInscriptionBanner] Resultado de la navegación (método antiguo):', success);
+        if (success) {
+          this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
+            duration: 3000
+          });
+        } else {
+          this.snackBar.open('Error al navegar al concurso. Intente nuevamente.', 'Cerrar', {
+            duration: 3000
+          });
+        }
       });
       return;
     }
