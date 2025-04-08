@@ -35,7 +35,7 @@ import { Postulacion, AttachedDocument } from '@shared/interfaces/postulacion/po
 export class PostulacionDetalleComponent {
   @Input() postulacion!: Postulacion;
   @Output() cerrarDetalle = new EventEmitter<void>();
-  
+
   closing = false;
 
   onCerrar() {
@@ -58,11 +58,17 @@ export class PostulacionDetalleComponent {
   getEstadoPostulacionLabel(estado: string): string {
     switch (estado) {
       case 'PENDING':
-        return 'Pendiente';
+        return 'En proceso'; // Inscripción interrumpida
+      case 'CONFIRMADA':
+        return 'Pendiente'; // Inscripción completada por el usuario, pendiente de validación
+      case 'INSCRIPTO':
+      case 'APPROVED':
       case 'ACCEPTED':
-        return 'Aprobada';
+        return 'Inscripto'; // Inscripción validada por el administrador
       case 'REJECTED':
         return 'Rechazada';
+      case 'CANCELLED':
+        return 'Cancelada';
       default:
         return estado;
     }

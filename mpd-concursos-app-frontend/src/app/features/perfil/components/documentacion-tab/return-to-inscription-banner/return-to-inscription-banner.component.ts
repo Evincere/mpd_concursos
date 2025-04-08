@@ -7,6 +7,8 @@ import { InscriptionStateService } from '@core/services/inscripcion/inscription-
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { IInscription } from '@shared/interfaces/inscripcion/inscription.interface';
 
 @Component({
   selector: 'app-return-to-inscription-banner',
@@ -20,9 +22,13 @@ import { Subscription } from 'rxjs';
     <div *ngIf="showBanner" class="return-banner">
       <div class="banner-content">
         <mat-icon>assignment_return</mat-icon>
-        <span>Está completando documentación para su inscripción. Cuando termine, haga clic en el botón para volver al proceso.</span>
+        <div class="message">
+          <h4>Inscripción en progreso</h4>
+          <p>Está completando documentación para su inscripción. Cuando termine, haga clic en el botón para volver al proceso.</p>
+        </div>
       </div>
       <button mat-raised-button (click)="returnToInscription()">
+        <mat-icon>arrow_forward</mat-icon>
         Volver a la inscripción
       </button>
     </div>
@@ -32,58 +38,112 @@ import { Subscription } from 'rxjs';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: #1a237e; /* Fondo azul oscuro para mejor contraste */
+      background: rgba(30, 30, 30, 0.7); /* Fondo oscuro semi-transparente */
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(63, 81, 181, 0.2); /* Borde sutil con color primario */
       border-left: 4px solid #3f51b5;
       padding: 16px 20px;
       margin-bottom: 20px;
-      border-radius: 4px;
-      box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-      color: white; /* Texto blanco para mejor contraste */
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      color: rgba(255, 255, 255, 0.87); /* Texto blanco con ligera transparencia */
     }
 
     .banner-content {
       display: flex;
       align-items: center;
-      gap: 12px;
-      font-weight: 500; /* Texto semi-bold para mejor legibilidad */
+      gap: 16px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    .message {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .message h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .message p {
+      margin: 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
     }
 
     mat-icon {
-      color: #8c9eff; /* Color más claro para el icono */
+      color: #3f51b5; /* Color primario para el icono */
       font-size: 24px;
       height: 24px;
       width: 24px;
+      filter: drop-shadow(0 0 5px rgba(63, 81, 181, 0.5)); /* Efecto de brillo */
     }
 
     button {
       white-space: nowrap;
-      background-color: #4caf50 !important; /* Verde para el botón de acción */
+      background: linear-gradient(135deg, #3f51b5 0%, #303f9f 100%) !important; /* Gradiente elegante */
       color: white !important;
       font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      transition: background-color 0.3s, box-shadow 0.3s;
+      padding: 8px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(63, 81, 181, 0.3);
+      transition: all 0.3s ease;
+      border: none;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      color: white;
+      filter: none;
+      margin-right: 4px;
     }
 
     button:hover {
-      background-color: #43a047 !important;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      background: linear-gradient(135deg, #3949ab 0%, #283593 100%) !important;
+      box-shadow: 0 6px 16px rgba(63, 81, 181, 0.4);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px rgba(63, 81, 181, 0.3);
     }
 
     @media (max-width: 768px) {
       .return-banner {
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
+        padding: 20px;
       }
 
       .banner-content {
         text-align: center;
         width: 100%;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .message {
+        text-align: center;
+        align-items: center;
       }
 
       button {
         width: 100%;
+        padding: 12px 20px;
+        justify-content: center;
       }
     }
   `]
@@ -101,17 +161,50 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    console.log('[ReturnToInscriptionBanner] Inicializando componente');
+
     // Verificar si venimos de la inscripción por parámetro de consulta
     this.queryParamSubscription = this.route.queryParams.subscribe(params => {
       if (params['fromInscription'] === 'true') {
+        console.log('[ReturnToInscriptionBanner] Parámetro fromInscription detectado');
         this.showBanner = true;
       }
     });
 
     // También verificar si hay una inscripción guardada
     const inscriptionId = this.inscriptionStateService.getRedirectFromInscription();
+
     if (inscriptionId) {
-      this.showBanner = true;
+      console.log('[ReturnToInscriptionBanner] ID de inscripción encontrado:', inscriptionId);
+
+      // Verificar si la inscripción está realmente en proceso
+      this.inscriptionService.inscriptions.subscribe(inscripciones => {
+        const inscripcionActual = inscripciones.find(ins => ins.id === inscriptionId);
+
+        if (inscripcionActual) {
+          console.log('[ReturnToInscriptionBanner] Estado de la inscripción:', inscripcionActual.state);
+
+          // Solo mostrar el banner si la inscripción está en estado PENDING
+          if (inscripcionActual.state === InscripcionState.PENDING) {
+            this.showBanner = true;
+          } else {
+            console.log('[ReturnToInscriptionBanner] La inscripción no está en proceso, no se muestra el banner');
+            // Limpiar la marca de redirección si la inscripción ya no está en proceso
+            this.inscriptionStateService.clearRedirectFromInscription();
+            this.showBanner = false;
+          }
+        } else {
+          // Verificar en el localStorage como respaldo
+          const formState = this.inscriptionService.getFormState(inscriptionId);
+          if (formState && formState.currentStep < 3) {
+            this.showBanner = true;
+          } else {
+            console.log('[ReturnToInscriptionBanner] No se encontró información de la inscripción o ya está completa');
+            this.inscriptionStateService.clearRedirectFromInscription();
+            this.showBanner = false;
+          }
+        }
+      });
     }
   }
 
@@ -122,6 +215,9 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
   }
 
   returnToInscription(): void {
+    // Deshabilitar el botón inmediatamente para evitar doble clic
+    this.showBanner = false;
+
     // Obtener el ID de inscripción desde el servicio de estado
     const inscriptionId = this.inscriptionStateService.getRedirectFromInscription();
 
@@ -137,114 +233,120 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Intentar obtener el contestId directamente desde las inscripciones activas
-    let contestId: number | null = null;
+    // Obtener las inscripciones actuales
+    let inscripciones: IInscription[] = [];
+    this.inscriptionService.inscriptions.subscribe((inscripcionesList: IInscription[]) => {
+      inscripciones = [...inscripcionesList];
+    }).unsubscribe();
 
-    // Suscribirse a las inscripciones para obtener el contestId
-    this.inscriptionService.inscriptions.subscribe(inscripciones => {
-      const inscripcionActual = inscripciones.find(ins => ins.id === inscriptionId);
-      if (inscripcionActual) {
-        contestId = inscripcionActual.contestId;
-        console.log('[ReturnToInscriptionBanner] Inscripción encontrada en el servicio:', inscripcionActual);
+    const inscripcionActual = inscripciones.find((ins: IInscription) => ins.id === inscriptionId);
+
+    if (inscripcionActual) {
+      console.log('[ReturnToInscriptionBanner] Inscripción encontrada:', inscripcionActual);
+
+      // Verificar si la inscripción ya está completada
+      if (inscripcionActual.state === InscripcionState.CONFIRMADA || inscripcionActual.state === InscripcionState.INSCRIPTO) {
+        console.log('[ReturnToInscriptionBanner] La inscripción ya está completada');
+        this.inscriptionStateService.clearRedirectFromInscription();
+        this.router.navigate(['/dashboard/mis-postulaciones']);
+        this.snackBar.open('La inscripción ya ha sido completada. Puede verla en sus postulaciones.', 'Cerrar', {
+          duration: 3000
+        });
+        return;
       }
-    }).unsubscribe(); // Desuscribirse inmediatamente
 
-    if (contestId) {
-      // Limpiar la marca de redirección
-      this.inscriptionStateService.clearRedirectFromInscription();
+      // Si la inscripción está en proceso, continuar con ella
+      if (inscripcionActual.contestId) {
+        console.log('[ReturnToInscriptionBanner] Redirigiendo a concurso:', inscripcionActual.contestId);
 
-      // Abrir directamente el diálogo de inscripción para el concurso
-      this.router.navigate(['/dashboard/concursos', contestId], {
-        queryParams: {
-          continueInscription: 'true',
-          inscriptionId: inscriptionId,
-          openDialog: 'true' // Parámetro adicional para forzar la apertura del diálogo
-        }
-      });
+        // Guardar el ID de inscripción en el servicio para que el componente de inscripción lo detecte
+        // Usar el objeto inscripcionActual que ya tiene todos los campos necesarios
+        this.inscriptionStateService.saveInProgressInscription(inscripcionActual);
 
-      this.snackBar.open('Volviendo al proceso de inscripción...', 'Cerrar', {
-        duration: 3000
-      });
-      return;
+        // Limpiar la marca de redirección para evitar ciclos
+        this.inscriptionStateService.clearRedirectFromInscription();
+
+        // Navegar al concurso con parámetros especiales
+        this.router.navigate(['/dashboard/concursos', inscripcionActual.contestId], {
+          queryParams: {
+            continueInscription: 'true',
+            inscriptionId: inscriptionId,
+            openDialog: 'true',
+            forceOpen: 'true',
+            timestamp: new Date().getTime()
+          }
+        });
+
+        this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
+          duration: 3000
+        });
+        return;
+      }
     }
 
-    // Intentar obtener el estado del formulario desde el servicio de inscripción
+    // Si no encontramos la inscripción en el servicio, intentar obtener el estado del formulario
     const formState = this.inscriptionService.getFormState(inscriptionId);
 
     if (formState && formState.contestId) {
-      console.log('[ReturnToInscriptionBanner] Estado encontrado en el servicio:', formState);
+      console.log('[ReturnToInscriptionBanner] Estado encontrado en localStorage:', formState);
 
-      // Limpiar la marca de redirección
+      // Limpiar la marca de redirección para evitar ciclos
       this.inscriptionStateService.clearRedirectFromInscription();
 
-      // Redirigir al usuario a la página de detalle del concurso con parámetros para continuar
+      // Navegar al concurso con parámetros especiales
       this.router.navigate(['/dashboard/concursos', formState.contestId], {
         queryParams: {
           continueInscription: 'true',
           inscriptionId: inscriptionId,
-          openDialog: 'true' // Parámetro adicional para forzar la apertura del diálogo
+          openDialog: 'true',
+          forceOpen: 'true',
+          timestamp: new Date().getTime()
         }
       });
 
-      this.snackBar.open('Volviendo al proceso de inscripción...', 'Cerrar', {
+      this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
         duration: 3000
       });
       return;
     }
 
-    // Intentar obtener la inscripción desde el método antiguo
+    // Último intento: obtener la inscripción desde el método antiguo
     const inscription = this.inscriptionStateService.getInProgressInscription();
 
     if (inscription && inscription.contestId) {
       console.log('[ReturnToInscriptionBanner] Inscripción encontrada en localStorage:', inscription);
 
-      // Limpiar la marca de redirección
+      // Limpiar la marca de redirección para evitar ciclos
       this.inscriptionStateService.clearRedirectFromInscription();
 
-      // Redirigir al usuario a la página de detalle del concurso
+      // Navegar al concurso con parámetros especiales
       this.router.navigate(['/dashboard/concursos', inscription.contestId], {
         queryParams: {
           continueInscription: 'true',
           inscriptionId: inscriptionId,
-          openDialog: 'true' // Parámetro adicional para forzar la apertura del diálogo
+          openDialog: 'true',
+          forceOpen: 'true',
+          timestamp: new Date().getTime()
         }
       });
 
-      this.snackBar.open('Volviendo al proceso de inscripción...', 'Cerrar', {
+      this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
         duration: 3000
       });
       return;
     }
 
-    // Si no encontramos información del concurso, intentar obtener el estado guardado
-    const savedState = this.inscriptionStateService.getInscriptionState(inscriptionId);
+    // Si llegamos aquí, no pudimos encontrar información suficiente
+    console.log('[ReturnToInscriptionBanner] No se pudo encontrar información de la inscripción');
 
-    if (savedState && savedState.contestId) {
-      console.log('[ReturnToInscriptionBanner] Estado encontrado en localStorage:', savedState);
-
-      // Limpiar la marca de redirección
-      this.inscriptionStateService.clearRedirectFromInscription();
-
-      // Redirigir al usuario a la página de detalle del concurso
-      this.router.navigate(['/dashboard/concursos', savedState.contestId], {
-        queryParams: {
-          continueInscription: 'true',
-          inscriptionId: inscriptionId,
-          openDialog: 'true' // Parámetro adicional para forzar la apertura del diálogo
-        }
-      });
-
-      this.snackBar.open('Volviendo al proceso de inscripción...', 'Cerrar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    // Si no encontramos ninguna información, simplemente navegar a concursos
+    // Limpiar cualquier estado parcial para evitar problemas futuros
     this.inscriptionStateService.clearRedirectFromInscription();
-    this.router.navigate(['/dashboard/concursos']);
+    if (inscriptionId) {
+      this.inscriptionService.clearFormState(inscriptionId);
+    }
 
-    this.snackBar.open('No se encontró información del concurso. Redirigiendo a la página de concursos.', 'Cerrar', {
+    this.router.navigate(['/dashboard/concursos']);
+    this.snackBar.open('No se pudo recuperar la información de la inscripción. Por favor, inicie el proceso nuevamente.', 'Cerrar', {
       duration: 5000
     });
   }

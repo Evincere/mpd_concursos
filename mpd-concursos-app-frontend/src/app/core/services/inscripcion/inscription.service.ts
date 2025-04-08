@@ -262,16 +262,16 @@ export class InscriptionService {
   private mapFrontendStateToBackend(state: InscripcionState): string {
     switch (state) {
       case InscripcionState.CONFIRMADA:
-        return 'CONFIRMADA'; // Nuevo estado para inscripciones completadas por el usuario
+        return 'PENDING'; // Inscripción completada por el usuario, pendiente de validación
       case InscripcionState.INSCRIPTO:
       case InscripcionState.APPROVED:
-        return 'ACTIVE'; // Mapear INSCRIPTO y APPROVED a ACTIVE en el backend
+        return 'ACTIVE'; // Inscripción validada por el administrador
       case InscripcionState.PENDING:
-        return 'PENDING';
+        return 'PENDING'; // Inscripción en proceso (interrumpida)
       case InscripcionState.CANCELLED:
         return 'CANCELLED';
       case InscripcionState.REJECTED:
-        return 'REJECTED'; // Nuevo estado para inscripciones rechazadas
+        return 'REJECTED'; // Inscripción rechazada por el administrador
       case InscripcionState.NO_INSCRIPTO:
       default:
         return 'PENDING'; // Por defecto, usar PENDING
@@ -663,9 +663,9 @@ export class InscriptionService {
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
       case 'ACTIVE':
-        return InscripcionState.CONFIRMADA;
+        return InscripcionState.INSCRIPTO; // Cambiado de CONFIRMADA a INSCRIPTO para mayor claridad
       case 'PENDING':
-        return InscripcionState.PENDING;
+        return InscripcionState.CONFIRMADA; // Cambiado de PENDING a CONFIRMADA para reflejar que está pendiente de validación
       case 'CANCELLED':
       case 'CANCELED':
       case 'CANCELADA':

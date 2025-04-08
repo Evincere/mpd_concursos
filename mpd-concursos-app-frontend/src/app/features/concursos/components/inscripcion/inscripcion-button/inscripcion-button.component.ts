@@ -34,11 +34,12 @@ import { ContinueInscriptionDialogComponent } from '../continue-inscription-dial
         color="primary"
         class="inscripcion-button"
         [class.loading]="loading"
-        [class.inscripto]="estado === InscripcionState.CONFIRMADA"
+        [class.inscripto]="estado === InscripcionState.INSCRIPTO"
+        [class.confirmada]="estado === InscripcionState.CONFIRMADA"
         [class.pending]="estado === InscripcionState.PENDING"
-        [disabled]="loading || estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDING"
+        [disabled]="loading || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDING"
         (click)="onInscribirse()">
-        <ng-container *ngIf="!loading && estado !== InscripcionState.CONFIRMADA && estado !== InscripcionState.PENDING">
+        <ng-container *ngIf="!loading && estado === InscripcionState.NO_INSCRIPTO">
           <mat-icon>how_to_reg</mat-icon>
           <span>Inscribirse</span>
         </ng-container>
@@ -54,6 +55,11 @@ import { ContinueInscriptionDialogComponent } from '../continue-inscription-dial
         </ng-container>
 
         <ng-container *ngIf="estado === InscripcionState.CONFIRMADA">
+          <mat-icon>hourglass_top</mat-icon>
+          <span>Pendiente</span>
+        </ng-container>
+
+        <ng-container *ngIf="estado === InscripcionState.INSCRIPTO">
           <mat-icon>check_circle</mat-icon>
           <span>Inscripto</span>
         </ng-container>
@@ -80,6 +86,16 @@ import { ContinueInscriptionDialogComponent } from '../continue-inscription-dial
 
         mat-icon {
           color: #4CAF50;
+        }
+      }
+
+      &.confirmada {
+        background: rgba(33, 150, 243, 0.12);
+        color: #2196F3;
+        pointer-events: none;
+
+        mat-icon {
+          color: #2196F3;
         }
       }
 

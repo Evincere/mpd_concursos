@@ -331,7 +331,9 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
     const labels: { [key: string]: string } = {
       'PENDING': 'Pendiente',
-      'APPROVED': 'Aprobada',
+      'CONFIRMADA': 'Pendiente', // Inscripción completada por el usuario, pendiente de validación
+      'INSCRIPTO': 'Inscripto', // Inscripción validada por el administrador
+      'APPROVED': 'Inscripto', // Mantener compatibilidad
       'REJECTED': 'Rechazada',
       'CANCELLED': 'Cancelada'
     };
@@ -349,7 +351,17 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       }
     }
 
-    return estado.toLowerCase();
+    // Mapeo de estados a clases CSS
+    const classMap: { [key: string]: string } = {
+      'PENDING': 'pending',
+      'CONFIRMADA': 'confirmada', // Inscripción completada por el usuario, pendiente de validación
+      'INSCRIPTO': 'inscripto', // Inscripción validada por el administrador
+      'APPROVED': 'inscripto', // Mantener compatibilidad
+      'REJECTED': 'rejected',
+      'CANCELLED': 'cancelled'
+    };
+
+    return classMap[estado] || estado.toLowerCase();
   }
 
   cancelarPostulacion(postulacion: Postulacion): void {
