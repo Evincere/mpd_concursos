@@ -1,0 +1,241 @@
+<div class="app-performance-container">
+  <div class="section-header">
+    <h2>Rendimiento de la Aplicación</h2>
+    <p class="section-description">
+      Métricas de rendimiento de la aplicación, incluyendo uso de recursos, tiempos de respuesta y errores.
+    </p>
+  </div>
+
+  <!-- Estado vacío -->
+  <div *ngIf="!appPerformanceMetrics" class="empty-state">
+    <mat-icon>speed</mat-icon>
+    <p>No hay datos disponibles para mostrar</p>
+  </div>
+
+  <!-- Métricas de rendimiento -->
+  <div *ngIf="appPerformanceMetrics" class="performance-metrics">
+    <!-- Información del sistema -->
+    <mat-card class="metrics-card">
+      <mat-card-header>
+        <mat-card-title>Información del Sistema</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Tiempo de actividad</div>
+            <div class="info-value">{{formatUptime(appPerformanceMetrics.uptime || 0)}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Carga del servidor</div>
+            <div class="info-value">{{appPerformanceMetrics.serverLoad || 0}}%</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Uso de CPU</div>
+            <div class="info-value">{{appPerformanceMetrics.cpuUsage.percentage || 0}}% ({{appPerformanceMetrics.cpuUsage.cores || 0}} núcleos)</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Memoria total</div>
+            <div class="info-value">{{formatMemorySize(appPerformanceMetrics.memoryUsage.total || 0)}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Memoria usada</div>
+            <div class="info-value">{{formatMemorySize(appPerformanceMetrics.memoryUsage.used || 0)}} ({{appPerformanceMetrics.memoryUsage.percentage || 0}}%)</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Memoria libre</div>
+            <div class="info-value">{{formatMemorySize(appPerformanceMetrics.memoryUsage.free || 0)}}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Métricas de API -->
+    <mat-card class="metrics-card">
+      <mat-card-header>
+        <mat-card-title>Métricas de API</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Total de solicitudes</div>
+            <div class="info-value">{{appPerformanceMetrics.apiMetrics.totalRequests || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Solicitudes exitosas</div>
+            <div class="info-value">{{appPerformanceMetrics.apiMetrics.successfulRequests || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Solicitudes fallidas</div>
+            <div class="info-value">{{appPerformanceMetrics.apiMetrics.failedRequests || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Tiempo de respuesta promedio</div>
+            <div class="info-value">{{appPerformanceMetrics.apiMetrics.averageResponseTime || 0}} ms</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Solicitudes por minuto</div>
+            <div class="info-value">{{appPerformanceMetrics.apiMetrics.requestsPerMinute || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Solicitudes por segundo</div>
+            <div class="info-value">{{appPerformanceMetrics.apiMetrics.requestsPerSecond || 0}}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Métricas de sesiones -->
+    <mat-card class="metrics-card">
+      <mat-card-header>
+        <mat-card-title>Métricas de Sesiones</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Sesiones activas</div>
+            <div class="info-value">{{appPerformanceMetrics.sessionMetrics.activeSessions || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Duración promedio de sesión</div>
+            <div class="info-value">{{formatUptime(appPerformanceMetrics.sessionMetrics.averageSessionDuration || 0)}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Usuarios concurrentes</div>
+            <div class="info-value">{{appPerformanceMetrics.sessionMetrics.concurrentUsers || 0}}</div>
+          </div>
+        </div>
+
+        <div class="users-by-role" *ngIf="appPerformanceMetrics?.sessionMetrics?.usersByRole?.length">
+          <h3>Usuarios por rol</h3>
+          <div class="role-list">
+            <div class="role-item" *ngFor="let role of appPerformanceMetrics?.sessionMetrics?.usersByRole">
+              <div class="role-name">{{role.role === 'ROLE_ADMIN' ? 'Administrador' : 'Usuario'}}</div>
+              <div class="role-count">{{role.count || 0}}</div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Rendimiento de endpoints -->
+  <div *ngIf="appPerformanceMetrics?.apiMetrics?.endpoints" class="endpoints-section">
+    <h3>Rendimiento de Endpoints</h3>
+
+    <div class="table-container mat-elevation-z2">
+      <table mat-table [dataSource]="appPerformanceMetrics?.apiMetrics?.endpoints || []" matSort class="endpoints-table">
+        <!-- Columna de Ruta -->
+        <ng-container matColumnDef="path">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Ruta</th>
+          <td mat-cell *matCellDef="let endpoint">{{endpoint.path || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna de Método -->
+        <ng-container matColumnDef="method">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Método</th>
+          <td mat-cell *matCellDef="let endpoint">
+            <span class="method-badge" [ngClass]="{'method-get': endpoint.method === 'GET', 'method-post': endpoint.method === 'POST', 'method-put': endpoint.method === 'PUT', 'method-delete': endpoint.method === 'DELETE'}">
+              {{endpoint.method || 'N/A'}}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Columna de Total de Solicitudes -->
+        <ng-container matColumnDef="totalRequests">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Total</th>
+          <td mat-cell *matCellDef="let endpoint">{{endpoint.totalRequests || 0}}</td>
+        </ng-container>
+
+        <!-- Columna de Tiempo de Respuesta -->
+        <ng-container matColumnDef="averageResponseTime">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tiempo Resp.</th>
+          <td mat-cell *matCellDef="let endpoint">{{endpoint.averageResponseTime || 0}} ms</td>
+        </ng-container>
+
+        <!-- Columna de Tasa de Errores -->
+        <ng-container matColumnDef="errorRate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tasa Error</th>
+          <td mat-cell *matCellDef="let endpoint">{{endpoint.errorRate || 0}}%</td>
+        </ng-container>
+
+        <!-- Columna de Solicitudes por Minuto -->
+        <ng-container matColumnDef="requestsPerMinute">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Req/min</th>
+          <td mat-cell *matCellDef="let endpoint">{{endpoint.requestsPerMinute || 0}}</td>
+        </ng-container>
+
+        <!-- Columna de Estado -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+          <td mat-cell *matCellDef="let endpoint">
+            <div class="status-indicator" [ngClass]="getEndpointStatusClass(endpoint.status || '')" matTooltip="{{getEndpointStatusLabel(endpoint.status || '')}}">
+              <mat-icon>{{getEndpointStatusIcon(endpoint.status || '')}}</mat-icon>
+              <span>{{getEndpointStatusLabel(endpoint.status || '')}}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="endpointColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: endpointColumns;"></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Errores recientes -->
+  <div *ngIf="appPerformanceMetrics?.errorMetrics?.recentErrors?.length" class="errors-section">
+    <h3>Errores Recientes</h3>
+
+    <div class="table-container mat-elevation-z2">
+      <table mat-table [dataSource]="appPerformanceMetrics?.errorMetrics?.recentErrors || []" matSort class="errors-table">
+        <!-- Columna de Timestamp -->
+        <ng-container matColumnDef="timestamp">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
+          <td mat-cell *matCellDef="let error">{{formatDate(error.timestamp) || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna de Tipo -->
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th>
+          <td mat-cell *matCellDef="let error">{{error.type || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna de Mensaje -->
+        <ng-container matColumnDef="message">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Mensaje</th>
+          <td mat-cell *matCellDef="let error">{{error.message || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna de Endpoint -->
+        <ng-container matColumnDef="endpoint">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Endpoint</th>
+          <td mat-cell *matCellDef="let error">{{error.endpoint || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna de Usuario -->
+        <ng-container matColumnDef="userId">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Usuario</th>
+          <td mat-cell *matCellDef="let error">{{error.username || error.userId || 'Anónimo'}}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="errorColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: errorColumns;"></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+

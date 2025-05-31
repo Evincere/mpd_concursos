@@ -1,0 +1,22 @@
+<div class="tabs-container">
+  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="activeTab">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>list</mat-icon>
+        <span>Listado</span>
+      </ng-template>
+      <div class="tab-content">
+        <ng-content select="[tabContent='list']"></ng-content>
+      </div>
+    </mat-tab>
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon [matBadge]="alertCount" [matBadgeHidden]="alertCount === 0" matBadgeColor="warn">notifications</mat-icon>
+        <span>Alertas</span>
+      </ng-template>
+      <div class="tab-content">
+        <ng-content select="[tabContent='alerts']"></ng-content>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

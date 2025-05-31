@@ -9,9 +9,9 @@ import { environment } from '@env/environment';
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private readonly PUBLIC_ENDPOINTS = [
-    '/auth/login',
-    '/auth/refresh',
-    '/activity-logs'  // Agregamos este endpoint como público
+    '/api/auth/login',
+    '/api/auth/refresh',
+    '/api/activity-logs'  // Agregamos este endpoint como público
   ];
 
   constructor(
@@ -19,7 +19,9 @@ export class AuthInterceptor implements HttpInterceptor {
     private router: Router
   ) {}
 
-  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+
+
+  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const isApiUrl = request.url.startsWith(environment.apiUrl);
     const isPublicEndpoint = this.PUBLIC_ENDPOINTS.some(endpoint =>
       request.url.includes(endpoint)
@@ -52,7 +54,7 @@ export class AuthInterceptor implements HttpInterceptor {
     );
   }
 
-  private addToken(request: HttpRequest<any>, token: string): HttpRequest<any> {
+  private addToken(request: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
     return request.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`

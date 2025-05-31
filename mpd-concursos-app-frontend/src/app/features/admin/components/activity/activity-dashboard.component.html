@@ -1,0 +1,295 @@
+<div class="activity-dashboard-container">
+  <div class="header">
+    <h1>Monitoreo de Actividad</h1>
+  </div>
+
+  <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
+    <!-- Pestaña de Registros de Actividad -->
+    <mat-tab label="Registros de Actividad">
+      <div class="tab-content">
+        <mat-card class="filter-card">
+          <mat-card-content>
+            <form [formGroup]="filterForm" class="filter-form">
+              <div class="filter-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Buscar</mat-label>
+                  <input matInput formControlName="search" placeholder="Usuario, detalles...">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Módulo</mat-label>
+                  <mat-select formControlName="module">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option *ngFor="let module of moduleOptions" [value]="module">
+                      {{module}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Acción</mat-label>
+                  <mat-select formControlName="action">
+                    <mat-option value="">Todas</mat-option>
+                    <mat-option *ngFor="let action of actionOptions" [value]="action">
+                      {{action}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="filter-row">
+                <div class="date-range">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha desde</mat-label>
+                    <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Fecha hasta</mat-label>
+                    <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+                    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+
+                <div class="filter-actions">
+                  <button mat-button color="primary" (click)="resetFilters()">
+                    <mat-icon>clear</mat-icon>
+                    Limpiar Filtros
+                  </button>
+                </div>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <div class="table-container mat-elevation-z2">
+          <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSort($event)">
+            <!-- Timestamp Column -->
+            <ng-container matColumnDef="timestamp">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha/Hora</th>
+              <td mat-cell *matCellDef="let log">
+                <div class="timestamp-cell">
+                  <div class="date">{{formatDateShort(log.timestamp)}}</div>
+                  <div class="time">{{formatTime(log.timestamp)}}</div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Username Column -->
+            <ng-container matColumnDef="username">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Usuario</th>
+              <td mat-cell *matCellDef="let log">
+                <div class="user-cell">
+                  <div class="username">{{log.username}}</div>
+                  <div class="user-fullname" *ngIf="log.userFullName">{{log.userFullName}}</div>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Action Column -->
+            <ng-container matColumnDef="action">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Acción</th>
+              <td mat-cell *matCellDef="let log">
+                <div class="action-cell">
+                  <div class="action-icon" [ngClass]="getActionClass(log.action)">
+                    <mat-icon>{{getActionIcon(log.action)}}</mat-icon>
+                  </div>
+                  <span>{{log.action}}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Module Column -->
+            <ng-container matColumnDef="module">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Módulo</th>
+              <td mat-cell *matCellDef="let log">
+                <div class="module-cell">
+                  <mat-icon>{{getModuleIcon(log.module)}}</mat-icon>
+                  <span>{{log.module}}</span>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Details Column -->
+            <ng-container matColumnDef="details">
+              <th mat-header-cell *matHeaderCellDef>Detalles</th>
+              <td mat-cell *matCellDef="let log">
+                <div class="details-cell">{{log.details}}</div>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let log">
+                <button mat-icon-button color="primary" (click)="openActivityDetailDialog(log)" matTooltip="Ver detalles">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="activity-row"></tr>
+          </table>
+
+          <!-- Loading Overlay -->
+          <div *ngIf="isLoading" class="loading-overlay">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!isLoading && dataSource.length === 0" class="empty-state">
+            <mat-icon>search_off</mat-icon>
+            <p>No se encontraron registros de actividad con los filtros aplicados</p>
+            <button mat-stroked-button color="primary" (click)="resetFilters()">Limpiar Filtros</button>
+          </div>
+
+          <!-- Paginator -->
+          <mat-paginator 
+            [length]="totalItems"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizeOptions"
+            [pageIndex]="pageIndex"
+            (page)="onPageChange($event)"
+            showFirstLastButtons>
+          </mat-paginator>
+        </div>
+      </div>
+    </mat-tab>
+    
+    <!-- Pestaña de Estadísticas -->
+    <mat-tab label="Estadísticas">
+      <div class="tab-content">
+        <!-- Loading State -->
+        <div *ngIf="isStatsLoading" class="stats-loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Cargando estadísticas...</p>
+        </div>
+        
+        <!-- Stats Content -->
+        <div *ngIf="!isStatsLoading && stats" class="stats-content">
+          <div class="stats-summary">
+            <mat-card class="stats-card">
+              <mat-card-content>
+                <div class="stats-icon">
+                  <mat-icon>analytics</mat-icon>
+                </div>
+                <div class="stats-data">
+                  <div class="stats-value">{{stats.totalLogs}}</div>
+                  <div class="stats-label">Total de Registros</div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stats-card">
+              <mat-card-content>
+                <div class="stats-icon">
+                  <mat-icon>category</mat-icon>
+                </div>
+                <div class="stats-data">
+                  <div class="stats-value">{{Object.keys(stats.byModule).length}}</div>
+                  <div class="stats-label">Módulos Activos</div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stats-card">
+              <mat-card-content>
+                <div class="stats-icon">
+                  <mat-icon>people</mat-icon>
+                </div>
+                <div class="stats-data">
+                  <div class="stats-value">{{Object.keys(stats.byUser).length}}</div>
+                  <div class="stats-label">Usuarios Activos</div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+            
+            <mat-card class="stats-card">
+              <mat-card-content>
+                <div class="stats-icon">
+                  <mat-icon>event</mat-icon>
+                </div>
+                <div class="stats-data">
+                  <div class="stats-value">{{Object.keys(stats.byDate).length}}</div>
+                  <div class="stats-label">Días con Actividad</div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+          
+          <div class="charts-container">
+            <div class="chart-row">
+              <mat-card class="chart-card">
+                <mat-card-header>
+                  <mat-card-title>Actividad por Módulo</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <app-activity-chart 
+                    [data]="stats.byModule" 
+                    [chartType]="'pie'"
+                    [colorScheme]="'module'">
+                  </app-activity-chart>
+                </mat-card-content>
+              </mat-card>
+              
+              <mat-card class="chart-card">
+                <mat-card-header>
+                  <mat-card-title>Actividad por Acción</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <app-activity-chart 
+                    [data]="stats.byAction" 
+                    [chartType]="'bar'"
+                    [colorScheme]="'action'">
+                  </app-activity-chart>
+                </mat-card-content>
+              </mat-card>
+            </div>
+            
+            <div class="chart-row">
+              <mat-card class="chart-card full-width">
+                <mat-card-header>
+                  <mat-card-title>Actividad por Fecha</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <app-activity-chart 
+                    [data]="stats.byDate" 
+                    [chartType]="'line'"
+                    [colorScheme]="'date'">
+                  </app-activity-chart>
+                </mat-card-content>
+              </mat-card>
+            </div>
+            
+            <div class="chart-row">
+              <mat-card class="chart-card full-width">
+                <mat-card-header>
+                  <mat-card-title>Actividad por Usuario</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <app-activity-chart 
+                    [data]="stats.byUser" 
+                    [chartType]="'bar'"
+                    [colorScheme]="'user'"
+                    [limit]="10">
+                  </app-activity-chart>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div *ngIf="!isStatsLoading && (!stats || stats.totalLogs === 0)" class="empty-state">
+          <mat-icon>analytics_off</mat-icon>
+          <p>No hay datos de actividad disponibles para generar estadísticas</p>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

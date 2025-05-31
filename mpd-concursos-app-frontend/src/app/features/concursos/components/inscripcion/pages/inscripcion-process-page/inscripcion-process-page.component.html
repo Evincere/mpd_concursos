@@ -1,0 +1,232 @@
+<div class="inscripcion-process-container">
+  <div class="inscripcion-header">
+    <div class="header-content">
+      <h1 class="page-title">Proceso de Inscripción</h1>
+      <h2 class="contest-title" *ngIf="contest">{{ contest.title }}</h2>
+      <button class="btn-back"
+              (click)="volverAConcursos()"
+              (keydown.enter)="volverAConcursos()"
+              (keydown.space)="volverAConcursos()"
+              aria-label="Volver a la lista de concursos">
+        <mat-icon>arrow_back</mat-icon>
+        Volver a Concursos
+      </button>
+    </div>
+  </div>
+
+  <div class="inscripcion-content">
+    <!-- Pasos de inscripción -->
+    <div class="steps-container">
+      <div class="step-line"></div>
+      <div class="step-progress" [style.width]="progressPercentage + '%'"></div>
+
+      <div class="step"
+           *ngFor="let step of steps; let i = index"
+           [class.active]="currentStep === i + 1"
+           [class.completed]="currentStep > i + 1"
+           [class.clickable]="currentStep > i + 1"
+           (click)="goToStep(i + 1)"
+           (keydown.enter)="goToStep(i + 1)"
+           (keydown.space)="goToStep(i + 1); $event.preventDefault()"
+           [attr.tabindex]="currentStep > i + 1 ? '0' : '-1'"
+           [attr.role]="currentStep > i + 1 ? 'button' : 'presentation'"
+           [attr.aria-label]="'Ir al paso ' + (i + 1) + ': ' + step.label">
+        <div class="step-number">
+          <mat-icon *ngIf="currentStep > i + 1">check</mat-icon>
+          <span *ngIf="currentStep <= i + 1">{{i + 1}}</span>
+        </div>
+        <div class="step-label">{{step.label}}</div>
+      </div>
+    </div>
+
+    <!-- Contenido de los pasos -->
+    <div class="step-content-container" [formGroup]="inscriptionForm">
+      <!-- Paso 1: Términos y condiciones -->
+      <div class="step-content" *ngIf="currentStep === 1" @fadeInOut>
+        <div class="content-section">
+          <h3>Términos y Condiciones</h3>
+          <div class="terms-container">
+            <p>
+              Por favor, lea atentamente los siguientes términos y condiciones antes de continuar con el proceso de inscripción:
+            </p>
+            <ol>
+              <li>Declaro bajo juramento que los datos consignados en este formulario son correctos y completos.</li>
+              <li>Me comprometo a mantener actualizada mi información personal y de contacto.</li>
+              <li>Acepto que la falsedad u omisión en los datos declarados será causal de exclusión del proceso.</li>
+              <li>Autorizo al Ministerio Público de la Defensa a verificar la información proporcionada.</li>
+              <li>Declaro conocer y aceptar las bases y condiciones del concurso.</li>
+              <li>Me comprometo a presentar la documentación original cuando sea requerida.</li>
+            </ol>
+          </div>
+          <div class="terms-acceptance">
+            <mat-checkbox formControlName="termsAccepted" color="primary">
+              Acepto los términos y condiciones
+            </mat-checkbox>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2: Centro de vida y circunscripciones -->
+      <div class="step-content" *ngIf="currentStep === 2" @fadeInOut>
+        <div class="content-section">
+          <h3>Centro de Vida</h3>
+          <p class="section-description">
+            Indique su domicilio actual, el cual será considerado como su centro de vida.
+            Esta información se utilizará para determinar las circunscripciones judiciales disponibles.
+          </p>
+
+          <div class="address-selector-wrapper">
+            <app-custom-address-autocomplete
+              [label]="'Domicilio'"
+              [placeholder]="'Ingrese su domicilio completo (ej: Emilio Civit 256, Ciudad, Mendoza)'"
+              [required]="true"
+              [initialValue]="centroDeVidaControl.value"
+              [errorMessage]="'Por favor ingrese una dirección válida'"
+              [hint]="'Este domicilio se guardará en su perfil como su centro de vida'"
+              [province]="'Mendoza'"
+              (addressSelected)="onAddressSelected($event)"
+            ></app-custom-address-autocomplete>
+          </div>
+
+          <div class="info-box">
+            <mat-icon>info</mat-icon>
+            <span>Esta dirección se guardará en su perfil como su centro de vida.</span>
+          </div>
+        </div>
+
+        <mat-divider class="custom-divider"></mat-divider>
+
+        <div class="content-section">
+          <h3>Circunscripciones Judiciales</h3>
+          <p class="section-description">
+            Seleccione las circunscripciones judiciales donde está dispuesto a trabajar.
+          </p>
+
+          <div class="circunscripciones-container">
+            <div class="circunscripcion-item" *ngFor="let circunscripcion of ['Primera', 'Segunda', 'Tercera', 'Cuarta']">
+              <mat-checkbox
+                [value]="circunscripcion"
+                (change)="onCircunscripcionChange($event, circunscripcion)"
+                [checked]="isCircunscripcionSelected(circunscripcion)"
+                color="primary">
+                {{ circunscripcion }} Circunscripción
+              </mat-checkbox>
+            </div>
+          </div>
+
+          <div class="error-message" *ngIf="selectedCircunscripcionesControl.invalid && selectedCircunscripcionesControl.touched">
+            Debe seleccionar al menos una circunscripción
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 3: Documentación -->
+      <div class="step-content" *ngIf="currentStep === 3" @fadeInOut>
+        <div class="content-section">
+          <h3>Documentación Requerida</h3>
+
+          <div class="info-box">
+            <mat-icon>info</mat-icon>
+            <strong>Para completar su inscripción, debe cargar todos los documentos requeridos.</strong>
+          </div>
+
+          <!-- Componente de documentos embebidos -->
+          <app-documentos-embebidos
+            [concursoId]="getContestId()"
+            (documentosCompletados)="onDocumentosCompletados($event)">
+          </app-documentos-embebidos>
+        </div>
+      </div>
+
+      <!-- Paso 4: Confirmación -->
+      <div class="step-content" *ngIf="currentStep === 4" @fadeInOut>
+        <div class="content-section">
+          <h3>Confirmación de Inscripción</h3>
+          <p class="section-description">
+            Por favor, revise la información proporcionada antes de finalizar su inscripción.
+          </p>
+
+          <div class="confirmation-summary">
+            <div class="summary-section">
+              <h4>Datos del Concurso</h4>
+              <div class="summary-item">
+                <span class="label">Concurso:</span>
+                <span class="value">{{ contest?.title }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="label">Cargo:</span>
+                <span class="value">{{ contest?.position }}</span>
+              </div>
+            </div>
+
+            <div class="summary-section">
+              <h4>Centro de Vida</h4>
+              <div class="summary-item">
+                <span class="label">Domicilio:</span>
+                <span class="value">{{ centroDeVidaControl.value }}</span>
+              </div>
+            </div>
+
+            <div class="summary-section">
+              <h4>Circunscripciones Seleccionadas</h4>
+              <div class="summary-item">
+                <span class="label">Circunscripciones:</span>
+                <span class="value">{{ selectedCircunscripcionesControl.value.join(', ') }}</span>
+              </div>
+            </div>
+
+            <div class="summary-section">
+              <h4>Estado de la Documentación</h4>
+              <div class="documents-grid">
+                <div class="document-status-item" *ngFor="let doc of documentacionRequerida">
+                  <div class="doc-header">
+                    <mat-icon [class.completed]="doc.completed" [class.pending]="!doc.completed">
+                      {{doc.completed ? 'check_circle' : 'pending'}}
+                    </mat-icon>
+                    <span class="doc-title">{{doc.title}}</span>
+                  </div>
+                  <span class="doc-status" [class.completed]="doc.completed" [class.pending]="!doc.completed">
+                    {{doc.completed ? 'Completado' : 'Pendiente'}}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="confirmation-checkbox">
+            <mat-checkbox formControlName="confirmedPersonalData" color="primary">
+              Confirmo que todos los datos proporcionados son correctos y completos
+            </mat-checkbox>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="action-buttons">
+      <button class="btn btn-secondary"
+              *ngIf="currentStep > 1"
+              (click)="previousStep()">
+        <mat-icon>arrow_back</mat-icon>
+        Atrás
+      </button>
+      <button class="btn btn-primary"
+              *ngIf="currentStep < 4"
+              [disabled]="!canProceed()"
+              (click)="nextStep()">
+        Siguiente
+        <mat-icon>arrow_forward</mat-icon>
+      </button>
+      <button class="btn btn-primary"
+              *ngIf="currentStep === 4"
+              [disabled]="!canFinish() || loading"
+              (click)="finish()">
+        <span *ngIf="!loading">
+          Finalizar Inscripción
+          <mat-icon>check_circle</mat-icon>
+        </span>
+        <div class="spinner" *ngIf="loading"></div>
+      </button>
+    </div>
+  </div>
+</div>

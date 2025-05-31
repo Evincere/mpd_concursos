@@ -1,0 +1,320 @@
+@use 'src/styles/variables' as *;
+
+.document-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: $color-surface;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+// Encabezado del documento
+.document-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: rgba($color-primary, 0.05);
+  border-bottom: 1px solid $color-border;
+  
+  .document-info {
+    flex: 1;
+    
+    .document-title {
+      margin: 0 0 0.25rem;
+      font-size: $font-size-md;
+      font-weight: 500;
+    }
+    
+    .document-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+  
+  .document-status {
+    margin-left: 1rem;
+  }
+}
+
+// Contenido principal
+.document-content {
+  display: flex;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 10;
+    
+    p {
+      margin-top: 1rem;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+// Visor de PDF
+.pdf-container {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid $color-border;
+  
+  .pdf-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: $color-background;
+    border-bottom: 1px solid $color-border;
+    
+    .page-navigation,
+    .zoom-controls,
+    .view-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .page-indicator,
+    .zoom-level {
+      font-size: $font-size-sm;
+      min-width: 60px;
+      text-align: center;
+    }
+  }
+  
+  .pdf-viewer {
+    flex: 1;
+    overflow: auto;
+    background-color: $color-background;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .pdf-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+      
+      img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      
+      .no-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: $color-text-tertiary;
+        
+        mat-icon {
+          font-size: 4rem;
+          width: 4rem;
+          height: 4rem;
+          margin-bottom: 1rem;
+        }
+        
+        p {
+          margin: 0;
+          font-size: $font-size-md;
+        }
+      }
+    }
+  }
+}
+
+// Detalles del documento
+.document-details {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  
+  h4 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .details-section,
+  .observations-section,
+  .actions-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  .detail-item {
+    display: flex;
+    margin-bottom: 0.75rem;
+    
+    .detail-label {
+      width: 120px;
+      font-weight: 500;
+      color: $color-text-primary;
+    }
+    
+    .detail-value {
+      flex: 1;
+      color: $color-text-secondary;
+    }
+  }
+  
+  .observations-text {
+    padding: 0.75rem;
+    background-color: rgba($color-border, 0.2);
+    border-radius: 4px;
+    margin: 0;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+  
+  .comment-form {
+    margin-bottom: 1rem;
+    
+    .full-width {
+      width: 100%;
+    }
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+}
+
+// Pie del documento
+.document-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid $color-border;
+  display: flex;
+  justify-content: flex-end;
+}
+
+// Estilos para badges de estado
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  text-align: center;
+  
+  &.status-pending {
+    background-color: rgba($color-warning, 0.15);
+    color: $color-warning;
+  }
+  
+  &.status-approved {
+    background-color: rgba($color-success, 0.15);
+    color: $color-success;
+  }
+  
+  &.status-rejected {
+    background-color: rgba($color-error, 0.15);
+    color: $color-error;
+  }
+}
+
+// Media queries para responsive
+@media (max-width: 992px) {
+  .document-content {
+    flex-direction: column;
+  }
+  
+  .pdf-container {
+    border-right: none;
+    border-bottom: 1px solid $color-border;
+    min-height: 400px;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .document-viewer-container {
+    background-color: $color-surface-dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .document-header {
+    background-color: rgba($color-primary-dark, 0.1);
+    border-bottom-color: $color-border-dark;
+    
+    .document-meta {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .pdf-container {
+    border-right-color: $color-border-dark;
+    
+    .pdf-toolbar {
+      background-color: $color-background-dark;
+      border-bottom-color: $color-border-dark;
+    }
+    
+    .pdf-viewer {
+      background-color: $color-background-dark;
+      
+      .pdf-placeholder {
+        .no-preview {
+          color: $color-text-tertiary-dark;
+        }
+      }
+    }
+  }
+  
+  .document-details {
+    h4 {
+      color: $color-text-primary-dark;
+    }
+    
+    .detail-item {
+      .detail-label {
+        color: $color-text-primary-dark;
+      }
+      
+      .detail-value {
+        color: $color-text-secondary-dark;
+      }
+    }
+    
+    .observations-text {
+      background-color: rgba($color-border-dark, 0.2);
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .document-footer {
+    border-top-color: $color-border-dark;
+  }
+  
+  .loading-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    
+    p {
+      color: $color-text-secondary-dark;
+    }
+  }
+}

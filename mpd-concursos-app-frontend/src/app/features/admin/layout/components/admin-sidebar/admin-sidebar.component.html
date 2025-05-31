@@ -1,0 +1,269 @@
+<div class="sidebar" [class.collapsed]="collapsed" (click)="$event.stopPropagation()">
+  <!-- Logo y título -->
+  <div class="sidebar-header">
+    <div class="logo-container">
+      <img src="assets/images/logo.png" alt="MPD Logo" class="logo">
+    </div>
+    <h2 *ngIf="!collapsed" class="title">Admin Panel</h2>
+  </div>
+
+  <!-- Buscador -->
+  <div class="search-container" *ngIf="!collapsed">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search search-icon" aria-hidden="true"></i>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Buscar..."
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange(searchQuery)"
+        aria-label="Buscar en el menú">
+      <i
+        *ngIf="searchQuery"
+        class="fas fa-times clear-search"
+        (click)="onSearchChange('')"
+        aria-label="Limpiar búsqueda">
+      </i>
+    </div>
+
+    <!-- Resultados de búsqueda -->
+    <div class="search-results" *ngIf="isSearching" [@fadeAnimation]>
+      <div *ngIf="searchResults.length === 0" class="no-results">
+        No se encontraron resultados
+      </div>
+      <ul class="results-list" *ngIf="searchResults.length > 0" [@listAnimation]="searchResults.length">
+        <li *ngFor="let item of searchResults" class="result-item">
+          <a [routerLink]="item.route" routerLinkActive="active" (click)="isSearching = false">
+            <i class="fas fa-{{item.icon}} result-icon" aria-hidden="true"></i>
+            <span class="result-label">{{item.label}}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Favoritos -->
+  <div class="favorites-section" *ngIf="showFavorites && favoriteItems.length > 0 && !isSearching">
+    <div class="section-header" *ngIf="!collapsed">
+      <h3 class="section-title">Favoritos</h3>
+      <button class="toggle-button" (click)="showFavorites = !showFavorites" aria-label="Ocultar favoritos">
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
+      </button>
+    </div>
+    <ul class="favorites-list" [@listAnimation]="favoriteItems.length">
+      <li *ngFor="let item of favoriteItems" class="favorite-item">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [appTooltip]="collapsed ? item.label : ''"
+          tooltipPosition="right">
+          <i class="fas fa-{{item.icon}} favorite-icon" aria-hidden="true"></i>
+          <span *ngIf="!collapsed" class="favorite-label">{{item.label}}</span>
+          <span *ngIf="!collapsed && item.badge" class="badge" [ngClass]="'badge-' + item.badge.color">
+            {{item.badge.value}}
+          </span>
+        </a>
+      </li>
+    </ul>
+    <app-custom-divider *ngIf="!collapsed && favoriteItems.length > 0"></app-custom-divider>
+  </div>
+
+  <!-- Menú de navegación modular -->
+  <nav class="sidebar-nav" *ngIf="!isSearching">
+    <ul class="modules-list">
+      <!-- Módulos -->
+      <li *ngFor="let module of modules" class="module-item">
+        <!-- Cabecera del módulo -->
+        <div
+          class="module-header"
+          [class.active-module]="module.expanded || activeFloatingModule === module"
+          (click)="toggleModule(module, $event)"
+          [appTooltip]="collapsed ? module.label : ''"
+          tooltipPosition="right">
+          <i class="fas fa-{{module.icon}} module-icon" aria-hidden="true"></i>
+          <span *ngIf="!collapsed" class="module-label">{{module.label}}</span>
+          <i
+            *ngIf="!collapsed"
+            class="fas fa-chevron-{{module.expanded ? 'up' : 'down'}} expand-icon"
+            aria-hidden="true">
+          </i>
+        </div>
+
+        <!-- Contenido del módulo (modo expandido) -->
+        <div
+          *ngIf="!collapsed"
+          class="module-content"
+          [@moduleAnimation]="module.expanded ? 'expanded' : 'collapsed'">
+          <ul class="nav-list">
+            <li *ngFor="let item of module.items" class="nav-item" [@listAnimation]="module.expanded ? 'in' : 'out'">
+              <!-- Elemento principal -->
+              <a
+                [routerLink]="item.children ? null : item.route"
+                [routerLinkActive]="item.children ? '' : 'active'"
+                [class.has-children]="item.children"
+                (click)="item.children ? (item.expanded = !item.expanded) : null">
+                <i class="fas fa-{{item.icon}} nav-icon" aria-hidden="true"></i>
+                <span class="nav-label">{{item.label}}</span>
+
+                <!-- Badge si existe -->
+                <span *ngIf="item.badge" class="badge" [ngClass]="'badge-' + item.badge.color">
+                  {{item.badge.value}}
+                </span>
+
+                <!-- Icono de expansión si tiene hijos -->
+                <i
+                  *ngIf="item.children"
+                  class="fas fa-chevron-{{item.expanded ? 'up' : 'down'}} expand-icon"
+                  aria-hidden="true">
+                </i>
+
+                <!-- Botón de favorito -->
+                <button
+                  class="favorite-button"
+                  [class.is-favorite]="item.isFavorite"
+                  (click)="toggleFavorite(item, $event)"
+                  aria-label="Marcar como favorito">
+                  <i class="fas" [ngClass]="item.isFavorite ? 'fa-star' : 'fa-star-o'" aria-hidden="true"></i>
+                </button>
+              </a>
+
+              <!-- Submenú para elementos con hijos -->
+              <div
+                *ngIf="item.children"
+                class="submenu-container"
+                [@moduleAnimation]="item.expanded ? 'expanded' : 'collapsed'">
+                <ul class="submenu">
+                  <li *ngFor="let child of item.children" class="submenu-item">
+                    <a
+                      [routerLink]="child.route"
+                      routerLinkActive="active">
+                      <i class="fas fa-{{child.icon}} submenu-icon" aria-hidden="true"></i>
+                      <span class="submenu-label">{{child.label}}</span>
+
+                      <!-- Badge si existe -->
+                      <span *ngIf="child.badge" class="badge" [ngClass]="'badge-' + child.badge.color">
+                        {{child.badge.value}}
+                      </span>
+
+                      <!-- Botón de favorito -->
+                      <button
+                        class="favorite-button"
+                        [class.is-favorite]="child.isFavorite"
+                        (click)="toggleFavorite(child, $event)"
+                        aria-label="Marcar como favorito">
+                        <i class="fas" [ngClass]="child.isFavorite ? 'fa-star' : 'fa-star-o'" aria-hidden="true"></i>
+                      </button>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Menú de navegación tradicional (compatibilidad) -->
+  <nav class="sidebar-nav" *ngIf="isSearching === false && modules.length === 0">
+    <ul class="nav-list">
+      <li *ngFor="let item of menuItems" class="nav-item">
+        <!-- Elemento principal -->
+        <a
+          [routerLink]="item.children ? null : item.route"
+          [routerLinkActive]="item.children ? '' : 'active'"
+          [class.has-children]="item.children"
+          (click)="toggleSubMenu(item, $event)"
+          [appTooltip]="collapsed && !item.children ? item.label : ''"
+          tooltipPosition="right"
+          [attr.aria-label]="item.label"
+          [class.active-floating-menu]="activeFloatingMenu === item"
+        >
+          <i class="fas fa-{{item.icon}} nav-icon" aria-hidden="true"></i>
+          <span *ngIf="!collapsed" class="nav-label">{{item.label}}</span>
+          <i *ngIf="!collapsed && item.children" class="fas fa-{{item.expanded ? 'chevron-up' : 'chevron-down'}} expand-icon" aria-hidden="true"></i>
+        </a>
+
+        <!-- Submenú para elementos con hijos (modo expandido) -->
+        <div *ngIf="item.children && !collapsed" class="submenu-container" [@moduleAnimation]="item.expanded ? 'expanded' : 'collapsed'">
+          <ul class="submenu">
+            <li *ngFor="let child of item.children" class="submenu-item" [@listAnimation]="item.expanded ? 'in' : 'out'">
+              <a
+                [routerLink]="child.route"
+                routerLinkActive="active"
+              >
+                <i class="fas fa-{{child.icon}} submenu-icon"></i>
+                <span class="submenu-label">{{child.label}}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Menú flotante para modo colapsado (módulos) -->
+  <div
+    *ngIf="collapsed && activeFloatingModule"
+    class="floating-menu"
+    [style.top.px]="floatingMenuPosition.top"
+    [style.left.px]="floatingMenuPosition.left"
+    [@fadeAnimation]>
+    <div class="floating-header">
+      <span class="floating-title">{{activeFloatingModule.label}}</span>
+    </div>
+    <ul class="floating-items">
+      <li *ngFor="let item of activeFloatingModule.items" class="floating-item">
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          (click)="activeFloatingModule = null">
+          <i class="fas fa-{{item.icon}} floating-icon" aria-hidden="true"></i>
+          <span class="floating-label">{{item.label}}</span>
+
+          <!-- Badge si existe -->
+          <span *ngIf="item.badge" class="badge" [ngClass]="'badge-' + item.badge.color">
+            {{item.badge.value}}
+          </span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Menú flotante para modo colapsado (compatibilidad) -->
+  <div *ngIf="activeFloatingMenu && collapsed" class="floating-menu"
+       [style.top.px]="floatingMenuPosition.top"
+       [style.left.px]="floatingMenuPosition.left">
+    <div class="floating-menu-header">
+      <i class="fas fa-{{activeFloatingMenu.icon}} floating-menu-icon"></i>
+      <span class="floating-menu-title">{{activeFloatingMenu.label}}</span>
+    </div>
+    <ul class="floating-menu-list">
+      <li *ngFor="let child of activeFloatingMenu.children" class="floating-menu-item">
+        <a [routerLink]="child.route" routerLinkActive="active" (click)="closeFloatingMenu()">
+          <i class="fas fa-{{child.icon}} floating-menu-item-icon"></i>
+          <span class="floating-menu-item-label">{{child.label}}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Separador -->
+  <app-custom-divider></app-custom-divider>
+
+  <!-- Acciones de usuario -->
+  <div class="sidebar-footer">
+    <a class="footer-item"
+       (click)="logout()"
+       (keydown.enter)="logout()"
+       (keydown.space)="logout()"
+       tabindex="0"
+       role="button"
+       aria-label="Cerrar sesión"
+       [appTooltip]="collapsed ? 'Cerrar Sesión' : ''"
+       tooltipPosition="right">
+      <i class="fas fa-sign-out-alt footer-icon" aria-hidden="true"></i>
+      <span *ngIf="!collapsed" class="footer-label">Cerrar Sesión</span>
+    </a>
+  </div>
+</div>

@@ -1,0 +1,277 @@
+.personal-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.profile-photo-section {
+  flex: 0 0 auto;
+  
+  @media (min-width: 768px) {
+    flex: 0 0 300px;
+  }
+
+  .photo-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+  }
+
+  .photo-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    box-shadow:
+      0 8px 25px rgba(0, 0, 0, 0.3),
+      0 4px 10px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: scale(1.02);
+      box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.4),
+        0 6px 15px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .profile-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .default-avatar {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      color: white;
+      font-size: 3rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .change-photo-btn {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      color: #3b82f6;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+
+      &:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      &:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  .photo-info {
+    text-align: center;
+
+    h3 {
+      margin: 0 0 0.5rem 0;
+      color: #ffffff;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: #d1d5db;
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+  }
+}
+
+.personal-data-section {
+  flex: 1;
+  min-width: 0;
+
+  .perfil-form {
+    width: 100%;
+  }
+
+  .card-header {
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+
+      h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        color: #ffffff;
+        font-size: 1.4rem;
+        font-weight: 600;
+
+        i {
+          color: #6b7280;
+        }
+      }
+    }
+  }
+
+  .form-content {
+    padding: 2rem;
+
+    &.editing {
+      background: linear-gradient(135deg, rgba(107, 114, 128, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border-left: 4px solid #6b7280;
+      backdrop-filter: blur(10px);
+    }
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h4 {
+      margin: 0 0 1.5rem 0;
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: #6b7280;
+        border-radius: 2px;
+        box-shadow: 0 0 10px rgba(107, 114, 128, 0.3);
+      }
+    }
+  }
+
+  .form-row {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+
+    @media (min-width: 768px) {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 2rem;
+
+    @media (max-width: 767px) {
+      flex-direction: column;
+      
+      app-custom-button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Loading states
+.form-content {
+  &.loading {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+}
+
+// Accessibility improvements
+@media (prefers-reduced-motion: reduce) {
+  .change-photo-btn {
+    transition: none;
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .photo-container {
+    border-width: 3px;
+  }
+  
+  .default-avatar {
+    background: #000;
+    color: #fff;
+  }
+}
+
+// Focus management
+app-custom-form-field {
+  &:focus-within {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+// Error states
+.form-row {
+  app-custom-form-field {
+    &.ng-invalid.ng-touched {
+      border-left: 3px solid #e53e3e;
+      box-shadow: 0 0 0 1px rgba(229, 62, 62, 0.3);
+    }
+  }
+}
+
+// Success states
+.form-content.editing {
+  app-custom-form-field {
+    &.ng-valid.ng-touched {
+      border-left: 3px solid #38a169;
+      box-shadow: 0 0 0 1px rgba(56, 161, 105, 0.3);
+    }
+  }
+}

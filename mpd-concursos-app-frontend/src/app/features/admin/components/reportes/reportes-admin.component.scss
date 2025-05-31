@@ -24,9 +24,36 @@
   }
 }
 
-.export-buttons {
+.export-options {
   display: flex;
   gap: 0.75rem;
+  align-items: center;
+
+  .export-format-select {
+    width: 150px;
+    margin-bottom: 0;
+  }
+}
+
+// Indicador de carga
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+
+  span {
+    margin-top: 1rem;
+    color: $color-primary;
+    font-weight: 500;
+  }
 }
 
 .tab-content {
@@ -479,9 +506,117 @@
 }
 
 // Estilos para los títulos
-h2.mat-headline-5 {
+h2.mat-headline-5, h2 {
   font-size: $font-size-lg;
   font-weight: 500;
   margin: 1.5rem 0 1rem;
   color: $color-text-primary;
+}
+
+// Estilos para el constructor de reportes
+.report-builder {
+  background-color: $color-surface;
+  border-radius: $border-radius;
+  padding: 2rem;
+  text-align: center;
+  margin-top: 1rem;
+
+  h2 {
+    margin-top: 0;
+  }
+
+  .section-description {
+    color: $color-text-secondary;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .report-builder-actions {
+    margin-top: 2rem;
+  }
+}
+
+// Estilos para las métricas de rendimiento
+.performance-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.performance-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  transition: $transition-default;
+  overflow: hidden;
+  height: 100%;
+
+  mat-card-header {
+    padding: 1rem 1rem 0;
+    color: $color-text-primary;
+  }
+
+  mat-card-title {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: $color-text-primary;
+  }
+
+  mat-card-content {
+    padding: 1rem;
+  }
+}
+
+.usage-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.usage-metric {
+  .metric-label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-bottom: 0.5rem;
+  }
+
+  .metric-bar-container {
+    height: 24px;
+    background-color: $color-surface-light;
+    border-radius: $border-radius-sm;
+    overflow: hidden;
+  }
+
+  .metric-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 0.75rem;
+    font-size: $font-size-xs;
+    font-weight: 500;
+    color: white;
+    transition: width 0.5s ease;
+
+    &.low {
+      background-color: $color-success;
+    }
+
+    &.medium {
+      background-color: $color-warning;
+    }
+
+    &.high {
+      background-color: $color-error;
+    }
+  }
 }

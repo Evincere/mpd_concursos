@@ -121,11 +121,16 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/auth/") ||
+        logger.debug("Checking if should filter path: {}", path);
+
+        boolean shouldNotFilter = path.startsWith("/api/auth/") ||
                 path.startsWith("/h2-console") ||
                 path.equals("/favicon.ico") ||
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/swagger-ui") ||
                 (path.startsWith("/api/concursos") && request.getMethod().equals("GET"));
+
+        logger.debug("Should not filter path {}: {}", path, shouldNotFilter);
+        return shouldNotFilter;
     }
 }

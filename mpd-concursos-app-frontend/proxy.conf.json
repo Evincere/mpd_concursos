@@ -1,0 +1,16 @@
+{
+  "/api": {
+    "target": "http://localhost:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "timeout": 60000,
+    "proxyTimeout": 60000,
+    "pathRewrite": {
+      "^/api": "/api"
+    },
+    "headers": {
+      "Connection": "keep-alive"
+    }
+  }
+}

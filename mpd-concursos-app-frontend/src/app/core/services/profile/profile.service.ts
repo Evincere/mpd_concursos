@@ -1,129 +1,54 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { UserProfile, ProfilePhotoResponse } from '@core/models/perfil.model';
+import type { ExperienciaData, HabilidadData } from '@core/models/perfil.model';
 
-export interface Experiencia {
-  id?: string;
-  empresa: string;
-  cargo: string;
-  fechaInicio: Date;
-  fechaFin?: Date;
-  descripcion?: string;
-  certificadoId?: string;
-  comentario?: string;
-  documentUrl?: string;
-}
-
-export enum TipoEducacion {
-  NIVEL_SUPERIOR = 'Carrera de Nivel Superior',
-  GRADO = 'Carrera de grado',
-  POSGRADO_ESPECIALIZACION = 'Posgrado: especialización',
-  POSGRADO_MAESTRIA = 'Posgrado: maestría',
-  POSGRADO_DOCTORADO = 'Posgrado: doctorado',
-  DIPLOMATURA = 'Diplomatura',
-  CURSO = 'Curso de Capacitación',
-  ACTIVIDAD_CIENTIFICA = 'Actividad Científica (investigación y/o difusión)'
-}
-
-export enum EstadoEducacion {
-  FINALIZADO = 'finalizado',
-  EN_PROCESO = 'en proceso'
-}
-
-export enum TipoActividadCientifica {
-  INVESTIGACION = 'investigación',
-  PONENCIA = 'ponencia',
-  PUBLICACION = 'publicación'
-}
-
-export enum CaracterActividadCientifica {
-  AYUDANTE = 'ayudante-participante',
-  AUTOR = 'autor-disertante-panelista-exponente'
-}
-
-export interface Educacion {
-  // Campos comunes
-  tipo: TipoEducacion;
-  estado: EstadoEducacion;
-  titulo: string;
-  institucion: string;
-  fechaEmision?: Date;
-  documentoId?: string;
-
-  // Campos específicos según el tipo
-  // Para carreras
-  duracionAnios?: number;
-  promedio?: number;
-
-  // Para posgrados
-  temaTesis?: string;
-
-  // Para diplomatura y cursos
-  cargaHoraria?: number;
-  evaluacionFinal?: boolean;
-
-  // Para actividad científica
-  tipoActividad?: TipoActividadCientifica;
-  caracter?: CaracterActividadCientifica;
-  lugarFechaExposicion?: string;
-  comentarios?: string;
-
-  // Campos para backward compatibility
-  descripcion?: string;
-  fechaInicio?: Date;
-  fechaFin?: Date;
-}
-
-export interface Habilidad {
-  nombre: string;
-  nivel: string;
-}
-
-export interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-  dni: string;
-  cuit: string;
-  firstName: string;
-  lastName: string;
-  telefono?: string;
-  direccion?: string;
-  experiencias?: Experiencia[];
-  educacion?: Educacion[];
-  habilidades?: Habilidad[];
-}
+// Re-export interfaces for backward compatibility
+export type { UserProfile, ExperienciaData as Experiencia, HabilidadData as Habilidad } from '@core/models/perfil.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
-  private apiUrl = `${environment.apiUrl}/users/profile`;
+  private apiUrl = `${environment.apiUrl}/users`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   getUserProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(this.apiUrl);
+    return this.http.get<UserProfile>(`${this.apiUrl}/profile`)
+      .pipe(catchError(this.handleError));
   }
 
   updateUserProfile(profile: Partial<UserProfile>): Observable<UserProfile> {
-    // Asegurarse de que las experiencias sean un array
-    if (profile.experiencias === undefined) {
-      profile.experiencias = [];
-    }
+    return this.http.put<UserProfile>(`${this.apiUrl}/profile`, profile)
+      .pipe(catchError(this.handleError));
+  }
+
+  uploadProfilePhoto(_file: File): Observable<ProfilePhotoResponse> {
+    // TODO: Implement photo upload endpoint in backend
+    // For now, return a mock response
+    console.warn('Photo upload not implemented in backend yet');
+    return throwError(() => new Error('Funcionalidad de subida de foto no implementada aún'));
+
+    // const formData = new FormData();
+    // formData.append('photo', file);
+    // return this.http.post<ProfilePhotoResponse>(`${this.apiUrl}/profile/photo`, formData)
+    //   .pipe(catchError(this.handleError));
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Ha ocurrido un error';
     
-    // Asegurarse de que la educación sea un array
-    if (profile.educacion === undefined) {
-      profile.educacion = [];
+    if (error.error instanceof ErrorEvent) {
+      // Error del lado del cliente
+      errorMessage = error.error.message;
+    } else {
+      // Error del backend
+      errorMessage = error.error?.message || 'Error del servidor';
     }
-    
-    // Asegurarse de que las habilidades sean un array
-    if (profile.habilidades === undefined) {
-      profile.habilidades = [];
-    }
-    
-    console.log('Enviando perfil actualizado al servidor:', profile);
-    return this.http.put<UserProfile>(this.apiUrl, profile);
+
+    return throwError(() => new Error(errorMessage));
   }
 }

@@ -13,15 +13,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class InscriptionPreferences {
     private final Set<String> selectedCircunscripciones;
+    private final String centroDeVida;
     private final boolean acceptedTerms;
     private final boolean confirmedPersonalData;
     private final LocalDateTime termsAcceptanceDate;
     private final LocalDateTime dataConfirmationDate;
-    
+
     public boolean isComplete() {
-        return acceptedTerms && 
-               confirmedPersonalData && 
-               selectedCircunscripciones != null && 
-               !selectedCircunscripciones.isEmpty();
+        return acceptedTerms &&
+               confirmedPersonalData &&
+               selectedCircunscripciones != null &&
+               !selectedCircunscripciones.isEmpty() &&
+               centroDeVida != null &&
+               !centroDeVida.trim().isEmpty();
     }
-} 
+}

@@ -1,0 +1,147 @@
+<h2 mat-dialog-title>Detalles de Actividad</h2>
+
+<mat-dialog-content>
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando información...</p>
+  </div>
+  
+  <div *ngIf="!isLoading && log" class="activity-details">
+    <div class="activity-header">
+      <div class="action-icon" [ngClass]="getActionClass(log.action)">
+        <mat-icon>{{getActionIcon(log.action)}}</mat-icon>
+      </div>
+      
+      <div class="activity-info">
+        <h3>{{log.action}} - {{log.module}}</h3>
+        <div class="activity-timestamp">
+          {{formatDate(log.timestamp)}}
+        </div>
+        <p class="activity-details-text">{{log.details}}</p>
+      </div>
+    </div>
+    
+    <mat-divider></mat-divider>
+    
+    <div class="info-section">
+      <h4>Información del Usuario</h4>
+      
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">
+            <mat-icon>person</mat-icon>
+            <span>Usuario</span>
+          </div>
+          <div class="info-value">{{log.username}}</div>
+        </div>
+        
+        <div class="info-item" *ngIf="log.userFullName">
+          <div class="info-label">
+            <mat-icon>badge</mat-icon>
+            <span>Nombre Completo</span>
+          </div>
+          <div class="info-value">{{log.userFullName}}</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-label">
+            <mat-icon>fingerprint</mat-icon>
+            <span>ID de Usuario</span>
+          </div>
+          <div class="info-value">{{log.userId}}</div>
+        </div>
+      </div>
+    </div>
+    
+    <mat-divider></mat-divider>
+    
+    <div class="info-section">
+      <h4>Información de Conexión</h4>
+      
+      <div class="info-grid">
+        <div class="info-item" *ngIf="log.ipAddress">
+          <div class="info-label">
+            <mat-icon>public</mat-icon>
+            <span>Dirección IP</span>
+          </div>
+          <div class="info-value">{{log.ipAddress}}</div>
+        </div>
+        
+        <div class="info-item" *ngIf="log.userAgent">
+          <div class="info-label">
+            <mat-icon>devices</mat-icon>
+            <span>Navegador/Dispositivo</span>
+          </div>
+          <div class="info-value user-agent">
+            {{log.userAgent}}
+            <button mat-icon-button (click)="copyToClipboard(log.userAgent)" matTooltip="Copiar">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <mat-divider *ngIf="hasMetadata()"></mat-divider>
+    
+    <div class="info-section" *ngIf="hasMetadata()">
+      <h4>Metadatos Adicionales</h4>
+      
+      <div class="metadata-container">
+        <div class="metadata-item" *ngFor="let key of getMetadataKeys()">
+          <div class="metadata-key">{{key}}</div>
+          <div class="metadata-value">
+            <pre>{{formatMetadataValue(log.metadata![key])}}</pre>
+            <button mat-icon-button (click)="copyToClipboard(formatMetadataValue(log.metadata![key]))" matTooltip="Copiar">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <mat-divider></mat-divider>
+    
+    <div class="info-section">
+      <h4>Información del Registro</h4>
+      
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">
+            <mat-icon>tag</mat-icon>
+            <span>ID del Registro</span>
+          </div>
+          <div class="info-value">{{log.id}}</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-label">
+            <mat-icon>category</mat-icon>
+            <span>Módulo</span>
+          </div>
+          <div class="info-value module-value">
+            <mat-icon>{{getModuleIcon(log.module)}}</mat-icon>
+            <span>{{log.module}}</span>
+          </div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-label">
+            <mat-icon>play_arrow</mat-icon>
+            <span>Acción</span>
+          </div>
+          <div class="info-value action-value">
+            <div class="action-icon-small" [ngClass]="getActionClass(log.action)">
+              <mat-icon>{{getActionIcon(log.action)}}</mat-icon>
+            </div>
+            <span>{{log.action}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>

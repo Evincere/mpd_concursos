@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { InscriptionStateService, IInscriptionFormState } from './inscription-state.service';
-import { ContinueInscriptionDialogComponent } from '@features/concursos/components/inscripcion/continue-inscription-dialog/continue-inscription-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
+
+import { IInscriptionFormState, InscriptionStateService } from  './inscription-state.service';
+
+import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -11,78 +12,68 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class InscriptionRecoveryService {
   constructor(
     private inscriptionStateService: InscriptionStateService,
-    private dialog: MatDialog,
-    private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {}
-  
+
+
   /**
-   * Verifica si hay inscripciones pendientes y muestra un diálogo si es necesario
+   * Verifica si hay inscripciones pendientes y muestra una notificación informativa
+   * @param skipDialog Si es true, no muestra ninguna notificación (usado cuando se navega desde la pestaña de documentación)
    */
-  checkForPendingInscriptions(): void {
-    const pendingInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
-    
-    if (pendingInscriptions.length > 0) {
-      console.log('[InscriptionRecoveryService] Inscripciones pendientes encontradas:', pendingInscriptions);
-      
-      // Si hay varias, mostrar un diálogo con la lista
-      if (pendingInscriptions.length > 1) {
-        this.showMultiplePendingInscriptionsSnackbar(pendingInscriptions);
-      } else {
-        // Si hay solo una, preguntar si quiere continuar
-        const inscription = pendingInscriptions[0];
-        this.showContinueInscriptionDialog(inscription);
-      }
-    }
-  }
-  
-  /**
-   * Muestra un diálogo para continuar una inscripción específica
-   * @param inscription Estado de la inscripción
-   */
-  showContinueInscriptionDialog(inscription: IInscriptionFormState): void {
-    // Verificar si ya hay un diálogo abierto
-    if (this.dialog.openDialogs.length > 0) {
+  checkForPendingInscriptions(skipDialog = false): void {
+    // Verificar si hay parámetros en la URL que indiquen que se está continuando una inscripción
+    const urlParams = new URLSearchParams(window.location.search);
+    const continueInscription = urlParams.get('continueInscription') === 'true';
+    const forceOpen = urlParams.get('forceOpen') === 'true';
+
+    // Si se está continuando una inscripción y se debe forzar la apertura, no mostrar notificación
+    if (continueInscription && forceOpen) {
+      console.log('[InscriptionRecoveryService] Detectados parámetros para continuar inscripción, omitiendo notificación');
       return;
     }
-    
-    const dialogRef = this.dialog.open(ContinueInscriptionDialogComponent, {
-      width: '400px',
-      data: {
-        contestId: inscription.contestId,
-        contestTitle: inscription.contestTitle || `Concurso #${inscription.contestId}`,
-        inscriptionId: inscription.inscriptionId
-      }
+
+    // Obtener todas las inscripciones incompletas
+    const pendingInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
+
+    // Filtrar inscripciones según su paso actual
+    const filteredInscriptions = pendingInscriptions.filter((inscription: IInscriptionFormState) => {
+      // Solo considerar inscripciones que no han llegado al paso final (COMPLETED)
+      // Ignorar inscripciones que ya están en el paso final
+      return inscription.currentStep !== InscriptionStep.COMPLETED;
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Si el usuario quiere continuar, navegar al detalle del concurso
-        this.router.navigate(['/dashboard/concursos', inscription.contestId], {
-          queryParams: {
-            continueInscription: 'true',
-            inscriptionId: inscription.inscriptionId
-          }
-        });
-      } else {
-        // Si no quiere continuar, limpiar el estado guardado
-        this.inscriptionStateService.clearInscriptionState(inscription.inscriptionId);
+    if (filteredInscriptions.length > 0) {
+      console.log('[InscriptionRecoveryService] Inscripciones pendientes encontradas:', filteredInscriptions);
+
+      // Si se debe omitir la notificación, no hacer nada
+      if (skipDialog) {
+        console.log('[InscriptionRecoveryService] Omitiendo notificación por solicitud');
+        return;
       }
-    });
+
+      // Mostrar notificación informativa independientemente de la cantidad de inscripciones pendientes
+      this.showPendingInscriptionsSnackbar(filteredInscriptions);
+    }
   }
-  
+
   /**
-   * Muestra un snackbar informando que hay múltiples inscripciones pendientes
+   * Muestra un snackbar informando que hay inscripciones pendientes
    * @param inscriptions Lista de inscripciones pendientes
    */
-  private showMultiplePendingInscriptionsSnackbar(inscriptions: IInscriptionFormState[]): void {
+  private showPendingInscriptionsSnackbar(inscriptions: IInscriptionFormState[]): void {
+    const message = inscriptions.length === 1
+      ? 'Tienes una inscripción en proceso. Puedes continuarla desde la sección "Mis Postulaciones".'
+      : `Tienes ${inscriptions.length} inscripciones en proceso. Puedes continuarlas desde la sección "Mis Postulaciones".`;
+
     const snackBarRef = this.snackBar.open(
-      `Tienes ${inscriptions.length} inscripciones en proceso. Puedes continuarlas desde la sección "Mis Postulaciones".`,
+      message,
       'Ver Postulaciones',
       {
         duration: 10000,
         horizontalPosition: 'center',
-        verticalPosition: 'bottom'
+        verticalPosition: 'bottom',
+        panelClass: ['info-snackbar']
       }
     );
 

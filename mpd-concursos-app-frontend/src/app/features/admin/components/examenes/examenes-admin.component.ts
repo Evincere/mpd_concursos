@@ -2,8 +2,8 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { ESTADO_EXAMEN, TipoExamen } from '@shared/interfaces/examen/examen.interface';
 import { ExamenFormComponent } from './examen-form/examen-form.component';
 import { CommonModule } from '@angular/common';
@@ -37,7 +37,7 @@ import { MatMenuModule } from '@angular/material/menu';
 })
 export class ExamenesAdminComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['id', 'titulo', 'tipo', 'estado', 'fechaInicio', 'duracion', 'puntajeMaximo', 'acciones'];
-  dataSource = new MatTableDataSource<any>([]);
+  dataSource = new MatTableDataSource<Record<string, unknown>>([]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -155,33 +155,45 @@ export class ExamenesAdminComponent implements OnInit, AfterViewInit {
       data: { mode: 'create' }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
         // Simular creación de examen
+        const resultObj = result as Record<string, any>;
         const nuevoExamen = {
-          ...result,
           id: (this.examenes.length + 1).toString(),
-          estado: ESTADO_EXAMEN.BORRADOR
+          estado: ESTADO_EXAMEN.BORRADOR,
+          titulo: resultObj['titulo'] || '',
+          descripcion: resultObj['descripcion'] || '',
+          tipo: resultObj['tipo'] || TipoExamen.TECNICO_JURIDICO,
+          duracion: resultObj['duracion'] || 0,
+          puntajeMaximo: resultObj['puntajeMaximo'] || 0,
+          fechaInicio: resultObj['fechaInicio'] || new Date().toISOString(),
+          intentosPermitidos: resultObj['intentosPermitidos'] || 1,
+          requisitos: resultObj['requisitos'] || [],
+          reglasExamen: resultObj['reglasExamen'] || [],
+          materialesPermitidos: resultObj['materialesPermitidos'] || []
         };
-        this.examenes.push(nuevoExamen);
+        this.examenes.push(nuevoExamen as any);
         this.dataSource.data = this.examenes;
         this.snackBar.open('Examen creado correctamente', 'Cerrar', { duration: 3000 });
       }
     });
   }
 
-  editarExamen(examen: any) {
+  editarExamen(examen: unknown) {
+    const examenObj = examen as Record<string, any>;
     const dialogRef = this.dialog.open(ExamenFormComponent, {
       width: '800px',
       data: { mode: 'edit', examen }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
         // Simular actualización de examen
-        const index = this.examenes.findIndex(e => e.id === examen.id);
+        const resultObj = result as Record<string, any>;
+        const index = this.examenes.findIndex(e => e.id === examenObj['id']);
         if (index !== -1) {
-          this.examenes[index] = { ...this.examenes[index], ...result };
+          this.examenes[index] = { ...this.examenes[index], ...resultObj };
           this.dataSource.data = this.examenes;
           this.snackBar.open('Examen actualizado correctamente', 'Cerrar', { duration: 3000 });
         }
@@ -189,9 +201,10 @@ export class ExamenesAdminComponent implements OnInit, AfterViewInit {
     });
   }
 
-  cambiarEstado(examen: any, nuevoEstado: ESTADO_EXAMEN) {
+  cambiarEstado(examen: unknown, nuevoEstado: ESTADO_EXAMEN) {
     // Simular cambio de estado
-    const index = this.examenes.findIndex(e => e.id === examen.id);
+    const examenObj = examen as Record<string, any>;
+    const index = this.examenes.findIndex(e => e.id === examenObj['id']);
     if (index !== -1) {
       this.examenes[index].estado = nuevoEstado;
       this.dataSource.data = this.examenes;
@@ -199,10 +212,11 @@ export class ExamenesAdminComponent implements OnInit, AfterViewInit {
     }
   }
 
-  eliminarExamen(examen: any) {
-    if (confirm(`¿Está seguro de eliminar el examen "${examen.titulo}"?`)) {
+  eliminarExamen(examen: unknown) {
+    const examenObj = examen as Record<string, any>;
+    if (confirm(`¿Está seguro de eliminar el examen "${examenObj['titulo']}"?`)) {
       // Simular eliminación
-      this.examenes = this.examenes.filter(e => e.id !== examen.id);
+      this.examenes = this.examenes.filter(e => e.id !== examenObj['id']);
       this.dataSource.data = this.examenes;
       this.snackBar.open('Examen eliminado correctamente', 'Cerrar', { duration: 3000 });
     }

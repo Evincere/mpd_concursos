@@ -1,6 +1,17 @@
 @use '@angular/material' as mat;
 @use 'sass:map';
 @import './styles/variables';
+@import './styles/responsive';
+@import './styles/touch';
+@import './styles/dialog-styles';
+@import './styles/global';
+@import './styles/fix-styles';
+/* Importaciones corregidas para los estilos de usuarios */
+@import './app/features/admin/components/usuarios/styles/user-dialog-button-fixes';
+@import './app/features/admin/components/usuarios/styles/user-select-fixes';
+@import './app/shared/components/custom-form/custom-dialog/dialog-button-fixes';
+@import './app/shared/components/custom-form/custom-select/select-fixes';
+@import './app/shared/components/custom-form/custom-checkbox/checkbox-fixes';
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
@@ -39,6 +50,84 @@ $dark-theme: mat.define-dark-theme((
   --card-backdrop-filter: blur(8px);
   --background-color: #121212;
   --background-color-rgb: 18, 18, 18;
+
+  /* Variables para la tabla personalizada */
+  --custom-surface: #424242;
+  --custom-surface-dark: #333333;
+  --custom-background: #333333;
+  --custom-background-dark: #222222;
+  --custom-background-light: #424242;
+  --custom-primary: #1976D2;
+  --custom-primary-dark: #1565C0;
+  --custom-primary-light: rgba(25, 118, 210, 0.15);
+  --custom-text-primary: #FFFFFF;
+  --custom-text-primary-dark: #E0E0E0;
+  --custom-text-secondary: #B0B0B0;
+  --custom-text-secondary-dark: #A0A0A0;
+  --custom-border: #484848;
+  --custom-border-dark: #333333;
+  --custom-hover: #3A3A3A;
+  --custom-success: #4caf50;
+  --custom-success-dark: #388e3c;
+  --custom-error: #f44336;
+  --custom-error-dark: #d32f2f;
+  --custom-warning: #ff9800;
+  --custom-warning-dark: #f57c00;
+  --custom-info: #2196F3;
+  --custom-info-dark: #1976D2;
+  --custom-accent: #4CAF50;
+  --custom-accent-dark: #388E3C;
+  --custom-text-disabled: #666666;
+  --custom-border-radius: 8px;
+  --custom-border-radius-sm: 4px;
+
+  /* Variables para el componente app-custom-table */
+  --color-surface: #424242;
+  --color-surface-dark: #333333;
+  --color-surface-rgb: 66, 66, 66;
+  --color-surface-dark-rgb: 51, 51, 51;
+  --color-background: #333333;
+  --color-background-dark: #222222;
+  --color-background-rgb: 51, 51, 51;
+  --color-background-dark-rgb: 34, 34, 34;
+  --color-background-light: #424242;
+  --color-background-light-rgb: 66, 66, 66;
+  --color-background-hover: #3A3A3A;
+  --color-background-hover-dark: #444444;
+  --color-background-hover-rgb: 58, 58, 58;
+  --color-background-hover-dark-rgb: 68, 68, 68;
+  --color-primary: #1976D2;
+  --color-primary-dark: #1565C0;
+  --color-primary-light: rgba(25, 118, 210, 0.15);
+  --color-primary-rgb: 25, 118, 210;
+  --color-primary-dark-rgb: 21, 101, 192;
+  --color-text-primary: #FFFFFF;
+  --color-text-primary-dark: #E0E0E0;
+  --color-text-primary-rgb: 255, 255, 255;
+  --color-text-primary-dark-rgb: 224, 224, 224;
+  --color-text-secondary: #B0B0B0;
+  --color-text-secondary-dark: #A0A0A0;
+  --color-text-secondary-rgb: 176, 176, 176;
+  --color-text-secondary-dark-rgb: 160, 160, 160;
+  --color-text-disabled: #666666;
+  --color-text-disabled-dark: #666666;
+  --color-text-disabled-rgb: 102, 102, 102;
+  --color-border: #484848;
+  --color-border-dark: #333333;
+  --color-border-rgb: 72, 72, 72;
+  --color-border-dark-rgb: 51, 51, 51;
+  --color-success: #4caf50;
+  --color-success-dark: #388e3c;
+  --color-success-rgb: 76, 175, 80;
+  --color-success-dark-rgb: 56, 142, 60;
+  --color-error: #f44336;
+  --color-error-dark: #d32f2f;
+  --color-error-rgb: 244, 67, 54;
+  --color-error-dark-rgb: 211, 47, 47;
+  --color-warning: #ff9800;
+  --color-warning-dark: #f57c00;
+  --color-warning-rgb: 255, 152, 0;
+  --color-warning-dark-rgb: 245, 124, 0;
 }
 
 // Estilos globales
@@ -414,6 +503,34 @@ $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
   z-index: 1000;
 }
 
+// Estilos para snackbars informativos
+.info-snackbar {
+  background-color: #3f51b5 !important; // Color primario indigo
+  color: white !important;
+  border-left: 4px solid #1a237e !important; // Borde izquierdo más oscuro
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+
+  .mat-simple-snackbar {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  .mat-simple-snackbar-action {
+    color: #ff9800 !important; // Color naranja para el botón de acción
+    font-weight: bold !important;
+
+    button {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      border-radius: 4px !important;
+      padding: 4px 12px !important;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+      }
+    }
+  }
+}
+
 // Ajustes para el contenedor de pestañas
 .mat-tab-body-content {
   overflow: visible;
@@ -427,6 +544,393 @@ $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
 
   .curriculum-container {
     overflow: visible;
+  }
+}
+
+// Estilos para la tabla personalizada
+app-custom-table {
+  .custom-table-container {
+    background-color: var(--color-surface) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(72, 72, 72, 0.2) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .custom-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+
+    th {
+      background-color: var(--color-background-dark) !important;
+      color: var(--color-text-primary) !important;
+      font-weight: 600 !important;
+      padding: 1.25rem 1rem !important;
+      text-align: left !important;
+      border-bottom: 2px solid rgba(25, 118, 210, 0.3) !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 10 !important;
+      font-size: 0.95rem !important;
+      letter-spacing: 0.5px !important;
+      text-transform: uppercase !important;
+    }
+
+    td {
+      padding: 1.25rem 1rem !important;
+      border-bottom: 1px solid rgba(72, 72, 72, 0.2) !important;
+      color: var(--color-text-primary) !important;
+      font-size: 0.95rem !important;
+      transition: all 0.2s ease !important;
+    }
+
+    tbody tr {
+      transition: all 0.3s ease !important;
+
+      &:hover {
+        background-color: var(--color-background-hover) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+      }
+    }
+  }
+
+  .loading-overlay {
+    background-color: rgba(51, 51, 51, 0.7) !important;
+
+    .spinner {
+      border: 3px solid rgba(25, 118, 210, 0.3) !important;
+      border-top-color: var(--color-primary) !important;
+    }
+  }
+
+  .pagination-container {
+    background-color: var(--color-background-dark) !important;
+    border-top: 1px solid var(--color-border) !important;
+
+    .pagination-button, .page-button {
+      color: var(--color-text-primary) !important;
+
+      &:hover:not(:disabled) {
+        color: var(--color-primary) !important;
+        background-color: rgba(25, 118, 210, 0.1) !important;
+      }
+
+      &:disabled {
+        color: var(--color-text-disabled) !important;
+      }
+    }
+
+    .page-button.active {
+      background-color: var(--color-primary) !important;
+      color: white !important;
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.4) !important;
+    }
+  }
+}
+
+// Estilos para los badges de roles
+.role-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.35rem 0.85rem !important;
+  border-radius: 20px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  background-color: rgba(25, 118, 210, 0.12) !important;
+  color: var(--color-primary) !important;
+  box-shadow: 0 2px 10px rgba(25, 118, 210, 0.15) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  margin: 0.2rem !important;
+}
+
+// Estilos para los badges de estado
+.estado-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.35rem 0.85rem !important;
+  border-radius: 20px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  text-align: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.estado-activo {
+  background-color: rgba(76, 175, 80, 0.12) !important;
+  color: var(--color-success) !important;
+  box-shadow: 0 2px 10px rgba(76, 175, 80, 0.15) !important;
+  border: 1px solid rgba(76, 175, 80, 0.2) !important;
+}
+
+.estado-inactivo {
+  background-color: rgba(255, 152, 0, 0.12) !important;
+  color: var(--color-warning) !important;
+  box-shadow: 0 2px 10px rgba(255, 152, 0, 0.15) !important;
+  border: 1px solid rgba(255, 152, 0, 0.2) !important;
+}
+
+.estado-bloqueado {
+  background-color: rgba(244, 67, 54, 0.12) !important;
+  color: var(--color-error) !important;
+  box-shadow: 0 2px 10px rgba(244, 67, 54, 0.15) !important;
+  border: 1px solid rgba(244, 67, 54, 0.2) !important;
+}
+
+// Estilos para los enlaces de email
+.email-link {
+  color: var(--color-primary) !important;
+  text-decoration: none !important;
+  position: relative !important;
+  padding: 0.1rem 0.2rem !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+// Estilos para celdas de ID
+.id-cell {
+  font-family: monospace !important;
+  font-size: 0.85rem !important;
+  color: var(--color-text-secondary) !important;
+  background-color: rgba(66, 66, 66, 0.5) !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+}
+
+// Estilos para información de usuario
+.user-info {
+  display: flex !important;
+  flex-direction: column !important;
+
+  .user-name {
+    font-weight: 500 !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  .user-dni {
+    font-size: 0.85rem !important;
+    color: var(--color-text-secondary) !important;
+    margin-top: 0.2rem !important;
+  }
+}
+
+// Estilos para celdas de fecha
+.date-info {
+  display: flex !important;
+  flex-direction: column !important;
+
+  .date-value {
+    font-weight: 500 !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  .date-time {
+    font-size: 0.85rem !important;
+    color: var(--color-text-secondary) !important;
+    margin-top: 0.2rem !important;
+  }
+}
+
+// Estilos para los botones de acciones
+.actions-container {
+  display: flex !important;
+  gap: 0.5rem !important;
+  justify-content: center !important;
+
+  app-custom-button {
+    ::ng-deep button {
+      min-width: auto !important;
+      width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 50% !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      background-color: rgba(66, 66, 66, 0.8) !important;
+      border: 1px solid rgba(72, 72, 72, 0.2) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+      position: relative !important;
+      overflow: hidden !important;
+
+      &:hover {
+        transform: translateY(-3px) scale(1.05) !important;
+        box-shadow: 0 6px 15px rgba(25, 118, 210, 0.2) !important;
+        border-color: rgba(25, 118, 210, 0.3) !important;
+      }
+
+      i {
+        font-size: 1rem !important;
+        color: var(--color-text-primary) !important;
+        position: relative !important;
+        z-index: 2 !important;
+        transition: all 0.3s ease !important;
+      }
+
+      &:hover i {
+        color: var(--color-primary) !important;
+        transform: scale(1.1) !important;
+      }
+    }
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  app-custom-table {
+    .custom-table-container {
+      background-color: var(--color-surface-dark) !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+      border: 1px solid rgba(51, 51, 51, 0.2) !important;
+    }
+
+    .custom-table {
+      th {
+        background-color: var(--color-background-dark) !important;
+        color: var(--color-text-primary-dark) !important;
+        border-bottom: 2px solid rgba(21, 101, 192, 0.3) !important;
+      }
+
+      td {
+        border-bottom: 1px solid rgba(51, 51, 51, 0.2) !important;
+        color: var(--color-text-primary-dark) !important;
+      }
+
+      tbody tr {
+        &:hover {
+          background-color: var(--color-background-hover-dark) !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        }
+      }
+    }
+
+    .loading-overlay {
+      background-color: rgba(34, 34, 34, 0.7) !important;
+
+      .spinner {
+        border-color: rgba(21, 101, 192, 0.3) !important;
+        border-top-color: var(--color-primary-dark) !important;
+      }
+    }
+
+    .pagination-container {
+      background-color: var(--color-background-dark) !important;
+      border-top: 1px solid var(--color-border-dark) !important;
+
+      .pagination-button, .page-button {
+        color: var(--color-text-primary-dark) !important;
+
+        &:hover:not(:disabled) {
+          color: var(--color-primary-dark) !important;
+          background-color: rgba(21, 101, 192, 0.1) !important;
+        }
+
+        &:disabled {
+          color: var(--color-text-disabled-dark) !important;
+        }
+      }
+
+      .page-button.active {
+        background-color: var(--color-primary-dark) !important;
+        box-shadow: 0 2px 8px rgba(21, 101, 192, 0.4) !important;
+      }
+    }
+  }
+
+  .role-badge {
+    background-color: rgba(21, 101, 192, 0.2) !important;
+    color: var(--color-primary-dark) !important;
+    box-shadow: 0 2px 10px rgba(21, 101, 192, 0.15) !important;
+  }
+
+  .estado-activo {
+    background-color: rgba(56, 142, 60, 0.2) !important;
+    color: var(--color-success-dark) !important;
+    box-shadow: 0 2px 10px rgba(56, 142, 60, 0.15) !important;
+    border: 1px solid rgba(56, 142, 60, 0.3) !important;
+  }
+
+  .estado-inactivo {
+    background-color: rgba(245, 124, 0, 0.2) !important;
+    color: var(--color-warning-dark) !important;
+    box-shadow: 0 2px 10px rgba(245, 124, 0, 0.15) !important;
+    border: 1px solid rgba(245, 124, 0, 0.3) !important;
+  }
+
+  .estado-bloqueado {
+    background-color: rgba(211, 47, 47, 0.2) !important;
+    color: var(--color-error-dark) !important;
+    box-shadow: 0 2px 10px rgba(211, 47, 47, 0.15) !important;
+    border: 1px solid rgba(211, 47, 47, 0.3) !important;
+  }
+
+  .email-link {
+    color: var(--color-primary-dark) !important;
+  }
+
+  .id-cell {
+    background-color: rgba(34, 34, 34, 0.5) !important;
+    color: var(--color-text-secondary-dark) !important;
+  }
+
+  .user-info {
+    .user-name {
+      color: var(--color-text-primary-dark) !important;
+    }
+
+    .user-dni {
+      color: var(--color-text-secondary-dark) !important;
+    }
+  }
+
+  .date-info {
+    .date-value {
+      color: var(--color-text-primary-dark) !important;
+    }
+
+    .date-time {
+      color: var(--color-text-secondary-dark) !important;
+    }
+  }
+
+  .actions-container {
+    app-custom-button {
+      ::ng-deep button {
+        background-color: rgba(51, 51, 51, 0.8) !important;
+        border: 1px solid rgba(51, 51, 51, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+
+        i {
+          color: var(--color-text-primary-dark) !important;
+        }
+
+        &:hover {
+          box-shadow: 0 6px 15px rgba(21, 101, 192, 0.2) !important;
+          border-color: rgba(21, 101, 192, 0.3) !important;
+
+          i {
+            color: var(--color-primary-dark) !important;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -667,10 +1171,14 @@ $datepicker-cell-size: 36px;
       pointer-events: auto !important;
       position: absolute !important;
       z-index: 11000 !important;
-      max-width: 320px !important;
-      min-width: 280px !important;
       background: none !important;
       isolation: isolate !important;
+
+      // Excepción para paneles de autocompletado
+      &:not(.mat-mdc-autocomplete-panel-above):not(.mat-mdc-autocomplete-panel-below) {
+        max-width: 320px !important;
+        min-width: 280px !important;
+      }
     }
 
     // Backdrop
@@ -927,11 +1435,27 @@ main.mat-app-background,
 // Sobrescribir estilos de Material para los contenedores con scroll
 .mat-mdc-dialog-container,
 .mat-mdc-select-panel,
-.mat-mdc-autocomplete-panel,
 .mat-mdc-menu-content,
 .mat-mdc-table-container {
   max-height: 80vh !important;
   overflow: auto !important;
+}
+
+// Estilos específicos para paneles de autocompletado
+.mat-mdc-autocomplete-panel {
+  max-height: 300px !important;
+  overflow: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 1001 !important;
+}
+
+// Asegurar que el panel de autocompletado se muestre correctamente
+.mat-autocomplete-panel-above,
+.mat-autocomplete-panel-below {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 // Estilos para diálogos
@@ -1166,4 +1690,17 @@ $snackbar-action: rgba(255, 255, 255, 0.9);
   background: rgba(0, 0, 0, 0.5) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.mat-mdc-tab-group,
+.mat-mdc-tab-nav-bar {
+  --mat-tab-header-active-label-text-color: #03a9f4 !important;
+  --mdc-tab-indicator-active-indicator-color: #03a9f4 !important;
+}
+
+.mat-mdc-tab-label.mat-mdc-tab-label-active,
+.mat-mdc-tab-label.mat-mdc-tab-label-active:focus,
+.mat-mdc-tab-label.mat-mdc-tab-label-active:active {
+  color: #03a9f4 !important;
+  font-weight: 800 !important;
 }

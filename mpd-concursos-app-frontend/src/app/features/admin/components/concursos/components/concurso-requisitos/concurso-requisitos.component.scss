@@ -1,0 +1,448 @@
+@use 'src/styles/variables' as *;
+
+.tab-content {
+  position: relative;
+  padding: 1.5rem;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 4px;
+}
+
+.requisitos-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+// Sección del formulario
+.form-section {
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .required-checkbox {
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+    }
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  
+  // Sección de plantillas
+  .templates-section {
+    margin-top: 2rem;
+    
+    h3 {
+      font-size: $font-size-md;
+      font-weight: 500;
+      margin: 0 0 1rem;
+      color: $color-text-primary;
+    }
+    
+    mat-accordion {
+      .template-content {
+        padding: 1rem 0;
+        
+        .template-requirements {
+          margin-bottom: 1rem;
+          
+          .template-requirement-item {
+            padding: 0.75rem;
+            border-radius: 4px;
+            background-color: rgba($color-primary, 0.05);
+            margin-bottom: 0.5rem;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+            
+            .requirement-header {
+              display: flex;
+              align-items: center;
+              flex-wrap: wrap;
+              gap: 0.5rem;
+              margin-bottom: 0.5rem;
+              
+              .requirement-category {
+                font-weight: 500;
+                font-size: $font-size-sm;
+                color: $color-text-primary;
+              }
+              
+              .requirement-priority {
+                font-size: $font-size-xs;
+                color: $color-text-secondary;
+              }
+              
+              mat-chip {
+                font-size: $font-size-xs;
+                height: 20px;
+              }
+            }
+            
+            .requirement-description {
+              margin: 0;
+              font-size: $font-size-sm;
+              color: $color-text-secondary;
+            }
+          }
+        }
+        
+        .template-actions {
+          display: flex;
+          justify-content: flex-end;
+        }
+      }
+    }
+  }
+}
+
+// Sección de lista de requisitos
+.requirements-list-section {
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .requirements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba($color-border, 0.5);
+      border-radius: 3px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: $color-border;
+      border-radius: 3px;
+    }
+    
+    .requirement-category-group {
+      .category-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        
+        h4 {
+          margin: 0;
+          font-size: $font-size-md;
+          font-weight: 500;
+          color: $color-text-primary;
+        }
+        
+        .category-count {
+          font-size: $font-size-xs;
+          color: $color-text-secondary;
+          background-color: rgba($color-border, 0.5);
+          padding: 0.25rem 0.5rem;
+          border-radius: 1rem;
+        }
+      }
+      
+      .requirements-list-items {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+    }
+  }
+  
+  .requirement-item {
+    display: flex;
+    background-color: $color-surface;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    
+    .drag-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      background-color: rgba($color-border, 0.2);
+      cursor: move;
+      
+      mat-icon {
+        color: $color-text-tertiary;
+      }
+    }
+    
+    .requirement-content {
+      flex: 1;
+      padding: 1rem;
+      
+      .requirement-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+        
+        .requirement-info {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          
+          mat-chip {
+            font-size: $font-size-xs;
+            height: 20px;
+          }
+          
+          .requirement-priority {
+            font-size: $font-size-xs;
+            color: $color-text-secondary;
+          }
+        }
+        
+        .requirement-actions {
+          display: flex;
+          gap: 0.25rem;
+        }
+      }
+      
+      .requirement-description {
+        margin: 0 0 0.5rem;
+        font-size: $font-size-sm;
+        color: $color-text-primary;
+        white-space: pre-line;
+      }
+      
+      .requirement-document-type {
+        display: flex;
+        align-items: center;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          margin-right: 0.25rem;
+          color: $color-text-secondary;
+        }
+        
+        span {
+          font-size: $font-size-xs;
+          color: $color-text-secondary;
+        }
+      }
+    }
+    
+    &.cdk-drag-preview {
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    &.cdk-drag-placeholder {
+      opacity: 0.3;
+    }
+    
+    &.cdk-drag-animating {
+      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  
+  .requirements-list-items.cdk-drop-list-dragging .requirement-item:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+  }
+  
+  .empty-requirements {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background-color: $color-surface;
+    border-radius: 8px;
+    
+    mat-icon {
+      font-size: 2rem;
+      width: 2rem;
+      height: 2rem;
+      margin-bottom: 0.5rem;
+      color: $color-text-tertiary;
+    }
+    
+    p {
+      margin: 0;
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+// Media queries para responsive
+@media (max-width: 992px) {
+  .requisitos-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .loading-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  .form-section {
+    h3 {
+      color: $color-text-primary-dark;
+    }
+    
+    .templates-section {
+      h3 {
+        color: $color-text-primary-dark;
+      }
+      
+      mat-accordion {
+        .template-content {
+          .template-requirements {
+            .template-requirement-item {
+              background-color: rgba($color-primary-dark, 0.1);
+              
+              .requirement-header {
+                .requirement-category {
+                  color: $color-text-primary-dark;
+                }
+                
+                .requirement-priority {
+                  color: $color-text-secondary-dark;
+                }
+              }
+              
+              .requirement-description {
+                color: $color-text-secondary-dark;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .requirements-list-section {
+    h3 {
+      color: $color-text-primary-dark;
+    }
+    
+    .requirements-list {
+      &::-webkit-scrollbar-track {
+        background: rgba($color-border-dark, 0.5);
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: $color-border-dark;
+      }
+      
+      .requirement-category-group {
+        .category-header {
+          h4 {
+            color: $color-text-primary-dark;
+          }
+          
+          .category-count {
+            color: $color-text-secondary-dark;
+            background-color: rgba($color-border-dark, 0.5);
+          }
+        }
+      }
+    }
+    
+    .requirement-item {
+      background-color: $color-surface-dark;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      
+      .drag-handle {
+        background-color: rgba($color-border-dark, 0.2);
+        
+        mat-icon {
+          color: $color-text-tertiary-dark;
+        }
+      }
+      
+      .requirement-content {
+        .requirement-header {
+          .requirement-info {
+            .requirement-priority {
+              color: $color-text-secondary-dark;
+            }
+          }
+        }
+        
+        .requirement-description {
+          color: $color-text-primary-dark;
+        }
+        
+        .requirement-document-type {
+          mat-icon {
+            color: $color-text-secondary-dark;
+          }
+          
+          span {
+            color: $color-text-secondary-dark;
+          }
+        }
+      }
+    }
+    
+    .empty-requirements {
+      background-color: $color-surface-dark;
+      
+      mat-icon {
+        color: $color-text-tertiary-dark;
+      }
+      
+      p {
+        color: $color-text-secondary-dark;
+      }
+    }
+  }
+}

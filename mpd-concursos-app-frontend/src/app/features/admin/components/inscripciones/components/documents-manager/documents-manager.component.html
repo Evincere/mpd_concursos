@@ -1,0 +1,123 @@
+<div class="documents-manager-container">
+  <div class="header">
+    <h1>Gestión de Documentos</h1>
+    <div class="header-actions">
+      <a class="button button-primary" routerLink="/admin/inscripciones/dashboard">
+        <span class="icon">🏠</span>
+        Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="tabs">
+      <button class="tab" [class.active]="activeTab === 0" (click)="activeTab = 0">Listado de Documentos</button>
+      <button class="tab" [class.active]="activeTab === 1" (click)="activeTab = 1" [disabled]="!selectedDocument">Visor de Documento</button>
+    </div>
+    <div class="tab-content" *ngIf="activeTab === 0">
+      <div class="filter-card">
+        <form [formGroup]="filterForm" class="filter-form">
+          <div class="filter-row">
+            <input class="input" type="text" formControlName="search" placeholder="Buscar por nombre, tipo...">
+            <select class="input" formControlName="status">
+              <option *ngFor="let option of statusOptions" [value]="option.value">{{option.label}}</option>
+            </select>
+            <select class="input" formControlName="documentType">
+              <option value="">Todos</option>
+              <option *ngFor="let type of documentTypes" [value]="type.id">{{type.name}}</option>
+            </select>
+            <button type="button" class="button button-secondary" (click)="resetFilters()">Limpiar Filtros</button>
+          </div>
+        </form>
+      </div>
+      <div class="bulk-actions" *ngIf="getSelectedCount() > 0">
+        <span>{{getSelectedCount()}} documento(s) seleccionado(s)</span>
+        <div class="action-buttons">
+          <button class="button button-primary" (click)="approveSelectedDocuments()">Aprobar Seleccionados</button>
+          <button class="button button-danger" (click)="rejectSelectedDocuments()">Rechazar Seleccionados</button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" [checked]="allSelected" [indeterminate]="getSelectedCount() > 0 && !allSelected" (change)="toggleAllSelection()"></th>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Fecha de Carga</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let document of dataSource" [class.clickable-row]="true" (click)="viewDocument(document)">
+              <td><input type="checkbox" [checked]="selectedDocuments[document.id]" (click)="$event.stopPropagation()" (change)="toggleSelection(document)"></td>
+              <td>
+                <div class="file-name-cell">
+                  <span class="file-icon">📄</span>
+                  <span class="file-name">{{document.fileName}}</span>
+                </div>
+              </td>
+              <td><span class="document-type">{{document.documentType}}</span></td>
+              <td>
+                <div class="date-cell">
+                  <span class="upload-date">{{formatDate(document.uploadDate)}}</span>
+                  <span class="review-date" *ngIf="document.reviewDate">Revisado: {{formatDate(document.reviewDate)}}</span>
+                </div>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(document.status)">{{getStatusLabel(document.status)}}</span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <app-custom-button
+                    [icon]="'eye'"
+                    [variant]="'icon'"
+                    [color]="'primary'"
+                    [tooltip]="'Ver Documento'"
+                    (buttonClick)="viewDocument(document); $event.stopPropagation()">
+                  </app-custom-button>
+                  <app-custom-button
+                    *ngIf="document.status === 'PENDING'"
+                    [icon]="'check'"
+                    [variant]="'icon'"
+                    [color]="'success'"
+                    [tooltip]="'Aprobar'"
+                    (buttonClick)="approveDocument(document); $event.stopPropagation()">
+                  </app-custom-button>
+                  <app-custom-button
+                    *ngIf="document.status === 'PENDING'"
+                    [icon]="'times'"
+                    [variant]="'icon'"
+                    [color]="'danger'"
+                    [tooltip]="'Rechazar'"
+                    (buttonClick)="rejectDocument(document); $event.stopPropagation()">
+                  </app-custom-button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div *ngIf="isLoading" class="loading-overlay">
+          <span class="loader"></span>
+        </div>
+        <div *ngIf="!isLoading && dataSource.length === 0" class="empty-state">
+          <span class="icon">📄</span>
+          <p>No se encontraron documentos con los filtros aplicados</p>
+          <button class="button button-primary" (click)="resetFilters()">Limpiar Filtros</button>
+        </div>
+        <div class="paginator-container">
+          <app-custom-paginator [length]="totalItems" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" [pageIndex]="pageIndex" (page)="onPageChange($event)"></app-custom-paginator>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content document-viewer-tab" *ngIf="activeTab === 1">
+      <div *ngIf="!selectedDocument" class="no-document-selected">
+        <span class="icon">📄</span>
+        <p>Seleccione un documento para visualizarlo</p>
+        <button class="button button-primary" (click)="activeTab = 0">Volver al Listado</button>
+      </div>
+      <app-document-viewer *ngIf="selectedDocument" [document]="selectedDocument"></app-document-viewer>
+    </div>
+  </div>
+</div>

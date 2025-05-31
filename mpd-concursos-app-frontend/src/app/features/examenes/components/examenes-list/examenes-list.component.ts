@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
 // Cambiamos la importación para asegurarnos de usar la correcta
 import { Examen, TipoExamen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
-import { ExamenesService } from '@core/services/examenes/examenes.service';
+
 
 @Component({
   selector: 'app-examenes-list',
@@ -33,10 +33,10 @@ import { ExamenesService } from '@core/services/examenes/examenes.service';
 export class ExamenesListComponent implements OnInit {
   readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
   examenes: Examen[] = [];
-  searchText: string = '';
-  estadoFilter: string = 'TODOS';
+  searchText = '';
+  estadoFilter = 'TODOS';
 
-  constructor(private examenesService: ExamenesService) {}
+  
 
   ngOnInit(): void {
     this.cargarExamenes();

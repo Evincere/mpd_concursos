@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserProfileService } from '../../../../core/services/user/user-profile.service';
-import { AuthService } from '../../../../core/services/auth/auth.service';
+
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -120,10 +120,7 @@ export class ProfileImageManagerComponent implements OnInit {
   currentImage: string | null = null;
   isLoading = false;
 
-  constructor(
-    private userProfileService: UserProfileService,
-    private authService: AuthService
-  ) {}
+  
 
   ngOnInit() {
     this.authService.getUserInfo().subscribe(userInfo => {

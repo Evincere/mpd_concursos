@@ -1,0 +1,412 @@
+@use 'src/styles/variables' as *;
+
+.profile-stats-container {
+  padding: 1rem 0;
+}
+
+// Estado vacío
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+    color: $color-text-tertiary;
+  }
+  
+  p {
+    margin: 0;
+    color: $color-text-secondary;
+    text-align: center;
+  }
+}
+
+// Contenido de estadísticas
+.stats-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Resumen de estadísticas
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.stats-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .stats-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba($color-primary, 0.1);
+    
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: $color-primary;
+    }
+  }
+  
+  .stats-data {
+    flex: 1;
+    
+    .stats-value {
+      font-size: $font-size-xl;
+      font-weight: 500;
+      color: $color-text-primary;
+    }
+    
+    .stats-label {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+// Sección de completitud
+.completion-section {
+  background-color: $color-surface;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  
+  h4 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .completion-bar {
+    position: relative;
+    margin-bottom: 1rem;
+    
+    mat-progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .completion-percentage {
+      position: absolute;
+      top: -1.5rem;
+      right: 0;
+      font-size: $font-size-sm;
+      font-weight: 500;
+      color: $color-primary;
+    }
+  }
+  
+  .completion-legend {
+    display: flex;
+    gap: 2rem;
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        
+        &.complete {
+          background-color: $color-primary;
+        }
+        
+        &.incomplete {
+          background-color: $color-text-tertiary;
+        }
+      }
+      
+      .legend-label {
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+      }
+      
+      .legend-value {
+        font-size: $font-size-sm;
+        font-weight: 500;
+        color: $color-text-primary;
+      }
+    }
+  }
+}
+
+// Tarjetas de detalle
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.stats-detail-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  mat-card-header {
+    padding: 1rem 1rem 0;
+  }
+  
+  mat-card-content {
+    padding: 1rem;
+  }
+}
+
+// Distribución por estado
+.status-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  
+  .status-item {
+    .status-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+      
+      .status-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        
+        &.status-active {
+          background-color: rgba($color-success, 0.1);
+          color: $color-success;
+        }
+        
+        &.status-inactive {
+          background-color: rgba($color-text-tertiary, 0.1);
+          color: $color-text-tertiary;
+        }
+        
+        &.status-blocked {
+          background-color: rgba($color-error, 0.1);
+          color: $color-error;
+        }
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+      
+      .status-info {
+        flex: 1;
+        
+        .status-name {
+          font-weight: 500;
+          margin-bottom: 0.25rem;
+        }
+        
+        .status-count {
+          font-size: $font-size-xs;
+          color: $color-text-secondary;
+        }
+      }
+      
+      .status-percentage {
+        font-size: $font-size-sm;
+        font-weight: 500;
+        color: $color-text-primary;
+      }
+    }
+    
+    mat-progress-bar {
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+      
+      &.status-active ::ng-deep .mat-progress-bar-fill::after {
+        background-color: $color-success;
+      }
+      
+      &.status-inactive ::ng-deep .mat-progress-bar-fill::after {
+        background-color: $color-text-tertiary;
+      }
+      
+      &.status-blocked ::ng-deep .mat-progress-bar-fill::after {
+        background-color: $color-error;
+      }
+    }
+  }
+}
+
+// Distribución de documentos
+.document-distribution,
+.title-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  
+  .document-item,
+  .title-item {
+    .document-header,
+    .title-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+      
+      .document-icon,
+      .title-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: rgba($color-primary, 0.1);
+        color: $color-primary;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+      
+      .document-info,
+      .title-info {
+        flex: 1;
+        
+        .document-name,
+        .title-name {
+          font-weight: 500;
+          margin-bottom: 0.25rem;
+        }
+        
+        .document-count,
+        .title-count {
+          font-size: $font-size-xs;
+          color: $color-text-secondary;
+        }
+      }
+      
+      .document-percentage,
+      .title-percentage {
+        font-size: $font-size-sm;
+        font-weight: 500;
+        color: $color-text-primary;
+      }
+    }
+    
+    mat-progress-bar {
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+  }
+}
+
+// Media queries para responsive
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .completion-legend {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .loading-container {
+    mat-icon {
+      color: $color-text-tertiary-dark;
+    }
+    
+    p {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .stats-card,
+  .completion-section,
+  .stats-detail-card {
+    background-color: $color-surface-dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .stats-card {
+    .stats-data {
+      .stats-value {
+        color: $color-text-primary-dark;
+      }
+      
+      .stats-label {
+        color: $color-text-secondary-dark;
+      }
+    }
+  }
+  
+  h4 {
+    color: $color-text-primary-dark !important;
+  }
+  
+  .completion-legend {
+    .legend-item {
+      .legend-label {
+        color: $color-text-secondary-dark;
+      }
+      
+      .legend-value {
+        color: $color-text-primary-dark;
+      }
+    }
+  }
+  
+  .status-distribution,
+  .document-distribution,
+  .title-distribution {
+    .status-item,
+    .document-item,
+    .title-item {
+      .status-info,
+      .document-info,
+      .title-info {
+        .status-count,
+        .document-count,
+        .title-count {
+          color: $color-text-secondary-dark;
+        }
+      }
+      
+      .status-percentage,
+      .document-percentage,
+      .title-percentage {
+        color: $color-text-primary-dark;
+      }
+    }
+  }
+}

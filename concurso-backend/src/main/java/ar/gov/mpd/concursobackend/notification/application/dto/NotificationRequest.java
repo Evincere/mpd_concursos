@@ -8,8 +8,12 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.Builder;
 
+import java.util.Map;
+
 @Data
 @Builder
+@lombok.NoArgsConstructor
+@lombok.AllArgsConstructor
 public class NotificationRequest {
     @NotBlank(message = "El nombre de usuario del destinatario no puede estar vacío")
     private String recipientUsername;
@@ -28,4 +32,9 @@ public class NotificationRequest {
     @NotNull(message = "El nivel de acuse es requerido")
     @Builder.Default
     private AcknowledgementLevel acknowledgementLevel = AcknowledgementLevel.NONE;
+
+    /**
+     * Optional metadata for the notification
+     */
+    private Map<String, Object> metadata;
 }

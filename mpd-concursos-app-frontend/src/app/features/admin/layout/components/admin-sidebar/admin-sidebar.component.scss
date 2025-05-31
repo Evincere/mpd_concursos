@@ -1,0 +1,823 @@
+@use 'src/styles/variables' as *;
+
+// Variables específicas del sidebar
+$sidebar-width: 250px;
+$sidebar-collapsed-width: 64px;
+$sidebar-transition: all 0.3s ease;
+$module-header-height: 48px;
+$item-height: 40px;
+
+// Estilos base del sidebar
+.sidebar {
+  width: $sidebar-width;
+  height: 100%;
+  background-color: #374151;
+  color: #f9fafb;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  transition: $sidebar-transition;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+  z-index: 10;
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  &.collapsed {
+    width: $sidebar-collapsed-width;
+
+    .logo {
+      margin: 0 auto;
+    }
+  }
+
+  // Scrollbar personalizado
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(75, 85, 99, 0.1);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+  }
+}
+
+// Header con logo
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  height: 64px;
+  transition: all 0.3s ease;
+  justify-content: flex-start;
+
+  .sidebar.collapsed & {
+    justify-content: center;
+    padding: 1rem 0.5rem;
+  }
+
+  .logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: $color-primary;
+    transition: all 0.3s ease;
+
+    .logo {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+    }
+  }
+
+  .title {
+    margin: 0 0 0 0.75rem;
+    font-size: $font-size-md;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+}
+
+// Buscador
+.search-container {
+  padding: 12px 16px;
+  position: relative;
+
+  .search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    color: $color-text-secondary;
+    font-size: 0.9rem;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 8px 32px 8px 30px;
+    border-radius: 20px;
+    border: 1px solid $color-border;
+    background-color: rgba($color-background, 0.5);
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+      background-color: $color-background;
+      box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+    }
+  }
+
+  .clear-search {
+    position: absolute;
+    right: 10px;
+    color: $color-text-secondary;
+    cursor: pointer;
+    font-size: 0.9rem;
+
+    &:hover {
+      color: $color-text-primary;
+    }
+  }
+
+  // Resultados de búsqueda
+  .search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 4px;
+    z-index: 20;
+    max-height: 300px;
+    overflow-y: auto;
+
+    .no-results {
+      padding: 12px 16px;
+      text-align: center;
+      color: $color-text-secondary;
+      font-style: italic;
+    }
+
+    .results-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .result-item {
+      a {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        text-decoration: none;
+        color: $color-text-primary;
+        transition: background-color 0.2s ease;
+
+        &:hover, &.active {
+          background-color: rgba($color-primary, 0.1);
+        }
+
+        &.active {
+          color: $color-primary;
+        }
+      }
+
+      .result-icon {
+        margin-right: 12px;
+        width: 16px;
+        text-align: center;
+      }
+
+      .result-label {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+// Sección de favoritos
+.favorites-section {
+  margin-bottom: 8px;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      color: $color-text-secondary;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .toggle-button {
+      background: none;
+      border: none;
+      color: $color-text-secondary;
+      cursor: pointer;
+      padding: 4px;
+      font-size: 0.8rem;
+
+      &:hover {
+        color: $color-text-primary;
+      }
+    }
+  }
+
+  .favorites-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .favorite-item {
+    a {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      text-decoration: none;
+      color: $color-text-primary;
+      transition: background-color 0.2s ease;
+      height: $item-height;
+
+      &:hover, &.active {
+        background-color: rgba($color-primary, 0.1);
+      }
+
+      &.active {
+        color: $color-primary;
+        border-left: 3px solid $color-primary;
+      }
+    }
+
+    .favorite-icon {
+      margin-right: 12px;
+      width: 16px;
+      text-align: center;
+      color: $color-primary;
+    }
+
+    .favorite-label {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+// Navegación
+.sidebar-nav {
+  flex: 1;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
+  .sidebar.collapsed & {
+    padding: 0.5rem 0;
+  }
+
+  .modules-list, .nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  // Módulos
+  .module-item {
+    margin-bottom: 4px;
+  }
+
+  .module-header {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: $module-header-height;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 8px;
+    margin: 0 8px;
+    color: #d1d5db;
+
+    &:hover {
+      background-color: rgba(75, 85, 99, 0.3);
+      color: #f9fafb;
+      transform: translateY(-1px);
+    }
+
+    &.active-module {
+      background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+      color: #f9fafb;
+      font-weight: 600;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .module-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 1rem;
+    margin-right: 12px;
+    color: #9ca3af;
+    transition: color 0.3s ease;
+
+    .module-header:hover &,
+    .module-header.active-module & {
+      color: #f9fafb;
+    }
+  }
+
+  .module-label {
+    flex: 1;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .expand-icon {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+  }
+
+  // Contenido del módulo
+  .module-content {
+    overflow: hidden;
+  }
+
+  // Elementos del menú
+  .nav-item {
+    margin-bottom: 0.25rem;
+
+    a {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      height: $item-height;
+      text-decoration: none;
+      color: #d1d5db;
+      transition: all 0.3s ease;
+      position: relative;
+      border-radius: 8px;
+      margin: 0 8px;
+      border: 1px solid transparent;
+
+      .sidebar.collapsed & {
+        padding: 0.75rem 0;
+        justify-content: center;
+        margin: 0.5rem auto;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+      }
+
+      &:hover {
+        background-color: rgba(75, 85, 99, 0.3);
+        color: #f9fafb;
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      &.active {
+        color: #f9fafb;
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        font-weight: 600;
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow:
+          0 4px 12px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+        // Indicador visual de elemento activo
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          height: 20px;
+          width: 3px;
+          background-color: #3b82f6;
+          border-radius: 0 2px 2px 0;
+          animation: slideIn 0.3s ease-out forwards;
+        }
+
+        // Animación para el indicador
+        @keyframes slideIn {
+          from { transform: translateY(-50%) translateX(-100%); opacity: 0; }
+          to { transform: translateY(-50%) translateX(0); opacity: 1; }
+        }
+      }
+
+      &.has-children {
+        cursor: pointer;
+      }
+
+      &:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+      }
+    }
+
+    .nav-icon {
+      width: 16px;
+      text-align: center;
+      margin-right: 12px;
+      font-size: 0.9rem;
+      color: #9ca3af;
+      transition: color 0.3s ease;
+    }
+
+    .nav-label {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.9rem;
+    }
+
+    a:hover .nav-icon,
+    a.active .nav-icon {
+      color: #f9fafb;
+    }
+
+    // Botón de favorito
+    .favorite-button {
+      background: none;
+      border: none;
+      color: $color-text-secondary;
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0;
+      transition: opacity 0.2s ease, color 0.2s ease;
+      margin-left: 4px;
+
+      &.is-favorite {
+        opacity: 1;
+        color: #FFD700; // Color dorado para favoritos
+      }
+    }
+
+    a:hover .favorite-button {
+      opacity: 1;
+    }
+  }
+
+  // Estilos para el submenú
+  .submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0.25rem 0 0.5rem 2.25rem;
+
+    .submenu-item {
+      a {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+
+        .submenu-icon {
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+// Footer
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid $color-border;
+  transition: all 0.3s ease;
+
+  .sidebar.collapsed & {
+    padding: 1rem 0.5rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .footer-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    color: $color-text-secondary;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    .sidebar.collapsed & {
+      padding: 0.75rem 0;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+    }
+
+    &:hover {
+      background-color: rgba($color-primary, 0.1);
+      color: $color-primary;
+    }
+
+    .footer-icon {
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+
+      .sidebar.collapsed & {
+        margin-right: 0;
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+
+    .footer-label {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+  }
+}
+
+// Badges
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+
+  &-primary {
+    background-color: $color-primary;
+    color: white;
+  }
+
+  &-accent {
+    background-color: $color-accent;
+    color: white;
+  }
+
+  &-warn {
+    background-color: $color-warn;
+    color: white;
+  }
+
+  &-success {
+    background-color: $color-success;
+    color: white;
+  }
+
+  &-info {
+    background-color: $color-info;
+    color: white;
+  }
+}
+
+// Estilos para el menú flotante modular
+.floating-menu {
+  position: fixed;
+  z-index: 1000;
+  background-color: $color-surface;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  min-width: 220px;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-out;
+  border: 1px solid $color-border;
+
+  .floating-header {
+    padding: 12px 16px;
+    background-color: rgba($color-primary, 0.1);
+    border-bottom: 1px solid $color-border;
+
+    .floating-title {
+      font-weight: 600;
+      color: $color-primary;
+    }
+  }
+
+  .floating-items {
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .floating-item {
+    a {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      text-decoration: none;
+      color: $color-text-primary;
+      transition: background-color 0.2s ease;
+
+      &:hover, &.active {
+        background-color: rgba($color-primary, 0.1);
+      }
+
+      &.active {
+        color: $color-primary;
+      }
+    }
+
+    .floating-icon {
+      width: 16px;
+      text-align: center;
+      margin-right: 12px;
+    }
+
+    .floating-label {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // Compatibilidad con el menú flotante anterior
+  .floating-menu-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: rgba($color-primary, 0.1);
+    border-bottom: 1px solid $color-border;
+
+    .floating-menu-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-right: 0.75rem;
+      color: $color-primary;
+    }
+
+    .floating-menu-title {
+      font-weight: 600;
+      color: $color-primary;
+    }
+  }
+
+  .floating-menu-list {
+    list-style: none;
+    padding: 0.5rem 0;
+    margin: 0;
+
+    .floating-menu-item {
+      a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: $color-text-secondary;
+        text-decoration: none;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background-color: rgba($color-primary, 0.05);
+          color: $color-primary;
+        }
+
+        &.active {
+          background-color: rgba($color-primary, 0.1);
+          color: $color-primary;
+          font-weight: 500;
+        }
+
+        .floating-menu-item-icon {
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+          margin-right: 0.75rem;
+        }
+      }
+    }
+  }
+}
+
+// Indicador visual para el elemento que tiene el menú flotante activo
+.active-floating-menu {
+  background-color: rgba($color-primary, 0.15) !important;
+  color: $color-primary !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background-color: $color-surface-dark;
+    color: $color-text-primary-dark;
+    border-right-color: $color-border-dark;
+  }
+
+  .sidebar-nav .nav-item a {
+    color: $color-text-secondary-dark;
+
+    &:hover {
+      background-color: rgba($color-primary-dark, 0.2);
+      color: $color-primary-dark;
+    }
+
+    &.active {
+      background-color: rgba($color-primary-dark, 0.25);
+      color: $color-primary-dark;
+
+      &::before {
+        background-color: $color-primary-dark;
+      }
+
+      &::after {
+        background: linear-gradient(
+          to right,
+          rgba($color-primary-dark, 0.05) 0%,
+          rgba($color-primary-dark, 0.1) 50%,
+          rgba($color-primary-dark, 0.05) 100%
+        );
+      }
+    }
+  }
+
+  .sidebar-footer {
+    border-top-color: $color-border-dark;
+
+    .footer-item {
+      color: $color-text-secondary-dark;
+
+      &:hover {
+        background-color: rgba($color-primary-dark, 0.2);
+        color: $color-primary-dark;
+      }
+    }
+  }
+
+  // Estilos para el menú flotante en tema oscuro
+  .floating-menu {
+    background-color: $color-surface-dark;
+    border-color: $color-border-dark;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    .floating-menu-header {
+      background-color: rgba($color-primary-dark, 0.2);
+      border-bottom-color: $color-border-dark;
+
+      .floating-menu-icon,
+      .floating-menu-title {
+        color: $color-primary-dark;
+      }
+    }
+
+    .floating-menu-list .floating-menu-item a {
+      color: $color-text-secondary-dark;
+
+      &:hover {
+        background-color: rgba($color-primary-dark, 0.1);
+        color: $color-primary-dark;
+      }
+
+      &.active {
+        background-color: rgba($color-primary-dark, 0.2);
+        color: $color-primary-dark;
+      }
+    }
+  }
+
+  // Indicador visual para el elemento activo en tema oscuro
+  .active-floating-menu {
+    background-color: rgba($color-primary-dark, 0.25) !important;
+    color: $color-primary-dark !important;
+  }
+}

@@ -48,7 +48,7 @@
         <div [ngSwitch]="preguntaActual.tipo">
           <!-- Opción Múltiple -->
           <div *ngSwitchCase="TIPO_PREGUNTA.OPCION_MULTIPLE">
-            <mat-radio-group [(ngModel)]="respuestas[preguntaActual.id]" (change)="guardarRespuesta($event.value)">
+            <mat-radio-group [(ngModel)]="respuestas[preguntaActual.id]" name="respuestaOpcionMultiple" (change)="guardarRespuesta($event.value)">
               <mat-radio-button *ngFor="let opcion of preguntaActual.opciones" [value]="opcion.id" class="opcion-radio">
                 {{ opcion.texto }}
               </mat-radio-button>
@@ -66,7 +66,7 @@
 
           <!-- Verdadero/Falso -->
           <div *ngSwitchCase="TIPO_PREGUNTA.VERDADERO_FALSO">
-            <mat-radio-group [(ngModel)]="respuestas[preguntaActual.id]" (change)="guardarRespuesta($event.value)">
+            <mat-radio-group [(ngModel)]="respuestas[preguntaActual.id]" name="respuestaVerdaderoFalso" (change)="guardarRespuesta($event.value)">
               <mat-radio-button value="true" class="opcion-radio">Verdadero</mat-radio-button>
               <mat-radio-button value="false" class="opcion-radio">Falso</mat-radio-button>
             </mat-radio-group>
@@ -75,7 +75,7 @@
           <!-- Desarrollo -->
           <div *ngSwitchCase="TIPO_PREGUNTA.DESARROLLO">
             <mat-form-field appearance="outline" class="respuesta-desarrollo">
-              <textarea matInput [(ngModel)]="respuestas[preguntaActual.id]" (input)="guardarRespuestaTexto($event)" rows="6" placeholder="Escriba su respuesta aquí..."></textarea>
+              <textarea matInput [(ngModel)]="respuestas[preguntaActual.id]" name="respuestaDesarrollo" (input)="guardarRespuestaTexto($event)" rows="6" placeholder="Escriba su respuesta aquí..."></textarea>
             </mat-form-field>
           </div>
 

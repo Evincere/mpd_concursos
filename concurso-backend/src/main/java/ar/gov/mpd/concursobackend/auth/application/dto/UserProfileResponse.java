@@ -1,6 +1,9 @@
 package ar.gov.mpd.concursobackend.auth.application.dto;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,4 +26,10 @@ public class UserProfileResponse {
     private List<ExperienciaDto> experiencias;
     private List<EducacionDto> educacion;
     private List<HabilidadDto> habilidades;
+
+    // Campos adicionales para el panel de administración
+    private Set<String> roles;
+    private LocalDateTime createdAt;
+    private String status;
+    private boolean enabled;
 }

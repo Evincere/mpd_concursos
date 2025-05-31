@@ -1,0 +1,173 @@
+@use 'src/styles/variables' as *;
+
+.preview-container {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  margin-bottom: 1rem;
+  
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: $font-size-md;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .description {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+.notification-preview {
+  flex: 1;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  overflow: hidden;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  color: white;
+  
+  &.notification-system {
+    background-color: $color-primary;
+  }
+  
+  &.notification-inscription {
+    background-color: $color-success;
+  }
+  
+  &.notification-contest {
+    background-color: $color-info;
+  }
+  
+  &.notification-document {
+    background-color: $color-warning;
+  }
+  
+  &.notification-exam {
+    background-color: $color-error;
+  }
+  
+  .notification-icon {
+    margin-right: 0.75rem;
+    
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+  
+  .notification-type {
+    font-weight: 500;
+    flex: 1;
+  }
+  
+  .notification-date {
+    font-size: $font-size-sm;
+  }
+}
+
+.notification-content {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  
+  .notification-subject {
+    margin: 0 0 1.5rem;
+    font-size: $font-size-lg;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .notification-body {
+    flex: 1;
+    margin-bottom: 1.5rem;
+    color: $color-text-primary;
+    line-height: 1.5;
+    
+    p {
+      margin-bottom: 1rem;
+    }
+    
+    ul, ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+    
+    a {
+      color: $color-primary;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+  
+  .notification-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid $color-border;
+    
+    .acknowledgement-info {
+      display: flex;
+      align-items: center;
+      color: $color-text-secondary;
+      font-size: $font-size-sm;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin-right: 0.5rem;
+      }
+    }
+    
+    .notification-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+  }
+}
+
+.preview-info {
+  .info-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: rgba($color-info, 0.1);
+    border-left: 4px solid $color-info;
+    border-radius: $border-radius;
+    
+    mat-icon {
+      color: $color-info;
+      margin-right: 0.75rem;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+    
+    span {
+      font-size: $font-size-sm;
+      color: $color-text-primary;
+    }
+  }
+}

@@ -1,0 +1,137 @@
+<div class="reports-container">
+  <div class="header">
+    <h1>Reportes de Inscripciones</h1>
+    <div class="header-actions">
+      <app-custom-button [variant]="'flat'" [color]="'primary'" [icon]="'dashboard'" [routerLink]="['/admin/inscripciones/dashboard']">
+        Dashboard
+      </app-custom-button>
+    </div>
+  </div>
+
+  <app-custom-card class="content-card">
+    <div class="stepper" [ngSwitch]="activeStep">
+      <!-- Paso 1: Configuración del Reporte -->
+      <ng-container *ngSwitchCase="0">
+        <form [formGroup]="reportForm" class="report-form">
+          <!-- Información General -->
+          <div class="form-section">
+            <h2>Información General</h2>
+            <div class="form-row">
+              <app-custom-form-field class="full-width" label="Nombre del Reporte">
+                <input appInput formControlName="reportName" placeholder="Ingrese un nombre para el reporte" />
+              </app-custom-form-field>
+            </div>
+            <div class="form-row">
+              <app-custom-form-field class="full-width" label="Plantilla">
+                <app-custom-select formControlName="template">
+                  <option value="custom">Personalizado</option>
+                  <option *ngFor="let template of reportTemplates" [value]="template.id">
+                    {{template.name}}
+                  </option>
+                </app-custom-select>
+              </app-custom-form-field>
+            </div>
+          </div>
+
+          <!-- Campos del Reporte -->
+          <div class="fields-group">
+            <div class="group-header">
+              <i class="fas fa-user"></i>
+              <h3>Datos del Postulante</h3>
+            </div>
+            <div class="fields-grid">
+              <div class="field-item" *ngFor="let field of availableFields | filter:'group':'user'"
+                   [class.selected]="isFieldSelected(getFieldId(field))"
+                   (click)="toggleFieldSelection(getFieldId(field))">
+                {{getFieldLabel(field)}}
+              </div>
+            </div>
+          </div>
+
+          <div class="fields-group">
+            <div class="group-header">
+              <i class="fas fa-gavel"></i>
+              <h3>Datos del Concurso</h3>
+            </div>
+            <div class="fields-grid">
+              <div class="field-item" *ngFor="let field of availableFields | filter:'group':'contest'"
+                   [class.selected]="isFieldSelected(getFieldId(field))"
+                   (click)="toggleFieldSelection(getFieldId(field))">
+                {{getFieldLabel(field)}}
+              </div>
+            </div>
+          </div>
+
+          <div class="fields-group">
+            <div class="group-header">
+              <i class="fas fa-clipboard"></i>
+              <h3>Datos de la Inscripción</h3>
+            </div>
+            <div class="fields-grid">
+              <div class="field-item" *ngFor="let field of availableFields | filter:'group':'inscription'"
+                   [class.selected]="isFieldSelected(getFieldId(field))"
+                   (click)="toggleFieldSelection(getFieldId(field))">
+                {{getFieldLabel(field)}}
+              </div>
+            </div>
+          </div>
+
+          <div class="fields-group">
+            <div class="group-header">
+              <i class="fas fa-file-alt"></i>
+              <h3>Datos de Documentos</h3>
+            </div>
+            <div class="fields-grid">
+              <div class="field-item" *ngFor="let field of availableFields | filter:'group':'document'"
+                   [class.selected]="isFieldSelected(getFieldId(field))"
+                   (click)="toggleFieldSelection(getFieldId(field))">
+                {{getFieldLabel(field)}}
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtros -->
+          <div class="filters-section">
+            <h3>Filtros</h3>
+            <div class="filters-grid" formGroupName="filters">
+              <app-custom-form-field label="Estado">
+                <app-custom-select formControlName="inscriptionState">
+                  <option value="">Todos</option>
+                  <ng-container *ngIf="getFieldOptions('inscriptionState') as options">
+                    <option *ngFor="let option of options" [value]="option.value">
+                      {{option.label}}
+                    </option>
+                  </ng-container>
+                </app-custom-select>
+              </app-custom-form-field>
+
+              <div formGroupName="dateRange">
+                <app-custom-form-field label="Desde">
+                  <app-custom-datepicker formControlName="startDate"></app-custom-datepicker>
+                </app-custom-form-field>
+                <app-custom-form-field label="Hasta">
+                  <app-custom-datepicker formControlName="endDate"></app-custom-datepicker>
+                </app-custom-form-field>
+              </div>
+
+              <app-custom-form-field label="Concurso">
+                <app-custom-select formControlName="contestId" [options]="contestOptions"></app-custom-select>
+              </app-custom-form-field>
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="actions-section">
+            <app-custom-button [variant]="'text'" (click)="resetForm()">
+              Reiniciar
+            </app-custom-button>
+            <app-custom-button [variant]="'flat'" [color]="'primary'" (click)="generateReport()"
+                             [disabled]="!fieldsArray.length">
+              Generar Reporte
+            </app-custom-button>
+          </div>
+        </form>
+      </ng-container>
+    </div>
+  </app-custom-card>
+</div>

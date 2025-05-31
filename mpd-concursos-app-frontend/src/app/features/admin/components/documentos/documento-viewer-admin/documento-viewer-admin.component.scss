@@ -1,0 +1,188 @@
+@use 'src/styles/variables' as *;
+
+.documento-viewer-container {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+  height: 80vh;
+  background-color: $color-background;
+  border-radius: $border-radius;
+  overflow: hidden;
+}
+
+.documento-toolbar {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: $color-surface;
+  border-bottom: 1px solid $color-border;
+  border-radius: $border-radius $border-radius 0 0;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagina-info {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin: 0 0.5rem;
+}
+
+.documento-content {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  position: relative;
+  background-color: darken($color-background, 5%);
+  border-radius: 0 0 0 $border-radius;
+  overflow: hidden;
+}
+
+.documento-viewer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-origin: center center;
+  transition: transform 0.3s ease;
+  
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+}
+
+.documento-loading,
+.documento-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: $color-text-secondary;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+  }
+}
+
+.documento-error {
+  color: $color-error;
+}
+
+.documento-info {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+  padding: 1rem;
+  background-color: $color-surface;
+  border-left: 1px solid $color-border;
+  border-radius: 0 $border-radius $border-radius 0;
+  overflow-y: auto;
+  
+  h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: $font-size-md;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.info-item {
+  margin-bottom: 0.75rem;
+  
+  .info-label {
+    display: block;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    margin-bottom: 0.25rem;
+  }
+  
+  .info-value {
+    display: block;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    word-break: break-word;
+  }
+}
+
+// Estados
+.estado-pendiente {
+  color: $color-warning;
+}
+
+.estado-aprobado {
+  color: $color-success;
+}
+
+.estado-rechazado {
+  color: $color-error;
+}
+
+// Anotaciones
+.anotacion {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+.anotacion-marker {
+  width: 32px;
+  height: 32px;
+  background-color: rgba($color-primary, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  mat-icon {
+    color: white;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  &:hover {
+    background-color: $color-primary;
+    transform: scale(1.1);
+  }
+}
+
+.anotacion-temporal {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+}
+
+.anotacion-form {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  padding: 1rem;
+  width: 250px;
+  box-shadow: $box-shadow;
+  
+  mat-form-field {
+    width: 100%;
+  }
+  
+  .anotacion-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}

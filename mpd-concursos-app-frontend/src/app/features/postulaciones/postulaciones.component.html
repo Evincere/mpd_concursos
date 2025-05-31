@@ -3,20 +3,21 @@
     (search)="onSearch($event)" (filter)="onFilter()">
   </app-search-header>
 
-  <div class="content" [class.blurred]="mostrarFiltros">
+  <app-postulaciones-tabs>
+    <div tabContent="list" class="content" [class.blurred]="mostrarFiltros">
     <app-loader *ngIf="loading" [overlay]="true" message="Cargando postulaciones...">
     </app-loader>
 
     <div class="error-message glassmorphism" *ngIf="error === 'connection'">
       <div class="error-icon">
-        <i class="fas fa-exclamation-circle"></i>
+        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
       </div>
       <div class="error-content">
         <h4>Error al cargar las postulaciones</h4>
         <p>No se pudo establecer conexión con el servidor. Por favor, verifica tu conexión a internet y vuelve a intentarlo.</p>
         <div class="error-actions">
-          <button mat-stroked-button (click)="retryLoad()">
-            <i class="fas fa-redo"></i>
+          <button mat-stroked-button (click)="retryLoad()" (keydown.enter)="retryLoad()" (keydown.space)="retryLoad()" aria-label="Reintentar cargar postulaciones">
+            <i class="fas fa-redo" aria-hidden="true"></i>
             Reintentar
           </button>
         </div>
@@ -26,34 +27,17 @@
     <ng-container *ngIf="!loading && error !== 'connection'">
       <!-- Lista de postulaciones -->
       <div class="postulaciones-list" *ngIf="dataSource.data.length > 0" [ngClass]="{'blurred': postulacionSeleccionada}">
-        <div class="postulacion-item" *ngFor="let postulacion of dataSource.data" (click)="verDetalle(postulacion)">
-          <!-- Acciones -->
-          <div class="actions">
-            <!-- Botón para cancelar postulación -->
-            <button mat-icon-button
-                    color="warn"
-                    matTooltip="Cancelar postulación"
-                    [disabled]="!puedesCancelarPostulacion(postulacion)"
-                    (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
-                    *ngIf="postulacion.estado !== 'CANCELLED'">
-              <mat-icon>cancel</mat-icon>
-            </button>
-
-            <!-- Botón para continuar inscripción (solo para inscripciones en proceso) -->
-            <button mat-icon-button
-                    color="primary"
-                    matTooltip="Continuar inscripción"
-                    [disabled]="!puedesContinuarInscripcion(postulacion)"
-                    (click)="$event.stopPropagation(); continuarInscripcion(postulacion)"
-                    *ngIf="postulacion.estado === 'PENDING' && esInscripcionEnProceso(postulacion)">
-              <mat-icon>play_arrow</mat-icon>
-            </button>
-
-            <!-- Botón para ver detalle -->
+        <div class="postulacion-item" *ngFor="let postulacion of dataSource.data" (click)="verDetalle(postulacion)" (keydown.enter)="verDetalle(postulacion)" tabindex="0" role="button" [attr.aria-label]="'Ver detalle de postulación: ' + (postulacion.concurso?.titulo || 'Sin título')">
+          <!-- Acciones para dispositivos móviles (se muestran solo en pantallas pequeñas) -->
+          <div class="actions mobile-only">
+            <!-- Botón para ver detalle (solo para móviles) -->
             <button mat-icon-button
                     matTooltip="Ver detalle"
-                    (click)="verDetalle(postulacion)">
-              <mat-icon>visibility</mat-icon>
+                    (click)="$event.stopPropagation(); verDetalle(postulacion)"
+                    (keydown.enter)="$event.stopPropagation(); verDetalle(postulacion)"
+                    (keydown.space)="$event.stopPropagation(); verDetalle(postulacion)"
+                    aria-label="Ver detalle de postulación">
+              <mat-icon aria-hidden="true">visibility</mat-icon>
             </button>
           </div>
 
@@ -64,21 +48,47 @@
                 <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
               </div>
               <div class="header-actions">
-                <div class="estado-badge" [class]="getEstadoPostulacionClass(postulacion.estado)">
-                  {{ getEstadoPostulacionLabel(postulacion.estado) }}
-                </div>
+                <app-contest-status-badge
+                  [status]="mapPostulationToContestStatus(postulacion.estado)"
+                  [showIcon]="true">
+                </app-contest-status-badge>
                 <div class="actions">
+                  <!-- Botón para cancelar postulación -->
                   <button mat-icon-button
                           color="warn"
                           matTooltip="Cancelar postulación"
                           [disabled]="!puedesCancelarPostulacion(postulacion)"
-                          (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)">
-                    <mat-icon>cancel</mat-icon>
+                          (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
+                          (keydown.enter)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
+                          (keydown.space)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
+                          aria-label="Cancelar esta postulación"
+                          *ngIf="postulacion.estado !== 'CANCELLED'">
+                    <mat-icon aria-hidden="true">cancel</mat-icon>
                   </button>
+
+                  <!-- Botón para continuar inscripción (solo para inscripciones en proceso) -->
+                  <button mat-stroked-button
+                          color="primary"
+                          class="continue-button"
+                          matTooltip="Continuar inscripción"
+                          [disabled]="!puedesContinuarInscripcion(postulacion)"
+                          (click)="$event.stopPropagation(); continuarInscripcion(postulacion)"
+                          (keydown.enter)="$event.stopPropagation(); continuarInscripcion(postulacion)"
+                          (keydown.space)="$event.stopPropagation(); continuarInscripcion(postulacion)"
+                          aria-label="Retomar proceso de inscripción"
+                          *ngIf="postulacion.estado === 'PENDING' && esInscripcionEnProceso(postulacion)">
+                    <mat-icon aria-hidden="true">play_arrow</mat-icon>
+                    <span>Retomar</span>
+                  </button>
+
+                  <!-- Botón para ver detalle -->
                   <button mat-icon-button
                           matTooltip="Ver detalle"
-                          (click)="verDetalle(postulacion)">
-                    <mat-icon>visibility</mat-icon>
+                          (click)="$event.stopPropagation(); verDetalle(postulacion)"
+                          (keydown.enter)="$event.stopPropagation(); verDetalle(postulacion)"
+                          (keydown.space)="$event.stopPropagation(); verDetalle(postulacion)"
+                          aria-label="Ver detalle de postulación">
+                    <mat-icon aria-hidden="true">visibility</mat-icon>
                   </button>
                 </div>
               </div>
@@ -90,14 +100,14 @@
             <!-- Información principal -->
             <div class="detalles-grid">
               <div class="detalle-item cargo">
-                <i class="fas fa-briefcase"></i>
+                <i class="fas fa-briefcase" aria-hidden="true"></i>
                 <div class="detalle-content">
                   <span class="label">Cargo</span>
                   <span class="value">{{ postulacion.concurso?.cargo || 'No especificado' }}</span>
                 </div>
               </div>
               <div class="detalle-item dependencia">
-                <i class="fas fa-building"></i>
+                <i class="fas fa-building" aria-hidden="true"></i>
                 <div class="detalle-content">
                   <span class="label">Dependencia</span>
                   <span class="value">{{ postulacion.concurso?.dependencia || 'No especificada' }}</span>
@@ -108,21 +118,21 @@
             <!-- Fechas -->
             <div class="fechas-grid">
               <div class="fecha-item">
-                <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>
                 <div class="fecha-content">
                   <span class="label">Postulación</span>
                   <span class="value">{{ postulacion.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
               </div>
               <div class="fecha-item" *ngIf="postulacion.concurso?.fechaInicio">
-                <i class="fas fa-calendar-alt"></i>
+                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                 <div class="fecha-content">
                   <span class="label">Inicio</span>
                   <span class="value">{{ postulacion.concurso?.fechaInicio | date:'dd/MM/yyyy' }}</span>
                 </div>
               </div>
               <div class="fecha-item" *ngIf="postulacion.concurso?.fechaFin">
-                <i class="fas fa-calendar-times"></i>
+                <i class="fas fa-calendar-times" aria-hidden="true"></i>
                 <div class="fecha-content">
                   <span class="label">Fin</span>
                   <span class="value">{{ postulacion.concurso?.fechaFin | date:'dd/MM/yyyy' }}</span>
@@ -133,7 +143,7 @@
             <!-- Documentos -->
             <div class="documentos-info" *ngIf="postulacion.attachedDocuments?.length">
               <div class="documentos-header">
-                <i class="fas fa-file-alt"></i>
+                <i class="fas fa-file-alt" aria-hidden="true"></i>
                 <span>{{ postulacion.attachedDocuments?.length }} documento(s) adjunto(s)</span>
               </div>
             </div>
@@ -145,55 +155,56 @@
       <div class="empty-state" *ngIf="dataSource.data.length === 0">
         <!-- Sin postulaciones (nuevo usuario) -->
         <div class="empty-state-content glassmorphism welcome" *ngIf="!hayFiltrosAplicados() && !todasCanceladas">
-          <i class="fas fa-user-plus fa-4x"></i>
+          <i class="fas fa-user-plus fa-4x" aria-hidden="true"></i>
           <h3>¡Bienvenido al Sistema de Concursos!</h3>
           <p>Aún no tienes postulaciones registradas. Comienza explorando los concursos disponibles y postúlate para iniciar tu carrera en el Ministerio Público de la Defensa.</p>
-          <button mat-raised-button color="primary" (click)="navegarAConcursos()">
-            <i class="fas fa-search"></i>
+          <button mat-raised-button color="primary" (click)="navegarAConcursos()" (keydown.enter)="navegarAConcursos()" (keydown.space)="navegarAConcursos()" aria-label="Explorar concursos disponibles">
+            <i class="fas fa-search" aria-hidden="true"></i>
             Explorar concursos disponibles
           </button>
         </div>
 
         <!-- Todas las postulaciones canceladas -->
         <div class="empty-state-content glassmorphism cancelled" *ngIf="!hayFiltrosAplicados() && todasCanceladas">
-          <i class="fas fa-folder-open fa-4x"></i>
+          <i class="fas fa-folder-open fa-4x" aria-hidden="true"></i>
           <h3>No hay postulaciones activas</h3>
           <p>Todas tus postulaciones han sido canceladas. Si deseas participar en nuevos concursos, explora las convocatorias disponibles.</p>
-          <button mat-raised-button color="primary" (click)="navegarAConcursos()">
-            <i class="fas fa-search"></i>
+          <button mat-raised-button color="primary" (click)="navegarAConcursos()" (keydown.enter)="navegarAConcursos()" (keydown.space)="navegarAConcursos()" aria-label="Ver nuevos concursos disponibles">
+            <i class="fas fa-search" aria-hidden="true"></i>
             Ver nuevos concursos
           </button>
         </div>
 
         <!-- Sin resultados de búsqueda -->
         <div class="empty-state-content glassmorphism filtered" *ngIf="hayFiltrosAplicados()">
-          <i class="fas fa-filter fa-4x"></i>
+          <i class="fas fa-filter fa-4x" aria-hidden="true"></i>
           <h3>No se encontraron coincidencias</h3>
           <p>No hay postulaciones que coincidan con los criterios de búsqueda actuales. Prueba ajustando los filtros o realizando una nueva búsqueda.</p>
           <div class="actions">
-            <button mat-stroked-button (click)="limpiarFiltros()">
-              <i class="fas fa-times"></i>
+            <button mat-stroked-button (click)="limpiarFiltros()" (keydown.enter)="limpiarFiltros()" (keydown.space)="limpiarFiltros()" aria-label="Limpiar todos los filtros aplicados">
+              <i class="fas fa-times" aria-hidden="true"></i>
               Limpiar filtros
             </button>
-            <button mat-raised-button color="primary" (click)="retryLoad()">
-              <i class="fas fa-sync"></i>
+            <button mat-raised-button color="primary" (click)="retryLoad()" (keydown.enter)="retryLoad()" (keydown.space)="retryLoad()" aria-label="Actualizar lista de postulaciones">
+              <i class="fas fa-sync" aria-hidden="true"></i>
               Actualizar lista
             </button>
           </div>
         </div>
       </div>
     </ng-container>
-  </div>
+    </div>
 
-  <!-- Panel de Detalle -->
-  <app-postulacion-detalle *ngIf="postulacionSeleccionada" [postulacion]="postulacionSeleccionada"
-    (cerrarDetalle)="cerrarDetalle()">
-  </app-postulacion-detalle>
+    <!-- Panel de Detalle -->
+    <app-postulacion-detalle *ngIf="postulacionSeleccionada" [postulacion]="postulacionSeleccionada"
+      (cerrarDetalle)="cerrarDetalle()">
+    </app-postulacion-detalle>
 
-  <!-- Panel de Filtros -->
-  <app-filtros-postulaciones *ngIf="mostrarFiltros" (filtrosChange)="aplicarFiltros($event)" (cerrar)="toggleFiltros()">
-  </app-filtros-postulaciones>
+    <!-- Panel de Filtros -->
+    <app-filtros-postulaciones *ngIf="mostrarFiltros" (filtrosChange)="aplicarFiltros($event)" (cerrar)="toggleFiltros()">
+    </app-filtros-postulaciones>
 
-  <!-- Backdrop -->
-  <div class="backdrop" *ngIf="mostrarFiltros" (click)="toggleFiltros()" @fadeInOut></div>
+    <!-- Backdrop -->
+    <div class="backdrop" *ngIf="mostrarFiltros" (click)="toggleFiltros()" (keydown.enter)="toggleFiltros()" (keydown.space)="toggleFiltros()" tabindex="0" role="button" aria-label="Cerrar panel de filtros" @fadeInOut></div>
+  </app-postulaciones-tabs>
 </div>

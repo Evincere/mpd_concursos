@@ -11,14 +11,15 @@ import { Pregunta, PreguntaDTO, TipoPregunta } from '@shared/interfaces/examen/p
 export class PreguntasService {
   private apiUrl = `${environment.apiUrl}/preguntas`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
+
 
   /**
    * Obtiene todas las preguntas
    */
   getPreguntas(): Observable<Pregunta[]> {
     return this.http.get<PreguntaDTO[]>(this.apiUrl).pipe(
-      map(preguntas => preguntas.map(pregunta => this.mapPreguntaFromDTO(pregunta))),
+      map((preguntas: PreguntaDTO[]) => preguntas.map((pregunta: PreguntaDTO) => this.mapPreguntaFromDTO(pregunta))),
       catchError(error => {
         console.error('Error al obtener preguntas:', error);
         return throwError(() => new Error('No se pudieron cargar las preguntas'));
@@ -31,7 +32,7 @@ export class PreguntasService {
    */
   getPregunta(id: string): Observable<Pregunta> {
     return this.http.get<PreguntaDTO>(`${this.apiUrl}/${id}`).pipe(
-      map(pregunta => this.mapPreguntaFromDTO(pregunta)),
+      map((pregunta: PreguntaDTO) => this.mapPreguntaFromDTO(pregunta)),
       catchError(error => {
         console.error(`Error al obtener pregunta ${id}:`, error);
         return throwError(() => new Error('No se pudo cargar la pregunta'));
@@ -45,7 +46,7 @@ export class PreguntasService {
   crearPregunta(pregunta: Pregunta): Observable<Pregunta> {
     const preguntaDTO = this.mapPreguntaToDTO(pregunta);
     return this.http.post<PreguntaDTO>(this.apiUrl, preguntaDTO).pipe(
-      map(response => this.mapPreguntaFromDTO(response)),
+      map((response: PreguntaDTO) => this.mapPreguntaFromDTO(response)),
       catchError(error => {
         console.error('Error al crear pregunta:', error);
         return throwError(() => new Error('No se pudo crear la pregunta'));
@@ -59,7 +60,7 @@ export class PreguntasService {
   actualizarPregunta(id: string, pregunta: Pregunta): Observable<Pregunta> {
     const preguntaDTO = this.mapPreguntaToDTO(pregunta);
     return this.http.put<PreguntaDTO>(`${this.apiUrl}/${id}`, preguntaDTO).pipe(
-      map(response => this.mapPreguntaFromDTO(response)),
+      map((response: PreguntaDTO) => this.mapPreguntaFromDTO(response)),
       catchError(error => {
         console.error(`Error al actualizar pregunta ${id}:`, error);
         return throwError(() => new Error('No se pudo actualizar la pregunta'));

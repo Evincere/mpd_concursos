@@ -1,0 +1,251 @@
+/* Estilos para tabla responsiva de usuarios */
+@use 'src/styles/variables' as global;
+@use 'src/styles/responsive' as responsive;
+@use './styles/shared-table' as shared;
+
+/* Contenedor de la tabla */
+.custom-table-container {
+  @include shared.table-container;
+
+  /* Contenedor con scroll horizontal solo en pantallas muy pequeñas */
+  .table-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+
+    /* Ocultar la barra de desplazamiento pero mantener la funcionalidad */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--color-primary-rgb, 25, 118, 210), 0.5) transparent;
+
+    &::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(var(--color-primary-rgb, 25, 118, 210), 0.5);
+      border-radius: global.$border-radius-sm;
+    }
+  }
+}
+
+/* Tabla */
+.custom-table {
+  @include shared.table-base;
+  table-layout: fixed; /* Importante para control de ancho de columnas */
+}
+
+/* Encabezados */
+.custom-table th {
+  @include shared.table-header;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* Tooltip para encabezados truncados */
+  &.truncated {
+    position: relative;
+
+    &:hover::after {
+      content: attr(data-full-text);
+      @include shared.tooltip-base;
+      font-weight: normal;
+      text-transform: none;
+    }
+  }
+}
+
+/* Celdas */
+.custom-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Columnas con anchos específicos */
+.col-id {
+  width: 80px;
+}
+
+.col-nombre {
+  width: 20%;
+  min-width: 180px;
+}
+
+.col-contacto {
+  width: 25%;
+  min-width: 200px;
+}
+
+.col-roles {
+  width: 20%;
+  min-width: 150px;
+}
+
+.col-estado {
+  width: 100px;
+}
+
+.col-fechas {
+  width: 15%;
+  min-width: 120px;
+}
+
+.col-acciones {
+  width: 100px;
+}
+
+/* Estilos para texto truncado con tooltip */
+.truncate-with-tooltip {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+
+  &:hover::after {
+    content: attr(data-full-text);
+    @include shared.tooltip-base;
+  }
+}
+
+/* Estilos responsivos */
+@media (max-width: 1200px) {
+  .col-fechas {
+    width: 120px;
+  }
+
+  .date-login {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .col-contacto {
+    width: 180px;
+  }
+
+  .phone-link {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Cambiar a vista de tarjetas en pantallas pequeñas */
+  .custom-table-container.card-view-enabled {
+    .table-scroll-container {
+      display: none;
+    }
+
+    .card-view {
+      display: block;
+    }
+  }
+
+  /* Vista de tarjetas para móviles */
+  .card-view {
+    display: none;
+    padding: 1rem;
+
+    .user-card {
+      background-color: rgba(var(--color-surface-rgb, 66, 66, 66), 0.8);
+      border-radius: global.$border-radius;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(var(--color-border-rgb, 72, 72, 72), 0.2);
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+
+        .user-name {
+          font-weight: 600;
+          font-size: 1.1rem;
+        }
+
+        .estado-badge {
+          flex-shrink: 0;
+        }
+      }
+
+      .card-content {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+
+        .card-item {
+          display: flex;
+          flex-direction: column;
+
+          .item-label {
+            font-size: 0.8rem;
+            color: var(--color-text-secondary, #B0B0B0);
+            margin-bottom: 0.25rem;
+          }
+
+          .item-value {
+            font-size: 0.95rem;
+          }
+        }
+
+        .card-item.full-width {
+          grid-column: 1 / -1;
+        }
+      }
+
+      .card-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(var(--color-border-rgb, 72, 72, 72), 0.2);
+      }
+    }
+  }
+}
+
+/* Estilos para tema oscuro */
+@media (prefers-color-scheme: dark) {
+  .custom-table-container {
+    @include shared.table-container-dark;
+
+    .table-scroll-container {
+      scrollbar-color: rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.5) transparent;
+
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.5);
+      }
+    }
+  }
+
+  .custom-table th {
+    @include shared.table-header-dark;
+  }
+
+  .custom-table th.truncated:hover::after {
+    @include shared.tooltip-dark;
+  }
+
+  .truncate-with-tooltip:hover::after {
+    @include shared.tooltip-dark;
+  }
+
+  @media (max-width: 768px) {
+    .card-view .user-card {
+      background-color: rgba(var(--color-surface-dark-rgb, 51, 51, 51), 0.8);
+      border: 1px solid rgba(var(--color-border-dark-rgb, 51, 51, 51), 0.2);
+
+      .card-content .card-item .item-label {
+        color: var(--color-text-secondary-dark, #A0A0A0);
+      }
+
+      .card-footer {
+        border-top: 1px solid rgba(var(--color-border-dark-rgb, 51, 51, 51), 0.2);
+      }
+    }
+  }
+}

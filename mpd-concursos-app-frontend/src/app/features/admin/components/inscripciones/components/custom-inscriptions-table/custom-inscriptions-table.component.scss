@@ -1,0 +1,242 @@
+@import 'src/styles/variables';
+@import 'src/styles/mixins';
+
+.inscriptions-table-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+// Estilos para la tarjeta de filtros
+.filters-card {
+  width: 100%;
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    
+    h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: $color-text-primary;
+    }
+  }
+  
+  .filters-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    
+    .filters-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      
+      .filter-field {
+        flex: 1;
+        min-width: 200px;
+        
+        @media (max-width: 768px) {
+          min-width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// Estilos para la tarjeta de tabla
+.table-card {
+  width: 100%;
+  
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    
+    h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: $color-text-primary;
+    }
+    
+    .results-count {
+      font-size: 0.9rem;
+      color: $color-text-secondary;
+      background-color: $color-background-light;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+    }
+  }
+  
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+// Estilos para las celdas de la tabla
+.id-cell {
+  font-family: $font-family-mono;
+  font-size: 0.85rem;
+  color: $color-text-secondary;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  
+  .user-name {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .user-email, .user-dni {
+    font-size: 0.85rem;
+    color: $color-text-secondary;
+  }
+}
+
+.contest-info {
+  display: flex;
+  flex-direction: column;
+  
+  .contest-title {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .contest-category, .contest-department {
+    font-size: 0.85rem;
+    color: $color-text-secondary;
+  }
+}
+
+.documents-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  .documents-count {
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: $color-text-primary;
+  }
+  
+  .documents-status {
+    font-size: 0.8rem;
+    
+    .status-approved {
+      color: $color-success;
+    }
+    
+    .status-pending {
+      color: $color-warning;
+    }
+    
+    .status-rejected {
+      color: $color-danger;
+    }
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  
+  &.status-pending {
+    background-color: rgba($color-warning, 0.15);
+    color: darken($color-warning, 15%);
+  }
+  
+  &.status-approved {
+    background-color: rgba($color-success, 0.15);
+    color: darken($color-success, 15%);
+  }
+  
+  &.status-rejected {
+    background-color: rgba($color-danger, 0.15);
+    color: darken($color-danger, 15%);
+  }
+  
+  &.status-cancelled {
+    background-color: rgba($color-text-secondary, 0.15);
+    color: darken($color-text-secondary, 15%);
+  }
+  
+  &.status-in-process {
+    background-color: rgba($color-info, 0.15);
+    color: darken($color-info, 15%);
+  }
+}
+
+.date-cell {
+  font-size: 0.85rem;
+  color: $color-text-secondary;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+// Estilos para estados de carga y vacío
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba($color-primary, 0.3);
+    border-radius: 50%;
+    border-top-color: $color-primary;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $color-text-secondary;
+  }
+}
+
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  
+  .empty-icon {
+    font-size: 3rem;
+    color: $color-text-disabled;
+    margin-bottom: 1rem;
+  }
+  
+  h4 {
+    margin: 0 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  p {
+    margin: 0;
+    color: $color-text-secondary;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

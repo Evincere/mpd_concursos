@@ -1,0 +1,265 @@
+@use 'src/styles/variables' as *;
+
+.lifecycle-container {
+  position: relative;
+  height: 100%;
+  background-color: $color-background-darker;
+  color: $color-text-light;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  
+  h1 {
+    font-size: $font-size-xl;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    
+    mat-icon {
+      color: $color-primary;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  
+  p {
+    margin-top: 1rem;
+    color: $color-text-light;
+  }
+}
+
+.tab-content {
+  padding: 1.5rem;
+  background-color: $color-surface-dark;
+  border-radius: $border-radius;
+  margin-top: 1rem;
+  box-shadow: $box-shadow;
+  
+  .filter-section {
+    background-color: $color-surface;
+    border-radius: $border-radius;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    
+    .filter-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      
+      .form-group {
+        flex: 1;
+        
+        label {
+          display: block;
+          margin-bottom: 0.5rem;
+          color: $color-text-secondary;
+          font-size: $font-size-sm;
+        }
+        
+        input, select {
+          width: 100%;
+          padding: 0.5rem;
+          border-radius: $border-radius-sm;
+          border: 1px solid $color-border;
+          background-color: $color-surface-dark;
+          color: $color-text-light;
+          
+          &:focus {
+            border-color: $color-primary;
+            outline: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+.current-state-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-light;
+    border-bottom: 1px solid $color-border-dark;
+    padding-bottom: 0.5rem;
+  }
+  
+  .state-card {
+    background-color: $color-surface;
+    border-radius: $border-radius;
+    box-shadow: $box-shadow;
+    padding: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    transition: $transition-normal;
+    
+    .state-info {
+      flex: 1;
+      min-width: 250px;
+      
+      .state-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: $border-radius-sm;
+        font-weight: 500;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        font-size: $font-size-sm;
+        
+        &.state-no_inscripto {
+          background-color: rgba($color-text-tertiary, 0.25);
+          color: $color-text-light;
+        }
+        
+        &.state-in_process {
+          background-color: rgba($color-info, 0.25);
+          color: $color-info-light;
+        }
+        
+        &.state-pending {
+          background-color: rgba($color-warning, 0.25);
+          color: $color-warning-light;
+        }
+        
+        &.state-approved {
+          background-color: rgba($color-success, 0.25);
+          color: $color-success-light;
+        }
+        
+        &.state-rejected {
+          background-color: rgba($color-error, 0.25);
+          color: $color-error-light;
+        }
+        
+        &.state-cancelled {
+          background-color: rgba($color-text-tertiary, 0.25);
+          color: $color-text-light;
+        }
+      }
+    }
+  }
+}
+
+.transition-section {
+  background-color: $color-surface;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 1.5rem;
+    color: $color-text-light;
+  }
+  
+  .transition-form {
+    .form-row {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 2rem;
+      
+      button {
+        min-width: 150px;
+      }
+    }
+  }
+}
+
+.no-transitions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: $color-surface;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-top: 1rem;
+  
+  mat-icon {
+    margin-right: 0.5rem;
+    color: $color-warning;
+  }
+  
+  p {
+    margin: 0;
+    color: $color-text-light;
+  }
+}
+
+// Styles for the main lifecycle management page structure
+// (based on DOM inspector from screenshot)
+.lifecycle-manager-container {
+  background-color: $color-background-dark;
+  color: $color-text-light;
+  padding: 1rem; 
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .header {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid $color-border-dark;
+    
+    h1, h2, h3 { 
+      color: $color-text-light;
+    }
+  }
+
+  .content-layout {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column; 
+    gap: 1.5rem;
+
+    .inscriptions-panel {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .card.filter-card,
+    .table-container,
+    .selection-message {
+      background-color: $color-surface-dark;
+      padding: 1.5rem;
+      border-radius: 8px;
+      color: $color-text-light;
+    }
+
+    .selection-message {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      border-left: 4px solid $color-primary;
+    }
+  }
+}

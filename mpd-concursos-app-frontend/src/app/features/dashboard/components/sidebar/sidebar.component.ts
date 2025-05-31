@@ -15,12 +15,16 @@ import { takeUntil } from 'rxjs/operators';
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   isCollapsed = false;
+  isAdmin = false;
   private destroy$ = new Subject<void>();
   @Output() sidebarCollapsed = new EventEmitter<boolean>();
 
-  constructor(private authService: AuthService, private sidebarService: SidebarService) {}
+  constructor(private authService: AuthService, private sidebarService: SidebarService) {
+    // Verificar si el usuario es administrador
+    this.isAdmin = this.authService.hasRole('ROLE_ADMIN');
+  }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.sidebarService.isCollapsed$
       .pipe(takeUntil(this.destroy$))
       .subscribe(state => {
@@ -29,16 +33,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
       });
   }
 
-  logout() {
+  logout(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
     this.authService.logout();
     window.location.href = '/login';
   }
 
-  toggleSidebar() {
+  toggleSidebar(): void {
     this.sidebarService.toggleSidebar();
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }

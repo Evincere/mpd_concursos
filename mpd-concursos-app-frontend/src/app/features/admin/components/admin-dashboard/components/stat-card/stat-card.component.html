@@ -1,0 +1,24 @@
+<mat-card class="stat-card" [matTooltip]="tooltipText">
+  <mat-card-content>
+    <div class="stat-icon" [style.background-color]="iconColor + '15'">
+      <mat-icon [style.color]="iconColor" aria-hidden="true">{{icon}}</mat-icon>
+    </div>
+    <div class="stat-content">
+      <div class="stat-header">
+        <h3 class="stat-title">{{title}}</h3>
+        <div *ngIf="trend !== null" class="stat-trend" [class.positive]="trend > 0" [class.negative]="trend < 0">
+          <mat-icon aria-hidden="true">{{trend > 0 ? 'trending_up' : (trend < 0 ? 'trending_down' : 'trending_flat')}}</mat-icon>
+          <span>{{trend > 0 ? '+' : ''}}{{trend}}% {{trendLabel}}</span>
+        </div>
+      </div>
+      <div class="stat-value">{{value | number}}</div>
+      <div class="stat-footer">
+        <span *ngIf="subtitle" class="stat-subtitle">{{subtitle}}</span>
+        <a *ngIf="link" [routerLink]="link" class="stat-link" [attr.aria-label]="linkLabel + ' - ' + title">
+          {{linkLabel}}
+          <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+        </a>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

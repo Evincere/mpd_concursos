@@ -1,0 +1,200 @@
+<div class="lifecycle-manager-container">
+  <div class="header">
+    <h1>Gestión del Ciclo de Vida de Inscripciones</h1>
+    <div class="header-actions">
+      <app-custom-button
+        [variant]="'flat'"
+        [color]="'primary'"
+        [icon]="'dashboard'"
+        [routerLink]="['/admin/inscripciones/dashboard']">
+        Dashboard
+      </app-custom-button>
+    </div>
+  </div>
+
+  <div class="content-layout" [ngClass]="{'with-selection': selectedInscription}">
+    <!-- Panel de Inscripciones -->
+    <div class="inscriptions-panel">
+      <app-custom-card class="filters-card">
+        <div class="card-header">
+          <h3>Filtros de búsqueda</h3>
+          <app-custom-button
+            [variant]="'text'"
+            [icon]="'refresh'"
+            [tooltip]="'Limpiar filtros'"
+            (click)="resetFilters()">
+            Limpiar
+          </app-custom-button>
+        </div>
+        <div class="filters-form" [formGroup]="filterForm">
+          <div class="filters-row">
+            <div class="filter-field">
+              <app-custom-form-field
+                label="Buscar"
+                placeholder="Nombre, DNI, email..."
+                [formControl]="$any(filterForm.get('search'))">
+              </app-custom-form-field>
+            </div>
+            <div class="filter-field">
+              <app-custom-select
+                label="Estado"
+                [options]="statusOptions"
+                [formControl]="$any(filterForm.get('status'))">
+              </app-custom-select>
+            </div>
+            <div class="filter-field">
+              <app-custom-select
+                label="Concurso"
+                [options]="contestOptions"
+                [formControl]="$any(filterForm.get('contestId'))">
+              </app-custom-select>
+            </div>
+          </div>
+          <div class="filters-row">
+            <div class="filter-field">
+              <app-custom-datepicker
+                label="Desde"
+                [formControl]="$any(filterForm.get('startDate'))">
+              </app-custom-datepicker>
+            </div>
+            <div class="filter-field">
+              <app-custom-datepicker
+                label="Hasta"
+                [formControl]="$any(filterForm.get('endDate'))">
+              </app-custom-datepicker>
+            </div>
+          </div>
+        </div>
+      </app-custom-card>
+
+      <app-custom-card class="table-card">
+        <div class="card-header">
+          <h3>Inscripciones</h3>
+          <span class="results-count">{{ totalItems }} resultados</span>
+        </div>
+        <div class="table-container">
+          <app-custom-table
+            [data]="dataSource"
+            [columns]="columns"
+            [loading]="isLoading"
+            [totalItems]="totalItems"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            (pageChange)="onPageChange($event)"
+            (rowClick)="selectInscription($event)">
+            <!-- Columnas personalizadas -->
+            <ng-template #columnTemplate let-item let-column="column" columnKey="userFullName">
+              <div class="user-info">
+                <span class="user-name">{{ item.userFullName }}</span>
+                <span class="user-email">{{ item.userEmail }}</span>
+                <span class="user-dni">DNI: {{ item.userDni }}</span>
+              </div>
+            </ng-template>
+            <ng-template #columnTemplate let-item let-column="column" columnKey="contestTitle">
+              <div class="contest-info">
+                <span class="contest-title">{{ item.contestTitle }}</span>
+                <span class="contest-category">{{ item.contestCategory }}</span>
+                <span class="contest-department">{{ item.contestDepartment }}</span>
+              </div>
+            </ng-template>
+            <ng-template #columnTemplate let-item let-column="column" columnKey="state">
+              <div class="status-badge" [ngClass]="getStatusClass(item.state)">
+                {{ getStatusLabel(item.state) }}
+              </div>
+            </ng-template>
+            <ng-template #columnTemplate let-item let-column="column" columnKey="createdAt">
+              <span class="date-cell">{{ formatDate(item.createdAt) }}</span>
+            </ng-template>
+            <ng-template #columnTemplate let-item let-column="column" columnKey="updatedAt">
+              <span class="date-cell">{{ formatDate(item.updatedAt) }}</span>
+            </ng-template>
+            <ng-template #columnTemplate let-item let-column="column" columnKey="actions">
+              <div class="actions-cell">
+                <app-custom-button
+                  [variant]="'icon'"
+                  [icon]="'cog'"
+                  [tooltip]="'Gestionar ciclo de vida'"
+                  (click)="selectInscription(item)">
+                </app-custom-button>
+              </div>
+            </ng-template>
+            <!-- Estado de carga -->
+            <ng-template #loadingTemplate>
+              <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Cargando inscripciones...</p>
+              </div>
+            </ng-template>
+            <!-- Estado vacío -->
+            <ng-template #emptyTemplate>
+              <div class="empty-container">
+                <div class="empty-icon">
+                  <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h4>No se encontraron inscripciones</h4>
+                <p>Intenta cambiar los filtros de búsqueda</p>
+                <app-custom-button [variant]="'stroked'" [color]="'primary'" (click)="resetFilters()">Limpiar Filtros</app-custom-button>
+              </div>
+            </ng-template>
+          </app-custom-table>
+        </div>
+      </app-custom-card>
+    </div>
+
+    <!-- Panel de Gestión de Ciclo de Vida -->
+    <div class="lifecycle-panel" *ngIf="selectedInscription">
+      <div class="panel-header">
+        <h2>Gestión de Inscripción</h2>
+        <app-custom-button [variant]="'icon'" [icon]="'close'" (click)="clearSelection()" [tooltip]="'Cerrar'"></app-custom-button>
+      </div>
+      <div class="panel-content">
+        <div class="lifecycle-content">
+          <div class="current-state-section">
+            <h3>Estado Actual</h3>
+            <div class="state-card">
+              <div class="state-info">
+                <span class="state-badge" [ngClass]="'state-' + selectedInscription.state.toLowerCase()">
+                  {{ selectedInscription.state }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="transition-section" *ngIf="canChangeStatus">
+            <h3>Cambiar Estado</h3>
+            <div class="transition-form">
+              <div class="form-row">
+                <app-custom-select
+                  label="Nuevo Estado"
+                  [options]="availableStates"
+                  [(ngModel)]="newState">
+                </app-custom-select>
+              </div>
+              <div class="form-actions">
+                <app-custom-button
+                  [variant]="'stroked'"
+                  [color]="'accent'"
+                  (click)="cancelStateChange()">
+                  Cancelar
+                </app-custom-button>
+                <app-custom-button
+                  [variant]="'flat'"
+                  [color]="'primary'"
+                  [disabled]="!newState"
+                  (click)="applyStateChange()">
+                  Aplicar Cambio
+                </app-custom-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje de selección -->
+    <div class="selection-message" *ngIf="!selectedInscription">
+      <i class="fas fa-hand-pointer"></i>
+      <p>Seleccione una inscripción para gestionar su ciclo de vida</p>
+    </div>
+  </div>
+</div>

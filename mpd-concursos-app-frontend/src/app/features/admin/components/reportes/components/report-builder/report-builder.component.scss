@@ -1,0 +1,318 @@
+@use 'src/styles/variables' as *;
+
+.report-builder-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+// Indicador de carga
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  
+  span {
+    margin-top: 1rem;
+    color: $color-primary;
+    font-weight: 500;
+  }
+}
+
+// Tarjeta principal
+.report-builder-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+// Formulario
+.report-form {
+  display: flex;
+  flex-direction: column;
+  
+  .step-content {
+    padding: 1.5rem;
+  }
+  
+  .step-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid $color-border;
+  }
+}
+
+// Secciones del formulario
+.form-section {
+  margin-bottom: 2rem;
+  
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: $color-text-primary;
+  }
+  
+  .section-description {
+    color: $color-text-secondary;
+    margin-bottom: 1.5rem;
+    font-size: $font-size-sm;
+  }
+}
+
+// Filas de formulario
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .checkbox-field {
+    display: flex;
+    align-items: center;
+    min-width: 200px;
+    margin-top: 0.5rem;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+// Contenedor de campos
+.fields-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Campos disponibles
+.available-fields {
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: $color-text-primary;
+  }
+  
+  h4 {
+    font-size: $font-size-sm;
+    font-weight: 500;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: $color-text-secondary;
+    border-bottom: 1px solid $color-border;
+    padding-bottom: 0.25rem;
+  }
+}
+
+// Lista de campos
+.field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+// Elemento de campo
+.field-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: $border-radius-sm;
+  background-color: $color-surface;
+  border: 1px solid $color-border;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: $color-hover;
+    transform: translateY(-2px);
+  }
+  
+  &.selected {
+    background-color: rgba($color-primary, 0.1);
+    border-color: $color-primary;
+    
+    mat-icon {
+      color: $color-primary;
+    }
+  }
+  
+  mat-icon {
+    margin-right: 0.5rem;
+    font-size: 18px;
+    color: $color-text-secondary;
+  }
+  
+  span {
+    flex: 1;
+  }
+  
+  button {
+    margin: -8px;
+  }
+}
+
+// Campos seleccionados
+.selected-fields {
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: $color-text-primary;
+  }
+  
+  .empty-message {
+    color: $color-text-secondary;
+    font-style: italic;
+    padding: 1rem;
+    text-align: center;
+    background-color: $color-surface-light;
+    border-radius: $border-radius-sm;
+  }
+}
+
+// Resultados vacíos
+.empty-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: $color-surface-light;
+  border-radius: $border-radius;
+  
+  mat-icon {
+    font-size: 48px;
+    color: $color-text-secondary;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $color-text-secondary;
+    font-size: $font-size-md;
+    margin: 0;
+  }
+}
+
+// Resultados del reporte
+.report-results {
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: $color-text-primary;
+  }
+}
+
+// Tabla de resultados
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border-radius: $border-radius;
+  
+  table {
+    width: 100%;
+  }
+  
+  th {
+    font-weight: 500;
+    color: $color-text-primary;
+    background-color: $color-surface-light;
+  }
+  
+  td, th {
+    padding: 0.75rem 1rem;
+  }
+  
+  tr:nth-child(even) {
+    background-color: $color-surface-light;
+  }
+}
+
+// Resumen de resultados
+.results-summary {
+  display: flex;
+  justify-content: flex-end;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  
+  p {
+    margin: 0;
+  }
+}
+
+// Estilos para el stepper
+::ng-deep .mat-horizontal-stepper-header-container {
+  padding: 0 1rem;
+}
+
+::ng-deep .mat-step-header .mat-step-icon-selected {
+  background-color: $color-primary;
+}
+
+::ng-deep .mat-step-header .mat-step-label.mat-step-label-active {
+  color: $color-text-primary;
+}
+
+::ng-deep .mat-step-header .mat-step-label {
+  color: $color-text-secondary;
+}
+
+// Estilos para los botones
+::ng-deep .mat-mdc-raised-button.mat-primary {
+  background-color: $color-primary;
+}
+
+::ng-deep .mat-mdc-stroked-button {
+  border-color: $color-border;
+  
+  &:hover {
+    background-color: rgba($color-primary, 0.1);
+  }
+}

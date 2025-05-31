@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserProfileService } from '../../../../core/services/user/user-profile.service';
+
 
 @Component({
   selector: 'app-profile-image-upload',
@@ -48,7 +48,7 @@ import { UserProfileService } from '../../../../core/services/user/user-profile.
 export class ProfileImageUploadComponent {
   @Output() imageUploaded = new EventEmitter<string>();
 
-  constructor(private userProfileService: UserProfileService) {}
+  
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;

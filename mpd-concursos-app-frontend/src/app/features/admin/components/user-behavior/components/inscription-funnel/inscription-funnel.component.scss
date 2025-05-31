@@ -1,0 +1,276 @@
+@use 'src/styles/variables' as *;
+
+.funnel-container {
+  padding: 1rem 0;
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+  
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 1.5rem 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  .section-description {
+    color: $color-text-secondary;
+    margin: 0;
+    font-size: $font-size-sm;
+  }
+}
+
+// Estado vacío
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: $color-surface-light;
+  border-radius: $border-radius;
+  
+  mat-icon {
+    font-size: 48px;
+    color: $color-text-secondary;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $color-text-secondary;
+    font-size: $font-size-md;
+    margin: 0;
+  }
+}
+
+// Métricas del embudo
+.funnel-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background-color: $color-surface;
+  border-radius: $border-radius;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  box-shadow: $box-shadow-sm;
+  
+  .metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba($color-primary, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    
+    mat-icon {
+      color: $color-primary;
+      font-size: 24px;
+    }
+  }
+  
+  .metric-content {
+    flex: 1;
+  }
+  
+  .metric-value {
+    font-size: $font-size-xl;
+    font-weight: 500;
+    color: $color-text-primary;
+    line-height: 1.2;
+  }
+  
+  .metric-label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+// Pasos del embudo
+.funnel-steps {
+  background-color: $color-surface;
+  border-radius: $border-radius;
+  padding: 1.5rem;
+  box-shadow: $box-shadow-sm;
+  margin-bottom: 2rem;
+}
+
+.funnel-step {
+  margin-bottom: 1.5rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  .step-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+  
+  .step-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    
+    mat-icon {
+      color: white;
+      font-size: 20px;
+    }
+  }
+  
+  .step-info {
+    flex: 1;
+  }
+  
+  .step-name {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .step-count {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+  
+  .step-bar-container {
+    height: 24px;
+    background-color: $color-surface-light;
+    border-radius: $border-radius-sm;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+  
+  .step-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 0.75rem;
+    transition: width 0.5s ease;
+    
+    .step-percentage {
+      color: white;
+      font-size: $font-size-xs;
+      font-weight: 500;
+    }
+  }
+  
+  .step-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .step-metric {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    
+    mat-icon {
+      font-size: 16px;
+      margin-right: 0.25rem;
+    }
+  }
+  
+  mat-divider {
+    margin: 1.5rem 0;
+  }
+}
+
+// Análisis de puntos de abandono
+.drop-off-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.drop-off-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-sm;
+  
+  mat-card-header {
+    padding: 1rem 1rem 0.5rem;
+  }
+  
+  mat-card-content {
+    padding: 0 1rem 1rem;
+  }
+  
+  .drop-off-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    mat-icon {
+      color: white;
+      font-size: 20px;
+    }
+  }
+}
+
+.drop-off-reasons {
+  h4 {
+    font-size: $font-size-sm;
+    font-weight: 500;
+    margin: 0.5rem 0;
+    color: $color-text-primary;
+  }
+}
+
+.reason-item {
+  margin-bottom: 0.75rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.reason-bar-container {
+  height: 20px;
+  background-color: $color-surface-light;
+  border-radius: $border-radius-sm;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+}
+
+.reason-bar {
+  height: 100%;
+  background-color: $color-primary;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.5rem;
+  
+  .reason-percentage {
+    color: white;
+    font-size: $font-size-xs;
+    font-weight: 500;
+  }
+}
+
+.reason-label {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}

@@ -1,27 +1,31 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute, Router } from '@angular/router';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
+
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { ConcursosService } from '@core/services/concursos/concursos.service';
-import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { FiltrosPanelComponent } from './components/filtros-panel/filtros-panel.component';
 import { ConcursoDetalleComponent } from './components/concurso-detalle/concurso-detalle.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { InscripcionButtonComponent } from './components/inscripcion/inscripcion-button/inscripcion-button.component';
+import { ConcursoCardComponent } from './components/concurso-card/concurso-card.component';
 import { FiltersConcurso } from '@shared/interfaces/filters/filters-concurso.interface';
+import { ConcursosService } from '@core/services/concursos/concursos.service';
 import { FiltersService } from '@core/services/filters/filters.service';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
+
 
 @Component({
   selector: 'app-concursos',
@@ -39,7 +43,8 @@ import { FiltersService } from '@core/services/filters/filters.service';
     SearchHeaderComponent,
     FiltrosPanelComponent,
     ConcursoDetalleComponent,
-    LoaderComponent
+    LoaderComponent,
+    ConcursoCardComponent
   ],
   animations: [
     trigger('fadeInOut', [
@@ -65,7 +70,7 @@ import { FiltersService } from '@core/services/filters/filters.service';
 export class ConcursosComponent implements OnInit, OnDestroy {
   concursos: Concurso[] = [];
   loading = false;
-  error: any = null;
+  error: HttpErrorResponse | null = null;
   concursoSeleccionado: Concurso | null = null;
   mostrarFiltros = false;
   filtrosActivos = false;
@@ -76,17 +81,18 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     periodo: 'todos'
   };
   concursosSinFiltrar: Concurso[] = [];
-  searchTerm: string = '';
+  searchTerm = '';
   primeraConsulta = true;
   private destroy$ = new Subject<void>();
 
   constructor(
     private concursosService: ConcursosService,
-    private inscriptionService: InscriptionService,
-    private snackBar: MatSnackBar,
     private filtersService: FiltersService,
+    private inscriptionService: InscriptionService,
+    private inscriptionStateService: InscriptionStateService,
+    private router: Router,
     private route: ActivatedRoute,
-    private router: Router
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -95,13 +101,20 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     // Suscribirse a los cambios en los parámetros de la URL
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
-      .subscribe(params => {
+      .subscribe((params: Record<string, string>) => {
         console.log('[ConcursosComponent] Parámetros de URL detectados:', params);
 
         // Si hay un ID de concurso en la URL, seleccionarlo
-        const concursoId = this.route.snapshot.paramMap.get('id');
+        let concursoId = this.route.snapshot.paramMap.get('id');
+
+        // También verificar si hay un ID de concurso en los parámetros de consulta
+        if (!concursoId && params['contestId']) {
+          concursoId = params['contestId'];
+          console.log('[ConcursosComponent] ID de concurso detectado en los parámetros de consulta:', concursoId);
+        }
+
         if (concursoId) {
-          console.log('[ConcursosComponent] ID de concurso detectado en la URL:', concursoId);
+          console.log('[ConcursosComponent] ID de concurso detectado:', concursoId);
           this.seleccionarConcursoPorId(parseInt(concursoId, 10));
         }
 
@@ -109,17 +122,39 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         if (params['continueInscription'] === 'true' && params['inscriptionId']) {
           console.log('[ConcursosComponent] Parámetros para continuar inscripción detectados:', {
             continueInscription: params['continueInscription'],
-            inscriptionId: params['inscriptionId']
+            inscriptionId: params['inscriptionId'],
+            directContinuation: params['directContinuation']
           });
+
+          // Si viene desde la pestaña de documentación, establecer el flag de continuación directa
+          if (params['directContinuation'] === 'true') {
+            this.inscriptionStateService.setDirectContinuation(true);
+            console.log('[ConcursosComponent] Flag de continuación directa establecido');
+          }
 
           // Esperar a que se carguen los concursos
           setTimeout(() => {
             if (this.concursoSeleccionado) {
-              // Forzar la apertura del diálogo de inscripción
-              const inscripcionButton = document.querySelector('app-inscripcion-button button') as HTMLButtonElement;
-              if (inscripcionButton && params['openDialog'] === 'true') {
-                console.log('[ConcursosComponent] Forzando clic en botón de inscripción');
-                inscripcionButton.click();
+              // Verificar si debemos abrir el diálogo de inscripción
+              if (params['openDialog'] === 'true' && params['inscriptionId']) {
+                console.log('[ConcursosComponent] Redirigiendo directamente a la página de inscripción');
+
+                // Redirigir directamente a la página de inscripción con los parámetros necesarios
+                this.router.navigate(['/dashboard/inscripcion'], {
+                  queryParams: {
+                    contestId: params['contestId'],
+                    inscriptionId: params['inscriptionId'],
+                    continueInscription: 'true',
+                    timestamp: new Date().getTime().toString() // Para evitar caché
+                  }
+                });
+              } else {
+                // Método anterior como fallback
+                const inscripcionButton = document.querySelector('app-inscripcion-button button') as HTMLButtonElement;
+                if (inscripcionButton && params['openDialog'] === 'true') {
+                  console.log('[ConcursosComponent] Forzando clic en botón de inscripción');
+                  inscripcionButton.click();
+                }
               }
             }
           }, 1000);
@@ -140,7 +175,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         this.concursosSinFiltrar = [...concursos];
 
         // Obtener los filtros actuales del servicio
-        this.filtersService.getFiltros().subscribe(filtros => {
+        this.filtersService.getFiltros().subscribe((filtros: FiltersConcurso) => {
           console.log('[ConcursosComponent] Aplicando filtros después de cargar:', filtros);
           this.filtros = filtros;
           this.aplicarFiltros(filtros);
@@ -160,7 +195,11 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSearch(term: string): void {
+  onSearch(event: any): void {
+    // Extraer el término de búsqueda del evento
+    const term = typeof event === 'string' ? event :
+                (event && event.target && event.target.value ? event.target.value : '');
+
     this.searchTerm = term;
     if (!term || !term.trim()) {
       this.cargarConcursos();
@@ -255,7 +294,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
   }
 
   getEstadoConcursoLabel(status: string): string {
-    const estados: { [key: string]: string } = {
+    const estados: Record<string, string> = {
       'ACTIVE': 'Activo',
       'PENDING': 'Pendiente',
       'CLOSED': 'Cerrado',
@@ -323,7 +362,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         fechaInicio.setHours(0, 0, 0, 0);
         fechaFin.setHours(23, 59, 59, 999);
         break;
-      case 'semana':
+      case 'semana': {
         fechaInicio = new Date(hoy);
         const diaSemana = hoy.getDay();
         fechaInicio.setDate(hoy.getDate() - diaSemana);
@@ -332,22 +371,26 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         fechaFin.setDate(fechaInicio.getDate() + 6);
         fechaFin.setHours(23, 59, 59, 999);
         break;
-      case 'mes':
+      }
+      case 'mes': {
         fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
         fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
         fechaFin.setHours(23, 59, 59, 999);
         break;
-      case 'trimestre':
+      }
+      case 'trimestre': {
         const trimestre = Math.floor(hoy.getMonth() / 3);
         fechaInicio = new Date(hoy.getFullYear(), trimestre * 3, 1);
         fechaFin = new Date(hoy.getFullYear(), (trimestre + 1) * 3, 0);
         fechaFin.setHours(23, 59, 59, 999);
         break;
-      case 'anio':
+      }
+      case 'anio': {
         fechaInicio = new Date(hoy.getFullYear(), 0, 1);
         fechaFin = new Date(hoy.getFullYear(), 11, 31);
         fechaFin.setHours(23, 59, 59, 999);
         break;
+      }
       default:
         return null;
     }

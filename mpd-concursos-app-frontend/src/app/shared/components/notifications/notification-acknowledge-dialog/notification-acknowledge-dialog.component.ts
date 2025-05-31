@@ -36,9 +36,9 @@ export interface AcknowledgementResult {
     styleUrls: ['./notification-acknowledge-dialog.component.scss']
 })
 export class NotificationAcknowledgeDialogComponent {
-    pin: string = '';
-    declaration: boolean = false;
-    declarationText: string = '';
+    pin = '';
+    declaration = false;
+    declarationText = '';
 
     constructor(
         public dialogRef: MatDialogRef<NotificationAcknowledgeDialogComponent>,

@@ -10,6 +10,9 @@
         <form [formGroup]="generalForm" (ngSubmit)="saveGeneralConfig()">
           <div class="form-section">
             <h2 class="section-title">Configuración General</h2>
+            <p class="section-description">
+              Configure los parámetros generales de la aplicación.
+            </p>
 
             <div class="form-row">
               <mat-form-field appearance="outline" class="full-width">
@@ -88,6 +91,9 @@
         <form [formGroup]="securityForm" (ngSubmit)="saveSecurityConfig()">
           <div class="form-section">
             <h2 class="section-title">Configuración de Seguridad</h2>
+            <p class="section-description">
+              Configure los parámetros de seguridad de la aplicación.
+            </p>
 
             <div class="form-row two-columns">
               <mat-form-field appearance="outline">
@@ -172,6 +178,9 @@
         <form [formGroup]="notificationsForm" (ngSubmit)="saveNotificationsConfig()">
           <div class="form-section">
             <h2 class="section-title">Configuración de Notificaciones</h2>
+            <p class="section-description">
+              Configure los parámetros de notificaciones de la aplicación.
+            </p>
 
             <div class="form-row checkbox-group">
               <mat-checkbox formControlName="emailNotifications">
@@ -226,6 +235,9 @@
         <form [formGroup]="backupForm" (ngSubmit)="saveBackupConfig()">
           <div class="form-section">
             <h2 class="section-title">Configuración de Respaldo</h2>
+            <p class="section-description">
+              Configure los parámetros de respaldo de la aplicación.
+            </p>
 
             <div class="form-row">
               <mat-checkbox formControlName="autoBackup">
@@ -290,6 +302,19 @@
             </div>
           </div>
         </form>
+      </div>
+    </mat-tab>
+    <!-- Configuración de Integraciones -->
+    <mat-tab label="Integraciones">
+      <div class="tab-content">
+        <app-integrations-config></app-integrations-config>
+      </div>
+    </mat-tab>
+
+    <!-- Historial de Cambios -->
+    <mat-tab label="Historial de Cambios">
+      <div class="tab-content">
+        <app-config-history></app-config-history>
       </div>
     </mat-tab>
   </mat-tab-group>

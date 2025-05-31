@@ -13,10 +13,10 @@ export class ExamenTimeService {
   private serverOffset = 0;
   private lastSyncTime = 0;
   private timeChecks: number[] = [];
-  private startTime: number = 0;
+  private startTime = 0;
   private destroy$ = new Subject<void>();
   private tiempoRestante$ = new BehaviorSubject<number>(0);
-  private duracionTotal: number = 0; // Duración total en segundos
+  private duracionTotal = 0; // Duración total en segundos
 
   private serverTime$ = new BehaviorSubject<number>(Date.now());
 
@@ -126,7 +126,11 @@ export class ExamenTimeService {
     }
   }
 
-  private handleTimeDriftViolation(driftInfo: any): void {
+  private handleTimeDriftViolation(driftInfo: {
+    currentOffset: number;
+    averageOffset: number;
+    drift: number;
+  }): void {
     try {
       const violation = {
         type: 'TIME_MANIPULATION',
@@ -215,14 +219,17 @@ export class ExamenTimeService {
       console.error('TimeService: Duración inválida:', duracionMinutos);
       return new Observable(observer => {
         observer.error(new Error('Duración inválida'));
-        return () => {};
+        return () => {
+          // Función de limpieza vacía
+          console.log('TimeService: Limpieza del temporizador inválido');
+        };
       });
     }
 
     console.log('TimeService: Iniciando temporizador con duración:', duracionMinutos, 'minutos');
 
     return new Observable(observer => {
-      let subscription: any;
+      let subscription: { unsubscribe: () => void } | null = null;
 
       try {
         // Convertir minutos a segundos

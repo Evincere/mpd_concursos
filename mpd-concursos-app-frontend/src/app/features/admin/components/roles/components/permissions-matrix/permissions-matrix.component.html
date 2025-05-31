@@ -1,0 +1,70 @@
+<div class="permissions-matrix-container">
+  <div class="header">
+    <h2>Permisos para el rol: {{roleName}}</h2>
+    <div class="header-actions" *ngIf="!isSystemRole">
+      <button mat-stroked-button color="primary" (click)="selectAllPermissions(true)">
+        <mat-icon>select_all</mat-icon>
+        Seleccionar Todos
+      </button>
+      <button mat-stroked-button color="warn" (click)="selectAllPermissions(false)">
+        <mat-icon>deselect</mat-icon>
+        Deseleccionar Todos
+      </button>
+    </div>
+  </div>
+  
+  <div *ngIf="isSystemRole" class="system-role-notice">
+    <mat-icon>info</mat-icon>
+    <span>Este es un rol del sistema y sus permisos no pueden ser modificados.</span>
+  </div>
+  
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Cargando permisos...</span>
+  </div>
+  
+  <form [formGroup]="permissionsForm" *ngIf="!isLoading">
+    <div formArrayName="categories">
+      <mat-accordion>
+        <mat-expansion-panel *ngFor="let category of categoriesArray.controls; let i = index" [expanded]="i === 0">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <div class="category-header">
+                <span class="category-name">{{formatCategoryName(category.get('name')?.value)}}</span>
+                <span class="category-count">
+                  ({{getPermissionsByCategory(category.get('name')?.value).length}} permisos)
+                </span>
+              </div>
+            </mat-panel-title>
+            <mat-panel-description>
+              <div class="category-select-all">
+                <mat-checkbox
+                  [formControl]="category.get('selectAll')"
+                  (change)="toggleCategoryPermissions(i)"
+                  color="primary"
+                  [disabled]="isSystemRole">
+                  Seleccionar todos
+                </mat-checkbox>
+              </div>
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+          
+          <div class="permissions-grid" [formGroup]="getPermissionsGroup(i)">
+            <div class="permission-item" *ngFor="let permission of getPermissionsByCategory(category.get('name')?.value)">
+              <mat-checkbox
+                [formControlName]="permission.name"
+                color="primary"
+                (change)="updateCategorySelectAll(i)"
+                [disabled]="isSystemRole">
+                <div class="permission-info">
+                  <span class="permission-name">{{permission.name}}</span>
+                  <span class="permission-description">{{permission.description}}</span>
+                </div>
+              </mat-checkbox>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </form>
+</div>

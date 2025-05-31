@@ -11,4 +11,6 @@ import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.Docu
 @Repository
 public interface IDocumentSpringRepository extends JpaRepository<DocumentEntity, UUID> {
     List<DocumentEntity> findByUserId(UUID userId);
+
+    long countByStatus(String status);
 }

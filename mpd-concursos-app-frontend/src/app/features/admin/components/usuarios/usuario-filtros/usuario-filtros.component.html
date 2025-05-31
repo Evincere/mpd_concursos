@@ -1,0 +1,86 @@
+<app-custom-card>
+  <div class="filter-content">
+    <div class="filter-header">
+      <h3>Filtros de búsqueda</h3>
+      <app-custom-button
+        [icon]="showAdvancedFilters ? 'chevron-up' : 'chevron-down'"
+        variant="icon"
+        color="primary"
+        (buttonClick)="toggleAdvancedFilters()">
+      </app-custom-button>
+    </div>
+
+    <form [formGroup]="filterForm" class="filter-form">
+      <!-- Búsqueda básica -->
+      <div class="basic-search">
+        <app-custom-form-field
+          label="Buscar"
+          placeholder="Nombre, email, DNI..."
+          iconRight="search"
+          [showClearButton]="true"
+          [formControl]="$any(filterForm.get('search'))">
+        </app-custom-form-field>
+      </div>
+
+      <!-- Filtros avanzados -->
+      <div class="advanced-filters" *ngIf="showAdvancedFilters">
+        <div class="filter-row">
+          <app-custom-select
+            label="Rol"
+            [options]="roleOptions"
+            [formControl]="$any(filterForm.get('role'))">
+          </app-custom-select>
+
+          <app-custom-select
+            label="Estado"
+            [options]="statusOptions"
+            [formControl]="$any(filterForm.get('status'))">
+          </app-custom-select>
+        </div>
+
+        <div class="filter-row">
+          <app-custom-datepicker
+            label="Fecha de registro desde"
+            placeholder="Seleccione fecha"
+            [formControl]="$any(filterForm.get('startDate'))">
+          </app-custom-datepicker>
+
+          <app-custom-datepicker
+            label="Fecha de registro hasta"
+            placeholder="Seleccione fecha"
+            [formControl]="$any(filterForm.get('endDate'))">
+          </app-custom-datepicker>
+        </div>
+
+
+
+        <div class="filter-row">
+          <app-custom-select
+            label="Ordenar por"
+            [options]="sortOptions"
+            [formControl]="$any(filterForm.get('sortBy'))">
+          </app-custom-select>
+
+          <app-custom-select
+            label="Dirección"
+            [options]="[
+              { value: 'asc', label: 'Ascendente' },
+              { value: 'desc', label: 'Descendente' }
+            ]"
+            [formControl]="$any(filterForm.get('sortDirection'))">
+          </app-custom-select>
+        </div>
+
+        <div class="filter-actions">
+          <app-custom-button
+            label="Limpiar filtros"
+            icon="eraser"
+            variant="stroked"
+            color="accent"
+            (buttonClick)="onReset()">
+          </app-custom-button>
+        </div>
+      </div>
+    </form>
+  </div>
+</app-custom-card>

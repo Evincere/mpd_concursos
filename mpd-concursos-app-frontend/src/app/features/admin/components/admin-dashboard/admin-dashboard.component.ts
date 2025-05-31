@@ -1,11 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { RouterModule } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { RouterModule, Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { DashboardStats, ActivityItem, QuickAccessWidget, AdminDashboardService } from '../../../../core/services/admin/admin-dashboard.service';
+import { StatCardComponent } from './components/stat-card/stat-card.component';
+import { QuickAccessWidgetComponent } from './components/quick-access-widget/quick-access-widget.component';
+import { ActivityFeedComponent } from './components/activity-feed/activity-feed.component';
+import { StatsChartComponent, ChartData } from './components/stats-chart/stats-chart.component';
 
 interface MenuItem {
   label: string;
@@ -19,16 +30,25 @@ interface MenuItem {
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
   standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     CommonModule,
     RouterModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatListModule
+    MatListModule,
+    MatTabsModule,
+    MatDividerModule,
+    MatProgressSpinnerModule,
+    StatCardComponent,
+    QuickAccessWidgetComponent,
+    ActivityFeedComponent,
+    StatsChartComponent
   ]
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, OnDestroy {
+  // Menú de navegación rápida
   menuItems: MenuItem[] = [
     {
       label: 'Dashboard',
@@ -37,16 +57,28 @@ export class AdminDashboardComponent implements OnInit {
       description: 'Vista general del sistema'
     },
     {
-      label: 'Usuarios',
+      label: 'Users',
       icon: 'people',
-      route: '/admin/usuarios',
-      description: 'Gestión de usuarios del sistema'
+      route: '/admin/users',
+      description: 'User management'
+    },
+    {
+      label: 'Documentos',
+      icon: 'description',
+      route: '/admin/documentos',
+      description: 'Gestión de documentos'
     },
     {
       label: 'Exámenes',
       icon: 'assignment',
       route: '/admin/examenes',
       description: 'Administración de exámenes'
+    },
+    {
+      label: 'Comunicaciones',
+      icon: 'message',
+      route: '/admin/comunicaciones',
+      description: 'Envío de comunicaciones masivas'
     },
     {
       label: 'Reportes',
@@ -62,50 +94,120 @@ export class AdminDashboardComponent implements OnInit {
     }
   ];
 
-  // Estadísticas para el dashboard
-  stats = {
-    totalUsuarios: 1245,
-    usuariosNuevos: 87,
-    examenesActivos: 12,
-    examenesCompletados: 342
-  };
+  // Datos del dashboard
+  isLoading = true;
+  dashboardStats!: DashboardStats;
+  recentActivities: ActivityItem[] = [];
+  quickAccessWidgets: QuickAccessWidget[] = [];
 
-  // Actividad reciente
-  actividadReciente = [
-    { tipo: 'usuario', accion: 'registro', usuario: 'María López', fecha: new Date(2023, 5, 15, 10, 30) },
-    { tipo: 'examen', accion: 'creación', usuario: 'Admin', examen: 'Examen de Derecho Civil', fecha: new Date(2023, 5, 14, 14, 45) },
-    { tipo: 'examen', accion: 'finalización', usuario: 'Juan Pérez', examen: 'Examen de Procedimiento', fecha: new Date(2023, 5, 14, 9, 15) },
-    { tipo: 'usuario', accion: 'actualización', usuario: 'Carlos Gómez', fecha: new Date(2023, 5, 13, 16, 20) },
-    { tipo: 'sistema', accion: 'backup', usuario: 'Sistema', fecha: new Date(2023, 5, 13, 1, 0) }
-  ];
+  // Datos para gráficos
+  inscripcionesChartData!: ChartData;
+  concursosChartData!: ChartData;
+  usuariosChartData!: ChartData;
 
-  constructor(private router: Router) { }
+  // Pestaña activa
+  activeTab = 0;
+
+  // Para limpieza de suscripciones
+  private destroy$ = new Subject<void>();
+
+  constructor(
+    private dashboardService: AdminDashboardService,
+    private router: Router
+  ) {}
+
 
   ngOnInit(): void {
-    // Aquí se podrían cargar datos reales del backend
+    this.loadDashboardData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadDashboardData(): void {
+    this.isLoading = true;
+
+    // Cargar estadísticas
+    this.dashboardService.getStats()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (stats: DashboardStats) => {
+          this.dashboardStats = stats;
+          this.prepareChartData(stats);
+          this.isLoading = false;
+        },
+        error: (error: Error) => {
+          console.error('Error cargando estadísticas:', error);
+          this.isLoading = false;
+        }
+      });
+
+    // Cargar actividad reciente
+    this.dashboardService.getRecentActivity(10)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (activities: ActivityItem[]) => {
+          this.recentActivities = activities;
+        },
+        error: (error: Error) => {
+          console.error('Error cargando actividad reciente:', error);
+        }
+      });
+
+    // Cargar widgets de acceso rápido
+    this.dashboardService.getQuickAccessWidgets()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (widgets: QuickAccessWidget[]) => {
+          this.quickAccessWidgets = widgets;
+        },
+        error: (error: Error) => {
+          console.error('Error cargando widgets de acceso rápido:', error);
+        }
+      });
+  }
+
+  prepareChartData(stats: DashboardStats): void {
+    // Gráfico de inscripciones
+    this.inscripcionesChartData = {
+      labels: ['Pendientes', 'Aprobadas', 'Rechazadas'],
+      datasets: [{
+        label: 'Inscripciones',
+        data: [stats.inscripciones.pendientes, stats.inscripciones.aprobadas, stats.inscripciones.rechazadas],
+        backgroundColor: ['#ff9800', '#4caf50', '#f44336'],
+        borderWidth: 0
+      }]
+    };
+
+    // Gráfico de concursos
+    this.concursosChartData = {
+      labels: ['Activos', 'Próximos', 'Finalizados'],
+      datasets: [{
+        label: 'Concursos',
+        data: [stats.concursos.activos, stats.concursos.proximos, stats.concursos.finalizados],
+        backgroundColor: ['#2196f3', '#9c27b0', '#607d8b'],
+        borderWidth: 0
+      }]
+    };
+
+    // Gráfico de usuarios por rol
+    const roles = Object.keys(stats.usuarios.porRol);
+    const usuariosPorRol = roles.map(role => stats.usuarios.porRol[role]);
+
+    this.usuariosChartData = {
+      labels: roles.map(role => role.replace('ROLE_', '')),
+      datasets: [{
+        label: 'Usuarios por Rol',
+        data: usuariosPorRol,
+        backgroundColor: ['#9c27b0', '#2196f3'],
+        borderWidth: 0
+      }]
+    };
   }
 
   navigateTo(route: string): void {
     this.router.navigate([route]);
-  }
-
-  getTipoIcono(tipo: string): string {
-    switch (tipo) {
-      case 'usuario': return 'person';
-      case 'examen': return 'assignment';
-      case 'sistema': return 'computer';
-      default: return 'info';
-    }
-  }
-
-  getAccionTexto(accion: string): string {
-    switch (accion) {
-      case 'registro': return 'se registró';
-      case 'creación': return 'creó';
-      case 'finalización': return 'finalizó';
-      case 'actualización': return 'actualizó su perfil';
-      case 'backup': return 'realizó copia de seguridad';
-      default: return accion;
-    }
   }
 }

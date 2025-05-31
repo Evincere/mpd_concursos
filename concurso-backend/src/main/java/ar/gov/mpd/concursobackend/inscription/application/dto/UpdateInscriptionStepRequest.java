@@ -13,7 +13,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class UpdateInscriptionStepRequest {
     private InscriptionStep step;
+    private String centroDeVida;
     private Set<String> selectedCircunscripciones;
     private Boolean acceptedTerms;
     private Boolean confirmedPersonalData;
-} 
+}

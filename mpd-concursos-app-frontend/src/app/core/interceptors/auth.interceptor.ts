@@ -1,9 +1,9 @@
-import { HttpInterceptorFn, HttpResponse, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse } from  '@angular/common/http';
 import { inject } from '@angular/core';
 import { TokenService } from '../services/auth/token.service';
 import { Router } from '@angular/router';
-import { catchError, tap } from 'rxjs/operators';
-import { Observable, throwError } from 'rxjs';
+import { catchError } from  'rxjs/operators';
+import { throwError } from  'rxjs';
 import { environment } from '../../../environments/environment';
 import { MatSnackBar } from '@angular/material/snack-bar';
 

@@ -175,6 +175,47 @@ VALUES
 (5, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (5, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
 
+-- Insertar requisitos para los concursos
+INSERT INTO contest_requirements (contest_id, description, category, required, priority, document_type)
+VALUES
+-- Requisitos para Concurso Defensor/a Penal (ID: 1)
+(1, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
+(1, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
+(1, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
+(1, 'Experiencia mínima de 3 años en litigación penal', 'EXPERIENCIA', TRUE, 4, NULL),
+(1, 'Conocimientos en derecho procesal penal y criminología', 'CONOCIMIENTOS', TRUE, 5, NULL),
+(1, 'Certificado de capacitación en Ley Micaela', 'CAPACITACION', FALSE, 6, 'certificado-ley-micaela'),
+
+-- Requisitos para Concurso Defensor/a Civil (ID: 2)
+(2, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
+(2, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
+(2, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
+(2, 'Experiencia mínima de 2 años en litigación civil', 'EXPERIENCIA', TRUE, 4, NULL),
+(2, 'Conocimientos en derecho procesal civil y comercial', 'CONOCIMIENTOS', TRUE, 5, NULL),
+
+-- Requisitos para Concurso Asesor/a Legal (ID: 3)
+(3, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
+(3, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
+(3, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
+(3, 'Experiencia en asesoramiento legal y técnico', 'EXPERIENCIA', TRUE, 4, NULL),
+(3, 'Conocimientos en derecho administrativo y procedimientos', 'CONOCIMIENTOS', TRUE, 5, NULL),
+
+-- Requisitos para Concurso Analista Programador/a (ID: 4)
+(4, 'Título universitario en Sistemas, Informática o carreras afines', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
+(4, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 2, 'antecedentes-penales'),
+(4, 'Experiencia mínima de 2 años en desarrollo de software', 'EXPERIENCIA', TRUE, 3, NULL),
+(4, 'Conocimientos en lenguajes de programación modernos', 'CONOCIMIENTOS', TRUE, 4, NULL),
+(4, 'Conocimientos en bases de datos y metodologías ágiles', 'CONOCIMIENTOS', TRUE, 5, NULL),
+(4, 'Certificaciones técnicas en tecnologías específicas', 'CERTIFICACIONES', FALSE, 6, NULL),
+
+-- Requisitos para Concurso Defensor/a de Familia (ID: 5)
+(5, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
+(5, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
+(5, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
+(5, 'Especialización o experiencia en derecho de familia', 'EXPERIENCIA', TRUE, 4, NULL),
+(5, 'Conocimientos en derechos del niño y violencia familiar', 'CONOCIMIENTOS', TRUE, 5, NULL),
+(5, 'Certificado de capacitación en perspectiva de género', 'CAPACITACION', TRUE, 6, NULL);
+
 -- Insertar preguntas para el primer examen
 SET @examen1_id = UUID_TO_BIN('77777777-7777-7777-7777-777777777777');
 
@@ -300,23 +341,23 @@ INSERT INTO examination_allowed_materials (examination_id, material) VALUES
 (UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Jurisprudencia relevante (sin anotaciones)');
 
 -- Datos iniciales para tipos de documento
--- Primero, actualizar el documento de identidad existente como documento padre
-REPLACE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+-- Primero, insertar el documento de identidad como documento padre
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
 (UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
 
 -- Insertar los tipos de documentos para DNI frente y dorso
-REPLACE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES
 (UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'dni-frente', 'DNI (Frente)', 'Documento Nacional de Identidad - Lado frontal', UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), TRUE, 1, TRUE),
 (UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), TRUE, 2, TRUE);
 
--- Actualizar e insertar otros tipos de documentos
-REPLACE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+-- Insertar otros tipos de documentos
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
 (UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 'titulo-universitario', 'Título Universitario', 'Título de grado universitario', TRUE, 3, TRUE),
 (UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 4, TRUE),
 (UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', FALSE, 5, TRUE);
 
 -- Insertar nuevos tipos de documentos requeridos
-REPLACE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
 (UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', TRUE, 6, TRUE),
 (UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', TRUE, 7, TRUE),
 (UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', TRUE, 8, TRUE),

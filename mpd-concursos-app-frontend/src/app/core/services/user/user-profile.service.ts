@@ -22,12 +22,12 @@ export class UserProfileService {
     }
   }
 
-  uploadProfileImage(file: File): Observable<any> {
+  uploadProfileImage(file: File): Observable<Record<string, unknown>> {
     const formData = new FormData();
     formData.append('image', file);
 
-    return this.http.post(`${this.apiUrl}/profile-image`, formData).pipe(
-      tap((response: any) => {
+    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/profile-image`, formData).pipe(
+      tap((response: unknown) => {
         if (response && response.imageUrl) {
           console.log('Imagen subida exitosamente:', response.imageUrl);
           this.setProfileImage(response.imageUrl);
@@ -51,8 +51,8 @@ export class UserProfileService {
     this.profileImageSubject.next(null);
   }
 
-  removeProfileImage(): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/profile-image`).pipe(
+  removeProfileImage(): Observable<Record<string, unknown>> {
+    return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/profile-image`).pipe(
       tap(() => {
         console.log('Imagen de perfil eliminada');
         localStorage.removeItem('userProfileImage');

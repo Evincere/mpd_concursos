@@ -1,0 +1,100 @@
+// Estilos para mejorar la experiencia táctil en formularios
+
+// Detectar dispositivos táctiles
+@media (hover: none) and (pointer: coarse) {
+  // Aumentar el tamaño de los elementos de formulario
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .mat-mdc-form-field,
+  button,
+  .mat-mdc-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-outlined-button,
+  .mat-mdc-flat-button,
+  .mat-mdc-stroked-button,
+  .mat-mdc-icon-button,
+  .mat-mdc-fab,
+  .mat-mdc-mini-fab {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  // Aumentar el espacio entre elementos
+  .mat-mdc-form-field {
+    margin-bottom: 16px;
+  }
+
+  // Aumentar el tamaño de los checkboxes y radios
+  .mat-mdc-checkbox .mdc-checkbox__native-control,
+  .mat-mdc-radio-button .mdc-radio__native-control {
+    transform: scale(1.2);
+  }
+
+  // Aumentar el tamaño de los iconos en botones
+  .mat-icon {
+    font-size: 24px;
+    height: 24px;
+    width: 24px;
+  }
+
+  // Mejorar la visibilidad del foco
+  input:focus,
+  select:focus,
+  textarea:focus,
+  button:focus,
+  .mat-mdc-form-field.mat-focused {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.5);
+  }
+
+  // Aumentar el espacio entre opciones en selects
+  .mat-mdc-option {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  // Aumentar el tamaño de los botones de acción
+  .mat-mdc-dialog-actions button,
+  form button[type="submit"],
+  .primary-action-button {
+    min-width: 120px;
+    min-height: 48px;
+    padding: 12px 24px;
+  }
+
+  // Aumentar el espacio entre elementos en listas
+  .mat-mdc-list-item {
+    min-height: 56px;
+  }
+
+  // Aumentar el tamaño de los tabs
+  .mat-mdc-tab {
+    min-height: 56px;
+    font-size: 16px;
+  }
+
+  // Aumentar el tamaño de los sliders
+  .mat-mdc-slider .mdc-slider__thumb {
+    transform: scale(1.2);
+  }
+
+  // Aumentar el tamaño de los toggles
+  .mat-mdc-slide-toggle .mdc-switch {
+    transform: scale(1.2);
+  }
+
+  // Aumentar el espacio de padding en cards
+  .mat-mdc-card {
+    padding: 16px;
+  }
+
+  // Aumentar el espacio entre elementos en formularios
+  form {
+    .form-row,
+    .form-group,
+    .form-field {
+      margin-bottom: 24px;
+    }
+  }
+}

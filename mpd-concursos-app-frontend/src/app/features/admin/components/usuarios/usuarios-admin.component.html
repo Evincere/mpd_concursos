@@ -1,123 +1,318 @@
-<div class="container">
+<div class="app-usuarios-admin">
+  <!-- Hack para hacer disponible UserStatus en el template -->
+  <ng-container *ngIf="false">
+    {{ UserStatus.ACTIVE }}
+    {{ UserStatus.INACTIVE }}
+    {{ UserStatus.BLOCKED }}
+    {{ UserStatus.LOCKED }}
+    {{ UserStatus.EXPIRED }}
+  </ng-container>
+
+  <!-- Encabezado -->
   <div class="header">
-    <h1 class="mat-headline-4">Administración de Usuarios</h1>
-    <button mat-raised-button color="primary" (click)="crearUsuario()">
-      <mat-icon>person_add</mat-icon>
-      Crear Usuario
-    </button>
+    <div class="header-title">
+      <h1>Gestión de Usuarios</h1>
+      <!-- Indicador de filtro activo -->
+      <div class="filter-indicator" *ngIf="currentFilters.status">
+        <span class="filter-badge" [ngClass]="getStatusClass(currentFilters.status)">
+          {{ getStatusText(currentFilters.status) }}
+        </span>
+        <button class="clear-filter-btn" (click)="clearStatusFilter()" title="Mostrar todos los usuarios">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div class="header-actions">
+      <!-- Selector rápido de estado -->
+      <div class="status-filter">
+        <label for="status-select">Filtrar por estado:</label>
+        <select
+          id="status-select"
+          (change)="onQuickStatusFilterChange($event)"
+          class="status-select"
+          [ngClass]="{'active-filter': currentFilters.status}">
+          <option value="" [selected]="!currentFilters.status">Todos los estados</option>
+          <option [value]="UserStatus.ACTIVE" [selected]="currentFilters.status === UserStatus.ACTIVE">Activos</option>
+          <option [value]="UserStatus.BLOCKED" [selected]="currentFilters.status === UserStatus.BLOCKED">Bloqueados</option>
+          <option [value]="UserStatus.INACTIVE" [selected]="currentFilters.status === UserStatus.INACTIVE">Inactivos</option>
+          <option [value]="UserStatus.LOCKED" [selected]="currentFilters.status === UserStatus.LOCKED">Bloqueados Temporalmente</option>
+          <option [value]="UserStatus.EXPIRED" [selected]="currentFilters.status === UserStatus.EXPIRED">Expirados</option>
+        </select>
+      </div>
+
+      <app-custom-button
+        [label]="'Nuevo Usuario'"
+        [icon]="'user-plus'"
+        [color]="'primary'"
+        (buttonClick)="openCreateUserDialog()">
+      </app-custom-button>
+    </div>
   </div>
 
-  <mat-card class="filter-card">
-    <mat-card-content>
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Filtrar</mat-label>
-        <input matInput (keyup)="applyFilter($event)" placeholder="Buscar usuario..." #input>
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
-    </mat-card-content>
-  </mat-card>
+  <!-- Filtros -->
+  <app-usuario-filtros
+    (filterChange)="onFilterChange($event)">
+  </app-usuario-filtros>
 
-  <div class="mat-elevation-z8 table-container">
-    <table mat-table [dataSource]="dataSource" matSort>
-      <!-- ID Column -->
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
-        <td mat-cell *matCellDef="let usuario"> {{usuario.id}} </td>
-      </ng-container>
+  <!-- Tabla de Usuarios -->
+  <app-custom-card class="table-card">
+    <div class="card-header">
+      <h3>Listado de Usuarios</h3>
+      <span class="results-count" *ngIf="totalUsuarios > 0">
+        {{ totalUsuarios }} resultados
+      </span>
+    </div>
 
-      <!-- Nombre Column -->
-      <ng-container matColumnDef="nombre">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Nombre </th>
-        <td mat-cell *matCellDef="let usuario"> {{usuario.nombre}} </td>
-      </ng-container>
+    <!-- Tabla nativa HTML -->
+    <div class="custom-table-container">
+      <!-- Estado de carga -->
+      <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+        <span>Cargando...</span>
+      </div>
 
-      <!-- Email Column -->
-      <ng-container matColumnDef="email">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Email </th>
-        <td mat-cell *matCellDef="let usuario"> {{usuario.email}} </td>
-      </ng-container>
-
-      <!-- Roles Column -->
-      <ng-container matColumnDef="roles">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Roles </th>
-        <td mat-cell *matCellDef="let usuario">
-          <div class="roles-container">
-            <span class="role-badge" *ngFor="let rol of usuario.roles">
-              {{getRolText(rol)}}
-            </span>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Estado Column -->
-      <ng-container matColumnDef="estado">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Estado </th>
-        <td mat-cell *matCellDef="let usuario">
-          <span class="estado-badge" [ngClass]="getEstadoClass(usuario.estado)">
-            {{usuario.estado.charAt(0).toUpperCase() + usuario.estado.slice(1)}}
+      <!-- Estado vacío -->
+      <div *ngIf="!isLoading && (!usuarios || usuarios.length === 0)" class="empty-state">
+        <i class="fas fa-inbox empty-icon"></i>
+        <p class="empty-message">
+          <span *ngIf="currentFilters.status">
+            No se encontraron usuarios con estado <strong>{{ getStatusText(currentFilters.status) }}</strong>
           </span>
-        </td>
-      </ng-container>
-
-      <!-- Fecha Registro Column -->
-      <ng-container matColumnDef="fechaRegistro">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha Registro </th>
-        <td mat-cell *matCellDef="let usuario"> {{usuario.fechaRegistro | date:'dd/MM/yyyy'}} </td>
-      </ng-container>
-
-      <!-- Último Acceso Column -->
-      <ng-container matColumnDef="ultimoAcceso">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Último Acceso </th>
-        <td mat-cell *matCellDef="let usuario">
-          {{usuario.ultimoAcceso ? (usuario.ultimoAcceso | date:'dd/MM/yyyy HH:mm') : 'Nunca'}}
-        </td>
-      </ng-container>
-
-      <!-- Acciones Column -->
-      <ng-container matColumnDef="acciones">
-        <th mat-header-cell *matHeaderCellDef> Acciones </th>
-        <td mat-cell *matCellDef="let usuario">
-          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Acciones">
-            <mat-icon>more_vert</mat-icon>
+          <span *ngIf="!currentFilters.status">
+            No se encontraron usuarios con los filtros aplicados
+          </span>
+        </p>
+        <div *ngIf="currentFilters.status" class="empty-actions">
+          <button class="action-button primary" (click)="clearStatusFilter()">
+            Ver todos los usuarios
           </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="editarUsuario(usuario)">
-              <mat-icon>edit</mat-icon>
-              <span>Editar</span>
-            </button>
-            <button mat-menu-item [matMenuTriggerFor]="estadoMenu">
-              <mat-icon>swap_horiz</mat-icon>
-              <span>Cambiar Estado</span>
-            </button>
-            <button mat-menu-item (click)="eliminarUsuario(usuario)">
-              <mat-icon>delete</mat-icon>
-              <span>Eliminar</span>
-            </button>
-          </mat-menu>
+        </div>
+      </div>
 
-          <mat-menu #estadoMenu="matMenu">
-            <button mat-menu-item (click)="cambiarEstado(usuario, 'activo')">
-              <span>Activo</span>
-            </button>
-            <button mat-menu-item (click)="cambiarEstado(usuario, 'inactivo')">
-              <span>Inactivo</span>
-            </button>
-            <button mat-menu-item (click)="cambiarEstado(usuario, 'bloqueado')">
-              <span>Bloqueado</span>
-            </button>
-          </mat-menu>
-        </td>
-      </ng-container>
+      <!-- Tabla de usuarios -->
+      <div class="table-scroll-container">
+        <table *ngIf="!isLoading && usuarios && usuarios.length > 0" class="custom-table">
+          <thead>
+            <tr>
+              <th class="sortable col-username" (click)="onSortChange({column: 'username', direction: 'asc'})">
+                <div class="header-cell">
+                  Usuario
+                  <div class="sort-icon">
+                    <i class="fas"
+                       [class.fa-sort]="currentFilters.sort !== 'username'"
+                       [class.fa-sort-up]="currentFilters.sort === 'username' && currentFilters.direction === 'asc'"
+                       [class.fa-sort-down]="currentFilters.sort === 'username' && currentFilters.direction === 'desc'"></i>
+                  </div>
+                </div>
+              </th>
+              <th class="sortable col-nombre" (click)="onSortChange({column: 'fullName', direction: 'asc'})">
+                <div class="header-cell">
+                  Nombre Completo
+                  <div class="sort-icon">
+                    <i class="fas"
+                       [class.fa-sort]="currentFilters.sort !== 'fullName'"
+                       [class.fa-sort-up]="currentFilters.sort === 'fullName' && currentFilters.direction === 'asc'"
+                       [class.fa-sort-down]="currentFilters.sort === 'fullName' && currentFilters.direction === 'desc'"></i>
+                  </div>
+                </div>
+              </th>
+              <th class="sortable col-email" (click)="onSortChange({column: 'email', direction: 'asc'})">
+                <div class="header-cell">
+                  Email
+                  <div class="sort-icon">
+                    <i class="fas"
+                       [class.fa-sort]="currentFilters.sort !== 'email'"
+                       [class.fa-sort-up]="currentFilters.sort === 'email' && currentFilters.direction === 'asc'"
+                       [class.fa-sort-down]="currentFilters.sort === 'email' && currentFilters.direction === 'desc'"></i>
+                  </div>
+                </div>
+              </th>
+              <th class="col-roles">
+                <div class="header-cell">
+                  Roles
+                </div>
+              </th>
+              <th class="sortable col-estado" (click)="onSortChange({column: 'status', direction: 'asc'})">
+                <div class="header-cell">
+                  Estado
+                  <div class="sort-icon">
+                    <i class="fas"
+                       [class.fa-sort]="currentFilters.sort !== 'status'"
+                       [class.fa-sort-up]="currentFilters.sort === 'status' && currentFilters.direction === 'asc'"
+                       [class.fa-sort-down]="currentFilters.sort === 'status' && currentFilters.direction === 'desc'"></i>
+                  </div>
+                </div>
+              </th>
+              <th class="sortable col-fecha" (click)="onSortChange({column: 'createdAt', direction: 'asc'})">
+                <div class="header-cell">
+                  Fecha Creación
+                  <div class="sort-icon">
+                    <i class="fas"
+                       [class.fa-sort]="currentFilters.sort !== 'createdAt'"
+                       [class.fa-sort-up]="currentFilters.sort === 'createdAt' && currentFilters.direction === 'asc'"
+                       [class.fa-sort-down]="currentFilters.sort === 'createdAt' && currentFilters.direction === 'desc'"></i>
+                  </div>
+                </div>
+              </th>
+              <th class="col-acciones">
+                <div class="header-cell">
+                  Acciones
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of usuarios" class="clickable" (click)="openUserDetail(user)">
+              <!-- Columna Usuario -->
+              <td class="col-username">
+                <div class="username-cell truncate-with-tooltip" [attr.data-full-text]="user.username">
+                  <i class="fas fa-user-circle user-icon"></i>
+                  <span>{{ user.username }}</span>
+                </div>
+              </td>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              <!-- Columna Nombre Completo -->
+              <td class="col-nombre">
+                <div class="truncate-with-tooltip" [attr.data-full-text]="user.firstName + ' ' + user.lastName">
+                  {{ user.firstName }} {{ user.lastName }}
+                </div>
+              </td>
 
-      <!-- Row shown when there is no matching data. -->
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" colspan="8">No se encontraron usuarios con el filtro: "{{input.value}}"</td>
-      </tr>
-    </table>
+              <!-- Columna Email -->
+              <td class="col-email">
+                <a href="mailto:{{ user.email }}" class="email-link truncate-with-tooltip"
+                   [attr.data-full-text]="user.email"
+                   (click)="$event.stopPropagation()">
+                  <i class="fas fa-envelope"></i>
+                  <span>{{ user.email }}</span>
+                </a>
+              </td>
 
-    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Seleccionar página de usuarios"></mat-paginator>
+              <!-- Columna Roles -->
+              <td class="col-roles">
+                <div class="roles-container">
+                  <span *ngFor="let role of user.roles" class="role-badge">
+                    {{ role.replace('ROLE_', '') }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Columna Estado -->
+              <td class="col-estado">
+                <span class="status-badge" [ngClass]="getStatusClass(user.status)">
+                  {{ getStatusText(user.status) }}
+                </span>
+              </td>
+
+              <!-- Columna Fecha Creación -->
+              <td class="col-fecha">
+                <div class="date-cell truncate-with-tooltip"
+                     [attr.data-full-text]="user.createdAt | date:'dd/MM/yyyy HH:mm'">
+                  <i class="fas fa-calendar-alt"></i>
+                  <span>{{ user.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </td>
+
+              <!-- Columna Acciones -->
+              <td class="col-acciones">
+                <div class="actions-container">
+                  <!-- Botón Ver Detalles -->
+                  <button class="action-button primary"
+                          title="Ver detalles"
+                          (click)="openUserDetail(user); $event.stopPropagation()">
+                    <i class="fas fa-eye"></i>
+                  </button>
+
+                  <!-- Botón Editar -->
+                  <button class="action-button accent"
+                          title="Editar usuario"
+                          (click)="editUser(user); $event.stopPropagation()">
+                    <i class="fas fa-edit"></i>
+                  </button>
+
+                  <!-- Botón Bloquear/Activar -->
+                  <button *ngIf="user.status !== 'BLOCKED'"
+                          class="action-button warn"
+                          title="Bloquear usuario"
+                          (click)="changeUserStatus(user, UserStatus.BLOCKED); $event.stopPropagation()">
+                    <i class="fas fa-user-lock"></i>
+                  </button>
+
+                  <button *ngIf="user.status === 'BLOCKED'"
+                          class="action-button success"
+                          title="Activar usuario"
+                          (click)="changeUserStatus(user, UserStatus.ACTIVE); $event.stopPropagation()">
+                    <i class="fas fa-user-check"></i>
+                  </button>
+
+                  <!-- Botón Eliminar -->
+                  <button class="action-button danger"
+                          title="Eliminar usuario"
+                          (click)="deleteUser(user); $event.stopPropagation()">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div *ngIf="!isLoading && usuarios && usuarios.length > 0" class="pagination-container">
+        <div class="pagination-info">
+          Mostrando {{ pageIndex * pageSize + 1 }} - {{ (pageIndex + 1) * pageSize > totalUsuarios ? totalUsuarios : (pageIndex + 1) * pageSize }} de {{ totalUsuarios }}
+        </div>
+
+        <div class="pagination-controls">
+          <button
+            class="pagination-button"
+            [disabled]="pageIndex === 0"
+            (click)="onPageChange({pageIndex: pageIndex - 1, pageSize: pageSize})"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <div class="pagination-pages">
+            <button
+              *ngFor="let page of getVisiblePages()"
+              class="page-button"
+              [class.active]="page === pageIndex"
+              (click)="onPageChange({pageIndex: page, pageSize: pageSize})"
+            >
+              {{ page + 1 }}
+            </button>
+          </div>
+
+          <button
+            class="pagination-button"
+            [disabled]="pageIndex >= getTotalPages() - 1"
+            (click)="onPageChange({pageIndex: pageIndex + 1, pageSize: pageSize})"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="pagination-size">
+          <span>Filas por página:</span>
+          <select [value]="pageSize" (change)="onPageSizeChange($event)">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </app-custom-card>
+
+  <!-- Detalle de Usuario (Diálogo lateral) -->
+  <app-usuario-detalle
+    *ngIf="showUserDetail && selectedUserId"
+    [userId]="selectedUserId"
+    (close)="closeUserDetail()"
+    (edit)="editUser($event)">
+  </app-usuario-detalle>
+
+  <!-- Overlay de carga -->
+  <div *ngIf="isLoading" class="section-loading-overlay">
+    <app-custom-spinner [size]="'large'"></app-custom-spinner>
   </div>
 </div>

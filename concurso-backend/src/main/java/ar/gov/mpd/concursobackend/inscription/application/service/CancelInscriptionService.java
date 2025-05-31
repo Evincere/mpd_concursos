@@ -34,6 +34,11 @@ public class CancelInscriptionService implements CancelInscriptionUseCase {
         public void cancel(UUID id) {
                 log.debug("Iniciando proceso de cancelación de inscripción con ID: {}", id);
 
+                if (id == null) {
+                        log.error("ID de inscripción nulo");
+                        throw new IllegalArgumentException("El ID de inscripción no puede ser nulo");
+                }
+
                 try {
                         var inscription = inscriptionRepository.findById(id)
                                         .orElseThrow(() -> {
@@ -43,57 +48,77 @@ public class CancelInscriptionService implements CancelInscriptionUseCase {
                                         });
 
                         log.debug("Inscripción encontrada: {}", inscription);
-                        log.debug("Estado actual de la inscripción: {}", inscription.getStatus());
+                        log.debug("Estado actual de la inscripción: {}", inscription.getState());
 
-                        inscription.cancel();
-                        inscriptionRepository.save(inscription);
-                        log.debug("Inscripción cancelada exitosamente: {}", id);
+                        // Verificar si la inscripción ya está cancelada
+                        if (inscription.getState() != null && inscription.getState().toString().equals("CANCELLED")) {
+                                log.info("La inscripción {} ya está cancelada, no se requiere acción adicional", id);
+                                return;
+                        }
 
-                        // Obtener información del concurso
-                        Contest contest = contestRepository.findById(inscription.getContestId().getValue())
-                                        .orElseThrow(() -> {
-                                                log.error("No se encontró el concurso con ID: {}",
-                                                                inscription.getContestId().getValue());
-                                                return new IllegalArgumentException("Concurso no encontrado");
-                                        });
+                        try {
+                                inscription.cancel();
+                                inscriptionRepository.save(inscription);
+                                log.debug("Inscripción cancelada exitosamente: {}", id);
+                        } catch (Exception e) {
+                                log.error("Error al cancelar la inscripción en la base de datos: {}", e.getMessage(), e);
+                                throw new RuntimeException("Error al guardar la inscripción cancelada", e);
+                        }
 
-                        log.debug("Concurso encontrado: {}", contest.getTitle());
+                        try {
+                                // Obtener información del concurso
+                                Contest contest = contestRepository.findById(inscription.getContestId().getValue())
+                                                .orElseThrow(() -> {
+                                                        log.error("No se encontró el concurso con ID: {}",
+                                                                        inscription.getContestId().getValue());
+                                                        return new IllegalArgumentException("Concurso no encontrado");
+                                                });
 
-                        // Obtener el username del usuario autenticado
-                        String username = securityUtils.getCurrentUsername();
-                        log.debug("Username del usuario autenticado: {}", username);
+                                log.debug("Concurso encontrado: {}", contest.getTitle());
 
-                        // Obtener información del usuario
-                        User user = userService.getByUsername(new UserUsername(username))
-                                        .orElseThrow(() -> {
-                                                log.error("No se encontró el usuario con username: {}", username);
-                                                return new IllegalArgumentException("Usuario no encontrado");
-                                        });
+                                // Obtener el username del usuario autenticado
+                                String username = securityUtils.getCurrentUsername();
+                                log.debug("Username del usuario autenticado: {}", username);
 
-                        log.debug("Usuario encontrado: {}", user.getUsername().value());
+                                // Obtener información del usuario
+                                User user = userService.getByUsername(new UserUsername(username))
+                                                .orElseThrow(() -> {
+                                                        log.error("No se encontró el usuario con username: {}", username);
+                                                        return new IllegalArgumentException("Usuario no encontrado");
+                                                });
 
-                        // Enviar notificación
-                        NotificationRequest notificationRequest = NotificationRequest.builder()
-                                        .recipientUsername(user.getUsername().value())
-                                        .subject("Postulación Cancelada - " + contest.getTitle())
-                                        .content(String.format(
-                                                        "Tu postulación al concurso '%s' ha sido cancelada.\n\n" +
-                                                                        "Detalles del concurso:\n" +
-                                                                        "- Cargo: %s\n" +
-                                                                        "- Dependencia: %s",
-                                                        contest.getTitle(),
-                                                        contest.getPosition(),
-                                                        contest.getDependency()))
-                                        .type(NotificationType.INSCRIPTION)
-                                        .acknowledgementLevel(AcknowledgementLevel.NONE)
-                                        .build();
+                                log.debug("Usuario encontrado: {}", user.getUsername().value());
 
-                        log.debug("Enviando notificación de cancelación a usuario: {}", user.getUsername().value());
-                        notificationService.sendNotification(notificationRequest);
-                        log.debug("Notificación enviada exitosamente");
+                                // Enviar notificación
+                                NotificationRequest notificationRequest = NotificationRequest.builder()
+                                                .recipientUsername(user.getUsername().value())
+                                                .subject("Postulación Cancelada - " + contest.getTitle())
+                                                .content(String.format(
+                                                                "Tu postulación al concurso '%s' ha sido cancelada.\n\n" +
+                                                                                "Detalles del concurso:\n" +
+                                                                                "- Cargo: %s\n" +
+                                                                                "- Dependencia: %s",
+                                                                contest.getTitle(),
+                                                                contest.getPosition(),
+                                                                contest.getDependency()))
+                                                .type(NotificationType.INSCRIPTION)
+                                                .acknowledgementLevel(AcknowledgementLevel.NONE)
+                                                .build();
+
+                                log.debug("Enviando notificación de cancelación a usuario: {}", user.getUsername().value());
+                                notificationService.sendNotification(notificationRequest);
+                                log.debug("Notificación enviada exitosamente");
+                        } catch (Exception e) {
+                                // Si hay un error al enviar la notificación, lo registramos pero no interrumpimos el proceso
+                                // La inscripción ya fue cancelada en la base de datos
+                                log.warn("Error al enviar notificación de cancelación: {}", e.getMessage(), e);
+                        }
 
                 } catch (IllegalArgumentException e) {
                         log.error("Error de validación al cancelar la inscripción: {}", e.getMessage());
+                        throw e;
+                } catch (IllegalStateException e) {
+                        log.error("Error de estado al cancelar la inscripción: {}", e.getMessage());
                         throw e;
                 } catch (Exception e) {
                         log.error("Error inesperado al cancelar la inscripción: {}", e.getMessage(), e);

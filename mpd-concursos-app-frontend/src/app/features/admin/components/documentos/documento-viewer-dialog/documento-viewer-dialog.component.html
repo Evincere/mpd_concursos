@@ -1,0 +1,16 @@
+<div class="documento-dialog-container">
+  <div class="documento-dialog-header">
+    <h2 mat-dialog-title>Visor de Documento</h2>
+    <button mat-icon-button (click)="cerrar()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  
+  <div mat-dialog-content class="documento-dialog-content">
+    <app-documento-viewer-admin [documento]="data.documento"></app-documento-viewer-admin>
+  </div>
+  
+  <div mat-dialog-actions class="documento-dialog-actions">
+    <button mat-button (click)="cerrar()">Cerrar</button>
+  </div>
+</div>

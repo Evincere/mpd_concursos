@@ -14,10 +14,12 @@ import ar.gov.mpd.concursobackend.contest.application.port.in.CreateContestInscr
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
+import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRequest;
@@ -70,34 +72,16 @@ public class CreateContestInscriptionService implements CreateContestInscription
                                 .contestId(new ContestId(contest.getId()))
                                 .userId(new UserId(user.getId().value()))
                                 .inscriptionDate(LocalDateTime.now())
-                                .status(InscriptionStatus.PENDING)
+                                .state(InscriptionStateConverter.toState(InscriptionStatus.ACTIVE))
                                 .build();
 
                 // Guardar la inscripción
                 Inscription savedInscription = saveInscriptionPort.save(inscription);
                 log.debug("Inscripción guardada con ID: {}", savedInscription.getId());
 
-                // Enviar notificación
-                NotificationRequest notificationRequest = NotificationRequest.builder()
-                                .recipientUsername(user.getUsername().value())
-                                .subject("Inscripción a Concurso - " + contest.getTitle())
-                                .content(String.format(
-                                                "Tu inscripción al concurso '%s' ha sido registrada con éxito.\n\n" +
-                                                                "Detalles del concurso:\n" +
-                                                                "- Cargo: %s\n" +
-                                                                "- Dependencia: %s\n\n" +
-                                                                "Estado actual: PENDIENTE\n" +
-                                                                "Te notificaremos cuando tu inscripción sea revisada.",
-                                                contest.getTitle(),
-                                                contest.getPosition(),
-                                                contest.getDependency()))
-                                .type(NotificationType.INSCRIPTION)
-                                .acknowledgementLevel(AcknowledgementLevel.NONE)
-                                .build();
-
-                log.debug("Enviando notificación para la inscripción: {}", notificationRequest);
-                var notification = notificationService.sendNotification(notificationRequest);
-                log.debug("Notificación enviada: {}", notification);
+                // No enviamos notificación al iniciar el proceso
+                log.debug("Inscripción iniciada para el usuario {} en el concurso {} - No se envía notificación inicial",
+                                user.getUsername().value(), contest.getTitle());
 
                 return savedInscription;
         }

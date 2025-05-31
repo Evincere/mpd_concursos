@@ -1,0 +1,154 @@
+@use 'src/styles/variables' as *;
+
+:host {
+  display: block;
+}
+
+.error-message {
+  color: $color-danger;
+  padding: 1rem;
+  text-align: center;
+  background-color: rgba($color-danger, 0.1);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba($color-primary, 0.1);
+    border-radius: 50%;
+    border-top-color: $color-primary;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $color-text-secondary;
+  }
+}
+
+.user-details {
+  .user-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    .user-avatar {
+      font-size: 3rem;
+      color: $color-primary;
+      margin-right: 1rem;
+    }
+    
+    .user-info {
+      flex: 1;
+      
+      h2 {
+        margin: 0 0 0.5rem;
+        font-size: $font-size-xl;
+        font-weight: 500;
+      }
+      
+      .user-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        
+        .user-dni {
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+        }
+        
+        .user-status {
+          font-size: $font-size-xs;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-weight: 500;
+          
+          &.estado-activo {
+            background-color: rgba($color-success, 0.1);
+            color: $color-success;
+          }
+          
+          &.estado-inactivo {
+            background-color: rgba($color-warning, 0.1);
+            color: $color-warning;
+          }
+          
+          &.estado-bloqueado {
+            background-color: rgba($color-danger, 0.1);
+            color: $color-danger;
+          }
+        }
+      }
+    }
+  }
+  
+  .details-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    
+    app-custom-card {
+      margin-bottom: 0;
+    }
+  }
+  
+  .detail-item {
+    margin-bottom: 0.75rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .detail-label {
+      font-weight: 500;
+      color: $color-text-secondary;
+      margin-right: 0.5rem;
+    }
+    
+    .detail-value {
+      color: $color-text-primary;
+      
+      a {
+        color: $color-primary;
+        text-decoration: none;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+      
+      .no-data {
+        font-style: italic;
+        color: $color-text-secondary;
+      }
+    }
+  }
+  
+  .roles-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    
+    .role-badge {
+      background-color: rgba($color-primary, 0.1);
+      color: $color-primary;
+      padding: 0.25rem 0.75rem;
+      border-radius: 16px;
+      font-size: $font-size-xs;
+      font-weight: 500;
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

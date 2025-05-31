@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.persistence;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.model.UserStatus;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
@@ -61,5 +62,17 @@ public class InMemoryUserRepository implements IUserRepository {
         return userSpringRepository.findAll().stream()
                 .map(userMapper::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> findByStatus(UserStatus status) {
+        return userSpringRepository.findByStatus(status).stream()
+                .map(userMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        userSpringRepository.deleteById(id);
     }
 }

@@ -3,53 +3,73 @@ package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
+import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapper;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CancelInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
+import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * REST controller for managing inscriptions
+ */
 @RestController
-@RequestMapping("/api/inscripciones")
+@RequestMapping({"/api/inscriptions", "/api/inscripciones"})
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
+@Slf4j
 public class InscriptionController {
     private final CreateInscriptionUseCase createInscriptionUseCase;
     private final FindInscriptionsUseCase findInscriptionsUseCase;
     private final CancelInscriptionUseCase cancelInscriptionUseCase;
     private final UpdateInscriptionStatusUseCase updateInscriptionStatusUseCase;
     private final SecurityUtils securityUtils;
-    private static final Logger log = LoggerFactory.getLogger(InscriptionController.class);
+    private final LoadInscriptionPort loadInscriptionPort;
+    private final InscriptionMapper inscriptionMapper;
 
+    /**
+     * Creates a new inscription for the current user
+     */
     @PostMapping
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<InscriptionDetailResponse> createInscription(@RequestBody InscriptionRequest request) {
         String currentUserId = securityUtils.getCurrentUserId();
         if (currentUserId == null) {
-            throw new IllegalStateException("No se encontró el usuario autenticado");
+            throw new IllegalStateException("No authenticated user found");
         }
 
         request.setUserId(UUID.fromString(currentUserId));
-        log.debug("Creando inscripción para usuario {} en concurso {}", currentUserId, request.getContestId());
+        log.debug("Creating inscription for user {} in contest {}", currentUserId, request.getContestId());
 
         InscriptionDetailResponse response = createInscriptionUseCase.createInscription(request);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/me")
+    /**
+     * Gets all inscriptions for the current user
+     */
+    @GetMapping("/user")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<Page<InscriptionResponse>> getMyInscriptions(
+    public ResponseEntity<Page<InscriptionResponse>> getUserInscriptions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "inscriptionDate") String sort,
@@ -57,79 +77,343 @@ public class InscriptionController {
 
         String currentUserId = securityUtils.getCurrentUserId();
         if (currentUserId == null) {
-            throw new IllegalStateException("No se encontró el usuario autenticado");
+            throw new IllegalStateException("No authenticated user found");
         }
 
-        var pageRequest = org.springframework.data.domain.PageRequest.of(
+        log.debug("Getting inscriptions for user {}", currentUserId);
+
+        var pageRequest = PageRequest.of(
                 page,
                 size,
                 Sort.Direction.valueOf(direction),
                 sort);
 
-        return ResponseEntity.ok(findInscriptionsUseCase.findAllPaged(pageRequest, UUID.fromString(currentUserId)));
+        Page<InscriptionResponse> inscriptions = findInscriptionsUseCase.findAllPaged(
+            pageRequest, UUID.fromString(currentUserId));
+
+        return ResponseEntity.ok(inscriptions);
     }
 
+    /**
+     * Gets all inscriptions for a contest (admin only)
+     */
+    @GetMapping("/contest/{contestId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Page<InscriptionResponse>> getContestInscriptions(
+            @PathVariable Long contestId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "inscriptionDate") String sort,
+            @RequestParam(defaultValue = "DESC") String direction) {
+
+        log.debug("Getting inscriptions for contest {}", contestId);
+
+        // This method is not implemented in the current interface
+        // In a real implementation, you would add a method to FindInscriptionsUseCase to get inscriptions by contest ID
+        // For now, we'll return an empty page
+        log.warn("Method findByContestId is not implemented in FindInscriptionsUseCase");
+
+        return ResponseEntity.ok(Page.empty());
+    }
+
+    /**
+     * Gets details of a specific inscription
+     */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<InscriptionDetailResponse> findById(@PathVariable UUID id) {
-        String currentUserId = securityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new IllegalStateException("No se encontró el usuario autenticado");
-        }
-
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
+    public ResponseEntity<InscriptionDetailResponse> getInscriptionDetails(@PathVariable UUID id) {
+        log.debug("Getting details for inscription {}", id);
         InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
-
-        // Verificar que la inscripción pertenece al usuario actual
-        if (!inscription.getUserId().toString().equals(currentUserId)) {
-            return ResponseEntity.notFound().build();
-        }
-
         return ResponseEntity.ok(inscription);
     }
 
-    @GetMapping("/estado/{concursoId}")
+    /**
+     * Checks if a user is inscribed in a contest
+     */
+    @GetMapping("/status/{contestId}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<Boolean> getInscriptionStatus(@PathVariable Long concursoId) {
+    public ResponseEntity<Boolean> getInscriptionStatus(@PathVariable Long contestId) {
         String currentUserId = securityUtils.getCurrentUserId();
         if (currentUserId == null) {
-            throw new IllegalStateException("No se encontró el usuario autenticado");
+            throw new IllegalStateException("No authenticated user found");
         }
 
         try {
-            Boolean inscripto = findInscriptionsUseCase.findInscriptionStatus(concursoId, currentUserId);
-            return ResponseEntity.ok(inscripto);
+            Boolean inscribed = findInscriptionsUseCase.findInscriptionStatus(contestId, currentUserId);
+            return ResponseEntity.ok(inscribed);
         } catch (IllegalArgumentException e) {
-            log.error("Error de validación al verificar inscripción: {}", e.getMessage());
+            log.error("Validation error when checking inscription: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
 
-    @DeleteMapping("/{id}")
+    /**
+     * Gets detailed inscription status for a user in a contest
+     */
+    @GetMapping("/user/contest/{contestId}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<Void> cancelInscription(@PathVariable UUID id) {
+    public ResponseEntity<Map<String, Object>> getUserInscriptionForContest(@PathVariable Long contestId) {
         String currentUserId = securityUtils.getCurrentUserId();
         if (currentUserId == null) {
-            throw new IllegalStateException("No se encontró el usuario autenticado");
+            throw new IllegalStateException("No authenticated user found");
         }
 
-        // Verificar que la inscripción pertenece al usuario actual
-        InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
-        if (!inscription.getUserId().toString().equals(currentUserId)) {
-            return ResponseEntity.notFound().build();
-        }
+        try {
+            log.debug("Getting inscription details for user {} in contest {}", currentUserId, contestId);
+            Optional<Inscription> inscription = loadInscriptionPort.findByContestIdAndUserId(contestId, UUID.fromString(currentUserId));
 
-        cancelInscriptionUseCase.cancel(id);
-        return ResponseEntity.ok().build();
+            if (inscription.isPresent()) {
+                Inscription inscriptionData = inscription.get();
+                Map<String, Object> response = new HashMap<>();
+
+                // Mapear el estado de la inscripción al formato esperado por el frontend
+                response.put("status", inscriptionData.getState().toString());
+
+                // Agregar fechas importantes
+                if (inscriptionData.getLastUpdated() != null) {
+                    response.put("updatedAt", inscriptionData.getLastUpdated().toString());
+                }
+                if (inscriptionData.getCreatedAt() != null) {
+                    response.put("createdAt", inscriptionData.getCreatedAt().toString());
+                }
+
+                // Agregar información adicional si está disponible
+                if (inscriptionData.getCurrentStep() != null) {
+                    response.put("currentStep", inscriptionData.getCurrentStep().toString());
+                }
+
+                // Agregar ID de la inscripción y del concurso
+                response.put("id", inscriptionData.getId().toString());
+                response.put("contestId", inscriptionData.getContestId().getValue());
+                response.put("userId", currentUserId);
+
+                log.debug("Found inscription with status {}", inscriptionData.getState());
+                return ResponseEntity.ok(response);
+            } else {
+                log.debug("No inscription found for user {} in contest {}", currentUserId, contestId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when getting inscription details: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error getting inscription details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    /**
+     * Gets detailed inscription status for a specific user in a contest (for use by frontend)
+     */
+    @GetMapping("/user/{userId}/contest/{contestId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<InscriptionResponse> getUserInscriptionByUserIdAndContestId(
+            @PathVariable UUID userId,
+            @PathVariable Long contestId) {
+
+        String currentUserId = securityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new IllegalStateException("No authenticated user found");
+        }
+
+        // Verificar que el usuario actual es el mismo que se está solicitando o es un administrador
+        boolean isSameUser = currentUserId.equals(userId.toString());
+
+        // Obtener la autenticación actual para verificar roles
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = authentication != null &&
+                          authentication.getAuthorities().stream()
+                              .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !isSameUser) {
+            log.warn("User {} attempted to access inscription of user {} for contest {}",
+                    currentUserId, userId, contestId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            log.debug("Getting inscription details for user {} in contest {}", userId, contestId);
+            Optional<Inscription> inscription = loadInscriptionPort.findByContestIdAndUserId(contestId, userId);
+
+            if (inscription.isPresent()) {
+                Inscription inscriptionData = inscription.get();
+                InscriptionResponse response = inscriptionMapper.toResponse(inscriptionData);
+
+                log.debug("Found inscription with status {}", inscriptionData.getState());
+                return ResponseEntity.ok(response);
+            } else {
+                log.debug("No inscription found for user {} in contest {}", userId, contestId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when getting inscription details: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error getting inscription details: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Gets all inscriptions for a specific user
+     */
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Page<InscriptionResponse>> getUserInscriptions(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "inscriptionDate") String sort,
+            @RequestParam(defaultValue = "DESC") String direction) {
+
+        try {
+            log.debug("Getting inscriptions for user {}", userId);
+
+            // Verificar permisos: solo el propio usuario o un administrador puede ver sus inscripciones
+            String currentUserId = securityUtils.getCurrentUserId();
+            if (currentUserId == null) {
+                throw new IllegalStateException("No authenticated user found");
+            }
+
+            // Verificar si el usuario actual es el mismo que se está solicitando o es un administrador
+            boolean isSameUser = currentUserId.equals(userId.toString());
+
+            // Obtener la autenticación actual para verificar roles
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = authentication != null &&
+                              authentication.getAuthorities().stream()
+                                  .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (!isAdmin && !isSameUser) {
+                log.warn("User {} attempted to access inscriptions of user {}", currentUserId, userId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Crear objeto PageRequest con la ordenación
+            Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+            PageRequest pageRequest = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+            // Obtener inscripciones del usuario
+            Page<Inscription> inscriptions = loadInscriptionPort.findAllByUserId(userId, pageRequest);
+
+            // Mapear a DTOs de respuesta
+            Page<InscriptionResponse> response = inscriptions.map(inscriptionMapper::toResponse);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when getting user inscriptions: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error getting user inscriptions: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Gets all inscriptions for the current user
+     */
+    @GetMapping("/by-user/{userId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Page<InscriptionResponse>> getCurrentUserInscriptions(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "inscriptionDate") String sort,
+            @RequestParam(defaultValue = "DESC") String direction) {
+
+        try {
+            // Verificar que el usuario actual es el mismo que se está solicitando
+            String currentUserId = securityUtils.getCurrentUserId();
+            if (currentUserId == null) {
+                throw new IllegalStateException("No authenticated user found");
+            }
+
+            if (!currentUserId.equals(userId.toString())) {
+                log.warn("User {} attempted to access inscriptions of user {}", currentUserId, userId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Crear objeto PageRequest con la ordenación
+            Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+            PageRequest pageRequest = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+            // Obtener inscripciones del usuario
+            Page<Inscription> inscriptions = loadInscriptionPort.findAllByUserId(userId, pageRequest);
+
+            // Mapear a DTOs de respuesta
+            Page<InscriptionResponse> response = inscriptions.map(inscriptionMapper::toResponse);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when getting current user inscriptions: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error getting current user inscriptions: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Cancels an inscription (PATCH endpoint)
+     */
+    @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Void> cancelInscriptionPatch(@PathVariable UUID id) {
+        return cancelInscriptionInternal(id);
+    }
+
+    /**
+     * Cancels an inscription (DELETE endpoint for backward compatibility)
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Void> cancelInscriptionDelete(@PathVariable UUID id) {
+        return cancelInscriptionInternal(id);
+    }
+
+    /**
+     * Internal method to handle inscription cancellation
+     */
+    private ResponseEntity<Void> cancelInscriptionInternal(UUID id) {
+        String currentUserId = securityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new IllegalStateException("No authenticated user found");
+        }
+
+        try {
+            // Verify that the inscription belongs to the current user
+            InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
+            if (!inscription.getUserId().toString().equals(currentUserId)) {
+                log.error("User {} tried to cancel an inscription that doesn't belong to them: {}",
+                        currentUserId, id);
+                return ResponseEntity.notFound().build();
+            }
+
+            // The method name in the interface is cancel, not cancelInscription
+            cancelInscriptionUseCase.cancel(id);
+            log.info("User {} cancelled inscription {}", currentUserId, id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when cancelling inscription: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Unexpected error when cancelling inscription: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Updates the status of an inscription (admin only)
+     */
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> updateStatus(@PathVariable UUID id, @RequestParam String status) {
         try {
             updateInscriptionStatusUseCase.updateStatus(id, status);
+            log.info("Admin updated inscription {} to status {}", id, status);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
-            log.error("Error de validación al actualizar estado de inscripción: {}", e.getMessage());
+            log.error("Validation error when updating inscription status: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }

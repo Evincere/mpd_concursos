@@ -1,4 +1,4 @@
-import { JwtDto } from '../dtos/jwt-dto';
+
 
 export class User {
   id: string;
@@ -13,7 +13,7 @@ export class User {
     this.authorities = data.authorities || [];
   }
 
-  static fromToken(tokenData: any): User {
+  static fromToken(tokenData: unknown): User {
     return new User({
       id: tokenData.userId || tokenData.sub || '',
       username: tokenData.sub || '',

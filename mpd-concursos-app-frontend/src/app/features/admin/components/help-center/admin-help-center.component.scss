@@ -1,0 +1,422 @@
+@use 'src/styles/variables' as *;
+
+.help-center-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  
+  span {
+    margin-top: 1rem;
+    color: $color-text-secondary;
+  }
+}
+
+.help-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.help-header {
+  margin-bottom: 1.5rem;
+  
+  h1 {
+    font-size: $font-size-xl;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  .help-description {
+    font-size: $font-size-md;
+    color: $color-text-secondary;
+    margin: 0;
+  }
+}
+
+.search-card {
+  margin-bottom: 1.5rem;
+  border-radius: $border-radius;
+  
+  mat-card-content {
+    padding: 1rem;
+  }
+}
+
+.search-form {
+  width: 100%;
+}
+
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  
+  .search-input {
+    flex: 3;
+    min-width: 200px;
+  }
+  
+  .category-filter,
+  .level-filter {
+    flex: 1;
+    min-width: 150px;
+  }
+  
+  .search-button {
+    height: 56px;
+    
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+.search-results {
+  margin-top: 1.5rem;
+  
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 1.5rem 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem;
+    
+    mat-icon {
+      font-size: 48px;
+      color: $color-text-secondary;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: $color-text-secondary;
+      margin-bottom: 1.5rem;
+    }
+  }
+  
+  .results-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .result-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-bottom: 1rem;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .result-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      
+      .category-icon {
+        color: $color-primary;
+        margin-right: 0.75rem;
+      }
+      
+      .result-title {
+        font-weight: 500;
+        font-size: $font-size-md;
+        color: $color-text-primary;
+      }
+    }
+    
+    .result-summary {
+      color: $color-text-secondary;
+      margin-bottom: 0.75rem;
+      font-size: $font-size-sm;
+    }
+    
+    .result-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: $font-size-xs;
+      
+      .result-category {
+        color: $color-text-secondary;
+        display: flex;
+        align-items: center;
+      }
+      
+      .result-level {
+        padding: 0.25rem 0.5rem;
+        border-radius: $border-radius-sm;
+        font-weight: 500;
+        
+        &.level-basic {
+          background-color: $color-success-light;
+          color: $color-success;
+        }
+        
+        &.level-intermediate {
+          background-color: $color-info-light;
+          color: $color-info;
+        }
+        
+        &.level-advanced {
+          background-color: $color-warn-light;
+          color: $color-warn;
+        }
+      }
+      
+      .result-time {
+        display: flex;
+        align-items: center;
+        color: $color-text-secondary;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          margin-right: 0.25rem;
+        }
+      }
+    }
+  }
+}
+
+.help-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  
+  mat-tab-group {
+    flex: 1;
+    overflow: hidden;
+  }
+  
+  .tab-content {
+    padding: 1.5rem 0;
+    overflow-y: auto;
+    height: calc(100vh - 250px);
+  }
+  
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .section-description {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin: 0 0 1.5rem;
+  }
+}
+
+.categories-section {
+  margin-bottom: 2rem;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  
+  .category-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .category-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: $color-primary-light;
+      margin-bottom: 1rem;
+      
+      mat-icon {
+        color: $color-primary;
+        font-size: 24px;
+      }
+    }
+    
+    .category-name {
+      font-weight: 500;
+      font-size: $font-size-md;
+      margin-bottom: 0.5rem;
+      color: $color-text-primary;
+    }
+    
+    .category-description {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+.popular-section,
+.tutorials-section {
+  margin-bottom: 2rem;
+}
+
+.articles-grid,
+.tutorials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  
+  .article-card,
+  .tutorial-card {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .article-category,
+    .tutorial-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      
+      mat-icon {
+        color: $color-primary;
+        margin-right: 0.5rem;
+      }
+      
+      span {
+        color: $color-text-secondary;
+        font-size: $font-size-sm;
+      }
+    }
+    
+    .article-title,
+    .tutorial-title {
+      font-weight: 500;
+      font-size: $font-size-md;
+      margin-bottom: 0.5rem;
+      color: $color-text-primary;
+    }
+    
+    .article-summary,
+    .tutorial-description {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+      margin-bottom: 0.75rem;
+    }
+    
+    .article-meta,
+    .tutorial-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      
+      .article-level,
+      .tutorial-level {
+        padding: 0.25rem 0.5rem;
+        border-radius: $border-radius-sm;
+        font-size: $font-size-xs;
+        font-weight: 500;
+        
+        &.level-basic {
+          background-color: $color-success-light;
+          color: $color-success;
+        }
+        
+        &.level-intermediate {
+          background-color: $color-info-light;
+          color: $color-info;
+        }
+        
+        &.level-advanced {
+          background-color: $color-warn-light;
+          color: $color-warn;
+        }
+      }
+      
+      .tutorial-time {
+        display: flex;
+        align-items: center;
+        color: $color-text-secondary;
+        font-size: $font-size-xs;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          margin-right: 0.25rem;
+        }
+      }
+    }
+    
+    .start-tutorial-button {
+      width: 100%;
+      
+      mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}
+
+.active-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  
+  .content-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    .content-title {
+      font-size: $font-size-lg;
+      font-weight: 500;
+      margin: 0 0 0 0.5rem;
+      color: $color-text-primary;
+    }
+  }
+}
+
+// Estilos para los tabs
+::ng-deep .mat-mdc-tab-header {
+  margin-bottom: 1rem;
+}
+
+::ng-deep .mat-mdc-tab-body-wrapper {
+  flex: 1;
+}

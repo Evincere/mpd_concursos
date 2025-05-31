@@ -5,5 +5,5 @@ export interface IFiltersService {
   getFiltros(): Observable<FiltersConcurso>;
   actualizarFiltros(filtros: Partial<FiltersConcurso>): void;
   limpiarFiltros(): void;
-  aplicarFiltros(concursos: any[]): any[];
+  aplicarFiltros(concursos: unknown[]): any[];
 } 

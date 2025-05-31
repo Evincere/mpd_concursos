@@ -13,7 +13,12 @@
                 <tr *ngFor="let concurso of recentConcursos">
                     <td>{{concurso.titulo}}</td>
                     <td>{{concurso.fecha | date:'dd/MM/yyyy'}}</td>
-                    <td><span class="status" [class.active]="concurso.estado === 'Activo'">{{concurso.estado}}</span></td>
+                    <td>
+                        <app-contest-status-badge
+                            [status]="concurso.estado"
+                            [showIcon]="true">
+                        </app-contest-status-badge>
+                    </td>
                 </tr>
             </tbody>
         </table>

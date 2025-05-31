@@ -1,0 +1,140 @@
+<div class="roles-admin-container">
+  <div class="header">
+    <h1>Gestión de Roles y Permisos</h1>
+    <div class="header-actions">
+      <app-custom-button 
+        [label]="'Nuevo Rol'" 
+        [icon]="'plus'"
+        (buttonClick)="openRoleFormDialog()">
+      </app-custom-button>
+    </div>
+  </div>
+
+  <app-custom-card [elevated]="true">
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="filter-row">
+        <app-custom-form-field 
+          [label]="'Buscar'" 
+          [placeholder]="'Nombre, descripción...'" 
+          [control]="filterForm.get('search')"
+          [iconRight]="'search'">
+        </app-custom-form-field>
+
+        <app-custom-select
+          [label]="'Tipo'"
+          [control]="filterForm.get('isSystem')"
+          [options]="[
+            { value: '', label: 'Todos' },
+            { value: true, label: 'Sistema' },
+            { value: false, label: 'Personalizados' }
+          ]">
+        </app-custom-select>
+
+        <div class="filter-actions">
+          <app-custom-button 
+            [label]="'Limpiar Filtros'" 
+            [icon]="'times'"
+            [variant]="'stroked'"
+            (buttonClick)="resetFilters()">
+          </app-custom-button>
+        </div>
+      </div>
+    </form>
+  </app-custom-card>
+
+  <app-custom-table
+    [data]="dataSource"
+    [columns]="tableColumns"
+    [loading]="isLoading"
+    [paginated]="true"
+    [pageSize]="pageSize"
+    [pageIndex]="pageIndex"
+    [totalItems]="totalItems"
+    [pageSizeOptions]="pageSizeOptions"
+    [emptyMessage]="'No se encontraron roles con los filtros aplicados'"
+    [rowClickable]="true"
+    (rowClick)="openRoleDetailDialog($event)"
+    (sortChange)="onSortChange($event)"
+    (pageChange)="onPageChange($event)">
+    
+    <!-- Columna Nombre -->
+    <app-custom-table-column property="name" header="Nombre" [sortable]="true">
+      <ng-template let-role>
+        <div class="role-name">
+          <span>{{role.name}}</span>
+          <i *ngIf="role.isSystem" 
+             class="fas fa-shield-alt system-icon" 
+             title="Rol del sistema"></i>
+        </div>
+      </ng-template>
+    </app-custom-table-column>
+    
+    <!-- Columna Descripción -->
+    <app-custom-table-column property="description" header="Descripción" [sortable]="true">
+      <ng-template let-role>
+        {{role.description}}
+      </ng-template>
+    </app-custom-table-column>
+    
+    <!-- Columna Permisos -->
+    <app-custom-table-column property="permissions" header="Permisos">
+      <ng-template let-role>
+        <app-custom-button 
+          [label]="'Ver permisos'" 
+          [variant]="'stroked'"
+          (buttonClick)="openRoleDetailDialog(role); $event.stopPropagation()">
+          <span class="permission-badge">{{getPermissionCount(role)}}</span>
+        </app-custom-button>
+      </ng-template>
+    </app-custom-table-column>
+    
+    <!-- Columna Usuarios -->
+    <app-custom-table-column property="userCount" header="Usuarios" [sortable]="true">
+      <ng-template let-role>
+        <span class="user-count" [ngClass]="{'has-users': role.userCount > 0}">
+          {{role.userCount || 0}}
+        </span>
+      </ng-template>
+    </app-custom-table-column>
+    
+    <!-- Columna Tipo -->
+    <app-custom-table-column property="isSystem" header="Tipo" [sortable]="true">
+      <ng-template let-role>
+        <span class="role-type" [ngClass]="{'system-role': role.isSystem, 'custom-role': !role.isSystem}">
+          {{role.isSystem ? 'Sistema' : 'Personalizado'}}
+        </span>
+      </ng-template>
+    </app-custom-table-column>
+    
+    <!-- Columna Acciones -->
+    <app-custom-table-column property="actions" header="Acciones">
+      <ng-template let-role>
+        <div class="action-buttons">
+          <app-custom-button 
+            [icon]="'eye'" 
+            [variant]="'icon'"
+            (buttonClick)="openRoleDetailDialog(role); $event.stopPropagation()"
+            title="Ver detalles">
+          </app-custom-button>
+          
+          <app-custom-button 
+            [icon]="'edit'" 
+            [variant]="'icon'"
+            [disabled]="role.isSystem"
+            (buttonClick)="openRoleFormDialog(role); $event.stopPropagation()"
+            title="Editar">
+          </app-custom-button>
+          
+          <app-custom-button 
+            [icon]="'trash'" 
+            [variant]="'icon'"
+            [color]="'warn'"
+            [disabled]="role.isSystem || (role.userCount && role.userCount > 0)"
+            (buttonClick)="deleteRole(role); $event.stopPropagation()"
+            title="Eliminar">
+          </app-custom-button>
+        </div>
+      </ng-template>
+    </app-custom-table-column>
+  </app-custom-table>
+</div>

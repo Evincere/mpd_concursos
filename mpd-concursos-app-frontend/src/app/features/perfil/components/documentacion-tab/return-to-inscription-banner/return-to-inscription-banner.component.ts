@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Router, ActivatedRoute } from '@angular/router';
-import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
-import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+
 import { Subscription } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { IInscription } from '@shared/interfaces/inscripcion/inscription.interface';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
 
 @Component({
   selector: 'app-return-to-inscription-banner',
@@ -156,10 +157,11 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private inscriptionStateService: InscriptionStateService,
+    private snackBar: MatSnackBar,
     private inscriptionService: InscriptionService,
-    private snackBar: MatSnackBar
+    private inscriptionStateService: InscriptionStateService
   ) {}
+
 
   ngOnInit(): void {
     console.log('[ReturnToInscriptionBanner] Inicializando componente');
@@ -291,17 +293,70 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
           // Limpiar la marca de redirección para evitar ciclos
           this.inscriptionStateService.clearRedirectFromInscription();
 
+          // Agregar un flag para indicar que se viene desde la pestaña de documentación
+          // y se debe navegar directamente al paso donde se dejó la inscripción
+          this.inscriptionStateService.setDirectContinuation(true);
+
           // Navegar al concurso con parámetros especiales
-          this.router.navigate(['/dashboard/concursos', inscripcionActual.contestId], {
+          // Primero navegar a la página de concursos sin parámetros
+          this.router.navigate(['/dashboard/concursos']).then(() => {
+            // Luego, después de un breve retraso, navegar con los parámetros
+            setTimeout(() => {
+              this.router.navigate(['/dashboard/concursos'], {
+                queryParams: {
+                  continueInscription: 'true',
+                  inscriptionId: inscriptionId,
+                  contestId: inscripcionActual.contestId,
+                  openDialog: 'true',
+                  forceOpen: 'true',
+                  directContinuation: 'true', // Nuevo parámetro para indicar continuación directa
+                  timestamp: new Date().getTime()
+                }
+              }).then(success => {
+                console.log('[ReturnToInscriptionBanner] Resultado de la navegación:', success);
+                if (success) {
+                  this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
+                    duration: 3000
+                  });
+                } else {
+                  this.snackBar.open('Error al navegar al concurso. Intente nuevamente.', 'Cerrar', {
+                    duration: 3000
+                  });
+                }
+              });
+            }, 500); // Esperar 500ms para asegurar que la página de concursos se haya cargado
+          });
+          return;
+        }
+      }
+    });
+
+    // Si no encontramos la inscripción en el servicio, intentar obtener el estado del formulario
+    const formState = this.inscriptionService.getFormState(inscriptionId);
+
+    if (formState && formState['contestId']) {
+      console.log('[ReturnToInscriptionBanner] Estado encontrado en localStorage:', formState);
+
+      // Limpiar la marca de redirección para evitar ciclos
+      this.inscriptionStateService.clearRedirectFromInscription();
+
+      // Navegar al concurso con parámetros especiales
+      // Primero navegar a la página de concursos sin parámetros
+      this.router.navigate(['/dashboard/concursos']).then(() => {
+        // Luego, después de un breve retraso, navegar con los parámetros
+        setTimeout(() => {
+          this.router.navigate(['/dashboard/concursos'], {
             queryParams: {
               continueInscription: 'true',
               inscriptionId: inscriptionId,
+              contestId: formState['contestId'],
               openDialog: 'true',
               forceOpen: 'true',
+              directContinuation: 'true', // Agregar parámetro para indicar continuación directa
               timestamp: new Date().getTime()
             }
           }).then(success => {
-            console.log('[ReturnToInscriptionBanner] Resultado de la navegación:', success);
+            console.log('[ReturnToInscriptionBanner] Resultado de la navegación (formState):', success);
             if (success) {
               this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
                 duration: 3000
@@ -312,40 +367,7 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
               });
             }
           });
-          return;
-        }
-      }
-    });
-
-    // Si no encontramos la inscripción en el servicio, intentar obtener el estado del formulario
-    const formState = this.inscriptionService.getFormState(inscriptionId);
-
-    if (formState && formState.contestId) {
-      console.log('[ReturnToInscriptionBanner] Estado encontrado en localStorage:', formState);
-
-      // Limpiar la marca de redirección para evitar ciclos
-      this.inscriptionStateService.clearRedirectFromInscription();
-
-      // Navegar al concurso con parámetros especiales
-      this.router.navigate(['/dashboard/concursos', formState.contestId], {
-        queryParams: {
-          continueInscription: 'true',
-          inscriptionId: inscriptionId,
-          openDialog: 'true',
-          forceOpen: 'true',
-          timestamp: new Date().getTime()
-        }
-      }).then(success => {
-        console.log('[ReturnToInscriptionBanner] Resultado de la navegación (formState):', success);
-        if (success) {
-          this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
-            duration: 3000
-          });
-        } else {
-          this.snackBar.open('Error al navegar al concurso. Intente nuevamente.', 'Cerrar', {
-            duration: 3000
-          });
-        }
+        }, 500); // Esperar 500ms para asegurar que la página de concursos se haya cargado
       });
       return;
     }
@@ -360,25 +382,33 @@ export class ReturnToInscriptionBannerComponent implements OnInit, OnDestroy {
       this.inscriptionStateService.clearRedirectFromInscription();
 
       // Navegar al concurso con parámetros especiales
-      this.router.navigate(['/dashboard/concursos', inscription.contestId], {
-        queryParams: {
-          continueInscription: 'true',
-          inscriptionId: inscriptionId,
-          openDialog: 'true',
-          forceOpen: 'true',
-          timestamp: new Date().getTime()
-        }
-      }).then(success => {
-        console.log('[ReturnToInscriptionBanner] Resultado de la navegación (método antiguo):', success);
-        if (success) {
-          this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
-            duration: 3000
+      // Primero navegar a la página de concursos sin parámetros
+      this.router.navigate(['/dashboard/concursos']).then(() => {
+        // Luego, después de un breve retraso, navegar con los parámetros
+        setTimeout(() => {
+          this.router.navigate(['/dashboard/concursos'], {
+            queryParams: {
+              continueInscription: 'true',
+              inscriptionId: inscriptionId,
+              contestId: inscription.contestId,
+              openDialog: 'true',
+              forceOpen: 'true',
+              directContinuation: 'true', // Agregar parámetro para indicar continuación directa
+              timestamp: new Date().getTime()
+            }
+          }).then(success => {
+            console.log('[ReturnToInscriptionBanner] Resultado de la navegación (método antiguo):', success);
+            if (success) {
+              this.snackBar.open('Retomando el proceso de inscripción...', 'Cerrar', {
+                duration: 3000
+              });
+            } else {
+              this.snackBar.open('Error al navegar al concurso. Intente nuevamente.', 'Cerrar', {
+                duration: 3000
+              });
+            }
           });
-        } else {
-          this.snackBar.open('Error al navegar al concurso. Intente nuevamente.', 'Cerrar', {
-            duration: 3000
-          });
-        }
+        }, 500); // Esperar 500ms para asegurar que la página de concursos se haya cargado
       });
       return;
     }

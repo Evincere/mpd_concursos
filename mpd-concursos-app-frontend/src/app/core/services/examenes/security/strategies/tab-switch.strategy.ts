@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
-import { ISecurityStrategy } from '@core/interfaces/examenes/security/security-strategy.interface';
+
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ExamenNotificationService } from '@core/services/examenes/examen-notification.service';
 import { BaseSecurityStrategy } from './base-security.strategy';
@@ -16,7 +16,7 @@ export class TabSwitchSecurityStrategy extends BaseSecurityStrategy {
     return SecurityViolationType.TAB_SWITCH;
   }
 
-  override handleViolation(details?: any): void {
+  override handleViolation(_details?: unknown): void {
     this.notificationService.showSecurityWarning(
       SecurityViolationType.TAB_SWITCH,
       'No se permite cambiar de pestaña durante el examen'

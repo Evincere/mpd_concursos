@@ -14,6 +14,7 @@ export interface IInscription {
 }
 
 export interface IInscriptionPreferences {
+  centroDeVida: string;
   selectedCircunscripciones: string[];
   acceptedTerms: boolean;
   confirmedPersonalData: boolean;
@@ -33,11 +34,15 @@ export interface IInscriptionResponse {
   inscriptionDate: string;
   createdAt: string;
   updatedAt: string;
+  currentStep?: string;
+  observations?: string;
 }
 
 export interface IInscriptionStatusResponse {
   status: InscripcionState;
   message?: string;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export interface IInscriptionUpdateRequest {
@@ -48,6 +53,7 @@ export interface IInscriptionUpdateRequest {
 
 export interface IInscriptionStepRequest {
   step: InscriptionStep;
+  centroDeVida?: string;
   selectedCircunscripciones?: string[];
   acceptedTerms?: boolean;
   confirmedPersonalData?: boolean;

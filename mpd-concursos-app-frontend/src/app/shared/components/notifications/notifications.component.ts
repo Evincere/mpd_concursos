@@ -4,13 +4,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from  '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
-import { NotificationsService } from '../../../core/services/notifications/notifications.service';
+
 import { NotificationItemComponent } from '../notification-item/notification-item.component';
 import { NotificationAcknowledgeDialogComponent } from './notification-acknowledge-dialog/notification-acknowledge-dialog.component';
-import { Notification, AcknowledgementLevel } from '../../../core/models/notification.model';
+import { Notification } from  '../../../core/models/notification.model';
+import { NotificationsService } from '@core/services/notifications/notifications.service';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+
 
 @Component({
     selector: 'app-notifications',
@@ -28,6 +31,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     styleUrls: ['./notifications.component.scss']
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
+
+
     notifications: Notification[] = [];
     showNotifications = false;
     unreadCount = 0;
@@ -38,6 +43,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         private dialog: MatDialog,
         private snackBar: MatSnackBar
     ) {}
+
+
 
     ngOnInit(): void {
         this.loadNotifications();
@@ -67,9 +74,15 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     private subscribeToNotifications(): void {
         this.notificationsService.notifications$
             .pipe(takeUntil(this.destroy$))
-            .subscribe(notifications => {
-                this.notifications = notifications;
-                this.updateUnreadCount();
+            .subscribe({
+                next: (notifications: Notification[]) => {
+                    this.notifications = notifications;
+                    this.updateUnreadCount();
+                },
+                error: (error: Error) => {
+                    console.error('Error loading notifications:', error);
+                    this.showErrorMessage('Error al cargar las notificaciones');
+                }
             });
     }
 

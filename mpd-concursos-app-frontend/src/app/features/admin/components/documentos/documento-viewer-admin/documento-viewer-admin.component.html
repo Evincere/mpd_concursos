@@ -1,0 +1,112 @@
+<div class="documento-viewer-container">
+  <div class="documento-toolbar">
+    <div class="toolbar-section">
+      <button mat-icon-button matTooltip="Acercar" (click)="acercar()">
+        <mat-icon>zoom_in</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Alejar" (click)="alejar()">
+        <mat-icon>zoom_out</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Rotar" (click)="rotar()">
+        <mat-icon>rotate_right</mat-icon>
+      </button>
+    </div>
+    
+    <div class="toolbar-section">
+      <button mat-icon-button matTooltip="Página anterior" (click)="paginaAnterior()" [disabled]="pagina <= 1">
+        <mat-icon>navigate_before</mat-icon>
+      </button>
+      <span class="pagina-info">{{pagina}} / {{totalPaginas}}</span>
+      <button mat-icon-button matTooltip="Página siguiente" (click)="paginaSiguiente()" [disabled]="pagina >= totalPaginas">
+        <mat-icon>navigate_next</mat-icon>
+      </button>
+    </div>
+    
+    <div class="toolbar-section">
+      <button mat-icon-button matTooltip="Añadir anotación" (click)="toggleModoAnotacion()" [color]="modoAnotacion ? 'accent' : ''">
+        <mat-icon>comment</mat-icon>
+      </button>
+    </div>
+  </div>
+  
+  <div class="documento-content">
+    <div class="documento-viewer" #pdfViewer [style.transform]="'scale(' + escala + ') rotate(' + rotacion + 'deg)'">
+      <div *ngIf="cargando" class="documento-loading">
+        <mat-icon>hourglass_empty</mat-icon>
+        <span>Cargando documento...</span>
+      </div>
+      
+      <div *ngIf="error" class="documento-error">
+        <mat-icon>error</mat-icon>
+        <span>Error al cargar el documento</span>
+      </div>
+      
+      <iframe *ngIf="!cargando && !error" [src]="documentoUrl" frameborder="0"></iframe>
+      
+      <!-- Anotaciones -->
+      <div *ngFor="let anotacion of anotaciones" class="anotacion" [style.left.%]="anotacion.posicionX" [style.top.%]="anotacion.posicionY">
+        <div class="anotacion-marker" matTooltip="{{anotacion.texto}}">
+          <mat-icon>comment</mat-icon>
+        </div>
+      </div>
+      
+      <!-- Anotación temporal -->
+      <div *ngIf="anotacionTemporal" class="anotacion-temporal" [style.left.%]="anotacionTemporal.x" [style.top.%]="anotacionTemporal.y">
+        <div class="anotacion-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Anotación</mat-label>
+            <input matInput [(ngModel)]="anotacionTexto" #anotacionInput>
+          </mat-form-field>
+          <div class="anotacion-actions">
+            <button mat-button color="primary" (click)="guardarAnotacion()" [disabled]="!anotacionTexto.trim()">Guardar</button>
+            <button mat-button (click)="cancelarAnotacion()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="documento-info">
+    <h3>Información del documento</h3>
+    <div class="info-item">
+      <span class="info-label">Nombre:</span>
+      <span class="info-value">{{documento.nombreArchivo}}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Tipo:</span>
+      <span class="info-value">{{documento.tipoDocumento?.nombre}}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Fecha de carga:</span>
+      <span class="info-value">{{documento.fechaCarga | date:'dd/MM/yyyy HH:mm'}}</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">Estado:</span>
+      <span class="info-value" [ngClass]="{
+        'estado-pendiente': documento.estado === 'pendiente',
+        'estado-aprobado': documento.estado === 'aprobado',
+        'estado-rechazado': documento.estado === 'rechazado'
+      }">{{documento.estado | titlecase}}</span>
+    </div>
+    
+    <div *ngIf="documento.estado === 'rechazado'" class="info-item">
+      <span class="info-label">Motivo de rechazo:</span>
+      <span class="info-value">{{documento.motivoRechazo}}</span>
+    </div>
+    
+    <div *ngIf="documento.validadoPor" class="info-item">
+      <span class="info-label">Validado por:</span>
+      <span class="info-value">{{documento.validadoPor}}</span>
+    </div>
+    
+    <div *ngIf="documento.fechaValidacion" class="info-item">
+      <span class="info-label">Fecha de validación:</span>
+      <span class="info-value">{{documento.fechaValidacion | date:'dd/MM/yyyy HH:mm'}}</span>
+    </div>
+    
+    <div *ngIf="documento.comentarios" class="info-item">
+      <span class="info-label">Comentarios:</span>
+      <span class="info-value">{{documento.comentarios}}</span>
+    </div>
+  </div>
+</div>

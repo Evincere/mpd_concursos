@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
-import { ISecurityStrategy } from '@core/interfaces/examenes/security/security-strategy.interface';
+
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { ExamenNotificationService } from '@core/services/examenes/examen-notification.service';
 import { BaseSecurityStrategy } from './base-security.strategy';
@@ -21,10 +21,11 @@ export class KeyboardSecurityStrategy extends BaseSecurityStrategy {
     return SecurityViolationType.KEYBOARD_SHORTCUT;
   }
 
-  override handleViolation(details?: any): void {
+  override handleViolation(details?: unknown): void {
+    const detailsObj = details as { key?: string } || {};
     this.notificationService.showSecurityWarning(
       SecurityViolationType.KEYBOARD_SHORTCUT,
-      `Atajo de teclado no permitido${details?.key ? `: ${details.key}` : ''}`
+      `Atajo de teclado no permitido${detailsObj.key ? `: ${detailsObj.key}` : ''}`
     );
     this.violations$.next(this.getType());
   }

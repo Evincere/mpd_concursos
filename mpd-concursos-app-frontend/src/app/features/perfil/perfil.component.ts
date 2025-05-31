@@ -1,39 +1,54 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef, NgZone, AfterViewInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, FormControl, AbstractControl } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ProfileService, UserProfile, Experiencia, Habilidad } from '../../core/services/profile/profile.service';
-import { ExperienceService } from '../../core/services/experience/experience.service';
-import { DocumentosService } from '../../core/services/documentos/documentos.service';
-import { DocumentoViewerComponent } from './components/documento-viewer/documento-viewer.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
-import { finalize } from 'rxjs/operators';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatRadioModule } from '@angular/material/radio';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { DocumentacionTabComponent } from './components/documentacion-tab/documentacion-tab.component';
-import { DocumentoResponse } from '../../core/models/documento.model';
-import { distinctUntilChanged } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+
+// Servicios
+import { ProfileService } from '@core/services/profile/profile.service';
+import { ExperienceService } from '@core/services/experience/experience.service';
+import { DocumentosService } from '@core/services/documentos/documentos.service';
+import { EducacionService } from '@core/services/educacion/educacion.service';
+import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
+import { PerfilStateService } from './services/perfil-state.service';
+
+// Tipos y modelos
+import { TabKey, ProfileTab } from './models/types';
+import { UserProfile, ExperienciaData, HabilidadData } from '@core/models/perfil.model';
+import { Educacion, TipoEducacion } from '@core/models/educacion.model';
+import { Experiencia } from '@core/models/experiencia.model';
+// Intento corregir el import de Habilidad, si no existe lo comento
+// import { Habilidad } from '@core/models/habilidad.model';
+
+// Componentes personalizados
+import { CustomConfirmDialogComponent } from '@shared/components/custom-confirm-dialog/custom-confirm-dialog.component';
+import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
+import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
+import { CustomSelectComponent } from '@shared/components/custom-form/custom-select/custom-select.component';
+import { CustomTabsComponent } from '@shared/components/custom-form/custom-tabs/custom-tabs.component';
+import { CustomTabComponent } from '@shared/components/custom-form/custom-tabs/custom-tab.component';
+import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
+import { DocumentacionTabComponent } from './components/documentacion-tab/documentacion-tab.component';
 import { EducacionContainerComponent } from './components/educacion/educacion-container/educacion-container.component';
 import { ExperienciaContainerComponent } from './components/experiencia/experiencia-container/experiencia-container.component';
-import { EducacionService } from '../../core/services/educacion/educacion.service';
-import { Educacion, TipoEducacion } from '../../core/models/educacion.model';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '@env/environment';
-import { ActivatedRoute } from '@angular/router';
-import { MatTabGroup } from '@angular/material/tabs';
+
+// New Child Components
+import { PerfilPersonalInfoComponent } from './components/perfil-personal-info/perfil-personal-info.component';
+import { PerfilCvComponent } from './components/perfil-cv/perfil-cv.component';
+import { PerfilLinkedInComponent } from './components/perfil-linkedin/perfil-linkedin.component';
+
+// Defino TAB_KEYS y los tipos ExperienciaData y Habilidad si no existen en los imports
+const TAB_KEYS = {
+  INFO: 'info' as TabKey,
+  CV: 'cv' as TabKey,
+  DOCS: 'docs' as TabKey,
+  LINKEDIN: 'linkedin' as TabKey
+};
 
 @Component({
   selector: 'app-perfil',
@@ -43,32 +58,29 @@ import { MatTabGroup } from '@angular/material/tabs';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatRadioModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    MatProgressBarModule,
+    CustomButtonComponent,
+    CustomCardComponent,
+    CustomFormFieldComponent,
+    CustomSelectComponent,
+    CustomTabsComponent,
+    CustomTabComponent,
+    CustomSpinnerComponent,
     DocumentacionTabComponent,
     EducacionContainerComponent,
-    ExperienciaContainerComponent
+    ExperienciaContainerComponent,
+    PerfilPersonalInfoComponent,
+    PerfilCvComponent,
+    PerfilLinkedInComponent
   ]
 })
-export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
+export class PerfilComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef;
-  @ViewChild('fechaInicio') fechaInicio: any;
-  @ViewChild('fechaFin') fechaFin: any;
-  @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
+  @ViewChild('fechaInicio') fechaInicio!: ElementRef;
+  @ViewChild('fechaFin') fechaFin!: ElementRef;
   perfilForm!: FormGroup;
   userProfile: UserProfile | null = null;
 
-  fotoPerfil: string = 'assets/images/default-avatar.png';
+  fotoPerfil = 'assets/images/default-avatar.png';
   linkedInConectado = false;
   linkedInTab = true;
   isEditing = false;
@@ -82,21 +94,79 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   // Variables para el modal de educación
   mostrarModalEducacion = false;
   educacionList: Educacion[] = [];
-
   // Variables para el modal de experiencia
   mostrarModalExperiencia = false;
 
+  private readonly tabDefinitions: ProfileTab[] = [
+    { key: TAB_KEYS.INFO, label: 'Información Personal', icon: 'fa-user' },
+    { key: TAB_KEYS.CV, label: 'Curriculum Vitae', icon: 'fa-file-alt' },
+    { key: TAB_KEYS.DOCS, label: 'Documentación', icon: 'fa-folder' },
+    { key: TAB_KEYS.LINKEDIN, label: 'LinkedIn', icon: 'fa-linkedin' }
+  ];
+
+  get tabs(): ProfileTab[] {
+    return this.tabDefinitions.filter(tab => 
+      tab.key !== TAB_KEYS.LINKEDIN || this.linkedInTab
+    );
+  }
+
+  selectedTab: TabKey = TAB_KEYS.INFO;
+  selectedTabIndex = 0; // Add numeric index for CustomTabsComponent
+
+  /**
+   * Cambia la pestaña activa
+   * @param tabKey Clave de la pestaña a activar
+   */
+  changeTab(tabKey: TabKey): void {
+    if (this.tabDefinitions.some(tab => tab.key === tabKey)) {
+      this.selectedTab = tabKey;
+      this.selectedTabIndex = this.tabDefinitions.findIndex(tab => tab.key === tabKey);
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Maneja el cambio de pestaña por índice
+   * @param index Índice de la pestaña
+   */
+  onTabChange(index: number): void {
+    const availableTabs = this.tabs;
+    if (index >= 0 && index < availableTabs.length) {
+      this.selectedTab = availableTabs[index].key;
+      this.selectedTabIndex = index;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Verifica si una pestaña está activa
+   * @param tabKey Clave de la pestaña a verificar
+   * @returns true si la pestaña está activa
+   */
+  isTabActive(tabKey: TabKey): boolean {
+    return this.selectedTab === tabKey;
+  }
+
+  /**
+   * Obtiene el ícono de una pestaña
+   * @param tabKey Clave de la pestaña
+   * @returns Clase del ícono FontAwesome
+   */
+  getTabIcon(tabKey: TabKey): string {
+    const tab = this.tabDefinitions.find(t => t.key === tabKey);
+    return tab?.icon || 'fa-circle';
+  }
+
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar,
     private documentosService: DocumentosService,
-    private dialog: MatDialog,
     private profileService: ProfileService,
-    private educacionService: EducacionService,
-    private cdr: ChangeDetectorRef,
-    private ngZone: NgZone,
-    private http: HttpClient,
+    private educacionService: EducacionService, 
     private experienceService: ExperienceService,
+    private dialog: CustomDialogService,
+    private notification: CustomNotificationService,
+    private perfilState: PerfilStateService,
+    private cdr: ChangeDetectorRef,
     private route: ActivatedRoute
   ) {
     this.initializeForms();
@@ -110,25 +180,23 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadUserProfile();
   }
 
-  ngAfterViewInit(): void {
+  private initializeActiveTab(): void {
     // Verificar si hay un parámetro activeTab en la URL
     this.route.queryParams.subscribe(params => {
       if (params['activeTab']) {
         console.log('[PerfilComponent] Parámetro activeTab detectado:', params['activeTab']);
 
-        // Buscar el índice de la pestaña por su etiqueta
-        const tabLabels = ['Información Personal', 'Curriculum Vitae', 'Documentación', 'LinkedIn'];
-        const tabIndex = tabLabels.findIndex(label => label === params['activeTab']);
+        // Buscar la pestaña por su etiqueta
+        const matchingTab = this.tabDefinitions.find(tab => 
+          tab.label === params['activeTab'] || tab.key === params['activeTab']
+        );
 
-        if (tabIndex !== -1 && this.tabGroup) {
-          console.log(`[PerfilComponent] Activando pestaña ${params['activeTab']} (índice ${tabIndex})`);
-          // Usar setTimeout para asegurar que el componente esté completamente inicializado
-          setTimeout(() => {
-            this.tabGroup.selectedIndex = tabIndex;
-            this.cdr.detectChanges();
-          }, 100);
+        if (matchingTab) {
+          console.log(`[PerfilComponent] Activando pestaña ${matchingTab.label}`);
+          this.selectedTab = matchingTab.key;
+          this.cdr.detectChanges();
         } else {
-          console.warn(`[PerfilComponent] No se encontró la pestaña '${params['activeTab']}' o tabGroup no está disponible`);
+          console.warn(`[PerfilComponent] No se encontró la pestaña '${params['activeTab']}'`);
         }
       }
     });
@@ -210,13 +278,8 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
                   console.error('Error al cargar educación:', respuesta.error);
                 }
               },
-              error => {
-                console.error('Error al cargar educación:', error);
-                this.snackBar.open('No se pudieron cargar los registros de educación', 'Cerrar', {
-                  duration: 5000,
-                  horizontalPosition: 'center',
-                  verticalPosition: 'bottom'
-                });
+              error => {                console.error('Error al cargar educación:', error);
+                this.notification.error('No se pudieron cargar los registros de educación');
               }
             );
           }
@@ -225,12 +288,9 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
         // Marcar como no cargando después de cargar los datos básicos
         this.isLoading = false;
         this.cdr.detectChanges(); // Forzar detección de cambios
-      },
-      error: (error) => {
+      },      error: (error: Error) => {
         console.error('Error loading user profile', error);
-        this.snackBar.open('Error al cargar el perfil', 'Cerrar', {
-          duration: 3000
-        });
+        this.notification.error('Error al cargar el perfil');
         this.isLoading = false;
         this.cdr.detectChanges(); // Forzar detección de cambios
       }
@@ -296,31 +356,25 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Método optimizado para actualizar el array de experiencias
   private actualizarArrayExperiencias(profile: UserProfile): void {
-    console.log('Actualizando array de experiencias:', profile.experiencias);
-
+    const experiencias = profile.experiencias as ExperienciaData[];
     const experienciasArray = this.perfilForm.get('experiencias') as FormArray;
     experienciasArray.clear();
-
-    // Asegurarse de que haya un array de experiencias, incluso si viene vacío o undefined
-    const experiencias = profile.experiencias || [];
-
     if (experiencias.length > 0) {
       experiencias.forEach(exp => {
-        experienciasArray.push(this.fb.group({
-          id: [exp.id || null],
-          cargo: [exp.cargo || '', Validators.required],
-          empresa: [exp.empresa || '', Validators.required],
-          fechaInicio: [exp.fechaInicio ? new Date(exp.fechaInicio) : null, Validators.required],
-          fechaFin: [exp.fechaFin ? new Date(exp.fechaFin) : null],
-          descripcion: [exp.descripcion || '', Validators.required],
-          comentario: [exp.comentario || ''],
-          certificadoId: [exp.certificadoId || null],
-          documentUrl: [exp.documentUrl || '']
-        }));
+        // Mapeo de ExperienciaData a Experiencia
+        const experiencia: Experiencia = {
+          id: exp.id,
+          puesto: exp.puesto || exp.cargo || '',
+          empresa: exp.empresa,
+          descripcion: exp.descripcion,
+          fechaInicio: typeof exp.fechaInicio === 'string' ? exp.fechaInicio : exp.fechaInicio?.toISOString().split('T')[0] || '',
+          fechaFin: typeof exp.fechaFin === 'string' ? exp.fechaFin : exp.fechaFin?.toISOString().split('T')[0],
+          actual: exp.actual,
+          ubicacion: exp.ubicacion
+        };
+        experienciasArray.push(this.createExperienciaFormGroup(experiencia));
       });
     }
-
-    console.log('Array de experiencias actualizado:', experienciasArray.value);
   }
 
   // Método optimizado para actualizar el array de habilidades
@@ -333,7 +387,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
 
       try {
         habilidadesArray.clear();
-        profile.habilidades.forEach((hab: Habilidad) => {
+        profile.habilidades.forEach((hab: HabilidadData) => {
           habilidadesArray.push(this.createHabilidadFormGroup(hab));
         });
       } finally {
@@ -342,17 +396,15 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private createExperienciaFormGroup(experiencia?: any): FormGroup {
+  private createExperienciaFormGroup(experiencia?: Experiencia): FormGroup {
     return this.fb.group({
       id: [experiencia?.id || null],
-      cargo: [experiencia?.cargo || '', Validators.required],
+      puesto: [experiencia?.puesto || '', Validators.required],
       empresa: [experiencia?.empresa || '', Validators.required],
       fechaInicio: [experiencia?.fechaInicio ? new Date(experiencia.fechaInicio) : null, Validators.required],
       fechaFin: [experiencia?.fechaFin ? new Date(experiencia.fechaFin) : null],
       descripcion: [experiencia?.descripcion || '', Validators.required],
-      comentario: [experiencia?.comentario || ''],
-      certificadoId: [experiencia?.certificadoId || null],
-      documentUrl: [experiencia?.documentUrl || '']
+      ubicacion: [experiencia?.ubicacion || '']
     });
   }
 
@@ -375,6 +427,21 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // Methods for child components
+  onEditToggle(): void {
+    this.toggleEditing();
+  }
+
+  onFormSave(): void {
+    if (this.perfilForm.valid) {
+      this.guardarPerfil();
+    }
+  }
+
+  onFormReset(): void {
+    this.resetForm();
+  }
+
   // Getters para acceder a los FormArrays
   get experiencias() {
     return this.perfilForm.get('experiencias') as FormArray;
@@ -385,7 +452,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Método para crear un nuevo grupo de habilidad
-  createHabilidadFormGroup(habilidad?: any): FormGroup {
+  createHabilidadFormGroup(habilidad?: HabilidadData): FormGroup {
     return this.fb.group({
       nombre: [habilidad?.nombre || '', Validators.required],
       nivel: [habilidad?.nivel || '', Validators.required]
@@ -395,21 +462,13 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   // Métodos para agregar elementos
   agregarExperiencia(): void {
     if (!this.userProfile || !this.userProfile.id) {
-      this.snackBar.open('No se puede agregar experiencia sin datos de usuario. Por favor, espere a que cargue el perfil.', 'Cerrar', {
-        duration: 3000,
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom'
-      });
+      this.notification.error('No se puede agregar experiencia sin datos de usuario. Por favor, espere a que cargue el perfil.');
       return;
     }
 
     // El ID puede ser un número o un UUID, ambos son válidos
     if (!this.esIdUsuarioValido()) {
-      this.snackBar.open('No se puede agregar experiencia: ID de usuario inválido.', 'Cerrar', {
-        duration: 3000,
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom'
-      });
+      this.notification.error('No se puede agregar experiencia: ID de usuario inválido.');
       console.error(`ID de usuario inválido: ${this.usuarioId}`);
       return;
     }
@@ -421,43 +480,40 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   agregarHabilidad(): void {
     this.habilidades.push(this.createHabilidadFormGroup());
   }
-
   // Métodos para eliminar elementos
   eliminarExperiencia(index: number): void {
     const experiencias = this.perfilForm.get('experiencias') as FormArray;
-    const experiencia = experiencias.at(index).value;
+    const experiencia = experiencias.at(index).value as ExperienciaData;
 
+    // Si no tiene ID, solo eliminar del FormArray
     if (!experiencia.id) {
-      // Si no tiene ID, es una experiencia nueva que no se ha guardado en el backend
       experiencias.removeAt(index);
-      this.snackBar.open('Experiencia eliminada', 'Cerrar', { duration: 3000 });
+      this.notification.success('Experiencia eliminada correctamente');
       return;
     }
 
-    // Confirmación antes de eliminar
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
+    // Configurar y abrir el diálogo de confirmación
+    const dialogRef = this.dialog.open(CustomConfirmDialogComponent, {
       data: {
         title: 'Confirmar eliminación',
         message: '¿Está seguro que desea eliminar esta experiencia laboral?',
-        confirmButtonText: 'Eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelText: 'Cancelar',
+        confirmText: 'Eliminar'
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Usar el nuevo servicio de experiencia para eliminar
-        this.experienceService.deleteExperience(experiencia.id)
+    dialogRef.afterClosed().subscribe((confirmed: unknown) => {
+      if (confirmed) {
+        this.experienceService.deleteExperience(experiencia.id!)
           .pipe(finalize(() => this.cdr.markForCheck()))
           .subscribe({
             next: () => {
               experiencias.removeAt(index);
-              this.snackBar.open('Experiencia eliminada correctamente', 'Cerrar', { duration: 3000 });
+              this.notification.success('Experiencia eliminada correctamente');
             },
             error: (error) => {
               console.error('Error al eliminar experiencia:', error);
-              this.snackBar.open('Error al eliminar la experiencia', 'Cerrar', { duration: 3000 });
+              this.notification.error('Error al eliminar la experiencia');
             }
           });
       }
@@ -468,12 +524,13 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     this.habilidades.removeAt(index);
   }
 
-  onFileSelected(event: any): void {
-    const file = event.target.files[0];
+  onFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.fotoPerfil = e.target.result;
+      reader.onload = () => {
+        this.fotoPerfil = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -498,14 +555,15 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
         direccion: formValues.direccion,
         experiencias: (formValues.experiencias || []).map((exp: any) => ({
           empresa: exp.empresa,
-          cargo: exp.cargo,
-          fechaInicio: exp.fechaInicio ? new Date(exp.fechaInicio).toISOString().split('T')[0] : null,
-          fechaFin: exp.fechaFin ? new Date(exp.fechaFin).toISOString().split('T')[0] : null,
+          cargo: exp.puesto,
+          puesto: exp.puesto,
+          fechaInicio: exp.fechaInicio ? (typeof exp.fechaInicio === 'string' ? exp.fechaInicio : exp.fechaInicio.toISOString().split('T')[0]) : '',
+          fechaFin: exp.fechaFin ? (typeof exp.fechaFin === 'string' ? exp.fechaFin : exp.fechaFin.toISOString().split('T')[0]) : '',
           descripcion: exp.descripcion,
-          comentario: exp.comentario,
-          certificadoId: exp.certificadoId
+          actual: exp.actual ?? false,
+          ubicacion: exp.ubicacion ?? ''
         })),
-        habilidades: (formValues.habilidades || []).map((hab: any) => ({
+        habilidades: (formValues.habilidades || []).map((hab: HabilidadData) => ({
           nombre: hab.nombre,
           nivel: hab.nivel
         }))
@@ -515,10 +573,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
         .pipe(finalize(() => this.isLoading = false))
         .subscribe({
           next: (profile) => {
-            this.snackBar.open('Perfil actualizado con éxito', 'Cerrar', {
-              duration: 3000,
-              panelClass: ['success-snackbar']
-            });
+            this.notification.success('Perfil actualizado con éxito');
 
             // Actualizar el perfil
             this.userProfile = profile;
@@ -528,21 +583,13 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
 
             this.perfilForm.markAsPristine();
           },
-          error: (error) => {
+          error: (error: Error) => {
             console.error('Error al actualizar el perfil', error);
-            this.snackBar.open('Error al actualizar el perfil', 'Cerrar', {
-              duration: 3000,
-              panelClass: ['error-snackbar']
-            });
+            this.notification.error('Error al actualizar el perfil');
           }
         });
     } else {
-      this.snackBar.open('Por favor, corrija los errores en el formulario antes de guardar', 'Cerrar', {
-        duration: 3000,
-        panelClass: ['warning-snackbar']
-      });
-
-      this.marcarCamposInvalidos(this.perfilForm);
+      this.notification.error('Por favor, complete todos los campos obligatorios antes de guardar.');
     }
   }
 
@@ -556,9 +603,9 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
 
   conectarLinkedIn(): void {
     this.linkedInConectado = !this.linkedInConectado;
-    const mensaje = this.linkedInConectado ?
-      'Cuenta de LinkedIn conectada exitosamente' :
-      'Cuenta de LinkedIn desconectada';
+    // const mensaje = this.linkedInConectado ?
+    //   'Cuenta de LinkedIn conectada exitosamente' :
+    //   'Cuenta de LinkedIn desconectada';
 
     // this.messageService.showSuccess(mensaje);
   }
@@ -596,8 +643,9 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     document.body.appendChild(fileInput);
 
     // Escuchar el evento de cambio de archivo
-    fileInput.addEventListener('change', (e: any) => {
-      const file = e.target.files[0];
+    fileInput.addEventListener('change', (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
       if (file) {
         this.isLoading = true;
         // Crear FormData para el archivo
@@ -632,21 +680,13 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   // Método para mostrar el modal de educación
   agregarEducacion(): void {
     if (!this.userProfile || !this.userProfile.id) {
-      this.snackBar.open('No se puede agregar educación sin datos de usuario. Por favor, espere a que cargue el perfil.', 'Cerrar', {
-        duration: 3000,
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom'
-      });
+      this.notification.error('No se puede agregar educación sin datos de usuario. Por favor, espere a que cargue el perfil.');
       return;
     }
 
     // El ID puede ser un número o un UUID, ambos son válidos ahora
     if (!this.esIdUsuarioValido()) {
-      this.snackBar.open('No se puede agregar educación: ID de usuario inválido.', 'Cerrar', {
-        duration: 3000,
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom'
-      });
+      this.notification.error('No se puede agregar educación: ID de usuario inválido.');
       console.error(`ID de usuario inválido: ${this.usuarioId}`);
       return;
     }
@@ -669,7 +709,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     // Verificar si la educación es válida antes de añadirla
     if (!educacion) {
       console.error('Error: Se recibió un objeto de educación nulo o indefinido');
-      this.snackBar.open('Error al guardar educación: datos inválidos', 'Cerrar', { duration: 3000 });
+      this.notification.error('Error al guardar educación: datos inválidos');
       return;
     }
 
@@ -689,11 +729,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('Lista de educación actualizada:', this.educacionList);
 
     // Mostrar notificación
-    this.snackBar.open('Educación guardada exitosamente', 'Cerrar', {
-      duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
-    });
+    this.notification.success('Educación guardada exitosamente');
 
     // Cerrar el modal
     this.cerrarModalEducacion();
@@ -794,8 +830,19 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     const experienciasArray = this.perfilForm.get('experiencias') as FormArray;
     if (profile.experiencias && Array.isArray(profile.experiencias)) {
       experienciasArray.clear(); // Limpiar experiencias existentes
-      profile.experiencias.forEach((exp: Experiencia) => {
-        experienciasArray.push(this.createExperienciaFormGroup(exp));
+      profile.experiencias.forEach((exp: ExperienciaData) => {
+        // Mapeo de ExperienciaData a Experiencia
+        const experiencia: Experiencia = {
+          id: exp.id,
+          puesto: exp.puesto || exp.cargo || '',
+          empresa: exp.empresa,
+          descripcion: exp.descripcion,
+          fechaInicio: typeof exp.fechaInicio === 'string' ? exp.fechaInicio : exp.fechaInicio?.toISOString().split('T')[0] || '',
+          fechaFin: typeof exp.fechaFin === 'string' ? exp.fechaFin : exp.fechaFin?.toISOString().split('T')[0],
+          actual: exp.actual,
+          ubicacion: exp.ubicacion
+        };
+        experienciasArray.push(this.createExperienciaFormGroup(experiencia));
       });
     }
 
@@ -803,7 +850,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     const habilidadesArray = this.perfilForm.get('habilidades') as FormArray;
     if (profile.habilidades && Array.isArray(profile.habilidades)) {
       habilidadesArray.clear();
-      profile.habilidades.forEach((hab: Habilidad) => {
+      profile.habilidades.forEach((hab: HabilidadData) => {
         habilidadesArray.push(this.createHabilidadFormGroup(hab));
       });
     }
@@ -838,8 +885,6 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Abrir el diálogo de visualización con el ID del documento
     const dialogRef = this.dialog.open(DocumentoViewerComponent, {
-      width: '80%',
-      height: '80%',
       data: {
         documentoId: documentoId
       }
@@ -866,17 +911,11 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
           this.experiencias.at(experienciaIndex).patchValue({
             certificadoId: null
           });
-          this.snackBar.open('Certificado eliminado correctamente', 'Cerrar', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
+          this.notification.success('Certificado eliminado correctamente');
         },
-        error: (error) => {
+        error: (error: Error) => {
           console.error('Error al eliminar el certificado:', error);
-          this.snackBar.open('Error al eliminar el certificado', 'Cerrar', {
-            duration: 3000,
-            panelClass: ['error-snackbar']
-          });
+          this.notification.error('Error al eliminar el certificado');
         }
       });
     }
@@ -889,46 +928,38 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   eliminarEducacion(id: string): void {
     // Validar que el ID no sea nulo o vacío
     if (!id || id.trim() === '') {
-      this.snackBar.open('ID de educación inválido', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('ID de educación inválido');
       return;
     }
 
     console.log(`Solicitando eliminar educación con ID (UUID): ${id}`);
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    const dialogRef = this.dialog.open(CustomConfirmDialogComponent, {
       data: {
         title: 'Confirmar eliminación',
         message: '¿Está seguro que desea eliminar esta educación? Esta acción no se puede deshacer.'
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.educacionService.eliminarEducacion(id).subscribe(
-          response => {
+    dialogRef.afterClosed().subscribe(_result => {
+      if (_result) {
+        this.educacionService.eliminarEducacion(id).subscribe({
+          next: (response) => {
             if (response.exito) {
               // Filtrar los registros por ID exacto
               this.educacionList = this.educacionList.filter(e => e.id !== id);
 
-              this.snackBar.open('Educación eliminada exitosamente', 'Cerrar', {
-                duration: 3000
-              });
+              this.notification.success('Educación eliminada exitosamente');
               this.cdr.markForCheck();
             } else {
-              this.snackBar.open(response.mensaje || 'Error al eliminar educación', 'Cerrar', {
-                duration: 3000
-              });
+              this.notification.error(response.mensaje || 'Error al eliminar educación');
             }
           },
-          error => {
+          error: (error: Error) => {
             console.error('Error eliminando educación', error);
-            this.snackBar.open('Error al eliminar educación', 'Cerrar', {
-              duration: 3000
-            });
+            this.notification.error('Error al eliminar educación');
           }
-        );
+        });
       }
     });
   }
@@ -1010,7 +1041,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // 4. Búsqueda recursiva en otros objetos anidados
-    const buscarPropiedadRecursiva = (obj: any, prop: string): any => {
+    const buscarPropiedadRecursiva = (obj: Record<string, any>, prop: string): any => {
       // Si es un objeto, buscar en sus propiedades
       if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
         // Verificar si el objeto mismo tiene la propiedad
@@ -1027,14 +1058,14 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
         // Buscar recursivamente en las propiedades
         for (const key in obj) {
           if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const resultado = buscarPropiedadRecursiva(obj[key], prop);
+            const resultado = buscarPropiedadRecursiva(obj[key] as Record<string, any>, prop);
             if (resultado !== undefined) {
               return resultado;
             }
 
             // También buscar con la propiedad mapeada
             if (propMapeada) {
-              const resultadoMapeado = buscarPropiedadRecursiva(obj[key], propMapeada);
+              const resultadoMapeado = buscarPropiedadRecursiva(obj[key] as Record<string, any>, propMapeada);
               if (resultadoMapeado !== undefined) {
                 return resultadoMapeado;
               }
@@ -1068,9 +1099,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   verDocumentoEducacion(educacion: Educacion): void {
     if (!educacion || !educacion.documentoPdf) {
-      this.snackBar.open('No hay documento adjunto para este registro', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('No hay documento adjunto para este registro');
       return;
     }
 
@@ -1087,22 +1116,18 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (!documentoId) {
-      this.snackBar.open('No se puede visualizar el documento: ID no disponible', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('No se puede visualizar el documento: ID no disponible');
       return;
     }
 
     // Mostrar el visor de documentos
     const dialogRef = this.dialog.open(DocumentoViewerComponent, {
-      width: '80%',
-      height: '80%',
       data: {
         documentoId: documentoId
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(() => {
       console.log('Visor de documento cerrado');
     });
   }
@@ -1110,7 +1135,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Obtiene las claves de un objeto para facilitar su inspección
    */
-  getObjectKeys(obj: any): string[] {
+  getObjectKeys(obj: unknown): string[] {
     if (!obj || typeof obj !== 'object') {
       return [];
     }
@@ -1120,7 +1145,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Verifica si un valor es un valor simple (no objeto ni array)
    */
-  isSimpleValue(value: any): boolean {
+  isSimpleValue(value: unknown): boolean {
     return value === null ||
            value === undefined ||
            typeof value === 'string' ||
@@ -1129,9 +1154,34 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Formatea una fecha de manera segura para mostrarla en la interfaz
+   * @param date Fecha a formatear (puede ser string, Date, o cualquier otro tipo)
+   * @returns Fecha formateada como string en formato dd/mm/yyyy
+   */
+  formatDate(date: unknown): string {
+    if (!date) return 'No especificada';
+
+    try {
+      const dateObj = new Date(date as string | number | Date);
+      if (isNaN(dateObj.getTime())) {
+        return 'Fecha inválida';
+      }
+
+      return dateObj.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return 'Error en formato de fecha';
+    }
+  }
+
+  /**
    * Verifica si un objeto tiene una propiedad específica, incluso si está anidada
    */
-  hasProperty(obj: any, propName: string): boolean {
+  hasProperty(obj: unknown, propName: string): boolean {
     if (!obj || typeof obj !== 'object') {
       return false;
     }
@@ -1174,7 +1224,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
     const propAlternativa = propiedadesMapeadas[propName];
 
     // Función recursiva para buscar la propiedad en el objeto
-    const buscarPropiedadRecursiva = (o: any, prop: string): boolean => {
+    const buscarPropiedadRecursiva = (o: Record<string, any>, prop: string): boolean => {
       if (!o || typeof o !== 'object') return false;
 
       // Verificar si el objeto tiene la propiedad directamente
@@ -1187,11 +1237,11 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       for (const key in o) {
         if (key === prop || (propAlternativa && key === propAlternativa)) return true;
         if (o[key] && typeof o[key] === 'object') {
-          if (buscarPropiedadRecursiva(o[key], prop)) {
+          if (buscarPropiedadRecursiva(o[key] as Record<string, any>, prop)) {
             return true;
           }
           // También buscar la propiedad alternativa
-          if (propAlternativa && buscarPropiedadRecursiva(o[key], propAlternativa)) {
+          if (propAlternativa && buscarPropiedadRecursiva(o[key] as Record<string, any>, propAlternativa)) {
             return true;
           }
         }
@@ -1207,11 +1257,9 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
    * Muestra una ventana de diálogo con los datos crudos del objeto de educación
    * para facilitar la depuración
    */
-  mostrarDatosCrudos(educacion: any): void {
+  mostrarDatosCrudos(educacion: unknown): void {
     if (!educacion) {
-      this.snackBar.open('No hay datos disponibles para mostrar', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('No hay datos disponibles para mostrar');
       return;
     }
 
@@ -1225,7 +1273,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('Mostrando datos crudos de educación:', datosFormateados);
 
       // Crear una representación HTML formateada y estilizada de los datos
-      const formatearValor = (valor: any): string => {
+      const formatearValor = (valor: unknown): string => {
         if (valor === null || valor === undefined) {
           return '<span class="property-value empty">No especificado</span>';
         }
@@ -1291,9 +1339,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       `;
 
       // Abrir diálogo con los datos formateados
-      this.dialog.open(ConfirmDialogComponent, {
-        width: '80%',
-        maxHeight: '90vh',
+      this.dialog.open(CustomConfirmDialogComponent, {
         data: {
           titulo: 'Detalles de Educación',
           mensaje: htmlFormateado,
@@ -1305,9 +1351,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     } catch (error) {
       console.error('Error al procesar los datos de educación:', error);
-      this.snackBar.open('Error al procesar los datos', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('Error al procesar los datos');
     }
   }
 
@@ -1318,7 +1362,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Método para manejar la experiencia guardada
-  onExperienciaGuardada(datos: any): void {
+  onExperienciaGuardada(datos: Record<string, unknown>): void {
     if (!datos) {
       console.log('No se recibieron datos de experiencia guardada');
       this.mostrarModalExperiencia = false;
@@ -1328,9 +1372,8 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
 
     console.log('Experiencia guardada recibida:', datos);
 
-    if (datos.experienciaNueva) {
+    if (datos['experienciaNueva']) {
       // Añadir la nueva experiencia a la lista
-      const experienciaGuardada = datos.experienciaNueva;
 
       // Cargar de nuevo las experiencias para asegurarnos de que tenemos los datos más actualizados
       this.experienceService.getAllExperiencesByUserId(this.usuarioId)
@@ -1342,17 +1385,19 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
                 id: exp.id,
                 empresa: exp.company,
                 cargo: exp.position,
-                fechaInicio: new Date(exp.startDate),
-                fechaFin: exp.endDate ? new Date(exp.endDate) : undefined,
+                puesto: exp.position,
+                fechaInicio: exp.startDate ? (typeof exp.startDate === 'string' ? exp.startDate : new Date(exp.startDate).toISOString().split('T')[0]) : '',
+                fechaFin: exp.endDate ? (typeof exp.endDate === 'string' ? exp.endDate : new Date(exp.endDate).toISOString().split('T')[0]) : '',
                 descripcion: exp.description,
-                comentario: exp.comments || '',
-                documentUrl: exp.documentUrl
+                comentario: exp.comments ?? '',
+                documentUrl: exp.documentUrl ?? '',
+                actual: false
               }));
               this.actualizarArrayExperiencias(this.userProfile);
               this.cdr.detectChanges();
             }
           },
-          error: (error) => {
+          error: (error: Error) => {
             console.error('Error al cargar experiencias actualizadas:', error);
           }
         });
@@ -1365,11 +1410,9 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Método para mostrar los datos crudos de una experiencia
    */
-  mostrarDatosExperiencia(experiencia: any): void {
+  mostrarDatosExperiencia(experiencia: FormGroup): void {
     if (!experiencia) {
-      this.snackBar.open('No hay datos disponibles para mostrar', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('No hay datos disponibles para mostrar');
       return;
     }
 
@@ -1377,13 +1420,12 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       // Crear un objeto con todos los valores del control de experiencia
       const datosCrudos = {
         id: experiencia.get('id')?.value,
-        cargo: experiencia.get('cargo')?.value,
+        puesto: experiencia.get('puesto')?.value,
         empresa: experiencia.get('empresa')?.value,
         fechaInicio: experiencia.get('fechaInicio')?.value,
         fechaFin: experiencia.get('fechaFin')?.value,
         descripcion: experiencia.get('descripcion')?.value,
-        comentario: experiencia.get('comentario')?.value,
-        certificadoId: experiencia.get('certificadoId')?.value
+        ubicacion: experiencia.get('ubicacion')?.value
       };
 
       // Formatear el JSON para mejor legibilidad
@@ -1392,7 +1434,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log('Mostrando datos crudos de experiencia:', datosFormateados);
 
       // Crear una representación HTML formateada y estilizada de los datos
-      const formatearValor = (valor: any): string => {
+      const formatearValor = (valor: unknown): string => {
         if (valor === null || valor === undefined) {
           return '<span class="property-value empty">No especificado</span>';
         }
@@ -1458,9 +1500,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       `;
 
       // Abrir diálogo con los datos formateados
-      this.dialog.open(ConfirmDialogComponent, {
-        width: '80%',
-        maxHeight: '90vh',
+      this.dialog.open(CustomConfirmDialogComponent, {
         data: {
           titulo: 'Detalles de Experiencia Laboral',
           mensaje: htmlFormateado,
@@ -1472,9 +1512,7 @@ export class PerfilComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     } catch (error) {
       console.error('Error al procesar los datos de experiencia:', error);
-      this.snackBar.open('Error al procesar los datos', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('Error al procesar los datos');
     }
   }
 }

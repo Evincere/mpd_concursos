@@ -1,18 +1,248 @@
-mat-dialog-content {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: 0 16px;
+@use 'src/styles/variables' as vars;
+
+.user-form {
+  width: 100%;
+  font-family: vars.$font-family-base;
+}
+
+.form-section {
+  margin-bottom: vars.$spacing-xl;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  h3 {
+    font-size: vars.$font-size-md;
+    font-weight: 600;
+    margin: 0 0 vars.$spacing-md 0;
+    color: vars.$color-text-primary;
+    border-bottom: 2px solid vars.$color-primary;
+    padding-bottom: vars.$spacing-sm;
+    display: flex;
+    align-items: center;
+    gap: vars.$spacing-xs;
+
+    &::before {
+      content: '\f0c9'; // Icono de lista
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      font-size: 0.8rem;
+      color: vars.$color-primary;
+    }
+  }
 }
 
 .form-row {
-  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: vars.$spacing-md;
+  margin-bottom: vars.$spacing-md;
+
+  app-custom-form-field,
+  app-custom-select {
+    flex: 1;
+    min-width: 250px;
+  }
 }
 
-.full-width {
-  width: 100%;
+.roles-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: vars.$spacing-sm;
+  margin-top: vars.$spacing-sm;
+
+  .role-checkbox {
+    display: flex;
+    align-items: center;
+    padding: vars.$spacing-sm;
+    background-color: rgba(vars.$color-primary, 0.05);
+    border-radius: vars.$border-radius-sm;
+    border: 1px solid rgba(vars.$color-primary, 0.2);
+    transition: vars.$transition-fast;
+
+    &:hover {
+      background-color: rgba(vars.$color-primary, 0.08);
+      transform: translateX(2px);
+    }
+
+    app-custom-checkbox {
+      margin-right: vars.$spacing-xs;
+    }
+
+    label {
+      color: vars.$color-text-primary;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+    }
+  }
 }
 
-mat-dialog-actions {
-  padding: 16px 0;
-  margin-bottom: 0;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: vars.$spacing-md;
+  margin-top: vars.$spacing-xl;
+  padding-top: vars.$spacing-lg;
+  border-top: 1px solid vars.$color-border;
+
+  app-custom-button {
+    min-width: 120px;
+
+    ::ng-deep .custom-button {
+      padding: vars.$spacing-sm vars.$spacing-lg;
+      border-radius: vars.$border-radius-sm;
+      font-weight: 500;
+      font-size: vars.$font-size-sm;
+      transition: vars.$transition-normal;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: vars.$spacing-xs;
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(vars.$color-primary, 0.3);
+      }
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: vars.$box-shadow-light;
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+
+      // Botón de cancelar
+      &.stroked {
+        background-color: transparent;
+        color: vars.$color-text-primary;
+        border: 1px solid vars.$color-border;
+
+        &:hover:not(:disabled) {
+          background-color: rgba(vars.$color-text-secondary, 0.1);
+          border-color: vars.$color-border-light;
+        }
+
+        &::before {
+          content: '\f00d'; // Icono de cancelar
+          font-family: 'Font Awesome 5 Free';
+          font-weight: 900;
+          font-size: 0.8rem;
+        }
+      }
+
+      // Botón de guardar
+      &.flat.primary {
+        background-color: vars.$color-primary;
+        color: vars.$color-white;
+        border: 1px solid vars.$color-primary;
+
+        &:hover:not(:disabled) {
+          background-color: vars.$color-primary-dark;
+          border-color: vars.$color-primary-dark;
+        }
+
+        &::before {
+          content: '\f0c7'; // Icono de guardar
+          font-family: 'Font Awesome 5 Free';
+          font-weight: 900;
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: vars.$spacing-sm;
+
+    app-custom-form-field,
+    app-custom-select {
+      min-width: unset;
+    }
+  }
+
+  .roles-container {
+    grid-template-columns: 1fr;
+    gap: vars.$spacing-xs;
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    app-custom-button {
+      width: 100%;
+      min-width: unset;
+    }
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .form-section {
+    h3 {
+      color: vars.$color-text-primary-dark;
+      border-bottom-color: vars.$color-primary-dark;
+
+      &::before {
+        color: vars.$color-primary-dark;
+      }
+    }
+  }
+
+  .roles-container {
+    .role-checkbox {
+      background-color: rgba(vars.$color-primary-dark, 0.1);
+      border-color: rgba(vars.$color-primary-dark, 0.3);
+
+      &:hover {
+        background-color: rgba(vars.$color-primary-dark, 0.15);
+      }
+
+      label {
+        color: vars.$color-text-primary-dark;
+      }
+    }
+  }
+
+  .form-actions {
+    border-top-color: vars.$color-border-dark;
+
+    app-custom-button {
+      ::ng-deep .custom-button {
+        &.stroked {
+          color: vars.$color-text-primary-dark;
+          border-color: vars.$color-border-dark;
+
+          &:hover:not(:disabled) {
+            background-color: rgba(vars.$color-text-secondary-dark, 0.1);
+            border-color: vars.$color-border-light;
+          }
+        }
+
+        &.flat.primary {
+          background-color: vars.$color-primary-dark;
+          border-color: vars.$color-primary-dark;
+
+          &:hover:not(:disabled) {
+            background-color: lighten(vars.$color-primary-dark, 10%);
+            border-color: lighten(vars.$color-primary-dark, 10%);
+          }
+        }
+      }
+    }
+  }
 }

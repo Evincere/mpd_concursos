@@ -1,14 +1,16 @@
 @use 'variables' as *;
+@use 'responsive' as *;
 
 .sidebar-container {
     position: relative;
     height: 100%;
     display: flex;
     z-index: 2; // Asegurando que esté por encima del contenido
+    background: transparent; // Fix visual gap - inherit dashboard background seamlessly
 }
 
 .sidebar {
-    background: $color-background;
+    background: #374151;
     padding: 1.5rem 1rem;
     height: 100%;
     overflow-x: hidden;
@@ -16,10 +18,25 @@
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     width: 250px;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.3),
+        0 4px 10px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+    @include md {
+        width: 220px;
+    }
+
+    @include sm {
+        width: 200px;
+    }
 
     &.collapsed {
         width: 60px;
         padding: 1.5rem 0.5rem;
+        // Maintain glassmorphism effects even when collapsed
+        background: #374151;
+        backdrop-filter: blur(10px);
 
         .nav-menu {
             .nav-item {
@@ -48,41 +65,83 @@
     right: -24px;
     top: 50%;
     transform: translateY(-50%);
-    width: 24px;
-    height: 80px;
-    background: $color-background;
+    width: 30px;
+    height: 60px;
+    background: rgba(55, 65, 81, 0.9); // More transparent to blend with background
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-left: none;
     border-radius: 0 8px 8px 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
+    justify-content: center;
     cursor: pointer;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000; // Asegurando que la pestaña esté por encima
-    
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    backdrop-filter: blur(15px); // Enhanced blur for better blending
+    box-shadow:
+        0 4px 15px rgba(0, 0, 0, 0.2),
+        0 2px 5px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
     &:hover {
-        background: lighten($color-background, 5%);
+        background: #4b5563;
+        transform: translateY(-50%) translateX(2px);
+        box-shadow:
+            0 6px 20px rgba(0, 0, 0, 0.3),
+            0 3px 8px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+        i {
+            color: #f9fafb;
+            transform: scale(1.1);
+        }
+
+        .tab-line {
+            background: rgba(255, 255, 255, 0.5);
+            height: 10px;
+        }
     }
-    
+
+    &:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+    }
+
     .tab-line {
         width: 2px;
-        height: 20px;
-        background: rgba(255, 255, 255, 0.2);
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 8px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 1px;
+        margin: 2px 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
+
     i {
         color: rgba(255, 255, 255, 0.7);
-        font-size: 12px;
-        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 14px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 0 2px;
     }
-    
+
     &.collapsed {
+        background: rgba(55, 65, 81, 0.7); // Even more transparent when collapsed
+        backdrop-filter: blur(20px); // Enhanced blur for seamless integration
+
+        .tab-line {
+            background: rgba(59, 130, 246, 0.4);
+        }
+
         i {
-            transform: rotate(180deg);
+            color: #3b82f6;
+        }
+
+        &:hover {
+            background: rgba(75, 85, 99, 0.8); // Slightly more opaque on hover
+
+            i {
+                color: #60a5fa;
+            }
         }
     }
 }
@@ -95,40 +154,83 @@
             display: flex;
             align-items: center;
             padding: 0.75rem 1rem;
-            color: rgba(255, 255, 255, 0.6);
+            color: #d1d5db;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 8px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 0.875rem;
             font-weight: 500;
+            position: relative;
+            border: 1px solid transparent;
 
             i {
                 width: 20px;
                 text-align: center;
                 font-size: 1.2rem;
                 margin-right: 1rem;
-                color: inherit;
-                transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                color: #9ca3af;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 transform: translateX(0);
             }
 
             span {
                 white-space: nowrap;
-                transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 opacity: 1;
                 transform: translateX(0);
                 visibility: visible;
+                color: #d1d5db;
             }
 
             &:hover {
-                background: rgba(2, 132, 199, 0.1);
-                color: #0284c7;
+                background: rgba(75, 85, 99, 0.3);
+                color: #f9fafb;
+                transform: translateY(-1px);
+                border-color: rgba(255, 255, 255, 0.1);
+
+                i {
+                    color: #f9fafb;
+                    transform: translateX(2px);
+                }
+
+                span {
+                    color: #f9fafb;
+                }
             }
 
             &.active {
-                background: #0284c7;
-                color: white;
-                font-weight: 500;
+                background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+                color: #f9fafb;
+                font-weight: 600;
+                border-color: rgba(255, 255, 255, 0.2);
+                box-shadow:
+                    0 4px 12px rgba(0, 0, 0, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+                i {
+                    color: #f9fafb;
+                }
+
+                span {
+                    color: #f9fafb;
+                }
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 3px;
+                    height: 20px;
+                    background: #3b82f6;
+                    border-radius: 0 2px 2px 0;
+                }
+            }
+
+            &:focus {
+                outline: 2px solid #3b82f6;
+                outline-offset: 2px;
             }
         }
     }

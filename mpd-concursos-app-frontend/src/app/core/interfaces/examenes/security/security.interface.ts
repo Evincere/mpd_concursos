@@ -4,7 +4,7 @@ import { RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 
 export interface ISecurityService {
   initializeSecurityMeasures(): void;
-  reportSecurityViolation(type: SecurityViolationType, details?: any): void;
+  reportSecurityViolation(type: SecurityViolationType, details?: unknown): void;
   getSecurityViolations(): Observable<SecurityViolation[]>;
   cleanup(): void;
 }

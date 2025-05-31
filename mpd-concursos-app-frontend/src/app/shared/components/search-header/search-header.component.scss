@@ -1,3 +1,5 @@
+@use '../../../../styles/responsive' as *;
+
 .search-header {
     display: flex;
     justify-content: space-between;
@@ -8,6 +10,13 @@
     height: 56px;
     box-sizing: border-box;
 
+    @include md {
+        flex-direction: column;
+        height: auto;
+        padding: 16px;
+        gap: 12px;
+    }
+
     h2 {
         display: flex;
         align-items: center;
@@ -17,6 +26,10 @@
         font-weight: 500;
         color: rgba(255, 255, 255, 0.87);
         height: 100%;
+
+        @include md {
+            height: auto;
+        }
 
         i {
             color: #2196f3;
@@ -29,8 +42,22 @@
         gap: 8px;
         align-items: center;
 
+        @include md {
+            width: 100%;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @include sm {
+            gap: 8px;
+        }
+
         .search-form {
             width: 320px;
+
+            @include md {
+                width: 100%;
+            }
 
             mat-form-field {
                 width: 100%;

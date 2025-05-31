@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval, fromEvent, merge } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, retry, catchError } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, retry, catchError } from  'rxjs/operators';
 import { ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { environment } from '@env/environment';
 import { ExamenNotificationService } from './examen-notification.service';
@@ -16,7 +16,7 @@ export class ExamenRecoveryService {
   private readonly MAX_RETRIES = 3;
   private isOnline$ = new BehaviorSubject<boolean>(navigator.onLine);
   private pendingChanges$ = new BehaviorSubject<boolean>(false);
-  private lastSyncTimestamp: number = 0;
+  private lastSyncTimestamp = 0;
 
   constructor(
     private http: HttpClient,
@@ -95,7 +95,7 @@ export class ExamenRecoveryService {
     }
   }
 
-  private syncWithServer(examenId: string, backup: any): void {
+  private syncWithServer(examenId: string, backup: unknown): void {
     if (!this.isOnline$.value) {
       console.log('Offline: cambios guardados localmente');
       return;
@@ -139,8 +139,8 @@ export class ExamenRecoveryService {
     });
   }
 
-  private getPendingBackups(): Array<{examenId: string, data: any}> {
-    const backups: Array<{examenId: string, data: any}> = [];
+  private getPendingBackups(): {examenId: string, data: Record<string, unknown>}[] {
+    const backups: {examenId: string, data: Record<string, unknown>}[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key?.startsWith(this.BACKUP_KEY_PREFIX)) {
@@ -179,28 +179,31 @@ export class ExamenRecoveryService {
     }
   }
 
-  private getServerBackup(examenId: string): Observable<any> {
-    return this.http.get(`${environment.apiUrl}/examenes/${examenId}/backup`);
+  private getServerBackup(examenId: string): Observable<Record<string, unknown>> {
+    return this.http.get<Record<string, unknown>>(`${environment.apiUrl}/examenes/${examenId}/backup`);
   }
 
-  private validateAndRecoverBackup(backup: any): ExamenEnCurso | null {
+  private validateAndRecoverBackup(backup: unknown): ExamenEnCurso | null {
     if (!this.isValidBackup(backup)) {
       console.error('Backup inválido o corrupto');
       return null;
     }
 
-    return backup.examen;
+    return (backup as Record<string, unknown>)['examen'] as ExamenEnCurso;
   }
 
-  private isValidBackup(backup: any): boolean {
-    return (
-      backup &&
-      backup.examen &&
-      backup.timestamp &&
-      backup.version &&
-      backup.examen.examenId &&
-      backup.examen.respuestas &&
-      Array.isArray(backup.examen.respuestas)
+  private isValidBackup(backup: unknown): boolean {
+    if (!backup) return false;
+    const backupObj = backup as Record<string, unknown>;
+
+    return !!(
+      backupObj &&
+      backupObj['examen'] &&
+      backupObj['timestamp'] &&
+      backupObj['version'] &&
+      (backupObj['examen'] as Record<string, unknown>)['examenId'] &&
+      (backupObj['examen'] as Record<string, unknown>)['respuestas'] &&
+      Array.isArray((backupObj['examen'] as Record<string, unknown>)['respuestas'])
     );
   }
 
@@ -280,7 +283,7 @@ export class ExamenRecoveryService {
     return examenRecuperado;
   }
 
-  guardarRespuestas(examenId: string, respuestas: { [key: string]: string | string[] }): void {
+  guardarRespuestas(examenId: string, respuestas: Record<string, string | string[]>): void {
     try {
       console.log('Guardando respuestas para examen:', examenId, respuestas);
 
@@ -329,12 +332,12 @@ export class ExamenRecoveryService {
     }
   }
 
-  recuperarRespuestas(examenId: string): { [key: string]: string | string[] } | null {
+  recuperarRespuestas(examenId: string): Record<string, string | string[]> | null {
     const backup = this.getLatestBackup(examenId);
     if (!backup || !backup.examen || !backup.examen.respuestas) return null;
 
     // Convertir el formato de respuestas al formato esperado por el componente
-    return backup.examen.respuestas.reduce((acc: { [key: string]: string | string[] }, respuesta: RespuestaUsuario) => {
+    return backup.examen.respuestas.reduce((acc: Record<string, string | string[]>, respuesta: RespuestaUsuario) => {
       acc[respuesta.preguntaId] = respuesta.respuesta;
       return acc;
     }, {});

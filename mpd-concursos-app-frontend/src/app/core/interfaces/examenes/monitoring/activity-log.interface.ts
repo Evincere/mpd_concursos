@@ -5,8 +5,15 @@ export enum ActivityLogType {
   NETWORK_ACTIVITY = 'NETWORK_ACTIVITY'
 }
 
+export interface ActivityLogDetails {
+  message?: string;
+  code?: string;
+  source?: string;
+  [key: string]: unknown;
+}
+
 export interface ActivityLog {
   type: ActivityLogType;
   timestamp: number;
-  details: any;
+  details: ActivityLogDetails;
 }

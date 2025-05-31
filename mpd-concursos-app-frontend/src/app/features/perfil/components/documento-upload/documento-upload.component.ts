@@ -71,13 +71,13 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             <h3 class="section-title">Información del documento</h3>
 
             <div class="form-field">
-              <label>Tipo de documento</label>
-              <div class="tipo-documento-seleccionado">
-                <i class="fas fa-file-pdf"></i>
+              <label id="label-tipo-documento-seleccionado">Tipo de documento</label>
+              <div class="tipo-documento-seleccionado" aria-labelledby="label-tipo-documento-seleccionado">
+                <i class="fas fa-file-pdf" aria-hidden="true"></i>
                 <span>{{ tipoDocumentoSeleccionado.nombre }}</span>
               </div>
               <!-- Campo oculto para el tipo de documento cuando ya está seleccionado -->
-              <input type="hidden" formControlName="tipoDocumentoId">
+              <input type="hidden" formControlName="tipoDocumentoId" aria-labelledby="label-tipo-documento-seleccionado">
             </div>
           </div>
 
@@ -127,8 +127,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             <h3 class="section-title">Especificar lado del DNI</h3>
 
             <div class="form-field">
-              <label>Seleccione qué lado del DNI está subiendo</label>
-              <div class="radio-group">
+              <label id="label-lado-dni">Seleccione qué lado del DNI está subiendo</label>
+              <div class="radio-group" role="radiogroup" aria-labelledby="label-lado-dni">
                 <div class="radio-option">
                   <input type="radio" id="dni-frente" formControlName="ladoDNI" value="frente">
                   <label for="dni-frente">Frente (Anverso)</label>

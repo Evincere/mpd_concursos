@@ -4,14 +4,19 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background-color: var(--background-color);
+  background: transparent; // Let the dashboard container background show through
 
   .content {
     flex: 1;
-    padding: 24px;
+    padding: 1.5rem; // Consistent with other views
     overflow-y: auto;
     position: relative;
     transition: all 0.3s ease;
+    background: transparent;
+
+    @media (max-width: 768px) {
+      padding: 1rem; // Reduced padding for mobile
+    }
   }
 
   app-filtros-postulaciones {
@@ -49,6 +54,15 @@
     flex: 1;
     min-height: 0;
 
+    // Estilos para acciones móviles
+    .mobile-only {
+      display: none; // Ocultar por defecto en escritorio
+
+      @media (max-width: 768px) {
+        display: flex; // Mostrar solo en móviles
+      }
+    }
+
     &::-webkit-scrollbar {
       width: 8px;
       height: 8px;
@@ -70,19 +84,46 @@
 
     .postulacion-item {
       position: relative;
-      background: #2A2A2A;
-      border-radius: 12px;
+      background: #374151;
+      border-radius: 8px;
       padding: 1.5rem;
       margin-bottom: 1rem;
       transition: all 0.3s ease;
       border: 1px solid rgba(255, 255, 255, 0.1);
       cursor: pointer;
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+
+      // Glassmorphism gradient overlay
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      // Content positioning
+      > * {
+        position: relative;
+        z-index: 2;
+      }
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+        box-shadow:
+          0 12px 40px rgba(0, 0, 0, 0.4),
+          0 6px 20px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
         border-color: rgba(255, 255, 255, 0.2);
-        background: #2F2F2F;
       }
 
       .header-container {
@@ -91,9 +132,10 @@
         .titulo-container {
           h3 {
             font-size: 1.4rem;
-            color: var(--text-color);
+            color: #f9fafb;
             margin: 0;
             font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
           }
         }
 
@@ -103,54 +145,28 @@
           gap: 1rem;
           margin-top: 0.5rem;
 
-          .estado-badge {
-            font-size: 0.8rem;
-            font-weight: 500;
-            padding: 0.35rem 1rem;
-            border-radius: 20px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-
-            &.pending {
-              background: rgba(255, 171, 0, 0.15);
-              color: #ffab00;
-            }
-
-            &.accepted {
-              background: rgba(76, 175, 80, 0.15);
-              color: #4caf50;
-            }
-
-            &.rejected {
-              background: rgba(244, 67, 54, 0.15);
-              color: #f44336;
-            }
-
-            &.cancelled {
-              background: rgba(158, 158, 158, 0.15);
-              color: #9e9e9e;
-            }
-
-            &.in-progress {
-              background: rgba(33, 150, 243, 0.15);
-              color: #2196f3;
-            }
-
-            &.confirmada {
-              background: rgba(33, 150, 243, 0.15);
-              color: #2196f3;
-            }
-
-            &.inscripto {
-              background: rgba(76, 175, 80, 0.15);
-              color: #4caf50;
-            }
-          }
+          // Status badge now handled by ContestStatusBadgeComponent
 
           .actions {
             display: flex;
             gap: 0.5rem;
+            align-items: center;
+
+            @media (max-width: 768px) {
+              // Mostrar solo el botón de ver detalle en móviles
+              button:not([matTooltip="Ver detalle"]):not(.continue-button) {
+                display: none;
+              }
+
+              // Ajustar el botón de continuar en móviles
+              .continue-button {
+                padding: 4px 8px;
+
+                span {
+                  display: none;
+                }
+              }
+            }
 
             button {
               background: rgba(255, 255, 255, 0.1);
@@ -175,6 +191,36 @@
                 background: var(--primary-color);
                 color: white;
                 transform: scale(1.05);
+              }
+
+              &.continue-button {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 12px;
+                border-radius: 20px;
+                background: rgba(33, 150, 243, 0.15);
+                border: 1px solid rgba(33, 150, 243, 0.3);
+                color: #2196f3;
+                font-weight: 500;
+
+                &:not(:disabled):hover {
+                  background: rgba(33, 150, 243, 0.25);
+                  border-color: rgba(33, 150, 243, 0.5);
+                  transform: translateY(-2px);
+                  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                mat-icon {
+                  font-size: 18px;
+                  height: 18px;
+                  width: 18px;
+                  line-height: 18px;
+                }
+
+                span {
+                  font-size: 14px;
+                }
               }
             }
           }
@@ -205,9 +251,10 @@
           background: rgba(255, 255, 255, 0.05);
           border-radius: 8px;
           border: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(5px);
 
           i {
-            color: var(--primary-color);
+            color: #3b82f6;
             font-size: 1.1rem;
             padding-top: 0.25rem;
           }
@@ -219,13 +266,13 @@
 
             .label {
               font-size: 0.85rem;
-              color: var(--text-color-secondary);
+              color: #d1d5db;
               font-weight: 500;
             }
 
             .value {
               font-size: 1rem;
-              color: var(--text-color);
+              color: #f9fafb;
               font-weight: 500;
             }
           }
@@ -244,7 +291,7 @@
           gap: 0.75rem;
 
           i {
-            color: var(--text-color-secondary);
+            color: #d1d5db;
             font-size: 1rem;
             padding-top: 0.25rem;
           }
@@ -256,12 +303,12 @@
 
             .label {
               font-size: 0.85rem;
-              color: var(--text-color-secondary);
+              color: #d1d5db;
             }
 
             .value {
               font-size: 0.95rem;
-              color: var(--text-color);
+              color: #f9fafb;
               font-weight: 500;
             }
           }
@@ -273,16 +320,17 @@
         background: rgba(255, 255, 255, 0.05);
         border-radius: 8px;
         border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
 
         .documentos-header {
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          color: var(--text-color-secondary);
+          color: #d1d5db;
           font-size: 0.9rem;
 
           i {
-            color: var(--primary-color);
+            color: #3b82f6;
           }
         }
       }
@@ -434,36 +482,73 @@
       border-radius: 16px;
 
       &.glassmorphism {
-        background: rgba(45, 45, 45, 0.5);
+        background: #374151;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.3),
+          0 4px 16px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        position: relative;
+        overflow: hidden;
+
+        // Glassmorphism gradient overlay
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        // Content positioning
+        > * {
+          position: relative;
+          z-index: 2;
+        }
 
         &.welcome {
-          background: linear-gradient(135deg, rgba(63, 81, 181, 0.1) 0%, rgba(63, 81, 181, 0.05) 100%);
-          border-color: rgba(63, 81, 181, 0.2);
+          background: #374151;
+          border-color: rgba(59, 130, 246, 0.3);
+
+          &::before {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+          }
 
           i {
-            color: #3f51b5;
+            color: #3b82f6;
           }
         }
 
         &.cancelled {
-          background: linear-gradient(135deg, rgba(158, 158, 158, 0.1) 0%, rgba(158, 158, 158, 0.05) 100%);
-          border-color: rgba(158, 158, 158, 0.2);
+          background: #374151;
+          border-color: rgba(107, 114, 128, 0.3);
+
+          &::before {
+            background: linear-gradient(135deg, rgba(107, 114, 128, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+          }
 
           i {
-            color: #9e9e9e;
+            color: #6b7280;
           }
         }
 
         &.filtered {
-          background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-          border-color: rgba(255, 193, 7, 0.2);
+          background: #374151;
+          border-color: rgba(245, 158, 11, 0.3);
+
+          &::before {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+          }
 
           i {
-            color: #ffc107;
+            color: #f59e0b;
           }
         }
       }
@@ -475,14 +560,15 @@
       }
 
       h3 {
-        color: white;
+        color: #f9fafb;
         margin-bottom: 1rem;
         font-size: 1.75rem;
         font-weight: 600;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
 
       p {
-        color: rgba(255, 255, 255, 0.7);
+        color: #d1d5db;
         margin-bottom: 2rem;
         line-height: 1.6;
         font-size: 1.1rem;

@@ -20,4 +20,13 @@ public class NotificationAcknowledgementRequest {
     private String declaration; // Para tipo DECLARATION
 
     private Map<String, String> metadata; // Datos adicionales según el tipo de firma
+
+    /**
+     * Obtiene los metadatos de la firma
+     *
+     * @return Metadatos de la firma
+     */
+    public Map<String, String> getSignatureMetadata() {
+        return this.metadata;
+    }
 }

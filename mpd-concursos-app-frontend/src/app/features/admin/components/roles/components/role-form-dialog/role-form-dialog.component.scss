@@ -1,0 +1,231 @@
+@use 'src/styles/variables' as *;
+
+:host {
+  display: block;
+  position: relative;
+}
+
+mat-dialog-content {
+  max-height: 70vh;
+  min-height: 300px;
+}
+
+.form-section {
+  margin: 1.5rem 0;
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  .section-description {
+    margin: 0 0 1rem;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+  
+  .form-row {
+    margin-bottom: 1rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+}
+
+mat-divider {
+  margin: 1.5rem 0;
+}
+
+// Contenedor de permisos
+.permissions-container {
+  margin-top: 1rem;
+  
+  mat-error {
+    margin-bottom: 1rem;
+    display: block;
+  }
+}
+
+// Encabezado de módulo
+.module-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  mat-icon {
+    color: $color-primary;
+  }
+  
+  .module-name {
+    text-transform: capitalize;
+    font-weight: 500;
+  }
+}
+
+// Acciones de módulo
+.module-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  
+  .module-count {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    min-width: 40px;
+    text-align: right;
+  }
+}
+
+// Lista de permisos
+.permission-list {
+  padding: 0.5rem 0;
+  
+  .permission-item {
+    margin-bottom: 0.75rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .permission-info {
+      display: flex;
+      flex-direction: column;
+      
+      .permission-name {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        
+        .action-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          
+          &.action-read {
+            background-color: rgba($color-info, 0.1);
+            color: $color-info;
+          }
+          
+          &.action-write {
+            background-color: rgba($color-success, 0.1);
+            color: $color-success;
+          }
+          
+          &.action-delete {
+            background-color: rgba($color-error, 0.1);
+            color: $color-error;
+          }
+          
+          &.action-admin {
+            background-color: rgba($color-warning, 0.1);
+            color: $color-warning;
+          }
+          
+          mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+          }
+        }
+      }
+      
+      .permission-description {
+        margin-left: 2.5rem;
+        font-size: $font-size-xs;
+        color: $color-text-secondary;
+      }
+    }
+  }
+}
+
+// Contenedor de carga
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: $color-text-secondary;
+  }
+}
+
+// Overlay de carga
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  border-radius: 4px;
+}
+
+// Media queries para responsive
+@media (max-width: 600px) {
+  .module-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+  
+  .permission-info {
+    .permission-name {
+      flex-wrap: wrap;
+    }
+    
+    .permission-description {
+      margin-left: 0 !important;
+      margin-top: 0.25rem;
+    }
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  h3 {
+    color: $color-text-primary-dark !important;
+  }
+  
+  .section-description {
+    color: $color-text-secondary-dark !important;
+  }
+  
+  .module-actions {
+    .module-count {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .permission-info {
+    .permission-description {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .loading-container {
+    p {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .loading-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}

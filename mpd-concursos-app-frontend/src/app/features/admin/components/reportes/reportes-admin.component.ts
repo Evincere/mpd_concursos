@@ -1,10 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatTabChangeEvent } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from  '@angular/material/snack-bar';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { AdminReportsService, SystemStats } from '@core/services/admin/admin-reports.service';
+import { ExportService } from '@core/services/admin/export.service';
+
 
 @Component({
   selector: 'app-reportes-admin',
@@ -13,14 +24,32 @@ import { MatTabsModule } from '@angular/material/tabs';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatTabsModule
+    MatTabsModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatSelectModule,
+    MatFormFieldModule
   ]
 })
-export class ReportesAdminComponent implements OnInit {
-  // Datos hardcodeados para la demostración
+export class ReportesAdminComponent implements OnInit, OnDestroy {
+  // Exponer el objeto Object global para usarlo en la plantilla
+  Object = Object;
+
+  // Estado de carga
+  isLoading = false;
+
+  // Estadísticas del sistema
+  systemStats?: SystemStats;
+
+  // Para limpieza de suscripciones
+  private destroy$ = new Subject<void>();
+
+  // Datos para reportes
   examenes = [
     {
       id: 1,
@@ -143,11 +172,45 @@ export class ReportesAdminComponent implements OnInit {
     { tipo: 'postulacion', cantidad: 280, porcentaje: 5 }
   ];
 
-  selectedExamen: any = null;
+  selectedExamen: unknown = null;
 
-  constructor() { }
+  // Formato de exportación seleccionado
+  selectedExportFormat: 'excel' | 'csv' | 'pdf' = 'excel';
+
+  constructor(
+    private reportsService: AdminReportsService,
+    private snackBar: MatSnackBar,
+    private exportService: ExportService
+  ) {}
 
   ngOnInit(): void {
+    this.loadSystemStats();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Carga las estadísticas del sistema
+   */
+  loadSystemStats(): void {
+    this.isLoading = true;
+
+    this.reportsService.getSystemStats()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (stats: SystemStats) => {
+          this.systemStats = stats;
+          this.isLoading = false;
+        },
+        error: (error: unknown) => {
+          console.error('Error cargando estadísticas del sistema:', error);
+          this.snackBar.open('Error al cargar estadísticas', 'Cerrar', { duration: 3000 });
+          this.isLoading = false;
+        }
+      });
   }
 
   getTotalParticipantes(): number {
@@ -168,16 +231,42 @@ export class ReportesAdminComponent implements OnInit {
     console.log('Tab changed to:', event.index);
   }
 
-  exportarReporte(formato: string): void {
-    // Aquí se implementaría la lógica para exportar reportes
-    console.log(`Exportando reporte en formato ${formato}`);
-    // Simular descarga
-    setTimeout(() => {
-      alert(`Reporte exportado en formato ${formato}`);
-    }, 1000);
+  exportarReporte(formato: 'excel' | 'csv' | 'pdf'): void {
+    this.isLoading = true;
+
+    // Determinar qué datos exportar según la pestaña activa
+    let dataToExport: Record<string, unknown>[] = [];
+    let fileName = 'reporte';
+
+    // En una implementación real, esto se basaría en la pestaña activa
+    // y los filtros aplicados por el usuario
+    dataToExport = this.examenes.map(examen => ({
+      id: examen.id,
+      titulo: examen.titulo,
+      tipo: this.getTipoExamenText(examen.tipo),
+      fechaInicio: examen.fechaInicio.toLocaleDateString(),
+      fechaFin: examen.fechaFin.toLocaleDateString(),
+      participantes: examen.participantes,
+      completados: examen.completados,
+      aprobados: examen.aprobados,
+      promedioCalificacion: examen.promedioCalificacion,
+      tiempoPromedio: examen.tiempoPromedio
+    }));
+
+    fileName = 'reporte_examenes';
+
+    // Exportar los datos
+    this.exportService.exportData(dataToExport, {
+      format: formato,
+      fileName: fileName,
+      includeHeaders: true
+    });
+
+    this.isLoading = false;
+    this.snackBar.open(`Reporte exportado como ${fileName}.${formato}`, 'Cerrar', { duration: 3000 });
   }
 
-  selectExamen(examen: any): void {
+  selectExamen(examen: unknown): void {
     this.selectedExamen = examen;
   }
 
@@ -188,5 +277,87 @@ export class ReportesAdminComponent implements OnInit {
       case 'mixto': return 'Mixto';
       default: return tipo;
     }
+  }
+
+  /**
+   * Calcula el total de usuarios nuevos a partir de los datos de systemStats
+   * @returns Número total de usuarios nuevos
+   */
+  calculateTotalNewUsers(): number {
+    if (!this.systemStats?.users?.newByPeriod) {
+      return 0;
+    }
+
+    return Object.values(this.systemStats.users.newByPeriod).reduce((total, count) => total + count, 0);
+  }
+
+  /**
+   * Calcula el número de usuarios inactivos
+   * @returns Número de usuarios inactivos
+   */
+  calculateInactiveUsers(): number {
+    if (!this.systemStats?.users?.total || !this.systemStats?.users?.active) {
+      return 0;
+    }
+
+    return this.systemStats.users.total - this.systemStats.users.active;
+  }
+
+  /**
+   * Obtiene la carga del servidor para las expresiones ngClass
+   * @returns Valor de la carga del servidor
+   */
+  getServerLoad(): number {
+    return this.systemStats?.performance?.serverLoad || 0;
+  }
+
+  /**
+   * Obtiene la tasa de errores para las expresiones ngClass
+   * @returns Valor de la tasa de errores
+   */
+  getErrorRate(): number {
+    return this.systemStats?.performance?.errorRate || 0;
+  }
+
+  /**
+   * Obtiene el tiempo de respuesta para las expresiones ngClass
+   * @returns Valor del tiempo de respuesta
+   */
+  getResponseTime(): number {
+    return this.systemStats?.performance?.averageResponseTime || 0;
+  }
+
+  /**
+   * Obtiene el número de administradores del sistema
+   * @returns Número de administradores
+   */
+  getAdminCount(): number {
+    if (!this.systemStats?.users?.byRole) {
+      return 0;
+    }
+
+    return this.systemStats.users.byRole['ROLE_ADMIN'] || 0;
+  }
+
+  /**
+   * Función para trackBy en ngFor
+   * @param index Índice del elemento
+   * @returns El índice como identificador
+   */
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  /**
+   * Obtiene el título del examen seleccionado
+   * @returns Título del examen o texto por defecto
+   */
+  getTituloExamen(): string {
+    if (!this.selectedExamen) {
+      return 'Examen seleccionado';
+    }
+
+    const examen = this.selectedExamen as Record<string, unknown>;
+    return examen['titulo'] as string || 'Examen seleccionado';
   }
 }

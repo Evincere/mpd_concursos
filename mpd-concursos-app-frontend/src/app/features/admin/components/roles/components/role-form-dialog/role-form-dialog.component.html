@@ -1,0 +1,109 @@
+<h2 mat-dialog-title>{{isEditMode ? 'Editar Rol' : 'Nuevo Rol'}}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="roleForm" (ngSubmit)="onSubmit()">
+    <div class="form-section">
+      <h3>Información del Rol</h3>
+      
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="name" placeholder="Ingrese nombre del rol">
+          <mat-hint>Mínimo 3 caracteres</mat-hint>
+          <mat-error *ngIf="roleForm.get('name')?.hasError('required')">
+            El nombre es obligatorio
+          </mat-error>
+          <mat-error *ngIf="roleForm.get('name')?.hasError('minlength')">
+            El nombre debe tener al menos 3 caracteres
+          </mat-error>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-row">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput formControlName="description" placeholder="Ingrese descripción del rol" rows="2"></textarea>
+          <mat-error *ngIf="roleForm.get('description')?.hasError('required')">
+            La descripción es obligatoria
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+    
+    <mat-divider></mat-divider>
+    
+    <div class="form-section">
+      <h3>Permisos</h3>
+      <p class="section-description">Seleccione los permisos que tendrá este rol</p>
+      
+      <div class="permissions-container">
+        <mat-error *ngIf="roleForm.get('permissions')?.hasError('required') || roleForm.get('permissions')?.hasError('minlength')">
+          Debe seleccionar al menos un permiso
+        </mat-error>
+        
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-spinner diameter="30"></mat-spinner>
+          <p>Cargando permisos...</p>
+        </div>
+        
+        <mat-accordion *ngIf="!isLoading">
+          <mat-expansion-panel *ngFor="let group of permissionGroups">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <div class="module-header">
+                  <mat-icon>{{getModuleIcon(group.module)}}</mat-icon>
+                  <span class="module-name">{{group.module}}</span>
+                </div>
+              </mat-panel-title>
+              <mat-panel-description>
+                <div class="module-actions">
+                  <div class="module-count">
+                    <span>{{getModulePermissionCount(group.module).selected}}/{{getModulePermissionCount(group.module).total}}</span>
+                  </div>
+                  <mat-checkbox 
+                    [checked]="isAllModulePermissionsSelected(group.module)"
+                    [indeterminate]="isSomeModulePermissionsSelected(group.module)"
+                    (change)="selectAllModulePermissions(group.module)"
+                    (click)="$event.stopPropagation()">
+                  </mat-checkbox>
+                </div>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+            
+            <div class="permission-list">
+              <div *ngFor="let permission of group.permissions" class="permission-item">
+                <mat-checkbox 
+                  [checked]="isPermissionSelected(permission.id)"
+                  (change)="togglePermission(permission.id)">
+                  <div class="permission-info">
+                    <div class="permission-name">
+                      <div class="action-icon" [ngClass]="getActionClass(permission.action)">
+                        <mat-icon>{{getActionIcon(permission.action)}}</mat-icon>
+                      </div>
+                      <span>{{permission.name}}</span>
+                    </div>
+                    <div class="permission-description">
+                      {{permission.description}}
+                    </div>
+                  </div>
+                </mat-checkbox>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close [disabled]="isLoading">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="roleForm.invalid || isLoading || roleForm.disabled">
+    <mat-icon>{{isEditMode ? 'save' : 'add'}}</mat-icon>
+    {{isEditMode ? 'Guardar Cambios' : 'Crear Rol'}}
+  </button>
+</mat-dialog-actions>
+
+<div *ngIf="isLoading" class="loading-overlay">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>

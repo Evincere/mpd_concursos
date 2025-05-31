@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "cache": {
+      "enabled": true,
+      "path": ".angular/cache",
+      "environment": "all"
+    },
+    "analytics": false
+  },
+  "projects": {
+    "mpd-concursos-app": {
+      "architect": {
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "mpd-concursos-app:build",
+            "port": 4200,
+            "host": "0.0.0.0",
+            "disableHostCheck": true,
+            "proxyConfig": "proxy.dev.conf.json",
+            "servePath": "/",
+            "publicHost": "localhost:4200",
+            "liveReload": true,
+            "hmr": true,
+            "open": true,
+            "headers": {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+              "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+            }
+          }
+        }
+      }
+    }
+  }
+}

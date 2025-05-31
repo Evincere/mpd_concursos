@@ -1,0 +1,194 @@
+<div class="dashboard-container">
+  <div class="header">
+    <h1>Dashboard de Concursos</h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" [routerLink]="['/admin/concursos/listado']">
+        <mat-icon>list</mat-icon>
+        Ver Listado
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando datos del dashboard...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading && stats">
+    <!-- Tarjetas de estadísticas principales -->
+    <div class="stats-cards">
+      <app-stat-card
+        icon="gavel"
+        iconColor="#4caf50"
+        title="Concursos Activos"
+        [value]="stats.active"
+        subtitle="Concursos abiertos actualmente"
+        link="/admin/concursos/listado?status=ACTIVE"
+      ></app-stat-card>
+
+      <app-stat-card
+        icon="edit_note"
+        iconColor="#2196f3"
+        title="Borradores"
+        [value]="stats.draft"
+        subtitle="Concursos en preparación"
+        link="/admin/concursos/listado?status=DRAFT"
+      ></app-stat-card>
+
+      <app-stat-card
+        icon="pending_actions"
+        iconColor="#ff9800"
+        title="En Proceso"
+        [value]="stats.inProgress"
+        subtitle="Concursos en evaluación"
+        link="/admin/concursos/listado?status=IN_PROGRESS"
+      ></app-stat-card>
+
+      <app-stat-card
+        icon="assignment_turned_in"
+        iconColor="#9e9e9e"
+        title="Concursos Cerrados"
+        [value]="stats.closed"
+        subtitle="Concursos finalizados"
+        link="/admin/concursos/listado?status=CLOSED"
+      ></app-stat-card>
+    </div>
+
+    <!-- Contenido principal -->
+    <mat-card class="content-card">
+      <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
+        <!-- Pestaña de Resumen -->
+        <mat-tab label="Resumen">
+          <div class="tab-content">
+            <div class="charts-section">
+              <div class="chart-container">
+                <app-stats-chart
+                  title="Concursos por Estado"
+                  [chartType]="'doughnut'"
+                  [chartData]="statusChartData"
+                  height="300px"
+                ></app-stats-chart>
+              </div>
+              
+              <div class="chart-container">
+                <app-stats-chart
+                  title="Concursos por Departamento"
+                  [chartType]="'pie'"
+                  [chartData]="departmentChartData"
+                  height="300px"
+                ></app-stats-chart>
+              </div>
+            </div>
+            
+            <div class="activity-section">
+              <app-activity-feed
+                [activities]="recentActivities"
+                title="Actividad Reciente de Concursos"
+                viewAllLink="/admin/reportes"
+                [maxItems]="5"
+              ></app-activity-feed>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <!-- Pestaña de Estadísticas Detalladas -->
+        <mat-tab label="Estadísticas Detalladas">
+          <div class="tab-content">
+            <div class="stats-grid">
+              <div class="stats-row">
+                <div class="stats-col">
+                  <app-stats-chart
+                    title="Concursos por Estado"
+                    [chartType]="'bar'"
+                    [chartData]="statusChartData"
+                    height="300px"
+                  ></app-stats-chart>
+                </div>
+                
+                <div class="stats-col">
+                  <app-stats-chart
+                    title="Concursos por Categoría"
+                    [chartType]="'bar'"
+                    [chartData]="categoryChartData"
+                    height="300px"
+                  ></app-stats-chart>
+                </div>
+              </div>
+              
+              <div class="stats-row">
+                <div class="stats-col">
+                  <app-stats-chart
+                    title="Concursos por Departamento"
+                    [chartType]="'bar'"
+                    [chartData]="departmentChartData"
+                    height="300px"
+                  ></app-stats-chart>
+                </div>
+                
+                <div class="stats-col">
+                  <mat-card class="stats-detail-card">
+                    <mat-card-header>
+                      <mat-card-title>Detalles de Estadísticas</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <div class="stats-detail-section">
+                        <h3>Concursos</h3>
+                        <div class="stats-detail-item">
+                          <span class="detail-label">Total:</span>
+                          <span class="detail-value">{{stats.total}}</span>
+                        </div>
+                        <div class="stats-detail-item">
+                          <span class="detail-label">Activos:</span>
+                          <span class="detail-value">{{stats.active}}</span>
+                        </div>
+                        <div class="stats-detail-item">
+                          <span class="detail-label">Borradores:</span>
+                          <span class="detail-value">{{stats.draft}}</span>
+                        </div>
+                        <div class="stats-detail-item">
+                          <span class="detail-label">En Proceso:</span>
+                          <span class="detail-value">{{stats.inProgress}}</span>
+                        </div>
+                        <div class="stats-detail-item">
+                          <span class="detail-label">Cerrados:</span>
+                          <span class="detail-value">{{stats.closed}}</span>
+                        </div>
+                        <div class="stats-detail-item">
+                          <span class="detail-label">Cancelados:</span>
+                          <span class="detail-value">{{stats.cancelled}}</span>
+                        </div>
+                      </div>
+                      
+                      <mat-divider></mat-divider>
+                      
+                      <div class="stats-detail-section">
+                        <h3>Departamentos Principales</h3>
+                        <ng-container *ngFor="let dept of departmentChartData.labels; let i = index">
+                          <div *ngIf="i < 5" class="stats-detail-item">
+                            <span class="detail-label">{{dept}}:</span>
+                            <span class="detail-value">{{departmentChartData.datasets[0].data[i]}}</span>
+                          </div>
+                        </ng-container>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+        
+        <!-- Pestaña de Próximos Concursos -->
+        <mat-tab label="Próximos Concursos">
+          <div class="tab-content">
+            <div class="coming-soon">
+              <mat-icon>event_upcoming</mat-icon>
+              <h3>Próximamente</h3>
+              <p>La vista de próximos concursos estará disponible en futuras actualizaciones.</p>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  </ng-container>
+</div>

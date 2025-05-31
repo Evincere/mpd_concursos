@@ -1,84 +1,239 @@
-<h2 mat-dialog-title>{{title}}</h2>
+<form [formGroup]="userForm" class="user-form">
+    <div class="form-section">
+      <h3>Información Personal</h3>
 
-<form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()">
-  <mat-dialog-content class="mat-typography">
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Nombre Completo</mat-label>
-        <input matInput formControlName="nombre" placeholder="Ingrese el nombre completo">
-        <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('required')">
-          El nombre es obligatorio
-        </mat-error>
-        <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('minlength')">
-          El nombre debe tener al menos 3 caracteres
-        </mat-error>
-      </mat-form-field>
+      <div class="form-row">
+        <app-custom-form-field
+          label="Nombre"
+          placeholder="Ingrese el nombre"
+          [required]="true"
+          [formControl]="$any(userForm.get('nombre'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('nombre')"
+          [customMessages]="validationMessages.nombre">
+        </app-form-error>
+
+        <app-custom-form-field
+          label="Apellido"
+          placeholder="Ingrese el apellido"
+          [required]="true"
+          [formControl]="$any(userForm.get('apellido'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('apellido')"
+          [customMessages]="validationMessages.apellido">
+        </app-form-error>
+      </div>
+
+      <div class="form-row">
+        <app-custom-form-field
+          label="DNI"
+          placeholder="Ingrese el DNI"
+          [required]="true"
+          [formControl]="$any(userForm.get('dni'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('dni')"
+          [customMessages]="validationMessages.dni">
+        </app-form-error>
+
+        <app-custom-form-field
+          label="CUIT"
+          placeholder="Ingrese el CUIT (sin guiones)"
+          [formControl]="$any(userForm.get('cuit'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('cuit')"
+          [customMessages]="validationMessages.cuit">
+        </app-form-error>
+      </div>
+
+      <div class="form-row">
+        <app-custom-form-field
+          label="Fecha de Nacimiento"
+          placeholder="Seleccione la fecha de nacimiento"
+          type="date"
+          [required]="true"
+          [formControl]="$any(userForm.get('birthDate'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('birthDate')"
+          [customMessages]="validationMessages.birthDate">
+        </app-form-error>
+
+        <app-custom-form-field
+          label="Teléfono"
+          placeholder="Ingrese el teléfono"
+          [formControl]="$any(userForm.get('telefono'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('telefono')"
+          [customMessages]="validationMessages.telefono">
+        </app-form-error>
+      </div>
     </div>
 
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
-        <input matInput formControlName="email" placeholder="Ingrese el email" type="email">
-        <mat-error *ngIf="usuarioForm.get('email')?.hasError('required')">
-          El email es obligatorio
-        </mat-error>
-        <mat-error *ngIf="usuarioForm.get('email')?.hasError('email')">
-          Ingrese un email válido
-        </mat-error>
-      </mat-form-field>
+    <div class="form-section">
+      <h3>Información de Cuenta</h3>
+
+      <div class="form-row">
+        <app-custom-form-field
+          label="Email"
+          placeholder="Ingrese el email"
+          type="email"
+          [required]="true"
+          [formControl]="$any(userForm.get('email'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('email')"
+          [customMessages]="validationMessages.email">
+        </app-form-error>
+      </div>
+
+      <div class="form-row" *ngIf="!isEditMode">
+        <app-custom-form-field
+          label="Contraseña"
+          placeholder="Ingrese la contraseña"
+          type="password"
+          [required]="true"
+          [formControl]="$any(userForm.get('password'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('password')"
+          [customMessages]="validationMessages.password">
+        </app-form-error>
+
+        <app-custom-form-field
+          label="Confirmar Contraseña"
+          placeholder="Confirme la contraseña"
+          type="password"
+          [required]="true"
+          [formControl]="$any(userForm.get('confirmPassword'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('confirmPassword')"
+          [customMessages]="validationMessages.confirmPassword">
+        </app-form-error>
+      </div>
     </div>
 
-    <div class="form-row" *ngIf="mode === 'create' || usuarioForm.get('password')?.value">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Contraseña</mat-label>
-        <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="Ingrese la contraseña">
-        <button mat-icon-button matSuffix (click)="hidePassword = !hidePassword" type="button">
-          <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
-        </button>
-        <mat-hint *ngIf="mode === 'edit'">Dejar en blanco para mantener la contraseña actual</mat-hint>
-        <mat-error *ngIf="usuarioForm.get('password')?.hasError('required')">
-          La contraseña es obligatoria
-        </mat-error>
-        <mat-error *ngIf="usuarioForm.get('password')?.hasError('minlength')">
-          La contraseña debe tener al menos 6 caracteres
-        </mat-error>
-      </mat-form-field>
+    <div class="form-section">
+      <h3>Roles y Permisos</h3>
+
+      <div class="roles-container">
+        <div *ngFor="let role of availableRoles" class="role-checkbox">
+          <app-custom-checkbox
+            [label]="role.label"
+            [formControlName]="role.value">
+          </app-custom-checkbox>
+        </div>
+      </div>
     </div>
 
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Roles</mat-label>
-        <mat-select formControlName="roles" multiple>
-          <mat-option *ngFor="let rol of roles" [value]="rol.value">
-            {{rol.label}}
-          </mat-option>
-        </mat-select>
-        <mat-error *ngIf="usuarioForm.get('roles')?.hasError('required')">
-          Debe seleccionar al menos un rol
-        </mat-error>
-      </mat-form-field>
+    <div class="form-section" *ngIf="isEditMode">
+      <h3>Estado de la Cuenta</h3>
+
+      <div class="form-row">
+        <app-custom-select
+          label="Estado"
+          [options]="estadoOptions"
+          [formControl]="$any(userForm.get('estado'))">
+        </app-custom-select>
+      </div>
     </div>
 
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Teléfono</mat-label>
-        <input matInput formControlName="telefono" placeholder="Ingrese el teléfono (10 dígitos)">
-        <mat-error *ngIf="usuarioForm.get('telefono')?.hasError('pattern')">
-          Ingrese un número de teléfono válido (10 dígitos)
-        </mat-error>
-      </mat-form-field>
+    <div class="form-section">
+      <h3>Datos de Ubicación</h3>
+
+      <div class="form-row">
+        <app-custom-form-field
+          label="País"
+          placeholder="Ingrese el país"
+          [required]="true"
+          [formControl]="$any(userForm.get('country'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('country')"
+          [customMessages]="validationMessages.country">
+        </app-form-error>
+
+        <app-custom-form-field
+          label="Provincia"
+          placeholder="Ingrese la provincia"
+          [required]="true"
+          [formControl]="$any(userForm.get('province'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('province')"
+          [customMessages]="validationMessages.province">
+        </app-form-error>
+      </div>
+
+      <div class="form-row">
+        <app-custom-form-field
+          label="Municipio"
+          placeholder="Ingrese el municipio"
+          [required]="true"
+          [formControl]="$any(userForm.get('municipality'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('municipality')"
+          [customMessages]="validationMessages.municipality">
+        </app-form-error>
+      </div>
+
+      <div class="form-row">
+        <app-custom-form-field
+          label="Domicilio Legal"
+          placeholder="Ingrese el domicilio legal"
+          [required]="true"
+          [formControl]="$any(userForm.get('legalAddress'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('legalAddress')"
+          [customMessages]="validationMessages.legalAddress">
+        </app-form-error>
+
+        <app-custom-form-field
+          label="Domicilio Real"
+          placeholder="Ingrese el domicilio real"
+          [required]="true"
+          [formControl]="$any(userForm.get('residentialAddress'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('residentialAddress')"
+          [customMessages]="validationMessages.residentialAddress">
+        </app-form-error>
+      </div>
+
+      <div class="form-row">
+        <app-custom-form-field
+          label="Dirección Adicional"
+          placeholder="Ingrese dirección adicional (opcional)"
+          [formControl]="$any(userForm.get('direccion'))">
+        </app-custom-form-field>
+        <app-form-error
+          [control]="userForm.get('direccion')">
+        </app-form-error>
+      </div>
     </div>
 
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Dirección</mat-label>
-        <textarea matInput formControlName="direccion" placeholder="Ingrese la dirección" rows="2"></textarea>
-      </mat-form-field>
+    <!-- Botones de acción -->
+    <div class="form-actions">
+      <app-custom-button
+        label="Cancelar"
+        variant="stroked"
+        color="accent"
+        [disabled]="isLoading"
+        (buttonClick)="closeDialogDirectly()">
+      </app-custom-button>
+      <app-custom-button
+        [label]="isEditMode ? 'Guardar Cambios' : 'Crear Usuario'"
+        variant="flat"
+        color="primary"
+        [loading]="isLoading"
+        (buttonClick)="onSubmit()">
+      </app-custom-button>
     </div>
-  </mat-dialog-content>
-
-  <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">Cancelar</button>
-    <button mat-raised-button color="primary" type="submit">Guardar</button>
-  </mat-dialog-actions>
-</form>
+  </form>

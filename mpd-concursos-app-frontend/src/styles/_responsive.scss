@@ -1,0 +1,397 @@
+// Variables de breakpoints
+$breakpoint-xs: 480px;
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1400px;
+
+// Mixins para media queries
+@mixin xs {
+  @media (max-width: #{$breakpoint-xs}) {
+    @content;
+  }
+}
+
+@mixin sm {
+  @media (max-width: #{$breakpoint-sm}) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (max-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (max-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (max-width: #{$breakpoint-xl}) {
+    @content;
+  }
+}
+
+@mixin xxl {
+  @media (max-width: #{$breakpoint-xxl}) {
+    @content;
+  }
+}
+
+// Mixins para tamaños mínimos
+@mixin min-xs {
+  @media (min-width: #{$breakpoint-xs + 1px}) {
+    @content;
+  }
+}
+
+@mixin min-sm {
+  @media (min-width: #{$breakpoint-sm + 1px}) {
+    @content;
+  }
+}
+
+@mixin min-md {
+  @media (min-width: #{$breakpoint-md + 1px}) {
+    @content;
+  }
+}
+
+@mixin min-lg {
+  @media (min-width: #{$breakpoint-lg + 1px}) {
+    @content;
+  }
+}
+
+@mixin min-xl {
+  @media (min-width: #{$breakpoint-xl + 1px}) {
+    @content;
+  }
+}
+
+@mixin min-xxl {
+  @media (min-width: #{$breakpoint-xxl + 1px}) {
+    @content;
+  }
+}
+
+// Mixins para rangos específicos
+@mixin xs-to-sm {
+  @media (min-width: #{$breakpoint-xs + 1px}) and (max-width: #{$breakpoint-sm}) {
+    @content;
+  }
+}
+
+@mixin sm-to-md {
+  @media (min-width: #{$breakpoint-sm + 1px}) and (max-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin md-to-lg {
+  @media (min-width: #{$breakpoint-md + 1px}) and (max-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin lg-to-xl {
+  @media (min-width: #{$breakpoint-lg + 1px}) and (max-width: #{$breakpoint-xl}) {
+    @content;
+  }
+}
+
+@mixin xl-to-xxl {
+  @media (min-width: #{$breakpoint-xl + 1px}) and (max-width: #{$breakpoint-xxl}) {
+    @content;
+  }
+}
+
+// Clases de utilidad para ocultar/mostrar elementos en diferentes tamaños
+.hide-xs {
+  @include xs {
+    display: none !important;
+  }
+}
+
+.hide-sm {
+  @include sm {
+    display: none !important;
+  }
+}
+
+.hide-md {
+  @include md {
+    display: none !important;
+  }
+}
+
+.hide-lg {
+  @include lg {
+    display: none !important;
+  }
+}
+
+.hide-xl {
+  @include xl {
+    display: none !important;
+  }
+}
+
+.show-xs {
+  display: none !important;
+  @include xs {
+    display: block !important;
+  }
+}
+
+.show-sm {
+  display: none !important;
+  @include sm {
+    display: block !important;
+  }
+}
+
+.show-md {
+  display: none !important;
+  @include md {
+    display: block !important;
+  }
+}
+
+.show-lg {
+  display: none !important;
+  @include lg {
+    display: block !important;
+  }
+}
+
+.show-xl {
+  display: none !important;
+  @include xl {
+    display: block !important;
+  }
+}
+
+// Clases de utilidad para flex en diferentes tamaños
+.flex-xs {
+  @include xs {
+    display: flex !important;
+  }
+}
+
+.flex-sm {
+  @include sm {
+    display: flex !important;
+  }
+}
+
+.flex-md {
+  @include md {
+    display: flex !important;
+  }
+}
+
+.flex-lg {
+  @include lg {
+    display: flex !important;
+  }
+}
+
+.flex-xl {
+  @include xl {
+    display: flex !important;
+  }
+}
+
+// Clases de utilidad para dirección de flex en diferentes tamaños
+.flex-column-xs {
+  @include xs {
+    flex-direction: column !important;
+  }
+}
+
+.flex-column-sm {
+  @include sm {
+    flex-direction: column !important;
+  }
+}
+
+.flex-column-md {
+  @include md {
+    flex-direction: column !important;
+  }
+}
+
+.flex-column-lg {
+  @include lg {
+    flex-direction: column !important;
+  }
+}
+
+.flex-column-xl {
+  @include xl {
+    flex-direction: column !important;
+  }
+}
+
+// Clases de utilidad para ancho completo en diferentes tamaños
+.full-width-xs {
+  @include xs {
+    width: 100% !important;
+  }
+}
+
+.full-width-sm {
+  @include sm {
+    width: 100% !important;
+  }
+}
+
+.full-width-md {
+  @include md {
+    width: 100% !important;
+  }
+}
+
+.full-width-lg {
+  @include lg {
+    width: 100% !important;
+  }
+}
+
+.full-width-xl {
+  @include xl {
+    width: 100% !important;
+  }
+}
+
+// Clases de utilidad para márgenes y paddings responsivos
+.m-responsive {
+  margin: 2rem;
+  
+  @include lg {
+    margin: 1.5rem;
+  }
+  
+  @include md {
+    margin: 1rem;
+  }
+  
+  @include sm {
+    margin: 0.75rem;
+  }
+  
+  @include xs {
+    margin: 0.5rem;
+  }
+}
+
+.p-responsive {
+  padding: 2rem;
+  
+  @include lg {
+    padding: 1.5rem;
+  }
+  
+  @include md {
+    padding: 1rem;
+  }
+  
+  @include sm {
+    padding: 0.75rem;
+  }
+  
+  @include xs {
+    padding: 0.5rem;
+  }
+}
+
+// Clases de utilidad para tamaños de texto responsivos
+.text-responsive {
+  font-size: 1rem;
+  
+  @include lg {
+    font-size: 0.95rem;
+  }
+  
+  @include md {
+    font-size: 0.9rem;
+  }
+  
+  @include sm {
+    font-size: 0.85rem;
+  }
+  
+  @include xs {
+    font-size: 0.8rem;
+  }
+}
+
+.title-responsive {
+  font-size: 2rem;
+  
+  @include lg {
+    font-size: 1.75rem;
+  }
+  
+  @include md {
+    font-size: 1.5rem;
+  }
+  
+  @include sm {
+    font-size: 1.25rem;
+  }
+  
+  @include xs {
+    font-size: 1.1rem;
+  }
+}
+
+// Clases de utilidad para grid responsivo
+.grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  
+  @include lg {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+  
+  @include md {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  @include sm {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+// Clases de utilidad para contenedores responsivos
+.container-responsive {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  
+  @include lg {
+    max-width: 992px;
+    padding: 0 1.5rem;
+  }
+  
+  @include md {
+    max-width: 768px;
+    padding: 0 1rem;
+  }
+  
+  @include sm {
+    max-width: 100%;
+    padding: 0 0.75rem;
+  }
+}

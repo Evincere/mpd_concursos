@@ -1,0 +1,121 @@
+// Estilos compartidos para tablas de usuarios
+@use 'src/styles/variables' as global;
+@use 'src/styles/responsive' as responsive;
+@use 'variables' as vars;
+
+// Variables compartidas
+$table-border-color: rgba(var(--color-border-rgb, 72, 72, 72), 0.2);
+$table-border-color-dark: rgba(var(--color-border-dark-rgb, 51, 51, 51), 0.2);
+$table-header-bg: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.9);
+$table-header-bg-dark: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.9);
+$table-container-bg: rgba(var(--color-surface-rgb, 66, 66, 66), 0.8);
+$table-container-bg-dark: rgba(var(--color-surface-dark-rgb, 51, 51, 51), 0.8);
+$table-row-hover-bg: rgba(var(--color-background-hover-rgb, 58, 58, 58), 0.5);
+$table-row-hover-bg-dark: rgba(var(--color-background-hover-dark-rgb, 68, 68, 68), 0.5);
+
+// Mixins para estilos comunes
+@mixin table-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: vars.$border-radius;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border: 1px solid $table-border-color;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+  background-color: $table-container-bg;
+}
+
+@mixin table-container-dark {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid $table-border-color-dark;
+  background-color: $table-container-bg-dark;
+}
+
+@mixin table-base {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+@mixin table-header {
+  background-color: $table-header-bg;
+  color: var(--color-text-primary, #FFFFFF);
+  font-weight: 600;
+  padding: 1.25rem 1rem;
+  text-align: left;
+  border-bottom: 2px solid rgba(var(--color-primary-rgb, 25, 118, 210), 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+@mixin table-header-dark {
+  background-color: $table-header-bg-dark;
+  color: var(--color-text-primary-dark, #E0E0E0);
+  border-bottom: 2px solid rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.3);
+}
+
+@mixin table-cell {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid $table-border-color;
+  color: var(--color-text-primary, #FFFFFF);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+@mixin table-cell-dark {
+  border-bottom: 1px solid $table-border-color-dark;
+  color: var(--color-text-primary-dark, #E0E0E0);
+}
+
+@mixin table-row-hover {
+  background-color: $table-row-hover-bg;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@mixin table-row-hover-dark {
+  background-color: $table-row-hover-bg-dark;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+// Mixins para badges de estado
+@mixin estado-badge($color-var, $color-fallback) {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background-color: rgba(var(--#{$color-var}-rgb, $color-fallback), 0.12);
+  color: var(--#{$color-var}, $color-fallback);
+  box-shadow: 0 2px 10px rgba(var(--#{$color-var}-rgb, $color-fallback), 0.15);
+  border: 1px solid rgba(var(--#{$color-var}-rgb, $color-fallback), 0.2);
+}
+
+// Mixins para tooltips
+@mixin tooltip-base {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: rgba(var(--color-surface-rgb, 66, 66, 66), 0.95);
+  color: var(--color-text-primary, #FFFFFF);
+  padding: 0.5rem;
+  border-radius: global.$border-radius-sm;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  white-space: normal;
+  max-width: 250px;
+  font-size: 0.85rem;
+}
+
+@mixin tooltip-dark {
+  background-color: rgba(var(--color-surface-dark-rgb, 51, 51, 51), 0.95);
+  color: var(--color-text-primary-dark, #E0E0E0);
+}

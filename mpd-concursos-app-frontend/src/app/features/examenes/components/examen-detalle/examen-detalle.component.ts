@@ -1,6 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from  '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { Observable } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,8 +9,9 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Examen, ESTADO_EXAMEN, TipoExamen } from '@shared/interfaces/examen/examen.interface';
+import { Examen, ESTADO_EXAMEN } from  '@shared/interfaces/examen/examen.interface';
 import { ExamenesService } from '@core/services/examenes/examenes.service';
+
 
 @Component({
   selector: 'app-examen-detalle',
@@ -35,8 +37,8 @@ export class ExamenDetalleComponent implements OnInit {
   error?: string;
 
   constructor(
-    private router: Router,
     private route: ActivatedRoute,
+    private router: Router,
     private examenesService: ExamenesService
   ) {}
 
@@ -49,7 +51,7 @@ export class ExamenDetalleComponent implements OnInit {
     }
 
     this.examenesService.getExamen(examenId).subscribe({
-      next: (examen) => {
+      next: (examen: Examen) => {
         console.log('Examen recibido en el componente:', {
           requisitos: examen.requisitos,
           reglasExamen: examen.reglasExamen,
@@ -58,7 +60,7 @@ export class ExamenDetalleComponent implements OnInit {
         this.examen = examen;
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: unknown) => {
         console.error('Error al cargar el examen:', error);
         this.error = 'No se pudo cargar el examen';
         this.loading = false;

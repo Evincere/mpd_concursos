@@ -1,6 +1,6 @@
 <div class="wrapper">
   <div class="cols">
-    <div class="login-box" [class.flipped]="isFlipped" (click)="onCardClick()">
+    <div class="login-box" [class.flipped]="isFlipped" (click)="onCardClick()" (keydown.enter)="onCardClick()" (keydown.space)="onCardClick()" tabindex="0" role="button" aria-label="Voltear tarjeta de inicio de sesión">
       <div class="front">
         <img src="assets/images/mpd-logo.png" alt="Logo Defensa" class="logo-defensa" (error)="onLogoError($event)">
         <h2>Bienvenido</h2>
@@ -11,8 +11,8 @@
         <p>Iniciar Sesión</p>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <div class="user-box">
-            <input matInput type="text" class="login-input" formControlName="username" placeholder=" " required>
-            <label>Usuario</label>
+            <input matInput type="text" class="login-input" formControlName="username" placeholder=" " required id="username">
+            <label for="username">Usuario</label>
             <mat-error *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.errors?.['required']">
               El nombre de usuario es requerido
             </mat-error>
@@ -21,8 +21,8 @@
             </mat-error>
           </div>
           <div class="user-box">
-            <input matInput type="password" class="login-input" formControlName="password" placeholder=" " required>
-            <label>Contraseña</label>
+            <input matInput type="password" class="login-input" formControlName="password" placeholder=" " required id="password">
+            <label for="password">Contraseña</label>
             <mat-error *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
               La contraseña es requerida
             </mat-error>
@@ -38,10 +38,35 @@
             Ingresar
           </button>
         </form>
-        <div class="error-message" *ngIf="loginError">
-          {{ loginError }}
+        <div class="error-message" *ngIf="loginError" [ngClass]="{'error-blocked': isBlockedError, 'error-inactive': isInactiveError, 'error-expired': isExpiredError}">
+          <div class="error-icon" *ngIf="isBlockedError || isInactiveError || isExpiredError">
+            <i class="material-icons">{{ getErrorIcon() }}</i>
+          </div>
+          <div class="error-content">
+            <strong>{{ getErrorTitle() }}</strong>
+            <p>{{ loginError }}</p>
+
+            <!-- Email del administrador para cuentas bloqueadas -->
+            <div class="admin-contact" *ngIf="isBlockedError">
+              <p class="contact-label">Contacte al administrador:</p>
+              <div class="email-container" (click)="copyAdminEmail()">
+                <span class="admin-email">{{ adminEmail }}</span>
+                <i class="material-icons copy-icon" [ngClass]="{'copied': emailCopied}">
+                  {{ emailCopied ? 'check_circle' : 'content_copy' }}
+                </i>
+                <span class="copy-tooltip" [ngClass]="{'visible': emailCopied}">
+                  {{ emailCopied ? '¡Copiado!' : 'Haga clic para copiar' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Botón de contacto para otros tipos de error -->
+            <div class="error-actions" *ngIf="(isInactiveError || isExpiredError) && !isBlockedError">
+              <button class="contact-admin-btn" (click)="copyAdminEmail()">Contactar al administrador</button>
+            </div>
+          </div>
         </div>
-        <p>¿No tienes una cuenta? <button class="a2" (click)="goToRegister()">Registrarse</button></p>
+        <p>¿No tienes una cuenta? <button class="a2" (click)="goToRegister()" (keydown.enter)="goToRegister()" (keydown.space)="goToRegister()" type="button">Registrarse</button></p>
       </div>
     </div>
   </div>

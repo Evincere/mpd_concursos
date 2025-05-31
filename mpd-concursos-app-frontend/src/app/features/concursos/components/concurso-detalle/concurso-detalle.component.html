@@ -1,8 +1,8 @@
 <div class="detalle-container" [class.closing]="closing">
   <div class="detalle-header">
     <h2>Detalle del Concurso</h2>
-    <button mat-icon-button class="cerrar-btn" (click)="onCerrar()">
-      <mat-icon>close</mat-icon>
+    <button mat-icon-button class="cerrar-btn" (click)="onCerrar()" (keydown.enter)="onCerrar()" (keydown.space)="onCerrar()" aria-label="Cerrar detalle del concurso">
+      <mat-icon aria-hidden="true">close</mat-icon>
     </button>
   </div>
 
@@ -27,9 +27,10 @@
             <div class="info-item">
               <div class="label">Estado</div>
               <div class="value">
-                <span class="estado-badge" [ngClass]="concurso.status.toLowerCase()">
-                  {{ getEstadoConcursoLabel(concurso.status) }}
-                </span>
+                <app-contest-status-badge
+                  [status]="concurso.status"
+                  [showIcon]="true">
+                </app-contest-status-badge>
               </div>
             </div>
           </div>
@@ -48,21 +49,21 @@
         <div class="tab-content">
           <div class="documentos-grid">
             <div class="documento-item">
-              <mat-icon>description</mat-icon>
+              <mat-icon aria-hidden="true">description</mat-icon>
               <div class="documento-info">
                 <h4>Bases y Condiciones</h4>
-                <a mat-button color="primary" [href]="concurso.basesUrl" target="_blank">
-                  <mat-icon>download</mat-icon>
+                <a mat-button color="primary" [href]="concurso.basesUrl" target="_blank" aria-label="Descargar bases y condiciones en PDF">
+                  <mat-icon aria-hidden="true">download</mat-icon>
                   Descargar PDF
                 </a>
               </div>
             </div>
             <div class="documento-item">
-              <mat-icon>work_outline</mat-icon>
+              <mat-icon aria-hidden="true">work_outline</mat-icon>
               <div class="documento-info">
                 <h4>Descripción del Puesto</h4>
-                <a mat-button color="primary" [href]="concurso.descriptionUrl" target="_blank">
-                  <mat-icon>download</mat-icon>
+                <a mat-button color="primary" [href]="concurso.descriptionUrl" target="_blank" aria-label="Descargar descripción del puesto en PDF">
+                  <mat-icon aria-hidden="true">download</mat-icon>
                   Descargar PDF
                 </a>
               </div>
@@ -77,7 +78,7 @@
           <div class="fechas-timeline">
             <div class="fecha-item" *ngFor="let fecha of concurso.dates">
               <div class="fecha-icon">
-                <mat-icon>event</mat-icon>
+                <mat-icon aria-hidden="true">event</mat-icon>
               </div>
               <div class="fecha-content">
                 <h4>{{ fecha.label }}</h4>
@@ -91,8 +92,8 @@
   </div>
 
   <div class="actions-container">
-    <button mat-stroked-button class="volver-btn" (click)="onCerrar()">
-      <mat-icon>arrow_back</mat-icon>
+    <button mat-stroked-button class="volver-btn" (click)="onCerrar()" (keydown.enter)="onCerrar()" (keydown.space)="onCerrar()" aria-label="Volver a la lista de concursos">
+      <mat-icon aria-hidden="true">arrow_back</mat-icon>
       Volver
     </button>
     <app-inscripcion-button

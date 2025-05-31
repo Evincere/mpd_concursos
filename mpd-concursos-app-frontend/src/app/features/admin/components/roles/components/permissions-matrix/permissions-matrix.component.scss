@@ -1,0 +1,140 @@
+@use 'src/styles/variables' as *;
+
+.permissions-matrix-container {
+  padding: 1rem 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  
+  h2 {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.system-role-notice {
+  display: flex;
+  align-items: center;
+  background-color: rgba($color-info, 0.1);
+  border-left: 4px solid $color-info;
+  padding: 0.75rem 1rem;
+  border-radius: $border-radius;
+  margin-bottom: 1.5rem;
+  
+  mat-icon {
+    color: $color-info;
+    margin-right: 0.75rem;
+  }
+  
+  span {
+    color: $color-text-primary;
+    font-size: $font-size-sm;
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  span {
+    margin-top: 1rem;
+    color: $color-text-secondary;
+  }
+}
+
+mat-accordion {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  
+  .category-name {
+    font-weight: 500;
+  }
+  
+  .category-count {
+    margin-left: 0.5rem;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+}
+
+.category-select-all {
+  display: flex;
+  align-items: center;
+}
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.permission-item {
+  padding: 0.5rem;
+  border-radius: $border-radius-sm;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: rgba($color-primary, 0.05);
+  }
+}
+
+.permission-info {
+  display: flex;
+  flex-direction: column;
+  
+  .permission-name {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .permission-description {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-top: 0.25rem;
+  }
+}
+
+// Estilos para los checkboxes
+::ng-deep .mat-mdc-checkbox .mdc-checkbox .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
+  background-color: $color-primary !important;
+  border-color: $color-primary !important;
+}
+
+::ng-deep .mat-mdc-checkbox .mdc-form-field {
+  width: 100%;
+}
+
+// Estilos para los paneles de expansión
+::ng-deep .mat-expansion-panel-header {
+  height: auto !important;
+  padding: 1rem !important;
+}
+
+::ng-deep .mat-expansion-panel-header-title,
+::ng-deep .mat-expansion-panel-header-description {
+  margin-right: 0 !important;
+}
+
+::ng-deep .mat-expansion-panel-body {
+  padding: 0 1rem 1rem !important;
+}

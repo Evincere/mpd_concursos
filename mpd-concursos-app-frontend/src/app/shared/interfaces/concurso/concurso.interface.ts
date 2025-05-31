@@ -1,7 +1,16 @@
-import { CategoriaEnum } from "../../constants/enums/categoria-enum";
+
 import { ContestDate } from './contest-date.interface';
 
 export type ContestStatus = 'ACTIVE' | 'CLOSED' | 'IN_PROGRESS' | 'DRAFT' | 'CANCELLED';
+
+export interface ContestStatusConfig {
+  value: ContestStatus;
+  label: string;
+  color: string;
+  backgroundColor: string;
+  borderColor: string;
+  icon?: string;
+}
 
 export interface Concurso {
     id: number | string;

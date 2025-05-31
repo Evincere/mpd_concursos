@@ -5,31 +5,31 @@
                 <a routerLink="/dashboard"
                    routerLinkActive="active"
                    [routerLinkActiveOptions]="{exact: true}">
-                    <i class="fas fa-home"></i>
+                    <i class="fas fa-home" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Principal</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a routerLink="/dashboard/concursos" routerLinkActive="active">
-                    <i class="fas fa-gavel"></i>
+                    <i class="fas fa-gavel" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Concursos</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a routerLink="/dashboard/postulaciones" routerLinkActive="active">
-                    <i class="fas fa-file-alt"></i>
+                    <i class="fas fa-file-alt" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Mis Postulaciones</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a routerLink="/dashboard/perfil" routerLinkActive="active">
-                    <i class="fas fa-user-circle"></i>
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Mi Perfil</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a routerLink="/dashboard/examenes" routerLinkActive="active">
-                    <i class="fas fa-file-alt"></i>
+                    <i class="fas fa-file-alt" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Exámenes</span>
                 </a>
             </div>
@@ -38,30 +38,37 @@
         <div class="section-divider"></div>
 
         <nav class="nav-menu">
+            <!-- Enlace al Panel de Administración (solo visible para administradores) -->
+            <div class="nav-item" *ngIf="isAdmin">
+                <a routerLink="/admin/dashboard" routerLinkActive="active">
+                    <i class="fas fa-user-shield" aria-hidden="true"></i>
+                    <span *ngIf="!isCollapsed">Panel de Administración</span>
+                </a>
+            </div>
             <div class="nav-item">
                 <a routerLink="/dashboard/configuracion" routerLinkActive="active">
-                    <i class="fas fa-cog"></i>
+                    <i class="fas fa-cog" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Configuración</span>
                 </a>
             </div>
             <div class="nav-item">
                 <a routerLink="/ayuda" routerLinkActive="active">
-                    <i class="fas fa-question-circle"></i>
+                    <i class="fas fa-question-circle" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Ayuda</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" (click)="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
+                <a href="#" (click)="logout($event)" (keydown.enter)="logout($event)" (keydown.space)="logout($event)" role="button" aria-label="Cerrar sesión">
+                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Cerrar Sesión</span>
                 </a>
             </div>
         </nav>
     </div>
 
-    <div class="sidebar-tab" (click)="toggleSidebar()" [class.collapsed]="isCollapsed">
+    <div class="sidebar-tab" (click)="toggleSidebar()" (keydown.enter)="toggleSidebar()" (keydown.space)="toggleSidebar()" [class.collapsed]="isCollapsed" tabindex="0" role="button" [attr.aria-label]="isCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'">
         <div class="tab-line"></div>
-        <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
+        <i class="fas" [class.fa-bars]="isCollapsed" [class.fa-times]="!isCollapsed" aria-hidden="true"></i>
         <div class="tab-line"></div>
     </div>
 </div>

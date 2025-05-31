@@ -6,7 +6,7 @@ import { TipoExamen } from "@shared/interfaces/examen/examen.interface";
   providedIn: 'root'
 })
 export class ExamenFactory {
-  createExamen(tipo: TipoExamen, data: any): IExamen {
+  createExamen(tipo: TipoExamen, data: unknown): IExamen {
     switch (tipo) {
       case TipoExamen.TECNICO_JURIDICO:
         return new ExamenTecnicoJuridico(data);

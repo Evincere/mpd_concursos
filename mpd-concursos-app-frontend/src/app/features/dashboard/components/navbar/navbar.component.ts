@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserInfoComponent } from './user-info/user-info.component';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { Router } from '@angular/router';
 import { NotificationsComponent } from '../../../../shared/components/notifications/notifications.component';
+import { SectionNavigationService } from '../../../../core/services/navigation/section-navigation.service';
 
 @Component({
   selector: 'app-navbar',
@@ -26,28 +27,40 @@ import { NotificationsComponent } from '../../../../shared/components/notificati
     ])
   ]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   @Input() isSidebarCollapsed = false;
   logoState = 'start';
+  isAdmin = false;
   private readonly fallbackLogoUrl = 'assets/images/mpd-logo.png';
 
   constructor(
     private authService: AuthService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private sectionNavigationService: SectionNavigationService
+  ) {
+    // Verificar si el usuario es administrador
+    this.isAdmin = this.authService.hasRole('ROLE_ADMIN');
+  }
 
-  ngOnInit() {
+  ngOnInit(): void {
     setTimeout(() => {
       this.logoState = 'end';
     }, 100);
   }
 
-  onLogout() {
+  onLogout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 
-  onLogoError(event: any) {
+  /**
+   * Navega al panel de administración
+   */
+  goToAdminPanel(): void {
+    this.sectionNavigationService.navigateToAdminSection();
+  }
+
+  onLogoError(event: Event): void {
     console.log('Error al cargar el logo, intentando con fallback');
     const imgElement = event.target as HTMLImageElement;
     imgElement.src = this.fallbackLogoUrl;

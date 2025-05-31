@@ -1,0 +1,139 @@
+// Correcciones de estilos para los checkboxes en la aplicación
+@use 'src/styles/variables' as vars;
+
+// Mejoras para los checkboxes en toda la aplicación
+::ng-deep app-custom-checkbox {
+  // Contenedor principal del checkbox
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    user-select: none;
+
+    // Checkbox deshabilitado
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+
+      .checkbox-label {
+        color: var(--color-text-disabled, vars.$color-text-disabled) !important;
+      }
+    }
+  }
+
+  // Checkbox personalizado
+  .custom-checkbox {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--color-border, vars.$color-border);
+    border-radius: 3px;
+    margin-right: 0.5rem;
+    background-color: transparent;
+    transition: all 0.2s ease-in-out;
+    flex-shrink: 0;
+
+    // Checkbox marcado
+    &.checked {
+      background-color: var(--color-primary, vars.$color-primary) !important;
+      border-color: var(--color-primary, vars.$color-primary) !important;
+
+      // Icono de check
+      .check-icon {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    // Checkbox con foco
+    &.focused {
+      box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2) !important;
+    }
+
+    // Checkbox indeterminado
+    &.indeterminate {
+      background-color: var(--color-primary, vars.$color-primary) !important;
+      border-color: var(--color-primary, vars.$color-primary) !important;
+
+      // Línea de indeterminado
+      .indeterminate-line {
+        opacity: 1;
+      }
+    }
+
+    // Icono de check
+    .check-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      color: white !important;
+      font-size: 12px;
+      opacity: 0;
+      transition: all 0.2s ease-in-out;
+    }
+
+    // Línea de indeterminado
+    .indeterminate-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 2px;
+      background-color: white !important;
+      opacity: 0;
+      transition: all 0.2s ease-in-out;
+    }
+  }
+
+  // Etiqueta del checkbox
+  .checkbox-label {
+    font-size: 0.875rem;
+    color: var(--color-text-primary, vars.$color-text-primary) !important;
+    margin-left: 0.5rem;
+    user-select: none;
+  }
+
+  // Checkbox nativo oculto
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+// Estilos específicos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  ::ng-deep app-custom-checkbox {
+    .checkbox-container {
+      &.disabled .checkbox-label {
+        color: var(--color-text-disabled, vars.$color-text-disabled) !important;
+      }
+    }
+
+    .custom-checkbox {
+      border-color: var(--color-border-dark, vars.$color-border-dark);
+
+      &.checked {
+        background-color: var(--color-primary-dark, vars.$color-primary-dark) !important;
+        border-color: var(--color-primary-dark, vars.$color-primary-dark) !important;
+      }
+
+      &.focused {
+        box-shadow: 0 0 0 2px rgba(121, 134, 203, 0.2) !important;
+      }
+
+      &.indeterminate {
+        background-color: var(--color-primary-dark, vars.$color-primary-dark) !important;
+        border-color: var(--color-primary-dark, vars.$color-primary-dark) !important;
+      }
+    }
+
+    .checkbox-label {
+      color: var(--color-text-primary-dark, vars.$color-text-primary-dark) !important;
+    }
+  }
+}

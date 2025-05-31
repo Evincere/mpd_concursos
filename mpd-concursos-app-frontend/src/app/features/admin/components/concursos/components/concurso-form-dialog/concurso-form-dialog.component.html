@@ -1,0 +1,186 @@
+<div class="concurso-form-dialog">
+  <div class="dialog-header">
+    <h2>{{ isEditMode ? 'Editar Concurso' : 'Nuevo Concurso' }}</h2>
+    <button class="close-button" (click)="onCancel()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-custom-spinner [size]="'large'"></app-custom-spinner>
+    <span>Cargando...</span>
+  </div>
+
+  <form [formGroup]="concursoForm" (ngSubmit)="onSubmit()">
+    <div class="form-content">
+      <app-custom-tabs>
+        <!-- Información General -->
+        <app-custom-tab label="Información General">
+          <div class="form-section">
+            <div class="form-row">
+              <app-custom-form-field
+                label="Título"
+                formControlName="title"
+                [required]="true"
+                [errorMessage]="getErrorMessage('title')">
+              </app-custom-form-field>
+            </div>
+
+            <div class="form-row">
+              <app-custom-textarea
+                label="Descripción"
+                formControlName="description"
+                [rows]="3"
+                [errorMessage]="getErrorMessage('description')">
+              </app-custom-textarea>
+            </div>
+
+            <div class="form-row two-columns">
+              <app-custom-form-field
+                label="Cargo"
+                formControlName="position"
+                [required]="true"
+                [errorMessage]="getErrorMessage('position')">
+              </app-custom-form-field>
+
+              <app-custom-select
+                label="Departamento"
+                formControlName="department"
+                [required]="true"
+                [options]="departmentOptions"
+                [errorMessage]="getErrorMessage('department')">
+              </app-custom-select>
+            </div>
+
+            <div class="form-row two-columns">
+              <app-custom-select
+                label="Categoría"
+                formControlName="category"
+                [required]="true"
+                [options]="categoryOptions"
+                [errorMessage]="getErrorMessage('category')">
+              </app-custom-select>
+
+              <app-custom-form-field
+                label="Clase"
+                formControlName="class"
+                [errorMessage]="getErrorMessage('class')">
+              </app-custom-form-field>
+            </div>
+
+            <div class="form-row">
+              <app-custom-form-field
+                label="Área"
+                formControlName="dependencia"
+                [required]="true"
+                [errorMessage]="getErrorMessage('dependencia')">
+              </app-custom-form-field>
+            </div>
+          </div>
+        </app-custom-tab>
+
+        <!-- Fechas y Estado -->
+        <app-custom-tab label="Fechas y Estado">
+          <div class="form-section">
+            <div class="form-row two-columns">
+              <app-custom-datepicker
+                label="Fecha de Inicio"
+                formControlName="startDate"
+                [required]="true"
+                [hint]="getErrorMessage('startDate')">
+              </app-custom-datepicker>
+
+              <app-custom-datepicker
+                label="Fecha de Fin"
+                formControlName="endDate"
+                [required]="true"
+                [hint]="getErrorMessage('endDate')">
+              </app-custom-datepicker>
+            </div>
+
+            <div class="form-row">
+              <app-custom-select
+                label="Estado"
+                formControlName="status"
+                [required]="true"
+                [options]="statusOptions"
+                [errorMessage]="getErrorMessage('status')">
+              </app-custom-select>
+            </div>
+
+            <div class="info-box">
+              <i class="fas fa-info-circle info-icon"></i>
+              <div class="info-content">
+                <h3>Información sobre estados</h3>
+                <p><strong>Borrador:</strong> El concurso no es visible para los usuarios.</p>
+                <p><strong>Activo:</strong> El concurso es visible y los usuarios pueden inscribirse.</p>
+                <p><strong>En Proceso:</strong> El concurso está en evaluación y no acepta nuevas inscripciones.</p>
+                <p><strong>Cerrado:</strong> El concurso ha finalizado y se han publicado los resultados.</p>
+                <p><strong>Cancelado:</strong> El concurso ha sido cancelado y no acepta inscripciones.</p>
+              </div>
+            </div>
+          </div>
+        </app-custom-tab>
+
+        <!-- Funciones y Documentos -->
+        <app-custom-tab label="Funciones y Documentos">
+          <div class="form-section">
+            <div class="form-row">
+              <app-custom-textarea
+                label="Funciones"
+                formControlName="functions"
+                [rows]="5"
+                [errorMessage]="getErrorMessage('functions')">
+              </app-custom-textarea>
+            </div>
+
+            <div class="form-row">
+              <app-custom-form-field
+                label="URL de Bases y Condiciones"
+                formControlName="termsUrl"
+                [iconRight]="'link'"
+                [errorMessage]="getErrorMessage('termsUrl')">
+              </app-custom-form-field>
+            </div>
+
+            <div class="form-row">
+              <app-custom-form-field
+                label="URL del Perfil del Puesto"
+                formControlName="profileUrl"
+                [iconRight]="'link'"
+                [errorMessage]="getErrorMessage('profileUrl')">
+              </app-custom-form-field>
+            </div>
+
+            <div class="info-box">
+              <i class="fas fa-info-circle info-icon"></i>
+              <div class="info-content">
+                <h3>Información sobre documentos</h3>
+                <p>Las URLs deben ser enlaces a documentos PDF almacenados en el servidor.</p>
+                <p>Para subir documentos, utilice la sección de gestión de documentos después de crear el concurso.</p>
+              </div>
+            </div>
+          </div>
+        </app-custom-tab>
+      </app-custom-tabs>
+    </div>
+
+    <div class="dialog-actions">
+      <app-custom-button
+        [label]="'Cancelar'"
+        [variant]="'stroked'"
+        [color]="'primary'"
+        [disabled]="isLoading"
+        (buttonClick)="onCancel()">
+      </app-custom-button>
+
+      <app-custom-button
+        [label]="isEditMode ? 'Guardar Cambios' : 'Crear Concurso'"
+        [variant]="'flat'"
+        [color]="'primary'"
+        [disabled]="concursoForm.invalid || isLoading"
+        [type]="'submit'">
+      </app-custom-button>
+    </div>
+  </form>
+</div>

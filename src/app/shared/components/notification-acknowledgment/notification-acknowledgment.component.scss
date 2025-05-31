@@ -1,0 +1,269 @@
+.acknowledgment-container {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  
+  // Glassmorphism design system
+  background: rgba(75, 85, 99, 0.8);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.acknowledgment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  
+  .acknowledgment-icon {
+    color: #fbbf24; // Orange for attention
+    font-size: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+  
+  h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f9fafb; // Primary text color from design system
+    line-height: 1.3;
+  }
+}
+
+.acknowledgment-description {
+  margin: 0 0 1.5rem 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #d1d5db; // Secondary text color from design system
+}
+
+.acknowledgment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  // Material form field styling for dark theme
+  ::ng-deep .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      background-color: rgba(75, 85, 99, 0.5);
+      border-radius: 6px;
+      
+      .mat-mdc-form-field-outline {
+        color: rgba(255, 255, 255, 0.2);
+      }
+      
+      &:hover .mat-mdc-form-field-outline {
+        color: rgba(255, 255, 255, 0.3);
+      }
+    }
+    
+    .mat-mdc-form-field-focus-overlay {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    &.mat-focused .mat-mdc-text-field-wrapper .mat-mdc-form-field-outline {
+      color: #3b82f6;
+    }
+    
+    .mat-mdc-form-field-label {
+      color: #9ca3af;
+    }
+    
+    &.mat-focused .mat-mdc-form-field-label {
+      color: #60a5fa;
+    }
+    
+    .mat-mdc-input-element {
+      color: #f9fafb;
+      
+      &::placeholder {
+        color: #6b7280;
+      }
+    }
+    
+    .mat-mdc-form-field-error {
+      color: #fca5a5;
+      font-size: 0.75rem;
+    }
+  }
+  
+  // Material select styling
+  ::ng-deep .mat-mdc-select {
+    .mat-mdc-select-value {
+      color: #f9fafb;
+    }
+    
+    .mat-mdc-select-arrow {
+      color: #9ca3af;
+    }
+  }
+  
+  // Material checkbox styling
+  ::ng-deep .mat-mdc-checkbox {
+    .mat-mdc-checkbox-frame {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    &.mat-mdc-checkbox-checked .mat-mdc-checkbox-background {
+      background-color: #3b82f6;
+    }
+    
+    .mat-mdc-checkbox-label {
+      color: #d1d5db;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+  }
+}
+
+.declaration-section {
+  padding: 1rem;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  
+  ::ng-deep .mat-mdc-checkbox {
+    .mat-mdc-checkbox-label {
+      font-weight: 500;
+    }
+  }
+  
+  .mat-mdc-form-field-error {
+    margin-top: 0.5rem;
+    color: #fca5a5;
+    font-size: 0.75rem;
+  }
+}
+
+.acknowledgment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  
+  button {
+    min-width: 120px;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:not(.acknowledge-button) {
+      // Cancel button styling
+      color: #9ca3af;
+      background: rgba(75, 85, 99, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      
+      &:hover:not([disabled]) {
+        background: rgba(75, 85, 99, 0.7);
+        color: #d1d5db;
+        transform: translateY(-1px);
+      }
+    }
+    
+    &.acknowledge-button {
+      // Primary acknowledge button styling
+      background: rgba(59, 130, 246, 0.8);
+      color: #f9fafb;
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      
+      &:hover:not([disabled]) {
+        background: rgba(59, 130, 246, 0.9);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+      
+      &[disabled] {
+        background: rgba(75, 85, 99, 0.5);
+        color: #6b7280;
+        border-color: rgba(255, 255, 255, 0.1);
+        cursor: not-allowed;
+      }
+      
+      mat-spinner {
+        margin-right: 0.5rem;
+      }
+      
+      mat-icon {
+        margin-right: 0.25rem;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .acknowledgment-container {
+    padding: 0.75rem;
+  }
+  
+  .acknowledgment-header {
+    gap: 0.5rem;
+    
+    .acknowledgment-icon {
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+    
+    h4 {
+      font-size: 0.9375rem;
+    }
+  }
+  
+  .acknowledgment-description {
+    font-size: 0.8125rem;
+  }
+  
+  .acknowledgment-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    button {
+      width: 100%;
+      min-width: unset;
+    }
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .acknowledgment-container {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  .declaration-section {
+    border-width: 2px;
+    border-color: #3b82f6;
+  }
+  
+  .acknowledgment-actions button {
+    border-width: 2px;
+    
+    &.acknowledge-button {
+      border-color: #3b82f6;
+    }
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .acknowledgment-actions button {
+    transition: none;
+    
+    &:hover:not([disabled]) {
+      transform: none;
+    }
+  }
+}

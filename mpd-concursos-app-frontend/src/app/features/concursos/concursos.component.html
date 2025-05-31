@@ -17,72 +17,47 @@
       </app-loader>
 
       <div class="error-message" *ngIf="error">
-        <i class="fas fa-exclamation-circle"></i>
+        <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
         <div class="error-content">
           <h4>Error al cargar los concursos</h4>
-          <p>{{ error.status === 0 ? 'No se pudo conectar con el servidor' : error.error?.message || 'Ocurrió un error inesperado' }}</p>
+          <p>{{ error && error.status === 0 ? 'No se pudo conectar con el servidor' : error && error.error?.message || 'Ocurrió un error inesperado' }}</p>
         </div>
-        <button mat-button (click)="retryLoad()">
-          <i class="fas fa-redo"></i>
+        <button mat-button (click)="retryLoad()" (keydown.enter)="retryLoad()" (keydown.space)="retryLoad()" aria-label="Reintentar cargar concursos">
+          <i class="fas fa-redo" aria-hidden="true"></i>
           Reintentar
         </button>
       </div>
 
       <div class="concursos-list" *ngIf="!loading && !error && concursos.length > 0">
-        <div class="concurso-item" *ngFor="let concurso of concursos" (click)="verDetalle(concurso)">
-          <div class="card-header">
-            <div class="estado" [ngClass]="concurso.status">
-              {{ getEstadoConcursoLabel(concurso.status) }}
-            </div>
-            <div class="fecha">
-              <i class="fas fa-calendar-alt"></i>
-              {{ concurso.startDate | date:'dd/MM/yyyy' }} - {{ concurso.endDate | date:'dd/MM/yyyy' }}
-            </div>
-          </div>
-
-          <div class="card-content">
-            <h3>{{ concurso.title }}</h3>
-            <p class="cargo">{{ concurso.position }}</p>
-            <p class="dependencia">{{ concurso.dependencia }}</p>
-          </div>
-
-          <div class="card-actions" (click)="$event.stopPropagation()">
-            <button mat-stroked-button
-                    class="details-button"
-                    (click)="verDetalle(concurso, $event)">
-              <mat-icon class="details-icon">visibility</mat-icon>
-              <span>Ver Detalles</span>
-            </button>
-
-            <app-inscripcion-button
-              *ngIf="concurso.status === 'ACTIVE'"
-              [contest]="concurso"
-              (inscriptionComplete)="onInscriptionComplete(concurso)">
-            </app-inscripcion-button>
-          </div>
-        </div>
+        <app-concurso-card
+          *ngFor="let concurso of concursos; let i = index"
+          [concurso]="concurso"
+          [index]="i"
+          (verDetalle)="verDetalle($event)"
+          (inscriptionComplete)="onInscriptionComplete($event)">
+        </app-concurso-card>
       </div>
 
       <div class="empty-state" *ngIf="!loading && !error && concursos.length === 0">
         <div class="empty-state-content" [ngClass]="{'filtered': hayFiltrosAplicados()}">
           <!-- Caso 1: No hay concursos disponibles -->
           <ng-container *ngIf="!hayFiltrosAplicados()">
-            <i class="fas fa-clipboard-list fa-4x"></i>
+            <i class="fas fa-clipboard-list fa-4x" aria-hidden="true"></i>
             <h3>No hay concursos disponibles</h3>
             <p>Actualmente no hay concursos abiertos. Te notificaremos cuando se publiquen nuevas convocatorias.</p>
-            <button mat-raised-button color="primary" (click)="retryLoad()">
-              <i class="fas fa-sync"></i>
+            <button mat-raised-button color="primary" (click)="retryLoad()" (keydown.enter)="retryLoad()" (keydown.space)="retryLoad()" aria-label="Actualizar lista de concursos">
+              <i class="fas fa-sync" aria-hidden="true"></i>
               Actualizar lista
             </button>
           </ng-container>
 
           <!-- Caso 2: No hay coincidencias con los filtros -->
           <ng-container *ngIf="hayFiltrosAplicados()">
-            <i class="fas fa-filter fa-4x"></i>
+            <i class="fas fa-filter fa-4x" aria-hidden="true"></i>
             <h3>No se encontraron coincidencias</h3>
             <p>No hay concursos que coincidan con los criterios de búsqueda actuales. Prueba ajustando los filtros o realizando una nueva búsqueda.</p>
             <div class="actions">
-              <button mat-stroked-button (click)="limpiarFiltros()" class="clear-filters-button">
+              <button mat-stroked-button (click)="limpiarFiltros()" (keydown.enter)="limpiarFiltros()" (keydown.space)="limpiarFiltros()" class="clear-filters-button" aria-label="Limpiar todos los filtros aplicados">
                 <i class="fas fa-times" aria-hidden="true"></i>
                 Limpiar filtros
               </button>
@@ -100,6 +75,11 @@
       <div class="backdrop"
         *ngIf="mostrarFiltros"
         (click)="toggleFiltros()"
+        (keydown.enter)="toggleFiltros()"
+        (keydown.space)="toggleFiltros()"
+        tabindex="0"
+        role="button"
+        aria-label="Cerrar panel de filtros"
         [@fadeInOut]="mostrarFiltros">
       </div>
     </div>

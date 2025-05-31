@@ -1,16 +1,26 @@
 <div class="container">
   <div class="header">
     <h1>Reportes y Estadísticas</h1>
-    <div class="export-buttons">
-      <button mat-stroked-button color="primary" (click)="exportarReporte('excel')">
-        <mat-icon>description</mat-icon>
-        Excel
-      </button>
-      <button mat-stroked-button color="primary" (click)="exportarReporte('pdf')">
-        <mat-icon>picture_as_pdf</mat-icon>
-        PDF
+    <div class="export-options">
+      <mat-form-field appearance="outline" class="export-format-select">
+        <mat-label>Formato</mat-label>
+        <mat-select [(ngModel)]="selectedExportFormat">
+          <mat-option value="excel">Excel (.xlsx)</mat-option>
+          <mat-option value="csv">CSV (.csv)</mat-option>
+          <mat-option value="pdf">PDF (.pdf)</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-raised-button color="primary" (click)="exportarReporte(selectedExportFormat)" [disabled]="isLoading">
+        <mat-icon>download</mat-icon>
+        Exportar
       </button>
     </div>
+  </div>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <span>Cargando datos...</span>
   </div>
 
   <mat-tab-group (selectedTabChange)="onTabChange($event)">
@@ -156,7 +166,7 @@
         </div>
 
         <div *ngIf="selectedExamen" class="selected-exam-details">
-          <h3>Detalles de {{selectedExamen.titulo}}</h3>
+          <h3>Detalles de {{getTituloExamen()}}</h3>
           <p>Aquí se mostrarían estadísticas detalladas del examen seleccionado, incluyendo distribución de calificaciones, tiempo por pregunta, etc.</p>
         </div>
       </div>
@@ -171,7 +181,7 @@
               <div class="stat-item">
                 <mat-icon>people</mat-icon>
                 <div class="stat-info">
-                  <span class="stat-value">{{usuarios.total}}</span>
+                  <span class="stat-value">{{systemStats?.users?.total || 0}}</span>
                   <span class="stat-label">Total Usuarios</span>
                 </div>
               </div>
@@ -183,7 +193,9 @@
               <div class="stat-item">
                 <mat-icon>person_add</mat-icon>
                 <div class="stat-info">
-                  <span class="stat-value">{{usuarios.nuevos.enero + usuarios.nuevos.febrero + usuarios.nuevos.marzo + usuarios.nuevos.abril + usuarios.nuevos.mayo}}</span>
+                  <span class="stat-value">
+                    {{systemStats?.users?.newByPeriod ? calculateTotalNewUsers() : 0}}
+                  </span>
                   <span class="stat-label">Nuevos (2023)</span>
                 </div>
               </div>
@@ -195,7 +207,7 @@
               <div class="stat-item">
                 <mat-icon>admin_panel_settings</mat-icon>
                 <div class="stat-info">
-                  <span class="stat-value">{{usuarios.porRol.admin}}</span>
+                  <span class="stat-value">{{getAdminCount()}}</span>
                   <span class="stat-label">Administradores</span>
                 </div>
               </div>
@@ -207,7 +219,7 @@
               <div class="stat-item">
                 <mat-icon>person_off</mat-icon>
                 <div class="stat-info">
-                  <span class="stat-value">{{usuarios.inactivos}}</span>
+                  <span class="stat-value">{{calculateInactiveUsers()}}</span>
                   <span class="stat-label">Inactivos</span>
                 </div>
               </div>
@@ -274,7 +286,7 @@
 
         <h2>Actividad de Usuarios</h2>
         <div class="activity-list">
-          <div class="activity-item" *ngFor="let item of actividad">
+          <div class="activity-item" *ngFor="let item of actividad; trackBy: trackByIndex">
             <div class="activity-icon">
               <mat-icon>
                 {{item.tipo === 'login' ? 'login' :
@@ -294,6 +306,152 @@
                 {{item.cantidad}} usuarios ({{item.porcentaje}}%)
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña de Sistema -->
+    <mat-tab label="Sistema">
+      <div class="tab-content">
+        <div class="stats-cards">
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>speed</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{systemStats?.performance?.averageResponseTime || 0}} ms</span>
+                  <span class="stat-label">Tiempo de respuesta</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>error_outline</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{systemStats?.performance?.errorRate || 0}}%</span>
+                  <span class="stat-label">Tasa de errores</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>memory</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{systemStats?.performance?.serverLoad || 0}}%</span>
+                  <span class="stat-label">Carga del servidor</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stats-card">
+            <mat-card-content>
+              <div class="stat-item">
+                <mat-icon>storage</mat-icon>
+                <div class="stat-info">
+                  <span class="stat-value">{{systemStats?.documents?.total || 0}}</span>
+                  <span class="stat-label">Documentos totales</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <h2>Rendimiento del Sistema</h2>
+        <div class="performance-metrics">
+          <mat-card class="performance-card">
+            <mat-card-header>
+              <mat-card-title>Distribución de Documentos</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-placeholder pie-chart">
+                <div class="pie-segment" style="--percentage: 80%; --color: rgba(76, 175, 80, 0.5);">
+                  <span class="pie-label">Aprobados</span>
+                </div>
+                <div class="pie-segment" style="--percentage: 10%; --color: rgba(255, 152, 0, 0.5);">
+                  <span class="pie-label">Pendientes</span>
+                </div>
+                <div class="pie-segment" style="--percentage: 10%; --color: rgba(244, 67, 54, 0.5);">
+                  <span class="pie-label">Rechazados</span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="performance-card">
+            <mat-card-header>
+              <mat-card-title>Uso del Sistema</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="usage-metrics">
+                <div class="usage-metric">
+                  <div class="metric-label">Carga del servidor</div>
+                  <div class="metric-bar-container">
+                    <div class="metric-bar" [style.width.%]="systemStats?.performance?.serverLoad || 0"
+                      [ngClass]="{
+                        'low': getServerLoad() < 50,
+                        'medium': getServerLoad() >= 50 && getServerLoad() < 80,
+                        'high': getServerLoad() >= 80
+                      }">
+                      {{systemStats?.performance?.serverLoad || 0}}%
+                    </div>
+                  </div>
+                </div>
+                <div class="usage-metric">
+                  <div class="metric-label">Tasa de errores</div>
+                  <div class="metric-bar-container">
+                    <div class="metric-bar" [style.width.%]="(systemStats?.performance?.errorRate || 0) * 10"
+                      [ngClass]="{
+                        'low': getErrorRate() < 1,
+                        'medium': getErrorRate() >= 1 && getErrorRate() < 5,
+                        'high': getErrorRate() >= 5
+                      }">
+                      {{systemStats?.performance?.errorRate || 0}}%
+                    </div>
+                  </div>
+                </div>
+                <div class="usage-metric">
+                  <div class="metric-label">Tiempo de respuesta</div>
+                  <div class="metric-bar-container">
+                    <div class="metric-bar" [style.width.%]="(systemStats?.performance?.averageResponseTime || 0) / 10"
+                      [ngClass]="{
+                        'low': getResponseTime() < 200,
+                        'medium': getResponseTime() >= 200 && getResponseTime() < 500,
+                        'high': getResponseTime() >= 500
+                      }">
+                      {{systemStats?.performance?.averageResponseTime || 0}} ms
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña de Constructor de Reportes -->
+    <mat-tab label="Constructor de Reportes">
+      <div class="tab-content">
+        <div class="report-builder">
+          <h2>Constructor de Reportes Personalizados</h2>
+          <p class="section-description">
+            Utilice esta herramienta para crear reportes personalizados con los datos que necesite.
+            Seleccione los campos, aplique filtros y exporte el resultado en el formato que prefiera.
+          </p>
+
+          <div class="report-builder-actions">
+            <button mat-raised-button color="primary" routerLink="/admin/inscripciones/reportes">
+              <mat-icon>build</mat-icon>
+              Ir al Constructor de Reportes
+            </button>
           </div>
         </div>
       </div>

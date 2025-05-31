@@ -1,0 +1,173 @@
+<div class="container">
+  <div class="header">
+    <h1>Gestión de Documentos</h1>
+  </div>
+
+  <!-- Tarjetas de estadísticas -->
+  <div class="stats-cards">
+    <mat-card class="stats-card" (click)="filtrarPorEstado('')">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>description</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{estadisticas.totalDocumentos || 0}}</div>
+          <div class="stat-label">Total Documentos</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stats-card" (click)="filtrarPorEstado('pendiente')">
+      <mat-card-content>
+        <div class="stat-icon pending-icon">
+          <mat-icon>pending</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{estadisticas.pendientes || 0}}</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stats-card" (click)="filtrarPorEstado('aprobado')">
+      <mat-card-content>
+        <div class="stat-icon approved-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{estadisticas.aprobados || 0}}</div>
+          <div class="stat-label">Aprobados</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stats-card" (click)="filtrarPorEstado('rechazado')">
+      <mat-card-content>
+        <div class="stat-icon rejected-icon">
+          <mat-icon>cancel</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{estadisticas.rechazados || 0}}</div>
+          <div class="stat-label">Rechazados</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Filtros -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-container">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Buscar</mat-label>
+          <input matInput (keyup)="applyFilter($event)" placeholder="Buscar documento..." #input>
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Estado</mat-label>
+          <mat-select [(value)]="filtroEstado" (selectionChange)="aplicarFiltros()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option value="pendiente">Pendientes</mat-option>
+            <mat-option value="aprobado">Aprobados</mat-option>
+            <mat-option value="rechazado">Rechazados</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Tipo de Documento</mat-label>
+          <mat-select [(value)]="filtroTipoDocumento" (selectionChange)="aplicarFiltros()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">
+              {{tipo.nombre}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Tabla de documentos -->
+  <div class="mat-elevation-z8 table-container">
+    <table mat-table [dataSource]="dataSource" matSort>
+
+      <!-- ID Column -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+        <td mat-cell *matCellDef="let documento"> {{documento?.id || 'N/A'}} </td>
+      </ng-container>
+
+      <!-- Nombre Archivo Column -->
+      <ng-container matColumnDef="nombreArchivo">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Archivo </th>
+        <td mat-cell *matCellDef="let documento"> {{documento?.nombreArchivo || 'Sin nombre'}} </td>
+      </ng-container>
+
+      <!-- Tipo Documento Column -->
+      <ng-container matColumnDef="tipoDocumento">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Tipo </th>
+        <td mat-cell *matCellDef="let documento"> {{documento.tipoDocumento?.nombre}} </td>
+      </ng-container>
+
+      <!-- Usuario Column -->
+      <ng-container matColumnDef="usuario">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Usuario </th>
+        <td mat-cell *matCellDef="let documento">
+          <div>{{documento?.nombreUsuario || 'Usuario desconocido'}}</div>
+          <div class="email-text">{{documento?.emailUsuario || 'Email no disponible'}}</div>
+        </td>
+      </ng-container>
+
+      <!-- Fecha Carga Column -->
+      <ng-container matColumnDef="fechaCarga">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha Carga </th>
+        <td mat-cell *matCellDef="let documento"> {{documento?.fechaCarga ? (documento.fechaCarga | date:'dd/MM/yyyy') : 'Fecha no disponible'}} </td>
+      </ng-container>
+
+      <!-- Estado Column -->
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Estado </th>
+        <td mat-cell *matCellDef="let documento">
+          <span class="estado-badge" [ngClass]="getEstadoClass(documento?.estado || '')">
+            {{documento?.estado ? (documento.estado | titlecase) : 'No definido'}}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Acciones Column -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef> Acciones </th>
+        <td mat-cell *matCellDef="let documento">
+          <button mat-icon-button color="primary" matTooltip="Ver documento" (click)="verDocumento(documento)">
+            <mat-icon>visibility</mat-icon>
+          </button>
+
+          <ng-container *ngIf="documento?.estado === 'pendiente'">
+            <button mat-icon-button color="accent" matTooltip="Aprobar documento" (click)="aprobarDocumento(documento)">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" matTooltip="Rechazar documento" (click)="rechazarDocumento(documento)">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="documento?.estado === 'rechazado'">
+            <button mat-icon-button matTooltip="Ver motivo de rechazo">
+              <mat-icon>info</mat-icon>
+            </button>
+          </ng-container>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- Row shown when there is no matching data. -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="7">No se encontraron documentos que coincidan con el filtro "{{input.value}}"</td>
+      </tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="Seleccionar página de documentos"></mat-paginator>
+  </div>
+</div>

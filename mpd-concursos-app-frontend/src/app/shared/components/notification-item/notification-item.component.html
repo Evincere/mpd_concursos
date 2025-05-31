@@ -1,7 +1,25 @@
+<!-- Mostrar componente especializado para notificaciones de inscripción -->
+<app-inscription-notification-item
+    *ngIf="notification && notification.type === 'INSCRIPTION'"
+    [notification]="notification"
+    (read)="onNotificationRead($event)"
+    (acknowledge)="onNotificationAcknowledge($event)"
+    tabindex="0"
+    role="button"
+    [attr.aria-label]="'Leer notificación: ' + notification.subject">
+</app-inscription-notification-item>
+
+<!-- Mostrar componente estándar para otros tipos de notificaciones -->
 <div class="notification-item"
+     *ngIf="notification && notification.type !== 'INSCRIPTION'"
      [ngClass]="{'unread': isUnread}"
      matRipple
-     (click)="onRead($event)">
+     (click)="onNotificationClick()"
+     (keydown.enter)="onNotificationClick()"
+     (keydown.space)="onNotificationClick()"
+     tabindex="0"
+     role="button"
+     [attr.aria-label]="'Leer notificación: ' + notification.subject">
 
     <div class="notification-content">
         <div class="notification-icon">
@@ -13,20 +31,42 @@
         <div class="notification-text">
             <h4>{{ notification.subject }}</h4>
             <p>{{ notification.content }}</p>
+
+            <!-- Notification Badges -->
+            <div class="notification-badges">
+              <!-- Status Badge -->
+              <div class="notification-badge status-badge"
+                   [ngClass]="'badge-' + getStatusColor()"
+                   [matTooltip]="getStatusTooltip()"
+                   matTooltipPosition="above">
+                <mat-icon class="badge-icon">{{ getStatusIcon() }}</mat-icon>
+                <span class="badge-text">{{ getStatusLabel() }}</span>
+              </div>
+
+              <!-- Acknowledgment Badge (only if requires acknowledgment) -->
+              <div *ngIf="showAcknowledgmentBadge()"
+                   class="notification-badge acknowledgment-badge"
+                   [ngClass]="'badge-' + getAcknowledgmentColor()"
+                   [matTooltip]="getAcknowledgmentTooltip()"
+                   matTooltipPosition="above">
+                <mat-icon class="badge-icon">{{ getAcknowledgmentIcon() }}</mat-icon>
+                <span class="badge-text">{{ getAcknowledgmentLabel() }}</span>
+              </div>
+
+              <!-- Signature Required Badge (only if requires signature) -->
+              <div *ngIf="showSignatureBadge()"
+                   class="notification-badge signature-badge badge-red"
+                   [matTooltip]="getSignatureTooltip()"
+                   matTooltipPosition="above">
+                <mat-icon class="badge-icon">security</mat-icon>
+                <span class="badge-text">Firma requerida</span>
+              </div>
+            </div>
+
             <div class="notification-meta">
                 <span class="notification-date">
                     {{ notification.sentAt | date:'dd/MM/yyyy HH:mm' }}
                 </span>
-                <div class="notification-badges">
-                    <span class="notification-status" [ngClass]="notification.status.toLowerCase()">
-                        {{ getStatusText(notification.status) }}
-                    </span>
-                    <span class="notification-acknowledgement"
-                          *ngIf="notification.acknowledgementLevel !== AcknowledgementLevel.NONE"
-                          [ngClass]="notification.acknowledgementLevel.toLowerCase()">
-                        {{ getAcknowledgementLevelText(notification.acknowledgementLevel) }}
-                    </span>
-                </div>
             </div>
             <div class="notification-acknowledgement-info" *ngIf="isAcknowledged">
                 <span class="acknowledgement-date">
@@ -36,12 +76,15 @@
         </div>
     </div>
 
-    <div class="notification-actions" *ngIf="canAcknowledge">
+    <div class="notification-actions" *ngIf="canAcknowledge && !showAcknowledgmentSection">
         <button mat-stroked-button
                 color="primary"
-                (click)="onAcknowledge($event)">
-            <mat-icon>verified</mat-icon>
+                (click)="onShowAcknowledgment($event)"
+                aria-label="Acusar recibo de la notificación">
+            <mat-icon aria-hidden="true">security</mat-icon>
             <span>Acusar Recibo</span>
         </button>
     </div>
+
+    <!-- Acknowledgment section would be implemented here when needed -->
 </div>

@@ -1,17 +1,19 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, of, throwError, finalize, retry, timeout, catchError, map, filter, mergeMap, forkJoin } from 'rxjs';
+import { Injectable, Inject } from '@angular/core';
+import { HttpErrorResponse, HttpClient } from '@angular/common/http';
+import { Observable, of, throwError, retry, timeout, catchError, map, forkJoin } from 'rxjs';
 import { Pregunta, ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
-import { ExamenTimeService } from './examen-time.service';
-import { ExamenSecurityService } from './security/examen-security.service';
-import { ExamenRecoveryService } from './examen-recovery.service';
+
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
-import { ExamenValidationService } from './examen-validation.service';
+
 import { environment } from '@env/environment';
-import { ExamenStateService } from './state/examen-state.service';
-import { ExamenNotificationService } from './examen-notification.service';
-import { AuthService } from '@core/services/auth/auth.service';
-import { Injector } from '@angular/core';
+
+
+interface AuthService {
+  getCurrentUserId: () => string;
+}
+
+// Crear un token de inyección para AuthService
+const AUTH_SERVICE_TOKEN = 'AUTH_SERVICE_TOKEN';
 
 @Injectable({
   providedIn: 'root'
@@ -23,14 +25,45 @@ export class ExamenRendicionService {
 
   constructor(
     private http: HttpClient,
-    private timeService: ExamenTimeService,
-    private securityService: ExamenSecurityService,
-    private validationService: ExamenValidationService,
-    private recoveryService: ExamenRecoveryService,
-    private stateService: ExamenStateService,
-    private notificationService: ExamenNotificationService,
-    private authService: AuthService,
-    private injector: Injector
+    @Inject(AUTH_SERVICE_TOKEN) private authService: AuthService,
+    @Inject('TIME_SERVICE') private timeService: {
+      iniciar: (duracionMinutos: number) => Observable<number>,
+      detener: () => void,
+      getTiempoUtilizado: () => number,
+      validateTimestamp: (timestamp: number) => boolean
+    },
+    @Inject('STATE_SERVICE') private stateService: {
+      initializeState: (examen: ExamenEnCurso) => void,
+      setPreguntas: (preguntas: Pregunta[]) => void,
+      getExamenEnCurso: () => Observable<ExamenEnCurso | null>,
+      getPreguntas: () => Observable<Pregunta[]>,
+      getPreguntaActual: () => Observable<Pregunta | null>,
+      getTiempoRestante: () => Observable<number>,
+      actualizarTiempoRestante: (tiempoRestante: number) => void,
+      guardarRespuesta: (respuesta: RespuestaUsuario) => void,
+      setPreguntaActual: (index: number) => void,
+      cambiarEstadoExamen: (estado: string) => void
+    },
+    @Inject('SECURITY_SERVICE') private securityService: {
+      reset: () => void,
+      reportSecurityViolation: (type: SecurityViolationType, details?: unknown) => void,
+      cleanup: () => void
+    },
+    @Inject('RECOVERY_SERVICE') private recoveryService: {
+      recoverExamen: (examenId: string) => Promise<ExamenEnCurso | null>,
+      initializeAutoSave: (examenId: string) => void,
+      saveToLocalBackup: (examenId: string, examen: ExamenEnCurso) => void,
+      getLatestBackup: (examenId: string) => { examen: ExamenEnCurso } | null,
+      cleanupBackups: (examenId: string) => void
+    },
+    @Inject('VALIDATION_SERVICE') private validationService: {
+      generarHash: (respuesta: RespuestaUsuario) => Promise<string>,
+      validarRespuesta: (respuesta: RespuestaUsuario, context: unknown) => Promise<{ isValid: boolean; violationType?: SecurityViolationType; details?: unknown }>,
+      validarIntegridadPostIncidente: (respuestas: RespuestaUsuario[], backupRespuestas: RespuestaUsuario[]) => { isValid: boolean; violationType?: SecurityViolationType; details?: unknown }
+    },
+    @Inject('NOTIFICATION_SERVICE') private notificationService: {
+      reset: () => void
+    }
   ) {}
 
   async iniciarExamen(examenId: string, preguntas: Pregunta[]): Promise<void> {
@@ -196,8 +229,8 @@ export class ExamenRendicionService {
     });
   }
 
-  anularExamen(examenId: string, motivo: { fecha: string; infracciones: SecurityViolationType[] }): Observable<any> {
-    return this.http.post(`${this.API_URL}/examenes/${examenId}/anular`, motivo).pipe(
+  anularExamen(examenId: string, motivo: { fecha: string; infracciones: SecurityViolationType[] }): Observable<{ success: boolean; local?: boolean; message?: string }> {
+    return this.http.post<{ success: boolean; local?: boolean; message?: string }>(`${this.API_URL}/examenes/${examenId}/anular`, motivo).pipe(
       timeout(this.TIMEOUT),
       retry({
         count: this.MAX_RETRIES,
@@ -219,18 +252,18 @@ export class ExamenRendicionService {
             local: true,
             message: 'Anulación guardada localmente'
           });
-        } catch (e) {
+        } catch (_e) {
           return throwError(() => new Error('No se pudo anular el examen. Se registrará localmente.'));
         }
       })
     );
   }
 
-  finalizarExamenApi(datos: any): Observable<any> {
+  finalizarExamenApi(datos: Record<string, unknown>): Observable<any> {
     console.log('Intentando finalizar examen:', datos);
 
     // Extraer el ID del examen del objeto de datos
-    const examenId = datos.examenId;
+    const examenId = datos['examenId'] as string;
 
     if (!examenId) {
       console.error('Error: No se proporcionó un ID de examen válido');
@@ -238,9 +271,9 @@ export class ExamenRendicionService {
     }
 
     // Asegurar que el ID del usuario esté incluido
-    if (!datos.usuarioId) {
-      datos.usuarioId = this.getCurrentUserId();
-      console.log('Añadiendo ID de usuario a la solicitud:', datos.usuarioId);
+    if (!datos['usuarioId']) {
+      datos['usuarioId'] = this.getCurrentUserId();
+      console.log('Añadiendo ID de usuario a la solicitud:', datos['usuarioId']);
     }
 
     // Crear una copia de los datos para evitar problemas de referencia
@@ -257,13 +290,13 @@ export class ExamenRendicionService {
     console.log('Datos formateados para envío:', datosEnvio);
 
     // Intentar finalizar el examen con el endpoint principal
-    return this.http.post(`${this.API_URL}/examenes/${examenId}/finalizar`, datosEnvio)
-      .pipe(
-        timeout(this.TIMEOUT),
-        retry({
-          count: this.MAX_RETRIES,
-          delay: 1000
-        }),
+    return this.http.post(`${this.API_URL}/examenes/${examenId}/finalizar`, datosEnvio).pipe(
+      map((response: unknown) => response as { success: boolean; guardadoLocal?: boolean; message?: string }),
+      timeout(this.TIMEOUT),
+      retry({
+        count: this.MAX_RETRIES,
+        delay: 1000
+      }),
         catchError((error: HttpErrorResponse) => {
           console.error('Error al finalizar examen (finalizar):', error);
 
@@ -279,27 +312,27 @@ export class ExamenRendicionService {
                 catchError(errorAlt => {
                   console.error('Error con formato alternativo:', errorAlt);
                   // Si también falla, intentar con el endpoint alternativo
-                  return this.intentarEndpointAlternativo(examenId, datosEnvio);
+                  return this.intentarEndpointAlternativo(examenId as string, datosEnvio);
                 })
               );
           }
 
           // Si es otro tipo de error, intentar con el endpoint alternativo
-          return this.intentarEndpointAlternativo(examenId, datosEnvio);
+          return this.intentarEndpointAlternativo(examenId as string, datosEnvio);
         })
       );
   }
 
-  private intentarEndpointAlternativo(examenId: string, datos: any): Observable<any> {
+  private intentarEndpointAlternativo(examenId: string, datos: Record<string, unknown>): Observable<any> {
     console.log('Intentando con endpoint alternativo...');
 
-    return this.http.post(`${this.API_URL}/examenes/${examenId}/submit`, datos)
-      .pipe(
-        timeout(this.TIMEOUT),
-        retry({
-          count: this.MAX_RETRIES,
-          delay: 1000
-        }),
+    return this.http.post(`${this.API_URL}/examenes/${examenId}/submit`, datos).pipe(
+      map((response: unknown) => response as { success: boolean; guardadoLocal?: boolean; message?: string }),
+      timeout(this.TIMEOUT),
+      retry({
+        count: this.MAX_RETRIES,
+        delay: 1000
+      }),
         catchError(error => {
           console.error('Error al finalizar examen (submit):', error);
 
@@ -316,11 +349,11 @@ export class ExamenRendicionService {
       );
   }
 
-  private formatearRespuestas(datos: any): void {
-    if (!datos.respuestas) return;
+  private formatearRespuestas(datos: Record<string, unknown>): void {
+    if (!datos['respuestas']) return;
 
     // Convertir el objeto de respuestas a un formato de array que el backend pueda procesar mejor
-    const respuestasArray = Object.entries(datos.respuestas).map(([preguntaId, respuesta]) => {
+    const respuestasArray = Object.entries(datos['respuestas'] as Record<string, unknown>).map(([preguntaId, respuesta]) => {
       return {
         preguntaId,
         respuesta,
@@ -329,20 +362,20 @@ export class ExamenRendicionService {
     });
 
     // Reemplazar el objeto de respuestas con el array
-    datos.respuestasArray = respuestasArray;
+    datos['respuestasArray'] = respuestasArray;
 
     // Mantener el objeto original para compatibilidad
     // datos.respuestas = datos.respuestas;
   }
 
-  private prepararFormatoAlternativo(datos: any): any {
+  private prepararFormatoAlternativo(datos: Record<string, unknown>): Record<string, unknown> {
     // Crear un formato alternativo que podría ser compatible con el backend
     const alternativo = {
-      examenId: datos.examenId,
-      usuarioId: datos.usuarioId,
-      motivo: datos.motivo,
-      tiempoUtilizado: datos.tiempoUtilizado || 0,
-      respuestas: datos.respuestasArray || []
+      examenId: datos['examenId'],
+      usuarioId: datos['usuarioId'],
+      motivo: datos['motivo'],
+      tiempoUtilizado: datos['tiempoUtilizado'] || 0,
+      respuestas: datos['respuestasArray'] || []
     };
 
     console.log('Formato alternativo preparado:', alternativo);
@@ -352,9 +385,9 @@ export class ExamenRendicionService {
   /**
    * Guarda los datos del examen en localStorage cuando hay problemas de conexión
    */
-  guardarExamenLocalStorage(datos: any): any {
+  guardarExamenLocalStorage(datos: Record<string, unknown>): { success: boolean; guardadoLocal: boolean; message: string } {
     try {
-      const examenId = datos.examenId;
+      const examenId = datos['examenId'] as string;
       const userId = this.getCurrentUserId();
 
       // Guardar en localStorage como respaldo, incluyendo el ID del usuario en la clave
@@ -428,11 +461,11 @@ export class ExamenRendicionService {
     }
   }
 
-  sincronizarExamenesFinalizados(): Observable<any> {
+  sincronizarExamenesFinalizados(): Observable<{ id: string; success: boolean; error?: string }[]> {
     const examenesFinalizados = this.obtenerExamenesFinalizadosLocalmente();
 
     if (examenesFinalizados.length === 0) {
-      return of({ success: true, message: 'No hay exámenes para sincronizar' });
+      return of([{ id: '', success: true }]);
     }
 
     // Crear un observable para cada examen finalizado
@@ -455,7 +488,7 @@ export class ExamenRendicionService {
     return forkJoin(observables);
   }
 
-  private obtenerExamenesFinalizadosLocalmente(): Array<{id: string, datos: any, timestamp: string}> {
+  private obtenerExamenesFinalizadosLocalmente(): {id: string, datos: Record<string, unknown>, timestamp: string}[] {
     const examenesFinalizados = [];
 
     for (let i = 0; i < localStorage.length; i++) {

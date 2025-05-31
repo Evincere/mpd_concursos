@@ -1,0 +1,33 @@
+<mat-card class="chart-card">
+  <mat-card-header>
+    <mat-card-title>{{title}}</mat-card-title>
+    <mat-card-subtitle *ngIf="subtitle">{{subtitle}}</mat-card-subtitle>
+    
+    <div class="chart-actions">
+      <button mat-icon-button [matMenuTriggerFor]="chartMenu" matTooltip="Opciones">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      
+      <mat-menu #chartMenu="matMenu">
+        <button mat-menu-item (click)="downloadChart('png')">
+          <mat-icon>download</mat-icon>
+          <span>Descargar PNG</span>
+        </button>
+        <button mat-menu-item (click)="downloadChart('jpg')">
+          <mat-icon>download</mat-icon>
+          <span>Descargar JPG</span>
+        </button>
+        <button mat-menu-item (click)="downloadChart('pdf')">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>Exportar PDF</span>
+        </button>
+      </mat-menu>
+    </div>
+  </mat-card-header>
+  
+  <mat-card-content [style.height]="height">
+    <div class="chart-container">
+      <canvas #chartCanvas></canvas>
+    </div>
+  </mat-card-content>
+</mat-card>

@@ -1,0 +1,147 @@
+@use 'src/styles/variables' as *;
+
+.stat-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  height: 100%;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  mat-card-content {
+    display: flex;
+    padding: 1rem;
+  }
+}
+
+.stat-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  margin-right: 1rem;
+  flex-shrink: 0;
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.stat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  
+  .stat-title {
+    margin: 0;
+    font-size: $font-size-md;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .stat-trend {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-xs;
+    font-weight: 500;
+    
+    &.positive {
+      color: $color-success;
+    }
+    
+    &.negative {
+      color: $color-error;
+    }
+    
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 2px;
+    }
+  }
+}
+
+.stat-value {
+  font-size: $font-size-xl;
+  font-weight: 600;
+  color: $color-text-primary;
+  margin-bottom: 0.5rem;
+}
+
+.stat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .stat-subtitle {
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+  }
+  
+  .stat-link {
+    display: flex;
+    align-items: center;
+    font-size: $font-size-xs;
+    color: $color-primary;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+    
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      margin-left: 4px;
+    }
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .stat-card {
+    background-color: $color-surface-dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+  
+  .stat-header {
+    .stat-title {
+      color: $color-text-primary-dark;
+    }
+  }
+  
+  .stat-value {
+    color: $color-text-primary-dark;
+  }
+  
+  .stat-footer {
+    .stat-subtitle {
+      color: $color-text-secondary-dark;
+    }
+    
+    .stat-link {
+      color: $color-primary-dark;
+    }
+  }
+}

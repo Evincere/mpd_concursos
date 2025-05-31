@@ -1,23 +1,32 @@
 /**
- * Estados posibles de una inscripción
+ * Possible states of an inscription
  *
- * NO_INSCRIPTO: Estado inicial, el usuario no se ha inscrito al concurso
- * IN_PROCESS: La inscripción está en proceso pero no se ha completado (interrumpida)
- * PENDIENTE: El usuario ha completado todos los pasos de la inscripción pero aun no ha sido validada por un administrador
- * INSCRIPTO: La inscripción ha sido validada por un administrador
- * REJECTED: La inscripción ha sido rechazada por un administrador
- * CANCELLED: La inscripción ha sido cancelada por el usuario
+ * Standardized states (English):
+ * - ACTIVE: Initial state when an inscription is created or in progress (formerly IN_PROCESS)
+ * - PENDING: Inscription completed by user, waiting for admin validation
+ * - APPROVED: Inscription approved by admin
+ * - REJECTED: Inscription rejected by admin
+ * - CANCELLED: Inscription cancelled by user
  *
- * Nota: Se mantienen algunos estados antiguos por compatibilidad, pero se deben usar los nuevos estados estandarizados
+ * Legacy states (kept for backward compatibility):
+ * - NO_INSCRIPTO: User not inscribed (initial state)
+ * - IN_PROCESS: Inscription in progress (now ACTIVE)
+ * - PENDIENTE: Spanish for PENDING
+ * - INSCRIPTO: Spanish for APPROVED
+ * - CONFIRMADA: Spanish for PENDING (old terminology)
  */
 export enum InscripcionState {
-  NO_INSCRIPTO = 'NO_INSCRIPTO',
-  IN_PROCESS = 'IN_PROCESS',     // Nuevo estado estandarizado
-  PENDING = 'PENDING',           // Mantenido por compatibilidad, equivalente a IN_PROCESS
-  PENDIENTE = 'PENDIENTE',       // Nuevo estado estandarizado
-  CONFIRMADA = 'CONFIRMADA',     // Mantenido por compatibilidad, equivalente a PENDIENTE
-  INSCRIPTO = 'INSCRIPTO',       // Estado estandarizado
-  APPROVED = 'APPROVED',         // Mantenido por compatibilidad, equivalente a INSCRIPTO
-  REJECTED = 'REJECTED',         // Estado estandarizado
-  CANCELLED = 'CANCELLED'        // Estado estandarizado
+  // Standard states (English)
+  ACTIVE = 'ACTIVE',         // New standardized state (replaces IN_PROCESS)
+  PENDING = 'PENDING',       // Standardized state
+  APPROVED = 'APPROVED',     // Standardized state
+  REJECTED = 'REJECTED',     // Standardized state
+  CANCELLED = 'CANCELLED',   // Standardized state
+
+  // Legacy states (kept for backward compatibility)
+  NO_INSCRIPTO = 'NO_INSCRIPTO',  // Legacy initial state
+  IN_PROCESS = 'IN_PROCESS',      // Legacy state, now ACTIVE
+  PENDIENTE = 'PENDIENTE',        // Legacy state (Spanish), now PENDING
+  INSCRIPTO = 'INSCRIPTO',        // Legacy state (Spanish), now APPROVED
+  CONFIRMADA = 'CONFIRMADA'       // Legacy state, now PENDING
 }

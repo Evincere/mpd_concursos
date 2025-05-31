@@ -52,6 +52,9 @@ public class InscriptionEntity {
     @Column(name = "confirmed_personal_data")
     private boolean confirmedPersonalData;
 
+    @Column(name = "centro_de_vida")
+    private String centroDeVida;
+
     @Column(name = "terms_acceptance_date")
     private LocalDateTime termsAcceptanceDate;
 

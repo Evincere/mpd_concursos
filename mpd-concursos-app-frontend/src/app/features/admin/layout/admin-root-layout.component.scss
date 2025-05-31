@@ -1,0 +1,74 @@
+@use 'src/styles/variables' as *;
+
+.admin-root-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background-color: $color-background;
+  color: $color-text-primary;
+
+  // Asegurar que el indicador de sección esté siempre visible
+  app-section-indicator {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+}
+
+.admin-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.admin-content {
+  flex: 1;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
+  position: relative;
+
+  &.sidebar-collapsed {
+    margin-left: 64px; // Ancho del sidebar colapsado
+  }
+}
+
+.content-wrapper {
+  padding: 1.5rem;
+  min-height: calc(100% - 48px); // Altura total menos la altura de breadcrumbs
+}
+
+// Botón flotante para abrir el sidebar en móvil
+.mobile-sidebar-toggle {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+// Media queries para responsive
+@media (max-width: 767px) {
+  .admin-content {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+
+  .content-wrapper {
+    padding: 1rem;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .admin-root-layout {
+    background-color: $color-background-dark;
+    color: $color-text-primary-dark;
+  }
+
+  .mobile-sidebar-toggle {
+    background-color: $color-primary-dark;
+  }
+}

@@ -1,0 +1,149 @@
+@use 'src/styles/variables' as *;
+
+.activity-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  mat-card-header {
+    padding: 1rem 1rem 0.5rem;
+    
+    mat-card-title {
+      font-size: $font-size-lg;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+  
+  mat-card-content {
+    flex: 1;
+    padding: 0 1rem;
+    overflow-y: auto;
+  }
+  
+  mat-card-actions {
+    padding: 0.5rem 1rem 1rem;
+    display: flex;
+    justify-content: center;
+    
+    .view-all-button {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      
+      mat-icon {
+        margin-left: 0.5rem;
+        transition: transform 0.2s ease;
+      }
+      
+      &:hover {
+        mat-icon {
+          transform: translateX(4px);
+        }
+      }
+    }
+  }
+}
+
+.activity-list {
+  .activity-item {
+    display: flex;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid $color-border;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.activity-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0; // Para que funcione text-overflow
+  
+  .activity-text {
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+    
+    strong {
+      font-weight: 500;
+    }
+  }
+  
+  .activity-time {
+    font-size: $font-size-xs;
+    color: $color-text-tertiary;
+  }
+}
+
+.no-activities {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  color: $color-text-tertiary;
+  
+  mat-icon {
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+  }
+  
+  p {
+    margin: 0;
+    font-size: $font-size-sm;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .activity-card {
+    background-color: $color-surface-dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .activity-list {
+    .activity-item {
+      border-bottom-color: $color-border-dark;
+    }
+  }
+  
+  .activity-content {
+    .activity-text {
+      color: $color-text-primary-dark;
+    }
+    
+    .activity-time {
+      color: $color-text-tertiary-dark;
+    }
+  }
+  
+  .no-activities {
+    color: $color-text-tertiary-dark;
+  }
+}

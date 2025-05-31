@@ -11,10 +11,11 @@
       document.write('<base href="./">');
     }
   </script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' app:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: app:; connect-src 'self' http://localhost:8080 ws://localhost:8080; font-src 'self' https://fonts.gstatic.com;">
+  <!-- La política de seguridad se aplicará dinámicamente desde el código JavaScript según el entorno -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
 <body class="mat-typography dark-mode">
   <app-root></app-root>

@@ -7,22 +7,23 @@
         <form [formGroup]="searchForm" class="search-form">
             <mat-form-field appearance="outline">
                 <input matInput formControlName="termino" [placeholder]="placeholder">
-                <button 
+                <button
                     *ngIf="searchForm.get('termino')?.value"
-                    matSuffix 
-                    mat-icon-button 
+                    matSuffix
+                    mat-icon-button
                     type="button"
                     (click)="limpiarBusqueda()"
-                    class="clear-button">
-                    <i class="fas fa-times"></i>
+                    class="clear-button"
+                    aria-label="Limpiar búsqueda">
+                    <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
-                <i matSuffix class="fas fa-search" *ngIf="!searchForm.get('termino')?.value"></i>
+                <i matSuffix class="fas fa-search" *ngIf="!searchForm.get('termino')?.value" aria-hidden="true"></i>
             </mat-form-field>
         </form>
-        <button mat-raised-button 
-                (click)="filter.emit()"
+        <button mat-raised-button
+                (click)="filterClick.emit()"
                 [class.active]="filtrosActivos">
-            <i class="fas" [class.fa-filter]="!filtrosActivos" [class.fa-filter-circle-xmark]="filtrosActivos"></i>
+            <i class="fas" [class.fa-filter]="!filtrosActivos" [class.fa-filter-circle-xmark]="filtrosActivos" aria-hidden="true"></i>
             {{ filtrosActivos ? 'Filtros Activos' : 'Filtrar' }}
         </button>
     </div>

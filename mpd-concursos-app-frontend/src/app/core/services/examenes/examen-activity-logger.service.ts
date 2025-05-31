@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, fromEvent } from 'rxjs';
-import { debounceTime, buffer, map, filter } from 'rxjs/operators';
+import { debounceTime, buffer } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { ActivityLogType } from '@core/interfaces/examenes/monitoring/activity-log.interface';
 import { TokenService } from '@core/services/auth/token.service';
@@ -9,13 +9,13 @@ import { TokenService } from '@core/services/auth/token.service';
 export interface ActivityLog {
   type: ActivityLogType;
   timestamp: number;
-  details: any;
+  details: Record<string, unknown>;
   resourceUsage?: SystemResourceInfo;
   networkInfo?: NetworkActivityInfo;
   userContext?: UserContextInfo;
 }
 
-interface SystemResourceInfo {
+interface SystemResourceInfo extends Record<string, unknown> {
   memory: {
     usedJSHeapSize: number;
     totalJSHeapSize: number;
@@ -31,7 +31,7 @@ interface SystemResourceInfo {
   };
 }
 
-interface NetworkActivityInfo {
+interface NetworkActivityInfo extends Record<string, unknown> {
   url?: string;
   method?: string;
   size?: number;
@@ -54,7 +54,7 @@ interface UserContextInfo {
   timestamp: number;
 }
 
-interface FormattedActivityLog {
+interface _FormattedActivityLog {
   type: ActivityLogType;
   timestamp: string;
   details: string;
@@ -73,7 +73,7 @@ export class ExamenActivityLoggerService {
 
   private activityLogs: ActivityLog[] = [];
   private pendingLogs$ = new BehaviorSubject<ActivityLog[]>([]);
-  private resourceMonitoringInterval: any;
+  private resourceMonitoringInterval: number | null = null;
   private performanceObserver!: PerformanceObserver;
   private mouseEvents$ = new Subject<MouseEvent>();
   private keyboardEvents$ = new Subject<KeyboardEvent>();
@@ -106,9 +106,9 @@ export class ExamenActivityLoggerService {
 
     // Buffer de eventos del mouse para detectar patrones
     this.mouseEvents$.pipe(
-      buffer(this.mouseEvents$.pipe(debounceTime(1000))),
-      filter(events => events.length > 0)
+      buffer(this.mouseEvents$.pipe(debounceTime(1000)))
     ).subscribe(events => {
+      if (events.length > 0) {
       this.logActivity({
         type: ActivityLogType.USER_INTERACTION,
         timestamp: Date.now(),
@@ -117,6 +117,7 @@ export class ExamenActivityLoggerService {
           points: events.map(e => ({ x: e.clientX, y: e.clientY }))
         }
       });
+      }
     });
 
     // Monitorear teclado
@@ -152,18 +153,19 @@ export class ExamenActivityLoggerService {
   }
 
   private async getSystemResourceInfo(): Promise<SystemResourceInfo> {
-    const memory = (performance as any).memory || {};
-    const resourceInfo: SystemResourceInfo = {
+    const memory = (performance as unknown as { memory?: { usedJSHeapSize: number, totalJSHeapSize: number, jsHeapSizeLimit: number } }).memory || {};
+    const memoryObj = memory as unknown as Record<string, number>;
+    const resourceInfo: SystemResourceInfo & Record<string, unknown> = {
       memory: {
-        usedJSHeapSize: memory.usedJSHeapSize || 0,
-        totalJSHeapSize: memory.totalJSHeapSize || 0,
-        jsHeapSizeLimit: memory.jsHeapSizeLimit || 0
+        usedJSHeapSize: memoryObj['usedJSHeapSize'] || 0,
+        totalJSHeapSize: memoryObj['totalJSHeapSize'] || 0,
+        jsHeapSizeLimit: memoryObj['jsHeapSizeLimit'] || 0
       }
     };
 
     // Obtener información de la batería si está disponible
     if ('getBattery' in navigator) {
-      const battery: any = await (navigator as any).getBattery();
+      const battery = await (navigator as unknown as { getBattery(): Promise<{ level: number, charging: boolean }> }).getBattery();
       resourceInfo.battery = {
         level: battery.level,
         charging: battery.charging
@@ -196,7 +198,7 @@ export class ExamenActivityLoggerService {
       // Monitorear cambios en la conexión
       if ('connection' in navigator) {
         try {
-          const connection = (navigator as any).connection;
+          const connection = (navigator as unknown as { connection: { addEventListener: (event: string, listener: () => void) => void, effectiveType: string, downlink: number, rtt: number, saveData: boolean } }).connection;
           connection.addEventListener('change', () => {
             this.logActivity({
               type: ActivityLogType.NETWORK_ACTIVITY,
@@ -220,7 +222,7 @@ export class ExamenActivityLoggerService {
   }
 
   private logNetworkActivity(entry: PerformanceResourceTiming): void {
-    const networkInfo: NetworkActivityInfo = {
+    const networkInfo: NetworkActivityInfo & Record<string, unknown> = {
       url: entry.name,
       duration: entry.duration,
       size: entry.transferSize,
@@ -290,7 +292,7 @@ export class ExamenActivityLoggerService {
     };
   }
 
-  private syncLogs(force: boolean = false): void {
+  private syncLogs(force = false): void {
     if (!this.tokenService.getToken()) {
       console.debug('No hay token disponible para sincronizar logs');
       return;

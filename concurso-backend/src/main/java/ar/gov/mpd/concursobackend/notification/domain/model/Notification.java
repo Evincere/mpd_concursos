@@ -90,4 +90,49 @@ public class Notification {
             this.status = NotificationStatus.SENT;
         }
     }
+
+    /**
+     * Set the status of the notification
+     *
+     * @param status The new status
+     */
+    public void setStatus(NotificationStatus status) {
+        this.status = status;
+    }
+
+    /**
+     * Set the acknowledged date of the notification
+     *
+     * @param acknowledgedAt The acknowledged date
+     */
+    public void setAcknowledgedAt(LocalDateTime acknowledgedAt) {
+        this.acknowledgedAt = acknowledgedAt;
+    }
+
+    /**
+     * Set the signature value of the notification
+     *
+     * @param signatureValue The signature value
+     */
+    public void setSignatureValue(String signatureValue) {
+        this.signatureValue = signatureValue;
+    }
+
+    /**
+     * Set the signature metadata of the notification
+     *
+     * @param signatureMetadata The signature metadata
+     */
+    public void setSignatureMetadata(Map<String, String> signatureMetadata) {
+        this.signatureMetadata = signatureMetadata;
+    }
+
+    /**
+     * Set the read date of the notification
+     *
+     * @param readAt The read date
+     */
+    public void setReadAt(LocalDateTime readAt) {
+        this.readAt = readAt;
+    }
 }

@@ -1,0 +1,33 @@
+<div class="inscripciones-admin-container">
+  <div class="header">
+    <h1>Gestión de Inscripciones</h1>
+    <div class="header-actions">
+      <app-custom-button
+        [variant]="'flat'"
+        [color]="'primary'"
+        [icon]="'dashboard'"
+        [routerLink]="['/admin/inscripciones/dashboard']">
+        Dashboard
+      </app-custom-button>
+    </div>
+  </div>
+
+  <!-- Tabla de inscripciones personalizada -->
+  <app-custom-inscriptions-table
+    [inscriptions]="dataSource"
+    [isLoading]="isLoading"
+    [totalItems]="totalItems"
+    [pageSize]="pageSize"
+    [pageIndex]="pageIndex"
+    [contests]="contests"
+    (viewInscription)="viewInscripcion($event)"
+    (approveInscription)="updateStatus($event, 'APPROVED')"
+    (rejectInscription)="updateStatus($event, 'REJECTED')"
+    (filterChange)="loadInscripciones()"
+    (pageChange)="onPageChange($event)"
+    (sortChange)="onSortChange($event)">
+  </app-custom-inscriptions-table>
+</div>
+
+<!-- Componente de detalle de inscripción (se mostrará como diálogo) -->
+<!-- Este componente se cargará dinámicamente cuando se llame a viewInscripcion() -->

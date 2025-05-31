@@ -7,8 +7,10 @@ import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscript
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.*;
+import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
@@ -50,8 +52,8 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
 
                 if (existingInscription.isPresent()) {
                         Inscription inscription = existingInscription.get();
-                        if (inscription.getStatus() == InscriptionStatus.ACTIVE ||
-                                        inscription.getStatus() == InscriptionStatus.PENDING) {
+                        if (InscriptionStateConverter.equals(inscription.getState(), InscriptionStatus.ACTIVE) ||
+                                        InscriptionStateConverter.equals(inscription.getState(), InscriptionStatus.PENDING)) {
                                 log.error("Ya existe una inscripción activa para el concurso {} y usuario {}",
                                                 request.getContestId(), request.getUserId());
                                 throw new IllegalStateException("Ya existe una inscripción activa para este concurso");
@@ -68,7 +70,7 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                                 .id(new InscriptionId())
                                 .contestId(new ContestId(request.getContestId()))
                                 .userId(new UserId(request.getUserId()))
-                                .status(InscriptionStatus.PENDING)
+                                .state(InscriptionStateConverter.toState(InscriptionStatus.ACTIVE))
                                 .createdAt(now)
                                 .inscriptionDate(now)
                                 .build();
@@ -83,27 +85,9 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                         throw new IllegalStateException("No se pudo obtener el username del usuario autenticado");
                 }
 
-                // Enviar notificación
-                NotificationRequest notificationRequest = NotificationRequest.builder()
-                                .recipientUsername(username)
-                                .subject("Inscripción Confirmada - " + contest.getTitle())
-                                .content(String.format(
-                                                "Tu inscripción al concurso '%s' ha sido procesada correctamente.\n\n" +
-                                                                "Detalles del concurso:\n" +
-                                                                "- Cargo: %s\n" +
-                                                                "- Fecha de cierre: %s\n\n" +
-                                                                "Podrás seguir el estado de tu postulación desde la sección 'Mis Postulaciones'.",
-                                                contest.getTitle(),
-                                                contest.getPosition(),
-                                                contest.getEndDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))))
-                                .acknowledgementLevel(AcknowledgementLevel.NONE)
-                                .type(NotificationType.INSCRIPTION)
-                                .build();
-
-                log.debug("Enviando notificación a usuario {} para inscripción en concurso {}",
+                // No enviamos notificación al iniciar el proceso
+                log.debug("Inscripción iniciada para el usuario {} en el concurso {} - No se envía notificación inicial",
                                 username, contest.getTitle());
-
-                notificationService.sendNotification(notificationRequest);
 
                 return inscriptionMapper.toDetailResponse(savedInscription, null);
         }

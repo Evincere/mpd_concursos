@@ -1,0 +1,68 @@
+// Variables y mixins para el componente de perfil
+@use 'src/styles/variables' as global;
+
+// Variables
+$common-spacing: 1rem;
+$border-radius: 8px;
+$surface-bg: rgba(var(--surface-color-rgb), 0.5);
+$scrollbar-width: 8px;
+$scrollbar-track-color: rgba(var(--surface-color-rgb), 0.3);
+$scrollbar-thumb-color: rgba(var(--primary-color-rgb), 0.5);
+$scrollbar-thumb-hover-color: rgba(var(--primary-color-rgb), 0.7);
+$sidebar-width: 280px;
+$content-spacing: 1.5rem;
+$item-spacing: 1rem;
+$transition-speed: 0.3s;
+
+// Mixins
+@mixin card-base {
+  background-color: $surface-bg;
+  border-radius: $border-radius;
+  border: 1px solid var(--card-border);
+  backdrop-filter: var(--card-backdrop-filter);
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+}
+
+@mixin button-base {
+  @include flex-center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: $border-radius;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin section-header {
+  @include flex-center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: $common-spacing;
+  border-bottom: 1px solid var(--card-border);
+
+  i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+  }
+
+  h2, h3 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 0;
+  }
+}

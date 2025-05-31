@@ -1,15 +1,16 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter, Output, Input, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit, ChangeDetectionStrategy, EventEmitter, Output, Input, OnDestroy, ChangeDetectorRef } from  '@angular/core';
+import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from  '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBarModule, MatSnackBar } from  '@angular/material/snack-bar';
 import { Educacion, EducacionBuilder, TipoEducacion, CarreraNivelSuperior, CarreraGrado, Posgrado, ActividadCientifica, Diplomatura, CursoCapacitacion, EstadoEducacion, TipoActividadCientifica, CaracterActividadCientifica } from '../../../../../core/models/educacion.model';
-import { EducacionService, OperacionResponse } from '../../../../../core/services/educacion/educacion.service';
+import { EducacionService } from '../../../../../core/services/educacion/educacion.service';
+
 import { BehaviorSubject, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { finalize } from 'rxjs/operators';
 
 // Tipo personalizado para acceder a las propiedades de forma segura
-type EducacionRecord = Record<string, any> & Partial<Educacion>;
+type EducacionRecord = Record<string, unknown> & Partial<Educacion>;
 
 // Estados del formulario de educación
 export enum EstadoFormulario {
@@ -40,7 +41,7 @@ enum PasoWizard {
   ]
 })
 export class EducacionContainerComponent implements OnInit, OnDestroy {
-  @Input() usuarioId: string = '';
+  @Input() usuarioId = '';
   @Input() educacionSeleccionada?: Educacion;
   @Output() educacionGuardada = new EventEmitter<Educacion>();
   @Output() cerrar = new EventEmitter<void>();
@@ -79,10 +80,11 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private educacionService: EducacionService,
+    private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
-    private snackBar: MatSnackBar
-  ) { }
+    private educacionService: EducacionService
+  ) {}
+
 
   ngOnInit(): void {
     // Validar que el ID de usuario sea válido
@@ -314,20 +316,22 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
   // Guardar datos del paso actual en el builder
   guardarDatosPaso(paso: PasoWizard): void {
     switch (paso) {
-      case PasoWizard.SELECCION_TIPO:
+      case PasoWizard.SELECCION_TIPO: {
         const tipoValue = this.getControlValue(this.formularioTipo, 'tipo');
         this.educacionBuilder.setTipo(tipoValue);
         break;
+      }
 
-      case PasoWizard.INFORMACION_BASICA:
+      case PasoWizard.INFORMACION_BASICA: {
         const { estado, titulo, institucion } = this.formularioBase.value;
         this.educacionBuilder
           .setEstado(estado)
           .setTitulo(titulo)
           .setInstitucion(institucion);
         break;
+      }
 
-      case PasoWizard.INFORMACION_ESPECIFICA:
+      case PasoWizard.INFORMACION_ESPECIFICA: {
         const tipo = this.getControlValue(this.formularioTipo, 'tipo');
         const valores = this.formularioEspecifico.value;
 
@@ -366,12 +370,14 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
             break;
         }
         break;
+      }
 
-      case PasoWizard.DOCUMENTACION:
+      case PasoWizard.DOCUMENTACION: {
         if (this.archivoSeleccionado) {
           this.educacionBuilder.setDocumentoPdf(this.archivoSeleccionado);
         }
         break;
+      }
     }
   }
 
@@ -430,7 +436,7 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
   // Método para guardar educación
   guardarEducacion(): void {
     // Validar que el usuario tenga un ID válido
-    if (!this.esUsuarioIdValido(this.usuarioId)) {
+    if (!this.usuarioId) {
       console.error(`Error al guardar educación: ID de usuario inválido (${this.usuarioId})`);
       this.snackBar.open('No se puede guardar educación sin un ID de usuario válido', 'Cerrar', {
         duration: 3000
@@ -516,7 +522,7 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
       this.educacionService.guardarEducacionCompleta(educacionParaBackend, this.usuarioId, archivoSeleccionado as File | undefined)
         .pipe(finalize(() => {
           this.cargando$.next(false);
-          this.detectChanges();
+          this.cdr.detectChanges();
         }))
         .subscribe({
           next: (response) => {
@@ -574,21 +580,22 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
     // Verificar fechas que podrían causar problemas de serialización
     if (educacion.fechaEmision instanceof Date) {
       console.log('Fecha de emisión (objeto Date):', educacion.fechaEmision);
-      console.log('Fecha de emisión (formato backend):', educacionParaBackend.issueDate);
+      console.log('Fecha de emisión (formato backend):', educacionParaBackend['issueDate']);
     }
 
     // Verificar campos específicos según el tipo
     console.log('Campos específicos para el tipo de educación:');
-    switch (educacionParaBackend.type) {
+    const type = educacionParaBackend['type'] as string;
+    switch (type) {
       case 'Título Terciario':
       case 'Título Universitario':
-        console.log('- durationYears:', educacionParaBackend.durationYears);
-        console.log('- average:', educacionParaBackend.average);
+        console.log('- durationYears:', educacionParaBackend['durationYears']);
+        console.log('- average:', educacionParaBackend['average']);
         break;
       case 'Especialización':
       case 'Maestría':
       case 'Doctorado':
-        console.log('- thesisTopic:', educacionParaBackend.thesisTopic);
+        console.log('- thesisTopic:', educacionParaBackend['thesisTopic']);
         break;
       // Añadir otros casos según sea necesario
     }
@@ -600,52 +607,54 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
    * Prepara el objeto de educación para enviarlo al backend,
    * aplicando las transformaciones necesarias en los campos
    */
-  private prepararEducacionParaBackend(educacion: Educacion): any {
+  private prepararEducacionParaBackend(educacion: Educacion): Record<string, unknown> {
     // Crear un objeto nuevo para el backend siguiendo la estructura esperada
-    const resultado: any = {};
+    const resultado: Record<string, unknown> = {};
 
     // Mapear campos base que espera el backend
-    resultado.type = this.mapearTipoEducacion(educacion.tipo);
-    resultado.status = this.mapearEstadoEducacion(educacion.estado);
-    resultado.title = educacion.titulo;
-    resultado.institution = educacion.institucion;
+    resultado['type'] = this.mapearTipoEducacion(educacion.tipo);
+    resultado['status'] = this.mapearEstadoEducacion(educacion.estado);
+    resultado['title'] = educacion.titulo;
+    resultado['institution'] = educacion.institucion;
 
     // Asegurar que la fecha está en formato ISO para serialización o usar LocalDate
     if (educacion.fechaEmision instanceof Date) {
-      resultado.issueDate = educacion.fechaEmision.toISOString().split('T')[0]; // Solo la parte de fecha YYYY-MM-DD
+      resultado['issueDate'] = educacion.fechaEmision.toISOString().split('T')[0]; // Solo la parte de fecha YYYY-MM-DD
     }
 
     // Mapear campos específicos según el tipo de educación
     switch (educacion.tipo) {
       case TipoEducacion.CARRERA_NIVEL_SUPERIOR:
       case TipoEducacion.CARRERA_GRADO:
-        resultado.durationYears = (educacion as any).duracionAnios;
-        resultado.average = (educacion as any).promedio;
+        resultado['durationYears'] = (educacion as CarreraGrado | CarreraNivelSuperior).duracionAnios;
+        resultado['average'] = (educacion as CarreraGrado | CarreraNivelSuperior).promedio;
         break;
 
       case TipoEducacion.POSGRADO_ESPECIALIZACION:
       case TipoEducacion.POSGRADO_MAESTRIA:
       case TipoEducacion.POSGRADO_DOCTORADO:
-        resultado.thesisTopic = (educacion as any).temaTesis;
+        resultado['thesisTopic'] = (educacion as Posgrado).temaTesis;
         break;
 
       case TipoEducacion.DIPLOMATURA:
       case TipoEducacion.CURSO_CAPACITACION:
-        resultado.hourlyLoad = (educacion as any).cargaHoraria;
-        resultado.hadFinalEvaluation = (educacion as any).tuvoEvaluacionFinal;
+        resultado['hourlyLoad'] = (educacion as Diplomatura | CursoCapacitacion).cargaHoraria;
+        resultado['hadFinalEvaluation'] = (educacion as Diplomatura | CursoCapacitacion).tuvoEvaluacionFinal;
         break;
 
-      case TipoEducacion.ACTIVIDAD_CIENTIFICA:
-        if ((educacion as any).tipoActividad) {
-          resultado.activityType = this.mapearTipoActividad((educacion as any).tipoActividad);
+      case TipoEducacion.ACTIVIDAD_CIENTIFICA: {
+        const actividadCientifica = educacion as ActividadCientifica;
+        if (actividadCientifica.tipoActividad) {
+          resultado['activityType'] = this.mapearTipoActividad(actividadCientifica.tipoActividad);
         }
-        resultado.topic = (educacion as any).tema;
-        if ((educacion as any).caracter) {
-          resultado.activityRole = this.mapearRolActividad((educacion as any).caracter);
+        resultado['topic'] = actividadCientifica.tema;
+        if (actividadCientifica.caracter) {
+          resultado['activityRole'] = this.mapearRolActividad(actividadCientifica.caracter);
         }
-        resultado.expositionPlaceDate = (educacion as any).lugarFechaExposicion;
-        resultado.comments = (educacion as any).comentarios;
+        resultado['expositionPlaceDate'] = actividadCientifica.lugarFechaExposicion;
+        resultado['comments'] = actividadCientifica.comentarios;
         break;
+      }
     }
 
     console.log('Objeto transformado para el backend:', resultado);
@@ -718,28 +727,30 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
     switch (educacion.tipo) {
       case TipoEducacion.CARRERA_NIVEL_SUPERIOR:
       case TipoEducacion.CARRERA_GRADO:
-        console.log(`Duración (años): ${(educacion as any).duracionAnios}`);
-        console.log(`Promedio: ${(educacion as any).promedio}`);
+        console.log(`Duración (años): ${(educacion as CarreraGrado | CarreraNivelSuperior).duracionAnios}`);
+        console.log(`Promedio: ${(educacion as CarreraGrado | CarreraNivelSuperior).promedio}`);
         break;
 
       case TipoEducacion.POSGRADO_ESPECIALIZACION:
       case TipoEducacion.POSGRADO_MAESTRIA:
       case TipoEducacion.POSGRADO_DOCTORADO:
-        console.log(`Tema de tesis: ${(educacion as any).temaTesis}`);
+        console.log(`Tema de tesis: ${(educacion as Posgrado).temaTesis}`);
         break;
 
       case TipoEducacion.DIPLOMATURA:
       case TipoEducacion.CURSO_CAPACITACION:
-        console.log(`Carga horaria: ${(educacion as any).cargaHoraria}`);
-        console.log(`Tuvo evaluación final: ${(educacion as any).tuvoEvaluacionFinal}`);
+        console.log(`Carga horaria: ${(educacion as Diplomatura | CursoCapacitacion).cargaHoraria}`);
+        console.log(`Tuvo evaluación final: ${(educacion as Diplomatura | CursoCapacitacion).tuvoEvaluacionFinal}`);
         break;
 
-      case TipoEducacion.ACTIVIDAD_CIENTIFICA:
-        console.log(`Tipo de actividad: ${(educacion as any).tipoActividad}`);
-        console.log(`Tema: ${(educacion as any).tema}`);
-        console.log(`Carácter: ${(educacion as any).caracter}`);
-        console.log(`Lugar/fecha de exposición: ${(educacion as any).lugarFechaExposicion}`);
+      case TipoEducacion.ACTIVIDAD_CIENTIFICA: {
+        const actividadCientifica = educacion as ActividadCientifica;
+        console.log(`Tipo de actividad: ${actividadCientifica.tipoActividad}`);
+        console.log(`Tema: ${actividadCientifica.tema}`);
+        console.log(`Carácter: ${actividadCientifica.caracter}`);
+        console.log(`Lugar/fecha de exposición: ${actividadCientifica.lugarFechaExposicion}`);
         break;
+      }
 
       default:
         console.warn(`Tipo de educación no reconocido: ${educacion.tipo}`);
@@ -869,40 +880,40 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
    * Corrige problemas comunes en los valores del formulario
    * basados en errores de validación conocidos del backend
    */
-  private corregirValoresEducacion(formValues: any): void {
+  private corregirValoresEducacion(formValues: Record<string, unknown>): void {
     console.log('Corrigiendo valores de educación antes de enviar', formValues);
 
     // Corregir promedio según validaciones del backend (debe ser positivo)
-    if (formValues.promedio !== undefined) {
+    if (formValues['promedio'] !== undefined) {
       // Convertir a número y asegurar que sea mayor que 0
-      const promedio = Number(formValues.promedio);
+      const promedio = Number(formValues['promedio']);
       if (isNaN(promedio) || promedio <= 0) {
         console.warn('Promedio inválido, ajustando a valor mínimo aceptable: 0.1');
-        formValues.promedio = 0.1;
+        formValues['promedio'] = 0.1;
       }
     }
 
     // Corregir duración (debe ser un entero positivo)
-    if (formValues.duracionAnios !== undefined) {
-      const duracion = Number(formValues.duracionAnios);
+    if (formValues['duracionAnios'] !== undefined) {
+      const duracion = Number(formValues['duracionAnios']);
       if (isNaN(duracion) || duracion <= 0 || !Number.isInteger(duracion)) {
         console.warn('Duración inválida, ajustando a valor mínimo aceptable: 1');
-        formValues.duracionAnios = 1;
+        formValues['duracionAnios'] = 1;
       }
     }
 
     // Corregir carga horaria (debe ser un número positivo)
-    if (formValues.cargaHoraria !== undefined) {
-      const cargaHoraria = Number(formValues.cargaHoraria);
+    if (formValues['cargaHoraria'] !== undefined) {
+      const cargaHoraria = Number(formValues['cargaHoraria']);
       if (isNaN(cargaHoraria) || cargaHoraria <= 0) {
         console.warn('Carga horaria inválida, ajustando a valor mínimo aceptable: 1');
-        formValues.cargaHoraria = 1;
+        formValues['cargaHoraria'] = 1;
       }
     }
 
     // Verificar que los campos de texto no estén vacíos
     ['titulo', 'institucion', 'temaTesis', 'tema', 'lugarFechaExposicion'].forEach(campo => {
-      if (formValues[campo] !== undefined && (!formValues[campo] || formValues[campo].trim() === '')) {
+      if (formValues[campo] !== undefined && (!formValues[campo] || (typeof formValues[campo] === 'string' && (formValues[campo] as string).trim() === ''))) {
         console.warn(`Campo ${campo} vacío, ajustando a valor por defecto`);
         formValues[campo] = campo === 'titulo' ? 'Sin título' :
                           campo === 'institucion' ? 'Sin institución' :
@@ -913,24 +924,24 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
     });
 
     // Verificar enums
-    if (formValues.tipo && !Object.values(TipoEducacion).includes(formValues.tipo)) {
-      console.warn(`Tipo de educación inválido: ${formValues.tipo}, ajustando a valor por defecto`);
-      formValues.tipo = TipoEducacion.CARRERA_GRADO;
+    if (formValues['tipo'] && !Object.values(TipoEducacion).includes(formValues['tipo'] as TipoEducacion)) {
+      console.warn(`Tipo de educación inválido: ${formValues['tipo']}, ajustando a valor por defecto`);
+      formValues['tipo'] = TipoEducacion.CARRERA_GRADO;
     }
 
-    if (formValues.estado && !Object.values(EstadoEducacion).includes(formValues.estado)) {
-      console.warn(`Estado de educación inválido: ${formValues.estado}, ajustando a valor por defecto`);
-      formValues.estado = EstadoEducacion.FINALIZADO;
+    if (formValues['estado'] && !Object.values(EstadoEducacion).includes(formValues['estado'] as EstadoEducacion)) {
+      console.warn(`Estado de educación inválido: ${formValues['estado']}, ajustando a valor por defecto`);
+      formValues['estado'] = EstadoEducacion.FINALIZADO;
     }
 
-    if (formValues.tipoActividad && !Object.values(TipoActividadCientifica).includes(formValues.tipoActividad)) {
-      console.warn(`Tipo de actividad inválido: ${formValues.tipoActividad}, ajustando a valor por defecto`);
-      formValues.tipoActividad = TipoActividadCientifica.INVESTIGACION;
+    if (formValues['tipoActividad'] && !Object.values(TipoActividadCientifica).includes(formValues['tipoActividad'] as TipoActividadCientifica)) {
+      console.warn(`Tipo de actividad inválido: ${formValues['tipoActividad']}, ajustando a valor por defecto`);
+      formValues['tipoActividad'] = TipoActividadCientifica.INVESTIGACION;
     }
 
-    if (formValues.caracter && !Object.values(CaracterActividadCientifica).includes(formValues.caracter)) {
-      console.warn(`Carácter de actividad inválido: ${formValues.caracter}, ajustando a valor por defecto`);
-      formValues.caracter = CaracterActividadCientifica.AUTOR_DISERTANTE;
+    if (formValues['caracter'] && !Object.values(CaracterActividadCientifica).includes(formValues['caracter'] as CaracterActividadCientifica)) {
+      console.warn(`Carácter de actividad inválido: ${formValues['caracter']}, ajustando a valor por defecto`);
+      formValues['caracter'] = CaracterActividadCientifica.AUTOR_DISERTANTE;
     }
 
     console.log('Valores corregidos:', formValues);
@@ -984,7 +995,7 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
   /**
    * Finalizar el proceso de guardado
    */
-  private finalizarGuardado(exito: boolean, educacion: Educacion | null, error: any): void {
+  private finalizarGuardado(exito: boolean, educacion: Educacion | null, error: unknown): void {
     if (exito) {
       if (educacion) {
         console.log('Educación guardada con éxito, ID recibido:', educacion.id, 'tipo:', typeof educacion.id);
@@ -1008,21 +1019,23 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
 
       if (error && typeof error === 'object') {
         // Si el error tiene una propiedad error.error, extraer los detalles
-        if (error.error) {
-          console.log('Detalles del error:', error.error);
+        const errorObj = error as Record<string, unknown>;
+        if (errorObj['error']) {
+          console.log('Detalles del error:', errorObj['error']);
 
           // Si hay errores de validación
-          if (error.error.errors && Array.isArray(error.error.errors)) {
+          const errorDetails = errorObj['error'] as Record<string, unknown>;
+          if (errorDetails['errors'] && Array.isArray(errorDetails['errors'])) {
             // Mostrar los primeros 3 errores de validación
-            const erroresValidacion = error.error.errors
+            const erroresValidacion = errorDetails['errors']
               .slice(0, 3)
-              .map((e: any) => {
+              .map((e: Record<string, unknown>) => {
                 // Intentar obtener información más detallada del error
-                if (e.defaultMessage) return e.defaultMessage;
-                if (e.field && e.defaultMessage) return `${e.field}: ${e.defaultMessage}`;
-                if (e.field) return `Error en campo ${e.field}`;
-                if (e.message) return e.message;
-                if (e.code) return e.code;
+                if (e['defaultMessage']) return e['defaultMessage'] as string;
+                if (e['field'] && e['defaultMessage']) return `${e['field']}: ${e['defaultMessage']}`;
+                if (e['field']) return `Error en campo ${e['field']}`;
+                if (e['message']) return e['message'] as string;
+                if (e['code']) return e['code'] as string;
                 return JSON.stringify(e);
               })
               .filter(Boolean);
@@ -1030,8 +1043,8 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
             if (erroresValidacion.length > 0) {
               mensajeError = `Errores de validación: ${erroresValidacion.join(', ')}`;
             }
-          } else if (error.error.message) {
-            mensajeError = error.error.message;
+          } else if (errorDetails['message']) {
+            mensajeError = errorDetails['message'] as string;
 
             // Extraer los detalles específicos del mensaje si contiene patrones conocidos
             if (mensajeError.includes('Validation failed')) {
@@ -1043,8 +1056,8 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
               }
             }
           }
-        } else if (error.message) {
-          mensajeError = error.message;
+        } else if (errorObj['message']) {
+          mensajeError = errorObj['message'] as string;
         } else if (typeof error === 'string') {
           mensajeError = error;
         }
@@ -1419,13 +1432,4 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
     return control ? control.value : '';
   }
 
-  // Método para verificar si el ID de usuario es válido
-  esUsuarioIdValido(usuarioId: string): boolean {
-    return !!usuarioId && usuarioId.trim() !== '';
-  }
-
-  // Método para detectar cambios
-  detectChanges(): void {
-    this.cdr.markForCheck();
-  }
 }

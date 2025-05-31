@@ -1,0 +1,189 @@
+// Archivo global de estilos para asegurar consistencia en toda la aplicación
+@use 'variables' as vars;
+@use 'responsive' as responsive;
+
+// Estilos globales para la aplicación
+:root {
+  // Colores principales
+  --color-primary: #{vars.$color-primary};
+  --color-primary-dark: #{vars.$color-primary-dark};
+  --color-primary-light: #{vars.$color-primary-light};
+  --color-secondary: #{vars.$color-secondary};
+  --color-accent: #{vars.$color-accent};
+  
+  // Colores de fondo
+  --color-background: #{vars.$color-background};
+  --color-background-dark: #{vars.$color-background-dark};
+  --color-background-light: #{vars.$color-background-light};
+  --color-surface: #{vars.$color-surface};
+  --color-surface-dark: #{vars.$color-surface-dark};
+  --color-surface-light: #{vars.$color-surface-light};
+  
+  // Colores de texto
+  --color-text-primary: #{vars.$color-text-primary};
+  --color-text-secondary: #{vars.$color-text-secondary};
+  --color-text-tertiary: #{vars.$color-text-tertiary};
+  --color-text-disabled: #{vars.$color-text-disabled};
+  
+  // Colores de estado
+  --color-success: #{vars.$color-success};
+  --color-warning: #{vars.$color-warning};
+  --color-error: #{vars.$color-error};
+  
+  // Bordes y sombras
+  --border-radius: #{vars.$border-radius};
+  --border-radius-sm: #{vars.$border-radius-sm};
+  --border-radius-lg: #{vars.$border-radius-lg};
+  --box-shadow: #{vars.$box-shadow};
+  --box-shadow-light: #{vars.$box-shadow-light};
+  
+  // Espaciado
+  --spacing-xs: #{vars.$spacing-xs};
+  --spacing-sm: #{vars.$spacing-sm};
+  --spacing-md: #{vars.$spacing-md};
+  --spacing-lg: #{vars.$spacing-lg};
+  --spacing-xl: #{vars.$spacing-xl};
+  
+  // Tipografía
+  --font-size-xs: #{vars.$font-size-xs};
+  --font-size-sm: #{vars.$font-size-sm};
+  --font-size-md: #{vars.$font-size-md};
+  --font-size-lg: #{vars.$font-size-lg};
+  --font-size-xl: #{vars.$font-size-xl};
+  --font-family-base: #{vars.$font-family-base};
+  
+  // Transiciones
+  --transition-default: #{vars.$transition-default};
+}
+
+// Estilos base para toda la aplicación
+body {
+  font-family: vars.$font-family-base;
+  background-color: vars.$color-background;
+  color: vars.$color-text-primary;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+// Estilos para tarjetas
+.card {
+  background-color: vars.$color-surface;
+  border-radius: vars.$border-radius;
+  box-shadow: vars.$box-shadow;
+  padding: vars.$spacing-md;
+  margin-bottom: vars.$spacing-md;
+  
+  &__header {
+    margin-bottom: vars.$spacing-md;
+    
+    h2, h3, h4 {
+      margin: 0;
+      color: vars.$color-text-primary;
+    }
+  }
+  
+  &__content {
+    color: vars.$color-text-secondary;
+  }
+  
+  &__footer {
+    margin-top: vars.$spacing-md;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+// Estilos para botones
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: vars.$spacing-sm vars.$spacing-md;
+  border-radius: vars.$border-radius-sm;
+  font-weight: 500;
+  cursor: pointer;
+  transition: vars.$transition-default;
+  border: none;
+  outline: none;
+  
+  &--primary {
+    background-color: vars.$color-primary;
+    color: white;
+    
+    &:hover {
+      background-color: vars.$color-primary-dark;
+    }
+  }
+  
+  &--secondary {
+    background-color: vars.$color-secondary;
+    color: white;
+    
+    &:hover {
+      background-color: darken(vars.$color-secondary, 10%);
+    }
+  }
+  
+  &--accent {
+    background-color: vars.$color-accent;
+    color: white;
+    
+    &:hover {
+      background-color: vars.$color-accent-dark;
+    }
+  }
+}
+
+// Estilos para iconos
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  
+  &--sm {
+    width: 16px;
+    height: 16px;
+  }
+  
+  &--lg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+// Utilidades de espaciado
+.mt-1 { margin-top: vars.$spacing-xs; }
+.mt-2 { margin-top: vars.$spacing-sm; }
+.mt-3 { margin-top: vars.$spacing-md; }
+.mt-4 { margin-top: vars.$spacing-lg; }
+.mt-5 { margin-top: vars.$spacing-xl; }
+
+.mb-1 { margin-bottom: vars.$spacing-xs; }
+.mb-2 { margin-bottom: vars.$spacing-sm; }
+.mb-3 { margin-bottom: vars.$spacing-md; }
+.mb-4 { margin-bottom: vars.$spacing-lg; }
+.mb-5 { margin-bottom: vars.$spacing-xl; }
+
+.ml-1 { margin-left: vars.$spacing-xs; }
+.ml-2 { margin-left: vars.$spacing-sm; }
+.ml-3 { margin-left: vars.$spacing-md; }
+.ml-4 { margin-left: vars.$spacing-lg; }
+.ml-5 { margin-left: vars.$spacing-xl; }
+
+.mr-1 { margin-right: vars.$spacing-xs; }
+.mr-2 { margin-right: vars.$spacing-sm; }
+.mr-3 { margin-right: vars.$spacing-md; }
+.mr-4 { margin-right: vars.$spacing-lg; }
+.mr-5 { margin-right: vars.$spacing-xl; }
+
+// Utilidades de flexbox
+.d-flex { display: flex; }
+.flex-column { flex-direction: column; }
+.justify-content-center { justify-content: center; }
+.justify-content-between { justify-content: space-between; }
+.align-items-center { align-items: center; }
+.flex-grow-1 { flex-grow: 1; }

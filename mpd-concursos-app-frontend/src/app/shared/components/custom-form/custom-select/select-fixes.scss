@@ -1,0 +1,201 @@
+// Correcciones de estilos para los selects en la aplicación
+@use 'src/styles/variables' as vars;
+
+// Mejoras para los selects en toda la aplicación
+::ng-deep app-custom-select {
+  // Contenedor principal del select
+  .custom-select {
+    margin-bottom: 1rem;
+
+    // Etiqueta del select
+    .select-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--color-text-primary, vars.$color-text-primary) !important;
+
+      &.required::after {
+        content: "*";
+        color: var(--color-error, vars.$color-error) !important;
+        margin-left: 0.25rem;
+      }
+    }
+
+    // Contenedor del select
+    .select-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--color-text-primary, vars.$color-text-primary) !important;
+      background-color: var(--color-surface, vars.$color-surface) !important;
+      border: 1px solid var(--color-border, vars.$color-border) !important;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+      &:hover:not(.disabled) {
+        border-color: var(--color-primary, vars.$color-primary) !important;
+      }
+    }
+
+    // Valor seleccionado
+    .select-value {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--color-text-primary, vars.$color-text-primary) !important;
+    }
+
+    // Flecha del select
+    .select-arrow {
+      margin-left: 0.5rem;
+      color: var(--color-text-secondary, vars.$color-text-secondary) !important;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    // Dropdown del select
+    .select-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      margin-top: 0.25rem;
+      background-color: var(--color-surface, vars.$color-surface) !important;
+      border: 1px solid var(--color-border, vars.$color-border) !important;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    // Opciones del select
+    .select-option {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+      color: var(--color-text-primary, vars.$color-text-primary) !important;
+
+      &:hover:not(.disabled) {
+        background-color: var(--color-background-hover, vars.$color-background-hover) !important;
+      }
+
+      &.selected {
+        background-color: var(--color-primary-light, vars.$color-primary-light) !important;
+        color: var(--color-primary, vars.$color-primary) !important;
+        font-weight: 500;
+      }
+
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    // Mensaje de no opciones
+    .select-no-options {
+      padding: 0.75rem 1rem;
+      color: var(--color-text-secondary, vars.$color-text-secondary) !important;
+      font-style: italic;
+      text-align: center;
+    }
+
+    // Mensaje de error
+    .error-message {
+      font-size: 0.75rem;
+      color: var(--color-error, vars.$color-error) !important;
+      margin-top: 0.25rem;
+    }
+
+    // Texto de ayuda
+    .hint-text {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary, vars.$color-text-secondary) !important;
+      margin-top: 0.25rem;
+    }
+
+    // Estados del select
+    &.has-error .select-container {
+      border-color: var(--color-error, vars.$color-error) !important;
+    }
+
+    &.focused .select-container {
+      border-color: var(--color-primary, vars.$color-primary) !important;
+      box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2) !important;
+    }
+
+    &.disabled .select-container {
+      background-color: var(--color-background-light, vars.$color-background-light) !important;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+}
+
+// Estilos específicos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  ::ng-deep app-custom-select {
+    .custom-select {
+      .select-label {
+        color: var(--color-text-primary-dark, vars.$color-text-primary-dark) !important;
+      }
+
+      .select-container {
+        color: var(--color-text-primary-dark, vars.$color-text-primary-dark) !important;
+        background-color: var(--color-surface-dark, vars.$color-surface-dark) !important;
+        border-color: var(--color-border-dark, vars.$color-border-dark) !important;
+
+        &:hover:not(.disabled) {
+          border-color: var(--color-primary-dark, vars.$color-primary-dark) !important;
+        }
+      }
+
+      .select-value {
+        color: var(--color-text-primary-dark, vars.$color-text-primary-dark) !important;
+      }
+
+      .select-arrow {
+        color: var(--color-text-secondary-dark, vars.$color-text-secondary-dark) !important;
+      }
+
+      .select-dropdown {
+        background-color: var(--color-surface-dark, vars.$color-surface-dark) !important;
+        border-color: var(--color-border-dark, vars.$color-border-dark) !important;
+      }
+
+      .select-option {
+        color: var(--color-text-primary-dark, vars.$color-text-primary-dark) !important;
+
+        &:hover:not(.disabled) {
+          background-color: var(--color-background-dark, vars.$color-background-dark) !important;
+        }
+
+        &.selected {
+          background-color: var(--color-primary-light, vars.$color-primary-light) !important;
+          color: var(--color-primary-dark, vars.$color-primary-dark) !important;
+        }
+      }
+
+      .select-no-options {
+        color: var(--color-text-secondary-dark, vars.$color-text-secondary-dark) !important;
+      }
+
+      .hint-text {
+        color: var(--color-text-secondary-dark, vars.$color-text-secondary-dark) !important;
+      }
+
+      &.focused .select-container {
+        border-color: var(--color-primary-dark, vars.$color-primary-dark) !important;
+        box-shadow: 0 0 0 2px rgba(121, 134, 203, 0.2) !important;
+      }
+
+      &.disabled .select-container {
+        background-color: var(--color-background-dark, vars.$color-background-dark) !important;
+      }
+    }
+  }
+}

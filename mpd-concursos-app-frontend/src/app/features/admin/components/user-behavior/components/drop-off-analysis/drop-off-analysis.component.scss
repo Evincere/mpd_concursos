@@ -1,0 +1,256 @@
+@use 'src/styles/variables' as *;
+
+.drop-off-container {
+  padding: 1rem 0;
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+  
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 1.5rem 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .section-description {
+    color: $color-text-secondary;
+    margin: 0;
+    font-size: $font-size-sm;
+  }
+}
+
+// Estado vacío
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: $color-surface-light;
+  border-radius: $border-radius;
+  
+  mat-icon {
+    font-size: 48px;
+    color: $color-text-secondary;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $color-text-secondary;
+    font-size: $font-size-md;
+    margin: 0;
+  }
+}
+
+// Análisis de puntos de abandono
+.drop-off-analysis {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  
+  @media (min-width: 992px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// Resumen de puntos de abandono
+.drop-off-summary {
+  .summary-card {
+    border-radius: $border-radius;
+    box-shadow: $box-shadow-sm;
+    height: 100%;
+    
+    mat-card-header {
+      padding: 1rem 1rem 0.5rem;
+    }
+    
+    mat-card-content {
+      padding: 0 1rem 1rem;
+      overflow-x: auto;
+    }
+  }
+}
+
+// Tabla de puntos de abandono
+.drop-off-table {
+  width: 100%;
+  
+  .mat-mdc-header-cell {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .mat-mdc-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: rgba($color-primary, 0.05);
+    }
+    
+    &.selected-row {
+      background-color: rgba($color-primary, 0.1);
+    }
+  }
+  
+  .step-cell {
+    display: flex;
+    align-items: center;
+    
+    .step-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.75rem;
+      
+      mat-icon {
+        color: white;
+        font-size: 16px;
+      }
+    }
+  }
+}
+
+// Detalles del punto de abandono
+.drop-off-details {
+  .details-card {
+    border-radius: $border-radius;
+    box-shadow: $box-shadow-sm;
+    height: 100%;
+    
+    mat-card-header {
+      padding: 1rem 1rem 0.5rem;
+    }
+    
+    mat-card-content {
+      padding: 0 1rem 1rem;
+    }
+    
+    .details-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      mat-icon {
+        color: white;
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+// Secciones de detalles
+.details-section {
+  margin-bottom: 1.5rem;
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 1rem 0 0.75rem;
+    color: $color-text-primary;
+  }
+}
+
+// Lista de razones
+.reasons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Elemento de razón
+.reason-item {
+  .reason-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+  }
+  
+  .reason-name {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .reason-stats {
+    display: flex;
+    gap: 0.5rem;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+  
+  .reason-bar-container {
+    height: 8px;
+    background-color: $color-surface-light;
+    border-radius: $border-radius-sm;
+    overflow: hidden;
+  }
+  
+  .reason-bar {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+}
+
+// Razones vacías
+.empty-reasons {
+  padding: 1rem;
+  background-color: $color-surface-light;
+  border-radius: $border-radius-sm;
+  text-align: center;
+  
+  p {
+    margin: 0;
+    color: $color-text-secondary;
+    font-style: italic;
+  }
+}
+
+// Recomendaciones
+.recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Elemento de recomendación
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  background-color: rgba($color-primary, 0.05);
+  border-radius: $border-radius-sm;
+  border-left: 4px solid $color-primary;
+  
+  mat-icon {
+    color: $color-primary;
+    margin-right: 0.75rem;
+    margin-top: 0.25rem;
+  }
+  
+  .recommendation-content {
+    flex: 1;
+  }
+  
+  .recommendation-title {
+    font-weight: 500;
+    color: $color-text-primary;
+    margin-bottom: 0.25rem;
+  }
+  
+  .recommendation-description {
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+}

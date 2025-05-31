@@ -1,0 +1,604 @@
+@use 'src/styles/variables' as vars;
+
+// Estilos para el diálogo de creación de usuarios
+:host {
+  display: contents;
+}
+
+// Contenedor principal del diálogo
+::ng-deep app-custom-dialog.user-dialog {
+  // Configuración del diálogo
+  .custom-dialog-container {
+    background-color: vars.$color-surface;
+    border-radius: vars.$border-radius;
+    box-shadow: vars.$box-shadow;
+    border: 1px solid vars.$color-border;
+    max-width: 800px;
+    width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    font-family: vars.$font-family-base;
+  }
+
+  // Header del diálogo
+  .dialog-header {
+    background-color: rgba(vars.$color-primary, 0.05);
+    border-bottom: 1px solid vars.$color-border;
+    padding: vars.$spacing-lg vars.$spacing-xl;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: vars.$spacing-md;
+
+    h2 {
+      margin: 0;
+      font-size: vars.$font-size-lg;
+      font-weight: 600;
+      color: vars.$color-text-primary;
+      display: flex;
+      align-items: center;
+      gap: vars.$spacing-sm;
+
+      &::before {
+        content: '\f007'; // Icono de usuario
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        font-size: 1rem;
+        color: vars.$color-primary;
+      }
+    }
+
+    .close-button {
+      background: transparent;
+      border: none;
+      color: vars.$color-text-secondary;
+      cursor: pointer;
+      padding: vars.$spacing-xs;
+      border-radius: vars.$border-radius-sm;
+      transition: vars.$transition-fast;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+
+      &:hover {
+        background-color: rgba(vars.$color-error, 0.1);
+        color: vars.$color-error;
+        transform: scale(1.1);
+      }
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(vars.$color-primary, 0.3);
+      }
+
+      &::before {
+        content: '\f00d'; // Icono de cerrar
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  // Contenido del diálogo
+  .dialog-content {
+    padding: vars.$spacing-xl;
+    background-color: vars.$color-surface;
+    overflow-y: auto;
+    max-height: calc(90vh - 140px); // Ajustar según header y footer
+  }
+
+  // Formulario de usuario
+  .user-form {
+    width: 100%;
+
+    .form-section {
+      margin-bottom: vars.$spacing-xl;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      h3 {
+        font-size: vars.$font-size-md;
+        font-weight: 600;
+        margin: 0 0 vars.$spacing-md 0;
+        color: vars.$color-text-primary;
+        border-bottom: 2px solid vars.$color-primary;
+        padding-bottom: vars.$spacing-sm;
+        display: flex;
+        align-items: center;
+        gap: vars.$spacing-xs;
+
+        &::before {
+          content: '\f0c9'; // Icono de lista
+          font-family: 'Font Awesome 5 Free';
+          font-weight: 900;
+          font-size: 0.8rem;
+          color: vars.$color-primary;
+        }
+      }
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: vars.$spacing-md;
+      margin-bottom: vars.$spacing-md;
+
+      app-custom-form-field,
+      app-custom-select {
+        flex: 1;
+        min-width: 250px;
+      }
+    }
+
+    // Contenedor de roles
+    .roles-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: vars.$spacing-sm;
+      margin-top: vars.$spacing-sm;
+
+      .role-checkbox {
+        display: flex;
+        align-items: center;
+        padding: vars.$spacing-sm;
+        background-color: rgba(vars.$color-primary, 0.05);
+        border-radius: vars.$border-radius-sm;
+        border: 1px solid rgba(vars.$color-primary, 0.2);
+        transition: vars.$transition-fast;
+
+        &:hover {
+          background-color: rgba(vars.$color-primary, 0.08);
+          transform: translateX(2px);
+        }
+
+        app-custom-checkbox {
+          margin-right: vars.$spacing-xs;
+        }
+
+        label {
+          color: vars.$color-text-primary;
+          font-weight: 500;
+          cursor: pointer;
+          flex: 1;
+        }
+      }
+    }
+  }
+
+  // Campos de formulario personalizados
+  app-custom-form-field {
+    ::ng-deep {
+      .form-field-container {
+        margin-bottom: vars.$spacing-md;
+
+        label {
+          color: vars.$color-text-primary;
+          font-weight: 500;
+          margin-bottom: vars.$spacing-xs;
+          display: block;
+        }
+
+        input, textarea {
+          width: 100%;
+          padding: vars.$spacing-sm vars.$spacing-md;
+          border: 1px solid vars.$color-border;
+          border-radius: vars.$border-radius-sm;
+          background-color: vars.$color-surface;
+          color: vars.$color-text-primary;
+          font-family: vars.$font-family-base;
+          font-size: vars.$font-size-sm;
+          transition: vars.$transition-fast;
+
+          &:focus {
+            outline: none;
+            border-color: vars.$color-primary;
+            box-shadow: 0 0 0 2px rgba(vars.$color-primary, 0.2);
+          }
+
+          &:hover:not(:focus) {
+            border-color: vars.$color-border-light;
+          }
+
+          &.error {
+            border-color: vars.$color-error;
+            box-shadow: 0 0 0 2px rgba(vars.$color-error, 0.2);
+          }
+        }
+
+        .error-message {
+          color: vars.$color-error;
+          font-size: vars.$font-size-xs;
+          margin-top: vars.$spacing-xs;
+          display: flex;
+          align-items: center;
+          gap: vars.$spacing-xs;
+
+          &::before {
+            content: '\f071'; // Icono de advertencia
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+
+  // Selectores personalizados
+  app-custom-select {
+    ::ng-deep {
+      .custom-select-container {
+        width: 100%;
+        border: 1px solid vars.$color-border;
+        border-radius: vars.$border-radius-sm;
+        background-color: vars.$color-surface;
+        transition: vars.$transition-fast;
+
+        &:hover:not(.disabled) {
+          border-color: vars.$color-primary;
+        }
+
+        &.focused:not(.disabled) {
+          border-color: vars.$color-primary;
+          box-shadow: 0 0 0 2px rgba(vars.$color-primary, 0.2);
+        }
+
+        .select-value {
+          color: vars.$color-text-primary;
+          padding: vars.$spacing-sm vars.$spacing-md;
+        }
+
+        .select-arrow {
+          color: vars.$color-text-secondary;
+        }
+      }
+
+      .select-dropdown {
+        background-color: vars.$color-surface;
+        border: 1px solid vars.$color-border;
+        border-radius: vars.$border-radius-sm;
+        box-shadow: vars.$box-shadow;
+
+        .select-option {
+          color: vars.$color-text-primary;
+          padding: vars.$spacing-sm vars.$spacing-md;
+          transition: vars.$transition-fast;
+
+          &:hover {
+            background-color: rgba(vars.$color-primary, 0.1);
+          }
+
+          &.selected {
+            background-color: vars.$color-primary;
+            color: vars.$color-white;
+          }
+        }
+      }
+    }
+  }
+
+  // Footer del diálogo con botones de acción
+  .dialog-footer {
+    background-color: rgba(vars.$color-surface-light, 0.5);
+    border-top: 1px solid vars.$color-border;
+    padding: vars.$spacing-lg vars.$spacing-xl;
+    display: flex;
+    justify-content: flex-end;
+    gap: vars.$spacing-md;
+
+    app-custom-button {
+      min-width: 120px;
+
+      ::ng-deep .custom-button {
+        padding: vars.$spacing-sm vars.$spacing-lg;
+        border-radius: vars.$border-radius-sm;
+        font-weight: 500;
+        font-size: vars.$font-size-sm;
+        transition: vars.$transition-normal;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: vars.$spacing-xs;
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 2px rgba(vars.$color-primary, 0.3);
+        }
+
+        &:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: vars.$box-shadow-light;
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(0);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none !important;
+          box-shadow: none !important;
+        }
+
+        // Botón de cancelar
+        &.stroked {
+          background-color: transparent;
+          color: vars.$color-text-primary;
+          border: 1px solid vars.$color-border;
+
+          &:hover:not(:disabled) {
+            background-color: rgba(vars.$color-text-secondary, 0.1);
+            border-color: vars.$color-border-light;
+          }
+
+          &::before {
+            content: '\f00d'; // Icono de cancelar
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 0.8rem;
+          }
+        }
+
+        // Botón de guardar
+        &.flat.primary {
+          background-color: vars.$color-primary;
+          color: vars.$color-white;
+          border: 1px solid vars.$color-primary;
+
+          &:hover:not(:disabled) {
+            background-color: vars.$color-primary-dark;
+            border-color: vars.$color-primary-dark;
+          }
+
+          &::before {
+            content: '\f0c7'; // Icono de guardar
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    .custom-dialog-container {
+      width: 95vw;
+      max-height: 95vh;
+    }
+
+    .dialog-header {
+      padding: vars.$spacing-md vars.$spacing-lg;
+
+      h2 {
+        font-size: vars.$font-size-md;
+      }
+    }
+
+    .dialog-content {
+      padding: vars.$spacing-lg;
+    }
+
+    .user-form {
+      .form-row {
+        flex-direction: column;
+        gap: vars.$spacing-sm;
+
+        app-custom-form-field,
+        app-custom-select {
+          min-width: unset;
+        }
+      }
+
+      .roles-container {
+        grid-template-columns: 1fr;
+        gap: vars.$spacing-xs;
+      }
+    }
+
+    .dialog-footer {
+      padding: vars.$spacing-md vars.$spacing-lg;
+      flex-direction: column;
+
+      app-custom-button {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .custom-dialog-container {
+      width: 98vw;
+      max-height: 98vh;
+    }
+
+    .dialog-header {
+      padding: vars.$spacing-sm vars.$spacing-md;
+    }
+
+    .dialog-content {
+      padding: vars.$spacing-md;
+    }
+
+    .dialog-footer {
+      padding: vars.$spacing-sm vars.$spacing-md;
+    }
+  }
+
+  // Estilos para tema oscuro
+  @media (prefers-color-scheme: dark) {
+    .custom-dialog-container {
+      background-color: vars.$color-surface-dark;
+      border-color: vars.$color-border-dark;
+    }
+
+    .dialog-header {
+      background-color: rgba(vars.$color-primary-dark, 0.1);
+      border-bottom-color: vars.$color-border-dark;
+
+      h2 {
+        color: vars.$color-text-primary-dark;
+
+        &::before {
+          color: vars.$color-primary-dark;
+        }
+      }
+
+      .close-button {
+        color: vars.$color-text-secondary-dark;
+
+        &:hover {
+          background-color: rgba(vars.$color-error-dark, 0.2);
+          color: vars.$color-error-dark;
+        }
+      }
+    }
+
+    .dialog-content {
+      background-color: vars.$color-surface-dark;
+    }
+
+    .user-form {
+      .form-section {
+        h3 {
+          color: vars.$color-text-primary-dark;
+          border-bottom-color: vars.$color-primary-dark;
+
+          &::before {
+            color: vars.$color-primary-dark;
+          }
+        }
+      }
+
+      .roles-container {
+        .role-checkbox {
+          background-color: rgba(vars.$color-primary-dark, 0.1);
+          border-color: rgba(vars.$color-primary-dark, 0.3);
+
+          &:hover {
+            background-color: rgba(vars.$color-primary-dark, 0.15);
+          }
+
+          label {
+            color: vars.$color-text-primary-dark;
+          }
+        }
+      }
+    }
+
+    app-custom-form-field {
+      ::ng-deep {
+        .form-field-container {
+          label {
+            color: vars.$color-text-primary-dark;
+          }
+
+          input, textarea {
+            border-color: vars.$color-border-dark;
+            background-color: vars.$color-surface-dark;
+            color: vars.$color-text-primary-dark;
+
+            &:focus {
+              border-color: vars.$color-primary-dark;
+              box-shadow: 0 0 0 2px rgba(vars.$color-primary-dark, 0.3);
+            }
+
+            &:hover:not(:focus) {
+              border-color: vars.$color-border-light;
+            }
+
+            &.error {
+              border-color: vars.$color-error-dark;
+              box-shadow: 0 0 0 2px rgba(vars.$color-error-dark, 0.3);
+            }
+          }
+
+          .error-message {
+            color: vars.$color-error-dark;
+          }
+        }
+      }
+    }
+
+    app-custom-select {
+      ::ng-deep {
+        .custom-select-container {
+          border-color: vars.$color-border-dark;
+          background-color: vars.$color-surface-dark;
+
+          &:hover:not(.disabled) {
+            border-color: vars.$color-primary-dark;
+          }
+
+          &.focused:not(.disabled) {
+            border-color: vars.$color-primary-dark;
+            box-shadow: 0 0 0 2px rgba(vars.$color-primary-dark, 0.3);
+          }
+
+          .select-value {
+            color: vars.$color-text-primary-dark;
+          }
+
+          .select-arrow {
+            color: vars.$color-text-secondary-dark;
+          }
+        }
+
+        .select-dropdown {
+          background-color: vars.$color-surface-dark;
+          border-color: vars.$color-border-dark;
+
+          .select-option {
+            color: vars.$color-text-primary-dark;
+
+            &:hover {
+              background-color: rgba(vars.$color-primary-dark, 0.2);
+            }
+
+            &.selected {
+              background-color: vars.$color-primary-dark;
+              color: vars.$color-white;
+            }
+          }
+        }
+      }
+    }
+
+    .dialog-footer {
+      background-color: rgba(vars.$color-surface-light, 0.3);
+      border-top-color: vars.$color-border-dark;
+
+      app-custom-button {
+        ::ng-deep .custom-button {
+          &.stroked {
+            color: vars.$color-text-primary-dark;
+            border-color: vars.$color-border-dark;
+
+            &:hover:not(:disabled) {
+              background-color: rgba(vars.$color-text-secondary-dark, 0.1);
+              border-color: vars.$color-border-light;
+            }
+          }
+
+          &.flat.primary {
+            background-color: vars.$color-primary-dark;
+            border-color: vars.$color-primary-dark;
+
+            &:hover:not(:disabled) {
+              background-color: lighten(vars.$color-primary-dark, 10%);
+              border-color: lighten(vars.$color-primary-dark, 10%);
+            }
+          }
+        }
+      }
+    }
+  }
+}

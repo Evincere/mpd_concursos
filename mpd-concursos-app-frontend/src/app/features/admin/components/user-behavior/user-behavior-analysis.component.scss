@@ -1,0 +1,140 @@
+@use 'src/styles/variables' as *;
+
+.user-behavior-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+// Indicador de carga
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  
+  span {
+    margin-top: 1rem;
+    color: $color-primary;
+    font-weight: 500;
+  }
+}
+
+// Tarjeta de filtros
+.filter-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-bottom: 1.5rem;
+  
+  mat-card-content {
+    padding: 1.5rem;
+  }
+}
+
+// Formulario de filtros
+.filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .date-range {
+    display: flex;
+    gap: 1rem;
+    flex: 2;
+    
+    mat-form-field {
+      flex: 1;
+    }
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      flex: 1;
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+// Tarjeta de contenido
+.content-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-bottom: 2rem;
+  
+  mat-card-content {
+    padding: 0;
+  }
+}
+
+// Contenido de pestañas
+.tab-content {
+  padding: 1.5rem;
+}
+
+// Estilos para el mat-tab-group
+::ng-deep .mat-mdc-tab-header {
+  padding: 0 1rem;
+}
+
+::ng-deep .mat-mdc-tab-labels {
+  background-color: $color-surface;
+}
+
+::ng-deep .mat-mdc-tab-label-active {
+  opacity: 1;
+}
+
+::ng-deep .mat-mdc-tab-label-content {
+  font-weight: 500;
+}
+
+// Estilos para los botones
+::ng-deep .mat-mdc-raised-button.mat-primary {
+  background-color: $color-primary;
+}
+
+::ng-deep .mat-mdc-stroked-button {
+  border-color: $color-border;
+  
+  &:hover {
+    background-color: rgba($color-primary, 0.1);
+  }
+}

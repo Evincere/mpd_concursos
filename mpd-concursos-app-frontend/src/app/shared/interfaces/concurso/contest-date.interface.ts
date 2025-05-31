@@ -1,8 +1,17 @@
 export interface ContestDate {
-    label: string;
-    startDate: Date;
-    endDate: Date;
-    type: ContestDateType;
+    id?: string;
+    contestId?: number | string;
+    label?: string;
+    startDate?: Date;
+    endDate?: Date;
+    type?: ContestDateType | string;
+    title?: string;
+    description?: string;
+    date?: Date | string;
+    important?: boolean;
+    order?: number;
+    reminderDays?: number[];
+    customReminderDays?: number[];
 }
 
 export type ContestDateType =

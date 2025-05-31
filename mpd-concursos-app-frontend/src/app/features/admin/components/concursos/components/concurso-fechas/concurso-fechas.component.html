@@ -1,0 +1,127 @@
+<div class="tab-content">
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-custom-spinner [size]="'large'"></app-custom-spinner>
+  </div>
+
+  <div class="fechas-container">
+    <!-- Formulario para agregar/editar fechas -->
+    <div class="form-section">
+      <h3>{{ isEditing ? 'Editar Fecha Importante' : 'Agregar Nueva Fecha' }}</h3>
+
+      <form [formGroup]="dateForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <app-custom-form-field
+            label="Título"
+            formControlName="title"
+            placeholder="Ingrese un título para la fecha"
+            [errorMessage]="getErrorMessage('title')">
+          </app-custom-form-field>
+
+          <app-custom-select
+            label="Tipo"
+            formControlName="type"
+            [options]="dateTypeOptions"
+            [errorMessage]="getErrorMessage('type')">
+          </app-custom-select>
+        </div>
+
+        <div class="form-row">
+          <app-custom-datepicker
+            label="Fecha"
+            formControlName="date"
+            [required]="true"
+            [hint]="getErrorMessage('date')">
+          </app-custom-datepicker>
+
+          <div class="important-checkbox">
+            <app-custom-checkbox
+              formControlName="important"
+              label="Marcar como importante">
+            </app-custom-checkbox>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <app-custom-textarea
+            label="Descripción"
+            formControlName="description"
+            [rows]="3"
+            placeholder="Ingrese una descripción (opcional)"
+            class="full-width">
+          </app-custom-textarea>
+        </div>
+
+        <div class="form-actions">
+          <app-custom-button
+            *ngIf="isEditing"
+            [label]="'Cancelar'"
+            [variant]="'text'"
+            (buttonClick)="cancelEdit()">
+          </app-custom-button>
+
+          <app-custom-button
+            [label]="isEditing ? 'Actualizar' : 'Agregar'"
+            [color]="'primary'"
+            [disabled]="isLoading"
+            [type]="'submit'">
+          </app-custom-button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Lista de fechas importantes -->
+    <div class="dates-list-section">
+      <h3>Fechas Importantes</h3>
+
+      <div class="dates-list" *ngIf="fechas && fechas.length > 0">
+        <div *ngFor="let fecha of fechas" class="date-item" [class.important]="fecha.important">
+          <div class="date-header">
+            <div class="date-title">
+              <h4>{{ fecha.title }}</h4>
+              <span *ngIf="fecha.important" class="important-badge">Importante</span>
+            </div>
+
+            <div class="date-actions">
+              <app-custom-button
+                [icon]="'edit'"
+                [variant]="'icon'"
+                [color]="'primary'"
+                [tooltip]="'Editar'"
+                (buttonClick)="editDate(fecha)">
+              </app-custom-button>
+
+              <app-custom-button
+                [icon]="'delete'"
+                [variant]="'icon'"
+                [color]="'warn'"
+                [tooltip]="'Eliminar'"
+                (buttonClick)="deleteDate(fecha)">
+              </app-custom-button>
+            </div>
+          </div>
+
+          <div class="date-content">
+            <div class="date-info">
+              <div class="info-item">
+                <i class="icon">📅</i>
+                <span>{{ formatDate(fecha?.date) || 'Fecha no disponible' }}</span>
+              </div>
+
+              <div class="info-item">
+                <i class="icon">🏷️</i>
+                <span>{{ getDateTypeLabel(fecha?.type) || 'Tipo no disponible' }}</span>
+              </div>
+            </div>
+
+            <p *ngIf="fecha?.description" class="date-description">{{ fecha?.description }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!fechas || fechas.length === 0" class="empty-dates">
+        <i class="icon">📅</i>
+        <p>No hay fechas importantes definidas</p>
+      </div>
+    </div>
+  </div>
+</div>

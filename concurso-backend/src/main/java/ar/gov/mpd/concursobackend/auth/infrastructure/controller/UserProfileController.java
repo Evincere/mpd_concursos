@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/users/profile")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200")
 @Slf4j
@@ -33,7 +33,7 @@ public class UserProfileController {
         private final UserProfileMapper mapper;
         private final ExperienceService experienceService;
 
-        @GetMapping("/profile")
+        @GetMapping
         @PreAuthorize("hasRole('ROLE_USER')")
         public ResponseEntity<UserProfileResponse> getProfile() {
                 String username = securityUtils.getCurrentUsername();
@@ -96,7 +96,7 @@ public class UserProfileController {
                 return result;
         }
 
-        @PutMapping("/profile")
+        @PutMapping
         @PreAuthorize("hasRole('ROLE_USER')")
         public ResponseEntity<UserProfileResponse> updateProfile(@Valid @RequestBody UserProfileUpdateRequest request) {
                 String username = securityUtils.getCurrentUsername();

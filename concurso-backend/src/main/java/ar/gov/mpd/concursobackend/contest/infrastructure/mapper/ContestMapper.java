@@ -7,11 +7,15 @@ import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.Conte
 import ar.gov.mpd.concursobackend.contest.application.dto.ContestDTO;
 import ar.gov.mpd.concursobackend.contest.application.dto.ContestDateDTO;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestCreateRequest;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestUpdateRequest;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 
 @Component
 public class ContestMapper {
@@ -47,14 +51,14 @@ public class ContestMapper {
 
     public ContestEntity toEntity(Contest domain) {
         if (domain == null) return null;
-        
+
         List<ContestDateEntity> dates = new ArrayList<>();
         if (domain.getDates() != null) {
             dates = domain.getDates().stream()
                 .map(this::toEntityDate)
                 .collect(Collectors.toList());
         }
-            
+
         return ContestEntity.builder()
             .id(domain.getId())
             .title(domain.getTitle())
@@ -74,11 +78,11 @@ public class ContestMapper {
 
     public ContestDTO toDTO(Contest domain) {
         if (domain == null) return null;
-        
+
         List<ContestDateDTO> dates = domain.getDates().stream()
             .map(this::toDateDTO)
             .collect(Collectors.toList());
-            
+
         return ContestDTO.builder()
             .id(domain.getId())
             .title(domain.getTitle())
@@ -134,4 +138,87 @@ public class ContestMapper {
             .endDate(date.getEndDate())
             .build();
     }
-} 
+
+    // Métodos para los nuevos DTOs de administración
+
+    /**
+     * Convierte un Contest a ContestResponse
+     */
+    public ContestResponse toResponse(Contest contest) {
+        if (contest == null) {
+            return null;
+        }
+
+        return ContestResponse.builder()
+                .id(contest.getId())
+                .title(contest.getTitle())
+                .description(contest.getFunctions()) // Usar functions como description
+                .position(contest.getPosition())
+                .category(contest.getCategory())
+                .contestClass(contest.getClass_())
+                .functions(contest.getFunctions())
+                .department(contest.getDependency())
+                .dependencia(contest.getDependency())
+                .status(contest.getStatus())
+                .startDate(contest.getStartDate())
+                .endDate(contest.getEndDate())
+                .termsUrl(contest.getBasesUrl())
+                .profileUrl(contest.getDescriptionUrl())
+                .createdAt(LocalDateTime.now()) // TODO: Agregar campos de auditoría al dominio
+                .updatedAt(LocalDateTime.now())
+                .createdBy("system") // TODO: Obtener del contexto de seguridad
+                .updatedBy("system")
+                .totalInscriptions(0) // TODO: Calcular desde inscripciones
+                .isActive("ACTIVE".equals(contest.getStatus()))
+                .allowsInscriptions("ACTIVE".equals(contest.getStatus()))
+                .build();
+    }
+
+    /**
+     * Convierte un ContestCreateRequest a Contest
+     */
+    public Contest fromCreateRequest(ContestCreateRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        return Contest.builder()
+                .title(request.getTitle())
+                .position(request.getPosition())
+                .category(request.getCategory())
+                .class_(request.getContestClass())
+                .functions(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
+                .dependency(request.getDepartment())
+                .status(request.getStatus())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .basesUrl(request.getTermsUrl())
+                .descriptionUrl(request.getProfileUrl())
+                .dates(new ArrayList<>())
+                .build();
+    }
+
+    /**
+     * Convierte un ContestUpdateRequest a Contest
+     */
+    public Contest fromUpdateRequest(ContestUpdateRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        return Contest.builder()
+                .title(request.getTitle())
+                .position(request.getPosition())
+                .category(request.getCategory())
+                .class_(request.getContestClass())
+                .functions(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
+                .dependency(request.getDepartment())
+                .status(request.getStatus())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .basesUrl(request.getTermsUrl())
+                .descriptionUrl(request.getProfileUrl())
+                .dates(new ArrayList<>())
+                .build();
+    }
+}

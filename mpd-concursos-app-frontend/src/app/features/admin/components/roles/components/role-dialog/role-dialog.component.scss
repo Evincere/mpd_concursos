@@ -1,0 +1,63 @@
+@use 'src/styles/variables' as *;
+
+:host {
+  display: block;
+}
+
+h2 {
+  margin: 0;
+  font-size: $font-size-lg;
+  font-weight: 500;
+  color: $color-text-primary;
+}
+
+mat-dialog-content {
+  min-height: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.tab-content {
+  padding: 1.5rem 0;
+}
+
+.role-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.system-role-notice {
+  display: flex;
+  align-items: center;
+  background-color: rgba($color-info, 0.1);
+  border-left: 4px solid $color-info;
+  padding: 0.75rem 1rem;
+  border-radius: $border-radius;
+  margin-top: 1.5rem;
+  
+  mat-icon {
+    color: $color-info;
+    margin-right: 0.75rem;
+  }
+  
+  span {
+    color: $color-text-primary;
+    font-size: $font-size-sm;
+  }
+}
+
+// Estilos para las pestañas
+::ng-deep .mat-mdc-tab-header {
+  margin-bottom: 1rem;
+}
+
+::ng-deep .mat-mdc-tab-body-content {
+  padding: 0;
+}
+
+// Estilos para los botones de acción
+mat-dialog-actions {
+  padding: 1rem 0 0;
+  margin-bottom: 0;
+}

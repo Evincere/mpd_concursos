@@ -1,0 +1,362 @@
+.linkedin-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.linkedin-content {
+  position: relative;
+  padding: 2rem;
+}
+
+.linkedin-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-light, #e0e0e0);
+
+  .linkedin-logo {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #0077b5 0%, #005885 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 119, 181, 0.3);
+
+    i {
+      font-size: 2rem;
+      color: white;
+    }
+  }
+
+  .header-text {
+    flex: 1;
+
+    h2 {
+      margin: 0 0 0.5rem 0;
+      color: var(--text-primary, #333);
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: var(--text-secondary, #666);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+
+  &.connected {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%);
+    border: 2px solid var(--success-color, #4caf50);
+
+    .status-indicator i {
+      color: var(--success-color, #4caf50);
+    }
+  }
+
+  &.disconnected {
+    background: linear-gradient(135deg, #fff3e0 0%, #fef7f0 100%);
+    border: 2px solid var(--warning-color, #ff9800);
+
+    .status-indicator i {
+      color: var(--warning-color, #ff9800);
+    }
+  }
+
+  .status-indicator {
+    flex-shrink: 0;
+
+    i {
+      font-size: 2rem;
+    }
+  }
+
+  .status-text {
+    flex: 1;
+
+    h3 {
+      margin: 0 0 0.25rem 0;
+      color: var(--text-primary, #333);
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: var(--text-secondary, #666);
+      font-size: 0.95rem;
+    }
+  }
+}
+
+.connected-section {
+  .profile-info {
+    margin-bottom: 2rem;
+
+    h4 {
+      margin: 0 0 1rem 0;
+      color: var(--text-primary, #333);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .sync-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .sync-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: var(--background-light, #f8f9fa);
+      border-radius: 8px;
+      border-left: 4px solid var(--success-color, #4caf50);
+
+      i:first-child {
+        color: var(--primary-color, #2196f3);
+        font-size: 1.1rem;
+        width: 20px;
+      }
+
+      span:nth-child(2) {
+        flex: 1;
+        font-weight: 500;
+        color: var(--text-primary, #333);
+      }
+
+      .sync-status {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+
+        &.success {
+          color: var(--success-color, #4caf50);
+        }
+      }
+    }
+  }
+
+  .sync-actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    @media (max-width: 480px) {
+      flex-direction: column;
+      
+      app-custom-button {
+        width: 100%;
+      }
+    }
+  }
+
+  .last-sync {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary, #666);
+    font-size: 0.9rem;
+    padding: 0.75rem;
+    background: var(--background-light, #f8f9fa);
+    border-radius: 8px;
+
+    i {
+      color: var(--primary-color, #2196f3);
+    }
+  }
+}
+
+.disconnected-section {
+  .benefits-list {
+    margin-bottom: 2rem;
+
+    h4 {
+      margin: 0 0 1rem 0;
+      color: var(--text-primary, #333);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        color: var(--text-secondary, #666);
+
+        i {
+          color: var(--success-color, #4caf50);
+          font-size: 0.9rem;
+          width: 16px;
+        }
+      }
+    }
+  }
+
+  .connect-action {
+    text-align: center;
+    margin-bottom: 2rem;
+
+    app-custom-button {
+      min-width: 200px;
+    }
+  }
+
+  .privacy-notice {
+    background: linear-gradient(135deg, #f0f4ff 0%, #f8faff 100%);
+    border: 1px solid var(--border-light, #e0e0e0);
+    border-radius: 12px;
+    padding: 1.5rem;
+
+    .notice-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+
+      i {
+        color: var(--primary-color, #2196f3);
+        font-size: 1.1rem;
+      }
+
+      h5 {
+        margin: 0;
+        color: var(--text-primary, #333);
+        font-size: 1rem;
+        font-weight: 600;
+      }
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      color: var(--text-secondary, #666);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .privacy-points {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        padding: 0.25rem 0;
+        color: var(--text-secondary, #666);
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  z-index: 10;
+
+  .loading-content {
+    text-align: center;
+    color: var(--text-secondary, #666);
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border-light, #e0e0e0);
+      border-top: 3px solid var(--primary-color, #2196f3);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem auto;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+  }
+}
+
+// Animations
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .linkedin-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .connection-status {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .sync-actions {
+    flex-direction: column;
+  }
+}
+
+// Accessibility
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+// High contrast mode
+@media (prefers-contrast: high) {
+  .connection-status {
+    border-width: 3px;
+  }
+
+  .privacy-notice {
+    border-width: 2px;
+  }
+}
+
+// Focus management
+.linkedin-content {
+  &:focus-within {
+    outline: 2px solid var(--primary-color, #2196f3);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}

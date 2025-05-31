@@ -17,4 +17,12 @@ public interface IDocumentRepository {
     void deleteById(DocumentId id);
 
     boolean existsById(DocumentId id);
+
+    /**
+     * Count documents by status
+     *
+     * @param status The status to count
+     * @return The number of documents with the given status
+     */
+    long countByStatus(String status);
 }

@@ -6,12 +6,23 @@ public class UserCuit {
     private final String value;
 
     public UserCuit(String cuit) {
+        // Si el CUIT es una cadena vacía, tratarlo como nulo
+        if (cuit != null && cuit.trim().isEmpty()) {
+            this.value = null;
+            return;
+        }
+
         validateCuit(cuit);
         this.value = cuit;
     }
 
     private void validateCuit(String cuit) {
-        if (cuit == null || cuit.length() != 11) {
+        // Si el CUIT es nulo, no hacer nada (permitir CUIT nulo)
+        if (cuit == null) {
+            return;
+        }
+
+        if (cuit.length() != 11) {
             throw new InvalidCuitException("El CUIT debe tener 11 dígitos.");
         }
 

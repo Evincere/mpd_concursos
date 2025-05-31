@@ -1,0 +1,107 @@
+<div class="user-roles-container">
+  <div class="header">
+    <h2>Asignación de Roles a Usuarios</h2>
+  </div>
+  
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filter-form">
+        <div class="filter-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Buscar</mat-label>
+            <input matInput formControlName="search" placeholder="Nombre, email, username...">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Rol</mat-label>
+            <mat-select formControlName="role">
+              <mat-option value="">Todos</mat-option>
+              <mat-option *ngFor="let role of roles" [value]="role.name">
+                {{role.name.replace('ROLE_', '')}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <div class="filter-actions">
+            <button mat-button color="primary" (click)="resetFilters()">
+              <mat-icon>clear</mat-icon>
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+  
+  <div class="table-container mat-elevation-z2">
+    <table mat-table [dataSource]="userRoles" matSort>
+      <!-- Username Column -->
+      <ng-container matColumnDef="username">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Username</th>
+        <td mat-cell *matCellDef="let user">{{user.username}}</td>
+      </ng-container>
+      
+      <!-- Full Name Column -->
+      <ng-container matColumnDef="fullName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+        <td mat-cell *matCellDef="let user">{{user.fullName}}</td>
+      </ng-container>
+      
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+        <td mat-cell *matCellDef="let user">{{user.email}}</td>
+      </ng-container>
+      
+      <!-- Roles Column -->
+      <ng-container matColumnDef="roles">
+        <th mat-header-cell *matHeaderCellDef>Roles</th>
+        <td mat-cell *matCellDef="let user">
+          <div class="roles-list">
+            <span *ngFor="let role of user.roles" 
+                  class="role-chip" 
+                  [ngClass]="getRoleColor(role)">
+              {{getRoleName(role)}}
+            </span>
+          </div>
+        </td>
+      </ng-container>
+      
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let user">
+          <button mat-icon-button color="primary" (click)="openEditUserRolesDialog(user)" matTooltip="Editar roles">
+            <mat-icon>edit</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+    
+    <!-- Loading Overlay -->
+    <div *ngIf="isLoading" class="loading-overlay">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+    
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && userRoles.length === 0" class="empty-state">
+      <mat-icon>search_off</mat-icon>
+      <p>No se encontraron usuarios con los filtros aplicados</p>
+      <button mat-stroked-button color="primary" (click)="resetFilters()">Limpiar Filtros</button>
+    </div>
+    
+    <!-- Paginator -->
+    <mat-paginator 
+      [length]="totalUsers"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [pageIndex]="pageIndex"
+      (page)="onPageChange($event)"
+      showFirstLastButtons>
+    </mat-paginator>
+  </div>
+</div>

@@ -1,0 +1,87 @@
+// Estilos para la sección de currículum
+@use 'variables' as vars;
+
+.curriculum-container {
+  display: flex;
+  gap: 2rem;
+  height: 100%;
+  overflow: hidden;
+}
+
+.form-row {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 0.5rem;
+
+  .form-field-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 250px; // Limitar el ancho máximo de los campos de fecha
+  }
+}
+
+.description-field {
+  ::ng-deep .mat-form-field-flex {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  ::ng-deep textarea.mat-input-element {
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    line-height: 1.4;
+  }
+}
+
+// Estilo para el botón de eliminar experiencia
+.item-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+}
+
+// Estilos específicos para la sección de educación
+.radio-group {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+
+  .mat-radio-button {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
+.action-button {
+  margin-bottom: 1rem;
+  padding: 0.7rem 1.2rem;
+  font-weight: 500;
+
+  i {
+    margin-right: 0.5rem;
+  }
+}
+
+// Agregamos estilo para el selector de tipos de educación
+::ng-deep .mat-select-panel {
+  background-color: #2a2a2a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  .mat-option {
+    color: rgba(255, 255, 255, 0.9);
+
+    &:hover:not(.mat-option-disabled) {
+      background-color: rgba(33, 150, 243, 0.1);
+    }
+
+    &.mat-selected:not(.mat-option-disabled) {
+      background-color: rgba(33, 150, 243, 0.2);
+      color: #2196f3;
+    }
+  }
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}

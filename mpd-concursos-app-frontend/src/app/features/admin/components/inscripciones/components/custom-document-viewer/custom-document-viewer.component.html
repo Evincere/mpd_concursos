@@ -1,0 +1,195 @@
+<div class="document-viewer-container" [class.is-dialog]="isDialog">
+  <!-- Cabecera -->
+  <div class="viewer-header">
+    <div class="header-title">
+      <h2>Visor de Documento</h2>
+      <span class="document-name">{{ document.fileName }}</span>
+    </div>
+
+    <app-custom-button
+      *ngIf="isDialog"
+      [variant]="'icon'"
+      [icon]="'close'"
+      [tooltip]="'Cerrar'"
+      (click)="onClose()">
+    </app-custom-button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="viewer-content" *ngIf="!isLoading; else loadingTemplate">
+    <div class="viewer-layout">
+      <!-- Panel de visualización -->
+      <div class="viewer-panel">
+        <div class="viewer-toolbar">
+          <div class="toolbar-section">
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'navigate_before'"
+              [tooltip]="'Página anterior'"
+              [disabled]="currentPage <= 1"
+              (click)="prevPage()">
+            </app-custom-button>
+
+            <span class="page-indicator">{{ currentPage }} / {{ totalPages || 1 }}</span>
+
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'navigate_next'"
+              [tooltip]="'Página siguiente'"
+              [disabled]="currentPage >= totalPages"
+              (click)="nextPage()">
+            </app-custom-button>
+          </div>
+
+          <div class="toolbar-section">
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'zoom_out'"
+              [tooltip]="'Reducir'"
+              [disabled]="zoom <= 0.5"
+              (click)="zoomOut()">
+            </app-custom-button>
+
+            <span class="zoom-indicator">{{ (zoom * 100).toFixed(0) }}%</span>
+
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'zoom_in'"
+              [tooltip]="'Ampliar'"
+              [disabled]="zoom >= 3"
+              (click)="zoomIn()">
+            </app-custom-button>
+          </div>
+
+          <div class="toolbar-section">
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'rotate_right'"
+              [tooltip]="'Rotar'"
+              (click)="rotate()">
+            </app-custom-button>
+
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'download'"
+              [tooltip]="'Descargar'"
+              (click)="downloadDocument()">
+            </app-custom-button>
+          </div>
+        </div>
+
+        <div class="viewer-frame">
+          <div class="pdf-container" #pdfViewer [style.transform]="'scale(' + zoom + ') rotate(' + rotation + 'deg)'">
+            <!-- Aquí se renderizaría el PDF con una biblioteca como pdf.js -->
+            <div class="pdf-placeholder">
+              <div class="placeholder-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <p>Vista previa no disponible</p>
+              <app-custom-button
+                [variant]="'text'"
+                [icon]="'open_in_new'"
+                [label]="'Abrir en nueva pestaña'"
+                (click)="downloadDocument()">
+              </app-custom-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel de información y acciones -->
+      <div class="info-panel">
+        <app-custom-card>
+          <h3>Información del Documento</h3>
+
+          <div class="info-section">
+            <div class="info-row">
+              <span class="info-label">Tipo:</span>
+              <span class="info-value">{{ document.documentType }}</span>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Tamaño:</span>
+              <span class="info-value">{{ (document.fileSize / 1024).toFixed(2) }} KB</span>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Subido:</span>
+              <span class="info-value">{{ formatDateTime(document.uploadDate) }}</span>
+            </div>
+
+            <div class="info-row">
+              <span class="info-label">Estado:</span>
+              <span class="info-value status-badge" [ngClass]="getStatusClass(document.status)">
+                {{ getStatusLabel(document.status) }}
+              </span>
+            </div>
+
+            <div class="info-row" *ngIf="document.reviewDate">
+              <span class="info-label">Revisado:</span>
+              <span class="info-value">{{ formatDateTime(document.reviewDate) }}</span>
+            </div>
+
+            <div class="info-row" *ngIf="document.reviewedBy">
+              <span class="info-label">Revisado por:</span>
+              <span class="info-value">{{ document.reviewedBy }}</span>
+            </div>
+          </div>
+
+          <div class="observations-section" *ngIf="document.observations">
+            <h4>Observaciones</h4>
+            <p class="observations-text">{{ document.observations }}</p>
+          </div>
+
+          <div class="actions-section">
+            <h4>Acciones</h4>
+
+            <form [formGroup]="commentForm" (ngSubmit)="updateDocumentStatus()" class="status-form">
+              <div class="form-row">
+                <div class="form-field">
+                  <app-custom-select
+                    label="Estado"
+                    [options]="statusOptions"
+                    [formControl]="$any(commentForm.get('status'))"
+                    [required]="true">
+                  </app-custom-select>
+                  <app-validation-error [control]="commentForm.get('status')"></app-validation-error>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field">
+                  <app-custom-textarea
+                    label="Observaciones"
+                    placeholder="Ingrese observaciones sobre el documento"
+                    [formControl]="$any(commentForm.get('observations'))"
+                    [rows]="4">
+                  </app-custom-textarea>
+                  <app-validation-error [control]="commentForm.get('observations')"></app-validation-error>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <app-custom-button
+                  [type]="'submit'"
+                  [label]="'Guardar cambios'"
+                  [icon]="'save'"
+                  [disabled]="commentForm.invalid || isSaving"
+                  [loading]="isSaving">
+                </app-custom-button>
+              </div>
+            </form>
+          </div>
+        </app-custom-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plantilla de carga -->
+  <ng-template #loadingTemplate>
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Cargando documento...</p>
+    </div>
+  </ng-template>
+</div>

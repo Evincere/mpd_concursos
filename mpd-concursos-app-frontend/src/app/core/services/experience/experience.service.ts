@@ -1,9 +1,10 @@
-import { HttpClient, HttpEventType } from '@angular/common/http';
+import { HttpClient, HttpEventType, HttpEvent } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { DocumentosService } from '../documentos/documentos.service';
+
 
 export interface ExperienceRequest {
   company: string;
@@ -34,7 +35,9 @@ export class ExperienceService {
   constructor(
     private http: HttpClient,
     private documentosService: DocumentosService
-  ) { }
+  ) {}
+
+
 
   /**
    * Obtiene todas las experiencias de un usuario
@@ -105,7 +108,15 @@ export class ExperienceService {
    * Sube un documento asociado a una experiencia
    * Esta implementación sigue el mismo patrón que el servicio de educación que funciona correctamente
    */
-  uploadDocument(experienceId: string, file: File): Observable<any> {
+  uploadDocument(experienceId: string, file: File): Observable<{
+    type: string;
+    progress?: number;
+    experience?: ExperienceResponse;
+    event?: HttpEvent<ExperienceResponse>;
+    error?: Error | unknown;
+    message?: string;
+    details?: string;
+  }> {
     // Verificar que tenemos un archivo válido
     if (!file) {
       console.error('Error: No se proporcionó ningún archivo para subir');
@@ -131,24 +142,27 @@ export class ExperienceService {
       reportProgress: true,
       observe: 'events'
     }).pipe(
-      map(event => {
+      map((event: HttpEvent<unknown>) => {
         switch (event.type) {
-          case HttpEventType.UploadProgress:
-            if (event.total) {
-              const progress = Math.round(100 * event.loaded / event.total);
+          case HttpEventType.UploadProgress: {
+            const total = event.total || 0;
+            if (total > 0) {
+              const progress = Math.round(100 * event.loaded / total);
               console.log(`Progreso de carga: ${progress}%`);
               return { type: 'progress', progress };
             }
             return { type: 'progress', progress: 0 };
+          }
 
-          case HttpEventType.Response:
+          case HttpEventType.Response: {
             console.log('Documento subido correctamente:', event.body);
             // Notificar al servicio de documentos que se ha subido un nuevo documento
             this.documentosService.notificarDocumentoActualizado();
             return {
               type: 'success',
-              experience: event.body
+              experience: (event.body as ExperienceResponse | null) || undefined
             };
+          }
 
           default:
             return { type: 'other', event };

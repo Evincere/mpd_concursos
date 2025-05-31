@@ -1,0 +1,345 @@
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatBadgeModule } from '@angular/material/badge';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TipoDocumento } from  '../../../../core/models/documento.model';
+import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
+import { AdminDocumentosService, DocumentoAdminView, EstadisticasDocumentos, DocumentoFiltros } from '../../../../core/services/admin/admin-documentos.service';
+import { DocumentoViewerDialogComponent } from './documento-viewer-dialog/documento-viewer-dialog.component';
+
+// La interfaz DocumentoAdminView ahora se importa desde el servicio
+
+@Component({
+  selector: 'app-documentos-admin',
+  templateUrl: './documentos-admin.component.html',
+  styleUrls: ['./documentos-admin.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatChipsModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatTabsModule,
+    MatTooltipModule,
+    MatBadgeModule,
+    FormsModule,
+    ReactiveFormsModule
+  ]
+})
+export class DocumentosAdminComponent implements OnInit, AfterViewInit {
+  displayedColumns: string[] = ['id', 'nombreArchivo', 'tipoDocumento', 'usuario', 'fechaCarga', 'estado', 'acciones'];
+  dataSource: MatTableDataSource<DocumentoAdminView>;
+  tiposDocumento: TipoDocumento[] = [];
+  estadisticas: EstadisticasDocumentos = {
+    totalDocumentos: 0,
+    pendientes: 0,
+    aprobados: 0,
+    rechazados: 0,
+    porTipo: {}
+  };
+  filtroEstado = '';
+  filtroTipoDocumento = '';
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  // Datos de ejemplo para desarrollo
+  documentos: DocumentoAdminView[] = [
+    {
+      id: '1',
+      tipoDocumentoId: '1',
+      tipoDocumento: { id: '1', code: 'DNI', nombre: 'DNI', requerido: true },
+      nombreArchivo: 'dni_frente.pdf',
+      fechaCarga: new Date(2023, 5, 15),
+      estado: 'pendiente',
+      nombreUsuario: 'Juan Pérez',
+      emailUsuario: 'juan.perez@example.com'
+    },
+    {
+      id: '2',
+      tipoDocumentoId: '2',
+      tipoDocumento: { id: '2', code: 'TITULO', nombre: 'Título Universitario', requerido: true },
+      nombreArchivo: 'titulo_abogado.pdf',
+      fechaCarga: new Date(2023, 5, 14),
+      estado: 'aprobado',
+      validadoPor: 'admin',
+      fechaValidacion: new Date(2023, 5, 16),
+      nombreUsuario: 'María López',
+      emailUsuario: 'maria.lopez@example.com'
+    },
+    {
+      id: '3',
+      tipoDocumentoId: '3',
+      tipoDocumento: { id: '3', code: 'CERT_PENAL', nombre: 'Certificado de Antecedentes Penales', requerido: true },
+      nombreArchivo: 'antecedentes_penales.pdf',
+      fechaCarga: new Date(2023, 5, 13),
+      estado: 'rechazado',
+      validadoPor: 'admin',
+      fechaValidacion: new Date(2023, 5, 17),
+      motivoRechazo: 'Documento ilegible',
+      nombreUsuario: 'Carlos Gómez',
+      emailUsuario: 'carlos.gomez@example.com'
+    }
+  ];
+
+  constructor(
+    private documentosService: DocumentosService,
+    private adminDocumentosService: AdminDocumentosService,
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
+  ) {
+    // Inicializar dataSource con datos de ejemplo
+    this.dataSource = new MatTableDataSource(this.documentos);
+  }
+
+  ngOnInit(): void {
+    // Cargar tipos de documento
+    this.cargarTiposDocumento();
+
+    // Cargar estadísticas
+    this.cargarEstadisticas();
+
+    // Cargar documentos
+    this.cargarDocumentos();
+  }
+
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  cargarTiposDocumento(): void {
+    this.documentosService.getTiposDocumento().subscribe({
+      next: (tipos) => {
+        this.tiposDocumento = tipos;
+      },
+      error: (error) => {
+        console.error('Error al cargar tipos de documento:', error);
+        this.snackBar.open('Error al cargar tipos de documento', 'Cerrar', { duration: 3000 });
+      }
+    });
+  }
+
+  cargarEstadisticas(): void {
+    // En una implementación real, obtendríamos las estadísticas del backend
+    // Por ahora, usamos datos de ejemplo
+    this.adminDocumentosService.getEstadisticas().subscribe({
+      next: (estadisticas) => {
+        this.estadisticas = estadisticas;
+      },
+      error: (error) => {
+        console.error('Error al cargar estadísticas:', error);
+        this.snackBar.open('Error al cargar estadísticas', 'Cerrar', { duration: 3000 });
+
+        // Calcular estadísticas localmente con los datos de ejemplo
+        this.calcularEstadisticasLocales();
+      }
+    });
+  }
+
+  calcularEstadisticasLocales(): void {
+    this.estadisticas.totalDocumentos = this.documentos.length;
+    this.estadisticas.pendientes = this.documentos.filter(d => d.estado === 'pendiente').length;
+    this.estadisticas.aprobados = this.documentos.filter(d => d.estado === 'aprobado').length;
+    this.estadisticas.rechazados = this.documentos.filter(d => d.estado === 'rechazado').length;
+
+    // Calcular estadísticas por tipo de documento
+    const porTipo: Record<string, number> = {};
+    this.documentos.forEach(doc => {
+      const tipoNombre = doc.tipoDocumento?.nombre || 'Desconocido';
+      porTipo[tipoNombre] = (porTipo[tipoNombre] || 0) + 1;
+    });
+    this.estadisticas.porTipo = porTipo;
+  }
+
+  cargarDocumentos(filtros?: DocumentoFiltros): void {
+    // En una implementación real, obtendríamos los documentos del backend
+    // Por ahora, usamos datos de ejemplo
+    this.adminDocumentosService.getDocumentos(filtros).subscribe({
+      next: (response) => {
+        this.dataSource.data = response.documentos;
+      },
+      error: (error) => {
+        console.error('Error al cargar documentos:', error);
+        this.snackBar.open('Error al cargar documentos', 'Cerrar', { duration: 3000 });
+
+        // Usar datos de ejemplo
+        this.dataSource.data = this.documentos;
+      }
+    });
+  }
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
+
+  filtrarPorEstado(estado: string): void {
+    this.filtroEstado = estado;
+    this.aplicarFiltros();
+  }
+
+  filtrarPorTipoDocumento(tipoId: string): void {
+    this.filtroTipoDocumento = tipoId;
+    this.aplicarFiltros();
+  }
+
+  aplicarFiltros(): void {
+    this.dataSource.data = this.documentos.filter(doc => {
+      let cumpleFiltroEstado = true;
+      let cumpleFiltroTipo = true;
+
+      if (this.filtroEstado) {
+        cumpleFiltroEstado = doc.estado === this.filtroEstado;
+      }
+
+      if (this.filtroTipoDocumento) {
+        cumpleFiltroTipo = doc.tipoDocumentoId === this.filtroTipoDocumento;
+      }
+
+      return cumpleFiltroEstado && cumpleFiltroTipo;
+    });
+  }
+
+  verDocumento(documento: DocumentoAdminView): void {
+    this.dialog.open(DocumentoViewerDialogComponent, {
+      width: '90vw',
+      height: '90vh',
+      maxWidth: '1400px',
+      maxHeight: '900px',
+      data: { documento }
+    });
+  }
+
+  aprobarDocumento(documento: DocumentoAdminView): void {
+    if (!documento.id) {
+      this.snackBar.open('Error: ID de documento no válido', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
+    // En una implementación real, llamaríamos al servicio para aprobar el documento
+    this.adminDocumentosService.aprobarDocumento(documento.id).subscribe({
+      next: (_documentoActualizado) => {
+        // Actualizar el documento en la lista
+        const index = this.dataSource.data.findIndex(d => d.id === documento.id);
+        if (index !== -1) {
+          const documentosActualizados = [...this.dataSource.data];
+          documentosActualizados[index] = {
+            ...documentosActualizados[index],
+            estado: 'aprobado',
+            fechaValidacion: new Date(),
+            validadoPor: 'admin' // En una implementación real, usar el ID del admin actual
+          };
+          this.dataSource.data = documentosActualizados;
+        }
+
+        // Actualizar estadísticas
+        this.cargarEstadisticas();
+
+        this.snackBar.open('Documento aprobado correctamente', 'Cerrar', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('Error al aprobar documento:', error);
+        this.snackBar.open('Error al aprobar documento', 'Cerrar', { duration: 3000 });
+
+        // Para desarrollo, simulamos la aprobación
+        const index = this.documentos.findIndex(d => d.id === documento.id);
+        if (index !== -1) {
+          this.documentos[index].estado = 'aprobado';
+          this.documentos[index].fechaValidacion = new Date();
+          this.documentos[index].validadoPor = 'admin';
+          this.dataSource.data = [...this.documentos];
+          this.calcularEstadisticasLocales();
+          this.snackBar.open('Documento aprobado correctamente (simulado)', 'Cerrar', { duration: 3000 });
+        }
+      }
+    });
+  }
+
+  rechazarDocumento(documento: DocumentoAdminView): void {
+    if (!documento.id) {
+      this.snackBar.open('Error: ID de documento no válido', 'Cerrar', { duration: 3000 });
+      return;
+    }
+
+    // Abrir diálogo para ingresar motivo de rechazo
+    const motivo = prompt('Ingrese el motivo del rechazo:');
+    if (motivo) {
+      // En una implementación real, llamaríamos al servicio para rechazar el documento
+      this.adminDocumentosService.rechazarDocumento(documento.id, motivo).subscribe({
+        next: (_documentoActualizado) => {
+          // Actualizar el documento en la lista
+          const index = this.dataSource.data.findIndex(d => d.id === documento.id);
+          if (index !== -1) {
+            const documentosActualizados = [...this.dataSource.data];
+            documentosActualizados[index] = {
+              ...documentosActualizados[index],
+              estado: 'rechazado',
+              fechaValidacion: new Date(),
+              validadoPor: 'admin', // En una implementación real, usar el ID del admin actual
+              motivoRechazo: motivo
+            };
+            this.dataSource.data = documentosActualizados;
+          }
+
+          // Actualizar estadísticas
+          this.cargarEstadisticas();
+
+          this.snackBar.open('Documento rechazado correctamente', 'Cerrar', { duration: 3000 });
+        },
+        error: (error) => {
+          console.error('Error al rechazar documento:', error);
+          this.snackBar.open('Error al rechazar documento', 'Cerrar', { duration: 3000 });
+
+          // Para desarrollo, simulamos el rechazo
+          const index = this.documentos.findIndex(d => d.id === documento.id);
+          if (index !== -1) {
+            this.documentos[index].estado = 'rechazado';
+            this.documentos[index].fechaValidacion = new Date();
+            this.documentos[index].validadoPor = 'admin';
+            this.documentos[index].motivoRechazo = motivo;
+            this.dataSource.data = [...this.documentos];
+            this.calcularEstadisticasLocales();
+            this.snackBar.open('Documento rechazado correctamente (simulado)', 'Cerrar', { duration: 3000 });
+          }
+        }
+      });
+    }
+  }
+
+  getEstadoClass(estado: string): string {
+    switch (estado) {
+      case 'pendiente': return 'estado-pendiente';
+      case 'aprobado': return 'estado-aprobado';
+      case 'rechazado': return 'estado-rechazado';
+      default: return '';
+    }
+  }
+}

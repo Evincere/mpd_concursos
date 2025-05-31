@@ -1,0 +1,167 @@
+<div class="drop-off-container">
+  <div class="section-header">
+    <h2>Análisis de Puntos de Abandono</h2>
+    <p class="section-description">
+      Identificación de los puntos donde los usuarios abandonan el proceso de inscripción y análisis de las posibles razones.
+    </p>
+  </div>
+  
+  <!-- Estado vacío -->
+  <div *ngIf="dropOffPoints.length === 0" class="empty-state">
+    <mat-icon>analytics</mat-icon>
+    <p>No hay datos disponibles para mostrar</p>
+  </div>
+  
+  <!-- Análisis de puntos de abandono -->
+  <div *ngIf="dropOffPoints.length > 0" class="drop-off-analysis">
+    <!-- Resumen de puntos de abandono -->
+    <div class="drop-off-summary">
+      <mat-card class="summary-card">
+        <mat-card-header>
+          <mat-card-title>Resumen de Abandonos</mat-card-title>
+          <mat-card-subtitle>Total de abandonos: {{getTotalDropOffPercentage()}}</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <table mat-table [dataSource]="processedDropOffPoints" class="drop-off-table">
+            <!-- Columna de Paso -->
+            <ng-container matColumnDef="step">
+              <th mat-header-cell *matHeaderCellDef>Paso</th>
+              <td mat-cell *matCellDef="let point">
+                <div class="step-cell">
+                  <div class="step-icon" [style.background-color]="point.color">
+                    <mat-icon>{{point.icon}}</mat-icon>
+                  </div>
+                  <span>{{point.label}}</span>
+                </div>
+              </td>
+            </ng-container>
+            
+            <!-- Columna de Cantidad -->
+            <ng-container matColumnDef="count">
+              <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+              <td mat-cell *matCellDef="let point">{{point.count}}</td>
+            </ng-container>
+            
+            <!-- Columna de Porcentaje -->
+            <ng-container matColumnDef="percentage">
+              <th mat-header-cell *matHeaderCellDef>Porcentaje</th>
+              <td mat-cell *matCellDef="let point">{{formatPercentage(point.percentage)}}</td>
+            </ng-container>
+            
+            <!-- Columna de Razón Principal -->
+            <ng-container matColumnDef="topReason">
+              <th mat-header-cell *matHeaderCellDef>Razón Principal</th>
+              <td mat-cell *matCellDef="let point">
+                {{point.topReason}} ({{formatPercentage(point.topReasonPercentage)}})
+              </td>
+            </ng-container>
+            
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+                (click)="selectDropOffPoint(row)"
+                [class.selected-row]="selectedDropOffPoint === row"></tr>
+          </table>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    
+    <!-- Detalles del punto de abandono seleccionado -->
+    <div *ngIf="selectedDropOffPoint" class="drop-off-details">
+      <mat-card class="details-card">
+        <mat-card-header>
+          <div mat-card-avatar class="details-icon" [style.background-color]="selectedDropOffPoint.color">
+            <mat-icon>{{selectedDropOffPoint.icon}}</mat-icon>
+          </div>
+          <mat-card-title>{{selectedDropOffPoint.label}}</mat-card-title>
+          <mat-card-subtitle>
+            {{selectedDropOffPoint.count}} abandonos ({{formatPercentage(selectedDropOffPoint.percentage)}})
+          </mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div class="details-section">
+            <h3>Razones de Abandono</h3>
+            
+            <div *ngIf="selectedDropOffPoint.reasons.length === 0" class="empty-reasons">
+              <p>No hay datos disponibles sobre las razones de abandono</p>
+            </div>
+            
+            <div *ngIf="selectedDropOffPoint.reasons.length > 0" class="reasons-list">
+              <div class="reason-item" *ngFor="let reason of selectedDropOffPoint.reasons">
+                <div class="reason-header">
+                  <div class="reason-name">{{reason.reason}}</div>
+                  <div class="reason-stats">
+                    <span class="reason-count">{{reason.count}}</span>
+                    <span class="reason-percentage">{{formatPercentage(reason.percentage)}}</span>
+                  </div>
+                </div>
+                
+                <div class="reason-bar-container">
+                  <div class="reason-bar" [style.width.%]="reason.percentage" [style.background-color]="selectedDropOffPoint.color">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="details-section">
+            <h3>Recomendaciones</h3>
+            
+            <div class="recommendations">
+              <div class="recommendation-item" *ngIf="selectedDropOffPoint.step === 'INITIAL'">
+                <mat-icon>lightbulb</mat-icon>
+                <div class="recommendation-content">
+                  <div class="recommendation-title">Simplificar el inicio del proceso</div>
+                  <div class="recommendation-description">
+                    Reducir la cantidad de información inicial y hacer más claro el propósito del proceso de inscripción.
+                  </div>
+                </div>
+              </div>
+              
+              <div class="recommendation-item" *ngIf="selectedDropOffPoint.step === 'TERMS_ACCEPTANCE'">
+                <mat-icon>lightbulb</mat-icon>
+                <div class="recommendation-content">
+                  <div class="recommendation-title">Mejorar la presentación de términos</div>
+                  <div class="recommendation-description">
+                    Simplificar el lenguaje de los términos y condiciones, y presentarlos de manera más amigable.
+                  </div>
+                </div>
+              </div>
+              
+              <div class="recommendation-item" *ngIf="selectedDropOffPoint.step === 'LOCATION_SELECTION'">
+                <mat-icon>lightbulb</mat-icon>
+                <div class="recommendation-content">
+                  <div class="recommendation-title">Optimizar la selección de ubicación</div>
+                  <div class="recommendation-description">
+                    Mejorar la usabilidad del selector de ubicación y proporcionar ayuda contextual.
+                  </div>
+                </div>
+              </div>
+              
+              <div class="recommendation-item" *ngIf="selectedDropOffPoint.step === 'DOCUMENTATION'">
+                <mat-icon>lightbulb</mat-icon>
+                <div class="recommendation-content">
+                  <div class="recommendation-title">Simplificar la carga de documentos</div>
+                  <div class="recommendation-description">
+                    Reducir la fricción en el proceso de carga de documentos y proporcionar instrucciones más claras.
+                  </div>
+                </div>
+              </div>
+              
+              <div class="recommendation-item" *ngIf="selectedDropOffPoint.step === 'DATA_CONFIRMATION'">
+                <mat-icon>lightbulb</mat-icon>
+                <div class="recommendation-content">
+                  <div class="recommendation-title">Clarificar el proceso de confirmación</div>
+                  <div class="recommendation-description">
+                    Hacer más evidente qué datos se están confirmando y qué sucederá después de la confirmación.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

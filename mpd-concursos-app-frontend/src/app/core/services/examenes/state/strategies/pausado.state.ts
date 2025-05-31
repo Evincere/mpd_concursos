@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { IExamenState } from '@core/interfaces/examenes/state/examen-state.interface';
-import { ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
+import { ExamenEnCurso } from  '@shared/interfaces/examen/pregunta.interface';
 import { Observable, of } from 'rxjs';
 import { ExamenTimeService } from '../../examen-time.service';
 

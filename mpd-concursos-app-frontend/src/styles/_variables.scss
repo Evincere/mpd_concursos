@@ -2,28 +2,59 @@
 
 // Paleta de colores MPD
 $color-primary: #1976D2;
+$color-primary-dark: #1565C0;
+$color-primary-light: rgba(25, 118, 210, 0.15);
+$color-info: #2196F3;
+$color-info-dark: #1976D2;
+$color-info-light: rgba(33, 150, 243, 0.15);
 $color-secondary: #424242;
 $color-background: #333333;
+$color-background-dark: #222222;
+$color-background-darker: #1a1a1a;
 $color-surface: #424242;
+$color-surface-dark: #333333;
 $color-surface-light: #4f4f4f;
 $color-text-primary: #FFFFFF;
+$color-text-light: $color-text-primary;
+$color-text-primary-dark: #E0E0E0;
 $color-text-secondary: #B0B0B0;
+$color-text-secondary-dark: #A0A0A0;
+$color-text-secondary-light: rgba(176, 176, 176, 0.15);
+$color-text-tertiary: #808080;
+$color-text-tertiary-dark: #707070;
 $color-text-muted: #808080;
+$color-text-disabled: #666666;
 $color-accent: #4CAF50;
+$color-accent-dark: #388E3C;
+$color-accent-light: rgba(76, 175, 80, 0.15);
 $color-hover: #3A3A3A;
 $color-white: #FFFFFF;
 $color-background-light: #424242;
 $color-background-hover: rgba(25, 118, 210, 0.08);
 $color-border: #484848;
 $color-border-light: #555555;
+$color-border-dark: #333333;
 
 // Estados
 $color-warning: #ff9800;
 $color-warning-bg: rgba($color-warning, 0.15);
+$color-warning-light: #ffcc80;
+$color-warning-dark: #f57c00;
 $color-success: #4caf50;
 $color-success-bg: rgba($color-success, 0.15);
+$color-success-light: #a5d6a7;
+$color-success-dark: #388e3c;
 $color-error: #f44336;
 $color-error-bg: rgba($color-error, 0.15);
+$color-error-light: #ef9a9a;
+$color-error-dark: #d32f2f;
+$color-danger: #f44336; // Alias para error para compatibilidad
+$color-danger-bg: rgba($color-danger, 0.15);
+$color-danger-light: #ef9a9a;
+$color-danger-dark: #d32f2f;
+$color-warn: #ff9800; // Alias para warning para compatibilidad
+$color-warn-light: #ffcc80;
+$color-warn-dark: #f57c00;
 
 // Bordes y sombras
 $border-radius: 8px;
@@ -31,6 +62,7 @@ $border-radius-sm: 4px;
 $border-radius-lg: 12px;
 $box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 $box-shadow-light: 0 1px 4px rgba(0, 0, 0, 0.2);
+$box-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15);
 
 // Espaciado
 $spacing-xs: 0.25rem;  // 4px
@@ -45,6 +77,10 @@ $font-size-sm: 0.875rem;   // 14px
 $font-size-md: 1rem;       // 16px
 $font-size-lg: 1.25rem;    // 20px
 $font-size-xl: 1.5rem;     // 24px
+
+// Familias de fuentes
+$font-family-base: Roboto, "Helvetica Neue", sans-serif;
+$font-family-mono: "Roboto Mono", "Courier New", monospace;
 
 // Transiciones
 $transition-fast: 150ms ease;

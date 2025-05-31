@@ -1,0 +1,80 @@
+<div class="notifications-container"
+     (click)="$event.stopPropagation()"
+     (keydown.escape)="closeNotifications()"
+     tabindex="0"
+     role="dialog"
+     aria-label="Notificaciones">
+  <!-- Header -->
+  <div class="notifications-header">
+    <h3 class="header-title">Notificaciones</h3>
+    <button
+      mat-button
+      color="primary"
+      class="mark-all-button"
+      (click)="markAllAsRead()"
+    >
+      Marcar todas como leídas
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Lista de notificaciones -->
+  <div class="notifications-list">
+    <ng-container *ngIf="notifications.length > 0; else noNotifications">
+      <div
+        *ngFor="let notification of notifications"
+        class="notification-item"
+        [class.unread]="!notification.read"
+        (click)="markAsRead(notification)"
+        (keydown.enter)="markAsRead(notification)"
+        (keydown.space)="markAsRead(notification)"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="'Notificación: ' + notification.title"
+      >
+        <div class="notification-icon" [ngClass]="notification.type">
+          <mat-icon>{{getNotificationIcon(notification.type)}}</mat-icon>
+        </div>
+        <div class="notification-content">
+          <div class="notification-header">
+            <h4 class="notification-title">{{notification.title}}</h4>
+            <span class="notification-time">{{getTimeAgo(notification.timestamp)}}</span>
+          </div>
+          <p class="notification-message">{{notification.message}}</p>
+          <div class="notification-actions">
+            <a
+              *ngIf="notification.link"
+              [routerLink]="notification.link"
+              class="notification-link"
+            >
+              Ver detalles
+            </a>
+            <span
+              class="notification-status"
+              [ngClass]="notification.read ? 'read' : 'unread'"
+            >
+              {{notification.read ? 'Leída' : 'Nueva'}}
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #noNotifications>
+      <div class="no-notifications">
+        <mat-icon>notifications_off</mat-icon>
+        <p>No tienes notificaciones</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Footer -->
+  <div class="notifications-footer">
+    <a routerLink="/admin/notificaciones" class="view-all-link">
+      Ver todas las notificaciones
+    </a>
+  </div>
+</div>

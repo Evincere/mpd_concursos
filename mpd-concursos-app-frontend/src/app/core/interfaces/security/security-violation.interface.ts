@@ -21,10 +21,22 @@ export enum SecurityViolationType {
 export type SecuritySeverity = 'LOW' | 'MEDIUM' | 'HIGH';
 export type SecurityAction = 'LOG' | 'WARN' | 'BLOCK';
 
+export interface SecurityViolationDetails {
+  message?: string;
+  code?: string;
+  source?: string;
+  timestamp?: number;
+  url?: string;
+  element?: string;
+  keyCode?: number;
+  keyName?: string;
+  [key: string]: unknown;
+}
+
 export interface SecurityViolation {
   type: SecurityViolationType;
   timestamp: string;
-  details?: any;
+  details?: SecurityViolationDetails;
   severity: SecuritySeverity;
   actionTaken: SecurityAction;
 }

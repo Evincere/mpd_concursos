@@ -9,7 +9,9 @@ import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { RegisterService } from '../../../../core/services/auth/register.service';
 import { NewUser } from '../../../../shared/interfaces/auth/new-user.interface';
+import { UserRegisterDTO } from '../../../../shared/interfaces/user/base-user.interface';
 import { Subscription } from 'rxjs';
+import { TouchFriendlyDirective } from '../../../../shared/directives/touch-friendly.directive';
 
 @Component({
   selector: 'app-register',
@@ -22,7 +24,8 @@ import { Subscription } from 'rxjs';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    TouchFriendlyDirective
   ],
   animations: [
     trigger('messageAnimation', [
@@ -38,7 +41,7 @@ import { Subscription } from 'rxjs';
 })
 export class RegisterComponent implements OnInit, OnDestroy {
   registerForm: FormGroup;
-  fieldErrors: Map<string, string> = new Map();
+  fieldErrors = new Map<string, string>();
   activeErrors: { type: string; title: string; message: string }[] = [];
   isLoading = false;
   showMessage = false;
@@ -58,14 +61,28 @@ export class RegisterComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar
   ) {
     this.registerForm = fb.nonNullable.group({
+      // Datos de acceso
       username: ['', [Validators.required, Validators.minLength(4)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
-      nombre: ['', Validators.required],
-      apellido: ['', Validators.required],
+
+      // Datos personales
+      firstName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
+      lastName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
       dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
       cuit: ['', [Validators.required, Validators.pattern(/^\d{2}-\d{8}-\d{1}$/)]],
+      birthDate: [null, [Validators.required]],
+
+      // Datos de ubicación
+      country: ['Argentina', Validators.required],
+      province: ['', Validators.required],
+      municipality: ['', Validators.required],
+      legalAddress: ['', Validators.required],
+      residentialAddress: ['', Validators.required],
+      telefono: ['', Validators.pattern(/^[0-9\-\+\s\(\)]{7,15}$/)],
+
+      // Términos y condiciones
       termsAccepted: [false, Validators.requiredTrue]
     }, {
       validators: this.passwordMatchValidator
@@ -157,7 +174,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     return this.fieldErrors.get(field) || '';
   }
 
-  onInputFocus(event: FocusEvent): void {
+  onInputFocus(event: Event): void {
     const inputElement = event.target as HTMLInputElement;
     const fieldName = inputElement.getAttribute('formcontrolname');
     if (fieldName && this.fieldErrors.has(fieldName)) {
@@ -210,21 +227,36 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.activeErrors = [];
 
     const formValue = this.registerForm.value;
-    const userData: NewUser = {
+
+    // Crear objeto con la nueva interfaz estandarizada
+    const userRegisterData: UserRegisterDTO = {
       username: formValue.username!,
       email: formValue.email!,
       password: formValue.password!,
       confirmPassword: formValue.confirmPassword!,
-      nombre: formValue.nombre!,
-      apellido: formValue.apellido!,
+      firstName: formValue.firstName!,
+      lastName: formValue.lastName!,
       dni: formValue.dni!,
-      cuit: formValue.cuit!.replace(/-/g, ''),
+      cuit: formValue.cuit!.replace(/-/g, ''), // Eliminar guiones del CUIT
+      birthDate: formValue.birthDate!,
+      country: formValue.country!,
+      province: formValue.province!,
+      municipality: formValue.municipality!,
+      legalAddress: formValue.legalAddress!,
+      residentialAddress: formValue.residentialAddress!,
+      telefono: formValue.telefono!,
+      termsAccepted: formValue.termsAccepted!
+    };
+
+    // Mantener compatibilidad con la interfaz anterior
+    const userData: NewUser = {
+      ...userRegisterData,
       roles: new Set<string>(['ROLE_USER'])
     };
 
     this.subscription.add(
       this.registerService.register(userData).subscribe({
-        next: (response) => {
+        next: (_response) => {
           this.isLoading = false;
           this.showMessage = true;
           this.isSuccess = true;
@@ -259,7 +291,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     );
   }
 
-  handleFieldErrors(fieldErrors: any[]): void {
+  handleFieldErrors(fieldErrors: { field: string; message: string }[]): void {
     fieldErrors.forEach(fieldError => {
       this.fieldErrors.set(fieldError.field, fieldError.message);
 
@@ -272,14 +304,18 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   getErrorTitle(field: string): string {
-    const titles: { [key: string]: string } = {
+    const titles: Record<string, string> = {
       username: 'Error en nombre de usuario',
       email: 'Error en correo electrónico',
       password: 'Error en contraseña',
       firstName: 'Error en nombre',
       lastName: 'Error en apellido',
       dni: 'Error en DNI',
-      cuit: 'Error en CUIT'
+      cuit: 'Error en CUIT',
+      nombre: 'Error en nombre',
+      apellido: 'Error en apellido',
+      confirmPassword: 'Error en confirmación de contraseña',
+      termsAccepted: 'Error en términos y condiciones'
     };
 
     return titles[field] || 'Error de Validación';
@@ -308,7 +344,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       termsControl.markAsTouched();
 
       // Añadir animación visual para llamar la atención
-      const termsLabel = document.querySelector('.terms-required');
+      const termsLabel = document.querySelector('label.flex.cursor-pointer');
       if (termsLabel) {
         termsLabel.classList.remove('terms-required');
         setTimeout(() => {

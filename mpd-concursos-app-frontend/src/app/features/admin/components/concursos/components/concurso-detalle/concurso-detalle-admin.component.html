@@ -1,0 +1,165 @@
+<div class="concurso-detalle-container">
+  <div class="header">
+    <div class="header-title">
+      <button
+        (click)="router.navigate(['/admin/concursos'])"
+        class="back-button"
+        title="Volver">
+        ← Volver
+      </button>
+      <h1>Detalle del Concurso</h1>
+    </div>
+
+    <div class="header-actions" *ngIf="concurso">
+      <button
+        (click)="editConcurso()"
+        class="action-button primary"
+        title="Editar concurso">
+        ✏️ Editar
+      </button>
+
+      <button
+        (click)="deleteConcurso()"
+        class="action-button danger"
+        [disabled]="concurso.status !== 'DRAFT'"
+        title="Eliminar concurso">
+        🗑️ Eliminar
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner">⏳</div>
+    <p>Cargando información del concurso...</p>
+  </div>
+
+  <div *ngIf="!isLoading && concurso" class="content">
+    <div class="concurso-header-card">
+      <div class="concurso-title">
+        <h2>{{concurso.title}}</h2>
+        <span class="status-badge" [ngClass]="getStatusClass(concurso.status)">
+          {{getStatusLabel(concurso.status)}}
+        </span>
+      </div>
+
+      <div class="concurso-info">
+        <div class="info-item">
+          <span class="icon">💼</span>
+          <span>{{concurso.position}}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="icon">🏢</span>
+          <span>{{concurso.department}}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="icon">📂</span>
+          <span>{{concurso.category}} - {{concurso.class}}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="icon">📅</span>
+          <span>{{formatDate(concurso.startDate)}} - {{formatDate(concurso.endDate)}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestañas básicas con HTML/CSS -->
+    <div class="tabs-container">
+      <div class="tabs-header">
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 0"
+          (click)="activeTab = 0">
+          📋 Información General
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 1"
+          (click)="activeTab = 1">
+          📅 Fechas Importantes ({{fechas.length}})
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 2"
+          (click)="activeTab = 2">
+          📝 Requisitos ({{requisitos.length}})
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 3"
+          (click)="activeTab = 3">
+          👥 Inscripciones
+        </button>
+      </div>
+
+      <div class="tab-content">
+        <!-- Información General -->
+        <div *ngIf="activeTab === 0" class="tab-panel">
+          <div class="section">
+            <h3>Descripción</h3>
+            <p *ngIf="concurso.description">{{concurso.description}}</p>
+            <p *ngIf="!concurso.description" class="empty-text">No hay descripción disponible</p>
+          </div>
+
+          <div class="section">
+            <h3>Funciones</h3>
+            <p *ngIf="concurso.functions">{{concurso.functions}}</p>
+            <p *ngIf="!concurso.functions" class="empty-text">No hay funciones especificadas</p>
+          </div>
+
+          <div class="section">
+            <h3>Documentos</h3>
+            <div class="documents-list" *ngIf="concurso.termsUrl || concurso.profileUrl">
+              <a *ngIf="concurso.termsUrl" [href]="concurso.termsUrl" target="_blank" class="document-link">
+                📄 Bases y Condiciones 🔗
+              </a>
+              <a *ngIf="concurso.profileUrl" [href]="concurso.profileUrl" target="_blank" class="document-link">
+                📄 Perfil del Puesto 🔗
+              </a>
+            </div>
+            <p *ngIf="!concurso.termsUrl && !concurso.profileUrl" class="empty-text">No hay documentos disponibles</p>
+          </div>
+        </div>
+
+        <!-- Fechas Importantes -->
+        <div *ngIf="activeTab === 1" class="tab-panel">
+          <h3>Fechas Importantes</h3>
+          <div class="fechas-list">
+            <div *ngFor="let fecha of fechas" class="fecha-item">
+              <span class="fecha-title">{{fecha.title}}</span>
+              <span class="fecha-date">{{fecha.date ? formatDate(fecha.date) : 'Sin fecha'}}</span>
+            </div>
+          </div>
+          <p *ngIf="fechas.length === 0" class="empty-text">No hay fechas configuradas</p>
+        </div>
+
+        <!-- Requisitos -->
+        <div *ngIf="activeTab === 2" class="tab-panel">
+          <h3>Requisitos</h3>
+          <div class="requisitos-list">
+            <div *ngFor="let requisito of requisitos" class="requisito-item">
+              <span class="requisito-description">{{requisito.description}}</span>
+              <span class="requisito-category">{{requisito.category}}</span>
+            </div>
+          </div>
+          <p *ngIf="requisitos.length === 0" class="empty-text">No hay requisitos configurados</p>
+        </div>
+
+        <!-- Inscripciones -->
+        <div *ngIf="activeTab === 3" class="tab-panel">
+          <app-concurso-inscripciones [contestId]="concursoId"></app-concurso-inscripciones>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && !concurso" class="error-container">
+    <h2>❌ Error al cargar el concurso</h2>
+    <p>No se pudo obtener la información del concurso solicitado.</p>
+    <button (click)="router.navigate(['/admin/concursos'])" class="back-button">
+      ← Volver al listado
+    </button>
+  </div>
+</div>

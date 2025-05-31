@@ -1,0 +1,215 @@
+<div class="inscripciones-container">
+  <!-- Encabezado con estadísticas -->
+  <div class="header-section">
+    <div class="header-info">
+      <h3>Gestión de Inscripciones</h3>
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-number">{{ totalInscripciones }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ getInscripcionesByState(InscripcionState.PENDIENTE).length }}</span>
+          <span class="stat-label">Pendientes</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ getInscripcionesByState(InscripcionState.INSCRIPTO).length }}</span>
+          <span class="stat-label">Aprobadas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ getInscripcionesByState(InscripcionState.REJECTED).length }}</span>
+          <span class="stat-label">Rechazadas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros mejorados -->
+  <app-custom-card class="filter-card">
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="filter-row">
+        <app-custom-form-field label="Estado" class="filter-field">
+          <select formControlName="state">
+            <option *ngFor="let state of inscripcionStates" [value]="state.value">
+              {{ state.label }}
+            </option>
+          </select>
+        </app-custom-form-field>
+
+        <app-custom-form-field label="Buscar postulante" class="filter-field search-field">
+          <input type="text" formControlName="search" placeholder="Nombre, DNI o email">
+        </app-custom-form-field>
+
+        <div class="filter-actions">
+          <app-custom-button
+            [color]="'primary'"
+            [variant]="'flat'"
+            [icon]="'search'"
+            [label]="'Buscar'"
+            (buttonClick)="loadInscripciones()">
+          </app-custom-button>
+
+          <app-custom-button
+            [color]="'primary'"
+            [variant]="'stroked'"
+            [icon]="'times'"
+            [label]="'Limpiar'"
+            (buttonClick)="resetFilters()">
+          </app-custom-button>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <app-custom-form-field label="Fecha desde" class="filter-field">
+          <input type="date" formControlName="startDate">
+        </app-custom-form-field>
+
+        <app-custom-form-field label="Fecha hasta" class="filter-field">
+          <input type="date" formControlName="endDate">
+        </app-custom-form-field>
+      </div>
+    </form>
+  </app-custom-card>
+
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner">⏳</div>
+    <p>Cargando inscripciones...</p>
+  </div>
+
+  <!-- Resultados -->
+  <div *ngIf="!isLoading" class="results-section">
+    <!-- Empty state -->
+    <div *ngIf="inscripciones.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-users" aria-hidden="true"></i>
+      </div>
+      <h3 class="empty-title">No se encontraron inscripciones</h3>
+      <p class="empty-message">No hay inscripciones que coincidan con los filtros aplicados. Intenta ajustar los criterios de búsqueda.</p>
+      <app-custom-button
+        [label]="'Limpiar Filtros'"
+        [icon]="'times'"
+        [color]="'primary'"
+        (buttonClick)="resetFilters()"
+        class="empty-action">
+      </app-custom-button>
+    </div>
+
+    <!-- Tabla de inscripciones -->
+    <app-custom-card *ngIf="inscripciones.length > 0" class="table-card">
+      <app-custom-table [data]="inscripciones">
+        <!-- Columna Postulante -->
+        <app-custom-table-column property="postulante" header="Postulante" width="250px">
+          <ng-template let-inscripcion>
+            <div class="user-info">
+              <div class="user-name">{{ inscripcion.userInfo?.fullName || 'No disponible' }}</div>
+              <div class="user-details">
+                <span class="user-dni">DNI: {{ inscripcion.userInfo?.dni || 'No disponible' }}</span>
+                <span class="user-email">{{ inscripcion.userInfo?.email || 'No disponible' }}</span>
+              </div>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Estado -->
+        <app-custom-table-column property="state" header="Estado" width="150px">
+          <ng-template let-inscripcion>
+            <div class="status-badge" [ngClass]="getStateClass(inscripcion.state)">
+              {{ getStateLabel(inscripcion.state) }}
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Fecha de Inscripción -->
+        <app-custom-table-column property="inscriptionDate" header="Fecha Inscripción" width="150px">
+          <ng-template let-inscripcion>
+            <div class="date-info">
+              <div class="date-value">{{ formatDate(inscripcion.inscriptionDate) }}</div>
+              <div class="date-time">{{ formatTime(inscripcion.inscriptionDate) }}</div>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Documentos -->
+        <app-custom-table-column property="documents" header="Documentos" width="120px">
+          <ng-template let-inscripcion>
+            <div class="documents-info">
+              <span class="docs-count">{{ inscripcion.documents?.length || 0 }} docs</span>
+              <span class="docs-status" [ngClass]="getDocumentsStatusClass(inscripcion.documents)">
+                {{ getDocumentsStatus(inscripcion.documents) }}
+              </span>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Acciones -->
+        <app-custom-table-column property="actions" header="Acciones" width="180px">
+          <ng-template let-inscripcion>
+            <div class="action-buttons">
+              <app-custom-button
+                [icon]="'eye'"
+                [variant]="'icon'"
+                [color]="'primary'"
+                [tooltip]="'Ver detalles'"
+                (buttonClick)="viewInscripcion(inscripcion)">
+              </app-custom-button>
+
+              <app-custom-button
+                *ngIf="inscripcion.state === InscripcionState.PENDIENTE"
+                [icon]="'check'"
+                [variant]="'icon'"
+                [color]="'success'"
+                [tooltip]="'Aprobar inscripción'"
+                (buttonClick)="changeState(inscripcion, InscripcionState.INSCRIPTO)">
+              </app-custom-button>
+
+              <app-custom-button
+                *ngIf="inscripcion.state === InscripcionState.PENDIENTE"
+                [icon]="'times'"
+                [variant]="'icon'"
+                [color]="'danger'"
+                [tooltip]="'Rechazar inscripción'"
+                (buttonClick)="changeState(inscripcion, InscripcionState.REJECTED)">
+              </app-custom-button>
+
+              <app-custom-button
+                *ngIf="inscripcion.state === InscripcionState.INSCRIPTO || inscripcion.state === InscripcionState.REJECTED"
+                [icon]="'edit'"
+                [variant]="'icon'"
+                [color]="'warn'"
+                [tooltip]="'Cambiar estado'"
+                (buttonClick)="openChangeStateDialog(inscripcion)">
+              </app-custom-button>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+      </app-custom-table>
+
+      <!-- Paginación -->
+      <div class="pagination-container" *ngIf="totalInscripciones > pageSize">
+        <div class="pagination-info">
+          <span>Mostrando {{(currentPage * pageSize) + 1}} - {{Math.min((currentPage + 1) * pageSize, totalInscripciones)}} de {{totalInscripciones}} inscripciones</span>
+        </div>
+        <div class="pagination-controls">
+          <app-custom-button
+            [icon]="'chevron-left'"
+            [variant]="'icon'"
+            [disabled]="currentPage === 0"
+            [tooltip]="'Página anterior'"
+            (buttonClick)="previousPage()">
+          </app-custom-button>
+
+          <span class="page-info">Página {{currentPage + 1}} de {{Math.ceil(totalInscripciones / pageSize)}}</span>
+
+          <app-custom-button
+            [icon]="'chevron-right'"
+            [variant]="'icon'"
+            [disabled]="(currentPage + 1) * pageSize >= totalInscripciones"
+            [tooltip]="'Página siguiente'"
+            (buttonClick)="nextPage()">
+          </app-custom-button>
+        </div>
+      </div>
+    </app-custom-card>
+  </div>
+</div>

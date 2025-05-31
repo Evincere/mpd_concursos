@@ -1,0 +1,48 @@
+<div class="inscription-notification">
+  <mat-card>
+    <mat-card-header>
+      <mat-icon [ngClass]="'color-' + statusInfo.color" mat-card-avatar>{{ statusInfo.icon }}</mat-icon>
+      <mat-card-title>{{ statusInfo.text }}</mat-card-title>
+      <mat-card-subtitle *ngIf="contestTitle">{{ contestTitle }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <p>{{ statusInfo.description }}</p>
+      <p *ngIf="updatedAt" class="timestamp">
+        <mat-icon>access_time</mat-icon>
+        <span>Actualizado: {{ updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      </p>
+    </mat-card-content>
+
+    <mat-divider *ngIf="showActions"></mat-divider>
+
+    <mat-card-actions *ngIf="showActions">
+      <button
+        mat-button
+        color="primary"
+        (click)="viewInscription()"
+        matTooltip="Ver detalles de la inscripción">
+        <mat-icon>visibility</mat-icon>
+        VER DETALLES
+      </button>
+
+      <button
+        mat-button
+        color="accent"
+        *ngIf="status === 'IN_PROCESS' || status === 'ACTIVE'"
+        (click)="continueInscription()"
+        matTooltip="Continuar con el proceso de inscripción">
+        <mat-icon>edit</mat-icon>
+        CONTINUAR
+      </button>
+
+      <button
+        mat-button
+        (click)="viewContest()"
+        matTooltip="Ver detalles del concurso">
+        <mat-icon>gavel</mat-icon>
+        VER CONCURSO
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

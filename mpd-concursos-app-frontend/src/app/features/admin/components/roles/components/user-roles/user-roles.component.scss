@@ -1,0 +1,138 @@
+@use 'src/styles/variables' as *;
+
+.user-roles-container {
+  padding: 1rem 0;
+}
+
+.header {
+  margin-bottom: 1.5rem;
+  
+  h2 {
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.filter-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-sm;
+  margin-bottom: 1.5rem;
+  
+  mat-card-content {
+    padding: 1rem;
+  }
+}
+
+.filter-form {
+  width: 100%;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .filter-actions {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.table-container {
+  position: relative;
+  border-radius: $border-radius;
+  overflow: hidden;
+  
+  table {
+    width: 100%;
+  }
+  
+  th {
+    font-weight: 500;
+    color: $color-text-primary;
+    background-color: $color-surface-light;
+  }
+  
+  td, th {
+    padding: 0.75rem 1rem;
+  }
+  
+  tr:nth-child(even) {
+    background-color: $color-surface-light;
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  
+  mat-icon {
+    font-size: 48px;
+    color: $color-text-secondary;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $color-text-secondary;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.roles-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.role-chip {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  color: white;
+  
+  &.role-admin {
+    background-color: #f44336; // Red
+  }
+  
+  &.role-evaluator {
+    background-color: #2196f3; // Blue
+  }
+  
+  &.role-supervisor {
+    background-color: #9c27b0; // Purple
+  }
+  
+  &.role-user {
+    background-color: #4caf50; // Green
+  }
+  
+  &.role-default {
+    background-color: #757575; // Grey
+  }
+}

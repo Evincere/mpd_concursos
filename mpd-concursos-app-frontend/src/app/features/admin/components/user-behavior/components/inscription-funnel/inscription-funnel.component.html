@@ -1,0 +1,129 @@
+<div class="funnel-container">
+  <div class="section-header">
+    <h2>Embudo de Conversión del Proceso de Inscripción</h2>
+    <p class="section-description">
+      Visualización del flujo de usuarios a través del proceso de inscripción, mostrando la tasa de conversión
+      y los puntos de abandono en cada etapa.
+    </p>
+  </div>
+
+  <!-- Estado vacío -->
+  <div *ngIf="!funnelData" class="empty-state">
+    <mat-icon>analytics</mat-icon>
+    <p>No hay datos disponibles para mostrar</p>
+  </div>
+
+  <!-- Embudo de conversión -->
+  <div *ngIf="funnelData" class="funnel-visualization">
+    <div class="funnel-metrics">
+      <div class="metric-card">
+        <div class="metric-icon">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{funnelData.totalStarted}}</div>
+          <div class="metric-label">Usuarios Iniciaron</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{funnelSteps.length > 0 ? funnelSteps[funnelSteps.length - 1].count : 0}}</div>
+          <div class="metric-label">Completaron</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">
+          <mat-icon>percent</mat-icon>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{formatPercentage(funnelSteps.length > 0 ? funnelSteps[funnelSteps.length - 1].percentage : 0)}}</div>
+          <div class="metric-label">Tasa de Conversión</div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">
+          <mat-icon>exit_to_app</mat-icon>
+        </div>
+        <div class="metric-content">
+          <div class="metric-value">{{funnelData.totalStarted - (funnelSteps.length > 0 ? funnelSteps[funnelSteps.length - 1].count : 0)}}</div>
+          <div class="metric-label">Abandonos Totales</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="funnel-steps">
+      <div class="funnel-step" *ngFor="let step of funnelSteps; let i = index">
+        <div class="step-header">
+          <div class="step-icon" [style.background-color]="step.color">
+            <mat-icon>{{step.icon}}</mat-icon>
+          </div>
+          <div class="step-info">
+            <div class="step-name">{{step.label}}</div>
+            <div class="step-count">{{step.count}} usuarios ({{formatPercentage(step.percentage)}})</div>
+          </div>
+        </div>
+
+        <div class="step-bar-container">
+          <div class="step-bar" [style.width.%]="step.width" [style.background-color]="step.color">
+            <span class="step-percentage">{{formatPercentage(step.percentage)}}</span>
+          </div>
+        </div>
+
+        <div class="step-details">
+          <div class="step-metric">
+            <mat-icon>timer</mat-icon>
+            <span>Tiempo promedio: {{formatTime(step.averageTimeInMinutes)}}</span>
+          </div>
+
+          <div class="step-metric" *ngIf="step.dropOffCount > 0">
+            <mat-icon>exit_to_app</mat-icon>
+            <span>Abandonos: {{step.dropOffCount}} ({{formatPercentage(step.dropOffPercentage)}})</span>
+          </div>
+        </div>
+
+        <mat-divider *ngIf="i < funnelSteps.length - 1"></mat-divider>
+      </div>
+    </div>
+  </div>
+
+  <!-- Análisis de puntos de abandono -->
+  <div *ngIf="dropOffPoints.length > 0" class="drop-off-analysis">
+    <div class="section-header">
+      <h3>Principales Puntos de Abandono</h3>
+    </div>
+
+    <div class="drop-off-cards">
+      <mat-card *ngFor="let point of dropOffPoints | slice:0:3" class="drop-off-card">
+        <mat-card-header>
+          <div mat-card-avatar class="drop-off-icon" [style.background-color]="getStepColor(point.step)">
+            <mat-icon>{{getStepIcon(point.step)}}</mat-icon>
+          </div>
+          <mat-card-title>{{getStepLabel(point.step)}}</mat-card-title>
+          <mat-card-subtitle>
+            {{point.count}} abandonos ({{formatPercentage(point.percentage)}})
+          </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="drop-off-reasons" *ngIf="point.reasons && point.reasons.length > 0">
+            <h4>Principales razones:</h4>
+            <div class="reason-item" *ngFor="let reason of point.reasons | slice:0:3">
+              <div class="reason-bar-container">
+                <div class="reason-bar" [style.width.%]="reason.percentage">
+                  <span class="reason-percentage">{{formatPercentage(reason.percentage)}}</span>
+                </div>
+              </div>
+              <div class="reason-label">{{reason.reason}}</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

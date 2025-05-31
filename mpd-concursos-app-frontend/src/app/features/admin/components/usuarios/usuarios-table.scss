@@ -1,0 +1,558 @@
+/* Estilos específicos para la tabla de usuarios en el panel de administración */
+@use 'src/styles/variables' as global;
+@use 'src/styles/responsive' as responsive;
+
+/* Aplicar estilos directamente sin encapsulación */
+
+/* Contenedor de la tabla */
+.custom-table-container {
+  background-color: rgba(var(--color-surface-rgb, 66, 66, 66), 0.8) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(var(--color-border-rgb, 72, 72, 72), 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Tabla */
+.custom-table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* Encabezados */
+.custom-table th {
+  background-color: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.9) !important;
+  color: var(--color-text-primary, #FFFFFF) !important;
+  font-weight: 600 !important;
+  padding: 1.25rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 2px solid rgba(var(--color-primary-rgb, 25, 118, 210), 0.3) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+/* Celdas */
+.custom-table td {
+  padding: 1.25rem 1rem !important;
+  border-bottom: 1px solid rgba(var(--color-border-rgb, 72, 72, 72), 0.2) !important;
+  color: var(--color-text-primary, #FFFFFF) !important;
+  font-size: 0.95rem !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Filas */
+.custom-table tbody tr {
+  transition: all 0.3s ease !important;
+}
+
+.custom-table tbody tr:hover {
+  background-color: rgba(var(--color-background-hover-rgb, 58, 58, 58), 0.5) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Badges de roles */
+.role-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.35rem 0.85rem !important;
+  border-radius: 20px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  background-color: rgba(var(--color-primary-rgb, 25, 118, 210), 0.12) !important;
+  color: var(--color-primary, #1976D2) !important;
+  box-shadow: 0 2px 10px rgba(var(--color-primary-rgb, 25, 118, 210), 0.15) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  margin: 0.2rem !important;
+}
+
+/* Badges de estado */
+.estado-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.35rem 0.85rem !important;
+  border-radius: 20px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  text-align: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.estado-activo {
+  background-color: rgba(var(--color-success-rgb, 76, 175, 80), 0.12) !important;
+  color: var(--color-success, #4CAF50) !important;
+  box-shadow: 0 2px 10px rgba(var(--color-success-rgb, 76, 175, 80), 0.15) !important;
+  border: 1px solid rgba(var(--color-success-rgb, 76, 175, 80), 0.2) !important;
+}
+
+.estado-inactivo {
+  background-color: rgba(var(--color-warning-rgb, 255, 152, 0), 0.12) !important;
+  color: var(--color-warning, #FF9800) !important;
+  box-shadow: 0 2px 10px rgba(var(--color-warning-rgb, 255, 152, 0), 0.15) !important;
+  border: 1px solid rgba(var(--color-warning-rgb, 255, 152, 0), 0.2) !important;
+}
+
+.estado-bloqueado {
+  background-color: rgba(var(--color-error-rgb, 244, 67, 54), 0.12) !important;
+  color: var(--color-error, #F44336) !important;
+  box-shadow: 0 2px 10px rgba(var(--color-error-rgb, 244, 67, 54), 0.15) !important;
+  border: 1px solid rgba(var(--color-error-rgb, 244, 67, 54), 0.2) !important;
+}
+
+/* Enlaces de email y teléfono */
+.email-link, .phone-link {
+  color: var(--color-primary, #1976D2) !important;
+  text-decoration: none !important;
+  position: relative !important;
+  padding: 0.1rem 0.2rem !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.email-link i, .phone-link i {
+  margin-right: 0.5rem !important;
+  font-size: 0.85rem !important;
+}
+
+.contact-info {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.phone-link {
+  margin-top: 0.2rem !important;
+}
+
+.email-link::after {
+  content: '' !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 2px !important;
+  bottom: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background-color: var(--color-primary, #1976D2) !important;
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.email-link:hover {
+  color: var(--color-primary-dark, #1565C0) !important;
+  background-color: rgba(var(--color-primary-rgb, 25, 118, 210), 0.05) !important;
+}
+
+.email-link:hover::after {
+  width: calc(100% - 1rem) !important;
+}
+
+/* Celdas de ID */
+.id-cell {
+  font-family: monospace !important;
+  font-size: 0.85rem !important;
+  color: var(--color-text-secondary, #B0B0B0) !important;
+  background-color: rgba(var(--color-background-light-rgb, 66, 66, 66), 0.5) !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+}
+
+/* Información de usuario */
+.user-info {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.user-info .user-name {
+  font-weight: 500 !important;
+  color: var(--color-text-primary, #FFFFFF) !important;
+}
+
+.user-info .user-dni {
+  font-size: 0.85rem !important;
+  color: var(--color-text-secondary, #B0B0B0) !important;
+  margin-top: 0.2rem !important;
+}
+
+/* Información de fecha */
+.date-info {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 0.3rem !important;
+}
+
+.date-info .date-value {
+  font-weight: 500 !important;
+  color: var(--color-text-primary, #FFFFFF) !important;
+}
+
+.date-info .date-time {
+  font-size: 0.85rem !important;
+  color: var(--color-text-secondary, #B0B0B0) !important;
+  margin-top: 0.2rem !important;
+}
+
+.date-info i {
+  margin-right: 0.5rem !important;
+  font-size: 0.85rem !important;
+}
+
+.date-created i {
+  color: var(--color-success, #4CAF50) !important;
+}
+
+.date-login i {
+  color: var(--color-primary, #1976D2) !important;
+}
+
+.dates-container {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Botones de acción */
+.actions-container {
+  display: flex !important;
+  gap: 0.5rem !important;
+  justify-content: center !important;
+}
+
+.actions-container button {
+  min-width: auto !important;
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  background-color: rgba(var(--color-surface-rgb, 66, 66, 66), 0.8) !important;
+  border: 1px solid rgba(var(--color-border-rgb, 72, 72, 72), 0.2) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.actions-container button:hover {
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 6px 15px rgba(var(--color-primary-rgb, 25, 118, 210), 0.2) !important;
+  border-color: rgba(var(--color-primary-rgb, 25, 118, 210), 0.3) !important;
+}
+
+.actions-container button i {
+  font-size: 1rem !important;
+  color: var(--color-text-primary, #FFFFFF) !important;
+  position: relative !important;
+  z-index: 2 !important;
+  transition: all 0.3s ease !important;
+}
+
+.actions-container button:hover i {
+  color: var(--color-primary, #1976D2) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Paginación */
+.pagination-container {
+  background-color: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.8) !important;
+  border-top: 1px solid var(--color-border, #484848) !important;
+  padding: 1rem !important;
+}
+
+.pagination-button, .page-button {
+  color: var(--color-text-primary, #FFFFFF) !important;
+}
+
+.pagination-button:hover:not(:disabled), .page-button:hover:not(.active) {
+  color: var(--color-primary, #1976D2) !important;
+  background-color: rgba(var(--color-primary-rgb, 25, 118, 210), 0.1) !important;
+}
+
+.page-button.active {
+  background-color: var(--color-primary, #1976D2) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(var(--color-primary-rgb, 25, 118, 210), 0.4) !important;
+}
+
+.pagination-button:disabled {
+  color: var(--color-text-disabled, #666666) !important;
+}
+
+/* Estilos para filas expandibles */
+.expandable-row {
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.expansion-indicator {
+  transition: transform 0.3s ease !important;
+  margin-right: 0.5rem !important;
+  color: var(--color-primary, #1976D2) !important;
+}
+
+.expanded .expansion-indicator {
+  transform: rotate(90deg) !important;
+}
+
+.row-detail {
+  background-color: rgba(var(--color-background-light-rgb, 66, 66, 66), 0.5) !important;
+  padding: 1rem !important;
+  border-bottom: 1px solid rgba(var(--color-border-rgb, 72, 72, 72), 0.2) !important;
+}
+
+.detail-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 1rem !important;
+}
+
+.detail-item {
+  display: flex !important;
+  flex-direction: column !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.detail-label {
+  font-size: 0.8rem !important;
+  color: var(--color-text-secondary, #B0B0B0) !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.detail-value {
+  font-size: 0.95rem !important;
+  color: var(--color-text-primary, #FFFFFF) !important;
+}
+
+.detail-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin-top: 1rem !important;
+  gap: 0.5rem !important;
+}
+
+/* Estilos para texto truncado */
+.truncate {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  display: inline-block !important;
+}
+
+/* Estilos responsivos */
+@media (max-width: 992px) {
+  .hide-lg {
+    display: none !important;
+  }
+
+  .detail-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .hide-md {
+    display: none !important;
+  }
+
+  .detail-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .hide-sm {
+    display: none !important;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .detail-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}
+
+/* Estilos para tema oscuro */
+@media (prefers-color-scheme: dark) {
+  /* Contenedor de la tabla */
+  .custom-table-container {
+    background-color: rgba(var(--color-surface-dark-rgb, 51, 51, 51), 0.8) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(var(--color-border-dark-rgb, 51, 51, 51), 0.2) !important;
+  }
+
+  /* Encabezados */
+  .custom-table th {
+    background-color: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.9) !important;
+    color: var(--color-text-primary-dark, #E0E0E0) !important;
+    border-bottom: 2px solid rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.3) !important;
+  }
+
+  /* Celdas */
+  .custom-table td {
+    border-bottom: 1px solid rgba(var(--color-border-dark-rgb, 51, 51, 51), 0.2) !important;
+    color: var(--color-text-primary-dark, #E0E0E0) !important;
+  }
+
+  /* Filas */
+  .custom-table tbody tr:hover {
+    background-color: rgba(var(--color-background-hover-dark-rgb, 68, 68, 68), 0.5) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  /* Badges de roles */
+  .role-badge {
+    background-color: rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.12) !important;
+    color: var(--color-primary-dark, #1565C0) !important;
+    box-shadow: 0 2px 10px rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.15) !important;
+  }
+
+  /* Badges de estado */
+  .estado-activo {
+    background-color: rgba(var(--color-success-dark-rgb, 56, 142, 60), 0.12) !important;
+    color: var(--color-success-dark, #388E3C) !important;
+    box-shadow: 0 2px 10px rgba(var(--color-success-dark-rgb, 56, 142, 60), 0.15) !important;
+    border: 1px solid rgba(var(--color-success-dark-rgb, 56, 142, 60), 0.2) !important;
+  }
+
+  .estado-inactivo {
+    background-color: rgba(var(--color-warning-dark-rgb, 245, 124, 0), 0.12) !important;
+    color: var(--color-warning-dark, #F57C00) !important;
+    box-shadow: 0 2px 10px rgba(var(--color-warning-dark-rgb, 245, 124, 0), 0.15) !important;
+    border: 1px solid rgba(var(--color-warning-dark-rgb, 245, 124, 0), 0.2) !important;
+  }
+
+  .estado-bloqueado {
+    background-color: rgba(var(--color-error-dark-rgb, 211, 47, 47), 0.12) !important;
+    color: var(--color-error-dark, #D32F2F) !important;
+    box-shadow: 0 2px 10px rgba(var(--color-error-dark-rgb, 211, 47, 47), 0.15) !important;
+    border: 1px solid rgba(var(--color-error-dark-rgb, 211, 47, 47), 0.2) !important;
+  }
+
+  /* Enlaces de email */
+  .email-link {
+    color: var(--color-primary-dark, #1565C0) !important;
+  }
+
+  .email-link:hover {
+    color: var(--color-primary-dark, #1565C0) !important;
+    background-color: rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.05) !important;
+  }
+
+  .email-link:hover::after {
+    background-color: var(--color-primary-dark, #1565C0) !important;
+  }
+
+  /* Celdas de ID */
+  .id-cell {
+    color: var(--color-text-secondary-dark, #A0A0A0) !important;
+    background-color: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.5) !important;
+  }
+
+  /* Información de usuario */
+  .user-info .user-name {
+    color: var(--color-text-primary-dark, #E0E0E0) !important;
+  }
+
+  .user-info .user-dni {
+    color: var(--color-text-secondary-dark, #A0A0A0) !important;
+  }
+
+  /* Información de fecha */
+  .date-info .date-value {
+    color: var(--color-text-primary-dark, #E0E0E0) !important;
+  }
+
+  .date-info .date-time {
+    color: var(--color-text-secondary-dark, #A0A0A0) !important;
+  }
+
+  /* Botones de acción */
+  .actions-container button {
+    background-color: rgba(var(--color-surface-dark-rgb, 51, 51, 51), 0.8) !important;
+    border: 1px solid rgba(var(--color-border-dark-rgb, 51, 51, 51), 0.2) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .actions-container button:hover {
+    box-shadow: 0 6px 15px rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.2) !important;
+    border-color: rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.3) !important;
+  }
+
+  .actions-container button i {
+    color: var(--color-text-primary-dark, #E0E0E0) !important;
+  }
+
+  .actions-container button:hover i {
+    color: var(--color-primary-dark, #1565C0) !important;
+  }
+
+  /* Paginación */
+  .pagination-container {
+    background-color: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.8) !important;
+    border-top: 1px solid var(--color-border-dark, #333333) !important;
+  }
+
+  .pagination-button, .page-button {
+    color: var(--color-text-primary-dark, #E0E0E0) !important;
+  }
+
+  .pagination-button:hover:not(:disabled), .page-button:hover:not(.active) {
+    color: var(--color-primary-dark, #1565C0) !important;
+    background-color: rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.1) !important;
+  }
+
+  .page-button.active {
+    background-color: var(--color-primary-dark, #1565C0) !important;
+    box-shadow: 0 2px 8px rgba(var(--color-primary-dark-rgb, 21, 101, 192), 0.4) !important;
+  }
+
+  .pagination-button:disabled {
+    color: var(--color-text-disabled-dark, #666666) !important;
+  }
+
+  /* Estilos para tema oscuro - filas expandibles */
+  .expandable-row {
+    cursor: pointer !important;
+  }
+
+  .expansion-indicator {
+    color: var(--color-primary-dark, #1565C0) !important;
+  }
+
+  .row-detail {
+    background-color: rgba(var(--color-background-dark-rgb, 34, 34, 34), 0.5) !important;
+    border-bottom: 1px solid rgba(var(--color-border-dark-rgb, 51, 51, 51), 0.2) !important;
+  }
+
+  .detail-label {
+    color: var(--color-text-secondary-dark, #A0A0A0) !important;
+  }
+
+  .detail-value {
+    color: var(--color-text-primary-dark, #E0E0E0) !important;
+  }
+}

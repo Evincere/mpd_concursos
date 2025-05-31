@@ -8,6 +8,7 @@ import { PerfilComponent } from '@features/perfil/perfil.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { ConcursosComponent } from '@features/concursos/concursos.component';
+import { FeedbackExamplesComponent } from '@features/examples/feedback-examples/feedback-examples.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, data: { animation: 'login' } },
@@ -18,18 +19,40 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', component: MainComponent },
-      { path: 'concursos', component: ConcursosComponent },
-      { path: 'postulaciones', component: PostulacionesComponent },
-      { path: 'perfil', component: PerfilComponent },
+      {
+        path: 'concursos',
+        loadChildren: () => import('./features/concursos/concursos.module')
+          .then(m => m.ConcursosModule)
+      },
+      {
+        path: 'postulaciones',
+        loadChildren: () => import('./features/postulaciones/postulaciones.module')
+          .then(m => m.PostulacionesModule)
+      },
+      {
+        path: 'perfil',
+        loadChildren: () => import('./features/perfil/perfil.module')
+          .then(m => m.PerfilModule)
+      },
+      {
+        path: 'examples',
+        loadChildren: () => import('./features/examples/examples.module')
+          .then(m => m.ExamplesModule)
+      },
       {
         path: 'examenes',
         loadChildren: () => import('./features/examenes/examenes.routes')
           .then(m => m.EXAMENES_ROUTES)
       },
       {
+        path: 'inscripcion',
+        loadChildren: () => import('./features/concursos/components/inscripcion/routes')
+          .then(m => m.INSCRIPCION_ROUTES)
+      },
+      {
         path: 'configuracion',
-        loadChildren: () => import('./features/admin/admin.routes')
-          .then(m => m.ADMIN_ROUTES),
+        loadChildren: () => import('./features/admin/admin.module')
+          .then(m => m.AdminModule),
         canActivate: [RoleGuard],
         data: { role: 'ROLE_ADMIN' }
       }
@@ -37,17 +60,11 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    component: DashboardComponent,
+    loadChildren: () => import('./features/admin/admin.module')
+      .then(m => m.AdminModule),
     canActivate: [AuthGuard, RoleGuard],
-    data: { role: 'ROLE_ADMIN' },
-    children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: '',
-        loadChildren: () => import('./features/admin/admin.routes')
-          .then(m => m.ADMIN_ROUTES)
-      }
-    ]
+    data: { role: 'ROLE_ADMIN' }
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '**', redirectTo: '/login' }
 ];

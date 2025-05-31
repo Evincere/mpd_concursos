@@ -36,9 +36,10 @@ function createWindow() {
           "default-src 'self'; " +
           "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-          "img-src 'self' data: https:; " +
-          "connect-src 'self' http://localhost:8080 ws://localhost:8080; " +
-          "font-src 'self' https://fonts.gstatic.com;"
+          "img-src 'self' data: https: blob:; " +
+          "connect-src 'self' http://localhost:8080 ws://localhost:8080 https://nominatim.openstreetmap.org; " +
+          "font-src 'self' https://fonts.gstatic.com; " +
+          "worker-src 'self' blob:;"
         ]
       }
     });

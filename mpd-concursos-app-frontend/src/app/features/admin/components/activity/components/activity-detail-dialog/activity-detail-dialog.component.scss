@@ -1,0 +1,305 @@
+@use 'src/styles/variables' as *;
+
+:host {
+  display: block;
+  position: relative;
+}
+
+mat-dialog-content {
+  max-height: 70vh;
+  min-height: 300px;
+}
+
+// Contenedor de carga
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: $color-text-secondary;
+  }
+}
+
+// Encabezado de actividad
+.activity-header {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  
+  .action-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    
+    &.action-success {
+      background-color: rgba($color-success, 0.1);
+      color: $color-success;
+    }
+    
+    &.action-error {
+      background-color: rgba($color-error, 0.1);
+      color: $color-error;
+    }
+    
+    &.action-warning {
+      background-color: rgba($color-warning, 0.1);
+      color: $color-warning;
+    }
+    
+    &.action-info {
+      background-color: rgba($color-info, 0.1);
+      color: $color-info;
+    }
+    
+    &.action-secondary {
+      background-color: rgba($color-text-secondary, 0.1);
+      color: $color-text-secondary;
+    }
+    
+    &.action-default {
+      background-color: rgba($color-text-tertiary, 0.1);
+      color: $color-text-tertiary;
+    }
+    
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+  }
+  
+  .activity-info {
+    flex: 1;
+    
+    h3 {
+      margin: 0 0 0.5rem;
+      font-size: $font-size-lg;
+      font-weight: 500;
+    }
+    
+    .activity-timestamp {
+      margin-bottom: 0.75rem;
+      color: $color-text-secondary;
+      font-size: $font-size-sm;
+    }
+    
+    .activity-details-text {
+      margin: 0;
+      color: $color-text-primary;
+    }
+  }
+}
+
+// Secciones de información
+.info-section {
+  margin: 1.5rem 0;
+  
+  h4 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.25rem;
+    
+    .info-item {
+      .info-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: $color-text-secondary;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+      
+      .info-value {
+        font-weight: 500;
+        word-break: break-word;
+        
+        &.user-agent {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+          font-size: $font-size-sm;
+          max-height: 60px;
+          overflow: auto;
+        }
+        
+        &.module-value,
+        &.action-value {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            color: $color-primary;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Metadatos
+.metadata-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  .metadata-item {
+    .metadata-key {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      color: $color-text-secondary;
+    }
+    
+    .metadata-value {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      background-color: rgba($color-background, 0.5);
+      border-radius: 4px;
+      padding: 0.5rem;
+      
+      pre {
+        margin: 0;
+        font-family: 'Roboto Mono', monospace;
+        font-size: $font-size-sm;
+        white-space: pre-wrap;
+        word-break: break-word;
+        flex: 1;
+      }
+    }
+  }
+}
+
+// Icono de acción pequeño
+.action-icon-small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  
+  &.action-success {
+    background-color: rgba($color-success, 0.1);
+    color: $color-success;
+  }
+  
+  &.action-error {
+    background-color: rgba($color-error, 0.1);
+    color: $color-error;
+  }
+  
+  &.action-warning {
+    background-color: rgba($color-warning, 0.1);
+    color: $color-warning;
+  }
+  
+  &.action-info {
+    background-color: rgba($color-info, 0.1);
+    color: $color-info;
+  }
+  
+  &.action-secondary {
+    background-color: rgba($color-text-secondary, 0.1);
+    color: $color-text-secondary;
+  }
+  
+  &.action-default {
+    background-color: rgba($color-text-tertiary, 0.1);
+    color: $color-text-tertiary;
+  }
+  
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+mat-divider {
+  margin: 1.5rem 0;
+}
+
+// Media queries para responsive
+@media (max-width: 600px) {
+  .activity-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    
+    .action-icon {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .loading-container {
+    p {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .activity-info {
+    .activity-timestamp {
+      color: $color-text-secondary-dark;
+    }
+    
+    .activity-details-text {
+      color: $color-text-primary-dark;
+    }
+  }
+  
+  h4 {
+    color: $color-text-primary-dark !important;
+  }
+  
+  .info-section {
+    .info-grid {
+      .info-item {
+        .info-label {
+          color: $color-text-secondary-dark;
+        }
+      }
+    }
+  }
+  
+  .metadata-container {
+    .metadata-item {
+      .metadata-key {
+        color: $color-text-secondary-dark;
+      }
+      
+      .metadata-value {
+        background-color: rgba($color-background-dark, 0.5);
+      }
+    }
+  }
+}

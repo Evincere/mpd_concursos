@@ -1,0 +1,149 @@
+// Estilos para celdas y elementos de tabla en el componente de usuarios
+@use 'src/styles/variables' as global;
+@use 'variables' as vars;
+
+// Estilos para los enlaces de email
+.email-link {
+  color: global.$color-primary !important;
+  text-decoration: none !important;
+  position: relative !important;
+  padding: 0.1rem 0.2rem !important;
+  transition: all vars.$transition-duration vars.$transition-timing !important;
+  border-radius: 4px !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+
+  &::before {
+    content: '\f0e0' !important; // Icono de sobre de FontAwesome
+    font-family: 'Font Awesome 5 Free' !important;
+    font-weight: 900 !important;
+    margin-right: 0.4rem !important;
+    font-size: 0.85rem !important;
+    opacity: 0.7 !important;
+    transition: all vars.$transition-duration vars.$transition-timing !important;
+  }
+
+  &::after {
+    content: '' !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 2px !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background-color: global.$color-primary !important;
+    transition: width vars.$transition-duration vars.$transition-timing !important;
+  }
+
+  &:hover {
+    color: darken(global.$color-primary, 10%) !important;
+    background-color: rgba(global.$color-primary, 0.05) !important;
+
+    &::after {
+      width: calc(100% - 1rem) !important;
+    }
+
+    &::before {
+      opacity: 1 !important;
+      transform: translateY(-1px) !important;
+    }
+  }
+}
+
+// Estilos para datos vacíos
+.no-data {
+  color: global.$color-text-secondary !important;
+  font-style: italic !important;
+  font-size: global.$font-size-xs !important;
+}
+
+// Estilos para celdas de ID
+.id-cell {
+  font-family: global.$font-family-mono !important;
+  font-size: 0.85rem !important;
+  color: global.$color-text-secondary !important;
+  background-color: rgba(global.$color-background-light, 0.5) !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+}
+
+// Estilos para información de usuario
+.user-info {
+  display: flex !important;
+  flex-direction: column !important;
+
+  .user-name {
+    font-weight: 500 !important;
+    color: global.$color-text-primary !important;
+  }
+
+  .user-dni {
+    font-size: 0.85rem !important;
+    color: global.$color-text-secondary !important;
+    margin-top: 0.2rem !important;
+  }
+}
+
+// Estilos para celdas de fecha
+.date-info {
+  display: flex !important;
+  flex-direction: column !important;
+
+  .date-value {
+    font-weight: 500 !important;
+    color: global.$color-text-primary !important;
+  }
+
+  .date-time {
+    font-size: 0.85rem !important;
+    color: global.$color-text-secondary !important;
+    margin-top: 0.2rem !important;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .no-data {
+    color: global.$color-text-secondary-dark !important;
+  }
+
+  .id-cell {
+    background-color: rgba(global.$color-background-dark, 0.5) !important;
+    color: global.$color-text-secondary-dark !important;
+  }
+
+  .user-info {
+    .user-name {
+      color: global.$color-text-primary-dark !important;
+    }
+
+    .user-dni {
+      color: global.$color-text-secondary-dark !important;
+    }
+  }
+
+  .date-info {
+    .date-value {
+      color: global.$color-text-primary-dark !important;
+    }
+
+    .date-time {
+      color: global.$color-text-secondary-dark !important;
+    }
+  }
+
+  .email-link {
+    color: global.$color-primary-dark !important;
+
+    &::after {
+      background-color: global.$color-primary-dark !important;
+    }
+
+    &:hover {
+      color: lighten(global.$color-primary-dark, 10%) !important;
+      background-color: rgba(global.$color-primary-dark, 0.1) !important;
+    }
+  }
+}

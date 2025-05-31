@@ -13,7 +13,7 @@ export class NetworkSecurityStrategy implements ISecurityStrategy {
     return SecurityViolationType.NETWORK_VIOLATION;
   }
 
-  handleViolation(details?: any): void {
+  handleViolation(_details?: unknown): void {
     this.notificationService.showSecurityWarning(
       SecurityViolationType.NETWORK_VIOLATION
     );

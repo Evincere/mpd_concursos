@@ -1,0 +1,83 @@
+// Variables específicas para el componente de usuarios
+@use 'src/styles/variables' as global;
+
+// Colores
+$card-background: global.$color-background;
+$card-background-dark: global.$color-background-dark;
+$card-border: rgba(global.$color-border, 0.5);
+$card-border-dark: rgba(global.$color-border-dark, 0.5);
+
+// Espaciado
+$section-padding: 1.5rem;
+$card-padding: 1rem;
+$element-gap: 0.75rem;
+
+// Bordes y sombras
+$border-radius: 8px;
+$card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+$card-shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+// Animaciones
+$transition-duration: 0.3s;
+$transition-timing: ease;
+
+// Mixins
+@mixin card {
+  background-color: $card-background;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  padding: $card-padding;
+  transition: all $transition-duration $transition-timing;
+}
+
+@mixin card-dark {
+  background-color: $card-background-dark;
+  box-shadow: $card-shadow-dark;
+}
+
+@mixin section-title {
+  margin: 0;
+  font-size: global.$font-size-xl;
+  font-weight: 600;
+  color: global.$color-text-primary;
+  display: flex;
+  align-items: center;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 24px;
+    background-color: global.$color-primary;
+    margin-right: $element-gap;
+    border-radius: 2px;
+  }
+}
+
+@mixin section-title-dark {
+  color: global.$color-text-primary-dark;
+
+  &::before {
+    background-color: global.$color-primary-dark;
+  }
+}
+
+@mixin loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(var(--color-background-rgb, 255, 255, 255), 0.7);
+  backdrop-filter: blur(2px);
+  border-radius: $border-radius;
+  animation: fadeIn $transition-duration $transition-timing;
+}
+
+@mixin loading-overlay-dark {
+  background-color: rgba(var(--color-background-dark-rgb, 33, 33, 33), 0.7);
+}

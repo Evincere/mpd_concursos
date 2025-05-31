@@ -33,10 +33,10 @@ export interface EducacionBase {
   titulo: string;
   institucion: string;
   fechaEmision?: Date;
-  documentoPdf?: any; // Para manejar el archivo subido
+  documentoPdf?: File | Blob | string; // Para manejar el archivo subido
 
   // Propiedades opcionales que pueden venir del backend en inglés
-  [key: string]: any; // Permite cualquier propiedad adicional
+  [key: string]: unknown; // Permite cualquier propiedad adicional
 }
 
 // Interfaces específicas para cada tipo
@@ -81,10 +81,10 @@ export class EducacionBuilder {
   // Inicializar todas las propiedades para evitar el error "no initializer"
   private _tipo: TipoEducacion = TipoEducacion.CARRERA_GRADO;
   private _estado: EstadoEducacion = EstadoEducacion.EN_PROCESO;
-  private _titulo: string = '';
-  private _institucion: string = '';
+  private _titulo = '';
+  private _institucion = '';
   private _fechaEmision?: Date;
-  private _documentoPdf?: any;
+  private _documentoPdf?: File | Blob | string;
 
   // Campos específicos
   private _duracionAnios?: number;
@@ -151,8 +151,20 @@ export class EducacionBuilder {
     return this;
   }
 
-  setDocumentoPdf(documento: any): EducacionBuilder {
-    this._documentoPdf = documento;
+  setDocumentoPdf(documento: unknown): EducacionBuilder {
+    // Verificar que el documento sea de un tipo válido antes de asignarlo
+    if (documento === undefined || documento === null) {
+      this._documentoPdf = undefined;
+    } else if (
+      documento instanceof File ||
+      documento instanceof Blob ||
+      typeof documento === 'string'
+    ) {
+      this._documentoPdf = documento as (File | Blob | string);
+    } else {
+      console.warn('Tipo de documento no válido:', documento);
+      this._documentoPdf = undefined;
+    }
     return this;
   }
 

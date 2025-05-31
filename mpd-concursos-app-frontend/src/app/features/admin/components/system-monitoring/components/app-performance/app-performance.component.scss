@@ -1,0 +1,229 @@
+@use 'src/styles/variables' as *;
+
+.app-performance-container {
+  padding: 1rem 0;
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+  
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 1.5rem 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  .section-description {
+    color: $color-text-secondary;
+    margin: 0;
+    font-size: $font-size-sm;
+  }
+}
+
+// Estado vacío
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background-color: $color-surface-light;
+  border-radius: $border-radius;
+  
+  mat-icon {
+    font-size: 48px;
+    color: $color-text-secondary;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: $color-text-secondary;
+    font-size: $font-size-md;
+    margin: 0;
+  }
+}
+
+// Métricas de rendimiento
+.performance-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metrics-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-sm;
+  height: 100%;
+  
+  mat-card-header {
+    padding: 1rem 1rem 0.5rem;
+  }
+  
+  mat-card-title {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  mat-card-content {
+    padding: 0 1rem 1rem;
+  }
+}
+
+// Grid de información
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.info-item {
+  margin-bottom: 0.75rem;
+  
+  .info-label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    margin-bottom: 0.25rem;
+  }
+  
+  .info-value {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+// Usuarios por rol
+.users-by-role {
+  margin-top: 1.5rem;
+  
+  h3 {
+    font-size: $font-size-sm;
+    font-weight: 500;
+    margin: 0 0 0.75rem;
+    color: $color-text-primary;
+  }
+}
+
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.role-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: $color-surface-light;
+  border-radius: $border-radius-sm;
+  
+  .role-name {
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .role-count {
+    font-weight: 500;
+    color: $color-primary;
+  }
+}
+
+// Secciones de endpoints y errores
+.endpoints-section, .errors-section {
+  margin-bottom: 2rem;
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+}
+
+// Tablas
+.table-container {
+  overflow-x: auto;
+  border-radius: $border-radius;
+  
+  table {
+    width: 100%;
+  }
+  
+  th {
+    font-weight: 500;
+    color: $color-text-primary;
+    background-color: $color-surface-light;
+  }
+  
+  td, th {
+    padding: 0.75rem 1rem;
+  }
+  
+  tr:nth-child(even) {
+    background-color: $color-surface-light;
+  }
+}
+
+// Método HTTP
+.method-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  font-weight: 500;
+  color: white;
+  
+  &.method-get {
+    background-color: #4caf50; // Green
+  }
+  
+  &.method-post {
+    background-color: #2196f3; // Blue
+  }
+  
+  &.method-put {
+    background-color: #ff9800; // Orange
+  }
+  
+  &.method-delete {
+    background-color: #f44336; // Red
+  }
+}
+
+// Indicador de estado
+.status-indicator {
+  display: flex;
+  align-items: center;
+  
+  &.status-healthy {
+    color: $color-success;
+  }
+  
+  &.status-warning {
+    color: $color-warning;
+  }
+  
+  &.status-critical {
+    color: $color-error;
+  }
+  
+  mat-icon {
+    font-size: 16px;
+    margin-right: 0.25rem;
+  }
+  
+  span {
+    font-size: $font-size-sm;
+  }
+}

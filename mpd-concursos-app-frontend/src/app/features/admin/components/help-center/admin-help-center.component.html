@@ -1,0 +1,265 @@
+<div class="help-center-container">
+  <div *ngIf="isLoading" class="loading-overlay">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Cargando...</span>
+  </div>
+  
+  <!-- Contenido principal -->
+  <div class="help-content" *ngIf="!isLoading">
+    <!-- Artículo o tutorial activo -->
+    <div *ngIf="activeArticle || activeTutorial" class="active-content">
+      <div class="content-header">
+        <button mat-icon-button (click)="closeActiveContent()" matTooltip="Volver">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h2 class="content-title">
+          {{ activeArticle ? activeArticle.title : (activeTutorial ? activeTutorial.title : '') }}
+        </h2>
+      </div>
+      
+      <app-article-viewer 
+        *ngIf="activeArticle" 
+        [article]="activeArticle">
+      </app-article-viewer>
+      
+      <app-guided-tutorial 
+        *ngIf="activeTutorial" 
+        [tutorial]="activeTutorial">
+      </app-guided-tutorial>
+    </div>
+    
+    <!-- Contenido principal cuando no hay artículo o tutorial activo -->
+    <div *ngIf="!activeArticle && !activeTutorial" class="main-content">
+      <div class="help-header">
+        <h1>Centro de Ayuda para Administradores</h1>
+        <p class="help-description">
+          Encuentre guías, tutoriales y respuestas a preguntas frecuentes sobre la administración del sistema.
+        </p>
+      </div>
+      
+      <!-- Buscador -->
+      <mat-card class="search-card">
+        <mat-card-content>
+          <form [formGroup]="searchForm" (ngSubmit)="search()" class="search-form">
+            <div class="search-row">
+              <mat-form-field appearance="outline" class="search-input">
+                <mat-label>Buscar en la documentación</mat-label>
+                <input matInput formControlName="query" placeholder="Escriba su consulta...">
+                <button *ngIf="searchForm.get('query')?.value" matSuffix mat-icon-button type="button" (click)="clearSearch()">
+                  <mat-icon>close</mat-icon>
+                </button>
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="category-filter">
+                <mat-label>Categoría</mat-label>
+                <mat-select formControlName="category">
+                  <mat-option value="">Todas</mat-option>
+                  <mat-option *ngFor="let category of categories" [value]="category.id">
+                    {{category.name}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="level-filter">
+                <mat-label>Nivel</mat-label>
+                <mat-select formControlName="level">
+                  <mat-option value="">Todos</mat-option>
+                  <mat-option value="basic">Básico</mat-option>
+                  <mat-option value="intermediate">Intermedio</mat-option>
+                  <mat-option value="advanced">Avanzado</mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <button mat-raised-button color="primary" type="submit" class="search-button">
+                <mat-icon>search</mat-icon>
+                Buscar
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+      
+      <!-- Resultados de búsqueda -->
+      <div *ngIf="searchResults" class="search-results">
+        <h2>Resultados de búsqueda</h2>
+        
+        <div *ngIf="searchResults.articles.length === 0 && searchResults.tutorials.length === 0" class="no-results">
+          <mat-icon>search_off</mat-icon>
+          <p>No se encontraron resultados para su búsqueda</p>
+          <button mat-stroked-button color="primary" (click)="clearSearch()">Limpiar búsqueda</button>
+        </div>
+        
+        <div *ngIf="searchResults.articles.length > 0 || searchResults.tutorials.length > 0" class="results-container">
+          <!-- Artículos encontrados -->
+          <div *ngIf="searchResults.articles.length > 0" class="articles-results">
+            <h3>Artículos ({{searchResults.articles.length}})</h3>
+            
+            <mat-card *ngFor="let article of searchResults.articles" class="result-card" (click)="openArticle(article.id)">
+              <mat-card-content>
+                <div class="result-header">
+                  <mat-icon class="category-icon">{{getCategoryIcon(article.category)}}</mat-icon>
+                  <div class="result-title">{{article.title}}</div>
+                </div>
+                <div class="result-summary">{{article.summary}}</div>
+                <div class="result-meta">
+                  <span class="result-category">{{getCategoryName(article.category)}}</span>
+                  <span class="result-level" [ngClass]="getLevelClass(article.level)">
+                    {{getLevelName(article.level)}}
+                  </span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+          
+          <!-- Tutoriales encontrados -->
+          <div *ngIf="searchResults.tutorials.length > 0" class="tutorials-results">
+            <h3>Tutoriales ({{searchResults.tutorials.length}})</h3>
+            
+            <mat-card *ngFor="let tutorial of searchResults.tutorials" class="result-card" (click)="startTutorial(tutorial.id)">
+              <mat-card-content>
+                <div class="result-header">
+                  <mat-icon class="category-icon">school</mat-icon>
+                  <div class="result-title">{{tutorial.title}}</div>
+                </div>
+                <div class="result-summary">{{tutorial.description}}</div>
+                <div class="result-meta">
+                  <span class="result-category">{{getCategoryName(tutorial.category)}}</span>
+                  <span class="result-level" [ngClass]="getLevelClass(tutorial.level)">
+                    {{getLevelName(tutorial.level)}}
+                  </span>
+                  <span class="result-time">
+                    <mat-icon>schedule</mat-icon>
+                    {{tutorial.estimatedTime}} min
+                  </span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contenido principal cuando no hay búsqueda -->
+      <div *ngIf="!searchResults" class="help-main">
+        <mat-tab-group [(selectedIndex)]="activeTab">
+          <!-- Inicio -->
+          <mat-tab label="Inicio">
+            <div class="tab-content">
+              <!-- Categorías -->
+              <div class="categories-section">
+                <h2>Categorías</h2>
+                <div class="categories-grid">
+                  <mat-card *ngFor="let category of categories" class="category-card" [routerLink]="['/dashboard/admin/help/category', category.id]">
+                    <mat-card-content>
+                      <div class="category-icon">
+                        <mat-icon>{{category.icon}}</mat-icon>
+                      </div>
+                      <div class="category-name">{{category.name}}</div>
+                      <div class="category-description">{{category.description}}</div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+              </div>
+              
+              <!-- Artículos populares -->
+              <div class="popular-section">
+                <h2>Artículos populares</h2>
+                <div class="articles-grid">
+                  <mat-card *ngFor="let article of popularArticles" class="article-card" (click)="openArticle(article.id)">
+                    <mat-card-content>
+                      <div class="article-category">
+                        <mat-icon>{{getCategoryIcon(article.category)}}</mat-icon>
+                        <span>{{getCategoryName(article.category)}}</span>
+                      </div>
+                      <div class="article-title">{{article.title}}</div>
+                      <div class="article-summary">{{article.summary}}</div>
+                      <div class="article-meta">
+                        <span class="article-level" [ngClass]="getLevelClass(article.level)">
+                          {{getLevelName(article.level)}}
+                        </span>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+              </div>
+              
+              <!-- Tutoriales recomendados -->
+              <div class="tutorials-section">
+                <h2>Tutoriales recomendados</h2>
+                <div class="tutorials-grid">
+                  <mat-card *ngFor="let tutorial of recommendedTutorials" class="tutorial-card" (click)="startTutorial(tutorial.id)">
+                    <mat-card-content>
+                      <div class="tutorial-header">
+                        <mat-icon>school</mat-icon>
+                        <div class="tutorial-title">{{tutorial.title}}</div>
+                      </div>
+                      <div class="tutorial-description">{{tutorial.description}}</div>
+                      <div class="tutorial-meta">
+                        <span class="tutorial-level" [ngClass]="getLevelClass(tutorial.level)">
+                          {{getLevelName(tutorial.level)}}
+                        </span>
+                        <span class="tutorial-time">
+                          <mat-icon>schedule</mat-icon>
+                          {{tutorial.estimatedTime}} min
+                        </span>
+                      </div>
+                      <button mat-stroked-button color="primary" class="start-tutorial-button">
+                        <mat-icon>play_arrow</mat-icon>
+                        Iniciar tutorial
+                      </button>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+          
+          <!-- Base de Conocimientos -->
+          <mat-tab label="Base de Conocimientos">
+            <div class="tab-content">
+              <app-knowledge-base 
+                [categories]="categories"
+                (articleSelected)="openArticle($event)">
+              </app-knowledge-base>
+            </div>
+          </mat-tab>
+          
+          <!-- Tutoriales Guiados -->
+          <mat-tab label="Tutoriales Guiados">
+            <div class="tab-content">
+              <h2>Tutoriales Guiados</h2>
+              <p class="section-description">
+                Los tutoriales guiados le ayudarán a aprender a utilizar las funciones del sistema paso a paso.
+              </p>
+              
+              <div class="tutorials-grid">
+                <mat-card *ngFor="let tutorial of recommendedTutorials" class="tutorial-card" (click)="startTutorial(tutorial.id)">
+                  <mat-card-content>
+                    <div class="tutorial-header">
+                      <mat-icon>school</mat-icon>
+                      <div class="tutorial-title">{{tutorial.title}}</div>
+                    </div>
+                    <div class="tutorial-description">{{tutorial.description}}</div>
+                    <div class="tutorial-meta">
+                      <span class="tutorial-level" [ngClass]="getLevelClass(tutorial.level)">
+                        {{getLevelName(tutorial.level)}}
+                      </span>
+                      <span class="tutorial-time">
+                        <mat-icon>schedule</mat-icon>
+                        {{tutorial.estimatedTime}} min
+                      </span>
+                    </div>
+                    <button mat-stroked-button color="primary" class="start-tutorial-button">
+                      <mat-icon>play_arrow</mat-icon>
+                      Iniciar tutorial
+                    </button>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    </div>
+  </div>
+</div>

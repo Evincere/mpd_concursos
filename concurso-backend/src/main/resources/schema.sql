@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS user_entity;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS inscription_circunscripciones;
+DROP TABLE IF EXISTS inscription_sessions;
 DROP TABLE IF EXISTS inscriptions;
 DROP TABLE IF EXISTS options;
 DROP TABLE IF EXISTS answers;
@@ -27,6 +28,7 @@ DROP TABLE IF EXISTS examination_allowed_materials;
 DROP TABLE IF EXISTS examination_security_violations;
 DROP TABLE IF EXISTS documents;
 DROP TABLE IF EXISTS document_types;
+DROP TABLE IF EXISTS contest_requirements;
 DROP TABLE IF EXISTS contest_dates;
 
 -- Habilitar verificación de foreign keys
@@ -41,6 +43,12 @@ CREATE TABLE user_entity (
     cuit VARCHAR(255) UNIQUE,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
+    birth_date DATE,
+    country VARCHAR(255),
+    province VARCHAR(255),
+    municipality VARCHAR(255),
+    legal_address VARCHAR(255),
+    residential_address VARCHAR(255),
     telefono VARCHAR(255),
     direccion VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -109,6 +117,22 @@ CREATE TABLE contest_dates (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE
+);
+
+CREATE TABLE contest_requirements (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    contest_id BIGINT NOT NULL,
+    description VARCHAR(500) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    required BOOLEAN NOT NULL DEFAULT TRUE,
+    priority INTEGER NOT NULL DEFAULT 1,
+    document_type VARCHAR(100),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE,
+    INDEX idx_contest_requirements_contest_id (contest_id),
+    INDEX idx_contest_requirements_category (category),
+    INDEX idx_contest_requirements_priority (priority)
 );
 
 CREATE TABLE examinations (
@@ -203,13 +227,31 @@ CREATE TABLE inscriptions (
     created_at DATETIME(6),
     updated_at DATETIME(6),
     inscription_date DATETIME(6),
-    status ENUM('ACTIVE', 'CANCELLED', 'PENDING'),
-    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DATA_CONFIRMATION', 'COMPLETED'),
+    status ENUM('ACTIVE', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'),
+    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED'),
     accepted_terms BOOLEAN DEFAULT FALSE,
     confirmed_personal_data BOOLEAN DEFAULT FALSE,
+    documentos_completos BOOLEAN DEFAULT FALSE,
+    centro_de_vida VARCHAR(500),
     terms_acceptance_date DATETIME(6),
     data_confirmation_date DATETIME(6),
     PRIMARY KEY (id),
+    FOREIGN KEY (contest_id) REFERENCES contests(id),
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
+) ENGINE=InnoDB;
+
+-- Tabla de sesiones de inscripción
+CREATE TABLE inscription_sessions (
+    id BINARY(16) PRIMARY KEY,
+    inscription_id BINARY(16) NOT NULL,
+    contest_id BIGINT NOT NULL,
+    user_id BINARY(16) NOT NULL,
+    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED') NOT NULL,
+    form_data LONGTEXT NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (inscription_id) REFERENCES inscriptions(id) ON DELETE CASCADE,
     FOREIGN KEY (contest_id) REFERENCES contests(id),
     FOREIGN KEY (user_id) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;

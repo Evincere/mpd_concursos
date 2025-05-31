@@ -1,0 +1,279 @@
+<div class="report-builder-container">
+  <div class="header">
+    <h1>Constructor de Reportes</h1>
+    <div class="header-actions">
+      <button mat-stroked-button color="primary" (click)="resetForm()" [disabled]="isLoading">
+        <mat-icon>refresh</mat-icon>
+        Reiniciar
+      </button>
+    </div>
+  </div>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <mat-spinner diameter="50"></mat-spinner>
+    <span>Procesando...</span>
+  </div>
+
+  <mat-card class="report-builder-card">
+    <mat-horizontal-stepper [linear]="true" #stepper [(selectedIndex)]="activeStep">
+      <!-- Paso 1: Selección de campos -->
+      <mat-step label="Selección de Campos">
+        <form [formGroup]="reportForm" class="report-form">
+          <div class="step-content">
+            <div class="form-section">
+              <h2>Información del Reporte</h2>
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Nombre del Reporte</mat-label>
+                  <input matInput formControlName="reportName" placeholder="Ingrese un nombre para el reporte">
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Plantilla</mat-label>
+                  <mat-select formControlName="template" (selectionChange)="loadTemplate($event.value)">
+                    <mat-option value="custom">Personalizado</mat-option>
+                    <mat-option *ngFor="let template of reportTemplates" [value]="template.id">
+                      {{template.name}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-hint>Seleccione una plantilla predefinida o cree un reporte personalizado</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h2>Campos del Reporte</h2>
+              <p class="section-description">Seleccione los campos que desea incluir en el reporte</p>
+
+              <div class="fields-container">
+                <div class="available-fields">
+                  <h3>Campos Disponibles</h3>
+
+                  <div class="field-group" *ngFor="let group of ['user', 'contest', 'inscription', 'document']">
+                    <h4>
+                      {{group === 'user' ? 'Usuario' :
+                        group === 'contest' ? 'Concurso' :
+                        group === 'inscription' ? 'Inscripción' :
+                        'Documentos'}}
+                    </h4>
+                    <div class="field-list">
+                      <div class="field-item" *ngFor="let field of availableFields | filterByGroup:group"
+                           (click)="addField(field.id)"
+                           (keydown.enter)="addField(field.id)"
+                           (keydown.space)="addField(field.id)"
+                           tabindex="0"
+                           role="button"
+                           [class.selected]="fieldsArray.value.includes(field.id)">
+                        <mat-icon>add</mat-icon>
+                        <span>{{field.label}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="selected-fields">
+                  <h3>Campos Seleccionados</h3>
+                  <div class="field-list">
+                    <div class="field-item selected" *ngFor="let fieldId of fieldsArray.value; let i = index">
+                      <span>{{getFieldLabel(fieldId)}}</span>
+                      <button mat-icon-button color="warn" (click)="removeField(i)">
+                        <mat-icon>remove</mat-icon>
+                      </button>
+                    </div>
+
+                    <div *ngIf="fieldsArray.length === 0" class="empty-message">
+                      No hay campos seleccionados
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperNext [disabled]="fieldsArray.length === 0">
+              Siguiente
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Paso 2: Filtros y Agrupación -->
+      <mat-step label="Filtros y Agrupación">
+        <form [formGroup]="reportForm" class="report-form">
+          <div class="step-content" formGroupName="filters">
+            <div class="form-section">
+              <h2>Filtros</h2>
+              <p class="section-description">Aplique filtros para limitar los resultados del reporte</p>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Estado de Inscripción</mat-label>
+                  <mat-select formControlName="inscriptionState">
+                    <mat-option value="">Todos</mat-option>
+                    <mat-option value="NO_INSCRIPTO">No inscripto</mat-option>
+                    <mat-option value="IN_PROCESS">En proceso</mat-option>
+                    <mat-option value="PENDING">Pendiente</mat-option>
+                    <mat-option value="APPROVED">Aprobada</mat-option>
+                    <mat-option value="REJECTED">Rechazada</mat-option>
+                    <mat-option value="CANCELLED">Cancelada</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Concurso</mat-label>
+                  <mat-select formControlName="contestId">
+                    <mat-option value="">Todos</mat-option>
+                    <!-- Aquí irían las opciones de concursos -->
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row" formGroupName="dateRange">
+                <mat-form-field appearance="outline">
+                  <mat-label>Fecha desde</mat-label>
+                  <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                  <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #startPicker></mat-datepicker>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Fecha hasta</mat-label>
+                  <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+                  <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #endPicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Búsqueda</mat-label>
+                  <input matInput formControlName="searchText" placeholder="Buscar por nombre, DNI, etc.">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="form-section" formGroupName="grouping">
+              <h2>Agrupación y Ordenamiento</h2>
+              <p class="section-description">Configure cómo se agruparán y ordenarán los resultados</p>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Agrupar por</mat-label>
+                  <mat-select formControlName="groupBy">
+                    <mat-option value="">Sin agrupación</mat-option>
+                    <mat-option *ngFor="let field of availableFields" [value]="field.id">
+                      {{field.label}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Ordenar por</mat-label>
+                  <mat-select formControlName="sortBy">
+                    <mat-option *ngFor="let field of availableFields" [value]="field.id">
+                      {{field.label}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Dirección</mat-label>
+                  <mat-select formControlName="sortDirection">
+                    <mat-option value="asc">Ascendente</mat-option>
+                    <mat-option value="desc">Descendente</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <mat-icon>arrow_back</mat-icon>
+              Anterior
+            </button>
+            <button mat-raised-button color="primary" (click)="generateReport()" [disabled]="isLoading">
+              <mat-icon>play_arrow</mat-icon>
+              Generar Reporte
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Paso 3: Resultados y Exportación -->
+      <mat-step label="Resultados">
+        <form [formGroup]="reportForm" class="report-form">
+          <div class="step-content">
+            <div class="form-section" formGroupName="export">
+              <h2>Opciones de Exportación</h2>
+              <p class="section-description">Configure las opciones para exportar el reporte</p>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Formato</mat-label>
+                  <mat-select formControlName="format">
+                    <mat-option *ngFor="let format of exportFormats" [value]="format.value">
+                      <mat-icon>{{format.icon}}</mat-icon>
+                      {{format.label}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Nombre del archivo</mat-label>
+                  <input matInput formControlName="fileName">
+                </mat-form-field>
+
+                <div class="checkbox-field">
+                  <mat-checkbox formControlName="includeHeaders">Incluir encabezados</mat-checkbox>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!reportGenerated" class="empty-results">
+              <mat-icon>info</mat-icon>
+              <p>Genere el reporte para ver los resultados</p>
+            </div>
+
+            <div *ngIf="reportGenerated" class="report-results">
+              <h2>{{reportForm.get('reportName')?.value}}</h2>
+
+              <div class="table-container mat-elevation-z2">
+                <table mat-table [dataSource]="reportData">
+                  <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
+                    <th mat-header-cell *matHeaderCellDef>{{getFieldLabel(column)}}</th>
+                    <td mat-cell *matCellDef="let row">{{row[column]}}</td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                </table>
+              </div>
+
+              <div class="results-summary">
+                <p>Total de registros: {{reportData.length}}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <mat-icon>arrow_back</mat-icon>
+              Anterior
+            </button>
+            <button mat-raised-button color="primary" (click)="exportReport()" [disabled]="!reportGenerated || isLoading">
+              <mat-icon>download</mat-icon>
+              Exportar
+            </button>
+          </div>
+        </form>
+      </mat-step>
+    </mat-horizontal-stepper>
+  </mat-card>
+</div>

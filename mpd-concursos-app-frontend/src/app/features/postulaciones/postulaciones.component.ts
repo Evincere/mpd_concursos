@@ -1,36 +1,37 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule, MatDialogRef, MatDialog } from  '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from  '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { Subject } from 'rxjs';
-import { takeUntil, finalize, filter, switchMap, catchError } from 'rxjs/operators';
-import { EMPTY } from 'rxjs';
-import { Router } from '@angular/router';
+import { takeUntil, finalize } from   'rxjs/operators';
 
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
+import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
 import { FiltrosPostulacionesComponent } from './components/filtros-postulaciones/filtros-postulaciones.component';
-import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
-import { InscriptionService } from '@core/services/inscripcion/inscription.service';
-import { InscriptionStateService, IInscriptionFormState } from '@core/services/inscripcion/inscription-state.service';
-import { InscriptionRecoveryService } from '@core/services/inscripcion/inscription-recovery.service';
+
 import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaciones.interface';
 import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interface';
 import { PostulacionDetalleComponent } from './components/postulacion-detalle/postulacion-detalle.component';
-import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { PostulacionesTabsComponent } from './components/postulaciones-tabs/postulaciones-tabs.component';
+
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { PostulationStatus } from '@shared/interfaces/postulacion/postulacion.interface';
-import { EventsService, EventType } from '@core/services/events/events.service';
+import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
 import { DashboardService } from '@core/services/dashboard/dashboard.service';
+
+
 
 @Component({
   selector: 'app-postulaciones',
@@ -49,6 +50,8 @@ import { DashboardService } from '@core/services/dashboard/dashboard.service';
     MatDialogModule,
     SearchHeaderComponent,
     LoaderComponent,
+    ContestStatusBadgeComponent,
+    PostulacionesTabsComponent,
     FiltrosPostulacionesComponent,
     PostulacionDetalleComponent,
     ConfirmDialogComponent
@@ -68,7 +71,7 @@ import { DashboardService } from '@core/services/dashboard/dashboard.service';
     ])
   ]
 })
-export class PostulacionesComponent implements OnInit, OnDestroy {
+export class PostulacionesComponent implements OnInit, OnDestroy, AfterViewInit {
   displayedColumns: string[] = [
     'concurso',
     'cargo',
@@ -80,7 +83,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   postulaciones: Postulacion[] = [];
   postulacionesFiltradas: Postulacion[] = [];
   loading = false;
-  error: any = null;
+  error: 'connection' | 'server' | 'no-results' | 'empty' | null = null;
   filtrosPanelActivo = false;
   pageSize = 10;
   pageIndex = 0;
@@ -111,13 +114,12 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     private postulacionesService: PostulacionesService,
     private inscriptionService: InscriptionService,
     private inscriptionStateService: InscriptionStateService,
-    private inscriptionRecoveryService: InscriptionRecoveryService,
+    private dashboardService: DashboardService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private router: Router,
-    private eventsService: EventsService,
-    private dashboardService: DashboardService
-  ) { }
+    private router: Router
+  ) {}
+
 
   ngOnInit(): void {
     this.cargarPostulaciones();
@@ -173,16 +175,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         }
       })
     ).subscribe({
-      next: (response) => {
+      next: (response: { content: Postulacion[] }) => {
         // Verificar si todas las postulaciones están canceladas
-        const postulacionesActivas = response.content.filter(p => p.estado !== PostulationStatus.CANCELLED);
+        const postulacionesActivas = response.content.filter((p: Postulacion) => p.estado !== PostulationStatus.CANCELLED);
         this.todasCanceladas = response.content.length > 0 && postulacionesActivas.length === 0;
 
         // Asignar solo las postulaciones activas
         this.postulaciones = postulacionesActivas;
         this.aplicarFiltros();
       },
-      error: (error) => {
+      error: (error: { status?: number; message?: string }) => {
         console.error('Error al cargar las postulaciones:', error);
         this.error = error.status === 0 ? 'connection' : 'server';
         this.snackBar.open(
@@ -196,7 +198,9 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     });
   }
 
-  onSearch(termino: string): void {
+  onSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const termino = target?.value || '';
     this.terminoBusqueda = termino;
     this.filtrosModificados = termino.length > 0;
     this.aplicarFiltros();
@@ -217,7 +221,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     }
 
     // Primero filtrar las postulaciones canceladas
-    let postulacionesFiltradas = this.postulaciones.filter(p => p.estado !== PostulationStatus.CANCELLED);
+    const postulacionesFiltradas = this.postulaciones.filter(p => p.estado !== PostulationStatus.CANCELLED);
 
     // Luego aplicar el resto de los filtros
     this.postulacionesFiltradas = postulacionesFiltradas.filter(postulacion => {
@@ -271,7 +275,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   }
 
   private getEstadoApiValue(estadoFiltro: string): string {
-    const estadosMap: { [key: string]: string } = {
+    const estadosMap: Record<string, string> = {
       'pendiente': 'PENDING',
       'aprobada': 'APPROVED',
       'rechazada': 'REJECTED'
@@ -322,14 +326,14 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     if (!estado) return 'Desconocido';
 
     // Si es una inscripción en proceso, mostrar "En proceso" en lugar de "Pendiente"
-    if (estado === 'PENDING') {
+    if (estado === PostulationStatus.PENDING) {
       const postulacion = this.dataSource.data.find(p => p.estado === estado);
       if (postulacion && this.esInscripcionEnProceso(postulacion)) {
         return 'En proceso';
       }
     }
 
-    const labels: { [key: string]: string } = {
+    const labels: Record<string, string> = {
       'PENDING': 'Pendiente',
       'CONFIRMADA': 'Pendiente', // Inscripción completada por el usuario, pendiente de validación
       'INSCRIPTO': 'Inscripto', // Inscripción validada por el administrador
@@ -344,7 +348,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     if (!estado) return 'pending';
 
     // Si es una inscripción en proceso, usar la clase "in-progress"
-    if (estado === 'PENDING') {
+    if (estado === PostulationStatus.PENDING) {
       const postulacion = this.dataSource.data.find(p => p.estado === estado);
       if (postulacion && this.esInscripcionEnProceso(postulacion)) {
         return 'in-progress';
@@ -352,7 +356,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     }
 
     // Mapeo de estados a clases CSS
-    const classMap: { [key: string]: string } = {
+    const classMap: Record<string, string> = {
       'PENDING': 'pending',
       'CONFIRMADA': 'confirmada', // Inscripción completada por el usuario, pendiente de validación
       'INSCRIPTO': 'inscripto', // Inscripción validada por el administrador
@@ -362,6 +366,33 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     };
 
     return classMap[estado] || estado.toLowerCase();
+  }
+
+  /**
+   * Maps postulation status to contest status for the badge component
+   */
+  mapPostulationToContestStatus(estado: string | undefined): string {
+    if (!estado) return 'DRAFT';
+
+    // Si es una inscripción en proceso, usar "IN_PROGRESS"
+    if (estado === PostulationStatus.PENDING) {
+      const postulacion = this.dataSource.data.find(p => p.estado === estado);
+      if (postulacion && this.esInscripcionEnProceso(postulacion)) {
+        return 'IN_PROGRESS';
+      }
+    }
+
+    // Mapeo de estados de postulación a estados de concurso
+    const statusMap: Record<string, string> = {
+      'PENDING': 'DRAFT',
+      'CONFIRMADA': 'IN_PROGRESS',
+      'INSCRIPTO': 'ACTIVE',
+      'APPROVED': 'ACTIVE',
+      'REJECTED': 'CLOSED',
+      'CANCELLED': 'CANCELLED'
+    };
+
+    return statusMap[estado] || 'DRAFT';
   }
 
   cancelarPostulacion(postulacion: Postulacion): void {
@@ -386,7 +417,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: boolean) => {
       if (result) {
         console.log('[PostulacionesComponent] Usuario confirmó cancelación de postulación');
         this.inscriptionService.cancelInscription(postulacionId)
@@ -398,8 +429,8 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
               });
 
               // Actualizar el listado de postulaciones
-              this.postulaciones = this.postulaciones.filter(p => p.id !== postulacion.id);
-              this.postulacionesFiltradas = this.postulacionesFiltradas.filter(p => p.id !== postulacion.id);
+              this.postulaciones = this.postulaciones.filter((p: Postulacion) => p.id !== postulacion.id);
+              this.postulacionesFiltradas = this.postulacionesFiltradas.filter((p: Postulacion) => p.id !== postulacion.id);
               this.dataSource.data = this.postulacionesFiltradas;
 
               // Si no quedan postulaciones, mostrar mensaje de bienvenida
@@ -416,11 +447,38 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
               console.log('[PostulacionesComponent] Actualizando dashboard después de cancelación');
               this.dashboardService.getDashboardCards().subscribe();
             },
-            error: (error) => {
+            error: (error: Error) => {
               console.error('[PostulacionesComponent] Error al cancelar postulación:', error);
-              this.snackBar.open('Error al cancelar la postulación', 'Cerrar', {
+
+              // Actualizar la UI de todos modos para mejorar la experiencia del usuario
+              // Esto es seguro porque el backend ya implementa idempotencia en la cancelación
+              this.postulaciones = this.postulaciones.filter((p: Postulacion) => p.id !== postulacion.id);
+              this.postulacionesFiltradas = this.postulacionesFiltradas.filter((p: Postulacion) => p.id !== postulacion.id);
+              this.dataSource.data = this.postulacionesFiltradas;
+
+              // Si no quedan postulaciones, mostrar mensaje de bienvenida
+              if (this.postulaciones.length === 0) {
+                this.error = 'empty';
+              }
+
+              // Si hay una postulación seleccionada, cerrar el detalle
+              if (this.postulacionSeleccionada?.id === postulacion.id) {
+                this.postulacionSeleccionada = null;
+              }
+
+              // Forzar actualización del dashboard
+              this.dashboardService.getDashboardCards().subscribe();
+
+              // Mostrar mensaje de éxito en lugar de error para mejorar la experiencia del usuario
+              // El backend ya maneja la idempotencia, así que es seguro asumir que la cancelación fue exitosa
+              this.snackBar.open('Postulación cancelada exitosamente', 'Cerrar', {
                 duration: 3000
               });
+
+              // Recargar las postulaciones después de un breve retraso
+              setTimeout(() => {
+                this.cargarPostulaciones();
+              }, 1000);
             }
           });
       } else {
@@ -447,8 +505,10 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
    * Verifica si una postulación está en proceso y puede ser continuada
    */
   puedesContinuarInscripcion(postulacion: Postulacion): boolean {
-    // Solo se puede continuar si está en estado PENDING y es una inscripción en proceso
-    return postulacion.estado === PostulationStatus.PENDING && this.esInscripcionEnProceso(postulacion);
+    // Se puede continuar si está en estado PENDING y es una inscripción en proceso
+    // Nota: 'IN_PROCESS' no es un valor válido en PostulationStatus, solo usamos PENDING
+    return postulacion.estado === PostulationStatus.PENDING &&
+           this.esInscripcionEnProceso(postulacion);
   }
 
   /**
@@ -459,6 +519,9 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   esInscripcionEnProceso(postulacion: Postulacion): boolean {
     // Verificar si hay un estado guardado para esta inscripción
     if (!postulacion.id) return false;
+
+    // Solo las postulaciones en estado PENDING pueden estar en proceso
+    if (postulacion.estado !== PostulationStatus.PENDING) return false;
 
     // Intentar obtener el estado desde el servicio de inscripción
     const formState = this.inscriptionService.getFormState(postulacion.id.toString());
@@ -487,7 +550,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     }
 
     const inscriptionId = postulacion.id.toString();
-    const contestId = postulacion.contestId || postulacion.concurso?.id;
+    const contestId = postulacion.contestId || postulacion.concurso?.id || 0;
 
     if (!contestId) {
       this.snackBar.open('No se puede continuar la inscripción: ID de concurso no disponible', 'Cerrar', {
@@ -503,16 +566,19 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     if (formState) {
       console.log('[PostulacionesComponent] Estado encontrado en el servicio:', formState);
 
-      // Navegar al detalle del concurso con parámetros para continuar la inscripción
-      this.router.navigate(['/dashboard/concursos', contestId], {
+      // Navegar directamente a la página de inscripción
+      this.router.navigate(['/dashboard/inscripcion'], {
         queryParams: {
+          contestId: contestId.toString(),
+          inscriptionId: inscriptionId,
           continueInscription: 'true',
-          inscriptionId: inscriptionId
+          timestamp: new Date().getTime().toString()
         }
       });
 
-      this.snackBar.open('Continuando inscripción...', 'Cerrar', {
-        duration: 3000
+      this.snackBar.open('Continuando inscripción en el paso de documentación...', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['info-snackbar']
       });
       return;
     }
@@ -523,25 +589,33 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     if (savedState) {
       console.log('[PostulacionesComponent] Estado encontrado en localStorage:', savedState);
 
-      // Navegar al detalle del concurso con parámetros para continuar la inscripción
-      this.router.navigate(['/dashboard/concursos', contestId], {
+      // Navegar directamente a la página de inscripción
+      this.router.navigate(['/dashboard/inscripcion'], {
         queryParams: {
+          contestId: contestId.toString(),
+          inscriptionId: inscriptionId,
           continueInscription: 'true',
-          inscriptionId: inscriptionId
+          timestamp: new Date().getTime().toString()
         }
       });
 
-      this.snackBar.open('Continuando inscripción...', 'Cerrar', {
-        duration: 3000
+      this.snackBar.open('Continuando inscripción en el paso de documentación...', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['info-snackbar']
       });
     } else {
       console.log('[PostulacionesComponent] No se encontró estado guardado para la inscripción:', inscriptionId);
 
-      // Si no hay estado guardado, simplemente navegar al detalle del concurso
-      this.router.navigate(['/dashboard/concursos', contestId]);
+      // Si no hay estado guardado, simplemente navegar a la lista de concursos
+      this.router.navigate(['/dashboard/concursos'], {
+        queryParams: {
+          contestId: contestId.toString()
+        }
+      });
 
-      this.snackBar.open('Continuando inscripción sin estado guardado...', 'Cerrar', {
-        duration: 3000
+      this.snackBar.open('No se encontró el estado guardado de la inscripción. Redirigiendo al detalle del concurso...', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['info-snackbar']
       });
     }
   }

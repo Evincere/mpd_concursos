@@ -4,6 +4,8 @@ import ar.gov.mpd.concursobackend.inscription.application.dto.UpdateInscriptionS
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStepUseCase;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionPreferences;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
+import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class UpdateInscriptionStepService implements UpdateInscriptionStepUseCase {
-    
+
     private final InscriptionRepository inscriptionRepository;
 
     @Override
@@ -31,9 +33,15 @@ public class UpdateInscriptionStepService implements UpdateInscriptionStepUseCas
         // Actualizar el paso actual
         inscription.updateStep(request.getStep());
 
+        // Si se completa la inscripción, actualizar el estado a ACTIVE
+        if (request.getStep() == InscriptionStep.COMPLETED) {
+            inscription.setState(InscriptionState.ACTIVE);
+        }
+
         // Crear y actualizar preferencias si se proporcionaron datos
         if (hasPreferencesData(request)) {
             var preferences = InscriptionPreferences.builder()
+                    .centroDeVida(request.getCentroDeVida())
                     .selectedCircunscripciones(request.getSelectedCircunscripciones())
                     .acceptedTerms(Boolean.TRUE.equals(request.getAcceptedTerms()))
                     .confirmedPersonalData(Boolean.TRUE.equals(request.getConfirmedPersonalData()))
@@ -51,6 +59,7 @@ public class UpdateInscriptionStepService implements UpdateInscriptionStepUseCas
     private boolean hasPreferencesData(UpdateInscriptionStepRequest request) {
         return request.getSelectedCircunscripciones() != null ||
                request.getAcceptedTerms() != null ||
-               request.getConfirmedPersonalData() != null;
+               request.getConfirmedPersonalData() != null ||
+               request.getCentroDeVida() != null;
     }
-} 
+}

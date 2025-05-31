@@ -12,7 +12,9 @@ import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
+import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,7 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
     private final ContestRepository contestRepository;
     private final SendNotificationUseCase notificationService;
     private final IUserService userService;
+    private final InscriptionNotificationService inscriptionNotificationService;
 
     @Override
     public void updateStatus(UUID id, String newStatus) {
@@ -61,28 +64,69 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
             Contest contest = contestRepository.findById(inscription.getContestId().getValue())
                     .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado"));
 
-            // Obtener información del usuario
-            User user = userService.getByUsername(new UserUsername(inscription.getUserId().getValue().toString()))
-                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+            // Send notifications based on the new status
+            if (status == InscriptionStatus.PENDING) {
+                // Notify administrators about pending inscription
+                inscriptionNotificationService.notifyAdminsAboutPendingInscription(inscription, contest);
+                log.info("Notification sent to administrators about pending inscription: {}", id);
 
-            // Enviar notificación
-            NotificationRequest notificationRequest = NotificationRequest.builder()
-                    .recipientUsername(user.getUsername().value())
-                    .subject("Estado de Postulación Actualizado - " + contest.getTitle())
-                    .content(String.format(
-                            "El estado de tu postulación al concurso '%s' ha sido actualizado a %s.\n\n" +
-                                    "Detalles del concurso:\n" +
-                                    "- Cargo: %s\n" +
-                                    "- Dependencia: %s",
-                            contest.getTitle(),
-                            status,
-                            contest.getPosition(),
-                            contest.getDependency()))
-                    .type(NotificationType.INSCRIPTION)
-                    .acknowledgementLevel(AcknowledgementLevel.NONE)
-                    .build();
+                // Notify user about completed inscription
+                User user = userService.getByUsername(new UserUsername(inscription.getUserId().getValue().toString()))
+                        .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-            notificationService.sendNotification(notificationRequest);
+                NotificationRequest completionRequest = NotificationRequest.builder()
+                        .recipientUsername(user.getUsername().value())
+                        .subject("Inscripción Completada - " + contest.getTitle())
+                        .content(String.format(
+                                "¡Felicitaciones! Has completado tu inscripción al concurso '%s'.\n\n" +
+                                        "Detalles del concurso:\n" +
+                                        "- Cargo: %s\n" +
+                                        "- Dependencia: %s\n\n" +
+                                        "Tu inscripción está ahora pendiente de validación por el equipo administrativo.\n" +
+                                        "Te notificaremos cuando tu inscripción sea revisada.",
+                                contest.getTitle(),
+                                contest.getPosition(),
+                                contest.getDependency()))
+                        .type(NotificationType.INSCRIPTION)
+                        .acknowledgementLevel(AcknowledgementLevel.NONE)
+                        .build();
+
+                notificationService.sendNotification(completionRequest);
+                log.info("Notification sent to user about completed inscription: {}", id);
+
+            } else if (status == InscriptionStatus.APPROVED || status == InscriptionStatus.REJECTED) {
+                // Notify user about approved or rejected inscription
+                inscriptionNotificationService.notifyUserAboutInscriptionStatusChange(inscription, contest);
+                log.info("Notification sent to user about inscription status change to {}: {}", status, id);
+            }
+
+            // Para los estados ACTIVE, CANCELLED y otros que no tienen notificaciones específicas
+            // enviamos una notificación general de cambio de estado
+            if (status != InscriptionStatus.PENDING && status != InscriptionStatus.APPROVED && status != InscriptionStatus.REJECTED) {
+                // Obtener información del usuario
+                User user = userService.getByUsername(new UserUsername(inscription.getUserId().getValue().toString()))
+                        .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+                // Enviar notificación
+                NotificationRequest notificationRequest = NotificationRequest.builder()
+                        .recipientUsername(user.getUsername().value())
+                        .subject("Estado de Postulación Actualizado - " + contest.getTitle())
+                        .content(String.format(
+                                "El estado de tu postulación al concurso '%s' ha sido actualizado a %s.\n\n" +
+                                        "Detalles del concurso:\n" +
+                                        "- Cargo: %s\n" +
+                                        "- Dependencia: %s",
+                                contest.getTitle(),
+                                status,
+                                contest.getPosition(),
+                                contest.getDependency()))
+                        .type(NotificationType.INSCRIPTION)
+                        .acknowledgementLevel(AcknowledgementLevel.NONE)
+                        .build();
+
+                notificationService.sendNotification(notificationRequest);
+                log.info("General notification sent to user about inscription status change to {}: {}", status, id);
+            }
 
         } catch (Exception e) {
             log.error("Error al actualizar el estado de la inscripción: {}", e.getMessage(), e);
@@ -91,14 +135,14 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
     }
 
     private Inscription updateInscriptionStatus(Inscription inscription, InscriptionStatus newStatus) {
-        if (inscription.getStatus() == newStatus) {
+        if (InscriptionStateConverter.equals(inscription.getState(), newStatus)) {
             log.debug("La inscripción ya tiene el estado {}", newStatus);
             return inscription;
         }
 
         // Aquí podrías agregar validaciones adicionales para las transiciones de estado
         // permitidas
-        if (newStatus == InscriptionStatus.CANCELLED && inscription.getStatus() == InscriptionStatus.CANCELLED) {
+        if (newStatus == InscriptionStatus.CANCELLED && InscriptionStateConverter.equals(inscription.getState(), InscriptionStatus.CANCELLED)) {
             throw new IllegalStateException("La inscripción ya está cancelada");
         }
 
@@ -107,7 +151,7 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
                 .id(inscription.getId())
                 .contestId(inscription.getContestId())
                 .userId(inscription.getUserId())
-                .status(newStatus)
+                .state(InscriptionStateConverter.toState(newStatus))
                 .createdAt(inscription.getCreatedAt())
                 .inscriptionDate(inscription.getInscriptionDate())
                 .build();

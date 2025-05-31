@@ -1,0 +1,172 @@
+<div class="tab-content">
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-custom-spinner [size]="'large'"></app-custom-spinner>
+  </div>
+
+  <div class="requisitos-container">
+    <!-- Formulario para agregar/editar requisitos -->
+    <div class="form-section">
+      <h3>{{ isEditing ? 'Editar Requisito' : 'Agregar Nuevo Requisito' }}</h3>
+
+      <form [formGroup]="requirementForm" (ngSubmit)="onSubmit()">
+        <div class="form-row">
+          <app-custom-textarea
+            label="Descripción"
+            formControlName="description"
+            [rows]="3"
+            placeholder="Ingrese la descripción del requisito"
+            [errorMessage]="getErrorMessage('description')"
+            class="full-width">
+          </app-custom-textarea>
+        </div>
+
+        <div class="form-row">
+          <app-custom-select
+            label="Categoría"
+            formControlName="category"
+            [options]="categoryOptions"
+            [errorMessage]="getErrorMessage('category')">
+          </app-custom-select>
+
+          <app-custom-select
+            label="Tipo de Documento"
+            formControlName="documentType"
+            [options]="documentTypeOptions">
+          </app-custom-select>
+        </div>
+
+        <div class="form-row">
+          <app-custom-form-field
+            label="Prioridad"
+            formControlName="priority"
+            [type]="'number'"
+            [min]="1"
+            [max]="10"
+            [hint]="'1 (más alta) - 10 (más baja)'"
+            [errorMessage]="getErrorMessage('priority')">
+          </app-custom-form-field>
+
+          <div class="required-checkbox">
+            <app-custom-checkbox
+              formControlName="required"
+              label="Requisito obligatorio">
+            </app-custom-checkbox>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <app-custom-button
+            *ngIf="isEditing"
+            [label]="'Cancelar'"
+            [variant]="'text'"
+            (buttonClick)="cancelEdit()">
+          </app-custom-button>
+
+          <app-custom-button
+            [label]="isEditing ? 'Actualizar' : 'Agregar'"
+            [color]="'primary'"
+            [disabled]="isLoading"
+            [type]="'submit'">
+          </app-custom-button>
+        </div>
+      </form>
+
+      <!-- Plantillas de requisitos -->
+      <div class="templates-section" *ngIf="templates && templates.length > 0">
+        <h3>Plantillas de Requisitos</h3>
+
+        <div class="templates-list">
+          <div *ngFor="let template of templates" class="template-card">
+            <div class="template-header">
+              <h4>{{ template.name }}</h4>
+              <p class="template-description">{{ template.description }}</p>
+            </div>
+
+            <div class="template-content">
+              <div class="template-requirements">
+                <div *ngFor="let req of template.requirements" class="template-requirement-item">
+                  <div class="requirement-header">
+                    <span class="requirement-category">{{ getCategoryLabel(req.category) }}</span>
+                    <span class="requirement-priority">Prioridad: {{ req.priority }}</span>
+                    <span *ngIf="req.required" class="required-badge">Obligatorio</span>
+                  </div>
+                  <p class="requirement-description">{{ req.description }}</p>
+                </div>
+              </div>
+
+              <div class="template-actions">
+                <app-custom-button
+                  [label]="'Aplicar Plantilla'"
+                  [color]="'primary'"
+                  (buttonClick)="applyTemplate(template.id)">
+                </app-custom-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de requisitos -->
+    <div class="requirements-list-section">
+      <h3>Requisitos del Concurso</h3>
+
+      <div class="requirements-list" *ngIf="requisitos && requisitos.length > 0">
+        <div *ngFor="let group of getRequisitosByCategory()" class="requirement-category-group">
+          <div class="category-header">
+            <h4>{{ getCategoryLabel(group.category) }}</h4>
+            <span class="category-count">{{ group.requirements.length }} requisitos</span>
+          </div>
+
+          <div cdkDropList (cdkDropListDropped)="drop($event, group.requirements)" class="requirements-list-items">
+            <div *ngFor="let requisito of group.requirements" class="requirement-item" cdkDrag>
+              <div class="drag-handle" cdkDragHandle>
+                <i class="icon">⋮⋮</i>
+              </div>
+
+              <div class="requirement-content">
+                <div class="requirement-header">
+                  <div class="requirement-info">
+                    <span *ngIf="requisito.required" class="required-badge">Obligatorio</span>
+                    <span *ngIf="!requisito.required" class="optional-badge">Opcional</span>
+                    <span class="requirement-priority">Prioridad: {{ requisito.priority }}</span>
+                  </div>
+
+                  <div class="requirement-actions">
+                    <app-custom-button
+                      [icon]="'edit'"
+                      [variant]="'icon'"
+                      [color]="'primary'"
+                      [tooltip]="'Editar'"
+                      (buttonClick)="editRequirement(requisito)">
+                    </app-custom-button>
+
+                    <app-custom-button
+                      [icon]="'delete'"
+                      [variant]="'icon'"
+                      [color]="'warn'"
+                      [tooltip]="'Eliminar'"
+                      (buttonClick)="deleteRequirement(requisito)">
+                    </app-custom-button>
+                  </div>
+                </div>
+
+                <p class="requirement-description">{{ requisito.description }}</p>
+
+                <div *ngIf="requisito.documentType" class="requirement-document-type">
+                  <i class="icon">📄</i>
+                  <span>{{ getDocumentTypeLabel(requisito.documentType) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!requisitos || requisitos.length === 0" class="empty-requirements">
+        <i class="icon">📋</i>
+        <p>No hay requisitos definidos</p>
+      </div>
+    </div>
+  </div>
+</div>

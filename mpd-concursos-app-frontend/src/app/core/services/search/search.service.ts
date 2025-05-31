@@ -12,7 +12,9 @@ export class SearchService implements ISearchService {
   private searchTerm$ = this.searchTermSubject.asObservable();
   private loading$ = this.loadingSubject.asObservable();
 
-  constructor() { }
+  constructor() {
+    console.log('[SearchService] Inicializado');
+  }
 
   search(term: string): void {
     this.loadingSubject.next(true);
@@ -38,4 +40,4 @@ export class SearchService implements ISearchService {
     this.searchTermSubject.next('');
     this.loadingSubject.next(false);
   }
-} 
+}

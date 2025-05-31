@@ -1,0 +1,293 @@
+@use 'src/styles/variables' as *;
+
+.profiles-admin-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+  }
+}
+
+// Contenido de pestañas
+.tab-content {
+  padding: 1.5rem 0;
+}
+
+// Tarjeta de filtros
+.filter-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  
+  mat-card-content {
+    padding: 1rem;
+  }
+}
+
+.filter-form {
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .filter-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex: 1;
+      min-width: 150px;
+    }
+  }
+}
+
+// Tabla de perfiles
+.table-container {
+  position: relative;
+  min-height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: $color-surface;
+  
+  table {
+    width: 100%;
+  }
+  
+  .mat-column-avatar {
+    width: 60px;
+    padding-right: 0;
+  }
+  
+  .mat-column-name {
+    min-width: 180px;
+  }
+  
+  .mat-column-email {
+    min-width: 200px;
+  }
+  
+  .mat-column-dni {
+    width: 120px;
+  }
+  
+  .mat-column-professionalInfo {
+    min-width: 150px;
+  }
+  
+  .mat-column-documents {
+    width: 150px;
+    text-align: center;
+  }
+  
+  .mat-column-status {
+    width: 120px;
+  }
+  
+  .mat-column-actions {
+    width: 60px;
+    text-align: center;
+  }
+  
+  // Celdas personalizadas
+  .avatar-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    
+    .avatar-placeholder {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: $color-primary;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 500;
+      font-size: $font-size-sm;
+    }
+  }
+  
+  .name-cell {
+    display: flex;
+    flex-direction: column;
+    
+    .full-name {
+      font-weight: 500;
+    }
+    
+    .username {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+  
+  .professional-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    .info-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: $color-primary;
+    }
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: $font-size-xs;
+    font-weight: 500;
+    
+    &.status-active {
+      background-color: rgba($color-success, 0.1);
+      color: $color-success;
+    }
+    
+    &.status-inactive {
+      background-color: rgba($color-text-tertiary, 0.1);
+      color: $color-text-tertiary;
+    }
+    
+    &.status-blocked {
+      background-color: rgba($color-error, 0.1);
+      color: $color-error;
+    }
+  }
+  
+  // Fila de perfil
+  .profile-row {
+    &:hover {
+      background-color: rgba($color-primary, 0.05);
+    }
+  }
+  
+  // Estado de carga
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+  }
+  
+  // Estado vacío
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    
+    mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      margin-bottom: 1rem;
+      color: $color-text-tertiary;
+    }
+    
+    p {
+      margin-bottom: 1.5rem;
+      color: $color-text-secondary;
+      text-align: center;
+    }
+  }
+}
+
+// Media queries para responsive
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    
+    h1 {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  .filter-form {
+    .filter-row {
+      flex-direction: column;
+      gap: 0;
+      
+      .filter-actions {
+        justify-content: flex-start;
+        margin-top: 1rem;
+      }
+    }
+  }
+  
+  .table-container {
+    overflow-x: auto;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .filter-card,
+  .table-container {
+    background-color: $color-surface-dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .table-container {
+    .loading-overlay {
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .empty-state {
+      mat-icon {
+        color: $color-text-tertiary-dark;
+      }
+      
+      p {
+        color: $color-text-secondary-dark;
+      }
+    }
+    
+    .profile-row {
+      &:hover {
+        background-color: rgba($color-primary-dark, 0.1);
+      }
+    }
+    
+    .name-cell {
+      .username {
+        color: $color-text-secondary-dark;
+      }
+    }
+  }
+}

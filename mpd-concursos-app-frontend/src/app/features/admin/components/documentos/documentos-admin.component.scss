@@ -1,0 +1,189 @@
+@use 'src/styles/variables' as *;
+
+.container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100%;
+  overflow-y: auto;
+  background-color: $color-background;
+  color: $color-text-primary;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+// Estilos para las tarjetas de estadísticas
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stats-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  transition: $transition-default;
+  overflow: hidden;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $box-shadow;
+    background: $color-surface-light;
+  }
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+  }
+}
+
+.stat-icon {
+  background-color: rgba($color-primary, 0.15);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: $color-primary;
+  }
+
+  &.pending-icon {
+    background-color: rgba($color-warning, 0.15);
+    mat-icon {
+      color: $color-warning;
+    }
+  }
+
+  &.approved-icon {
+    background-color: rgba($color-success, 0.15);
+    mat-icon {
+      color: $color-success;
+    }
+  }
+
+  &.rejected-icon {
+    background-color: rgba($color-error, 0.15);
+    mat-icon {
+      color: $color-error;
+    }
+  }
+}
+
+.stat-info {
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+
+  .stat-label {
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+// Estilos para los filtros
+.filter-card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  margin-bottom: 1.5rem;
+}
+
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filter-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+// Estilos para la tabla
+.table-container {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+}
+
+.mat-mdc-row:hover {
+  background-color: rgba($color-primary, 0.05);
+}
+
+.email-text {
+  font-size: 0.8rem;
+  color: $color-text-secondary;
+}
+
+// Estilos para los badges de estado
+.estado-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.estado-pendiente {
+  background-color: rgba($color-warning, 0.15);
+  color: $color-warning;
+}
+
+.estado-aprobado {
+  background-color: rgba($color-success, 0.15);
+  color: $color-success;
+}
+
+.estado-rechazado {
+  background-color: rgba($color-error, 0.15);
+  color: $color-error;
+}
+
+// Estilos para los botones de acción
+button[mat-icon-button] {
+  margin-right: 0.25rem;
+}
+
+// Estilos para el paginador
+mat-paginator {
+  background: $color-surface;
+  border-top: 1px solid $color-border;
+}

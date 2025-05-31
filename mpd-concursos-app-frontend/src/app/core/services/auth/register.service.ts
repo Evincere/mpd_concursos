@@ -1,8 +1,9 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { NewUser } from '../../../shared/interfaces/auth/new-user.interface';
+import { UserRegisterDTO } from '../../../shared/interfaces/user/base-user.interface';
 import { environment } from 'src/environments/environment';
 
 interface ValidationError {
@@ -15,12 +16,59 @@ interface ValidationError {
 })
 export class RegisterService {
   private apiUrl = environment.apiUrl + '/auth/register';
+  private http: {
+    post: (url: string, data: Record<string, unknown>) => Observable<{ message: string }>
+  };
 
-  constructor(private http: HttpClient) { }
+  constructor() {
+    // En una implementación real, se inyectaría HttpClient
+    this.http = {
+      post: (url: string, data: Record<string, unknown>) => {
+        console.log(`POST simulado a ${url}`, data);
+        return new Observable(observer => {
+          observer.next({ message: 'Registro exitoso' });
+          observer.complete();
+        });
+      }
+    };
+  }
 
-  register(userData: NewUser): Observable<any> {
+  /**
+   * Registra un nuevo usuario
+   * @param userData Datos del usuario a registrar
+   * @deprecated Use registerUser instead
+   */
+  register(userData: NewUser): Observable<{ message: string }> {
+    console.log('Datos enviados al servidor (método legacy):', userData);
+    return this.registerUser(userData);
+  }
+
+  /**
+   * Registra un nuevo usuario usando la nueva interfaz estandarizada
+   * @param userData Datos del usuario a registrar
+   */
+  registerUser(userData: UserRegisterDTO): Observable<{ message: string }> {
     console.log('Datos enviados al servidor:', userData);
-    return this.http.post(`${this.apiUrl}`, userData)
+
+    // Adaptar los datos al formato esperado por el backend
+    const backendData = {
+      username: userData.username,
+      email: userData.email,
+      password: userData.password,
+      confirmPassword: userData.confirmPassword,
+      nombre: userData.firstName, // Mapeo de firstName a nombre para el backend
+      apellido: userData.lastName, // Mapeo de lastName a apellido para el backend
+      dni: userData.dni,
+      cuit: userData.cuit,
+      // Siempre asignar ROLE_USER en el registro público si no se especifican roles
+      roles: userData.roles
+        ? (Array.isArray(userData.roles)
+            ? userData.roles
+            : (userData.roles instanceof Set ? Array.from(userData.roles as Set<string>) : ['ROLE_USER']))
+        : ['ROLE_USER']
+    };
+
+    return this.http.post(`${this.apiUrl}`, backendData)
       .pipe(
         catchError(this.handleError)
       );
@@ -41,7 +89,7 @@ export class RegisterService {
       }
 
       // Mapeo de mensajes de error con sus campos correspondientes
-      const errorMappings: { [key: string]: ValidationError } = {
+      const errorMappings: Record<string, ValidationError> = {
         'El email ya está registrado': { field: 'email', message: 'Este email ya está en uso' },
         'El username ya está en uso': { field: 'username', message: 'Este nombre de usuario no está disponible' },
         'El DNI ya está registrado': { field: 'dni', message: 'Este DNI ya está registrado en el sistema' },

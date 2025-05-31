@@ -1,0 +1,80 @@
+<header class="admin-header">
+  <div class="header-left">
+    <!-- Botón para colapsar/expandir el sidebar -->
+    <div class="sidebar-toggle-container">
+      <app-custom-button
+        [variant]="'icon'"
+        [icon]="isSidebarCollapsed ? 'bars' : 'times'"
+        [tooltip]="isSidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'"
+        [color]="'primary'"
+        class="sidebar-toggle"
+        (buttonClick)="onToggleSidebar()"
+      ></app-custom-button>
+    </div>
+
+    <!-- Título de la sección (se puede hacer dinámico basado en la ruta actual) -->
+    <h1 class="header-title">Panel de Administración</h1>
+
+    <!-- El botón para volver al área de usuario ahora está en el indicador de sección -->
+  </div>
+
+  <div class="header-right">
+    <!-- Botón de búsqueda -->
+    <app-custom-button
+      [variant]="'icon'"
+      [icon]="'search'"
+      [tooltip]="'Buscar'"
+      class="action-button"
+    ></app-custom-button>
+
+    <!-- Botón de notificaciones -->
+    <div class="notification-container">
+      <app-custom-button
+        [variant]="'icon'"
+        [icon]="'bell'"
+        [tooltip]="'Notificaciones'"
+        class="action-button"
+        [appCustomMenuTrigger]="notificationsMenu"
+      ></app-custom-button>
+      <span
+        *ngIf="unreadNotifications > 0"
+        class="notification-badge"
+      >{{unreadNotifications}}</span>
+    </div>
+
+    <!-- Menú de notificaciones -->
+    <app-custom-menu #notificationsMenu [xPosition]="'before'" class="notifications-menu">
+      <app-admin-notifications></app-admin-notifications>
+    </app-custom-menu>
+
+    <!-- Menú de usuario -->
+    <div
+      class="user-button"
+      [appCustomMenuTrigger]="userMenu"
+    >
+      <div class="user-avatar">{{userInitials}}</div>
+      <div class="user-info">
+        <span class="user-name">{{userName}}</span>
+        <span class="user-role">{{userRole}}</span>
+      </div>
+      <i class="fas fa-chevron-down dropdown-icon"></i>
+    </div>
+
+    <app-custom-menu #userMenu [xPosition]="'before'">
+      <app-custom-menu-item icon="home" routerLink="/dashboard">
+        Ir al Dashboard Principal
+      </app-custom-menu-item>
+      <app-custom-divider></app-custom-divider>
+      <app-custom-menu-item icon="person" routerLink="/admin/perfil">
+        Mi Perfil
+      </app-custom-menu-item>
+      <app-custom-menu-item icon="cog" routerLink="/admin/configuracion">
+        Configuración
+      </app-custom-menu-item>
+      <app-custom-divider></app-custom-divider>
+      <app-custom-menu-item icon="sign-out-alt" (itemSelected)="logout()">
+        Cerrar Sesión
+      </app-custom-menu-item>
+    </app-custom-menu>
+  </div>
+</header>

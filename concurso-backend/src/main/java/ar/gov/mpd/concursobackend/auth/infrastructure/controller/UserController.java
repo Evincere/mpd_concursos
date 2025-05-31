@@ -1,17 +1,40 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import ar.gov.mpd.concursobackend.auth.application.dto.UpdateUserRequest;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileResponse;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileUpdateRequest;
+import ar.gov.mpd.concursobackend.auth.application.service.RolService;
 import ar.gov.mpd.concursobackend.auth.application.service.UserService;
+import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
+import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCuitException;
+import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.model.UserStatus;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
 import ar.gov.mpd.concursobackend.shared.security.IAuthenticationFacade;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,6 +47,7 @@ public class UserController {
 
     private final UserService userService;
     private final IAuthenticationFacade authenticationFacade;
+    private final RolService rolService;
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('ROLE_USER')")
@@ -53,15 +77,88 @@ public class UserController {
     }
 
     private UserProfileResponse mapToProfileResponse(User user) {
-        return UserProfileResponse.builder()
-                .id(user.getId().value().toString())
-                .username(user.getUsername().value())
-                .email(user.getEmail().value())
-                .dni(user.getDni().value())
-                .cuit(user.getCuit().value())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .build();
+        if (user == null) {
+            log.warn("Attempted to map null user to profile response");
+            return null;
+        }
+
+        try {
+            // Mapear roles a strings con manejo de nulos
+            Set<String> roleStrings = new HashSet<>();
+            if (user.getRoles() != null) {
+                roleStrings = user.getRoles().stream()
+                        .filter(Objects::nonNull)
+                        .map(rol -> {
+                            try {
+                                return rol.getRole().name();
+                            } catch (Exception e) {
+                                log.warn("Error getting role name: {}", e.getMessage());
+                                return "UNKNOWN";
+                            }
+                        })
+                        .collect(Collectors.toSet());
+            }
+
+            // Obtener el estado del usuario
+            String status = user.getStatus() != null ? user.getStatus().toString() : "ACTIVE";
+
+            // Construir la respuesta con manejo de nulos
+            UserProfileResponse.UserProfileResponseBuilder builder = UserProfileResponse.builder();
+
+            // Añadir ID con manejo de nulos
+            if (user.getId() != null && user.getId().value() != null) {
+                builder.id(user.getId().value().toString());
+            } else {
+                builder.id("unknown");
+            }
+
+            // Añadir username con manejo de nulos
+            if (user.getUsername() != null) {
+                builder.username(user.getUsername().value());
+            } else {
+                builder.username("unknown");
+            }
+
+            // Añadir email con manejo de nulos
+            if (user.getEmail() != null) {
+                builder.email(user.getEmail().value());
+            } else {
+                builder.email("unknown");
+            }
+
+            // Añadir dni con manejo de nulos
+            if (user.getDni() != null) {
+                builder.dni(user.getDni().value());
+            } else {
+                builder.dni("unknown");
+            }
+
+            // Añadir cuit con manejo de nulos
+            if (user.getCuit() != null) {
+                builder.cuit(user.getCuit().value());
+            }
+
+            // Añadir el resto de campos
+            builder.firstName(user.getFirstName())
+                   .lastName(user.getLastName())
+                   .telefono(user.getTelefono())
+                   .direccion(user.getDireccion())
+                   .roles(roleStrings)
+                   .status(status)
+                   .enabled(true); // Por defecto, todos los usuarios se consideran habilitados
+
+            // Añadir createdAt con manejo de nulos
+            if (user.getCreatedAt() != null && user.getCreatedAt().value() != null) {
+                builder.createdAt(user.getCreatedAt().value());
+            } else {
+                builder.createdAt(LocalDateTime.now());
+            }
+
+            return builder.build();
+        } catch (Exception e) {
+            log.error("Error mapping user to profile response: {}", e.getMessage(), e);
+            return null;
+        }
     }
 
     private User updateUserFromRequest(User user, UserProfileUpdateRequest request) {
@@ -70,5 +167,325 @@ public class UserController {
         user.setDni(new UserDni(request.getDni()));
         user.setCuit(new UserCuit(request.getCuit()));
         return user;
+    }
+
+    /**
+     * Get all users with pagination and filtering (admin only)
+     *
+     * @param page Page number (0-based)
+     * @param size Page size
+     * @param sort Field to sort by
+     * @param direction Sort direction (ASC or DESC)
+     * @param role Filter by role (optional)
+     * @param query Search query for name, email, or username (optional)
+     * @param status Filter by user status (optional): ACTIVE, INACTIVE, BLOCKED, LOCKED, EXPIRED
+     * @return Page of users
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Page<UserProfileResponse>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sort,
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String status) {
+
+        log.debug("Getting all users with page={}, size={}, sort={}, direction={}, role={}, query={}, status={}",
+                page, size, sort, direction, role, query, status);
+
+        try {
+            // Create page request
+            // Convertir la dirección a mayúsculas para evitar errores con el enum
+            String directionUpperCase = direction.toUpperCase();
+            log.debug("Using sort direction: {}", directionUpperCase);
+
+            PageRequest pageRequest = PageRequest.of(
+                    page,
+                    size,
+                    Sort.Direction.valueOf(directionUpperCase),
+                    sort);
+
+            // Get users based on filters
+            List<User> users;
+
+            // Primero aplicar filtro por estado si existe
+            if (status != null && !status.isEmpty()) {
+                try {
+                    UserStatus userStatus = UserStatus.valueOf(status.toUpperCase());
+                    users = userService.findUsersByStatus(userStatus);
+                    log.debug("Filtered by status: {}, found {} users", userStatus, users.size());
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid status: {}", status);
+                    users = userService.findAll();
+                }
+            } else if (role != null && !role.isEmpty()) {
+                // Si no hay filtro por estado pero sí por rol
+                try {
+                    RoleEnum roleEnum = RoleEnum.valueOf(role);
+                    users = userService.findUsersByRole(roleEnum);
+                    log.debug("Filtered by role: {}, found {} users", roleEnum, users.size());
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid role: {}", role);
+                    users = userService.findAll();
+                }
+            } else {
+                // Si no hay filtros, obtener todos los usuarios
+                users = userService.findAll();
+                log.debug("No filters applied, found {} users", users.size());
+            }
+
+            // Apply query filter if provided
+            if (query != null && !query.isEmpty()) {
+                String searchQuery = query.toLowerCase();
+                users = users.stream()
+                        .filter(user ->
+                            user.getUsername().value().toLowerCase().contains(searchQuery) ||
+                            user.getEmail().value().toLowerCase().contains(searchQuery) ||
+                            user.getFirstName().toLowerCase().contains(searchQuery) ||
+                            user.getLastName().toLowerCase().contains(searchQuery) ||
+                            user.getDni().value().contains(searchQuery))
+                        .collect(Collectors.toList());
+            }
+
+            // Ensure users list is not null
+            if (users == null) {
+                log.warn("User list is null, returning empty list");
+                users = new ArrayList<>();
+            }
+
+            // Apply pagination manually
+            int start = (int) pageRequest.getOffset();
+            int end = Math.min((start + pageRequest.getPageSize()), users.size());
+
+            // Ensure valid sublist range
+            if (start > users.size()) {
+                start = 0;
+                end = Math.min(pageRequest.getPageSize(), users.size());
+            }
+
+            // Map users to response DTOs with null safety
+            List<UserProfileResponse> userResponses = users.subList(start, end).stream()
+                    .map(user -> {
+                        try {
+                            return mapToProfileResponse(user);
+                        } catch (Exception e) {
+                            log.error("Error mapping user to response: {}", e.getMessage(), e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            // Create a Page object
+            Page<UserProfileResponse> page1 = new org.springframework.data.domain.PageImpl<>(
+                    userResponses,
+                    pageRequest,
+                    users.size());
+
+            return ResponseEntity.ok(page1);
+        } catch (Exception e) {
+            log.error("Error getting all users: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
+     * Get available roles (admin only)
+     *
+     * @return List of available roles
+     */
+    @GetMapping("/roles")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<String>> getAvailableRoles() {
+        log.debug("Getting available roles");
+
+        try {
+            // Obtener todos los roles disponibles del enum
+            List<String> roles = Arrays.stream(RoleEnum.values())
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(roles);
+        } catch (Exception e) {
+            log.error("Error getting available roles: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
+     * Get user by ID (admin only)
+     *
+     * @param userId User ID
+     * @return User profile response
+     */
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<UserProfileResponse> getUserById(@PathVariable String userId) {
+        log.debug("Getting user by ID: {}", userId);
+
+        try {
+            // Convertir el ID de String a UUID
+            UUID userUuid;
+            try {
+                userUuid = UUID.fromString(userId);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid user ID format: {}", userId);
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Obtener el usuario por ID
+            return userService.getById(userUuid)
+                    .map(user -> {
+                        try {
+                            return mapToProfileResponse(user);
+                        } catch (Exception e) {
+                            log.error("Error mapping user to response: {}", e.getMessage(), e);
+                            return null;
+                        }
+                    })
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            log.error("Error getting user by ID {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
+     * Update user by ID (admin only)
+     *
+     * @param userId User ID
+     * @param updateRequest Update request data
+     * @return Updated user profile response
+     */
+    /**
+     * Delete user by ID (admin only)
+     *
+     * @param userId User ID
+     * @return No content if successful
+     */
+    @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable String userId) {
+        log.debug("Deleting user with ID: {}", userId);
+
+        try {
+            // Convertir el ID de String a UUID
+            UUID userUuid;
+            try {
+                userUuid = UUID.fromString(userId);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid user ID format: {}", userId);
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Eliminar el usuario
+            boolean deleted = userService.deleteUser(userUuid);
+            if (deleted) {
+                log.info("User with ID {} deleted successfully", userId);
+                return ResponseEntity.noContent().build();
+            } else {
+                log.warn("User with ID {} not found or could not be deleted", userId);
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            log.error("Error deleting user with ID {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/{userId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<UserProfileResponse> updateUser(
+            @PathVariable String userId,
+            @RequestBody UpdateUserRequest updateRequest) {
+        log.debug("Actualizando usuario con ID: {}", userId);
+
+        try {
+            // Convertir el ID de String a UUID
+            UUID userUuid;
+            try {
+                userUuid = UUID.fromString(userId);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid user ID format: {}", userId);
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Obtener el usuario por ID
+            return userService.getById(userUuid)
+                    .map(user -> {
+                        try {
+                            // Actualizar los campos del usuario
+                            if (updateRequest.getFirstName() != null) {
+                                user.setFirstName(updateRequest.getFirstName());
+                            }
+                            if (updateRequest.getLastName() != null) {
+                                user.setLastName(updateRequest.getLastName());
+                            }
+                            if (updateRequest.getEmail() != null) {
+                                user.setEmail(new UserEmail(updateRequest.getEmail()));
+                            }
+                            if (updateRequest.getDni() != null) {
+                                user.setDni(new UserDni(updateRequest.getDni()));
+                            }
+
+                            // Manejar el CUIT de forma especial
+                            if (updateRequest.getCuit() != null) {
+                                try {
+                                    user.setCuit(new UserCuit(updateRequest.getCuit()));
+                                } catch (InvalidCuitException e) {
+                                    log.warn("Invalid CUIT format: {}", updateRequest.getCuit());
+                                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El formato del CUIT no es válido");
+                                }
+                            }
+
+                            // Actualizar otros campos
+                            if (updateRequest.getTelefono() != null) {
+                                user.setTelefono(updateRequest.getTelefono());
+                            }
+                            if (updateRequest.getDireccion() != null) {
+                                user.setDireccion(updateRequest.getDireccion());
+                            }
+
+                            // Actualizar roles si se proporcionan
+                            if (updateRequest.getRoles() != null && !updateRequest.getRoles().isEmpty()) {
+                                Set<Rol> roles = new HashSet<>();
+                                for (String roleName : updateRequest.getRoles()) {
+                                    try {
+                                        RoleEnum roleEnum = RoleEnum.valueOf(roleName);
+                                        rolService.findByName(roleEnum)
+                                                .ifPresent(roles::add);
+                                    } catch (IllegalArgumentException e) {
+                                        log.warn("Invalid role name: {}", roleName);
+                                    }
+                                }
+                                if (!roles.isEmpty()) {
+                                    user.setRoles(roles);
+                                }
+                            }
+
+                            // Nota: La entidad User no tiene un campo 'enabled'
+                            // El estado del usuario se maneja a través de sus roles
+
+                            // Guardar el usuario actualizado
+                            User updatedUser = userService.updateUser(user);
+                            return mapToProfileResponse(updatedUser);
+                        } catch (ResponseStatusException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            log.error("Error updating user: {}", e.getMessage(), e);
+                            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al actualizar el usuario");
+                        }
+                    })
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error updating user with ID {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(500).build();
+        }
     }
 }

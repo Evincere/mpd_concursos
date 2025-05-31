@@ -1,0 +1,842 @@
+@use 'src/styles/variables' as vars;
+
+.concurso-detalle-container {
+  padding: vars.$spacing-lg;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: vars.$color-background;
+  min-height: 100vh;
+  color: vars.$color-text-primary;
+  font-family: vars.$font-family-base;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: vars.$spacing-xl;
+  padding-bottom: vars.$spacing-lg;
+  border-bottom: 1px solid vars.$color-border;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: vars.$spacing-md;
+
+    h1 {
+      margin: 0;
+      font-size: vars.$font-size-xl;
+      font-weight: 500;
+      color: vars.$color-text-primary;
+      display: flex;
+      align-items: center;
+
+      &::before {
+        content: '\f0ae'; // Icono de documento
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        margin-right: vars.$spacing-sm;
+        font-size: 1rem;
+        color: vars.$color-primary;
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: vars.$spacing-sm;
+  }
+}
+
+// Estilos para botones administrativos
+.back-button, .action-button {
+  padding: vars.$spacing-sm vars.$spacing-md;
+  border: 1px solid transparent;
+  border-radius: vars.$border-radius-sm;
+  cursor: pointer;
+  font-size: vars.$font-size-sm;
+  font-weight: 500;
+  font-family: vars.$font-family-base;
+  transition: vars.$transition-normal;
+  display: inline-flex;
+  align-items: center;
+  gap: vars.$spacing-xs;
+  text-decoration: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba(vars.$color-primary, 0.3);
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: vars.$box-shadow-light;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+.back-button {
+  background-color: vars.$color-surface;
+  color: vars.$color-text-primary;
+  border-color: vars.$color-border;
+
+  &:hover:not(:disabled) {
+    background-color: vars.$color-surface-light;
+    border-color: vars.$color-border-light;
+  }
+
+  &::before {
+    content: '\f060'; // Icono de flecha izquierda
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 0.8rem;
+  }
+}
+
+.action-button {
+  &.primary {
+    background-color: vars.$color-primary;
+    color: vars.$color-white;
+    border-color: vars.$color-primary;
+
+    &:hover:not(:disabled) {
+      background-color: vars.$color-primary-dark;
+      border-color: vars.$color-primary-dark;
+    }
+
+    &::before {
+      content: '\f044'; // Icono de editar
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      font-size: 0.8rem;
+    }
+  }
+
+  &.danger {
+    background-color: vars.$color-error;
+    color: vars.$color-white;
+    border-color: vars.$color-error;
+
+    &:hover:not(:disabled) {
+      background-color: vars.$color-error-dark;
+      border-color: vars.$color-error-dark;
+    }
+
+    &::before {
+      content: '\f2ed'; // Icono de eliminar
+      font-family: 'Font Awesome 5 Free';
+      font-weight: 900;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+// Estilos para el contenido
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: vars.$spacing-xl;
+  background-color: vars.$color-surface;
+  border-radius: vars.$border-radius;
+  box-shadow: vars.$box-shadow;
+  margin: vars.$spacing-lg 0;
+
+  .spinner {
+    font-size: 2rem;
+    margin-bottom: vars.$spacing-md;
+    color: vars.$color-primary;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    color: vars.$color-text-secondary;
+    font-size: vars.$font-size-md;
+    margin: 0;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.concurso-header-card {
+  background-color: vars.$color-surface;
+  border-radius: vars.$border-radius;
+  padding: vars.$spacing-xl;
+  margin-bottom: vars.$spacing-xl;
+  box-shadow: vars.$box-shadow;
+  border: 1px solid vars.$color-border;
+  transition: vars.$transition-normal;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .concurso-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: vars.$spacing-lg;
+    gap: vars.$spacing-md;
+
+    h2 {
+      margin: 0;
+      color: vars.$color-text-primary;
+      font-size: vars.$font-size-lg;
+      font-weight: 600;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .status-badge {
+      padding: vars.$spacing-xs vars.$spacing-sm;
+      border-radius: vars.$border-radius-lg;
+      font-size: vars.$font-size-xs;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: vars.$spacing-xs;
+
+      &::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: currentColor;
+      }
+
+      &.status-active {
+        background-color: vars.$color-success-bg;
+        color: vars.$color-success;
+        border: 1px solid rgba(vars.$color-success, 0.3);
+      }
+
+      &.status-draft {
+        background-color: vars.$color-warning-bg;
+        color: vars.$color-warning;
+        border: 1px solid rgba(vars.$color-warning, 0.3);
+      }
+
+      &.status-in-progress {
+        background-color: vars.$color-info-light;
+        color: vars.$color-info;
+        border: 1px solid rgba(vars.$color-info, 0.3);
+      }
+
+      &.status-closed {
+        background-color: vars.$color-error-bg;
+        color: vars.$color-error;
+        border: 1px solid rgba(vars.$color-error, 0.3);
+      }
+
+      &.status-cancelled {
+        background-color: rgba(vars.$color-text-tertiary, 0.15);
+        color: vars.$color-text-tertiary;
+        border: 1px solid rgba(vars.$color-text-tertiary, 0.3);
+      }
+    }
+  }
+
+  .concurso-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: vars.$spacing-lg;
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: vars.$spacing-sm;
+      padding: vars.$spacing-sm;
+      background-color: rgba(vars.$color-primary, 0.05);
+      border-radius: vars.$border-radius-sm;
+      border-left: 3px solid vars.$color-primary;
+      transition: vars.$transition-fast;
+
+      &:hover {
+        background-color: rgba(vars.$color-primary, 0.08);
+        transform: translateX(2px);
+      }
+
+      .icon {
+        font-size: 1.1rem;
+        color: vars.$color-primary;
+        min-width: 20px;
+        text-align: center;
+      }
+
+      span {
+        color: vars.$color-text-primary;
+        font-size: vars.$font-size-sm;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+    }
+  }
+}
+
+// Estilos para pestañas
+.tabs-container {
+  background-color: vars.$color-surface;
+  border-radius: vars.$border-radius;
+  box-shadow: vars.$box-shadow;
+  border: 1px solid vars.$color-border;
+  overflow: hidden;
+
+  .tabs-header {
+    display: flex;
+    background-color: rgba(vars.$color-primary, 0.05);
+    border-bottom: 1px solid vars.$color-border;
+
+    .tab-button {
+      flex: 1;
+      padding: vars.$spacing-md vars.$spacing-lg;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: vars.$font-size-sm;
+      font-weight: 500;
+      color: vars.$color-text-secondary;
+      transition: vars.$transition-normal;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: vars.$spacing-xs;
+      min-height: 48px;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: transparent;
+        transition: vars.$transition-fast;
+      }
+
+      &:hover:not(.active) {
+        background-color: rgba(vars.$color-primary, 0.08);
+        color: vars.$color-text-primary;
+      }
+
+      &.active {
+        background-color: vars.$color-primary;
+        color: vars.$color-white;
+
+        &::after {
+          background-color: vars.$color-accent;
+        }
+      }
+
+      &:focus {
+        outline: none;
+        box-shadow: inset 0 0 0 2px rgba(vars.$color-primary, 0.3);
+      }
+    }
+  }
+
+  .tab-content {
+    padding: vars.$spacing-xl;
+
+    .tab-panel {
+      animation: fadeIn 0.3s ease-in-out;
+
+      .section {
+        margin-bottom: vars.$spacing-xl;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        h3 {
+          margin: 0 0 vars.$spacing-md 0;
+          color: vars.$color-text-primary;
+          font-size: vars.$font-size-md;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: vars.$spacing-xs;
+
+          &::before {
+            content: '\f0c9'; // Icono de lista
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 0.8rem;
+            color: vars.$color-primary;
+          }
+        }
+
+        p {
+          color: vars.$color-text-secondary;
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .empty-text {
+          color: vars.$color-text-tertiary;
+          font-style: italic;
+          text-align: center;
+          padding: vars.$spacing-lg;
+          background-color: rgba(vars.$color-text-tertiary, 0.05);
+          border-radius: vars.$border-radius-sm;
+          border: 1px dashed rgba(vars.$color-text-tertiary, 0.3);
+        }
+      }
+
+      .documents-list {
+        display: flex;
+        flex-direction: column;
+        gap: vars.$spacing-sm;
+
+        .document-link {
+          display: inline-flex;
+          align-items: center;
+          gap: vars.$spacing-xs;
+          color: vars.$color-primary;
+          text-decoration: none;
+          padding: vars.$spacing-sm;
+          border-radius: vars.$border-radius-sm;
+          transition: vars.$transition-fast;
+          background-color: rgba(vars.$color-primary, 0.05);
+          border: 1px solid rgba(vars.$color-primary, 0.2);
+
+          &:hover {
+            background-color: rgba(vars.$color-primary, 0.1);
+            transform: translateX(4px);
+          }
+
+          &::before {
+            content: '\f1c1'; // Icono de documento
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 0.9rem;
+          }
+
+          &::after {
+            content: '\f35d'; // Icono de enlace externo
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 0.7rem;
+            margin-left: auto;
+            opacity: 0.7;
+          }
+        }
+      }
+
+      .fechas-list, .requisitos-list {
+        display: flex;
+        flex-direction: column;
+        gap: vars.$spacing-md;
+
+        .fecha-item, .requisito-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: vars.$spacing-md;
+          background-color: rgba(vars.$color-surface-light, 0.5);
+          border-radius: vars.$border-radius-sm;
+          border: 1px solid vars.$color-border;
+          transition: vars.$transition-fast;
+
+          &:hover {
+            background-color: rgba(vars.$color-primary, 0.05);
+            border-color: rgba(vars.$color-primary, 0.3);
+            transform: translateX(2px);
+          }
+
+          .fecha-title, .requisito-description {
+            font-weight: 500;
+            color: vars.$color-text-primary;
+            flex: 1;
+          }
+
+          .fecha-date, .requisito-category {
+            color: vars.$color-text-secondary;
+            font-size: vars.$font-size-sm;
+            background-color: rgba(vars.$color-primary, 0.1);
+            padding: vars.$spacing-xs vars.$spacing-sm;
+            border-radius: vars.$border-radius-lg;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: vars.$spacing-xl;
+  background-color: vars.$color-surface;
+  border-radius: vars.$border-radius;
+  box-shadow: vars.$box-shadow;
+  border: 1px solid vars.$color-border;
+  margin: vars.$spacing-lg 0;
+
+  &::before {
+    content: '\f071'; // Icono de advertencia
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 3rem;
+    color: vars.$color-error;
+    margin-bottom: vars.$spacing-md;
+  }
+
+  h2 {
+    color: vars.$color-error;
+    margin: 0 0 vars.$spacing-md 0;
+    font-size: vars.$font-size-lg;
+    font-weight: 600;
+  }
+
+  p {
+    color: vars.$color-text-secondary;
+    margin: 0 0 vars.$spacing-lg 0;
+    line-height: 1.6;
+    max-width: 400px;
+  }
+}
+
+// Media queries para responsive design
+@media (max-width: 768px) {
+  .concurso-detalle-container {
+    padding: vars.$spacing-md;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: vars.$spacing-md;
+
+    .header-title {
+      width: 100%;
+
+      h1 {
+        font-size: vars.$font-size-lg;
+      }
+    }
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
+  }
+
+  .concurso-header-card {
+    padding: vars.$spacing-lg;
+
+    .concurso-title {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: vars.$spacing-sm;
+
+      h2 {
+        font-size: vars.$font-size-md;
+      }
+    }
+
+    .concurso-info {
+      grid-template-columns: 1fr;
+      gap: vars.$spacing-sm;
+    }
+  }
+
+  .tabs-container {
+    .tabs-header {
+      flex-direction: column;
+
+      .tab-button {
+        border-bottom: 1px solid vars.$color-border;
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+    }
+
+    .tab-content {
+      padding: vars.$spacing-lg;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .concurso-detalle-container {
+    padding: vars.$spacing-sm;
+  }
+
+  .header {
+    .header-actions {
+      .back-button, .action-button {
+        font-size: vars.$font-size-xs;
+        padding: vars.$spacing-xs vars.$spacing-sm;
+      }
+    }
+  }
+
+  .tabs-container {
+    .tab-content {
+      padding: vars.$spacing-md;
+    }
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .concurso-detalle-container {
+    background-color: vars.$color-background-dark;
+    color: vars.$color-text-primary-dark;
+  }
+
+  .header {
+    border-bottom-color: vars.$color-border-dark;
+
+    h1 {
+      color: vars.$color-text-primary-dark;
+
+      &::before {
+        color: vars.$color-primary-dark;
+      }
+    }
+  }
+
+  .back-button {
+    background-color: vars.$color-surface-dark;
+    color: vars.$color-text-primary-dark;
+    border-color: vars.$color-border-dark;
+
+    &:hover:not(:disabled) {
+      background-color: vars.$color-surface-light;
+      border-color: vars.$color-border-light;
+    }
+  }
+
+  .action-button {
+    &.primary {
+      background-color: vars.$color-primary-dark;
+      border-color: vars.$color-primary-dark;
+
+      &:hover:not(:disabled) {
+        background-color: lighten(vars.$color-primary-dark, 10%);
+        border-color: lighten(vars.$color-primary-dark, 10%);
+      }
+    }
+
+    &.danger {
+      background-color: vars.$color-error-dark;
+      border-color: vars.$color-error-dark;
+
+      &:hover:not(:disabled) {
+        background-color: lighten(vars.$color-error-dark, 10%);
+        border-color: lighten(vars.$color-error-dark, 10%);
+      }
+    }
+  }
+
+  .loading-container {
+    background-color: vars.$color-surface-dark;
+    border-color: vars.$color-border-dark;
+
+    .spinner {
+      color: vars.$color-primary-dark;
+    }
+
+    p {
+      color: vars.$color-text-secondary-dark;
+    }
+  }
+
+  .concurso-header-card {
+    background-color: vars.$color-surface-dark;
+    border-color: vars.$color-border-dark;
+
+    .concurso-title {
+      h2 {
+        color: vars.$color-text-primary-dark;
+      }
+
+      .status-badge {
+        &.status-active {
+          background-color: rgba(vars.$color-success-dark, 0.2);
+          color: vars.$color-success-dark;
+          border-color: rgba(vars.$color-success-dark, 0.3);
+        }
+
+        &.status-draft {
+          background-color: rgba(vars.$color-warning-dark, 0.2);
+          color: vars.$color-warning-dark;
+          border-color: rgba(vars.$color-warning-dark, 0.3);
+        }
+
+        &.status-in-progress {
+          background-color: rgba(vars.$color-info-dark, 0.2);
+          color: vars.$color-info-dark;
+          border-color: rgba(vars.$color-info-dark, 0.3);
+        }
+
+        &.status-closed {
+          background-color: rgba(vars.$color-error-dark, 0.2);
+          color: vars.$color-error-dark;
+          border-color: rgba(vars.$color-error-dark, 0.3);
+        }
+      }
+    }
+
+    .concurso-info {
+      .info-item {
+        background-color: rgba(vars.$color-primary-dark, 0.1);
+        border-left-color: vars.$color-primary-dark;
+
+        &:hover {
+          background-color: rgba(vars.$color-primary-dark, 0.15);
+        }
+
+        .icon {
+          color: vars.$color-primary-dark;
+        }
+
+        span {
+          color: vars.$color-text-primary-dark;
+        }
+      }
+    }
+  }
+
+  .tabs-container {
+    background-color: vars.$color-surface-dark;
+    border-color: vars.$color-border-dark;
+
+    .tabs-header {
+      background-color: rgba(vars.$color-primary-dark, 0.1);
+      border-bottom-color: vars.$color-border-dark;
+
+      .tab-button {
+        color: vars.$color-text-secondary-dark;
+
+        &:hover:not(.active) {
+          background-color: rgba(vars.$color-primary-dark, 0.15);
+          color: vars.$color-text-primary-dark;
+        }
+
+        &.active {
+          background-color: vars.$color-primary-dark;
+          color: vars.$color-white;
+
+          &::after {
+            background-color: vars.$color-accent-dark;
+          }
+        }
+      }
+    }
+
+    .tab-content {
+      .tab-panel {
+        .section {
+          h3 {
+            color: vars.$color-text-primary-dark;
+
+            &::before {
+              color: vars.$color-primary-dark;
+            }
+          }
+
+          p {
+            color: vars.$color-text-secondary-dark;
+          }
+
+          .empty-text {
+            color: vars.$color-text-tertiary-dark;
+            background-color: rgba(vars.$color-text-tertiary-dark, 0.1);
+            border-color: rgba(vars.$color-text-tertiary-dark, 0.3);
+          }
+        }
+
+        .documents-list {
+          .document-link {
+            color: vars.$color-primary-dark;
+            background-color: rgba(vars.$color-primary-dark, 0.1);
+            border-color: rgba(vars.$color-primary-dark, 0.3);
+
+            &:hover {
+              background-color: rgba(vars.$color-primary-dark, 0.2);
+            }
+          }
+        }
+
+        .fechas-list, .requisitos-list {
+          .fecha-item, .requisito-item {
+            background-color: rgba(vars.$color-surface-light, 0.3);
+            border-color: vars.$color-border-dark;
+
+            &:hover {
+              background-color: rgba(vars.$color-primary-dark, 0.1);
+              border-color: rgba(vars.$color-primary-dark, 0.3);
+            }
+
+            .fecha-title, .requisito-description {
+              color: vars.$color-text-primary-dark;
+            }
+
+            .fecha-date, .requisito-category {
+              color: vars.$color-text-secondary-dark;
+              background-color: rgba(vars.$color-primary-dark, 0.2);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .error-container {
+    background-color: vars.$color-surface-dark;
+    border-color: vars.$color-border-dark;
+
+    &::before {
+      color: vars.$color-error-dark;
+    }
+
+    h2 {
+      color: vars.$color-error-dark;
+    }
+
+    p {
+      color: vars.$color-text-secondary-dark;
+    }
+  }
+}

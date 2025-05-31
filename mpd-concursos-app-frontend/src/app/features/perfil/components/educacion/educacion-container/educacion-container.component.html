@@ -267,8 +267,8 @@
               <span class="campo-label">Duración (años):</span>
               <span class="campo-valor campo-duracion">
                 <span class="valor-numerico">{{ getValorFormulario(formularioEspecifico, 'duracionAnios') }}</span>
-                <span *ngIf="getValorFormulario(formularioEspecifico, 'duracionAnios') == 1">año</span>
-                <span *ngIf="getValorFormulario(formularioEspecifico, 'duracionAnios') != 1">años</span>
+                <span *ngIf="getValorFormulario(formularioEspecifico, 'duracionAnios') === 1">año</span>
+                <span *ngIf="getValorFormulario(formularioEspecifico, 'duracionAnios') !== 1">años</span>
               </span>
             </div>
             <div class="resumen-campo">
@@ -368,7 +368,7 @@
       </div>
       <h4>¡Educación guardada con éxito!</h4>
       <p *ngIf="mensajeExito$ | async as mensaje">{{ mensaje }}</p>
-      
+
       <div class="resumen-guardado" *ngIf="educacionGuardadaResultado">
         <h5>Resumen de la información guardada:</h5>
         <div class="resumen-campo">
@@ -384,7 +384,7 @@
           <span class="campo-valor">{{ educacionGuardadaResultado.estado }}</span>
         </div>
       </div>
-      
+
       <div class="acciones-posteriores">
         <button type="button" class="btn btn-primary" (click)="agregarOtraEducacion()">
           Agregar otra educación
@@ -406,7 +406,7 @@
       </div>
       <h4>Error al guardar la educación</h4>
       <p *ngIf="error$ | async as error">{{ error }}</p>
-      
+
       <div class="acciones-posteriores">
         <button type="button" class="btn btn-primary" (click)="reintentar()">
           Reintentar

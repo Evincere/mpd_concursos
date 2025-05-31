@@ -1,6 +1,4 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { finalize } from 'rxjs/operators';
 import { Concurso, Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { CommonModule } from '@angular/common';
@@ -10,13 +8,15 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { DatePipe } from '@angular/common';
-import { Subject } from 'rxjs';
+import { Subject, BehaviorSubject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
+import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
 import { ContestDate } from '@shared/interfaces/concurso/contest-date.interface';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
-import { BehaviorSubject } from 'rxjs';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -30,7 +30,8 @@ import { BehaviorSubject } from 'rxjs';
     MatProgressSpinnerModule,
     MatTabsModule,
     DatePipe,
-    InscripcionButtonComponent
+    InscripcionButtonComponent,
+    ContestStatusBadgeComponent
   ],
   templateUrl: './concurso-detalle.component.html',
   styleUrls: ['./concurso-detalle.component.scss']
@@ -46,10 +47,7 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   InscripcionState = InscripcionState;
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private inscriptionService: InscriptionService,
-    private snackBar: MatSnackBar
-  ) { }
+  constructor(private snackBar: MatSnackBar, private inscriptionService: InscriptionService) {}
 
   ngOnInit(): void {
     if (this.concurso) {
@@ -93,11 +91,11 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (estado) => {
+        next: (estado: InscripcionState) => {
           console.log('Estado de inscripción actualizado:', estado);
           this.inscripcionState$.next(estado);
         },
-        error: (error) => {
+        error: (error: Error) => {
           console.error('Error al verificar inscripción:', error);
           this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
           this.snackBar.open(
@@ -110,7 +108,7 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   }
 
   getEstadoConcursoLabel(status: string): string {
-    const estados: { [key: string]: string } = {
+    const estados: Record<string, string> = {
       'ACTIVE': 'Activo',
       'CLOSED': 'Cerrado',
       'IN_PROGRESS': 'En Proceso',

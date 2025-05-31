@@ -1,0 +1,57 @@
+<h2 mat-dialog-title>{{data.title}}</h2>
+
+<mat-dialog-content>
+  <mat-tab-group [(selectedIndex)]="activeTab" (selectedIndexChange)="onTabChange($event)">
+    <!-- Pestaña de Información Básica -->
+    <mat-tab label="Información Básica">
+      <div class="tab-content">
+        <form [formGroup]="roleForm" class="role-form">
+          <mat-form-field appearance="outline">
+            <mat-label>Nombre del Rol</mat-label>
+            <input matInput formControlName="name" placeholder="Ej: ROLE_MANAGER">
+            <mat-hint>El nombre debe comenzar con ROLE_ y solo puede contener letras, números y guiones bajos</mat-hint>
+            <mat-error *ngIf="roleForm.get('name')?.hasError('required')">
+              El nombre del rol es obligatorio
+            </mat-error>
+            <mat-error *ngIf="roleForm.get('name')?.hasError('pattern')">
+              El nombre solo puede contener letras, números y guiones bajos
+            </mat-error>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Descripción</mat-label>
+            <textarea matInput formControlName="description" placeholder="Descripción del rol" rows="3"></textarea>
+            <mat-error *ngIf="roleForm.get('description')?.hasError('required')">
+              La descripción es obligatoria
+            </mat-error>
+          </mat-form-field>
+        </form>
+        
+        <div *ngIf="isSystemRole()" class="system-role-notice">
+          <mat-icon>info</mat-icon>
+          <span>Este es un rol del sistema y algunos campos no pueden ser modificados.</span>
+        </div>
+      </div>
+    </mat-tab>
+    
+    <!-- Pestaña de Permisos -->
+    <mat-tab label="Permisos">
+      <div class="tab-content">
+        <app-permissions-matrix
+          [roleId]="data.role?.id || ''"
+          [roleName]="data.role?.name || roleForm.get('name')?.value || 'Nuevo Rol'"
+          [selectedPermissions]="selectedPermissions"
+          [isSystemRole]="isSystemRole()"
+          (permissionsChange)="onPermissionsChange($event)">
+        </app-permissions-matrix>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="roleForm.invalid || isSystemRole()">
+    {{isEditMode ? 'Actualizar' : 'Crear'}}
+  </button>
+</mat-dialog-actions>

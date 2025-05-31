@@ -14,25 +14,30 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
 ## 🛠️ Tecnologías Utilizadas
 
 ### Frontend
-- Angular
-- Material Design
-- SCSS
+- Angular 18
+- Angular Material
+- TailwindCSS
 - TypeScript
+- RxJS para programación reactiva
+- JWT para autenticación
 - Electron (para versión de escritorio)
 
 ### Backend
-- Spring Boot
-- Java 17
-- MySQL
-- JWT para autenticación
+- Spring Boot 3.2.4
+- Java 21
+- Arquitectura Hexagonal (Ports & Adapters)
+- MySQL 8.0
+- Spring Security con JWT para autenticación
+- Spring Data JPA + Hibernate
+- Lombok y MapStruct
 - Maven
 
 ## 📦 Estructura del Proyecto
 
 ```
 ├── concurso-backend/           # Backend en Spring Boot
-│   ├── src/                    
-│   │   ├── main/              
+│   ├── src/
+│   │   ├── main/
 │   │   │   ├── java/          # Código fuente Java
 │   │   │   └── resources/     # Configuraciones
 │   │   └── test/              # Tests
@@ -135,10 +140,11 @@ flowchart TD
 ## 🚀 Instalación y Configuración
 
 ### Requisitos Previos
-- Java 17 o superior
+- Java 21
 - Node.js 18 o superior
 - MySQL 8.0
 - Maven 3.8+
+- Docker y Docker Compose (para entorno de desarrollo y producción)
 
 ### Backend
 1. Configurar variables de entorno:
@@ -209,7 +215,7 @@ sequenceDiagram
     participant ContestController
     participant DocumentController
     participant DB
-    
+
     Postulante->>Frontend: Inicia postulación
     Frontend->>AuthController: Valida sesión
     AuthController-->>Frontend: Sesión válida
@@ -236,7 +242,7 @@ sequenceDiagram
     participant ContestController
     participant NotificationController
     participant DB
-    
+
     Evaluador->>Frontend: Accede a evaluaciones
     Frontend->>AuthController: Valida permisos
     AuthController-->>Frontend: Confirma permisos
@@ -300,10 +306,10 @@ public ResponseEntity<DocumentoResponse> cargarDocumento(
     try {
         // Validación de formato y tamaño
         validarDocumento(archivo);
-        
+
         // Procesamiento y almacenamiento
         String rutaArchivo = documentoService.almacenar(archivo);
-        
+
         // Registro en base de datos
         Documento documento = documentoService.registrar(
             Documento.builder()
@@ -313,7 +319,7 @@ public ResponseEntity<DocumentoResponse> cargarDocumento(
                 .estado(EstadoDocumento.PENDIENTE_REVISION)
                 .build()
         );
-        
+
         return ResponseEntity.ok(documentoMapper.toResponse(documento));
     } catch (Exception e) {
         log.error("Error al procesar documento", e);
@@ -687,4 +693,25 @@ interface INotificationService {
     markAsRead(notificationId: string): Promise<void>;
     getUnreadCount(): Promise<number>;
 }
-``` 
+```
+
+## 🔍 Problemas Conocidos y Mejoras Pendientes
+
+### Flujo de inscripción interrumpido
+Existe un problema en el flujo de inscripción a concursos donde los usuarios no pueden retomar el proceso después de navegar a la pestaña de documentación para cargar documentos. El problema ocurre en los siguientes pasos:
+
+1. El usuario inicia el proceso de inscripción a un concurso
+2. Durante el proceso, navega a la pestaña de documentación para cargar documentos requeridos
+3. Al intentar volver al proceso de inscripción, el sistema no recupera correctamente el estado anterior
+4. Se han implementado soluciones parciales como:
+   - Banner de retorno en la pestaña de documentación
+   - Almacenamiento del estado de inscripción en localStorage
+   - Parámetros de URL para recuperar el contexto
+
+Este problema está siendo abordado en la rama `inscripcion` con mejoras en el servicio `InscriptionRecoveryService` y el componente `ReturnToInscriptionBanner`.
+
+### Otras mejoras planificadas
+- Optimización del rendimiento en la carga de documentos
+- Mejora en la validación de documentos en tiempo real
+- Implementación de notificaciones push para actualizaciones de estado
+- Integración con sistema de firma digital

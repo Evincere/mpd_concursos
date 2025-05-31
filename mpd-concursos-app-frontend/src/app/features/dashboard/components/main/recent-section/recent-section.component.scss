@@ -1,47 +1,105 @@
 @use 'variables' as *;
 
-section {
-    background: $color-background;
+.recent-section {
+    background: #374151;
     padding: 1.5rem;
-    border-radius: $border-radius;
-    box-shadow: $box-shadow;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+
+    // Glassmorphism gradient overlay
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        pointer-events: none;
+        z-index: 1;
+    }
 
     h2 {
-        color: $color-text-primary;
-        margin-bottom: 1.5rem;
+        color: #f9fafb;
+        margin: 0 0 1.5rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        position: relative;
+        z-index: 2;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 }
 
 .table-container {
     overflow-x: auto;
+    position: relative;
+    z-index: 2;
+    border-radius: 8px;
+    background: rgba(75, 85, 99, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 
     table {
         width: 100%;
         border-collapse: collapse;
+        background: transparent;
 
         th, td {
             padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid $color-secondary;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
         }
 
         th {
-            color: $color-text-muted;
+            color: #d1d5db;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(75, 85, 99, 0.3);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        td {
+            color: #f9fafb;
             font-weight: 500;
         }
 
-        .status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            background: $color-secondary;
+        tr {
+            transition: all 0.3s ease;
 
-            &.active {
-                background: $color-accent;
-                color: $color-text-primary;
+            &:hover {
+                background: rgba(75, 85, 99, 0.3);
+                transform: translateX(2px);
+            }
+
+            &:last-child td {
+                border-bottom: none;
+            }
+        }
+
+        // Status styling is now handled by the contest-status-badge component
+    }
+
+    // Responsive behavior
+    @media (max-width: 768px) {
+        table {
+            th, td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.875rem;
+            }
+
+            th {
+                font-size: 0.75rem;
             }
         }
     }
-
-   
 }

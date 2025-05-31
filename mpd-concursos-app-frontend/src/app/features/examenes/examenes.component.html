@@ -26,9 +26,10 @@
             <span class="examen-tipo" [class]="examen.tipo.toLowerCase()">
               {{ getTipoExamenLabel(examen.tipo) }}
             </span>
-            <span class="estado-pill" [ngClass]="getEstadoClass(examen.estado)">
-              {{ getEstadoLabel(examen.estado) }}
-            </span>
+            <app-contest-status-badge
+              [status]="mapExamToContestStatus(examen.estado)"
+              [showIcon]="true">
+            </app-contest-status-badge>
           </div>
 
           <div class="examen-body">

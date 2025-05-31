@@ -42,6 +42,15 @@ public class RolService implements IRolService {
         return findByRole.run(name);
     }
 
+    /**
+     * Encuentra un rol por su nombre (string)
+     * @param name Nombre del rol (debe ser un valor válido de RoleEnum)
+     * @return Optional con el rol si se encuentra
+     */
+    public Optional<Rol> findByName(RoleEnum name) {
+        return findByRole.run(name);
+    }
+
     public void create(Rol rol) {
         roleCreate.run(rol);
     }

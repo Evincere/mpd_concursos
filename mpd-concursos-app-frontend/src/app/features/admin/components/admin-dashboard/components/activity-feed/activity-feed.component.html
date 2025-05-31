@@ -1,0 +1,35 @@
+<mat-card class="activity-card">
+  <mat-card-header>
+    <mat-card-title>{{title}}</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <ng-container *ngIf="activities && activities.length > 0; else noActivities">
+      <div class="activity-list">
+        <div *ngFor="let activity of activities.slice(0, maxItems)" class="activity-item">
+          <div class="activity-icon" [style.background-color]="getActivityIconColor(activity.tipo) + '15'">
+            <mat-icon [style.color]="getActivityIconColor(activity.tipo)" aria-hidden="true">{{getActivityIcon(activity.tipo)}}</mat-icon>
+          </div>
+          <div class="activity-content">
+            <div class="activity-text" [innerHTML]="getActivityText(activity)"></div>
+            <div class="activity-time">{{getTimeAgo(activity.fecha)}}</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #noActivities>
+      <div class="no-activities">
+        <mat-icon aria-hidden="true">history</mat-icon>
+        <p>{{emptyMessage}}</p>
+      </div>
+    </ng-template>
+  </mat-card-content>
+
+  <mat-card-actions *ngIf="viewAllLink && activities && activities.length > 0">
+    <a mat-button color="primary" [routerLink]="viewAllLink" class="view-all-button" [attr.aria-label]="viewAllLabel + ' - Ver todas las actividades'">
+      {{viewAllLabel}}
+      <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+    </a>
+  </mat-card-actions>
+</mat-card>

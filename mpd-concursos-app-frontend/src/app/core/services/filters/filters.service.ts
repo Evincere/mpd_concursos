@@ -16,7 +16,9 @@ export class FiltersService implements IFiltersService {
 
   private filtrosSubject = new BehaviorSubject<FiltersConcurso>(this.filtrosIniciales);
 
-  constructor() { }
+  constructor() {
+    // Constructor vacío
+  }
 
   getFiltros(): Observable<FiltersConcurso> {
     return this.filtrosSubject.asObservable();
@@ -35,14 +37,19 @@ export class FiltersService implements IFiltersService {
     this.filtrosSubject.next(this.filtrosIniciales);
   }
 
-  aplicarFiltros(concursos: any[]): any[] {
+  /**
+   * Aplica los filtros actuales a una lista de concursos
+   * @param concursos Lista de concursos a filtrar
+   * @returns Lista de concursos filtrados
+   */
+  aplicarFiltros<T extends { status?: string; dependencia?: string; cargo?: string; fecha?: string | Date }>(concursos: T[]): T[] {
     const filtrosActuales = this.filtrosSubject.value;
     console.log('[FiltersService] Aplicando filtros:', filtrosActuales);
 
     return concursos.filter(concurso => {
       let cumpleFiltros = true;
 
-      if (filtrosActuales.estado !== 'todos') {
+      if (filtrosActuales.estado !== 'todos' && concurso.status) {
         cumpleFiltros = cumpleFiltros && concurso.status === filtrosActuales.estado;
       }
 
@@ -50,11 +57,11 @@ export class FiltersService implements IFiltersService {
         cumpleFiltros = cumpleFiltros && this.cumplePeriodo(concurso, filtrosActuales.periodo);
       }
 
-      if (filtrosActuales.dependencia !== 'todos') {
+      if (filtrosActuales.dependencia !== 'todos' && concurso.dependencia) {
         cumpleFiltros = cumpleFiltros && concurso.dependencia === filtrosActuales.dependencia;
       }
 
-      if (filtrosActuales.cargo !== 'todos') {
+      if (filtrosActuales.cargo !== 'todos' && concurso.cargo) {
         cumpleFiltros = cumpleFiltros && concurso.cargo === filtrosActuales.cargo;
       }
 
@@ -62,9 +69,17 @@ export class FiltersService implements IFiltersService {
     });
   }
 
-  private cumplePeriodo(concurso: any, periodo: string): boolean {
+  /**
+   * Verifica si un concurso cumple con el filtro de periodo
+   * @param concurso Concurso a verificar
+   * @param periodo Periodo a verificar
+   * @returns true si el concurso cumple con el periodo, false en caso contrario
+   */
+  private cumplePeriodo<T extends { fecha?: string | Date }>(concurso: T, periodo: string): boolean {
+    if (!concurso.fecha) return false;
+
     const fechaConcurso = new Date(concurso.fecha);
-    const hoy = new Date();
+    // Variable hoy no utilizada aquí, se usa en cada método específico
 
     switch (periodo) {
       case 'hoy':

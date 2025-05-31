@@ -12,7 +12,9 @@ export interface IInscriptionFormState {
   currentStep: InscriptionStep;
   formData: {
     termsAccepted: boolean;
+    centroDeVida: string;
     selectedCircunscripciones: string[];
+    documentosCompletos: boolean;
     confirmedPersonalData: boolean;
     // Otros campos que puedan ser necesarios
   };
@@ -28,8 +30,9 @@ export class InscriptionStateService {
   private readonly REDIRECT_FROM_DOCS_KEY = 'mpd_redirect_from_inscription';
   private readonly FORM_STATE_KEY = 'mpd_inscription_form_state';
   private readonly INCOMPLETE_INSCRIPTIONS_KEY = 'mpd_incomplete_inscriptions';
+  private readonly DIRECT_CONTINUATION_KEY = 'mpd_direct_continuation';
 
-  constructor() { }
+
 
   /**
    * Guarda el estado de una inscripción en progreso
@@ -41,7 +44,7 @@ export class InscriptionStateService {
       const inscriptionData = {
         ...inscription,
         state: InscripcionState.PENDING,
-        currentStep: InscriptionStep.DATA_CONFIRMATION, // Paso 3
+        currentStep: InscriptionStep.DATA_CONFIRMATION, // Paso 4 (ahora que tenemos el paso de documentación)
         timestamp: new Date().toISOString()
       };
 
@@ -144,13 +147,19 @@ export class InscriptionStateService {
    * @param formData Datos del formulario
    * @param contestTitle Título del concurso (opcional)
    */
-  saveInscriptionState(inscriptionId: string, contestId: number, currentStep: InscriptionStep, formData: any, contestTitle?: string): void {
+  saveInscriptionState(inscriptionId: string, contestId: number, currentStep: InscriptionStep, formData: unknown, contestTitle?: string): void {
     try {
       const state: IInscriptionFormState = {
         inscriptionId,
         contestId,
         currentStep,
-        formData,
+        formData: {
+          termsAccepted: (formData as Record<string, unknown>)['termsAccepted'] as boolean || false,
+          centroDeVida: (formData as Record<string, unknown>)['centroDeVida'] as string || '',
+          selectedCircunscripciones: (formData as Record<string, unknown>)['selectedCircunscripciones'] as string[] || [],
+          documentosCompletos: (formData as Record<string, unknown>)['documentosCompletos'] as boolean || false,
+          confirmedPersonalData: (formData as Record<string, unknown>)['confirmedPersonalData'] as boolean || false
+        },
         timestamp: new Date().toISOString(),
         contestTitle
       };
@@ -224,7 +233,7 @@ export class InscriptionStateService {
         return false;
       }
 
-      const inscriptions = JSON.parse(data) as Array<{id: string, contestId: number, timestamp: string, contestTitle?: string}>;
+      const inscriptions = JSON.parse(data) as {id: string, contestId: number, timestamp: string, contestTitle?: string}[];
       return inscriptions.length > 0;
     } catch (error) {
       console.error('[InscriptionStateService] Error al verificar inscripciones incompletas:', error);
@@ -243,7 +252,7 @@ export class InscriptionStateService {
         return [];
       }
 
-      const incompleteIds = JSON.parse(data) as Array<{id: string, contestId: number, timestamp: string, contestTitle?: string}>;
+      const incompleteIds = JSON.parse(data) as {id: string, contestId: number, timestamp: string, contestTitle?: string}[];
 
       // Filtrar por tiempo (menos de 24 horas)
       const now = new Date();
@@ -283,7 +292,7 @@ export class InscriptionStateService {
   private addToIncompleteInscriptions(inscriptionId: string, contestId: number, contestTitle?: string): void {
     try {
       const data = localStorage.getItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
-      let inscriptions: Array<{id: string, contestId: number, timestamp: string, contestTitle?: string}> = [];
+      let inscriptions: {id: string, contestId: number, timestamp: string, contestTitle?: string}[] = [];
 
       if (data) {
         inscriptions = JSON.parse(data);
@@ -324,12 +333,43 @@ export class InscriptionStateService {
         return;
       }
 
-      let inscriptions = JSON.parse(data) as Array<{id: string, contestId: number, timestamp: string}>;
+      let inscriptions = JSON.parse(data) as {id: string, contestId: number, timestamp: string}[];
       inscriptions = inscriptions.filter(item => item.id !== inscriptionId);
 
       localStorage.setItem(this.INCOMPLETE_INSCRIPTIONS_KEY, JSON.stringify(inscriptions));
     } catch (error) {
       console.error('[InscriptionStateService] Error al eliminar de inscripciones incompletas:', error);
     }
+  }
+
+  /**
+   * Establece el flag de continuación directa
+   * @param value Valor del flag
+   */
+  setDirectContinuation(value: boolean): void {
+    if (value) {
+      localStorage.setItem(this.DIRECT_CONTINUATION_KEY, 'true');
+      console.log('[InscriptionStateService] Flag de continuación directa establecido');
+    } else {
+      localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
+      console.log('[InscriptionStateService] Flag de continuación directa eliminado');
+    }
+  }
+
+  /**
+   * Verifica si se debe realizar una continuación directa
+   * @returns true si se debe realizar una continuación directa, false en caso contrario
+   */
+  isDirectContinuation(): boolean {
+    const value = localStorage.getItem(this.DIRECT_CONTINUATION_KEY);
+    return value === 'true';
+  }
+
+  /**
+   * Limpia el flag de continuación directa
+   */
+  clearDirectContinuation(): void {
+    localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
+    console.log('[InscriptionStateService] Flag de continuación directa limpiado');
   }
 }

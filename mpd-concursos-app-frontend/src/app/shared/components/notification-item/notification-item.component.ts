@@ -3,11 +3,22 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import {
-    Notification,
-    NotificationStatus,
-    AcknowledgementLevel
+  Notification,
+  NotificationStatus,
+  AcknowledgementLevel,
+  requiresAcknowledgment,
+  requiresSignature,
+  NOTIFICATION_STATUS_LABELS,
+  ACKNOWLEDGEMENT_LEVEL_LABELS,
+  getNotificationStatusColor,
+  getAcknowledgementLevelColor
 } from '../../../core/models/notification.model';
+import { InscriptionNotificationItemComponent } from './inscription-notification-item/inscription-notification-item.component';
+import { NotificationsService } from '@core/services/notifications/notifications.service';
+// Removed external component imports - implementing badge system directly
 
 @Component({
     selector: 'app-notification-item',
@@ -16,7 +27,9 @@ import {
         CommonModule,
         MatIconModule,
         MatButtonModule,
-        MatRippleModule
+        MatRippleModule,
+        MatTooltipModule,
+        InscriptionNotificationItemComponent
     ],
     templateUrl: './notification-item.component.html',
     styleUrls: ['./notification-item.component.scss']
@@ -26,7 +39,14 @@ export class NotificationItemComponent {
     @Output() read = new EventEmitter<Notification>();
     @Output() acknowledge = new EventEmitter<Notification>();
 
+    showAcknowledgmentSection = false;
+    isAcknowledging = false;
     protected AcknowledgementLevel = AcknowledgementLevel;
+
+    constructor(
+        private notificationsService: NotificationsService,
+        private snackBar: MatSnackBar
+    ) {}
 
     get statusIcon(): string {
         switch (this.notification.status) {
@@ -85,6 +105,61 @@ export class NotificationItemComponent {
         }
     }
 
+    onNotificationClick(): void {
+        if (this.notification && this.isUnread) {
+            this.markAsRead();
+        }
+    }
+
+    onNotificationRead(notification: Notification): void {
+        this.read.emit(notification);
+    }
+
+    onNotificationAcknowledge(notification: Notification): void {
+        this.acknowledge.emit(notification);
+    }
+
+    private markAsRead(): void {
+        if (!this.notification) return;
+
+        this.notificationsService.markAsRead(this.notification.id).subscribe({
+            next: (updatedNotification) => {
+                this.notification = updatedNotification;
+                this.read.emit(updatedNotification);
+                this.showSuccessMessage('Notificación marcada como leída');
+            },
+            error: (error) => {
+                console.error('Error marking notification as read:', error);
+                this.showErrorMessage('Error al marcar la notificación como leída');
+            }
+        });
+    }
+
+    onShowAcknowledgment(event: Event): void {
+        event.stopPropagation();
+        this.showAcknowledgmentSection = true;
+    }
+
+    // Acknowledgment functionality would be implemented here when needed
+
+    private showSuccessMessage(message: string): void {
+        this.snackBar.open(message, 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'bottom'
+        });
+    }
+
+    private showErrorMessage(message: string): void {
+        this.snackBar.open(message, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'bottom'
+        });
+    }
+
     onRead(event: Event): void {
         event.stopPropagation();
         if (this.isUnread) {
@@ -92,10 +167,92 @@ export class NotificationItemComponent {
         }
     }
 
-    onAcknowledge(event: Event): void {
-        event.stopPropagation();
-        if (this.canAcknowledge) {
-            this.acknowledge.emit(this.notification);
+    // Badge system methods
+    getStatusLabel(): string {
+        return NOTIFICATION_STATUS_LABELS[this.notification?.status || NotificationStatus.PENDING] || 'Desconocido';
+    }
+
+    getStatusColor(): string {
+        return getNotificationStatusColor(this.notification?.status || NotificationStatus.PENDING);
+    }
+
+    getStatusIcon(): string {
+        switch (this.notification?.status) {
+            case NotificationStatus.PENDING:
+                return 'schedule';
+            case NotificationStatus.SENT:
+                return 'send';
+            case NotificationStatus.READ:
+                return 'visibility';
+            case NotificationStatus.ACKNOWLEDGED:
+                return 'verified';
+            default:
+                return 'info';
         }
+    }
+
+    getStatusTooltip(): string {
+        switch (this.notification?.status) {
+            case NotificationStatus.PENDING:
+                return 'Esta notificación está pendiente de envío';
+            case NotificationStatus.SENT:
+                return 'Esta notificación ha sido enviada';
+            case NotificationStatus.READ:
+                return 'Esta notificación ha sido leída';
+            case NotificationStatus.ACKNOWLEDGED:
+                return 'Esta notificación ha sido acusada de recibo';
+            default:
+                return 'Estado de notificación desconocido';
+        }
+    }
+
+    showAcknowledgmentBadge(): boolean {
+        return this.notification?.acknowledgementLevel !== AcknowledgementLevel.NONE;
+    }
+
+    getAcknowledgmentLabel(): string {
+        return ACKNOWLEDGEMENT_LEVEL_LABELS[this.notification?.acknowledgementLevel || AcknowledgementLevel.NONE] || 'Desconocido';
+    }
+
+    getAcknowledgmentColor(): string {
+        return getAcknowledgementLevelColor(this.notification?.acknowledgementLevel || AcknowledgementLevel.NONE);
+    }
+
+    getAcknowledgmentIcon(): string {
+        switch (this.notification?.acknowledgementLevel) {
+            case AcknowledgementLevel.SIMPLE:
+                return 'check_circle_outline';
+            case AcknowledgementLevel.SIGNATURE_BASIC:
+                return 'edit';
+            case AcknowledgementLevel.SIGNATURE_ADVANCED:
+                return 'verified_user';
+            default:
+                return 'info';
+        }
+    }
+
+    getAcknowledgmentTooltip(): string {
+        switch (this.notification?.acknowledgementLevel) {
+            case AcknowledgementLevel.SIMPLE:
+                return 'Esta notificación requiere acuse de recibo simple';
+            case AcknowledgementLevel.SIGNATURE_BASIC:
+                return 'Esta notificación requiere firma básica';
+            case AcknowledgementLevel.SIGNATURE_ADVANCED:
+                return 'Esta notificación requiere firma avanzada';
+            default:
+                return 'Nivel de acuse desconocido';
+        }
+    }
+
+    showSignatureBadge(): boolean {
+        return this.notification ? requiresSignature(this.notification) &&
+               this.notification.status !== NotificationStatus.ACKNOWLEDGED : false;
+    }
+
+    getSignatureTooltip(): string {
+        if (this.notification?.acknowledgementLevel === AcknowledgementLevel.SIGNATURE_ADVANCED) {
+            return 'Esta notificación requiere firma digital avanzada para ser acusada de recibo';
+        }
+        return 'Esta notificación requiere firma para ser acusada de recibo';
     }
 }

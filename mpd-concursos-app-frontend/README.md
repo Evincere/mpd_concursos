@@ -1,27 +1,69 @@
-# MpdConcursosAppFrontend
+# MPD Concursos App Frontend
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.8.
+Aplicación frontend para la gestión de concursos del Ministerio Público de la Defensa.
 
-## Development server
+## Características
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- **Panel Administrativo**: Gestión completa de usuarios, concursos e inscripciones
+- **Gestión de Usuarios**: Creación, edición, cambio de estado y asignación de roles
+- **Arquitectura Hexagonal**: Separación clara de capas (dominio, aplicación, infraestructura)
+- **Componentes Personalizados**: Interfaz de usuario consistente y personalizada
 
-## Code scaffolding
+## Estados de Usuario
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+La aplicación soporta los siguientes estados de usuario:
 
-## Build
+- **Activo**: Usuario completamente funcional
+- **Inactivo**: Usuario que no está actualmente en uso pero puede ser reactivado
+- **Bloqueado**: Usuario permanentemente bloqueado por razones de seguridad o administrativas
+- **Bloqueado Temporalmente**: Usuario bloqueado por un período específico
+- **Expirado**: Usuario cuya cuenta ha caducado
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Los administradores pueden cambiar el estado de un usuario desde:
+1. La vista de lista de usuarios (botón de acción rápida)
+2. La vista de detalle de usuario (botón junto al estado)
 
-## Running unit tests
+## Desarrollo
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+### Requisitos previos
 
-## Running end-to-end tests
+- Node.js 18.x o superior
+- Angular CLI 18.x
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### Instalación
 
-## Further help
+```bash
+# Clonar el repositorio
+git clone https://github.com/tu-usuario/mpd-concursos-app-frontend.git
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+# Instalar dependencias
+cd mpd-concursos-app-frontend
+npm install
+
+# Iniciar servidor de desarrollo
+ng serve
+```
+
+### Comandos útiles
+
+- `ng serve`: Inicia el servidor de desarrollo
+- `ng build`: Compila la aplicación para producción
+- `ng test`: Ejecuta las pruebas unitarias
+- `ng lint`: Verifica el código según las reglas de linting
+
+## Arquitectura
+
+El proyecto sigue una arquitectura hexagonal con las siguientes capas:
+
+- **Domain**: Modelos y lógica de negocio
+- **Application**: Casos de uso y servicios de aplicación
+- **Infrastructure**: Implementaciones concretas (repositorios, adaptadores)
+- **UI**: Componentes de interfaz de usuario
+
+## Contribución
+
+1. Crea un fork del repositorio
+2. Crea una rama para tu funcionalidad (`git checkout -b feature/nueva-funcionalidad`)
+3. Realiza tus cambios y haz commit (`git commit -am 'Agrega nueva funcionalidad'`)
+4. Sube los cambios a tu fork (`git push origin feature/nueva-funcionalidad`)
+5. Crea un Pull Request

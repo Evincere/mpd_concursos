@@ -2,7 +2,7 @@ export class LoginUser {
     username: string;
     password: string;
 
-    constructor(username: string = '', password: string = '') {
+    constructor(username = '', password = '') {
         this.username = username?.trim();
         this.password = password;
     }

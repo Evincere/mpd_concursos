@@ -3,7 +3,7 @@ import { Observable, tap } from 'rxjs';
 import { LoginUser } from '../../models/login-user.model';
 import { TokenService } from './token.service';
 import { LoginService } from './login.service';
-import { User } from '../../models/user.model';
+
 import { JwtDto } from '../../dtos/jwt-dto';
 import { jwtDecode } from 'jwt-decode';
 
@@ -26,11 +26,11 @@ export class AuthService {
   public readonly userInfo = computed(() => this.userInfoSignal());
 
   constructor(
-    private loginService: LoginService, 
+    private loginService: LoginService,
     private tokenService: TokenService
   ) {
     this.loadUserInfo();
-    
+
     // Efecto para sincronizar con localStorage
     effect(() => {
       const currentInfo = this.userInfo();
@@ -87,7 +87,7 @@ export class AuthService {
   public hasRole(role: string): boolean {
     console.log('[AuthService] Verificando rol:', role);
     const token = this.tokenService.getToken();
-    
+
     if (!token) {
       console.log('[AuthService] Token no presente');
       return false;
@@ -97,7 +97,7 @@ export class AuthService {
     const hasRole = authorities.some(auth => auth.authority === role);
     console.log('[AuthService] Roles del usuario:', authorities);
     console.log('[AuthService] ¿Tiene el rol?', hasRole);
-    
+
     return hasRole;
   }
 
@@ -107,9 +107,9 @@ export class AuthService {
         console.log('[AuthService] No hay token disponible');
         return '';
     }
-    
+
     try {
-        const decodedToken = jwtDecode(token) as any;
+        const decodedToken = jwtDecode<{ userId?: string }>(token);
         console.log('[AuthService] Token decodificado:', decodedToken);
         return decodedToken.userId || '';
     } catch (error) {

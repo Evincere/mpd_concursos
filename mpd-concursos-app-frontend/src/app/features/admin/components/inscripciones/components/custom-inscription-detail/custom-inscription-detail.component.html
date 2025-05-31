@@ -1,0 +1,318 @@
+<div class="inscription-detail-container" [class.is-dialog]="isDialog">
+  <!-- Cabecera -->
+  <div class="detail-header">
+    <div class="header-title">
+      <h2>Detalle de Inscripción</h2>
+      <span class="inscription-id" *ngIf="inscriptionDetail">ID: {{ inscriptionDetail.inscription.id.substring(0, 8) }}</span>
+    </div>
+
+    <app-custom-button
+      *ngIf="isDialog"
+      [variant]="'icon'"
+      [icon]="'close'"
+      [tooltip]="'Cerrar'"
+      (click)="onClose()">
+    </app-custom-button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="detail-content" *ngIf="!isLoading && inscriptionDetail; else loadingTemplate">
+    <!-- Información básica -->
+    <app-custom-card class="basic-info-card">
+      <div class="info-grid">
+        <div class="info-section">
+          <h3>Información del Postulante</h3>
+          <div class="info-row">
+            <span class="info-label">Nombre:</span>
+            <span class="info-value">{{ inscriptionDetail.user.firstName }} {{ inscriptionDetail.user.lastName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">DNI:</span>
+            <span class="info-value">{{ inscriptionDetail.user.dni }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ inscriptionDetail.user.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Teléfono:</span>
+            <span class="info-value">{{ inscriptionDetail.user.telefono || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3>Información del Concurso</h3>
+          <div class="info-row">
+            <span class="info-label">Concurso:</span>
+            <span class="info-value">{{ inscriptionDetail.inscription.contestTitle }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Categoría:</span>
+            <span class="info-value">{{ inscriptionDetail.inscription.contestCategory }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Departamento:</span>
+            <span class="info-value">{{ inscriptionDetail.inscription.contestDepartment }}</span>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3>Estado de la Inscripción</h3>
+          <div class="info-row">
+            <span class="info-label">Estado:</span>
+            <span class="info-value status-badge" [ngClass]="'status-' + inscriptionDetail.inscription.state.toLowerCase()">
+              {{ inscriptionDetail.inscription.state === 'PENDING' ? 'Pendiente' :
+                 inscriptionDetail.inscription.state === 'APPROVED' ? 'Aprobada' :
+                 inscriptionDetail.inscription.state === 'REJECTED' ? 'Rechazada' :
+                 inscriptionDetail.inscription.state === 'CANCELLED' ? 'Cancelada' :
+                 inscriptionDetail.inscription.state === 'IN_PROCESS' ? 'En Proceso' : 'Desconocido' }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Fecha de inscripción:</span>
+            <span class="info-value">{{ formatDateTime(inscriptionDetail.inscription.createdAt) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Última actualización:</span>
+            <span class="info-value">{{ formatDateTime(inscriptionDetail.inscription.updatedAt) }}</span>
+          </div>
+          <div class="info-row" *ngIf="inscriptionDetail.inscription.reviewedBy">
+            <span class="info-label">Revisado por:</span>
+            <span class="info-value">{{ inscriptionDetail.inscription.reviewedBy }}</span>
+          </div>
+        </div>
+      </div>
+    </app-custom-card>
+
+    <!-- Pestañas de contenido -->
+    <app-custom-tabs [activeTab]="activeTab" (tabChange)="activeTab = $event">
+      <!-- Pestaña de Documentos -->
+      <app-custom-tab title="Documentos" icon="description">
+        <div class="documents-container">
+          <div class="documents-header">
+            <h3>Documentos del Postulante</h3>
+            <div class="documents-stats">
+              <span class="stat-item">
+                <span class="stat-value">{{ inscriptionDetail.documents.length }}</span>
+                <span class="stat-label">Total</span>
+              </span>
+              <span class="stat-item">
+                <span class="stat-value">{{ getDocumentsCount('APPROVED') }}</span>
+                <span class="stat-label">Aprobados</span>
+              </span>
+              <span class="stat-item">
+                <span class="stat-value">{{ getDocumentsCount('PENDING') }}</span>
+                <span class="stat-label">Pendientes</span>
+              </span>
+              <span class="stat-item">
+                <span class="stat-value">{{ getDocumentsCount('REJECTED') }}</span>
+                <span class="stat-label">Rechazados</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="documents-list" *ngIf="inscriptionDetail.documents.length > 0; else noDocumentsTemplate">
+            <div *ngFor="let document of inscriptionDetail.documents" class="document-card">
+              <div class="document-header">
+                <div class="document-info">
+                  <span class="document-name">{{ document.fileName }}</span>
+                  <span class="document-type">{{ document.documentType }}</span>
+                </div>
+
+                <div class="document-status">
+                  <span class="status-badge" [ngClass]="getDocumentStatusClass(document.status)">
+                    {{ getDocumentStatusLabel(document.status) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="document-content">
+                <div class="document-details">
+                  <div class="detail-item">
+                    <span class="label">Tamaño:</span>
+                    <span class="value">{{ (document.fileSize / 1024).toFixed(2) }} KB</span>
+                  </div>
+
+                  <div class="detail-item">
+                    <span class="label">Subido:</span>
+                    <span class="value">{{ formatDateTime(document.uploadDate) }}</span>
+                  </div>
+
+                  <div class="detail-item" *ngIf="document.reviewDate">
+                    <span class="label">Revisado:</span>
+                    <span class="value">{{ formatDateTime(document.reviewDate) }}</span>
+                  </div>
+
+                  <div class="detail-item" *ngIf="document.reviewedBy">
+                    <span class="label">Revisado por:</span>
+                    <span class="value">{{ document.reviewedBy }}</span>
+                  </div>
+                </div>
+
+                <div class="document-actions">
+                  <app-custom-button
+                    [variant]="'text'"
+                    [icon]="'visibility'"
+                    [tooltip]="'Ver documento'"
+                    (click)="downloadDocument(document)">
+                    Ver
+                  </app-custom-button>
+
+                  <app-custom-button
+                    *ngIf="document.status === 'PENDING'"
+                    [variant]="'text'"
+                    [icon]="'check_circle'"
+                    [color]="'success'"
+                    [tooltip]="'Aprobar documento'"
+                    (click)="updateDocumentStatus(document, 'APPROVED')">
+                    Aprobar
+                  </app-custom-button>
+
+                  <app-custom-button
+                    *ngIf="document.status === 'PENDING'"
+                    [variant]="'text'"
+                    [icon]="'cancel'"
+                    [color]="'danger'"
+                    [tooltip]="'Rechazar documento'"
+                    (click)="updateDocumentStatus(document, 'REJECTED')">
+                    Rechazar
+                  </app-custom-button>
+                </div>
+              </div>
+
+              <div class="document-observations" *ngIf="document.observations">
+                <span class="observations-label">Observaciones:</span>
+                <p class="observations-text">{{ document.observations }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </app-custom-tab>
+
+      <!-- Pestaña de Historial -->
+      <app-custom-tab title="Historial" icon="history">
+        <div class="history-container">
+          <h3>Historial de la Inscripción</h3>
+
+          <div class="history-timeline" *ngIf="inscriptionDetail.history.length > 0; else noHistoryTemplate">
+            <div *ngFor="let item of inscriptionDetail.history" class="timeline-item">
+              <div class="timeline-icon" [ngClass]="'icon-' + (item.newState || 'default').toLowerCase()">
+                <i class="fas" [ngClass]="
+                  item.newState === 'APPROVED' ? 'fa-check-circle' :
+                  item.newState === 'REJECTED' ? 'fa-times-circle' :
+                  item.newState === 'PENDING' ? 'fa-clock' :
+                  item.newState === 'CANCELLED' ? 'fa-ban' :
+                  item.newState === 'IN_PROCESS' ? 'fa-spinner' : 'fa-info-circle'
+                "></i>
+              </div>
+
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <span class="timeline-date">{{ formatDateTime(item.date) }}</span>
+                  <span class="timeline-user">{{ item.userName }} ({{ item.userRole }})</span>
+                </div>
+
+                <div class="timeline-body">
+                  <p class="timeline-action">{{ item.action }}</p>
+
+                  <div class="timeline-states" *ngIf="item.previousState && item.newState">
+                    <span class="state-from status-badge" [ngClass]="'status-' + item.previousState.toLowerCase()">
+                      {{ item.previousState === 'PENDING' ? 'Pendiente' :
+                         item.previousState === 'APPROVED' ? 'Aprobada' :
+                         item.previousState === 'REJECTED' ? 'Rechazada' :
+                         item.previousState === 'CANCELLED' ? 'Cancelada' :
+                         item.previousState === 'IN_PROCESS' ? 'En Proceso' : 'Desconocido' }}
+                    </span>
+                    <span class="state-arrow">→</span>
+                    <span class="state-to status-badge" [ngClass]="'status-' + item.newState.toLowerCase()">
+                      {{ item.newState === 'PENDING' ? 'Pendiente' :
+                         item.newState === 'APPROVED' ? 'Aprobada' :
+                         item.newState === 'REJECTED' ? 'Rechazada' :
+                         item.newState === 'CANCELLED' ? 'Cancelada' :
+                         item.newState === 'IN_PROCESS' ? 'En Proceso' : 'Desconocido' }}
+                    </span>
+                  </div>
+
+                  <p class="timeline-details" *ngIf="item.details">{{ item.details }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </app-custom-tab>
+
+      <!-- Pestaña de Gestión -->
+      <app-custom-tab title="Gestión" icon="settings">
+        <div class="management-container">
+          <h3>Gestión de la Inscripción</h3>
+
+          <form [formGroup]="statusForm" (ngSubmit)="updateInscriptionStatus()" class="status-form">
+            <div class="form-row">
+              <div class="form-field">
+                <app-custom-select
+                  label="Estado"
+                  [options]="statusOptions"
+                  [formControl]="$any(statusForm.get('status'))"
+                  [required]="true">
+                </app-custom-select>
+                <app-validation-error [control]="statusForm.get('status')"></app-validation-error>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <app-custom-textarea
+                  label="Observaciones"
+                  placeholder="Ingrese observaciones sobre la inscripción"
+                  [formControl]="$any(statusForm.get('observations'))"
+                  [rows]="4">
+                </app-custom-textarea>
+                <app-validation-error [control]="statusForm.get('observations')"></app-validation-error>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <app-custom-button
+                [type]="'submit'"
+                [label]="'Guardar cambios'"
+                [icon]="'save'"
+                [disabled]="statusForm.invalid || isSaving"
+                [loading]="isSaving">
+              </app-custom-button>
+            </div>
+          </form>
+        </div>
+      </app-custom-tab>
+    </app-custom-tabs>
+  </div>
+
+  <!-- Plantilla de carga -->
+  <ng-template #loadingTemplate>
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Cargando detalle de inscripción...</p>
+    </div>
+  </ng-template>
+
+  <!-- Plantilla sin documentos -->
+  <ng-template #noDocumentsTemplate>
+    <div class="empty-container">
+      <div class="empty-icon">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <h4>No hay documentos</h4>
+      <p>El postulante no ha subido ningún documento</p>
+    </div>
+  </ng-template>
+
+  <!-- Plantilla sin historial -->
+  <ng-template #noHistoryTemplate>
+    <div class="empty-container">
+      <div class="empty-icon">
+        <i class="fas fa-history"></i>
+      </div>
+      <h4>No hay historial</h4>
+      <p>No se han registrado acciones en esta inscripción</p>
+    </div>
+  </ng-template>
+</div>

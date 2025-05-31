@@ -1,0 +1,48 @@
+<div class="admin-root-layout">
+  <!-- Indicador de carga global -->
+  <app-global-loader></app-global-loader>
+
+  <!-- Ayuda de atajos de teclado -->
+  <app-keyboard-shortcuts-help></app-keyboard-shortcuts-help>
+
+  <!-- Indicador de sección -->
+  <app-section-indicator></app-section-indicator>
+
+  <!-- Header -->
+  <app-admin-header
+    [isSidebarCollapsed]="isSidebarCollapsed"
+    (toggleSidebar)="onSidebarToggle(!isSidebarCollapsed)">
+  </app-admin-header>
+
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <app-admin-sidebar
+      [collapsed]="isSidebarCollapsed"
+      *ngIf="!isMobile || !isSidebarCollapsed">
+    </app-admin-sidebar>
+
+    <!-- Main Content Area -->
+    <main class="admin-content" [class.sidebar-collapsed]="isSidebarCollapsed">
+      <!-- Breadcrumbs -->
+      <app-admin-breadcrumbs></app-admin-breadcrumbs>
+
+      <!-- Router Outlet for Content -->
+      <div class="content-wrapper">
+        <app-content-transition [type]="'fade'">
+          <router-outlet></router-outlet>
+        </app-content-transition>
+      </div>
+    </main>
+  </div>
+
+  <!-- Botón flotante para abrir el sidebar en móvil -->
+  <app-custom-button
+    *ngIf="isMobile && isSidebarCollapsed"
+    [variant]="'flat'"
+    [color]="'primary'"
+    [icon]="'bars'"
+    [tooltip]="'Abrir menú'"
+    class="mobile-sidebar-toggle"
+    (buttonClick)="onSidebarToggle(false)">
+  </app-custom-button>
+</div>

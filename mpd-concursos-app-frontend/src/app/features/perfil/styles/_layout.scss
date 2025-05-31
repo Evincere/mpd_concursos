@@ -1,0 +1,78 @@
+// Estilos de layout para el componente de perfil
+@use 'variables' as vars;
+
+// Variables globales para mejorar la coherencia visual
+:host {
+  --input-bg-color: rgba(255, 255, 255, 0.9);
+  --input-border-color: rgba(var(--primary-color-rgb), 0.3);
+  --card-hover-bg: rgba(255, 255, 255, 0.2);
+  --label-color: rgba(255, 255, 255, 0.9);
+  --section-heading-bg: linear-gradient(to right, rgba(var(--primary-color-rgb), 0.15), transparent);
+}
+
+.perfil-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  background: transparent; // Let the dashboard container background show through
+}
+
+.perfil-header {
+  @include vars.flex-center;
+  gap: 1rem;
+  background: var(--section-heading-bg);
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+
+  h2 {
+    @include vars.flex-center;
+    gap: 0.75rem;
+    margin: 0;
+    color: var(--label-color);
+    font-size: 1.6rem;
+    font-weight: 500;
+  }
+
+  i {
+    color: var(--primary-color);
+    font-size: 1.6rem;
+  }
+}
+
+.perfil-tabs {
+  flex: 1;
+  @include vars.card-base;
+  overflow: hidden;
+
+  ::ng-deep {
+    .mat-mdc-tab-body-wrapper {
+      flex: 1;
+    }
+
+    .mat-mdc-tab-body-content {
+      padding: 1.5rem;
+      overflow-x: hidden;
+    }
+  }
+}
+
+.tab-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.perfil-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1.5rem;
+}

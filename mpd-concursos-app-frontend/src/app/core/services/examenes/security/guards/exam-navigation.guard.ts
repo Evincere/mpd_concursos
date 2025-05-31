@@ -31,7 +31,7 @@ export class ExamNavigationGuard implements CanDeactivate<ComponentWithExam> {
         // Registrar el intento de navegación como una violación de seguridad
         this.securityService.reportSecurityViolation(
           SecurityViolationType.SUSPICIOUS_BEHAVIOR,
-          { action: 'NAVIGATION_ATTEMPT', timestamp: new Date().toISOString() }
+          { action: 'NAVIGATION_ATTEMPT', timestamp: Date.now() }
         );
 
         // Mostrar diálogo de confirmación
@@ -41,7 +41,7 @@ export class ExamNavigationGuard implements CanDeactivate<ComponentWithExam> {
           // Registrar la decisión del usuario de salir
           this.securityService.reportSecurityViolation(
             SecurityViolationType.SUSPICIOUS_BEHAVIOR,
-            { action: 'EXAM_ABANDONED', timestamp: new Date().toISOString() }
+            { action: 'EXAM_ABANDONED', timestamp: Date.now() }
           );
         }
 

@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FiltersService } from '@core/services/filters/filters.service';
+
 
 @Component({
   selector: 'app-quick-actions',

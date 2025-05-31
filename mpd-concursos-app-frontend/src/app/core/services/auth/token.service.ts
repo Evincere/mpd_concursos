@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { JwtDto } from '../../dtos/jwt-dto';
-import { User } from '../../models/user.model';
+
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 
@@ -59,7 +59,7 @@ export class TokenService {
         console.log('[TokenService] No token found in localStorage');
         return null;
       }
-      
+
       const decodedToken = this.decodeToken(token);
       if (!decodedToken || this.isTokenExpired(token)) {
         console.log('[TokenService] Token expirado o inválido, removiendo...');
@@ -78,7 +78,7 @@ export class TokenService {
     return this.tokenSubject.asObservable();
   }
 
-  public decodeToken(token: string): any {
+  public decodeToken(token: string): Record<string, unknown> | null {
     try {
       const decoded = this.jwtHelper.decodeToken(token);
       if (!decoded) {
@@ -92,7 +92,7 @@ export class TokenService {
     }
   }
 
-  public getUser(): any {
+  public getUser(): Record<string, unknown> | null {
     try {
       const user = window.localStorage.getItem(this.userKey);
       return user ? JSON.parse(user) : null;
@@ -102,7 +102,7 @@ export class TokenService {
     }
   }
 
-  public saveUser(user: any): void {
+  public saveUser(user: Record<string, unknown>): void {
     try {
       window.localStorage.setItem(this.userKey, JSON.stringify(user));
       console.log('[TokenService] Usuario guardado exitosamente');
@@ -126,7 +126,7 @@ export class TokenService {
     }
   }
 
-  public getAuthorities(): any[] {
+  public getAuthorities(): { authority: string }[] {
     try {
       const authoritiesStr = window.localStorage.getItem(this.authoritiesKey);
       return authoritiesStr ? JSON.parse(authoritiesStr) : [];
@@ -176,13 +176,13 @@ export class TokenService {
     try {
       const decoded = this.jwtHelper.decodeToken(token);
       const isExpired = this.jwtHelper.isTokenExpired(token);
-      
+
       console.log('[TokenService] Validación de token:', {
         isExpired,
         exp: decoded.exp,
         now: Date.now() / 1000
       });
-      
+
       return !isExpired;
     } catch (error) {
       console.error('[TokenService] Error validando token:', error);
@@ -205,7 +205,7 @@ export class TokenService {
       }
 
       // Obtener el userId del token
-      const userId = decodedToken.userId;
+      const userId = decodedToken['userId'] as string | undefined;
       if (!userId) {
         console.log('[TokenService] No se encontró userId en el token');
         return null;

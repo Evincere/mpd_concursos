@@ -8,7 +8,7 @@ export abstract class BaseSecurityStrategy implements ISecurityStrategy {
   protected violations$ = new Subject<SecurityViolationType>();
 
   abstract getType(): SecurityViolationType;
-  abstract handleViolation(details?: any): void;
+  abstract handleViolation(details?: unknown): void;
 
   async activate(): Promise<void> {
     // Implementación base que puede ser sobrescrita

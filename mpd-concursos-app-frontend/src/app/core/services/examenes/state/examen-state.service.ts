@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+
 import { IExamenState } from '@core/interfaces/examenes/state/examen-state.interface';
 import { ExamenEnCurso, Pregunta, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
 import { ExamenEnCursoState } from './strategies/en-curso.state';

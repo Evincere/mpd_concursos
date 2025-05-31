@@ -1,0 +1,111 @@
+<app-custom-dialog
+  title="Detalles del Usuario"
+  [showCloseButton]="true"
+  [showConfirmButton]="false"
+  [showCancelButton]="false"
+  [loading]="isLoading"
+  (close)="onClose()">
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="usuario && !isLoading" class="user-details">
+    <div class="user-header">
+      <div class="user-avatar">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <div class="user-info">
+        <h2>{{ usuario.firstName || 'Sin nombre' }} {{ usuario.lastName || 'Sin apellido' }}</h2>
+        <div class="user-meta">
+          <span class="user-dni">DNI: {{ usuario.dni || 'No disponible' }}</span>
+          <span class="user-status" [ngClass]="getEstadoClass(usuario.status)">
+            {{ getEstadoText(usuario.status) }}
+          </span>
+        </div>
+      </div>
+      <div class="user-actions">
+        <app-custom-button
+          icon="edit"
+          variant="flat"
+          color="primary"
+          (buttonClick)="onEdit()">
+          Editar
+        </app-custom-button>
+      </div>
+    </div>
+
+    <div class="details-section">
+      <app-custom-card title="Información de Contacto" icon="address-card">
+        <div class="detail-item">
+          <span class="detail-label">Email:</span>
+          <span class="detail-value">
+            <a *ngIf="usuario.email" href="mailto:{{ usuario.email }}">{{ usuario.email }}</a>
+            <span *ngIf="!usuario.email" class="no-data">No disponible</span>
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">DNI:</span>
+          <span class="detail-value">{{ usuario.dni || 'No disponible' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">CUIT:</span>
+          <span class="detail-value">{{ usuario.cuit || 'No disponible' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Teléfono:</span>
+          <span class="detail-value">{{ usuario.telefono || 'No disponible' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Dirección:</span>
+          <span class="detail-value">{{ usuario.direccion || 'No disponible' }}</span>
+        </div>
+      </app-custom-card>
+
+      <app-custom-card title="Roles y Permisos" icon="user-shield">
+        <div class="roles-container">
+          <span *ngFor="let rol of usuario.roles" class="role-badge">
+            {{ rol }}
+          </span>
+          <span *ngIf="!usuario.roles || usuario.roles.length === 0" class="no-data">Sin roles asignados</span>
+        </div>
+      </app-custom-card>
+
+      <app-custom-card title="Información de Cuenta" icon="info-circle">
+        <div class="detail-item">
+          <span class="detail-label">ID:</span>
+          <span class="detail-value">{{ usuario.id || 'No disponible' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Fecha de registro:</span>
+          <span class="detail-value">
+            <span *ngIf="usuario.createdAt">{{ usuario.createdAt | date:'dd/MM/yyyy' }}</span>
+            <span *ngIf="!usuario.createdAt" class="no-data">No disponible</span>
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Último acceso:</span>
+          <span class="detail-value">
+            <span *ngIf="usuario.lastLogin">{{ usuario.lastLogin | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span *ngIf="!usuario.lastLogin" class="no-data">Sin accesos</span>
+          </span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Nombre de usuario:</span>
+          <span class="detail-value">{{ usuario.username || 'No disponible' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Estado:</span>
+          <span class="detail-value" [ngClass]="getEstadoClass(usuario.status)">
+            {{ getEstadoText(usuario.status) }}
+          </span>
+        </div>
+      </app-custom-card>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando información del usuario...</p>
+  </div>
+</app-custom-dialog>

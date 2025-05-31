@@ -1,0 +1,339 @@
+<h2 mat-dialog-title>Editar Perfil: {{getFullName()}}</h2>
+
+<mat-dialog-content>
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando información...</p>
+  </div>
+  
+  <div *ngIf="!isLoading && profile" class="profile-edit-form">
+    <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
+      <!-- Pestaña de Información Personal -->
+      <mat-tab label="Información Personal">
+        <div class="tab-content">
+          <form [formGroup]="personalForm">
+            <div class="form-section">
+              <h4>Datos Personales</h4>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Nombre</mat-label>
+                  <input matInput formControlName="firstName" placeholder="Ingrese nombre">
+                  <mat-error *ngIf="personalForm.get('firstName')?.hasError('required')">
+                    El nombre es obligatorio
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Apellido</mat-label>
+                  <input matInput formControlName="lastName" placeholder="Ingrese apellido">
+                  <mat-error *ngIf="personalForm.get('lastName')?.hasError('required')">
+                    El apellido es obligatorio
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Email</mat-label>
+                  <input matInput formControlName="email" placeholder="Ingrese email" type="email">
+                  <mat-error *ngIf="personalForm.get('email')?.hasError('required')">
+                    El email es obligatorio
+                  </mat-error>
+                  <mat-error *ngIf="personalForm.get('email')?.hasError('email')">
+                    Ingrese un email válido
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Teléfono</mat-label>
+                  <input matInput formControlName="phone" placeholder="Ingrese teléfono">
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>DNI</mat-label>
+                  <input matInput formControlName="dni" placeholder="Ingrese DNI">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>CUIT</mat-label>
+                  <input matInput formControlName="cuit" placeholder="Ingrese CUIT">
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Fecha de Nacimiento</mat-label>
+                  <input matInput [matDatepicker]="birthDatePicker" formControlName="birthDate">
+                  <mat-datepicker-toggle matSuffix [for]="birthDatePicker"></mat-datepicker-toggle>
+                  <mat-datepicker #birthDatePicker></mat-datepicker>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Género</mat-label>
+                  <mat-select formControlName="gender">
+                    <mat-option value="Masculino">Masculino</mat-option>
+                    <mat-option value="Femenino">Femenino</mat-option>
+                    <mat-option value="No binario">No binario</mat-option>
+                    <mat-option value="Prefiero no decir">Prefiero no decir</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Nacionalidad</mat-label>
+                  <input matInput formControlName="nationality" placeholder="Ingrese nacionalidad">
+                </mat-form-field>
+              </div>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+      
+      <!-- Pestaña de Dirección -->
+      <mat-tab label="Dirección">
+        <div class="tab-content">
+          <form [formGroup]="addressForm">
+            <div class="form-section">
+              <h4>Dirección</h4>
+              
+              <div formGroupName="address">
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Calle</mat-label>
+                    <input matInput formControlName="street" placeholder="Ingrese calle">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="number-field">
+                    <mat-label>Número</mat-label>
+                    <input matInput formControlName="number" placeholder="Ingrese número">
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="number-field">
+                    <mat-label>Piso</mat-label>
+                    <input matInput formControlName="floor" placeholder="Ingrese piso">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="number-field">
+                    <mat-label>Departamento</mat-label>
+                    <input matInput formControlName="apartment" placeholder="Ingrese departamento">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Código Postal</mat-label>
+                    <input matInput formControlName="postalCode" placeholder="Ingrese código postal">
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Ciudad</mat-label>
+                    <input matInput formControlName="city" placeholder="Ingrese ciudad">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Provincia</mat-label>
+                    <input matInput formControlName="province" placeholder="Ingrese provincia">
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>País</mat-label>
+                    <input matInput formControlName="country" placeholder="Ingrese país">
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+            
+            <mat-divider></mat-divider>
+            
+            <div class="form-section">
+              <div class="section-header">
+                <h4>Centro de Vida</h4>
+                <mat-checkbox formControlName="sameCentroDeVida">Usar la misma dirección</mat-checkbox>
+              </div>
+              
+              <div formGroupName="centroDeVida">
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Calle</mat-label>
+                    <input matInput formControlName="street" placeholder="Ingrese calle">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="number-field">
+                    <mat-label>Número</mat-label>
+                    <input matInput formControlName="number" placeholder="Ingrese número">
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="number-field">
+                    <mat-label>Piso</mat-label>
+                    <input matInput formControlName="floor" placeholder="Ingrese piso">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline" class="number-field">
+                    <mat-label>Departamento</mat-label>
+                    <input matInput formControlName="apartment" placeholder="Ingrese departamento">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Código Postal</mat-label>
+                    <input matInput formControlName="postalCode" placeholder="Ingrese código postal">
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Ciudad</mat-label>
+                    <input matInput formControlName="city" placeholder="Ingrese ciudad">
+                  </mat-form-field>
+                  
+                  <mat-form-field appearance="outline">
+                    <mat-label>Provincia</mat-label>
+                    <input matInput formControlName="province" placeholder="Ingrese provincia">
+                  </mat-form-field>
+                </div>
+                
+                <div class="form-row">
+                  <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>País</mat-label>
+                    <input matInput formControlName="country" placeholder="Ingrese país">
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+      
+      <!-- Pestaña de Información Profesional -->
+      <mat-tab label="Información Profesional">
+        <div class="tab-content">
+          <form [formGroup]="professionalForm">
+            <div class="form-section">
+              <h4>Datos Profesionales</h4>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Título</mat-label>
+                  <input matInput formControlName="title" placeholder="Ingrese título">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Especialización</mat-label>
+                  <input matInput formControlName="specialization" placeholder="Ingrese especialización">
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Número de Matrícula</mat-label>
+                  <input matInput formControlName="licenseNumber" placeholder="Ingrese número de matrícula">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Fecha de Graduación</mat-label>
+                  <input matInput [matDatepicker]="graduationDatePicker" formControlName="graduationDate">
+                  <mat-datepicker-toggle matSuffix [for]="graduationDatePicker"></mat-datepicker-toggle>
+                  <mat-datepicker #graduationDatePicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Universidad</mat-label>
+                  <input matInput formControlName="university" placeholder="Ingrese universidad">
+                </mat-form-field>
+              </div>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+      
+      <!-- Pestaña de Preferencias -->
+      <mat-tab label="Preferencias">
+        <div class="tab-content">
+          <form [formGroup]="preferencesForm">
+            <div class="form-section">
+              <h4>Preferencias de Usuario</h4>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Tema</mat-label>
+                  <mat-select formControlName="theme">
+                    <mat-option value="light">Claro</mat-option>
+                    <mat-option value="dark">Oscuro</mat-option>
+                    <mat-option value="system">Sistema</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Idioma</mat-label>
+                  <mat-select formControlName="language">
+                    <mat-option value="es">Español</mat-option>
+                    <mat-option value="en">Inglés</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              
+              <div formGroupName="notifications" class="preferences-section">
+                <h5>Notificaciones</h5>
+                
+                <div class="toggle-row">
+                  <mat-slide-toggle formControlName="email" color="primary">
+                    Email
+                  </mat-slide-toggle>
+                  
+                  <mat-slide-toggle formControlName="push" color="primary">
+                    Push
+                  </mat-slide-toggle>
+                  
+                  <mat-slide-toggle formControlName="sms" color="primary">
+                    SMS
+                  </mat-slide-toggle>
+                </div>
+              </div>
+              
+              <div formGroupName="accessibility" class="preferences-section">
+                <h5>Accesibilidad</h5>
+                
+                <div class="toggle-row">
+                  <mat-slide-toggle formControlName="highContrast" color="primary">
+                    Alto contraste
+                  </mat-slide-toggle>
+                  
+                  <mat-slide-toggle formControlName="largeText" color="primary">
+                    Texto grande
+                  </mat-slide-toggle>
+                  
+                  <mat-slide-toggle formControlName="screenReader" color="primary">
+                    Lector de pantalla
+                  </mat-slide-toggle>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close [disabled]="isSaving">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="personalForm.invalid || isSaving">
+    <mat-icon>save</mat-icon>
+    Guardar Cambios
+  </button>
+</mat-dialog-actions>
+
+<div *ngIf="isSaving" class="loading-overlay">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>

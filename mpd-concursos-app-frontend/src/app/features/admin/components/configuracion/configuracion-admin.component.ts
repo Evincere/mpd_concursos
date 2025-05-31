@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
@@ -11,6 +11,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+import { SystemConfigService } from '@core/services/admin/system-config.service';
+import { IntegrationsConfigComponent } from './components/integrations-config/integrations-config.component';
+import { ConfigHistoryComponent } from './components/config-history/config-history.component';
 
 @Component({
   selector: 'app-configuracion-admin',
@@ -28,10 +35,13 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
     MatIconModule,
     MatTabsModule,
     MatCheckboxModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatDialogModule,
+    IntegrationsConfigComponent,
+    ConfigHistoryComponent
   ]
 })
-export class ConfiguracionAdminComponent implements OnInit {
+export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
   generalForm: FormGroup;
   securityForm: FormGroup;
   notificationsForm: FormGroup;
@@ -71,9 +81,13 @@ export class ConfiguracionAdminComponent implements OnInit {
     }
   };
 
+  // Para limpieza de suscripciones
+  private destroy$ = new Subject<void>();
+
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private systemConfigService: SystemConfigService
   ) {
     this.generalForm = this.fb.group({
       appName: [this.configData.general.appName, Validators.required],
@@ -111,13 +125,80 @@ export class ConfiguracionAdminComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadConfigurations();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Carga las configuraciones del sistema
+   */
+  loadConfigurations(): void {
+    // Cargar configuración general
+    this.systemConfigService.getGeneralConfig()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.generalForm.patchValue(config);
+        },
+        error: (error) => {
+          console.error('Error cargando configuración general:', error);
+        }
+      });
+
+    // Cargar configuración de seguridad
+    this.systemConfigService.getSecurityConfig()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.securityForm.patchValue(config);
+        },
+        error: (error) => {
+          console.error('Error cargando configuración de seguridad:', error);
+        }
+      });
+
+    // Cargar configuración de notificaciones
+    this.systemConfigService.getNotificationsConfig()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.notificationsForm.patchValue(config);
+        },
+        error: (error) => {
+          console.error('Error cargando configuración de notificaciones:', error);
+        }
+      });
+
+    // Cargar configuración de respaldo
+    this.systemConfigService.getBackupConfig()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.backupForm.patchValue(config);
+        },
+        error: (error) => {
+          console.error('Error cargando configuración de respaldo:', error);
+        }
+      });
   }
 
   saveGeneralConfig(): void {
     if (this.generalForm.valid) {
-      // Simular guardado
-      this.configData.general = this.generalForm.value;
-      this.snackBar.open('Configuración general guardada correctamente', 'Cerrar', { duration: 3000 });
+      this.systemConfigService.updateGeneralConfig(this.generalForm.value)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Configuración general guardada correctamente', 'Cerrar', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error guardando configuración general:', error);
+            this.snackBar.open('Error al guardar la configuración general', 'Cerrar', { duration: 3000 });
+          }
+        });
     } else {
       this.markFormGroupTouched(this.generalForm);
     }
@@ -125,9 +206,17 @@ export class ConfiguracionAdminComponent implements OnInit {
 
   saveSecurityConfig(): void {
     if (this.securityForm.valid) {
-      // Simular guardado
-      this.configData.security = this.securityForm.value;
-      this.snackBar.open('Configuración de seguridad guardada correctamente', 'Cerrar', { duration: 3000 });
+      this.systemConfigService.updateSecurityConfig(this.securityForm.value)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Configuración de seguridad guardada correctamente', 'Cerrar', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error guardando configuración de seguridad:', error);
+            this.snackBar.open('Error al guardar la configuración de seguridad', 'Cerrar', { duration: 3000 });
+          }
+        });
     } else {
       this.markFormGroupTouched(this.securityForm);
     }
@@ -135,9 +224,17 @@ export class ConfiguracionAdminComponent implements OnInit {
 
   saveNotificationsConfig(): void {
     if (this.notificationsForm.valid) {
-      // Simular guardado
-      this.configData.notifications = this.notificationsForm.value;
-      this.snackBar.open('Configuración de notificaciones guardada correctamente', 'Cerrar', { duration: 3000 });
+      this.systemConfigService.updateNotificationsConfig(this.notificationsForm.value)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Configuración de notificaciones guardada correctamente', 'Cerrar', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error guardando configuración de notificaciones:', error);
+            this.snackBar.open('Error al guardar la configuración de notificaciones', 'Cerrar', { duration: 3000 });
+          }
+        });
     } else {
       this.markFormGroupTouched(this.notificationsForm);
     }
@@ -145,56 +242,35 @@ export class ConfiguracionAdminComponent implements OnInit {
 
   saveBackupConfig(): void {
     if (this.backupForm.valid) {
-      // Simular guardado
-      this.configData.backup = this.backupForm.value;
-      this.snackBar.open('Configuración de respaldo guardada correctamente', 'Cerrar', { duration: 3000 });
+      this.systemConfigService.updateBackupConfig(this.backupForm.value)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.snackBar.open('Configuración de respaldo guardada correctamente', 'Cerrar', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('Error guardando configuración de respaldo:', error);
+            this.snackBar.open('Error al guardar la configuración de respaldo', 'Cerrar', { duration: 3000 });
+          }
+        });
     } else {
       this.markFormGroupTouched(this.backupForm);
     }
   }
 
   resetToDefaults(formType: string): void {
-    switch (formType) {
-      case 'general':
-        this.generalForm.reset({
-          appName: 'Defensa Mendoza',
-          appLogo: 'assets/images/logo.png',
-          appTheme: 'light',
-          defaultLanguage: 'es',
-          itemsPerPage: 10
-        });
-        break;
-      case 'security':
-        this.securityForm.reset({
-          sessionTimeout: 30,
-          maxLoginAttempts: 5,
-          passwordMinLength: 8,
-          passwordRequireSpecialChar: true,
-          passwordRequireNumber: true,
-          passwordRequireUppercase: true,
-          twoFactorAuth: false
-        });
-        break;
-      case 'notifications':
-        this.notificationsForm.reset({
-          emailNotifications: true,
-          newExamNotification: true,
-          examResultNotification: true,
-          systemUpdatesNotification: false,
-          reminderBeforeExam: 24
-        });
-        break;
-      case 'backup':
-        this.backupForm.reset({
-          autoBackup: true,
-          backupFrequency: 'daily',
-          backupTime: '02:00',
-          keepBackupsFor: 30,
-          backupLocation: '/var/backups/mpd-concursos'
-        });
-        break;
-    }
-    this.snackBar.open(`Configuración de ${formType} restablecida a valores predeterminados`, 'Cerrar', { duration: 3000 });
+    this.systemConfigService.resetConfig(formType)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.snackBar.open(`Configuración de ${formType} restablecida a valores predeterminados`, 'Cerrar', { duration: 3000 });
+          this.loadConfigurations();
+        },
+        error: (error) => {
+          console.error(`Error restableciendo configuración de ${formType}:`, error);
+          this.snackBar.open(`Error al restablecer la configuración de ${formType}`, 'Cerrar', { duration: 3000 });
+        }
+      });
   }
 
   // Marcar todos los controles como tocados para mostrar errores

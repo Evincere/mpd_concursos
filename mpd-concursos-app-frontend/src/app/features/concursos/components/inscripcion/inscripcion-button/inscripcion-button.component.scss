@@ -40,8 +40,47 @@
         color: #4CAF50;
         pointer-events: none;
 
-        i {
+        i, mat-icon {
             color: #4CAF50;
+        }
+    }
+
+    &.confirmada {
+        background: rgba(255, 152, 0, 0.12);
+        color: #FF9800;
+        pointer-events: none;
+
+        i, mat-icon {
+            color: #FF9800;
+        }
+    }
+
+    &.rejected {
+        background: rgba(244, 67, 54, 0.12);
+        color: #F44336;
+        pointer-events: none;
+
+        i, mat-icon {
+            color: #F44336;
+        }
+    }
+
+    &.cancelled {
+        background: rgba(158, 158, 158, 0.12);
+        color: #9E9E9E;
+        pointer-events: none;
+
+        i, mat-icon {
+            color: #9E9E9E;
+        }
+    }
+
+    &.retomar {
+        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+
+        &:not([disabled]):hover {
+            background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
         }
     }
 

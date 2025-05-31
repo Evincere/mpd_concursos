@@ -1,6 +1,18 @@
 .examenes-list-container {
   padding: 2rem;
 
+  @include lg {
+    padding: 1.5rem;
+  }
+
+  @include md {
+    padding: 1rem;
+  }
+
+  @include sm {
+    padding: 0.75rem;
+  }
+
   .header {
     display: flex;
     justify-content: space-between;
@@ -8,10 +20,29 @@
     margin-bottom: 2rem;
     flex-wrap: wrap;
 
+    @include md {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
     h1 {
       font-size: 2rem;
       margin: 0;
       color: #333;
+
+      @include lg {
+        font-size: 1.75rem;
+      }
+
+      @include md {
+        font-size: 1.5rem;
+      }
+
+      @include sm {
+        font-size: 1.25rem;
+      }
     }
 
     .filters {
@@ -20,12 +51,26 @@
       align-items: center;
       flex-wrap: wrap;
 
+      @include md {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
       .search-field {
         width: 300px;
+
+        @include md {
+          width: 100%;
+        }
       }
 
       .filter-toggle {
         height: 36px;
+
+        @include md {
+          width: 100%;
+        }
       }
     }
   }
@@ -36,13 +81,28 @@
     gap: 2rem;
     margin-bottom: 2rem;
 
+    @include lg {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    @include md {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    @include sm {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
     .examen-card {
       position: relative;
       overflow: hidden;
       border-radius: 8px;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       cursor: pointer;
-      
+
       &:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
@@ -53,7 +113,7 @@
         overflow: hidden;
         border: 2px solid rgba(244, 67, 54, 0.7);
         box-shadow: 0 4px 8px rgba(244, 67, 54, 0.2) !important;
-        
+
         &::before {
           content: "";
           position: absolute;
@@ -70,7 +130,7 @@
           );
           pointer-events: none;
         }
-        
+
         // Mejoramos el estilo de la cinta "ANULADO"
         .cinta-anulado {
           position: absolute;
@@ -86,7 +146,7 @@
           letter-spacing: 1px;
           font-size: 0.9rem;
         }
-        
+
         // Mejoramos el estilo de la información de anulación
         .anulado-info {
           background-color: rgba(244, 67, 54, 0.1);
@@ -97,7 +157,7 @@
           box-shadow: 0 2px 6px rgba(0,0,0,0.1);
           display: flex;
           align-items: flex-start;
-          
+
           .anulado-text {
             p {
               margin: 6px 0;
@@ -106,7 +166,7 @@
               font-weight: 500;
               line-height: 1.4;
             }
-            
+
             .anulado-fecha {
               display: flex;
               align-items: center;
@@ -114,14 +174,14 @@
               margin-top: 8px;
               color: rgba(0, 0, 0, 0.7);
               font-weight: 500;
-              
+
               .small-icon {
                 color: #f44336;
                 font-size: 1.1rem;
               }
             }
           }
-          
+
           mat-icon {
             margin-right: 12px;
             color: #f44336;
@@ -152,15 +212,15 @@
               border-radius: 16px;
               font-size: 0.75rem;
               color: white;
-              
+
               &.tipo-juridico {
                 background-color: #3f51b5;
               }
-              
+
               &.tipo-administrativo {
                 background-color: #2196f3;
               }
-              
+
               &.tipo-auxiliar {
                 background-color: #009688;
               }
@@ -173,19 +233,19 @@
             font-size: 0.75rem;
             font-weight: 500;
             color: white;
-            
+
             &.estado-disponible {
               background-color: #4caf50;
             }
-            
+
             &.estado-en-curso {
               background-color: #ff9800;
             }
-            
+
             &.estado-finalizado {
               background-color: #607d8b;
             }
-            
+
             &.estado-anulado {
               background-color: #f44336;
             }
@@ -204,14 +264,14 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            
+
             mat-icon {
               color: #555;
               font-size: 1.1rem;
               height: 1.1rem;
               width: 1.1rem;
             }
-            
+
             span {
               font-size: 0.9rem;
               color: #555;

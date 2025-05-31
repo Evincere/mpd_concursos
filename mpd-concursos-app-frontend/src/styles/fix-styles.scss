@@ -1,0 +1,211 @@
+/* 
+ * Archivo de corrección de estilos para la aplicación MPD Concursos
+ * Este archivo corrige problemas de estilo y asegura la consistencia visual
+ */
+
+// Asegurar que las variables globales estén correctamente definidas
+:root {
+  // Colores principales
+  --color-primary: #1976D2;
+  --color-primary-dark: #1565C0;
+  --color-primary-light: rgba(25, 118, 210, 0.15);
+  --color-secondary: #424242;
+  --color-accent: #4CAF50;
+  
+  // Colores de fondo
+  --color-background: #121212;
+  --color-background-dark: #0a0a0a;
+  --color-background-light: #1e1e1e;
+  --color-surface: #1e1e1e;
+  --color-surface-light: #2c2c2c;
+  
+  // Colores de texto
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-text-disabled: rgba(255, 255, 255, 0.38);
+  
+  // Bordes y sombras
+  --border-radius: 8px;
+  --border-radius-sm: 4px;
+  --border-radius-lg: 12px;
+  --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --card-border: rgba(255, 255, 255, 0.1);
+  
+  // Transiciones
+  --transition-default: all 0.3s ease;
+}
+
+// Correcciones para el cuerpo y elementos principales
+body, html {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+// Correcciones para el dashboard
+.dashboard-layout {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  
+  .dashboard-container {
+    background-color: var(--color-background);
+  }
+  
+  .dashboard-content {
+    background-color: var(--color-background);
+  }
+}
+
+// Correcciones para la barra lateral
+.sidebar {
+  background-color: var(--color-background-dark);
+  border-right: 1px solid var(--card-border);
+  
+  .nav-item {
+    a {
+      color: var(--color-text-secondary);
+      
+      &.active {
+        background-color: var(--color-primary-light);
+        color: var(--color-primary);
+      }
+      
+      &:hover:not(.active) {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+    }
+  }
+}
+
+// Correcciones para la barra de navegación
+.navbar {
+  background-color: var(--color-background-dark);
+  border-bottom: 1px solid var(--card-border);
+  color: var(--color-text-primary);
+}
+
+// Correcciones para tarjetas
+.card, mat-card {
+  background-color: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: var(--border-radius) !important;
+  box-shadow: var(--box-shadow) !important;
+  border: 1px solid var(--card-border) !important;
+}
+
+// Specific override for dashboard cards to allow colored left borders
+.dashboard-cards .card {
+  border: 1px solid var(--card-border) !important;
+  border-left: none !important; // Will be set by inline style
+}
+
+.card, mat-card {
+  .mat-mdc-card-title {
+    color: var(--color-text-primary) !important;
+  }
+  
+  .mat-mdc-card-subtitle {
+    color: var(--color-text-secondary) !important;
+  }
+}
+
+// Correcciones para botones
+button, .mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-outlined-button {
+  &.mat-primary {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+  }
+  
+  &.mat-accent {
+    background-color: var(--color-accent) !important;
+    color: white !important;
+  }
+}
+
+// Correcciones para tablas
+.mat-mdc-table {
+  background-color: var(--color-surface) !important;
+  
+  .mat-mdc-header-cell {
+    background-color: var(--color-surface-light) !important;
+    color: var(--color-text-primary) !important;
+  }
+  
+  .mat-mdc-cell {
+    color: var(--color-text-primary) !important;
+    border-bottom-color: var(--card-border) !important;
+  }
+}
+
+// Correcciones para pestañas
+.mat-mdc-tab-group {
+  .mat-mdc-tab-header {
+    background-color: var(--color-surface) !important;
+    border-bottom: 1px solid var(--card-border) !important;
+  }
+  
+  .mat-mdc-tab-label {
+    color: var(--color-text-secondary) !important;
+    
+    &.mat-mdc-tab-label-active {
+      color: var(--color-primary) !important;
+    }
+  }
+  
+  .mat-mdc-tab-body-content {
+    background-color: var(--color-surface) !important;
+  }
+}
+
+// Correcciones para iconos
+.mat-icon {
+  color: var(--color-text-secondary);
+}
+
+// Correcciones para formularios
+.mat-mdc-form-field {
+  width: 100%;
+  
+  .mat-mdc-form-field-flex {
+    background-color: var(--color-surface-light) !important;
+  }
+  
+  .mat-mdc-text-field-wrapper {
+    background-color: transparent !important;
+  }
+  
+  .mat-mdc-form-field-label {
+    color: var(--color-text-secondary) !important;
+  }
+  
+  .mat-mdc-input-element {
+    color: var(--color-text-primary) !important;
+  }
+}
+
+// Correcciones para diálogos
+.mat-mdc-dialog-container {
+  .mat-mdc-dialog-surface {
+    background-color: var(--color-surface) !important;
+    color: var(--color-text-primary) !important;
+    border-radius: var(--border-radius) !important;
+    box-shadow: var(--box-shadow) !important;
+  }
+}
+
+// Correcciones para menús
+.mat-mdc-menu-panel {
+  background-color: var(--color-surface) !important;
+  
+  .mat-mdc-menu-item {
+    color: var(--color-text-primary) !important;
+    
+    &:hover:not([disabled]) {
+      background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+  }
+}

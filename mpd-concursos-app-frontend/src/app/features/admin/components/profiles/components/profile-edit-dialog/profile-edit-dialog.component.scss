@@ -1,0 +1,160 @@
+@use 'src/styles/variables' as *;
+
+:host {
+  display: block;
+  position: relative;
+}
+
+mat-dialog-content {
+  max-height: 70vh;
+  min-height: 300px;
+}
+
+// Contenedor de carga
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: $color-text-secondary;
+  }
+}
+
+// Contenido de pestañas
+.tab-content {
+  padding: 1.5rem 0;
+}
+
+// Secciones de formulario
+.form-section {
+  margin: 1.5rem 0;
+  
+  h4 {
+    font-size: $font-size-md;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+  
+  h5 {
+    font-size: $font-size-sm;
+    font-weight: 500;
+    margin: 0 0 0.75rem;
+    color: $color-text-primary;
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    mat-form-field {
+      flex: 1;
+      min-width: 200px;
+      
+      &.number-field {
+        flex: 0.5;
+        min-width: 100px;
+      }
+      
+      &.full-width {
+        flex: 1 1 100%;
+      }
+    }
+  }
+  
+  .preferences-section {
+    margin-top: 1.5rem;
+    
+    .toggle-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      
+      mat-slide-toggle {
+        margin-bottom: 0.75rem;
+      }
+    }
+  }
+}
+
+mat-divider {
+  margin: 1.5rem 0;
+}
+
+// Overlay de carga
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  border-radius: 4px;
+}
+
+// Media queries para responsive
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0 !important;
+    
+    mat-form-field {
+      width: 100%;
+      
+      &.number-field {
+        width: 100%;
+      }
+    }
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .preferences-section {
+    .toggle-row {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .loading-container {
+    p {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  h4, h5 {
+    color: $color-text-primary-dark !important;
+  }
+  
+  .loading-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}

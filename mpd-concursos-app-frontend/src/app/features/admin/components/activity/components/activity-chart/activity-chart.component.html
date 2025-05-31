@@ -1,0 +1,81 @@
+<div class="chart-container" #chartContainer>
+  <!-- Estado vacío -->
+  <div *ngIf="chartData.length === 0" class="empty-chart">
+    <mat-icon>insert_chart</mat-icon>
+    <p>No hay datos disponibles para mostrar</p>
+  </div>
+  
+  <!-- Gráfico de barras -->
+  <div *ngIf="chartData.length > 0 && chartType === 'bar'" class="bar-chart">
+    <div class="chart-body">
+      <div class="bar-container" *ngFor="let item of chartData">
+        <div class="bar-label" [matTooltip]="item.label">
+          {{item.label.length > 15 ? item.label.substring(0, 12) + '...' : item.label}}
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar" 
+               [style.height]="getBarHeight(item.value)"
+               [style.background-color]="item.color">
+            <div class="bar-value">{{formatValue(item.value)}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Gráfico de pastel -->
+  <div *ngIf="chartData.length > 0 && chartType === 'pie'" class="pie-chart">
+    <div class="pie-container">
+      <div class="pie">
+        <div class="pie-segment" 
+             *ngFor="let item of chartData; let i = index"
+             [style]="getPieSegmentStyle(i)"
+             [matTooltip]="item.label + ': ' + item.value + ' (' + formatPercentage(item.percentage) + ')'">
+        </div>
+      </div>
+    </div>
+    <div class="pie-legend">
+      <div class="legend-item" *ngFor="let item of chartData">
+        <div class="legend-color" [style.background-color]="item.color"></div>
+        <div class="legend-label" [matTooltip]="item.label">
+          {{item.label.length > 15 ? item.label.substring(0, 12) + '...' : item.label}}
+        </div>
+        <div class="legend-value">{{formatValue(item.value)}}</div>
+        <div class="legend-percentage">{{formatPercentage(item.percentage)}}</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Gráfico de línea -->
+  <div *ngIf="chartData.length > 0 && chartType === 'line'" class="line-chart">
+    <div class="chart-body">
+      <div class="line-container">
+        <!-- Líneas de cuadrícula -->
+        <div class="grid-lines">
+          <div class="grid-line" *ngFor="let _ of [0, 1, 2, 3, 4]"></div>
+        </div>
+        
+        <!-- Puntos y líneas -->
+        <div class="line-points">
+          <div class="line-point" 
+               *ngFor="let item of chartData; let i = index"
+               [style.left]="getLinePointPosition(i, chartData.length).left"
+               [style.bottom]="getLinePointPosition(i, chartData.length).bottom"
+               [style.background-color]="item.color"
+               [matTooltip]="(colorScheme === 'date' ? formatDate(item.label) : item.label) + ': ' + item.value">
+          </div>
+        </div>
+        
+        <!-- Etiquetas del eje X -->
+        <div class="x-axis-labels">
+          <div class="x-label" 
+               *ngFor="let item of chartData; let i = index"
+               [style.left]="getLinePointPosition(i, chartData.length).left">
+            {{colorScheme === 'date' ? formatDate(item.label) : 
+              (item.label.length > 8 ? item.label.substring(0, 5) + '...' : item.label)}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

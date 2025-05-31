@@ -28,8 +28,10 @@ import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentTypeDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentValidationResult;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentTypeService;
+import ar.gov.mpd.concursobackend.document.application.service.DocumentValidationService;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,7 @@ public class DocumentController {
 
     private final DocumentService documentService;
     private final DocumentTypeService documentTypeService;
+    private final DocumentValidationService documentValidationService;
     private final SecurityUtils securityUtils;
 
     @GetMapping("/tipos")
@@ -212,5 +215,27 @@ public class DocumentController {
             @RequestParam("estado") String status) {
 
         return ResponseEntity.ok(documentService.updateDocumentStatus(documentId, status));
+    }
+
+    /**
+     * Valida un documento antes de subirlo
+     *
+     * @param file Archivo a validar
+     * @return Resultado de la validación
+     */
+    @PostMapping("/validate")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<DocumentValidationResult> validateDocument(
+            @RequestParam("file") MultipartFile file) {
+
+        log.debug("REST request to validate document: {}", file.getOriginalFilename());
+
+        try {
+            DocumentValidationResult result = documentValidationService.validateFile(file);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Error validating document", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

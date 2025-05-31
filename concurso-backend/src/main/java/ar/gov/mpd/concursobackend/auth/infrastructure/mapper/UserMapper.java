@@ -60,8 +60,37 @@ public class UserMapper {
 
         entity.setFirstName(user.getFirstName());
         entity.setLastName(user.getLastName());
+
+        // Mapear los nuevos campos
+        if (user.getBirthDate() != null) {
+            entity.setBirthDate(user.getBirthDate().getValue());
+        }
+        if (user.getCountry() != null) {
+            entity.setCountry(user.getCountry().getValue());
+        }
+        if (user.getProvince() != null) {
+            entity.setProvince(user.getProvince().getValue());
+        }
+        if (user.getMunicipality() != null) {
+            entity.setMunicipality(user.getMunicipality().getValue());
+        }
+        if (user.getLegalAddress() != null) {
+            entity.setLegalAddress(user.getLegalAddress().getValue());
+        }
+        if (user.getResidentialAddress() != null) {
+            entity.setResidentialAddress(user.getResidentialAddress().getValue());
+        }
+
         entity.setTelefono(user.getTelefono());
         entity.setDireccion(user.getDireccion());
+
+        // Mapear el estado del usuario
+        if (user.getStatus() != null) {
+            entity.setStatus(user.getStatus());
+        } else {
+            // Si el estado es nulo, establecer como ACTIVE por defecto
+            entity.setStatus(ar.gov.mpd.concursobackend.auth.domain.model.UserStatus.ACTIVE);
+        }
 
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             logger.info("Mapeando {} roles para el usuario {}", user.getRoles().size(), user.getUsername().value());
@@ -134,6 +163,27 @@ public class UserMapper {
 
         user.setFirstName(entity.getFirstName());
         user.setLastName(entity.getLastName());
+
+        // Mapear los nuevos campos
+        if (entity.getBirthDate() != null) {
+            user.setBirthDate(new UserBirthDate(entity.getBirthDate()));
+        }
+        if (entity.getCountry() != null) {
+            user.setCountry(new UserCountry(entity.getCountry()));
+        }
+        if (entity.getProvince() != null) {
+            user.setProvince(new UserProvince(entity.getProvince()));
+        }
+        if (entity.getMunicipality() != null) {
+            user.setMunicipality(new UserMunicipality(entity.getMunicipality()));
+        }
+        if (entity.getLegalAddress() != null) {
+            user.setLegalAddress(new UserLegalAddress(entity.getLegalAddress()));
+        }
+        if (entity.getResidentialAddress() != null) {
+            user.setResidentialAddress(new UserResidentialAddress(entity.getResidentialAddress()));
+        }
+
         user.setTelefono(entity.getTelefono());
         user.setDireccion(entity.getDireccion());
 
@@ -151,6 +201,14 @@ public class UserMapper {
                     })
                     .collect(Collectors.toSet());
             user.setRoles(roles);
+        }
+
+        // Mapear el estado del usuario
+        if (entity.getStatus() != null) {
+            user.setStatus(entity.getStatus());
+        } else {
+            // Si el estado es nulo, establecer como ACTIVE por defecto
+            user.setStatus(ar.gov.mpd.concursobackend.auth.domain.model.UserStatus.ACTIVE);
         }
 
         return user;

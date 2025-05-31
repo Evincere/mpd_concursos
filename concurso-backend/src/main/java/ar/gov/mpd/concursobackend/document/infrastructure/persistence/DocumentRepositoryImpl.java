@@ -51,4 +51,9 @@ public class DocumentRepositoryImpl implements IDocumentRepository {
     public boolean existsById(DocumentId id) {
         return documentSpringRepository.existsById(id.value());
     }
+
+    @Override
+    public long countByStatus(String status) {
+        return documentSpringRepository.countByStatus(status);
+    }
 }

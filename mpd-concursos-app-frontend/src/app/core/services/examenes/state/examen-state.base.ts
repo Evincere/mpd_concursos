@@ -1,5 +1,5 @@
 import { ExamenEnCurso, RespuestaUsuario } from '@shared/interfaces/examen/pregunta.interface';
-import { Observable } from 'rxjs';
+
 
 export abstract class ExamenState {
   protected examen: ExamenEnCurso;

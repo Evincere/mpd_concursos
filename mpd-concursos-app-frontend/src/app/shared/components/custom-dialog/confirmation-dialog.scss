@@ -1,0 +1,73 @@
+/* Estilos para los diálogos de confirmación */
+
+.confirmation-message {
+  font-family: var(--font-family, 'Roboto', sans-serif);
+  color: var(--color-text-primary, #333333);
+  line-height: 1.5;
+  
+  p {
+    margin: 0.75rem 0;
+  }
+  
+  .user-info-confirmation {
+    background-color: rgba(var(--color-background-rgb, 245, 245, 245), 0.5);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--color-primary, #1976D2);
+    
+    p {
+      margin: 0.5rem 0;
+      
+      strong {
+        font-weight: 500;
+        color: var(--color-text-primary, #333333);
+      }
+    }
+  }
+  
+  .warning-text {
+    color: var(--color-error, #F44336);
+    font-weight: 500;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background-color: rgba(var(--color-error-rgb, 244, 67, 54), 0.1);
+    border-left: 4px solid var(--color-error, #F44336);
+  }
+  
+  .info-text {
+    color: var(--color-info, #2196F3);
+    padding: 0.5rem;
+    border-radius: 4px;
+    background-color: rgba(var(--color-info-rgb, 33, 150, 243), 0.1);
+    border-left: 4px solid var(--color-info, #2196F3);
+  }
+}
+
+/* Estilos para tema oscuro */
+@media (prefers-color-scheme: dark) {
+  .confirmation-message {
+    color: var(--color-text-primary-dark, #E0E0E0);
+    
+    .user-info-confirmation {
+      background-color: rgba(var(--color-background-dark-rgb, 66, 66, 66), 0.5);
+      border-left-color: var(--color-primary-dark, #42A5F5);
+      
+      p strong {
+        color: var(--color-text-primary-dark, #E0E0E0);
+      }
+    }
+    
+    .warning-text {
+      color: var(--color-error-dark, #EF5350);
+      background-color: rgba(var(--color-error-dark-rgb, 239, 83, 80), 0.15);
+      border-left-color: var(--color-error-dark, #EF5350);
+    }
+    
+    .info-text {
+      color: var(--color-info-dark, #64B5F6);
+      background-color: rgba(var(--color-info-dark-rgb, 100, 181, 246), 0.15);
+      border-left-color: var(--color-info-dark, #64B5F6);
+    }
+  }
+}

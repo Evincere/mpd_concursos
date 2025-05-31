@@ -1,0 +1,96 @@
+package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
+
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.port.out.ContestRepository;
+import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
+import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
+import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionNotificationService;
+import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
+import ar.gov.mpd.concursobackend.inscription.domain.port.out.InscriptionRepository;
+import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+/**
+ * Controller that allows users to update the status of their own inscriptions
+ * Only allows changing from ACTIVE to PENDING when completing the inscription process
+ */
+@RestController
+@RequestMapping("/api/inscriptions")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
+@Slf4j
+public class InscriptionUserStatusController {
+    private final UpdateInscriptionStatusUseCase updateInscriptionStatusUseCase;
+    private final FindInscriptionsUseCase findInscriptionsUseCase;
+    private final SecurityUtils securityUtils;
+    private final InscriptionRepository inscriptionRepository;
+    private final ContestRepository contestRepository;
+    private final InscriptionNotificationService inscriptionNotificationService;
+
+    /**
+     * Endpoint that allows a user to update the status of their own inscription
+     * Only allows changing to PENDING when completing the process
+     * 
+     * @param id ID of the inscription
+     * @param status New status (only PENDING is accepted)
+     * @return ResponseEntity with no content
+     */
+    @PatchMapping("/{id}/user-status")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Void> updateUserStatus(@PathVariable UUID id, @RequestParam String status) {
+        String currentUserId = securityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            log.error("No authenticated user found");
+            return ResponseEntity.badRequest().build();
+        }
+
+        // Verify that the inscription belongs to the current user
+        try {
+            InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
+            if (!inscription.getUserId().toString().equals(currentUserId)) {
+                log.error("User {} tried to update an inscription that doesn't belong to them: {}", 
+                        currentUserId, id);
+                return ResponseEntity.notFound().build();
+            }
+
+            // Only allow changing to PENDING
+            if (!"PENDING".equalsIgnoreCase(status)) {
+                log.error("User {} tried to change status to {}, but only PENDING is allowed", 
+                        currentUserId, status);
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Update the status
+            updateInscriptionStatusUseCase.updateStatus(id, status);
+            log.info("User {} updated their inscription {} to PENDING status", currentUserId, id);
+
+            // Send notification to administrators about the pending inscription
+            try {
+                Inscription updatedInscription = inscriptionRepository.findById(id)
+                        .orElseThrow(() -> new IllegalArgumentException("Inscription not found after update"));
+                
+                Contest contest = contestRepository.findById(updatedInscription.getContestId().getValue())
+                        .orElseThrow(() -> new IllegalArgumentException("Contest not found"));
+                
+                inscriptionNotificationService.notifyAdminsAboutPendingInscription(updatedInscription, contest);
+                log.info("Notification sent to administrators about pending inscription: {}", id);
+            } catch (Exception e) {
+                // Don't fail the request if notification fails
+                log.error("Failed to send notification about pending inscription: {}", id, e);
+            }
+            
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when updating inscription status: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+}

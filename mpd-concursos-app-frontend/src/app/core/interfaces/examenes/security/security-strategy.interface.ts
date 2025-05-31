@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 
 export interface ISecurityStrategy {
   getType(): SecurityViolationType;
-  handleViolation(details?: any): void;
+  handleViolation(details?: unknown): void;
   activate(): Promise<void>;
   deactivate(): void;
   initialize(): void;

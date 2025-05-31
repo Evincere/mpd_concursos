@@ -1,0 +1,243 @@
+@use 'src/styles/variables' as *;
+
+.dashboard-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+  }
+}
+
+// Indicador de carga
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  
+  p {
+    margin-top: 1rem;
+    color: $color-text-secondary;
+    font-size: $font-size-md;
+  }
+}
+
+// Tarjetas de estadísticas
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+// Tarjeta de contenido
+.content-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  
+  .tab-content {
+    padding: 1.5rem;
+  }
+}
+
+// Sección de gráficos
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  
+  .chart-container {
+    height: 100%;
+  }
+}
+
+// Sección de actividad
+.activity-section {
+  margin-bottom: 1.5rem;
+}
+
+// Estadísticas detalladas
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+  
+  .stats-col {
+    height: 100%;
+  }
+  
+  .stats-detail-card {
+    height: 100%;
+    
+    mat-card-header {
+      padding: 1rem 1rem 0.5rem;
+      
+      mat-card-title {
+        font-size: $font-size-md;
+        font-weight: 500;
+        margin: 0;
+      }
+    }
+    
+    mat-card-content {
+      padding: 0 1rem 1rem;
+    }
+    
+    .stats-detail-section {
+      margin-bottom: 1rem;
+      
+      h3 {
+        font-size: $font-size-md;
+        font-weight: 500;
+        margin: 0.75rem 0;
+        color: $color-text-primary;
+      }
+      
+      .stats-detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        
+        .detail-label {
+          color: $color-text-secondary;
+          font-size: $font-size-sm;
+        }
+        
+        .detail-value {
+          font-weight: 500;
+          font-size: $font-size-sm;
+        }
+      }
+    }
+  }
+}
+
+// Próximamente
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+    color: $color-text-tertiary;
+  }
+  
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    color: $color-text-primary;
+  }
+  
+  p {
+    margin: 0;
+    text-align: center;
+    color: $color-text-secondary;
+  }
+}
+
+// Media queries para responsive
+@media (max-width: 992px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    .stats-row {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    
+    h1 {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .loading-container {
+    p {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .content-card {
+    background-color: $color-surface-dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .stats-detail-card {
+    background-color: $color-surface-dark;
+    
+    .stats-detail-section {
+      h3 {
+        color: $color-text-primary-dark;
+      }
+      
+      .stats-detail-item {
+        .detail-label {
+          color: $color-text-secondary-dark;
+        }
+        
+        .detail-value {
+          color: $color-text-primary-dark;
+        }
+      }
+    }
+  }
+  
+  .coming-soon {
+    mat-icon {
+      color: $color-text-tertiary-dark;
+    }
+    
+    h3 {
+      color: $color-text-primary-dark;
+    }
+    
+    p {
+      color: $color-text-secondary-dark;
+    }
+  }
+}

@@ -1,13 +1,8 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, interval, Subscription, throwError, timer, of, fromEvent } from 'rxjs';
-import { map, tap, startWith, switchMap, catchError, retry, retryWhen, delay, filter } from 'rxjs/operators';
-import {
-    Notification,
-    NotificationAcknowledgementRequest,
-    NotificationResponse,
-    SignatureType
-} from '../../models/notification.model';
+import { Observable, BehaviorSubject, Subscription, throwError, timer, of, fromEvent } from 'rxjs';
+import { map, tap, switchMap, catchError, retry, filter } from 'rxjs/operators';
+import { Notification, NotificationAcknowledgementRequest, SignatureType } from '../../models/notification.model';
 import { environment } from '../../../../environments/environment';
 import { TokenService } from '../auth/token.service';
 import { AuthService } from '../auth/auth.service';

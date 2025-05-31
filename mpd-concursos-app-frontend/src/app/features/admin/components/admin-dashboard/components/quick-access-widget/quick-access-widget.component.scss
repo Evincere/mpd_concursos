@@ -1,0 +1,130 @@
+@use 'src/styles/variables' as *;
+
+.widget-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  height: 100%;
+  cursor: pointer;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    
+    .widget-footer {
+      .widget-action {
+        text-decoration: underline;
+      }
+      
+      mat-icon {
+        transform: translateX(4px);
+      }
+    }
+  }
+  
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    height: 100%;
+  }
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  
+  .widget-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .widget-count {
+    font-size: $font-size-xl;
+    font-weight: 600;
+  }
+}
+
+.widget-content {
+  flex: 1;
+  margin-bottom: 1rem;
+  
+  .widget-title {
+    margin: 0 0 0.5rem 0;
+    font-size: $font-size-md;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+  
+  .widget-description {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    line-height: 1.4;
+  }
+}
+
+.widget-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .widget-action {
+    font-size: $font-size-sm;
+    font-weight: 500;
+    color: $color-primary;
+  }
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: $color-primary;
+    transition: transform 0.2s ease;
+  }
+}
+
+// Estilos para tema oscuro
+@media (prefers-color-scheme: dark) {
+  .widget-card {
+    background-color: $color-surface-dark;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+  
+  .widget-content {
+    .widget-title {
+      color: $color-text-primary-dark;
+    }
+    
+    .widget-description {
+      color: $color-text-secondary-dark;
+    }
+  }
+  
+  .widget-footer {
+    .widget-action {
+      color: $color-primary-dark;
+    }
+    
+    mat-icon {
+      color: $color-primary-dark;
+    }
+  }
+}

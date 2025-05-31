@@ -1,0 +1,90 @@
+// Estilos para la sección de datos personales
+@use 'variables' as vars;
+
+.datos-personales-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.datos-personales-header {
+  @include vars.section-header;
+}
+
+.datos-personales-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary-color);
+  }
+
+  input, select {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--input-border-color);
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      background-color: rgba(var(--background-color-rgb), 0.2);
+    }
+  }
+
+  .error-message {
+    font-size: 0.8rem;
+    color: var(--error-color);
+    margin-top: 0.25rem;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--card-border);
+
+  button {
+    @include vars.button-base;
+
+    &.primary {
+      background-color: var(--primary-color);
+      color: white;
+
+      &:hover {
+        background-color: darken(#2196f3, 10%);
+      }
+    }
+
+    &.secondary {
+      background-color: transparent;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+
+      &:hover {
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+      }
+    }
+  }
+}

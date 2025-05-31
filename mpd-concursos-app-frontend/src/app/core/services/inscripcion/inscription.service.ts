@@ -17,27 +17,62 @@ import {
 } from '@shared/interfaces/inscripcion/inscription.interface';
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { InscriptionStateService } from './inscription-state.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class InscriptionService {
+export class InscriptionService { // TODO: Refactorizar para solo utilizar las apis en ingles
   private readonly baseUrl = environment.apiUrl;
-  private readonly inscriptionsEndpoint = '/inscripciones';
-  private readonly contestsEndpoint = '/contests';
+  private readonly inscriptionsEndpoint = '/inscriptions';
+  // Keep old endpoint for backward compatibility during transition
+  private readonly oldInscriptionsEndpoint = '/inscripciones';
   private inscriptions$ = new BehaviorSubject<IInscription[]>([]);
 
   // Estado temporal de inscripciones en progreso
-  private inProgressInscriptions: Map<string, any> = new Map();
+  private inProgressInscriptions = new Map<string, Record<string, unknown>>();
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
     private tokenService: TokenService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private inscriptionStateService: InscriptionStateService
+  ) {
+    // Guardar una referencia al servicio de estado de inscripción en el objeto window
+    // para evitar problemas de inyección circular
+    (window as unknown as Record<string, unknown>)['inscriptionStateService'] = inscriptionStateService;
+  }
 
   // Métodos públicos
+  /**
+   * Marca una inscripción como interrumpida y envía una notificación al usuario
+   * @param inscriptionId ID de la inscripción
+   * @returns Observable<void>
+   */
+  markAsInterrupted(inscriptionId: string): Observable<void> {
+    if (!this.validateAuthentication()) return EMPTY;
+    if (!inscriptionId) {
+      return throwError(() => new Error('El ID de inscripción es requerido'));
+    }
+
+    console.log('[InscriptionService] Marcando inscripción como interrumpida:', inscriptionId);
+
+    return this.http.post<void>(
+      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/interrupt`,
+      {}
+    ).pipe(
+      tap(() => {
+        console.log('[InscriptionService] Inscripción marcada como interrumpida exitosamente:', inscriptionId);
+      }),
+      catchError(error => {
+        console.error('[InscriptionService] Error al marcar inscripción como interrumpida:', error);
+        // Incluso si hay un error, no queremos que la UI muestre un error al usuario
+        return of(void 0);
+      })
+    );
+  }
+
   createInscription(contestId: string | number): Observable<IInscriptionResponse> {
     if (!this.validateAuthentication()) return EMPTY;
 
@@ -137,10 +172,10 @@ export class InscriptionService {
   }
 
   getUserInscriptions(
-    page: number = 0,
-    size: number = 10,
-    sort: string = 'inscriptionDate',
-    direction: string = 'DESC'
+    page = 0,
+    size = 10,
+    sort = 'inscriptionDate',
+    direction = 'DESC'
   ): Observable<Page<IInscriptionResponse>> {
     if (!this.validateAuthentication()) return EMPTY;
 
@@ -150,8 +185,16 @@ export class InscriptionService {
       .set('sort', sort)
       .set('direction', direction);
 
+    // Obtener el ID del usuario actual
+    const userId = this.authService.getCurrentUserId();
+    if (!userId) {
+      console.error('[InscriptionService] No se pudo obtener el ID del usuario actual');
+      return EMPTY;
+    }
+
+    // Usar el endpoint correcto con el ID del usuario en lugar de 'me'
     return this.http.get<Page<IInscriptionResponse>>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/me`,
+      `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}`,
       { params }
     ).pipe(
       tap(response => {
@@ -174,7 +217,42 @@ export class InscriptionService {
           this.inscriptions$.next(inscriptions);
         }
       }),
-      catchError(this.handleError.bind(this))
+      catchError(error => {
+        // Si falla, intentar con el endpoint alternativo
+        if (error.status === 404) {
+          console.log('[InscriptionService] Endpoint /user/{userId} no encontrado, intentando con endpoint alternativo');
+          return this.http.get<Page<IInscriptionResponse>>(
+            `${this.baseUrl}${this.inscriptionsEndpoint}/by-user/${userId}`,
+            { params }
+          ).pipe(
+            tap(response => {
+              console.log('[InscriptionService] Inscripciones obtenidas (endpoint alternativo):', response);
+              if (response?.content) {
+                const inscriptions: IInscription[] = response.content.map(item => {
+                  const mappedInscription: IInscription = {
+                    id: item.id,
+                    contestId: item.contestId,
+                    userId: item.userId,
+                    state: this.mapStatusToState(item.status),
+                    createdAt: new Date(item.inscriptionDate),
+                    updatedAt: new Date(item.inscriptionDate),
+                    observations: undefined
+                  };
+                  return mappedInscription;
+                });
+                this.inscriptions$.next(inscriptions);
+              }
+            }),
+            catchError(secondError => {
+              console.error('[InscriptionService] Error con endpoint alternativo:', secondError);
+              // Si también falla, devolver un array vacío para evitar errores en la UI
+              this.inscriptions$.next([]);
+              return this.handleError(secondError);
+            })
+          );
+        }
+        return this.handleError(error);
+      })
     );
   }
 
@@ -189,23 +267,87 @@ export class InscriptionService {
 
     if (localInscription) {
       console.log('[InscriptionService] Estado encontrado localmente:', localInscription.state);
+
+      // Si el estado es CANCELLED, verificar si es una inscripción reciente (menos de 1 hora)
+      // para determinar si es una cancelación de proceso o una cancelación de postulación completada
+      if (localInscription.state === InscripcionState.CANCELLED) {
+        // Si la inscripción fue actualizada hace menos de 1 hora, considerarla como una cancelación de proceso
+        // y permitir reiniciar el proceso de inscripción
+        const now = new Date();
+        const updatedAt = localInscription.updatedAt ? new Date(localInscription.updatedAt) : now;
+        const timeDiff = now.getTime() - updatedAt.getTime();
+        const oneHourInMs = 60 * 60 * 1000;
+
+        if (timeDiff < oneHourInMs) {
+          console.log('[InscriptionService] Estado CANCELLED reciente encontrado, devolviendo NO_INSCRIPTO para permitir reiniciar');
+          return of(InscripcionState.NO_INSCRIPTO);
+        } else {
+          console.log('[InscriptionService] Estado CANCELLED antiguo encontrado, manteniendo como CANCELLED');
+          return of(InscripcionState.CANCELLED);
+        }
+      }
+
       return of(localInscription.state);
     }
 
-    return this.http.get<IInscriptionStatusResponse>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/estado/${numericContestId}`
+    // Obtener el ID del usuario actual
+    const userId = this.authService.getCurrentUserId();
+    if (!userId) {
+      console.error('[InscriptionService] No se pudo obtener el ID del usuario actual');
+      return of(InscripcionState.NO_INSCRIPTO);
+    }
+
+    // Usar el endpoint de usuario/concurso que funciona correctamente
+    console.log(`[InscriptionService] Verificando estado con endpoint: ${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`);
+    return this.http.get<IInscriptionResponse>(
+      `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`
     ).pipe(
       map(response => {
-        console.log('[InscriptionService] Respuesta de estado:', response);
-        return response?.status || InscripcionState.NO_INSCRIPTO;
+        console.log('[InscriptionService] Respuesta de estado (endpoint user/contest):', response);
+        return this.mapStatusToState(response.status);
       }),
       tap(state => console.log('[InscriptionService] Estado de inscripción mapeado:', state)),
       catchError(error => {
-        console.error('[InscriptionService] Error al verificar estado:', error);
+        console.error('[InscriptionService] Error al verificar estado con endpoint user/contest:', error);
+
+        // Si falla, intentar con el endpoint status
         if (error.status === 404) {
-          console.log('[InscriptionService] No se encontró inscripción para el concurso');
-          return of(InscripcionState.NO_INSCRIPTO);
+          console.log(`[InscriptionService] Intentando con endpoint status: ${this.baseUrl}${this.inscriptionsEndpoint}/status/${numericContestId}`);
+          return this.http.get<boolean>(
+            `${this.baseUrl}${this.inscriptionsEndpoint}/status/${numericContestId}`
+          ).pipe(
+            map(isInscribed => {
+              console.log('[InscriptionService] Respuesta de estado (endpoint status):', isInscribed);
+              // Este endpoint solo devuelve true/false, así que mapeamos a un estado
+              return isInscribed ? InscripcionState.PENDING : InscripcionState.NO_INSCRIPTO;
+            }),
+            catchError(secondError => {
+              console.error('[InscriptionService] Error al verificar estado con endpoint status:', secondError);
+
+              // Si también falla, intentar con el endpoint antiguo
+              if (secondError.status === 404) {
+                console.log('[InscriptionService] Intentando con endpoint antiguo: /inscripciones/estado/{contestId}');
+                return this.http.get<IInscriptionStatusResponse>(
+                  `${this.baseUrl}${this.oldInscriptionsEndpoint}/estado/${numericContestId}`
+                ).pipe(
+                  map(response => {
+                    console.log('[InscriptionService] Respuesta de estado (endpoint antiguo):', response);
+                    return response?.status || InscripcionState.NO_INSCRIPTO;
+                  }),
+                  catchError(thirdError => {
+                    console.error('[InscriptionService] Error al verificar estado con todos los endpoints:', thirdError);
+                    console.log('[InscriptionService] No se encontró inscripción para el concurso');
+                    return of(InscripcionState.NO_INSCRIPTO);
+                  })
+                );
+              }
+
+              console.log('[InscriptionService] No se encontró inscripción para el concurso');
+              return of(InscripcionState.NO_INSCRIPTO);
+            })
+          );
         }
+
         if (error.status === 500) {
           console.error('[InscriptionService] Error del servidor al verificar estado:', error);
           // En caso de error 500, verificar el estado local nuevamente
@@ -213,33 +355,61 @@ export class InscriptionService {
           const localInscription = currentInscriptions.find(ins => ins.contestId === numericContestId);
           return of(localInscription?.state || InscripcionState.NO_INSCRIPTO);
         }
+
+        console.log('[InscriptionService] No se encontró inscripción para el concurso');
         return of(InscripcionState.NO_INSCRIPTO);
       })
     );
   }
 
-  cancelInscription(inscriptionId: string): Observable<void> {
+  /**
+   * Cancela una inscripción en el backend
+   * @param inscriptionId ID de la inscripción a cancelar
+   * @param isProcessCancellation Indica si es una cancelación durante el proceso de inscripción (true) o una cancelación de una postulación ya completada (false)
+   * @returns Observable<void>
+   */
+  cancelInscription(inscriptionId: string, isProcessCancellation = true): Observable<void> {
     if (!this.validateAuthentication()) return EMPTY;
     if (!inscriptionId) {
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
-    console.log('[InscriptionService] Iniciando proceso de cancelación para inscripción:', inscriptionId);
+    console.log('[InscriptionService] Iniciando proceso de cancelación para inscripción:', inscriptionId, 'Cancelación de proceso:', isProcessCancellation);
 
-    return this.http.delete<void>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`
+    // Usar el endpoint PATCH para cancelar la inscripción (más compatible con el backend actual)
+    return this.http.patch<void>(
+      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/cancel`,
+      {} // Cuerpo vacío
     ).pipe(
       tap(() => {
         console.log('[InscriptionService] Inscripción cancelada exitosamente:', inscriptionId);
+
+        // Limpiar el estado del formulario en memoria
+        this.clearFormState(inscriptionId);
+
         // Actualizar el estado local de la inscripción
         const currentInscriptions = this.inscriptions$.getValue();
-        const updatedInscriptions = currentInscriptions.map(inscription => {
-          if (inscription.id === inscriptionId) {
-            return { ...inscription, state: InscripcionState.CANCELLED };
-          }
-          return inscription;
-        });
-        this.inscriptions$.next(updatedInscriptions);
+
+        if (isProcessCancellation) {
+          // Si es una cancelación durante el proceso, eliminar completamente la inscripción de la lista local
+          console.log('[InscriptionService] Cancelación durante el proceso, eliminando inscripción de la lista local');
+          const filteredInscriptions = currentInscriptions.filter(ins => ins.id !== inscriptionId);
+          this.inscriptions$.next(filteredInscriptions);
+        } else {
+          // Si es una cancelación de una postulación completada, actualizar su estado a CANCELLED
+          console.log('[InscriptionService] Cancelación de postulación completada, actualizando estado a CANCELLED');
+          const updatedInscriptions = currentInscriptions.map(ins => {
+            if (ins.id === inscriptionId) {
+              return {
+                ...ins,
+                state: InscripcionState.CANCELLED,
+                updatedAt: new Date()
+              };
+            }
+            return ins;
+          });
+          this.inscriptions$.next(updatedInscriptions);
+        }
 
         // Agregar delay para asegurar que el backend procese la cancelación
         setTimeout(() => {
@@ -247,42 +417,153 @@ export class InscriptionService {
           this.refreshInscriptions();
         }, 500);
       }),
-      catchError(this.handleError.bind(this))
+      catchError((error) => {
+        console.error('[InscriptionService] Error al cancelar inscripción con PATCH:', error);
+
+        // Si es un error 404 o 405, intentar con el método DELETE (para compatibilidad con versiones anteriores)
+        if (error.status === 404 || error.status === 405) {
+          console.log('[InscriptionService] Intentando cancelar con método DELETE como fallback');
+
+          return this.http.delete<void>(
+            `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`
+          ).pipe(
+            tap(() => {
+              console.log('[InscriptionService] Inscripción cancelada exitosamente con DELETE:', inscriptionId);
+
+              // Limpiar el estado del formulario en memoria
+              this.clearFormState(inscriptionId);
+
+              // Actualizar el estado local de la inscripción
+              const currentInscriptions = this.inscriptions$.getValue();
+
+              if (isProcessCancellation) {
+                // Si es una cancelación durante el proceso, eliminar completamente la inscripción de la lista local
+                console.log('[InscriptionService] Cancelación durante el proceso, eliminando inscripción de la lista local');
+                const filteredInscriptions = currentInscriptions.filter(ins => ins.id !== inscriptionId);
+                this.inscriptions$.next(filteredInscriptions);
+              } else {
+                // Si es una cancelación de una postulación completada, actualizar su estado a CANCELLED
+                console.log('[InscriptionService] Cancelación de postulación completada, actualizando estado a CANCELLED');
+                const updatedInscriptions = currentInscriptions.map(ins => {
+                  if (ins.id === inscriptionId) {
+                    return {
+                      ...ins,
+                      state: InscripcionState.CANCELLED,
+                      updatedAt: new Date()
+                    };
+                  }
+                  return ins;
+                });
+                this.inscriptions$.next(updatedInscriptions);
+              }
+
+              // Agregar delay para asegurar que el backend procese la cancelación
+              setTimeout(() => {
+                console.log('[InscriptionService] Refrescando inscripciones después de cancelación con DELETE');
+                this.refreshInscriptions();
+              }, 500);
+            }),
+            catchError((deleteError) => {
+              console.error('[InscriptionService] Error al cancelar inscripción con DELETE:', deleteError);
+
+              // Incluso en caso de error, intentamos limpiar el estado local
+              this.clearFormState(inscriptionId);
+
+              // Actualizar el estado local de la inscripción
+              this.handleLocalCancellation(inscriptionId, isProcessCancellation);
+
+              // Forzar una actualización de las inscripciones desde el backend
+              setTimeout(() => {
+                this.refreshInscriptions();
+              }, 500);
+
+              // Propagar el error para que el componente pueda manejarlo
+              return this.handleError(deleteError);
+            })
+          );
+        }
+
+        // Incluso en caso de error, intentamos limpiar el estado local
+        this.clearFormState(inscriptionId);
+
+        // Actualizar el estado local de la inscripción
+        this.handleLocalCancellation(inscriptionId, isProcessCancellation);
+
+        // Forzar una actualización de las inscripciones desde el backend
+        setTimeout(() => {
+          this.refreshInscriptions();
+        }, 500);
+
+        // Propagar el error para que el componente pueda manejarlo
+        return this.handleError(error);
+      })
     );
   }
 
+  /**
+   * Maneja la cancelación local de una inscripción cuando falla la comunicación con el backend
+   * @param inscriptionId ID de la inscripción a cancelar
+   * @param isProcessCancellation Indica si es una cancelación durante el proceso o de una postulación completada
+   */
+  private handleLocalCancellation(inscriptionId: string, isProcessCancellation: boolean): void {
+    const currentInscriptions = this.inscriptions$.getValue();
+
+    if (isProcessCancellation) {
+      // Si es una cancelación durante el proceso, eliminar completamente la inscripción de la lista local
+      console.log('[InscriptionService] Error en cancelación durante el proceso, eliminando inscripción de la lista local');
+      const filteredInscriptions = currentInscriptions.filter(ins => ins.id !== inscriptionId);
+      this.inscriptions$.next(filteredInscriptions);
+    } else {
+      // Si es una cancelación de una postulación completada, actualizar su estado a CANCELLED
+      console.log('[InscriptionService] Error en cancelación de postulación completada, actualizando estado a CANCELLED');
+      const updatedInscriptions = currentInscriptions.map(ins => {
+        if (ins.id === inscriptionId) {
+          return {
+            ...ins,
+            state: InscripcionState.CANCELLED,
+            updatedAt: new Date()
+          };
+        }
+        return ins;
+      });
+      this.inscriptions$.next(updatedInscriptions);
+    }
+  }
+
   // Variable para controlar los reintentos
-  private updateStatusRetryCount: { [key: string]: number } = {};
+  private updateStatusRetryCount: Record<string, number> = {};
   private readonly MAX_RETRY_ATTEMPTS = 3;
 
   /**
-   * Mapea los estados del frontend a los estados aceptados por el backend
-   * El backend solo acepta: ACTIVE, PENDING, CANCELLED, REJECTED, IN_PROCESS
+   * Maps frontend states to backend states
+   * The backend only accepts: ACTIVE, PENDING, APPROVED, REJECTED, CANCELLED
    */
   private mapFrontendStateToBackend(state: InscripcionState): string {
     switch (state) {
-      // Estados estandarizados
-      case InscripcionState.PENDIENTE:
-        return 'PENDING'; // Inscripción completada por el usuario, pendiente de validación
-      case InscripcionState.INSCRIPTO:
-        return 'ACTIVE';  // Inscripción validada por el administrador
-      case InscripcionState.IN_PROCESS:
-        return 'IN_PROCESS'; // Inscripción en proceso (interrumpida)
-      case InscripcionState.CANCELLED:
-        return 'CANCELLED'; // Inscripción cancelada
-      case InscripcionState.REJECTED:
-        return 'REJECTED';  // Inscripción rechazada por el administrador
-
-      // Estados antiguos (mantenidos por compatibilidad)
-      case InscripcionState.CONFIRMADA:
-        return 'PENDING';   // Equivalente a PENDIENTE
-      case InscripcionState.APPROVED:
-        return 'ACTIVE';    // Equivalente a INSCRIPTO
+      // Standard states (direct mapping)
+      case InscripcionState.ACTIVE:
+        return 'ACTIVE';    // Inscription in progress
       case InscripcionState.PENDING:
-        return 'IN_PROCESS'; // Equivalente a IN_PROCESS
+        return 'PENDING';   // Inscription completed by user, waiting for validation
+      case InscripcionState.APPROVED:
+        return 'APPROVED';  // Inscription approved by admin
+      case InscripcionState.REJECTED:
+        return 'REJECTED';  // Inscription rejected by admin
+      case InscripcionState.CANCELLED:
+        return 'CANCELLED'; // Inscription cancelled by user
+
+      // Legacy states (mapping to standardized states)
+      case InscripcionState.IN_PROCESS:
+        return 'ACTIVE';    // Now mapped to ACTIVE
+      case InscripcionState.PENDIENTE:
+        return 'PENDING';   // Spanish for PENDING
+      case InscripcionState.INSCRIPTO:
+        return 'APPROVED';  // Spanish for APPROVED
+      case InscripcionState.CONFIRMADA:
+        return 'PENDING';   // Old term for PENDING
       case InscripcionState.NO_INSCRIPTO:
       default:
-        return 'PENDING';   // Por defecto, usar PENDING
+        return 'ACTIVE';    // Default to ACTIVE for new inscriptions
     }
   }
 
@@ -344,10 +625,24 @@ export class InscriptionService {
     // Actualizar el estado local inmediatamente para mejorar la experiencia de usuario
     this.updateLocalInscriptionState(inscriptionId, request.state);
 
-    // Usar la ruta correcta con parámetros de consulta en lugar de cuerpo JSON
-    // El backend espera un parámetro de consulta 'status', no un cuerpo JSON
+    // Determinar qué endpoint usar según el estado
+    // Si es PENDING, usar el endpoint user-status que permite a usuarios normales cambiar a PENDING
+    // Si es otro estado, usar el endpoint status que requiere permisos de administrador
+    // Try the new endpoint first, but fall back to the old one if needed
+    const endpoint = backendState === 'PENDING'
+      ? `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`
+      : `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
+
+    // Keep old endpoint for backward compatibility during transition
+    // This will be used in the catch block if the first attempt fails
+    // const oldEndpoint = backendState === 'PENDING'
+    //   ? `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`
+    //   : `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
+
+    console.log(`[InscriptionService] Using endpoint: ${endpoint}`);
+
     return this.http.patch<IInscriptionResponse>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`,
+      endpoint,
       {} // Cuerpo vacío, ya que enviamos el estado como parámetro de consulta
     ).pipe(
       tap(response => {
@@ -359,6 +654,87 @@ export class InscriptionService {
       }),
       catchError(error => {
         console.error('[InscriptionService] Error al actualizar estado:', error);
+
+        // Si es un error 403 o 404 y estamos intentando cambiar a PENDING, intentar con el otro endpoint
+        if ((error.status === 403 || error.status === 404) && backendState === 'PENDING' && this.updateStatusRetryCount[inscriptionId] === 1) {
+          console.log(`[InscriptionService] Error ${error.status}, trying alternative endpoint for PENDING`);
+
+          // First try the alternative new endpoint (switch between user-status and status)
+          const alternativeEndpoint = endpoint.includes('user-status')
+            ? `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`
+            : `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`;
+
+          console.log(`[InscriptionService] Using alternative endpoint: ${alternativeEndpoint}`);
+
+          // Incrementar el contador de reintentos
+          this.updateStatusRetryCount[inscriptionId]++;
+
+          return this.http.patch<IInscriptionResponse>(alternativeEndpoint, {}).pipe(
+            tap(response => {
+              console.log('[InscriptionService] Status updated with alternative endpoint:', response);
+              // Limpiar el contador de reintentos al tener éxito
+              delete this.updateStatusRetryCount[inscriptionId];
+              // Refrescar la lista después de un breve delay
+              setTimeout(() => this.refreshInscriptions(), 500);
+            }),
+            catchError(secondError => {
+              console.error('[InscriptionService] Error in second attempt:', secondError);
+
+              // If both new endpoints fail, try the old endpoints for backward compatibility
+              if ((secondError.status === 403 || secondError.status === 404) && this.updateStatusRetryCount[inscriptionId] === 2) {
+                console.log(`[InscriptionService] Error ${secondError.status}, trying old endpoint format`);
+
+                // Try the old endpoint format
+                const oldEndpoint = backendState === 'PENDING'
+                  ? `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`
+                  : `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
+
+                console.log(`[InscriptionService] Using old endpoint format: ${oldEndpoint}`);
+
+                // Incrementar el contador de reintentos
+                this.updateStatusRetryCount[inscriptionId]++;
+
+                return this.http.patch<IInscriptionResponse>(oldEndpoint, {}).pipe(
+                  tap(response => {
+                    console.log('[InscriptionService] Status updated with old endpoint format:', response);
+                    // Limpiar el contador de reintentos al tener éxito
+                    delete this.updateStatusRetryCount[inscriptionId];
+                    // Refrescar la lista después de un breve delay
+                    setTimeout(() => this.refreshInscriptions(), 500);
+                  }),
+                  catchError(thirdError => {
+                    console.error('[InscriptionService] Error in third attempt with old endpoint:', thirdError);
+                    // Limpiar el contador de reintentos para evitar bucles infinitos
+                    delete this.updateStatusRetryCount[inscriptionId];
+                    // Ya actualizamos el estado local, así que podemos devolver un observable exitoso
+                    return of({
+                      id: inscriptionId,
+                      contestId: 0,
+                      userId: '',
+                      status: request.state,
+                      inscriptionDate: new Date().toISOString(),
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString()
+                    } as IInscriptionResponse);
+                  })
+                );
+              }
+
+              // Limpiar el contador de reintentos para evitar bucles infinitos
+              delete this.updateStatusRetryCount[inscriptionId];
+              // Ya actualizamos el estado local, así que podemos devolver un observable exitoso
+              return of({
+                id: inscriptionId,
+                contestId: 0,
+                userId: '',
+                status: request.state,
+                inscriptionDate: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              } as IInscriptionResponse);
+            })
+          );
+        }
 
         // Si es un error 404, 400 o 500, podemos intentar una solución alternativa
         if (error.status === 404 || error.status === 400 || error.status === 500) {
@@ -399,10 +775,24 @@ export class InscriptionService {
     });
     this.inscriptions$.next(updatedInscriptions);
     console.log('[InscriptionService] Estado local actualizado para inscripción:', inscriptionId);
+
+    // Si el estado es final (PENDIENTE, INSCRIPTO, CANCELLED o REJECTED), limpiar el estado local en localStorage
+    if (newState === InscripcionState.PENDIENTE ||
+        newState === InscripcionState.INSCRIPTO ||
+        newState === InscripcionState.APPROVED ||
+        newState === InscripcionState.CANCELLED ||
+        newState === InscripcionState.REJECTED) {
+      // Limpiar el estado del formulario en memoria
+      this.clearFormState(inscriptionId);
+
+      // Limpiar el estado en localStorage
+      console.log('[InscriptionService] Limpiando estado local en localStorage para inscripción:', inscriptionId);
+      this.inscriptionStateService.clearInscriptionState(inscriptionId);
+    }
   }
 
   // Variable para controlar los reintentos de actualización de paso
-  private updateStepRetryCount: { [key: string]: number } = {};
+  private updateStepRetryCount: Record<string, number> = {};
 
   updateInscriptionStep(
     inscriptionId: string,
@@ -447,11 +837,17 @@ export class InscriptionService {
     // Actualizar el estado local inmediatamente para mejorar la experiencia de usuario
     this.updateLocalInscriptionStep(inscriptionId, request.step);
 
-    // Usar la ruta correcta con parámetros de consulta en lugar de cuerpo JSON
-    // Intentar usar el formato que espera el backend
-    return this.http.patch<IInscriptionResponse>(
+    // Usar la ruta correcta con el método PUT en lugar de PATCH
+    // El controlador en el backend usa @PutMapping("/{inscriptionId}/step")
+    return this.http.put<IInscriptionResponse>(
       `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/step`,
-      { step: request.step } // Probar primero con el cuerpo JSON
+      {
+        step: request.step,
+        centroDeVida: request.centroDeVida,
+        selectedCircunscripciones: request.selectedCircunscripciones,
+        acceptedTerms: request.acceptedTerms,
+        confirmedPersonalData: request.confirmedPersonalData
+      } // Enviar todos los datos en el cuerpo JSON
     ).pipe(
       tap(response => {
         console.log('[InscriptionService] Paso actualizado:', response);
@@ -464,12 +860,18 @@ export class InscriptionService {
 
         // Si es un error 404, 400 o 500, podemos intentar una solución alternativa
         if (error.status === 404 || error.status === 400 || error.status === 500) {
-          // Si el primer intento falló, intentar con parámetros de consulta
+          // Si el primer intento falló, intentar con ruta alternativa
           if (this.updateStepRetryCount[inscriptionId] === 1) {
-            console.log('[InscriptionService] Primer intento fallido, intentando con parámetros de consulta');
-            return this.http.patch<IInscriptionResponse>(
-              `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/step?step=${request.step}`,
-              {} // Cuerpo vacío, ya que enviamos el paso como parámetro de consulta
+            console.log('[InscriptionService] Primer intento fallido, intentando con ruta alternativa');
+            return this.http.put<IInscriptionResponse>(
+              `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/step`,
+              {
+                step: request.step,
+                centroDeVida: request.centroDeVida,
+                selectedCircunscripciones: request.selectedCircunscripciones,
+                acceptedTerms: request.acceptedTerms,
+                confirmedPersonalData: request.confirmedPersonalData
+              }
             ).pipe(
               tap(response => {
                 console.log('[InscriptionService] Paso actualizado con parámetros de consulta:', response);
@@ -548,11 +950,11 @@ export class InscriptionService {
   private readonly MIN_REFRESH_INTERVAL = 5000; // 5 segundos mínimo entre actualizaciones
   private refreshInProgress = false;
 
-  refreshInscriptions(): void {
+  refreshInscriptions(): Observable<Page<IInscriptionResponse>> {
     // Evitar múltiples llamadas simultáneas
     if (this.refreshInProgress) {
-      console.log('[InscriptionService] Ya hay una actualización en progreso, ignorando solicitud');
-      return;
+      console.log('[InscriptionService] Ya hay una actualización en progreso, devolviendo observable vacío');
+      return EMPTY;
     }
 
     // Aplicar throttling para evitar demasiadas peticiones
@@ -561,23 +963,23 @@ export class InscriptionService {
 
     if (timeSinceLastRefresh < this.MIN_REFRESH_INTERVAL) {
       console.log(`[InscriptionService] Throttling aplicado, última actualización hace ${timeSinceLastRefresh}ms`);
-      return;
+      return EMPTY;
     }
 
     console.log('[InscriptionService] Actualizando lista de inscripciones...');
     this.refreshInProgress = true;
     this.lastRefreshTimestamp = now;
 
-    this.getUserInscriptions()
-      .pipe(
-        take(1),
-        finalize(() => {
-          this.refreshInProgress = false;
-        })
-      )
-      .subscribe({
-        error: error => console.error('[InscriptionService] Error al actualizar inscripciones:', error)
-      });
+    return this.getUserInscriptions().pipe(
+      take(1),
+      finalize(() => {
+        this.refreshInProgress = false;
+      }),
+      catchError(error => {
+        console.error('[InscriptionService] Error al actualizar inscripciones:', error);
+        return EMPTY;
+      })
+    );
   }
 
   private validateAuthentication(): boolean {
@@ -659,40 +1061,45 @@ export class InscriptionService {
   }
 
   /**
-   * Mapea los estados del backend a los estados del frontend
-   * Este método se usa para convertir los estados que vienen del backend a los estados que usa el frontend
+   * Maps backend states to frontend states
+   * This method converts states received from the backend to the states used by the frontend
    */
   private mapStatusToState(status: string): InscripcionState {
     if (!status) {
-      console.warn('[InscriptionService] Estado nulo o indefinido');
-      return InscripcionState.IN_PROCESS; // Cambiado de PENDING a IN_PROCESS
+      console.warn('[InscriptionService] Null or undefined status');
+      return InscripcionState.ACTIVE; // Default to ACTIVE for undefined states
     }
 
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
-      // Mapeo de estados del backend a los nuevos estados estandarizados
+      // Standard states (direct mapping to standardized states)
       case 'ACTIVE':
-        return InscripcionState.INSCRIPTO; // Inscripción validada por el administrador
+        return InscripcionState.ACTIVE;    // Inscription in progress
       case 'PENDING':
-        return InscripcionState.PENDIENTE; // Inscripción completada por el usuario, pendiente de validación
-      case 'IN_PROCESS':
-        return InscripcionState.IN_PROCESS; // Inscripción en proceso (interrumpida)
+        return InscripcionState.PENDING;   // Inscription completed by user, waiting for validation
+      case 'APPROVED':
+        return InscripcionState.APPROVED;  // Inscription approved by admin
+      case 'REJECTED':
+        return InscripcionState.REJECTED;  // Inscription rejected by admin
       case 'CANCELLED':
+        return InscripcionState.CANCELLED; // Inscription cancelled by user
+
+      // Legacy backend states (mapping to standardized states)
+      case 'IN_PROCESS':
+        return InscripcionState.ACTIVE;    // Now mapped to ACTIVE
       case 'CANCELED':
       case 'CANCELADA':
       case 'CANCELADO':
-        return InscripcionState.CANCELLED; // Inscripción cancelada
-      case 'REJECTED':
+        console.log('[InscriptionService] Legacy CANCELLED state received from backend');
+        return InscripcionState.CANCELLED; // All variations map to CANCELLED
       case 'RECHAZADA':
       case 'RECHAZADO':
-        return InscripcionState.REJECTED; // Inscripción rechazada
-
-      // Compatibilidad con estados antiguos
+        return InscripcionState.REJECTED;  // Spanish variations map to REJECTED
       case 'CONFIRMADA':
-        return InscripcionState.PENDIENTE; // Ahora mapeado a PENDIENTE
+        return InscripcionState.PENDING;   // Old term maps to PENDING
       default:
-        console.warn('[InscriptionService] Estado desconocido:', status);
-        return InscripcionState.IN_PROCESS; // Cambiado de PENDING a IN_PROCESS
+        console.warn('[InscriptionService] Unknown status:', status);
+        return InscripcionState.ACTIVE;    // Default to ACTIVE for unknown states
     }
   }
 
@@ -701,19 +1108,32 @@ export class InscriptionService {
    * @param inscriptionId ID de la inscripción
    * @param formState Estado del formulario
    */
-  saveFormState(inscriptionId: string, formState: any): void {
+  saveFormState(inscriptionId: string, formState: unknown): void {
     console.log('[InscriptionService] Guardando estado del formulario:', { inscriptionId, formState });
-    this.inProgressInscriptions.set(inscriptionId, formState);
+    this.inProgressInscriptions.set(inscriptionId, formState as Record<string, unknown>);
   }
+
+  // Cache para evitar llamadas repetitivas a getFormState
+  private formStateCache = new Map<string, Record<string, unknown> | null>();
 
   /**
    * Recupera el estado del formulario de inscripción desde la memoria
    * @param inscriptionId ID de la inscripción
    * @returns Estado del formulario o null si no existe
    */
-  getFormState(inscriptionId: string): any {
+  getFormState(inscriptionId: string): Record<string, unknown> | null {
+    // Verificar si ya tenemos el estado en cache
+    if (this.formStateCache.has(inscriptionId)) {
+      return this.formStateCache.get(inscriptionId) || null;
+    }
+
+    // Si no está en cache, obtenerlo y guardarlo
     const state = this.inProgressInscriptions.get(inscriptionId);
     console.log('[InscriptionService] Recuperando estado del formulario:', { inscriptionId, state });
+
+    // Guardar en cache para futuras llamadas
+    this.formStateCache.set(inscriptionId, state || null);
+
     return state || null;
   }
 
@@ -724,5 +1144,7 @@ export class InscriptionService {
   clearFormState(inscriptionId: string): void {
     console.log('[InscriptionService] Limpiando estado del formulario:', inscriptionId);
     this.inProgressInscriptions.delete(inscriptionId);
+    // También limpiar la cache
+    this.formStateCache.delete(inscriptionId);
   }
 }

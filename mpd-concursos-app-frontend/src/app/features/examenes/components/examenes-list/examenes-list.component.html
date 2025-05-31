@@ -4,14 +4,14 @@
     <div class="filters">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Buscar</mat-label>
-        <input matInput placeholder="Buscar examen..." [(ngModel)]="searchText">
+        <input matInput placeholder="Buscar examen..." [(ngModel)]="searchText" name="searchText">
         <button *ngIf="searchText" matSuffix mat-icon-button aria-label="Clear" (click)="searchText=''">
           <mat-icon>close</mat-icon>
         </button>
         <mat-icon matPrefix>search</mat-icon>
       </mat-form-field>
 
-      <mat-button-toggle-group class="filter-toggle" [(ngModel)]="estadoFilter" aria-label="Filtro por estado">
+      <mat-button-toggle-group class="filter-toggle" [(ngModel)]="estadoFilter" name="estadoFilter" aria-label="Filtro por estado">
         <mat-button-toggle value="TODOS">Todos</mat-button-toggle>
         <mat-button-toggle value="DISPONIBLE">Disponibles</mat-button-toggle>
         <mat-button-toggle value="FINALIZADO">Finalizados</mat-button-toggle>

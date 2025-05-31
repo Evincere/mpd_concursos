@@ -1,0 +1,93 @@
+<div class="calendario-container">
+  <div class="header">
+    <h1>Calendario de Concursos</h1>
+    <div class="header-actions">
+      <button mat-stroked-button [routerLink]="['/admin/concursos/listado']">
+        <mat-icon>list</mat-icon>
+        Ver Listado
+      </button>
+    </div>
+  </div>
+
+  <div class="calendar-controls">
+    <div class="month-navigation">
+      <button mat-icon-button (click)="prevMonth()">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <h2>{{ getMonthName(currentMonth) }} {{ currentYear }}</h2>
+      <button mat-icon-button (click)="nextMonth()">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+
+    <form [formGroup]="filterForm" class="filter-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Mes</mat-label>
+        <mat-select formControlName="month">
+          <mat-option *ngFor="let month of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; let i = index" [value]="i">
+            {{ getMonthName(i) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Año</mat-label>
+        <mat-select formControlName="year">
+          <mat-option *ngFor="let year of [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]" [value]="year">
+            {{ year }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando calendario...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="calendar">
+    <div class="calendar-header">
+      <div class="weekday">Domingo</div>
+      <div class="weekday">Lunes</div>
+      <div class="weekday">Martes</div>
+      <div class="weekday">Miércoles</div>
+      <div class="weekday">Jueves</div>
+      <div class="weekday">Viernes</div>
+      <div class="weekday">Sábado</div>
+    </div>
+
+    <div class="calendar-body">
+      <div *ngFor="let day of calendarDays" 
+           class="calendar-day" 
+           [class.other-month]="!day.isCurrentMonth"
+           [class.today]="isToday(day.date)">
+        <div class="day-number">{{ day.day }}</div>
+        
+        <div class="day-events" *ngIf="day.events.length > 0">
+          <div *ngFor="let event of day.events.slice(0, 3)" class="event">
+            <div class="event-dot"></div>
+            <div class="event-title">
+              {{ event.title || event.label }}
+              <span *ngIf="event.contestTitle" class="event-contest">
+                ({{ event.contestTitle }})
+              </span>
+            </div>
+          </div>
+          
+          <div *ngIf="day.events.length > 3" class="more-events">
+            +{{ day.events.length - 3 }} más
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="calendar-legend">
+    <h3>Leyenda</h3>
+    <div class="legend-item">
+      <div class="legend-dot"></div>
+      <span>Fechas importantes de concursos</span>
+    </div>
+  </div>
+</div>

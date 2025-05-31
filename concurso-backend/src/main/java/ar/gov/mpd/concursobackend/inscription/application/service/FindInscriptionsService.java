@@ -13,7 +13,9 @@ import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapp
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
+import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 import lombok.RequiredArgsConstructor;
 import java.util.UUID;
@@ -103,9 +105,9 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
             Optional<Inscription> inscripcionOpt = loadInscriptionPort.findByContestIdAndUserId(contestId, userUUID);
 
             return inscripcionOpt.map(inscripcion -> {
-                log.debug("Se encontró una inscripción con estado {}: {}", inscripcion.getStatus(), inscripcion);
-                boolean isActiveOrPending = inscripcion.getStatus() == InscriptionStatus.ACTIVE ||
-                        inscripcion.getStatus() == InscriptionStatus.PENDING;
+                log.debug("Se encontró una inscripción con estado {}: {}", inscripcion.getState(), inscripcion);
+                boolean isActiveOrPending = InscriptionStateConverter.equals(inscripcion.getState(), InscriptionStatus.ACTIVE) ||
+                        InscriptionStateConverter.equals(inscripcion.getState(), InscriptionStatus.PENDING);
                 log.debug("¿La inscripción está activa o pendiente? {}", isActiveOrPending);
                 return isActiveOrPending;
             }).orElseGet(() -> {

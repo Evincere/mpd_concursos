@@ -1,0 +1,360 @@
+<div class="concursos-admin-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Gestión de Concursos</h1>
+      <p class="header-subtitle">Administra y supervisa todos los concursos del sistema</p>
+    </div>
+    <div class="header-actions">
+      <!-- Toggle de vista -->
+      <div class="view-toggle">
+        <app-custom-button
+          [icon]="'th-large'"
+          [variant]="'stroked'"
+          [color]="viewMode === 'cards' ? 'primary' : 'accent'"
+          [tooltip]="'Vista de tarjetas'"
+          [disabled]="viewMode === 'cards'"
+          (buttonClick)="viewMode === 'table' && toggleViewMode()">
+        </app-custom-button>
+        <app-custom-button
+          [icon]="'table'"
+          [variant]="'stroked'"
+          [color]="viewMode === 'table' ? 'primary' : 'accent'"
+          [tooltip]="'Vista de tabla'"
+          [disabled]="viewMode === 'table'"
+          (buttonClick)="viewMode === 'cards' && toggleViewMode()">
+        </app-custom-button>
+      </div>
+
+      <app-custom-button
+        [label]="'Exportar'"
+        [icon]="'download'"
+        [color]="'accent'"
+        [variant]="'stroked'"
+        [disabled]="isLoading || dataSource.length === 0"
+        (buttonClick)="exportData()">
+      </app-custom-button>
+
+      <app-custom-button
+        [label]="'Nuevo Concurso'"
+        [icon]="'plus'"
+        [color]="'primary'"
+        (buttonClick)="createConcurso()">
+      </app-custom-button>
+    </div>
+  </div>
+
+  <app-custom-card>
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="filter-row">
+        <app-custom-form-field
+          [label]="'Buscar'"
+          [placeholder]="'Título, cargo, descripción...'"
+          [iconRight]="'search'"
+          formControlName="search">
+        </app-custom-form-field>
+
+        <app-custom-select
+          [label]="'Estado'"
+          [options]="statusOptions"
+          formControlName="status">
+        </app-custom-select>
+
+        <app-custom-select
+          [label]="'Dependencia'"
+          [options]="getDepartmentOptions()"
+          formControlName="department">
+        </app-custom-select>
+      </div>
+
+      <div class="filter-row">
+        <app-custom-select
+          [label]="'Cargo'"
+          [options]="getPositionOptions()"
+          formControlName="position">
+        </app-custom-select>
+
+        <app-custom-select
+          [label]="'Categoría'"
+          [options]="getCategoryOptions()"
+          formControlName="category">
+        </app-custom-select>
+
+        <div class="date-range">
+          <app-custom-datepicker
+            [label]="'Fecha Inicio'"
+            formControlName="startDate">
+          </app-custom-datepicker>
+
+          <app-custom-datepicker
+            [label]="'Fecha Fin'"
+            formControlName="endDate">
+          </app-custom-datepicker>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <app-custom-button
+          [label]="'Limpiar Filtros'"
+          [icon]="'times'"
+          [color]="'primary'"
+          [variant]="'text'"
+          (buttonClick)="resetFilters()">
+        </app-custom-button>
+      </div>
+    </form>
+  </app-custom-card>
+
+  <!-- Contenedor de concursos -->
+  <div class="concursos-container">
+    <!-- Loading Overlay -->
+    <div *ngIf="isLoading" class="loading-overlay">
+      <div class="loading-content">
+        <div class="spinner"></div>
+        <p class="loading-text">Cargando concursos...</p>
+      </div>
+    </div>
+
+    <!-- Vista de tarjetas -->
+    <div *ngIf="!isLoading && dataSource.length > 0 && viewMode === 'cards'" class="concursos-grid">
+      <div *ngFor="let concurso of dataSource; let i = index"
+           class="concurso-card"
+           [style.animation-delay]="(i * 100) + 'ms'">
+
+        <!-- Header de la tarjeta -->
+        <div class="card-header">
+          <div class="concurso-id">ID: {{concurso?.id || 'N/A'}}</div>
+          <div class="status-badge" [ngClass]="getStatusClass(concurso?.status || '')">
+            {{getStatusLabel(concurso?.status || '')}}
+          </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="card-content">
+          <h3 class="concurso-title">{{concurso?.title || 'Sin título'}}</h3>
+          <p class="concurso-position">{{concurso?.position || 'No especificado'}}</p>
+          <p class="concurso-department">{{concurso?.department || 'No especificado'}}</p>
+
+          <div class="concurso-meta">
+            <div class="meta-item">
+              <i class="fas fa-layer-group" aria-hidden="true"></i>
+              <span>{{concurso?.category || 'No especificado'}}{{concurso?.class ? ' - ' + concurso.class : ''}}</span>
+            </div>
+
+            <div class="meta-item">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+              <span>{{formatDate(concurso?.startDate) || 'No definida'}} - {{formatDate(concurso?.endDate) || 'No definida'}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="card-actions">
+          <app-custom-button
+            [icon]="'eye'"
+            [color]="'primary'"
+            [variant]="'icon'"
+            [tooltip]="'Ver detalles del concurso'"
+            [routerLink]="['/admin/concursos/detalle', concurso.id]"
+            class="action-button">
+          </app-custom-button>
+
+          <app-custom-button
+            [icon]="'edit'"
+            [color]="'accent'"
+            [variant]="'icon'"
+            [tooltip]="'Editar concurso'"
+            (buttonClick)="editConcurso(concurso)"
+            class="action-button">
+          </app-custom-button>
+
+          <app-custom-button
+            [icon]="'calendar-alt'"
+            [color]="'primary'"
+            [variant]="'icon'"
+            [tooltip]="'Gestionar fechas del concurso'"
+            [routerLink]="['/admin/concursos/fechas', concurso.id]"
+            class="action-button">
+          </app-custom-button>
+
+          <app-custom-button
+            #statusMenuTrigger
+            [icon]="'exchange-alt'"
+            [color]="'primary'"
+            [variant]="'icon'"
+            [tooltip]="'Cambiar estado del concurso'"
+            [appCustomMenuTrigger]="statusMenu"
+            class="action-button">
+          </app-custom-button>
+
+          <app-custom-menu #statusMenu>
+            <app-custom-menu-item
+              *ngFor="let option of statusOptions"
+              [disabled]="option.value === 'ALL' || option.value === concurso?.status"
+              (click)="changeStatus(concurso, option.value)">
+              {{option.label}}
+            </app-custom-menu-item>
+          </app-custom-menu>
+
+          <app-custom-button
+            [icon]="'trash'"
+            [color]="'danger'"
+            [variant]="'icon'"
+            [tooltip]="'Eliminar concurso (solo borradores)'"
+            [disabled]="concurso?.status !== 'DRAFT'"
+            (buttonClick)="deleteConcurso(concurso)"
+            class="action-button">
+          </app-custom-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista de tabla -->
+    <div *ngIf="!isLoading && dataSource.length > 0 && viewMode === 'table'" class="table-container">
+      <app-custom-table
+        [data]="dataSource"
+        [loading]="isLoading"
+        [paginated]="true"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [totalItems]="totalItems"
+        [pageSizeOptions]="pageSizeOptions"
+        [emptyMessage]="'No se encontraron concursos'"
+        (sortChange)="onSortChange($event)"
+        (pageChange)="onPageChange($event)">
+
+        <!-- Columna ID -->
+        <app-custom-table-column property="id" header="ID" [sortable]="true" width="80px">
+          <ng-template let-concurso>
+            <span class="id-cell">{{concurso?.id || 'N/A'}}</span>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Título -->
+        <app-custom-table-column property="title" header="Título" [sortable]="true" width="350px">
+          <ng-template let-concurso>
+            <div class="title-cell">
+              <strong>{{concurso?.title || 'Sin título'}}</strong>
+              <small>{{concurso?.description || 'Sin descripción'}}</small>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Cargo -->
+        <app-custom-table-column property="position" header="Cargo" [sortable]="true" width="220px">
+          <ng-template let-concurso>
+            <span>{{concurso?.position || 'No especificado'}}</span>
+          </ng-template>
+        </app-custom-table-column>
+
+
+
+        <!-- Columna Fechas -->
+        <app-custom-table-column property="dates" header="Fechas" width="200px">
+          <ng-template let-concurso>
+            <div class="dates-cell">
+              <div class="date-item">
+                <span class="date-label">Inicio:</span>
+                <span class="date-value">{{formatDate(concurso?.startDate) || 'No definida'}}</span>
+              </div>
+              <div class="date-item">
+                <span class="date-label">Fin:</span>
+                <span class="date-value">{{formatDate(concurso?.endDate) || 'No definida'}}</span>
+              </div>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Estado -->
+        <app-custom-table-column property="status" header="Estado" [sortable]="true" width="130px">
+          <ng-template let-concurso>
+            <div class="status-badge" [ngClass]="getStatusClass(concurso?.status || '')">
+              {{getStatusLabel(concurso?.status || '')}}
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+
+        <!-- Columna Acciones -->
+        <app-custom-table-column property="actions" header="Acciones" width="160px">
+          <ng-template let-concurso>
+            <div class="action-buttons">
+              <app-custom-button
+                [icon]="'eye'"
+                [variant]="'icon'"
+                [color]="'primary'"
+                [tooltip]="'Ver detalles'"
+                [routerLink]="['/admin/concursos/detalle', concurso.id]">
+              </app-custom-button>
+
+              <app-custom-button
+                [icon]="'edit'"
+                [variant]="'icon'"
+                [color]="'accent'"
+                [tooltip]="'Editar'"
+                (buttonClick)="editConcurso(concurso); $event.stopPropagation()">
+              </app-custom-button>
+
+              <app-custom-button
+                [icon]="'calendar-alt'"
+                [variant]="'icon'"
+                [color]="'warn'"
+                [tooltip]="'Fechas'"
+                [routerLink]="['/admin/concursos/fechas', concurso.id]">
+              </app-custom-button>
+
+              <app-custom-button
+                [icon]="'trash'"
+                [variant]="'icon'"
+                [color]="'danger'"
+                [tooltip]="'Eliminar'"
+                [disabled]="concurso?.status !== 'DRAFT'"
+                (buttonClick)="deleteConcurso(concurso); $event.stopPropagation()">
+              </app-custom-button>
+            </div>
+          </ng-template>
+        </app-custom-table-column>
+      </app-custom-table>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && dataSource.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </div>
+      <h3 class="empty-title">No se encontraron concursos</h3>
+      <p class="empty-message">No hay concursos que coincidan con los filtros aplicados. Intenta ajustar los criterios de búsqueda.</p>
+      <app-custom-button
+        [label]="'Limpiar Filtros'"
+        [icon]="'times'"
+        [color]="'primary'"
+        (buttonClick)="resetFilters()"
+        class="empty-action">
+      </app-custom-button>
+    </div>
+
+    <!-- Paginación -->
+    <div *ngIf="!isLoading && dataSource.length > 0" class="pagination-container">
+      <div class="pagination-info">
+        <span>Mostrando {{(pageIndex * pageSize) + 1}} - {{Math.min((pageIndex + 1) * pageSize, totalItems)}} de {{totalItems}} resultados</span>
+      </div>
+      <div class="pagination-controls">
+        <app-custom-button
+          [icon]="'chevron-left'"
+          [variant]="'icon'"
+          [disabled]="pageIndex === 0"
+          [tooltip]="'Página anterior'"
+          (buttonClick)="previousPage()">
+        </app-custom-button>
+
+        <span class="page-info">Página {{pageIndex + 1}} de {{Math.ceil(totalItems / pageSize)}}</span>
+
+        <app-custom-button
+          [icon]="'chevron-right'"
+          [variant]="'icon'"
+          [disabled]="(pageIndex + 1) * pageSize >= totalItems"
+          [tooltip]="'Página siguiente'"
+          (buttonClick)="nextPage()">
+        </app-custom-button>
+      </div>
+    </div>
+  </div>
+</div>

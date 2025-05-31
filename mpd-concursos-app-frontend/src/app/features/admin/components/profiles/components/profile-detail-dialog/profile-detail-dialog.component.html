@@ -1,0 +1,326 @@
+<h2 mat-dialog-title>Detalles del Perfil</h2>
+
+<mat-dialog-content>
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando información...</p>
+  </div>
+
+  <div *ngIf="!isLoading && profile" class="profile-details">
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <div *ngIf="profile.avatar" class="avatar" [style.background-image]="'url(' + profile.avatar + ')'"></div>
+        <div *ngIf="!profile.avatar" class="avatar-placeholder">
+          {{getInitials()}}
+        </div>
+      </div>
+
+      <div class="profile-info">
+        <h3>{{getFullName()}}</h3>
+        <div class="profile-meta">
+          <div class="username">{{'@' + profile.username}}</div>
+          <div class="status-badge" [ngClass]="getStatusClass()">
+            {{getStatusText()}}
+          </div>
+        </div>
+        <div class="profile-dates">
+          <div class="date-item">
+            <mat-icon>event</mat-icon>
+            <span>Creado: {{formatDate(profile.createdAt)}}</span>
+          </div>
+          <div class="date-item" *ngIf="profile.lastLogin">
+            <mat-icon>login</mat-icon>
+            <span>Último acceso: {{formatDateTime(profile.lastLogin)}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
+      <!-- Pestaña de Información Personal -->
+      <mat-tab label="Información Personal">
+        <div class="tab-content">
+          <div class="info-section">
+            <h4>Datos Personales</h4>
+
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>person</mat-icon>
+                  <span>Nombre Completo</span>
+                </div>
+                <div class="info-value">{{profile.firstName}} {{profile.lastName}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>email</mat-icon>
+                  <span>Email</span>
+                </div>
+                <div class="info-value">{{profile.email}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>phone</mat-icon>
+                  <span>Teléfono</span>
+                </div>
+                <div class="info-value">{{profile.phone || 'No especificado'}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>badge</mat-icon>
+                  <span>DNI</span>
+                </div>
+                <div class="info-value">{{profile.dni || 'No especificado'}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>credit_card</mat-icon>
+                  <span>CUIT</span>
+                </div>
+                <div class="info-value">{{profile.cuit || 'No especificado'}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>cake</mat-icon>
+                  <span>Fecha de Nacimiento</span>
+                </div>
+                <div class="info-value">{{formatDate(profile.birthDate)}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>wc</mat-icon>
+                  <span>Género</span>
+                </div>
+                <div class="info-value">{{profile.gender || 'No especificado'}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>flag</mat-icon>
+                  <span>Nacionalidad</span>
+                </div>
+                <div class="info-value">{{profile.nationality || 'No especificado'}}</div>
+              </div>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="info-section">
+            <h4>Dirección</h4>
+
+            <div *ngIf="hasAddress()" class="address-container">
+              <div class="address-text">
+                <pre>{{getFormattedAddress(profile.address)}}</pre>
+              </div>
+              <button mat-icon-button color="primary" (click)="openMap(profile.address)" matTooltip="Ver en mapa">
+                <mat-icon>map</mat-icon>
+              </button>
+            </div>
+
+            <div *ngIf="!hasAddress()" class="empty-info">
+              <mat-icon>location_off</mat-icon>
+              <p>No se ha especificado una dirección</p>
+            </div>
+          </div>
+
+          <mat-divider *ngIf="hasCentroDeVida()"></mat-divider>
+
+          <div class="info-section" *ngIf="hasCentroDeVida()">
+            <h4>Centro de Vida</h4>
+
+            <div class="address-container">
+              <div class="address-text">
+                <pre>{{getFormattedAddress(profile.centroDeVida)}}</pre>
+              </div>
+              <button mat-icon-button color="primary" (click)="openMap(profile.centroDeVida)" matTooltip="Ver en mapa">
+                <mat-icon>map</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Pestaña de Información Profesional -->
+      <mat-tab label="Información Profesional">
+        <div class="tab-content">
+          <div class="info-section">
+            <h4>Datos Profesionales</h4>
+
+            <div *ngIf="profile.professionalInfo" class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>school</mat-icon>
+                  <span>Título</span>
+                </div>
+                <div class="info-value">{{profile.professionalInfo.title || 'No especificado'}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>category</mat-icon>
+                  <span>Especialización</span>
+                </div>
+                <div class="info-value">{{profile.professionalInfo.specialization || 'No especificado'}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>card_membership</mat-icon>
+                  <span>Número de Matrícula</span>
+                </div>
+                <div class="info-value">{{profile.professionalInfo.licenseNumber || 'No especificado'}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>event</mat-icon>
+                  <span>Fecha de Graduación</span>
+                </div>
+                <div class="info-value">{{formatDate(profile.professionalInfo.graduationDate)}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>account_balance</mat-icon>
+                  <span>Universidad</span>
+                </div>
+                <div class="info-value">{{profile.professionalInfo.university || 'No especificado'}}</div>
+              </div>
+            </div>
+
+            <div *ngIf="!profile.professionalInfo" class="empty-info">
+              <mat-icon>school_off</mat-icon>
+              <p>No se ha especificado información profesional</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Pestaña de Documentos -->
+      <mat-tab label="Documentos">
+        <div class="tab-content">
+          <div class="info-section">
+            <h4>Documentos</h4>
+
+            <div *ngIf="profile.documents && profile.documents.length > 0" class="documents-grid">
+              <mat-card *ngFor="let document of profile.documents" class="document-card">
+                <mat-card-content>
+                  <div class="document-icon">
+                    <mat-icon>{{getDocumentIcon(document.type)}}</mat-icon>
+                  </div>
+                  <div class="document-info">
+                    <div class="document-name">{{document.name}}</div>
+                    <div class="document-type">{{getDocumentTypeText(document.type)}}</div>
+                    <div class="document-date">{{formatDate(document.uploadDate)}}</div>
+                    <div class="document-verification" [ngClass]="getVerificationClass(document.verified)">
+                      {{getVerificationStatus(document.verified)}}
+                    </div>
+                  </div>
+                  <div class="document-actions">
+                    <button mat-icon-button color="primary" (click)="openDocument(document)" matTooltip="Ver documento">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <div *ngIf="!profile.documents || profile.documents.length === 0" class="empty-info">
+              <mat-icon>description_off</mat-icon>
+              <p>No hay documentos disponibles</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Pestaña de Preferencias -->
+      <mat-tab label="Preferencias">
+        <div class="tab-content">
+          <div class="info-section">
+            <h4>Preferencias de Usuario</h4>
+
+            <div *ngIf="profile.preferences" class="info-grid">
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>palette</mat-icon>
+                  <span>Tema</span>
+                </div>
+                <div class="info-value">{{getThemeText(profile.preferences.theme)}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>language</mat-icon>
+                  <span>Idioma</span>
+                </div>
+                <div class="info-value">{{getLanguageText(profile.preferences.language)}}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">
+                  <mat-icon>notifications</mat-icon>
+                  <span>Notificaciones</span>
+                </div>
+                <div class="info-value notifications-value" *ngIf="profile.preferences.notifications">
+                  <div class="notification-item" [ngClass]="{'enabled': profile.preferences.notifications && profile.preferences.notifications.email}">
+                    <mat-icon>email</mat-icon>
+                    <span>Email</span>
+                  </div>
+                  <div class="notification-item" [ngClass]="{'enabled': profile.preferences.notifications && profile.preferences.notifications.push}">
+                    <mat-icon>notifications_active</mat-icon>
+                    <span>Push</span>
+                  </div>
+                  <div class="notification-item" [ngClass]="{'enabled': profile.preferences.notifications && profile.preferences.notifications.sms}">
+                    <mat-icon>sms</mat-icon>
+                    <span>SMS</span>
+                  </div>
+                </div>
+                <div class="info-value" *ngIf="!profile.preferences.notifications">
+                  <span class="no-data">No se han configurado notificaciones</span>
+                </div>
+              </div>
+
+              <div class="info-item" *ngIf="profile.preferences.accessibility">
+                <div class="info-label">
+                  <mat-icon>accessibility</mat-icon>
+                  <span>Accesibilidad</span>
+                </div>
+                <div class="info-value accessibility-value">
+                  <div class="accessibility-item" [ngClass]="{'enabled': profile.preferences.accessibility.highContrast}">
+                    <mat-icon>contrast</mat-icon>
+                    <span>Alto contraste</span>
+                  </div>
+                  <div class="accessibility-item" [ngClass]="{'enabled': profile.preferences.accessibility.largeText}">
+                    <mat-icon>format_size</mat-icon>
+                    <span>Texto grande</span>
+                  </div>
+                  <div class="accessibility-item" [ngClass]="{'enabled': profile.preferences.accessibility.screenReader}">
+                    <mat-icon>record_voice_over</mat-icon>
+                    <span>Lector de pantalla</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!profile.preferences" class="empty-info">
+              <mat-icon>settings_off</mat-icon>
+              <p>No se han especificado preferencias</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cerrar</button>
+</mat-dialog-actions>
+

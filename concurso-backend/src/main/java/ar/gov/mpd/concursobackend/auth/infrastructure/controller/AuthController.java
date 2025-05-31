@@ -14,6 +14,10 @@ import ar.gov.mpd.concursobackend.auth.application.dto.JwtDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserLogin;
 import ar.gov.mpd.concursobackend.auth.application.service.UserService;
+import ar.gov.mpd.concursobackend.auth.domain.exception.BlockedAccountException;
+import ar.gov.mpd.concursobackend.auth.domain.exception.ExpiredAccountException;
+import ar.gov.mpd.concursobackend.auth.domain.exception.InactiveAccountException;
+import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCredentialsException;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -51,10 +55,26 @@ public class AuthController {
             JwtDto jwtDto = userService.login(userLogin);
             logger.info("Login exitoso para usuario: {}", userLogin.getUsername());
             return ResponseEntity.ok(jwtDto);
-        } catch (Exception e) {
-            logger.error("Error en el login para usuario {}: {}", userLogin.getUsername(), e.getMessage());
+        } catch (BlockedAccountException e) {
+            logger.warn("Intento de login en cuenta bloqueada: {}", userLogin.getUsername());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Cuenta bloqueada", e.getMessage()));
+        } catch (InactiveAccountException e) {
+            logger.warn("Intento de login en cuenta inactiva: {}", userLogin.getUsername());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Cuenta inactiva", e.getMessage()));
+        } catch (ExpiredAccountException e) {
+            logger.warn("Intento de login en cuenta expirada: {}", userLogin.getUsername());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ErrorResponse("Cuenta expirada", e.getMessage()));
+        } catch (InvalidCredentialsException e) {
+            logger.error("Credenciales inválidas para usuario: {}", userLogin.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse("Error de autenticación", e.getMessage()));
+                    .body(new ErrorResponse("Credenciales inválidas", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error inesperado en el login para usuario {}: {}", userLogin.getUsername(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Error de autenticación", "Ha ocurrido un error inesperado. Por favor, inténtelo de nuevo más tarde."));
         }
     }
 

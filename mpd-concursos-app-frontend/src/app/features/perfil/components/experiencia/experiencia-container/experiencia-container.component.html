@@ -132,7 +132,7 @@
 
             <div class="file-upload-container">
               <div *ngIf="!archivoSeleccionado" class="upload-placeholder">
-                <button mat-raised-button color="primary" type="button" (click)="seleccionarArchivo()">
+                <button class="primary" type="button" (click)="seleccionarArchivo()">
                   <i class="fas fa-upload"></i> Seleccionar archivo
                 </button>
                 <p class="upload-hint">Formatos aceptados: PDF</p>
@@ -144,7 +144,7 @@
                   <span class="file-name">{{ nombreArchivo }}</span>
                 </div>
                 <div class="file-actions">
-                  <button mat-icon-button color="warn" type="button" (click)="eliminarArchivoSeleccionado()">
+                  <button class="icon-button warn" type="button" (click)="eliminarArchivoSeleccionado()">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -152,7 +152,10 @@
             </div>
 
             <div *ngIf="cargandoArchivo" class="upload-progress">
-              <mat-progress-bar mode="determinate" [value]="progresoCarga"></mat-progress-bar>
+              <div class="progress-bar-custom">
+                <div class="progress-bar-inner" [style.width]="progresoCarga + '%'">
+                </div>
+              </div>
               <span class="progress-text">{{ progresoCarga }}% completado</span>
             </div>
           </div>
@@ -181,7 +184,7 @@
   <!-- Botones de navegación -->
   <div class="wizard-actions">
     <button *ngIf="pasoActual > 0"
-           mat-button
+           class="secondary"
            type="button"
            (click)="retrocederPaso()"
            [disabled]="guardando">
@@ -189,7 +192,7 @@
     </button>
 
     <div>
-      <button mat-button
+      <button class="secondary"
              type="button"
              (click)="cerrarModal()"
              [disabled]="guardando">
@@ -197,8 +200,7 @@
       </button>
 
       <button *ngIf="pasoActual < pasoWizard.RESUMEN"
-             mat-raised-button
-             color="primary"
+             class="primary"
              type="button"
              (click)="avanzarPaso()"
              [disabled]="!validarPasoActual() || guardando">
@@ -206,8 +208,7 @@
       </button>
 
       <button *ngIf="pasoActual === pasoWizard.RESUMEN"
-             mat-raised-button
-             color="primary"
+             class="primary"
              type="button"
              (click)="guardarExperiencia()"
              [disabled]="guardando">
@@ -219,7 +220,7 @@
   <!-- Spinner de carga durante el guardado -->
   <div *ngIf="guardando" class="loading-overlay">
     <div class="loading-spinner">
-      <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      <span class="loader"></span>
       <p>Guardando...</p>
     </div>
   </div>

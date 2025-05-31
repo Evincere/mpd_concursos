@@ -1,0 +1,264 @@
+<h2 mat-dialog-title>
+  Detalle de Inscripción
+  <button mat-icon-button mat-dialog-close class="close-button">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+
+<mat-dialog-content>
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando información de la inscripción...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading && inscriptionDetail">
+    <!-- Encabezado con información básica -->
+    <div class="inscription-header">
+      <div class="inscription-info">
+        <div class="inscription-id">
+          <span class="label">ID:</span>
+          <span class="value">{{inscriptionDetail.inscription.id}}</span>
+        </div>
+
+        <div class="inscription-status">
+          <span class="status-badge" [ngClass]="getStatusClass(inscriptionDetail.inscription.state)">
+            {{getStatusLabel(inscriptionDetail.inscription.state)}}
+          </span>
+        </div>
+      </div>
+
+      <div class="inscription-dates">
+        <div class="date-item">
+          <span class="label">Creada:</span>
+          <span class="value">{{formatDateTime(inscriptionDetail.inscription.createdAt)}}</span>
+        </div>
+
+        <div class="date-item" *ngIf="inscriptionDetail.inscription.reviewDate">
+          <span class="label">Revisada:</span>
+          <span class="value">{{formatDateTime(inscriptionDetail.inscription.reviewDate)}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestañas de contenido -->
+    <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
+      <!-- Pestaña de Información General -->
+      <mat-tab label="Información General">
+        <div class="tab-content">
+          <div class="info-section">
+            <h3>Información del Concurso</h3>
+
+            <div class="info-card">
+              <div class="info-row">
+                <span class="label">Título:</span>
+                <span class="value">{{inscriptionDetail.inscription.contestTitle}}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">Categoría:</span>
+                <span class="value">{{inscriptionDetail.inscription.contestCategory}}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">Departamento:</span>
+                <span class="value">{{inscriptionDetail.inscription.contestDepartment}}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h3>Información del Postulante</h3>
+
+            <div class="info-card">
+              <div class="info-row">
+                <span class="label">Nombre:</span>
+                <span class="value">{{inscriptionDetail.user.firstName}} {{inscriptionDetail.user.lastName}}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">DNI:</span>
+                <span class="value">{{inscriptionDetail.user.dni}}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">Email:</span>
+                <span class="value">{{inscriptionDetail.user.email}}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">Teléfono:</span>
+                <span class="value">{{inscriptionDetail.user.telefono || 'No especificado'}}</span>
+              </div>
+
+              <div class="info-row">
+                <span class="label">Dirección:</span>
+                <span class="value">{{inscriptionDetail.user.direccion || 'No especificada'}}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h3>Gestión de Estado</h3>
+
+            <form [formGroup]="statusForm" (ngSubmit)="updateStatus()" class="status-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Estado</mat-label>
+                  <mat-select formControlName="status">
+                    <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+                      {{option.label}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Observaciones</mat-label>
+                  <textarea matInput formControlName="observations" rows="3" placeholder="Ingrese observaciones sobre esta inscripción"></textarea>
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" mat-raised-button color="primary" [disabled]="statusForm.invalid || isLoading">
+                  Actualizar Estado
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Pestaña de Documentos -->
+      <mat-tab label="Documentos">
+        <div class="tab-content">
+          <div class="documents-section">
+            <h3>Documentos Presentados</h3>
+
+            <div class="documents-list" *ngIf="inscriptionDetail.documents.length > 0">
+              <div *ngFor="let document of inscriptionDetail.documents" class="document-item">
+                <div class="document-header">
+                  <div class="document-info">
+                    <span class="document-name">{{document.fileName}}</span>
+                    <span class="document-type">{{document.documentType}}</span>
+                  </div>
+
+                  <div class="document-status">
+                    <span class="status-badge" [ngClass]="getDocumentStatusClass(document.status)">
+                      {{getDocumentStatusLabel(document.status)}}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="document-content">
+                  <div class="document-details">
+                    <div class="detail-item">
+                      <span class="label">Tamaño:</span>
+                      <span class="value">{{(document.fileSize / 1024).toFixed(2)}} KB</span>
+                    </div>
+
+                    <div class="detail-item">
+                      <span class="label">Subido:</span>
+                      <span class="value">{{formatDateTime(document.uploadDate)}}</span>
+                    </div>
+
+                    <div class="detail-item" *ngIf="document.reviewDate">
+                      <span class="label">Revisado:</span>
+                      <span class="value">{{formatDateTime(document.reviewDate)}}</span>
+                    </div>
+
+                    <div class="detail-item" *ngIf="document.reviewedBy">
+                      <span class="label">Revisado por:</span>
+                      <span class="value">{{document.reviewedBy}}</span>
+                    </div>
+                  </div>
+
+                  <div class="document-observations" *ngIf="document.observations">
+                    <span class="label">Observaciones:</span>
+                    <p class="value">{{document.observations}}</p>
+                  </div>
+
+                  <div class="document-actions">
+                    <button mat-stroked-button color="primary" (click)="downloadDocument(document)">
+                      <mat-icon>download</mat-icon>
+                      Descargar
+                    </button>
+
+                    <button mat-stroked-button color="accent"
+                            (click)="updateDocumentStatus(document, 'APPROVED')"
+                            [disabled]="document.status === 'APPROVED'">
+                      <mat-icon>check_circle</mat-icon>
+                      Aprobar
+                    </button>
+
+                    <button mat-stroked-button color="warn"
+                            (click)="updateDocumentStatus(document, 'REJECTED')"
+                            [disabled]="document.status === 'REJECTED'">
+                      <mat-icon>cancel</mat-icon>
+                      Rechazar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="inscriptionDetail.documents.length === 0" class="empty-documents">
+              <mat-icon>description_off</mat-icon>
+              <p>No hay documentos asociados a esta inscripción</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Pestaña de Historial -->
+      <mat-tab label="Historial">
+        <div class="tab-content">
+          <div class="history-section">
+            <h3>Historial de Cambios</h3>
+
+            <div class="history-list" *ngIf="inscriptionDetail.history.length > 0">
+              <mat-list>
+                <mat-list-item *ngFor="let item of inscriptionDetail.history">
+                  <div class="history-item">
+                    <div class="history-icon">
+                      <mat-icon>history</mat-icon>
+                    </div>
+
+                    <div class="history-content">
+                      <div class="history-header">
+                        <span class="history-action">{{item.action}}</span>
+                        <span class="history-date">{{formatDateTime(item.date)}}</span>
+                      </div>
+
+                      <div class="history-details">
+                        <span class="history-user">{{item.userName}} ({{item.userRole}})</span>
+
+                        <div *ngIf="item.previousState && item.newState" class="state-change">
+                          <span class="previous-state">{{getStatusLabel(item.previousState)}}</span>
+                          <mat-icon>arrow_forward</mat-icon>
+                          <span class="new-state">{{getStatusLabel(item.newState)}}</span>
+                        </div>
+                      </div>
+
+                      <p *ngIf="item.details" class="history-details-text">{{item.details}}</p>
+                    </div>
+                  </div>
+                  <mat-divider></mat-divider>
+                </mat-list-item>
+              </mat-list>
+            </div>
+
+            <div *ngIf="inscriptionDetail.history.length === 0" class="empty-history">
+              <mat-icon>history_toggle_off</mat-icon>
+              <p>No hay historial de cambios para esta inscripción</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Cerrar</button>
+</mat-dialog-actions>

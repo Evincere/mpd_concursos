@@ -1,0 +1,12 @@
+<div class="custom-paginator">
+  <button (click)="onPreviousPage()" [disabled]="pageIndex === 0">&lt;</button>
+  <span>Página {{ pageIndex + 1 }} de {{ totalPages }}</span>
+  <button (click)="onNextPage()" [disabled]="pageIndex >= totalPages - 1">&gt;</button>
+
+  <span class="page-size-label">Filas por página:</span>
+  <select [value]="pageSize" (change)="onPageSizeChange($event)">
+    <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+  </select>
+
+  <span class="total-items">Total: {{ length }}</span>
+</div>

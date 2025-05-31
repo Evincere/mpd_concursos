@@ -25,12 +25,12 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SearchHeaderComponent {
-  @Input() title: string = '';
-  @Input() icon: string = '';
-  @Input() placeholder: string = 'Ingrese término de búsqueda';
-  @Input() filtrosActivos: boolean = false;
-  @Output() search = new EventEmitter<string>();
-  @Output() filter = new EventEmitter<void>();
+  @Input() title = '';
+  @Input() icon = '';
+  @Input() placeholder = 'Ingrese término de búsqueda';
+  @Input() filtrosActivos = false;
+  @Output() searchChange = new EventEmitter<string>();
+  @Output() filterClick = new EventEmitter<void>();
 
   searchForm: FormGroup;
 
@@ -45,12 +45,12 @@ export class SearchHeaderComponent {
         distinctUntilChanged()
       )
       .subscribe(value => {
-        this.search.emit(value);
+        this.searchChange.emit(value);
       });
   }
 
   limpiarBusqueda(): void {
     this.searchForm.get('termino')?.reset();
-    // this.filter.emit(); 
+    // this.filter.emit();
   }
 }

@@ -1,0 +1,110 @@
+<div class="tracking-container">
+  <div class="header">
+    <h1>Seguimiento de Inscripciones</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" [routerLink]="['/admin/inscripciones/dashboard']">
+        <i class="fas fa-tachometer-alt"></i>
+        Dashboard
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-cards">
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{stats.pendingCount}}</div>
+          <div class="stat-label">Inscripciones Pendientes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="fas fa-hourglass-half"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{stats.avgResponseTime}}h</div>
+          <div class="stat-label">Tiempo Promedio de Respuesta</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="fas fa-hourglass-end"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{formatWaitTime(stats.oldestPending)}}</div>
+          <div class="stat-label">Inscripción Más Antigua</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="fas fa-bell" [class.has-badge]="stats.alertsCount > 0"></i>
+          <span class="badge" *ngIf="stats.alertsCount > 0">{{stats.alertsCount}}</span>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{stats.alertsCount}}</div>
+          <div class="stat-label">Alertas Activas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="card-header">
+      <div class="refresh-info">
+        <div class="auto-refresh">
+          <label class="custom-checkbox">
+            <input type="checkbox" [checked]="autoRefresh" (change)="toggleAutoRefresh()">
+            <span class="checkmark"></span>
+            Actualización automática
+          </label>
+        </div>
+        
+        <div class="refresh-timer" *ngIf="autoRefresh">
+          <div class="progress-bar">
+            <div class="progress" [style.width.%]="(timeLeft / refreshInterval) * 100"></div>
+          </div>
+          <span class="timer-text">Actualización en {{timeLeft}}s</span>
+        </div>
+        
+        <button class="btn btn-icon" (click)="manualRefresh()" title="Actualizar ahora">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+      
+      <div class="filter-form">
+        <form [formGroup]="filterForm" class="filter-row">
+          <div class="form-group">
+            <label for="status">Estado</label>
+            <select id="status" class="form-select" formControlName="status">
+              <option *ngFor="let option of statusOptions" [value]="option.value">
+                {{option.label}}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="minWaitTime">Tiempo mínimo de espera (horas)</label>
+            <input id="minWaitTime" type="number" class="form-control" formControlName="minWaitTime" min="0" max="168">
+          </div>
+          
+          <div class="form-group">
+            <label for="maxAlerts">Máximo de alertas</label>
+            <input id="maxAlerts" type="number" class="form-control" formControlName="maxAlerts" min="0" max="100">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

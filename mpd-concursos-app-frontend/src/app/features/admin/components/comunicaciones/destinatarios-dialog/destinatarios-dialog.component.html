@@ -1,0 +1,151 @@
+<h2 mat-dialog-title>Seleccionar Destinatarios</h2>
+
+<mat-dialog-content>
+  <mat-tab-group [(selectedIndex)]="activeTab">
+    <!-- Pestaña de Usuarios -->
+    <mat-tab label="Usuarios">
+      <div class="tab-content">
+        <div class="filter-section">
+          <form [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+            <div class="filter-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Buscar</mat-label>
+                <input matInput formControlName="search" placeholder="Nombre, email, username...">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Rol</mat-label>
+                <mat-select formControlName="role">
+                  <mat-option value="">Todos</mat-option>
+                  <mat-option value="ROLE_ADMIN">Administrador</mat-option>
+                  <mat-option value="ROLE_USER">Usuario</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Estado</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="ACTIVE">Activo</mat-option>
+                  <mat-option value="INACTIVE">Inactivo</mat-option>
+                  <mat-option value="BLOCKED">Bloqueado</mat-option>
+                  <mat-option value="">Todos</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div class="filter-actions">
+                <button type="submit" mat-raised-button color="primary">Filtrar</button>
+                <button type="button" mat-button (click)="resetFilter()">Limpiar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="table-container">
+          <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z1">
+            <!-- Checkbox Column -->
+            <ng-container matColumnDef="select">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox (change)="$event ? toggleAllRows() : null"
+                              [checked]="selection.hasValue() && isAllSelected()"
+                              [indeterminate]="selection.hasValue() && !isAllSelected()">
+                </mat-checkbox>
+              </th>
+              <td mat-cell *matCellDef="let row">
+                <mat-checkbox (click)="$event.stopPropagation()"
+                              (change)="$event ? selection.toggle(row) : null"
+                              [checked]="selection.isSelected(row)">
+                </mat-checkbox>
+              </td>
+            </ng-container>
+
+            <!-- Username Column -->
+            <ng-container matColumnDef="username">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Username</th>
+              <td mat-cell *matCellDef="let user">{{user.username}}</td>
+            </ng-container>
+
+            <!-- Nombre Column -->
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+              <td mat-cell *matCellDef="let user">{{user.firstName}} {{user.lastName}}</td>
+            </ng-container>
+
+            <!-- Email Column -->
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+              <td mat-cell *matCellDef="let user">{{user.email}}</td>
+            </ng-container>
+
+            <!-- Roles Column -->
+            <ng-container matColumnDef="roles">
+              <th mat-header-cell *matHeaderCellDef>Roles</th>
+              <td mat-cell *matCellDef="let user">
+                <mat-chip-set>
+                  <mat-chip *ngFor="let role of user.roles" [color]="role === 'ROLE_ADMIN' ? 'accent' : undefined">
+                    {{role === 'ROLE_ADMIN' ? 'Admin' : 'Usuario'}}
+                  </mat-chip>
+                </mat-chip-set>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                (click)="selection.toggle(row)"></tr>
+          </table>
+
+          <div *ngIf="isLoading" class="loading-overlay">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+
+          <mat-paginator [length]="totalUsers"
+                        [pageSize]="pageSize"
+                        [pageSizeOptions]="[5, 10, 25, 50]"
+                        (page)="onPageChange($event)"
+                        showFirstLastButtons>
+          </mat-paginator>
+        </div>
+
+        <div class="selection-summary">
+          <p>{{selection.selected.length}} usuarios seleccionados</p>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Pestaña de Roles -->
+    <mat-tab label="Roles">
+      <div class="tab-content">
+        <div class="roles-container">
+          <div class="role-card"
+               *ngFor="let role of availableRoles"
+               [class.selected]="isRoleSelected(role)"
+               (click)="toggleRole(role)"
+               (keydown.enter)="toggleRole(role)"
+               (keydown.space)="toggleRole(role)"
+               tabindex="0"
+               role="button">
+            <div class="role-header">
+              <h3>{{role === 'ROLE_ADMIN' ? 'Administradores' : 'Usuarios'}}</h3>
+              <mat-icon *ngIf="isRoleSelected(role)" color="primary">check_circle</mat-icon>
+            </div>
+            <p class="role-description">
+              {{role === 'ROLE_ADMIN' ?
+                'Usuarios con permisos administrativos en el sistema.' :
+                'Todos los usuarios registrados en el sistema.'}}
+            </p>
+          </div>
+        </div>
+
+        <div class="selection-summary">
+          <p>{{selectedRoles.length}} roles seleccionados</p>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()">
+    Confirmar Selección
+  </button>
+</mat-dialog-actions>

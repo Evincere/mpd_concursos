@@ -32,8 +32,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
   @ViewChild('loginFormContainer') loginFormContainer!: ElementRef;
   loginForm: FormGroup;
   loginError: string | null = null;
-  hide: boolean = true;
-  isFlipped: boolean = false;
+  hide = true;
+  isFlipped = false;
+  isBlockedError = false;
+  isInactiveError = false;
+  isExpiredError = false;
+  adminEmail = 'administracion@mdp.gov.ar';
+  emailCopied = false;
   private readonly fallbackLogoUrl = 'assets/images/mpd-logo.png';
 
   constructor(
@@ -47,7 +52,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.loginForm.valueChanges.subscribe(() => {
       if (this.loginError) {
         this.loginError = null;
@@ -55,7 +60,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     });
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     if (this.loginFormContainer && this.loginFormContainer.nativeElement) {
       const inputs = this.loginFormContainer.nativeElement.querySelectorAll('.login-input');
       if (inputs) {
@@ -73,7 +78,12 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   onSubmit(): void {
     if (this.loginForm.valid) {
+      // Resetear estados de error
       this.loginError = null;
+      this.isBlockedError = false;
+      this.isInactiveError = false;
+      this.isExpiredError = false;
+
       const loginData = new LoginUser(
         this.loginForm.get('username')?.value?.trim(),
         this.loginForm.get('password')?.value
@@ -91,7 +101,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
       this.authService.handleLogin(loginData)
         .subscribe({
-          next: (response) => {
+          next: (_response) => {
             console.log('[LoginComponent] Login exitoso, redirigiendo...');
             this.router.navigate(['dashboard']);
           },
@@ -99,16 +109,91 @@ export class LoginComponent implements OnInit, AfterViewInit {
             console.error('[LoginComponent] Error en login:', error.message);
             this.loginError = error.message || 'Error al intentar iniciar sesión';
 
-            setTimeout(() => {
-              this.loginForm.get('password')?.reset();
-              this.isFlipped = true;
-            }, 3000);
+            // Determinar el tipo de error para aplicar estilos específicos
+            this.detectErrorType(error.message);
+
+            // Mostrar el mensaje de error y resetear la contraseña
+            this.loginForm.get('password')?.reset();
+            this.isFlipped = true;
           }
         });
     } else {
       this.loginError = 'Por favor, complete todos los campos correctamente';
       this.isFlipped = true;
     }
+  }
+
+  /**
+   * Detecta el tipo de error basado en el mensaje para aplicar estilos específicos
+   */
+  private detectErrorType(errorMessage: string): void {
+    // Resetear todos los estados de error
+    this.isBlockedError = false;
+    this.isInactiveError = false;
+    this.isExpiredError = false;
+
+    // Detectar si es un error de permisos (posible cuenta bloqueada)
+    if (errorMessage.includes('No tiene permisos') || errorMessage.includes('bloqueada')) {
+      this.isBlockedError = true;
+      // Reemplazar el mensaje genérico con uno más específico
+      this.loginError = this.getBlockedAccountMessage();
+    } else if (errorMessage.includes('inactiva')) {
+      this.isInactiveError = true;
+    } else if (errorMessage.includes('expirado') || errorMessage.includes('expirada')) {
+      this.isExpiredError = true;
+    }
+  }
+
+  /**
+   * Obtiene el título apropiado para el mensaje de error
+   */
+  getErrorTitle(): string {
+    if (this.isBlockedError) {
+      return 'Cuenta bloqueada';
+    } else if (this.isInactiveError) {
+      return 'Cuenta inactiva';
+    } else if (this.isExpiredError) {
+      return 'Cuenta expirada';
+    }
+    return 'Error de autenticación';
+  }
+
+  /**
+   * Obtiene el icono apropiado para el tipo de error
+   */
+  getErrorIcon(): string {
+    if (this.isBlockedError) {
+      return 'lock';
+    } else if (this.isInactiveError) {
+      return 'warning';
+    } else if (this.isExpiredError) {
+      return 'access_time';
+    }
+    return 'error';
+  }
+
+  /**
+   * Copia el email del administrador al portapapeles
+   */
+  copyAdminEmail(): void {
+    navigator.clipboard.writeText(this.adminEmail)
+      .then(() => {
+        this.emailCopied = true;
+        // Resetear el estado después de 3 segundos
+        setTimeout(() => {
+          this.emailCopied = false;
+        }, 3000);
+      })
+      .catch(err => {
+        console.error('Error al copiar el email: ', err);
+      });
+  }
+
+  /**
+   * Devuelve un mensaje personalizado para el error de cuenta bloqueada
+   */
+  getBlockedAccountMessage(): string {
+    return `Su cuenta ha sido bloqueada por motivos de seguridad. Para resolver este problema, por favor contacte al administrador del sistema.`;
   }
 
   goToRegister(): void {
@@ -121,7 +206,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onLogoError(event: any) {
+  onLogoError(event: Event) {
     console.log('Error al cargar el logo en login, intentando con fallback');
     const imgElement = event.target as HTMLImageElement;
     imgElement.src = this.fallbackLogoUrl;

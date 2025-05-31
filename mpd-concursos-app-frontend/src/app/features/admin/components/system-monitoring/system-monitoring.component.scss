@@ -1,0 +1,369 @@
+@use 'src/styles/variables' as *;
+
+.system-monitoring-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: 500;
+    color: $color-text-primary;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+// Indicador de carga
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  
+  span {
+    margin-top: 1rem;
+    color: $color-primary;
+    font-weight: 500;
+  }
+}
+
+// Tarjeta de filtros
+.filter-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-bottom: 1.5rem;
+  
+  mat-card-content {
+    padding: 1.5rem;
+  }
+}
+
+// Formulario de filtros
+.filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .date-range {
+    display: flex;
+    gap: 1rem;
+    flex: 2;
+    
+    mat-form-field {
+      flex: 1;
+    }
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      flex: 1;
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+// Resumen de estado del sistema
+.system-status-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.status-card, .metric-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-sm;
+  
+  mat-card-content {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+  }
+}
+
+.status-card {
+  &.status-healthy {
+    background-color: rgba($color-success, 0.1);
+    border-left: 4px solid $color-success;
+    
+    .status-icon mat-icon {
+      color: $color-success;
+    }
+  }
+  
+  &.status-warning {
+    background-color: rgba($color-warning, 0.1);
+    border-left: 4px solid $color-warning;
+    
+    .status-icon mat-icon {
+      color: $color-warning;
+    }
+  }
+  
+  &.status-critical {
+    background-color: rgba($color-error, 0.1);
+    border-left: 4px solid $color-error;
+    
+    .status-icon mat-icon {
+      color: $color-error;
+    }
+  }
+}
+
+.status-icon, .metric-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba($color-primary, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  
+  mat-icon {
+    color: $color-primary;
+    font-size: 24px;
+  }
+}
+
+.status-info, .metric-info {
+  flex: 1;
+}
+
+.status-title, .metric-title {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: 0.25rem;
+}
+
+.status-value, .metric-value {
+  font-size: $font-size-lg;
+  font-weight: 500;
+  color: $color-text-primary;
+}
+
+// Alertas activas
+.active-alerts {
+  margin-bottom: 1.5rem;
+  
+  h2 {
+    font-size: $font-size-lg;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: $color-text-primary;
+  }
+}
+
+.alerts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.alert-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-sm;
+  
+  &.alert-info {
+    background-color: rgba($color-info, 0.1);
+    border-left: 4px solid $color-info;
+    
+    .alert-icon mat-icon {
+      color: $color-info;
+    }
+  }
+  
+  &.alert-warning {
+    background-color: rgba($color-warning, 0.1);
+    border-left: 4px solid $color-warning;
+    
+    .alert-icon mat-icon {
+      color: $color-warning;
+    }
+  }
+  
+  &.alert-error {
+    background-color: rgba($color-error, 0.1);
+    border-left: 4px solid $color-error;
+    
+    .alert-icon mat-icon {
+      color: $color-error;
+    }
+  }
+  
+  &.alert-critical {
+    background-color: rgba(#f44336, 0.1);
+    border-left: 4px solid #f44336;
+    
+    .alert-icon mat-icon {
+      color: #f44336;
+    }
+  }
+  
+  mat-card-content {
+    padding: 1.5rem;
+  }
+}
+
+.alert-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.alert-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba($color-surface, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  
+  mat-icon {
+    font-size: 20px;
+  }
+}
+
+.alert-info {
+  flex: 1;
+}
+
+.alert-title {
+  font-weight: 500;
+  color: $color-text-primary;
+  margin-bottom: 0.25rem;
+}
+
+.alert-timestamp {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.alert-details {
+  margin-bottom: 0.75rem;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.alert-metrics {
+  margin-bottom: 0.75rem;
+}
+
+.alert-metric {
+  font-size: $font-size-sm;
+  margin-bottom: 0.25rem;
+  
+  .metric-name {
+    font-weight: 500;
+    margin-right: 0.25rem;
+  }
+  
+  .metric-value {
+    margin-right: 0.25rem;
+  }
+  
+  .metric-threshold {
+    color: $color-text-secondary;
+  }
+}
+
+.alert-actions {
+  display: flex;
+  justify-content: flex-end;
+  
+  .alert-status {
+    display: flex;
+    align-items: center;
+    color: $color-success;
+    font-size: $font-size-sm;
+    
+    mat-icon {
+      font-size: 16px;
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+// Tarjeta de contenido
+.content-card {
+  border-radius: $border-radius;
+  box-shadow: $box-shadow;
+  margin-bottom: 2rem;
+  
+  mat-card-content {
+    padding: 0;
+  }
+}
+
+// Contenido de pestañas
+.tab-content {
+  padding: 1.5rem;
+}
+
+// Estilos para el mat-tab-group
+::ng-deep .mat-mdc-tab-header {
+  padding: 0 1rem;
+}
+
+::ng-deep .mat-mdc-tab-labels {
+  background-color: $color-surface;
+}
+
+::ng-deep .mat-mdc-tab-label-active {
+  opacity: 1;
+}
+
+::ng-deep .mat-mdc-tab-label-content {
+  font-weight: 500;
+}
+
+// Estilos para los botones
+::ng-deep .mat-mdc-raised-button.mat-primary {
+  background-color: $color-primary;
+}
+
+::ng-deep .mat-mdc-stroked-button {
+  border-color: $color-border;
+  
+  &:hover {
+    background-color: rgba($color-primary, 0.1);
+  }
+}

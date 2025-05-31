@@ -24,9 +24,9 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
     return SecurityViolationType.FULLSCREEN_REQUIRED;
   }
 
-  handleViolation(details?: any): void {
+  handleViolation(details?: unknown): void {
     // Solo manejamos violaciones cuando estamos en estado ACTIVE o EXITING
-    if (this.currentState === FullscreenState.ACTIVE || 
+    if (this.currentState === FullscreenState.ACTIVE ||
         this.currentState === FullscreenState.EXITING) {
       console.log('Violación de pantalla completa detectada:', details);
     }
@@ -39,23 +39,23 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
   // Método para comprobar si el navegador soporta pantalla completa
   checkFullscreenSupport(): boolean {
     const docElm = document.documentElement;
-    
+
     // Comprobamos las diferentes API de pantalla completa según el navegador
-    const fullscreenEnabled = document.fullscreenEnabled || 
-                            (document as any).webkitFullscreenEnabled || 
-                            (document as any).mozFullScreenEnabled ||
-                            (document as any).msFullscreenEnabled;
-    
+    const fullscreenEnabled = document.fullscreenEnabled ||
+                            (document as Document & { webkitFullscreenEnabled?: boolean }).webkitFullscreenEnabled ||
+                            (document as Document & { mozFullScreenEnabled?: boolean }).mozFullScreenEnabled ||
+                            (document as Document & { msFullscreenEnabled?: boolean }).msFullscreenEnabled;
+
     const requestFullscreen = docElm.requestFullscreen ||
-                            (docElm as any).webkitRequestFullscreen ||
-                            (docElm as any).mozRequestFullScreen ||
-                            (docElm as any).msRequestFullscreen;
-    
+                            (docElm as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> }).webkitRequestFullscreen ||
+                            (docElm as HTMLElement & { mozRequestFullScreen?: () => Promise<void> }).mozRequestFullScreen ||
+                            (docElm as HTMLElement & { msRequestFullscreen?: () => Promise<void> }).msRequestFullscreen;
+
     console.log('Soporte de pantalla completa:', {
       fullscreenEnabled,
       requestFullscreenExists: !!requestFullscreen
     });
-    
+
     return !!fullscreenEnabled && !!requestFullscreen;
   }
 
@@ -66,7 +66,7 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
         console.error('Este navegador no soporta la API de pantalla completa');
         throw new Error('Navegador no compatible con pantalla completa');
       }
-      
+
       // Si ya estamos en estado ACTIVE, no hacemos nada
       if (this.currentState === FullscreenState.ACTIVE) {
         console.log('Ya estamos en pantalla completa, no se hace nada');
@@ -74,20 +74,20 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
       }
 
       console.log(`Activando pantalla completa. Estado actual: ${this.currentState}`);
-      
+
       // Cambiamos al estado ENTERING
       this.currentState = FullscreenState.ENTERING;
       console.log('Estado cambiado a ENTERING');
-      
+
       const element = document.documentElement;
-      
+
       // Verificamos si ya estamos en pantalla completa
       if (!document.fullscreenElement) {
         console.log('Solicitando pantalla completa desde la estrategia...');
         try {
           await element.requestFullscreen();
           console.log('Pantalla completa activada exitosamente desde la estrategia');
-          
+
           // Después de la activación exitosa, cambiamos a ACTIVE
           this.currentState = FullscreenState.ACTIVE;
           console.log('Estado actualizado a ACTIVE');
@@ -101,7 +101,7 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
         this.currentState = FullscreenState.ACTIVE;
         console.log('Estado actualizado a ACTIVE');
       }
-      
+
       return Promise.resolve();
     } catch (error) {
       console.error('Error en método activate de FullscreenStrategy:', error);
@@ -119,7 +119,7 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
 
   async handleFullscreenChange(isInFullscreen: boolean): Promise<boolean> {
     console.log(`Manejando cambio de pantalla completa. Estado actual: ${this.currentState}, ¿Está en pantalla completa?: ${isInFullscreen}`);
-    
+
     // Si estamos en estado INITIAL o ENTERING, significa que estamos en el proceso de
     // activar la pantalla completa inicialmente, por lo que no deberíamos generar warning o violación
     switch (this.currentState) {
@@ -157,7 +157,7 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
           return false;
         }
         break;
-        
+
       case FullscreenState.VIOLATED:
         if (isInFullscreen) {
           // El usuario volvió a la pantalla completa después de una violación
@@ -175,7 +175,7 @@ export class FullscreenStrategy extends BaseSecurityStrategy implements ISecurit
   }
 
   isInInitialPhase(): boolean {
-    return this.currentState === FullscreenState.INITIAL || 
+    return this.currentState === FullscreenState.INITIAL ||
            this.currentState === FullscreenState.ENTERING;
   }
 }

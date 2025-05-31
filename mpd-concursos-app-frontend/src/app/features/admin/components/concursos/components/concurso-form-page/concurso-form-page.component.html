@@ -1,0 +1,217 @@
+<div class="concurso-form-page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Crear Nuevo Concurso</h1>
+      <p class="page-subtitle">Complete la información del concurso</p>
+    </div>
+    <div class="header-actions">
+      <app-custom-button
+        [label]="'Cancelar'"
+        [color]="'warn'"
+        [variant]="'stroked'"
+        (buttonClick)="onCancel()">
+      </app-custom-button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <app-custom-spinner [size]="'medium'"></app-custom-spinner>
+    <p>Cargando opciones...</p>
+  </div>
+
+  <!-- Form Content -->
+  <div *ngIf="!isLoading" class="form-content">
+    <app-custom-card>
+      <form [formGroup]="concursoForm" (ngSubmit)="onSubmit()" class="concurso-form">
+
+        <app-custom-tabs>
+          <!-- Tab 1: Información Básica -->
+          <app-custom-tab [label]="'Información Básica'" [icon]="'info-circle'">
+            <div class="form-section">
+              <div class="form-row">
+                <div class="form-field full-width">
+                  <app-custom-form-field
+                    [label]="'Título del Concurso'"
+                    [required]="true"
+                    [type]="'text'"
+                    [placeholder]="'Ingrese el título del concurso'"
+                    [errorMessage]="isFieldInvalid('title') ? getFieldError('title') : ''"
+                    formControlName="title">
+                  </app-custom-form-field>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field full-width">
+                  <app-custom-textarea
+                    [label]="'Descripción'"
+                    [required]="false"
+                    [placeholder]="'Descripción detallada del concurso'"
+                    [rows]="4"
+                    formControlName="description">
+                  </app-custom-textarea>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field half-width">
+                  <app-custom-form-field
+                    [label]="'Cargo'"
+                    [required]="true"
+                    [type]="'text'"
+                    [placeholder]="'Cargo a concursar'"
+                    [errorMessage]="isFieldInvalid('position') ? getFieldError('position') : ''"
+                    formControlName="position">
+                  </app-custom-form-field>
+                </div>
+
+                <div class="form-field half-width">
+                  <app-custom-select
+                    [label]="'Categoría'"
+                    [required]="true"
+                    [options]="categoryOptions"
+                    [placeholder]="'Seleccione una categoría'"
+                    formControlName="category">
+                  </app-custom-select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field half-width">
+                  <app-custom-select
+                    [label]="'Departamento'"
+                    [required]="true"
+                    [options]="departmentOptions"
+                    [placeholder]="'Seleccione un departamento'"
+                    formControlName="department">
+                  </app-custom-select>
+                </div>
+
+                <div class="form-field half-width">
+                  <app-custom-form-field
+                    [label]="'Dependencia'"
+                    [required]="true"
+                    [type]="'text'"
+                    [placeholder]="'Dependencia específica'"
+                    [errorMessage]="isFieldInvalid('dependencia') ? getFieldError('dependencia') : ''"
+                    formControlName="dependencia">
+                  </app-custom-form-field>
+                </div>
+              </div>
+            </div>
+          </app-custom-tab>
+
+          <!-- Tab 2: Detalles del Cargo -->
+          <app-custom-tab [label]="'Detalles del Cargo'" [icon]="'briefcase'">
+            <div class="form-section">
+              <div class="form-row">
+                <div class="form-field half-width">
+                  <app-custom-form-field
+                    [label]="'Clase'"
+                    [required]="false"
+                    [type]="'text'"
+                    [placeholder]="'Clase del cargo'"
+                    formControlName="class">
+                  </app-custom-form-field>
+                </div>
+
+                <div class="form-field half-width">
+                  <app-custom-select
+                    [label]="'Estado'"
+                    [required]="true"
+                    [options]="statusOptions"
+                    [placeholder]="'Seleccione un estado'"
+                    formControlName="status">
+                  </app-custom-select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field full-width">
+                  <app-custom-textarea
+                    [label]="'Funciones'"
+                    [required]="false"
+                    [placeholder]="'Descripción de las funciones del cargo'"
+                    [rows]="4"
+                    formControlName="functions">
+                  </app-custom-textarea>
+                </div>
+              </div>
+            </div>
+          </app-custom-tab>
+
+          <!-- Tab 3: Fechas y Enlaces -->
+          <app-custom-tab [label]="'Fechas y Enlaces'" [icon]="'calendar-alt'">
+            <div class="form-section">
+              <div class="form-row">
+                <div class="form-field half-width">
+                  <app-custom-datepicker
+                    [label]="'Fecha de Inicio'"
+                    [required]="true"
+                    [placeholder]="'Seleccione fecha de inicio'"
+                    formControlName="startDate">
+                  </app-custom-datepicker>
+                </div>
+
+                <div class="form-field half-width">
+                  <app-custom-datepicker
+                    [label]="'Fecha de Fin'"
+                    [required]="true"
+                    [placeholder]="'Seleccione fecha de fin'"
+                    formControlName="endDate">
+                  </app-custom-datepicker>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field full-width">
+                  <app-custom-form-field
+                    [label]="'URL de Términos y Condiciones'"
+                    [required]="false"
+                    [type]="'url'"
+                    [placeholder]="'https://ejemplo.com/terminos'"
+                    formControlName="termsUrl">
+                  </app-custom-form-field>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field full-width">
+                  <app-custom-form-field
+                    [label]="'URL del Perfil del Cargo'"
+                    [required]="false"
+                    [type]="'url'"
+                    [placeholder]="'https://ejemplo.com/perfil'"
+                    formControlName="profileUrl">
+                  </app-custom-form-field>
+                </div>
+              </div>
+            </div>
+          </app-custom-tab>
+        </app-custom-tabs>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <app-custom-button
+            [label]="'Cancelar'"
+            [color]="'warn'"
+            [variant]="'stroked'"
+            [disabled]="isSubmitting"
+            (buttonClick)="onCancel()">
+          </app-custom-button>
+
+          <app-custom-button
+            [label]="isSubmitting ? 'Creando...' : 'Crear Concurso'"
+            [color]="'primary'"
+            [variant]="'flat'"
+            [disabled]="!concursoForm.valid || isSubmitting"
+            [loading]="isSubmitting"
+            type="submit">
+          </app-custom-button>
+        </div>
+      </form>
+    </app-custom-card>
+  </div>
+</div>

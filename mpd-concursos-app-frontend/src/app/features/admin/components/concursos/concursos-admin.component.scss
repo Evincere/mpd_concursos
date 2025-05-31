@@ -1,0 +1,1104 @@
+// Importar variables globales para consistencia visual
+@import '../../../../../styles/variables';
+
+// Contenedor principal
+.concursos-admin-container {
+  padding: $spacing-lg;
+  background-color: $color-background;
+  min-height: 100vh;
+  position: relative;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-xl;
+    padding: $spacing-xl;
+    background: linear-gradient(135deg, rgba($color-surface-light, 0.9) 0%, rgba($color-surface, 1) 100%);
+    border-radius: $border-radius-lg;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba($color-border, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    .header-content {
+      flex: 1;
+
+      h1 {
+        margin: 0;
+        color: $color-text-primary;
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header-subtitle {
+        color: $color-text-secondary;
+        font-size: $font-size-md;
+        margin-top: $spacing-sm;
+        font-weight: 400;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: $spacing-md;
+      align-items: center;
+      flex-wrap: wrap;
+
+      .view-toggle {
+        display: flex;
+        gap: 0;
+        background: rgba($color-surface-dark, 0.8);
+        border-radius: 8px;
+        padding: 4px;
+        margin-right: $spacing-lg;
+        border: 1px solid rgba($color-border, 0.6);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+        app-custom-button {
+          ::ng-deep .custom-button {
+            min-width: 44px;
+            height: 36px;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: $transition-default;
+            border: none;
+            font-weight: 500;
+
+            &:disabled {
+              background-color: $color-primary;
+              color: white;
+              opacity: 1;
+              cursor: default;
+              box-shadow: 0 2px 6px rgba($color-primary, 0.25);
+            }
+
+            &:not(:disabled) {
+              background-color: transparent;
+              color: rgba($color-text-secondary, 0.9);
+
+              &:hover {
+                background-color: rgba($color-primary, 0.2);
+                color: $color-primary;
+              }
+            }
+          }
+        }
+      }
+
+      app-custom-button {
+        ::ng-deep .custom-button {
+          font-weight: 500;
+          padding: $spacing-sm $spacing-lg;
+          border-radius: 8px;
+          transition: $transition-default;
+
+          &:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Formulario de filtros
+app-custom-card {
+  margin-bottom: $spacing-xl;
+
+  ::ng-deep .custom-card {
+    background: rgba($color-surface, 0.95);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba($color-border, 0.6);
+    border-radius: $border-radius-lg;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+
+    .card-content {
+      padding: $spacing-xl;
+      background: linear-gradient(135deg, rgba($color-surface-light, 0.1) 0%, transparent 100%);
+    }
+  }
+}
+
+.filter-form {
+  .filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: $spacing-xl;
+    margin-bottom: $spacing-xl;
+
+    &:last-of-type {
+      margin-bottom: $spacing-lg;
+    }
+
+    .date-range {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: $spacing-md;
+    }
+
+    // Mejorar apariencia de los campos de filtro
+    app-custom-form-field,
+    app-custom-select,
+    app-custom-datepicker {
+      ::ng-deep {
+        .form-field-container {
+          margin-bottom: 0;
+        }
+
+        .form-field-label {
+          font-weight: 600;
+          color: $color-text-primary;
+          margin-bottom: $spacing-sm;
+          font-size: $font-size-md;
+          letter-spacing: 0.025em;
+        }
+
+        .form-control {
+          border-radius: 8px;
+          border: 1.5px solid rgba($color-border, 0.8);
+          padding: $spacing-sm $spacing-md;
+          font-size: $font-size-md;
+          transition: $transition-default;
+          background: rgba($color-surface-dark, 0.8);
+          color: $color-text-primary;
+
+          &:focus {
+            border-color: $color-primary;
+            box-shadow: 0 0 0 3px rgba($color-primary, 0.3);
+            background: rgba($color-surface-dark, 0.9);
+            outline: none;
+          }
+
+          &:hover:not(:focus) {
+            border-color: rgba($color-border, 1);
+            background: rgba($color-surface-dark, 0.9);
+          }
+
+          &::placeholder {
+            color: rgba($color-text-secondary, 0.8);
+          }
+        }
+
+        .select-trigger {
+          border-radius: 8px;
+          border: 1.5px solid rgba($color-border, 0.8);
+          padding: $spacing-sm $spacing-md;
+          background: rgba($color-surface-dark, 0.8);
+          transition: $transition-default;
+          color: $color-text-primary;
+
+          &:hover:not(.select-open) {
+            border-color: rgba($color-border, 1);
+            background: rgba($color-surface-dark, 0.9);
+          }
+
+          &.select-open {
+            border-color: $color-primary;
+            box-shadow: 0 0 0 3px rgba($color-primary, 0.3);
+            background: rgba($color-surface-dark, 0.9);
+          }
+        }
+
+        // Mejorar el dropdown de opciones
+        .select-dropdown {
+          background: rgba($color-surface, 0.95);
+          border: 1px solid rgba($color-border, 0.8);
+          border-radius: 8px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(8px);
+
+          .select-option {
+            color: $color-text-primary;
+            padding: $spacing-sm $spacing-md;
+            transition: $transition-default;
+
+            &:hover {
+              background: rgba($color-primary, 0.2);
+              color: $color-text-primary;
+            }
+
+            &.selected {
+              background: rgba($color-primary, 0.3);
+              color: $color-text-primary;
+              font-weight: 600;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: $spacing-lg;
+    border-top: 1px solid rgba($color-border, 0.4);
+
+    app-custom-button {
+      ::ng-deep .custom-button {
+        padding: $spacing-sm $spacing-lg;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: $transition-default;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+  }
+}
+
+// Contenedor de concursos
+.concursos-container {
+  position: relative;
+  min-height: 400px;
+}
+
+// Loading overlay
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba($color-surface, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: $border-radius-lg;
+
+  .loading-content {
+    text-align: center;
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba($color-primary, 0.2);
+      border-top: 3px solid $color-primary;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto $spacing-md;
+    }
+
+    .loading-text {
+      color: $color-text-primary;
+      font-size: $font-size-sm;
+      margin: 0;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// Vista de tarjetas
+.concursos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: $spacing-lg;
+  padding: $spacing-md;
+
+  .concurso-card {
+    background: linear-gradient(135deg, rgba($color-surface-light, 0.9) 0%, rgba($color-surface, 1) 100%);
+    border-radius: $border-radius-lg;
+    border: 1px solid rgba($color-border, 0.6);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: $transition-default;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      border-color: rgba($color-primary, 0.5);
+    }
+
+    .card-header {
+      padding: $spacing-lg;
+      border-bottom: 1px solid rgba($color-border, 0.4);
+      background: linear-gradient(135deg, rgba($color-primary, 0.1) 0%, transparent 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .concurso-id {
+        font-size: $font-size-sm;
+        font-weight: 600;
+        color: $color-text-secondary;
+        background: rgba($color-primary, 0.1);
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-sm;
+        border: 1px solid rgba($color-primary, 0.3);
+      }
+
+      .card-title {
+        font-size: $font-size-lg;
+        font-weight: 700;
+        color: $color-text-primary;
+        margin: 0 0 $spacing-sm 0;
+        line-height: 1.3;
+      }
+
+      .card-subtitle {
+        color: $color-text-secondary;
+        font-size: $font-size-sm;
+        margin: 0;
+        font-weight: 500;
+      }
+    }
+
+    .card-content {
+      padding: $spacing-lg;
+
+      .concurso-title {
+        font-size: $font-size-lg;
+        font-weight: 700;
+        color: $color-text-primary;
+        margin: 0 0 $spacing-sm 0;
+        line-height: 1.3;
+      }
+
+      .concurso-position {
+        font-size: $font-size-md;
+        font-weight: 600;
+        color: $color-primary;
+        margin: 0 0 $spacing-xs 0;
+      }
+
+      .concurso-department {
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+        margin: 0 0 $spacing-md 0;
+        font-weight: 500;
+      }
+
+      .concurso-meta {
+        display: grid;
+        gap: $spacing-sm;
+        margin-top: $spacing-md;
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          font-size: $font-size-sm;
+          color: $color-text-secondary;
+
+          i {
+            color: $color-primary;
+            font-size: 1rem;
+            width: 16px;
+            text-align: center;
+          }
+
+          span {
+            font-weight: 500;
+          }
+        }
+      }
+
+      .concurso-info {
+        display: grid;
+        gap: $spacing-md;
+
+        .info-item {
+          display: flex;
+          align-items: flex-start;
+          gap: $spacing-sm;
+
+          .info-icon {
+            color: $color-primary;
+            font-size: 1.1rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+          }
+
+          .info-content {
+            flex: 1;
+
+            .info-label {
+              font-size: $font-size-xs;
+              color: $color-text-secondary;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              font-weight: 600;
+              margin-bottom: 2px;
+            }
+
+            .info-value {
+              color: $color-text-primary;
+              font-size: $font-size-sm;
+              font-weight: 500;
+              line-height: 1.4;
+            }
+          }
+        }
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: $spacing-xs;
+        padding: $spacing-xs $spacing-sm;
+        border-radius: 20px;
+        font-size: $font-size-xs;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: $spacing-md;
+
+        &.status-draft {
+          background: rgba($color-warning, 0.2);
+          color: $color-warning;
+          border: 1px solid rgba($color-warning, 0.4);
+        }
+
+        &.status-published {
+          background: rgba($color-success, 0.2);
+          color: $color-success;
+          border: 1px solid rgba($color-success, 0.4);
+        }
+
+        &.status-closed {
+          background: rgba($color-error, 0.2);
+          color: $color-error;
+          border: 1px solid rgba($color-error, 0.4);
+        }
+
+        &.status-archived {
+          background: rgba($color-text-secondary, 0.2);
+          color: $color-text-secondary;
+          border: 1px solid rgba($color-text-secondary, 0.4);
+        }
+      }
+    }
+
+    .card-actions {
+      padding: $spacing-sm $spacing-md;
+      border-top: 1px solid rgba($color-border, 0.4);
+      background: rgba($color-surface-dark, 0.3);
+      display: flex;
+      gap: $spacing-xs;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+
+      app-custom-button {
+        ::ng-deep .custom-button {
+          padding: 8px !important;
+          border-radius: $border-radius-sm !important;
+          font-size: 14px !important;
+          min-width: 36px !important;
+          height: 36px !important;
+          width: 36px !important;
+          border: 1px solid transparent !important;
+          transition: $transition-default !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+
+          // Estilos específicos por color - usando las clases reales del CustomButton para variante icon
+          &.primary.icon {
+            background: rgba($color-primary, 0.15) !important;
+            color: $color-primary !important;
+            border-color: rgba($color-primary, 0.3) !important;
+
+            &:hover:not(:disabled) {
+              background: $color-primary !important;
+              color: white !important;
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba($color-primary, 0.4);
+            }
+          }
+
+          &.accent.icon {
+            background: rgba($color-accent, 0.15) !important;
+            color: $color-accent !important;
+            border-color: rgba($color-accent, 0.3) !important;
+
+            &:hover:not(:disabled) {
+              background: $color-accent !important;
+              color: white !important;
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba($color-accent, 0.4);
+            }
+          }
+
+          &.danger.icon {
+            background: rgba($color-danger, 0.15) !important;
+            color: $color-danger !important;
+            border-color: rgba($color-danger, 0.3) !important;
+
+            &:hover:not(:disabled) {
+              background: $color-danger !important;
+              color: white !important;
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba($color-danger, 0.4);
+            }
+          }
+
+          &.warn.icon {
+            background: rgba($color-warning, 0.15) !important;
+            color: $color-warning !important;
+            border-color: rgba($color-warning, 0.3) !important;
+
+            &:hover:not(:disabled) {
+              background: $color-warning !important;
+              color: white !important;
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba($color-warning, 0.4);
+            }
+          }
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+          }
+
+          // Iconos en botones
+          i {
+            margin: 0 !important;
+            font-size: 16px !important;
+            line-height: 1 !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Vista de tabla - Estilos específicos para concursos admin
+.concursos-admin-container .table-container {
+  background: rgba($color-surface, 0.95);
+  border-radius: $border-radius-lg;
+  border: 1px solid rgba($color-border, 0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  overflow-x: auto;
+  overflow-y: hidden;
+  backdrop-filter: blur(8px);
+  width: 100%;
+  max-width: 100%;
+
+  // Scroll horizontal suave
+  scrollbar-width: thin;
+  scrollbar-color: rgba($color-primary, 0.5) rgba($color-surface-dark, 0.3);
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($color-surface-dark, 0.3);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($color-primary, 0.5);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba($color-primary, 0.7);
+    }
+  }
+}
+
+// ESTILOS FORZADOS PARA BOTONES DE ACCIÓN - SOLUCIÓN TEMPORAL
+.action-buttons {
+  display: flex !important;
+  gap: 4px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 4px !important;
+  min-height: 40px !important;
+
+  app-custom-button {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    .custom-button {
+      display: flex !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      padding: 6px !important;
+      min-width: 28px !important;
+      height: 28px !important;
+      width: 28px !important;
+      border-radius: 6px !important;
+      font-size: 12px !important;
+      transition: all 0.2s ease !important;
+      border: 1px solid rgba($color-border, 0.3) !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      background: rgba($color-surface-light, 0.9) !important;
+      color: $color-text-secondary !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+
+      // Colores base según función (visibles inmediatamente)
+      &.primary.icon {
+        background: rgba(#1976D2, 0.15) !important;
+        color: #1976D2 !important;
+        border-color: rgba(#1976D2, 0.4) !important;
+      }
+
+      &.accent.icon {
+        background: rgba(#4CAF50, 0.15) !important;
+        color: #4CAF50 !important;
+        border-color: rgba(#4CAF50, 0.4) !important;
+      }
+
+      &.danger.icon {
+        background: rgba(#f44336, 0.15) !important;
+        color: #f44336 !important;
+        border-color: rgba(#f44336, 0.4) !important;
+      }
+
+      &.warn.icon {
+        background: rgba(#FF9800, 0.15) !important;
+        color: #FF9800 !important;
+        border-color: rgba(#FF9800, 0.4) !important;
+      }
+
+      // Hover con colores sólidos
+      &:hover:not(:disabled) {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15) !important;
+      }
+
+      &.primary.icon:hover:not(:disabled) {
+        background: #1976D2 !important;
+        color: white !important;
+        border-color: #1976D2 !important;
+        box-shadow: 0 3px 8px rgba(#1976D2, 0.4) !important;
+      }
+
+      &.accent.icon:hover:not(:disabled) {
+        background: #4CAF50 !important;
+        color: white !important;
+        border-color: #4CAF50 !important;
+        box-shadow: 0 3px 8px rgba(#4CAF50, 0.4) !important;
+      }
+
+      &.danger.icon:hover:not(:disabled) {
+        background: #f44336 !important;
+        color: white !important;
+        border-color: #f44336 !important;
+        box-shadow: 0 3px 8px rgba(#f44336, 0.4) !important;
+      }
+
+      &.warn.icon:hover:not(:disabled) {
+        background: #FF9800 !important;
+        color: white !important;
+        border-color: #FF9800 !important;
+        box-shadow: 0 3px 8px rgba(#FF9800, 0.4) !important;
+      }
+
+      &:disabled {
+        opacity: 0.4 !important;
+        cursor: not-allowed !important;
+        background: rgba($color-surface-dark, 0.3) !important;
+        color: $color-text-disabled !important;
+
+        &:hover {
+          transform: none !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+        }
+      }
+
+      i {
+        font-size: 12px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        display: block !important;
+        visibility: visible !important;
+      }
+    }
+  }
+}
+
+// Aplicar también con ng-deep para mayor especificidad
+.concursos-admin-container {
+  ::ng-deep .action-buttons {
+    display: flex !important;
+    gap: 4px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 4px !important;
+    min-height: 40px !important;
+
+    app-custom-button {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+
+      .custom-button {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: rgba($color-surface-light, 0.9) !important;
+        color: $color-text-secondary !important;
+        border: 1px solid rgba($color-border, 0.3) !important;
+        padding: 6px !important;
+        min-width: 28px !important;
+        height: 28px !important;
+        border-radius: 6px !important;
+
+        // Colores representativos inmediatos
+        &.primary.icon {
+          background: rgba(#1976D2, 0.15) !important;
+          color: #1976D2 !important;
+          border-color: rgba(#1976D2, 0.4) !important;
+        }
+
+        &.accent.icon {
+          background: rgba(#4CAF50, 0.15) !important;
+          color: #4CAF50 !important;
+          border-color: rgba(#4CAF50, 0.4) !important;
+        }
+
+        &.danger.icon {
+          background: rgba(#f44336, 0.15) !important;
+          color: #f44336 !important;
+          border-color: rgba(#f44336, 0.4) !important;
+        }
+
+        &.warn.icon {
+          background: rgba(#FF9800, 0.15) !important;
+          color: #FF9800 !important;
+          border-color: rgba(#FF9800, 0.4) !important;
+        }
+      }
+    }
+  }
+}
+
+
+
+// Paginación
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-xl;
+  padding: $spacing-lg;
+  background: rgba($color-surface, 0.95);
+  border-radius: $border-radius-lg;
+  border: 1px solid rgba($color-border, 0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+
+  .pagination-info {
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+    font-weight: 500;
+
+    .highlight {
+      color: $color-text-primary;
+      font-weight: 700;
+    }
+  }
+
+  .pagination-controls {
+    display: flex;
+    gap: $spacing-sm;
+    align-items: center;
+
+    .page-info {
+      color: $color-text-primary;
+      font-size: $font-size-sm;
+      font-weight: 600;
+      margin: 0 $spacing-md;
+      padding: $spacing-xs $spacing-sm;
+      background: rgba($color-primary, 0.1);
+      border-radius: $border-radius-sm;
+      border: 1px solid rgba($color-primary, 0.3);
+    }
+
+    app-custom-button {
+      ::ng-deep .custom-button {
+        padding: $spacing-xs $spacing-md;
+        border-radius: 6px;
+        font-size: $font-size-sm;
+        font-weight: 500;
+        transition: $transition-default;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+      }
+    }
+
+    .page-size-selector {
+      margin-left: $spacing-lg;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      label {
+        color: $color-text-secondary;
+        font-size: $font-size-sm;
+        font-weight: 500;
+      }
+
+      select {
+        padding: $spacing-xs $spacing-sm;
+        border-radius: 6px;
+        border: 1.5px solid rgba($color-border, 0.8);
+        background: rgba($color-surface-dark, 0.8);
+        color: $color-text-primary;
+        font-size: $font-size-sm;
+        transition: $transition-default;
+
+        &:focus {
+          border-color: $color-primary;
+          box-shadow: 0 0 0 3px rgba($color-primary, 0.3);
+          outline: none;
+        }
+
+        &:hover:not(:focus) {
+          border-color: rgba($color-border, 1);
+        }
+      }
+    }
+  }
+}
+
+// Estado vacío
+.empty-state {
+  text-align: center;
+  padding: $spacing-xl * 2;
+  color: $color-text-secondary;
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: $spacing-lg;
+    opacity: 0.6;
+  }
+
+  .empty-title {
+    font-size: $font-size-lg;
+    font-weight: 600;
+    color: $color-text-primary;
+    margin-bottom: $spacing-sm;
+  }
+
+  .empty-message {
+    font-size: $font-size-md;
+    line-height: 1.5;
+    max-width: 400px;
+    margin: 0 auto $spacing-lg;
+  }
+
+  app-custom-button {
+    ::ng-deep .custom-button {
+      padding: $spacing-sm $spacing-lg;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: $transition-default;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+    }
+  }
+}
+
+// Responsividad de tabla optimizada - SIN DEPENDENCIA Y CATEGORÍA
+.concursos-admin-container .table-container {
+  // Tabla optimizada para monitores estándar sin scroll horizontal
+  ::ng-deep .custom-table {
+    min-width: 1060px;  // Reducido significativamente
+    width: 100%;
+    table-layout: fixed;
+
+    // Nueva distribución de columnas (6 columnas en total)
+    th:nth-child(1), td:nth-child(1) { width: 60px; }     // ID
+    th:nth-child(2), td:nth-child(2) { width: 350px; }    // Título (más espacio)
+    th:nth-child(3), td:nth-child(3) { width: 220px; }    // Cargo (más espacio)
+    th:nth-child(4), td:nth-child(4) { width: 200px; }    // Fechas
+    th:nth-child(5), td:nth-child(5) { width: 130px; }    // Estado
+    th:nth-child(6), td:nth-child(6) { width: 160px; }    // Acciones
+
+    // Asegurar que las celdas de acciones sean visibles
+    td:nth-child(6) {  // Ahora es la columna 6 en lugar de 8
+      padding: 8px 12px !important;
+      text-align: center !important;
+      vertical-align: middle !important;
+      overflow: visible !important;
+    }
+
+    // Mejorar el texto en columnas de contenido
+    td:nth-child(2) { // Título
+      padding: 12px 8px !important;
+
+      .title-cell {
+        strong {
+          display: block;
+          font-weight: 600;
+          color: $color-text-primary;
+          margin-bottom: 4px;
+          line-height: 1.3;
+        }
+
+        small {
+          display: block;
+          color: $color-text-secondary;
+          font-size: 11px;
+          line-height: 1.2;
+          opacity: 0.8;
+        }
+      }
+    }
+
+    td:nth-child(3) { // Cargo
+      padding: 12px 8px !important;
+      font-weight: 500;
+      color: $color-text-primary;
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .concursos-admin-container {
+    padding: $spacing-md;
+
+    .page-header {
+      flex-direction: column;
+      gap: $spacing-lg;
+      text-align: center;
+
+      .header-actions {
+        justify-content: center;
+        width: 100%;
+      }
+    }
+
+    // Ajustar tabla para pantallas medianas
+    .table-container ::ng-deep .custom-table {
+      min-width: 900px;  // Reducido para pantallas medianas
+
+      // Ajustar anchos en pantallas medianas
+      th:nth-child(2), td:nth-child(2) { width: 280px; }    // Título
+      th:nth-child(3), td:nth-child(3) { width: 180px; }    // Cargo
+      th:nth-child(4), td:nth-child(4) { width: 160px; }    // Fechas
+    }
+  }
+
+  .concursos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: $spacing-lg;
+  }
+}
+
+@media (max-width: 768px) {
+  .concursos-admin-container {
+    padding: $spacing-sm;
+
+    .page-header {
+      padding: $spacing-lg;
+
+      .header-actions {
+        flex-direction: column;
+        gap: $spacing-md;
+
+        .view-toggle {
+          margin-right: 0;
+          margin-bottom: $spacing-sm;
+        }
+      }
+    }
+
+    // Tabla compacta para móviles
+    .table-container ::ng-deep .custom-table {
+      min-width: 700px;  // Mínimo para móviles
+
+      // Anchos compactos para móvil
+      th:nth-child(1), td:nth-child(1) { width: 40px; }     // ID
+      th:nth-child(2), td:nth-child(2) { width: 200px; }    // Título
+      th:nth-child(3), td:nth-child(3) { width: 140px; }    // Cargo
+      th:nth-child(4), td:nth-child(4) { width: 140px; }    // Fechas
+      th:nth-child(5), td:nth-child(5) { width: 80px; }     // Estado
+      th:nth-child(6), td:nth-child(6) { width: 100px; }    // Acciones
+
+      th, td {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+      }
+    }
+  }
+
+  .filter-form .filter-row {
+    grid-template-columns: 1fr;
+    gap: $spacing-lg;
+
+    .date-range {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .concursos-grid {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    gap: $spacing-md;
+    text-align: center;
+
+    .pagination-controls {
+      justify-content: center;
+
+      .page-size-selector {
+        margin-left: 0;
+        margin-top: $spacing-sm;
+      }
+    }
+  }
+}
+
+// Mejoras de accesibilidad
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Focus visible para navegación por teclado
+.concurso-card:focus-visible,
+app-custom-button:focus-visible,
+.sortable:focus-visible {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
+
+// Mejoras para modo de alto contraste
+@media (prefers-contrast: high) {
+  .concurso-card,
+  .concursos-table,
+  app-custom-card ::ng-deep .custom-card {
+    border-width: 2px;
+    border-color: $color-text-primary;
+  }
+
+  .status-badge {
+    border-width: 2px;
+  }
+}

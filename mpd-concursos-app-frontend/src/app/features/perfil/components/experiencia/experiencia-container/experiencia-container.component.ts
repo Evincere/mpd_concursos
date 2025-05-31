@@ -5,8 +5,20 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { ProfileService, Experiencia } from '../../../../../core/services/profile/profile.service';
-import { ExperienceService, ExperienceRequest } from '../../../../../core/services/experience/experience.service';
-import { HttpEventType } from '@angular/common/http';
+import { ExperienceService, ExperienceRequest } from  '../../../../../core/services/experience/experience.service';
+
+// Interfaz para el objeto de experiencia que viene del backend
+interface ExperienciaBackend {
+  id?: string;
+  company: string;
+  position: string;
+  startDate: string;
+  endDate?: string;
+  description: string;
+  comments?: string;
+  documentUrl?: string;
+}
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -48,7 +60,7 @@ export enum PasoWizard {
   ]
 })
 export class ExperienciaContainerComponent implements OnInit, OnDestroy {
-  @Input() usuarioId: string = '';
+  @Input() usuarioId = '';
   @Output() experienciaGuardada = new EventEmitter<any>();
   @Output() cerrar = new EventEmitter<void>();
 
@@ -64,16 +76,16 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   infoBasicaForm: FormGroup;
   infoDetalladaForm: FormGroup;
   documentacionForm: FormGroup;
-  esNuevo: boolean = true;
+  esNuevo = true;
 
   // Variables para gestionar la carga de archivos
   archivoSeleccionado: File | null = null;
-  nombreArchivo: string = '';
-  cargandoArchivo: boolean = false;
-  progresoCarga: number = 0;
+  nombreArchivo = '';
+  cargandoArchivo = false;
+  progresoCarga = 0;
 
   // Variables para el guardado
-  guardando: boolean = false;
+  guardando = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -177,8 +189,9 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   }
 
   // Gestión de archivos
-  onArchivoSeleccionado(event: any): void {
-    const files = event.target.files;
+  onArchivoSeleccionado(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const files = target.files;
     if (files && files.length > 0) {
       this.archivoSeleccionado = files[0];
       if (this.archivoSeleccionado) {
@@ -330,20 +343,20 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (event: any) => {
-          if (event.type === 'progress') {
-            this.progresoCarga = event.progress;
+        next: (event: Record<string, any>) => {
+          if (event['type'] === 'progress') {
+            this.progresoCarga = event['progress'];
             this.cdr.markForCheck();
-          } else if (event.type === 'success') {
-            console.log('Certificado subido correctamente:', event.experience);
+          } else if (event['type'] === 'success') {
+            console.log('Certificado subido correctamente:', event['experience']);
 
             this.snackBar.open('Certificado subido correctamente', 'Cerrar', {
               duration: 3000
             });
 
             // Actualizar experiencia con la URL del documento si es necesario
-            if (event.experience && event.experience.documentUrl) {
-              console.log('URL del documento: ', event.experience.documentUrl);
+            if (event['experience'] && event['experience']['documentUrl']) {
+              console.log('URL del documento: ', event['experience']['documentUrl']);
             }
 
             this.finalizarGuardado();
@@ -453,20 +466,23 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   }
 
   // Método para mapear la respuesta del backend (en inglés) al formato del frontend (en español)
-  private mapearRespuestaBackend(experienciaBackend: any): Experiencia | null {
+  private mapearRespuestaBackend(experienciaBackend: Record<string, any>): Experiencia | null {
     if (!experienciaBackend) {
       return null;
     }
 
     return {
-      id: experienciaBackend.id,
-      empresa: experienciaBackend.company,
-      cargo: experienciaBackend.position,
-      fechaInicio: experienciaBackend.startDate ? new Date(experienciaBackend.startDate) : new Date(),
-      fechaFin: experienciaBackend.endDate ? new Date(experienciaBackend.endDate) : undefined,
-      descripcion: experienciaBackend.description,
-      comentario: experienciaBackend.comments,
-      documentUrl: experienciaBackend.documentUrl
+      id: experienciaBackend['id'],
+      empresa: experienciaBackend['company'],
+      cargo: experienciaBackend['position'],
+      puesto: experienciaBackend['position'] || experienciaBackend['cargo'] || '',
+      fechaInicio: experienciaBackend['startDate'] ? new Date(experienciaBackend['startDate']) : new Date(),
+      fechaFin: experienciaBackend['endDate'] ? new Date(experienciaBackend['endDate']) : undefined,
+      descripcion: experienciaBackend['description'],
+      comentario: experienciaBackend['comments'],
+      documentUrl: experienciaBackend['documentUrl'],
+      actual: !experienciaBackend['endDate'] || experienciaBackend['current'] || false,
+      ubicacion: experienciaBackend['location']
     };
   }
 }

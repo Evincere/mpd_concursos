@@ -1,19 +1,17 @@
 import { Injectable, Inject, NgZone } from '@angular/core';
-import { Observable, BehaviorSubject, fromEvent, merge, Subject } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
-import { SecurityViolation, SecurityViolationType, SecuritySeverity, SecurityAction } from '@core/interfaces/security/security-violation.interface';
+import { Observable, BehaviorSubject, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { SecurityViolation, SecurityViolationType, SecuritySeverity, SecurityAction, SecurityViolationDetails } from '@core/interfaces/security/security-violation.interface';
 import { ISecurityService } from '@core/interfaces/examenes/security/security.interface';
 import { ISecurityStrategy } from '@core/interfaces/examenes/security/security-strategy.interface';
 import { ICleanupService } from '@core/interfaces/examenes/cleanup/cleanup.interface';
 import { ExamenNotificationService } from '../examen-notification.service';
-
 @Injectable({
   providedIn: 'root'
 })
 export class ExamenSecurityService implements ISecurityService, ICleanupService {
   private readonly MAX_WARNINGS = 3;
   private readonly MIN_WARNING_INTERVAL = 2000;
-
   private securityStrategies: Map<SecurityViolationType, ISecurityStrategy>;
   private violations$ = new BehaviorSubject<SecurityViolation[]>([]);
   private isSecureModeActive = new BehaviorSubject<boolean>(false);
@@ -106,8 +104,10 @@ export class ExamenSecurityService implements ISecurityService, ICleanupService 
       console.log(`Estrategia registrada: ${type}`);
     }
   }
-
-  reportSecurityViolation(type: SecurityViolationType, details?: any): void {
+;
+;
+;
+  reportSecurityViolation(type: SecurityViolationType, details?: SecurityViolationDetails): void {
     const strategy = this.securityStrategies.get(type);
     if (!strategy) return;
 
@@ -121,7 +121,7 @@ export class ExamenSecurityService implements ISecurityService, ICleanupService 
     const violation: SecurityViolation = {
       type,
       timestamp: new Date().toISOString(),
-      details,
+      details: details || undefined,
       severity,
       actionTaken: this.getActionForViolation(type)
     };
@@ -188,12 +188,12 @@ export class ExamenSecurityService implements ISecurityService, ICleanupService 
     return this.securityState$.asObservable();
   }
 
-  private logViolation(type: SecurityViolationType, details?: any): void {
+  private logViolation(type: SecurityViolationType, details?: SecurityViolationDetails): void {
     const violations = this.violations$.value;
     const violation: SecurityViolation = {
       type,
       timestamp: new Date().toISOString(),
-      details,
+      details: details || undefined,
       severity: this.getViolationSeverity(type),
       actionTaken: this.getActionForViolation(type)
     };
