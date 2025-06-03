@@ -16,7 +16,7 @@
           (buttonClick)="viewMode === 'table' && toggleViewMode()">
         </app-custom-button>
         <app-custom-button
-          [icon]="'table'"
+          [icon]="'bars'"
           [variant]="'stroked'"
           [color]="viewMode === 'table' ? 'primary' : 'accent'"
           [tooltip]="'Vista de tabla'"
@@ -55,7 +55,7 @@
 
         <app-custom-select
           [label]="'Estado'"
-          [options]="statusOptions"
+          [options]="getStatusOptions()"
           formControlName="status">
         </app-custom-select>
 
@@ -176,24 +176,7 @@
             class="action-button">
           </app-custom-button>
 
-          <app-custom-button
-            #statusMenuTrigger
-            [icon]="'exchange-alt'"
-            [color]="'primary'"
-            [variant]="'icon'"
-            [tooltip]="'Cambiar estado del concurso'"
-            [appCustomMenuTrigger]="statusMenu"
-            class="action-button">
-          </app-custom-button>
 
-          <app-custom-menu #statusMenu>
-            <app-custom-menu-item
-              *ngFor="let option of statusOptions"
-              [disabled]="option.value === 'ALL' || option.value === concurso?.status"
-              (click)="changeStatus(concurso, option.value)">
-              {{option.label}}
-            </app-custom-menu-item>
-          </app-custom-menu>
 
           <app-custom-button
             [icon]="'trash'"
@@ -223,14 +206,14 @@
         (pageChange)="onPageChange($event)">
 
         <!-- Columna ID -->
-        <app-custom-table-column property="id" header="ID" [sortable]="true" width="80px">
+        <app-custom-table-column property="id" header="ID" [sortable]="true">
           <ng-template let-concurso>
             <span class="id-cell">{{concurso?.id || 'N/A'}}</span>
           </ng-template>
         </app-custom-table-column>
 
         <!-- Columna Título -->
-        <app-custom-table-column property="title" header="Título" [sortable]="true" width="350px">
+        <app-custom-table-column property="title" header="Título" [sortable]="true">
           <ng-template let-concurso>
             <div class="title-cell">
               <strong>{{concurso?.title || 'Sin título'}}</strong>
@@ -240,16 +223,14 @@
         </app-custom-table-column>
 
         <!-- Columna Cargo -->
-        <app-custom-table-column property="position" header="Cargo" [sortable]="true" width="220px">
+        <app-custom-table-column property="position" header="Cargo" [sortable]="true">
           <ng-template let-concurso>
             <span>{{concurso?.position || 'No especificado'}}</span>
           </ng-template>
         </app-custom-table-column>
 
-
-
         <!-- Columna Fechas -->
-        <app-custom-table-column property="dates" header="Fechas" width="200px">
+        <app-custom-table-column property="dates" header="Fechas">
           <ng-template let-concurso>
             <div class="dates-cell">
               <div class="date-item">
@@ -265,7 +246,7 @@
         </app-custom-table-column>
 
         <!-- Columna Estado -->
-        <app-custom-table-column property="status" header="Estado" [sortable]="true" width="130px">
+        <app-custom-table-column property="status" header="Estado" [sortable]="true">
           <ng-template let-concurso>
             <div class="status-badge" [ngClass]="getStatusClass(concurso?.status || '')">
               {{getStatusLabel(concurso?.status || '')}}
@@ -274,41 +255,44 @@
         </app-custom-table-column>
 
         <!-- Columna Acciones -->
-        <app-custom-table-column property="actions" header="Acciones" width="160px">
+        <app-custom-table-column property="actions" header="Acciones">
           <ng-template let-concurso>
-            <div class="action-buttons">
+            <div class="action-menu-container" [class.menu-open]="openMenuId === concurso.id">
               <app-custom-button
-                [icon]="'eye'"
+                [icon]="'ellipsis-v'"
                 [variant]="'icon'"
                 [color]="'primary'"
-                [tooltip]="'Ver detalles'"
-                [routerLink]="['/admin/concursos/detalle', concurso.id]">
+                [tooltip]="'Más acciones'"
+                (buttonClick)="toggleActionMenu(concurso.id, $event)">
               </app-custom-button>
 
-              <app-custom-button
-                [icon]="'edit'"
-                [variant]="'icon'"
-                [color]="'accent'"
-                [tooltip]="'Editar'"
-                (buttonClick)="editConcurso(concurso); $event.stopPropagation()">
-              </app-custom-button>
+              <!-- Menú desplegable -->
+              <div class="action-menu" *ngIf="openMenuId === concurso.id">
+                <div class="menu-item" (click)="viewConcursoDetails(concurso)">
+                  <i class="fas fa-eye menu-icon primary-icon"></i>
+                  <span>Ver detalles</span>
+                </div>
 
-              <app-custom-button
-                [icon]="'calendar-alt'"
-                [variant]="'icon'"
-                [color]="'warn'"
-                [tooltip]="'Fechas'"
-                [routerLink]="['/admin/concursos/fechas', concurso.id]">
-              </app-custom-button>
+                <div class="menu-item" (click)="editConcurso(concurso)">
+                  <i class="fas fa-edit menu-icon accent-icon"></i>
+                  <span>Editar</span>
+                </div>
 
-              <app-custom-button
-                [icon]="'trash'"
-                [variant]="'icon'"
-                [color]="'danger'"
-                [tooltip]="'Eliminar'"
-                [disabled]="concurso?.status !== 'DRAFT'"
-                (buttonClick)="deleteConcurso(concurso); $event.stopPropagation()">
-              </app-custom-button>
+                <div class="menu-item" (click)="manageConcursoDates(concurso)">
+                  <i class="fas fa-calendar-alt menu-icon warn-icon"></i>
+                  <span>Gestionar fechas</span>
+                </div>
+
+                <div class="menu-separator"></div>
+
+                <div
+                  class="menu-item danger-item"
+                  [class.disabled]="concurso?.status !== 'DRAFT'"
+                  (click)="deleteConcurso(concurso)">
+                  <i class="fas fa-trash menu-icon danger-icon"></i>
+                  <span>Eliminar</span>
+                </div>
+              </div>
             </div>
           </ng-template>
         </app-custom-table-column>
@@ -331,30 +315,6 @@
       </app-custom-button>
     </div>
 
-    <!-- Paginación -->
-    <div *ngIf="!isLoading && dataSource.length > 0" class="pagination-container">
-      <div class="pagination-info">
-        <span>Mostrando {{(pageIndex * pageSize) + 1}} - {{Math.min((pageIndex + 1) * pageSize, totalItems)}} de {{totalItems}} resultados</span>
-      </div>
-      <div class="pagination-controls">
-        <app-custom-button
-          [icon]="'chevron-left'"
-          [variant]="'icon'"
-          [disabled]="pageIndex === 0"
-          [tooltip]="'Página anterior'"
-          (buttonClick)="previousPage()">
-        </app-custom-button>
 
-        <span class="page-info">Página {{pageIndex + 1}} de {{Math.ceil(totalItems / pageSize)}}</span>
-
-        <app-custom-button
-          [icon]="'chevron-right'"
-          [variant]="'icon'"
-          [disabled]="(pageIndex + 1) * pageSize >= totalItems"
-          [tooltip]="'Página siguiente'"
-          (buttonClick)="nextPage()">
-        </app-custom-button>
-      </div>
-    </div>
   </div>
 </div>

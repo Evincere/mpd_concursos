@@ -1,25 +1,12 @@
-import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule } from '@angular/material/dialog';
+import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+
+// Servicios custom
+import { NotificationService } from '@core/services/notification/notification.service';
 
 import {
   SystemMonitoringService,
@@ -39,28 +26,10 @@ import { AlertConfigurationComponent } from './components/alert-configuration/al
   templateUrl: './system-monitoring.component.html',
   styleUrls: ['./system-monitoring.component.scss'],
   standalone: true,
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatDialogModule,
     AppPerformanceComponent,
     DatabaseMonitoringComponent,
     SystemAlertsComponent,
@@ -76,7 +45,11 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
 
   // Estado de la UI
   isLoading = false;
-  activeTab = 0;
+  activeTab: string = 'performance';
+
+  // Modo del componente (monitoreo, auditoría, backups)
+  mode: 'monitoring' | 'audit' | 'backup' = 'monitoring';
+  filter: string | null = null;
 
   // Formulario de filtros
   filterForm: FormGroup;
@@ -90,6 +63,47 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
     { value: 'custom', label: 'Personalizado' }
   ];
 
+  // Configuración de tabs por modo
+  tabsConfig = {
+    monitoring: [
+      { id: 'performance', label: 'Rendimiento', icon: '📊' },
+      { id: 'database', label: 'Base de Datos', icon: '🗄️' },
+      { id: 'alerts', label: 'Alertas', icon: '🚨' },
+      { id: 'config', label: 'Configuración', icon: '⚙️' }
+    ],
+    audit: [
+      { id: 'users', label: 'Usuarios', icon: '👥' },
+      { id: 'system', label: 'Sistema', icon: '🖥️' },
+      { id: 'security', label: 'Seguridad', icon: '🔒' },
+      { id: 'reports', label: 'Reportes', icon: '📋' }
+    ],
+    backup: [
+      { id: 'automatic', label: 'Automáticos', icon: '🔄' },
+      { id: 'manual', label: 'Manuales', icon: '📁' },
+      { id: 'schedule', label: 'Programación', icon: '⏰' },
+      { id: 'restore', label: 'Restaurar', icon: '↩️' }
+    ]
+  };
+
+  // Tabs activos según el modo
+  activeTabs: any[] = [];
+
+  // Títulos por modo
+  modeConfig = {
+    monitoring: {
+      title: 'Monitoreo del Sistema',
+      description: 'Supervise el rendimiento, base de datos y alertas del sistema en tiempo real.'
+    },
+    audit: {
+      title: 'Auditoría del Sistema',
+      description: 'Revise los registros de auditoría, actividad de usuarios y eventos de seguridad.'
+    },
+    backup: {
+      title: 'Copias de Seguridad',
+      description: 'Gestione las copias de seguridad automáticas y manuales del sistema.'
+    }
+  };
+
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
 
@@ -98,8 +112,9 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
+    private route: ActivatedRoute,
     private monitoringService: SystemMonitoringService,
-    private snackBar: MatSnackBar
+    private notificationService: NotificationService
   ) {
     // Inicializar formulario de filtros
     this.filterForm = this.fb.group({
@@ -126,12 +141,28 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadData();
+    try {
+      // Detectar modo basándose en los datos de la ruta
+      this.route.data.pipe(takeUntil(this.destroy$)).subscribe(data => {
+        if (data['mode']) {
+          this.mode = data['mode'];
+          this.filter = data['filter'] || null;
+        }
 
-    // Configurar actualización automática cada 30 segundos
-    this.refreshInterval = setInterval(() => {
-      this.loadData(false);
-    }, 30000);
+        // Configurar tabs según el modo
+        this.configureTabsForMode();
+      });
+
+      this.loadData();
+
+      // Configurar actualización automática cada 30 segundos
+      this.refreshInterval = setInterval(() => {
+        this.loadData(false);
+      }, 30000);
+    } catch (error) {
+      console.error('Error initializing SystemMonitoringComponent:', error);
+      this.notificationService.showError('Error al inicializar el componente de monitoreo');
+    }
   }
 
   ngOnDestroy(): void {
@@ -145,16 +176,45 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Configura las tabs según el modo actual
+   */
+  configureTabsForMode(): void {
+    this.activeTabs = this.tabsConfig[this.mode] || this.tabsConfig.monitoring;
+
+    // Establecer la primera tab como activa si no hay una seleccionada
+    if (this.activeTabs.length > 0 && !this.activeTab) {
+      this.activeTab = this.activeTabs[0].id;
+    }
+  }
+
+  /**
+   * Obtiene la configuración del modo actual
+   */
+  getCurrentModeConfig() {
+    return this.modeConfig[this.mode] || this.modeConfig.monitoring;
+  }
+
+  /**
+   * Cambia la pestaña activa
+   */
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+  }
+
+
+
+  /**
    * Carga los datos de monitoreo
    * @param showLoading Indica si se debe mostrar el indicador de carga
    */
   loadData(showLoading = true): void {
-    if (showLoading) {
-      this.isLoading = true;
-    }
+    try {
+      if (showLoading) {
+        this.isLoading = true;
+      }
 
-    // Obtener filtros
-    const filter = this.getMonitoringFilter();
+      // Obtener filtros
+      const filter = this.getMonitoringFilter();
 
     // Cargar métricas de rendimiento de la aplicación
     this.monitoringService.getAppPerformanceMetrics(filter)
@@ -168,7 +228,7 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando métricas de rendimiento:', error);
-          this.snackBar.open('Error al cargar métricas de rendimiento', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al cargar métricas de rendimiento');
           if (showLoading) {
             this.isLoading = false;
           }
@@ -210,6 +270,13 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
           console.error('Error cargando umbrales de alerta:', error);
         }
       });
+    } catch (error) {
+      console.error('Error in loadData method:', error);
+      this.notificationService.showError('Error al cargar los datos de monitoreo');
+      if (showLoading) {
+        this.isLoading = false;
+      }
+    }
   }
 
   /**
@@ -286,7 +353,9 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
    * @param index Índice de la pestaña seleccionada
    */
   onTabChange(index: number): void {
-    this.activeTab = index;
+    // Convertir índice numérico a string para compatibilidad
+    const tabs = ['performance', 'database', 'alerts', 'config'];
+    this.activeTab = tabs[index] || 'performance';
   }
 
   /**
@@ -310,7 +379,7 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
 
     if (!alertId) {
       console.error('ID de alerta no válido');
-      this.snackBar.open('Error: ID de alerta no válido', 'Cerrar', { duration: 3000 });
+      this.notificationService.showError('Error: ID de alerta no válido');
       return;
     }
 
@@ -320,12 +389,12 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (_alert) => {
-          this.snackBar.open('Alerta acusada correctamente', 'Cerrar', { duration: 3000 });
+          this.notificationService.showSuccess('Alerta acusada correctamente');
           this.loadData(false);
         },
         error: (error) => {
           console.error('Error acusando alerta:', error);
-          this.snackBar.open('Error al acusar alerta', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al acusar alerta');
         }
       });
   }
@@ -351,7 +420,7 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
 
     if (!alertId) {
       console.error('ID de alerta no válido');
-      this.snackBar.open('Error: ID de alerta no válido', 'Cerrar', { duration: 3000 });
+      this.notificationService.showError('Error: ID de alerta no válido');
       return;
     }
 
@@ -361,12 +430,12 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (_alert) => {
-          this.snackBar.open('Alerta resuelta correctamente', 'Cerrar', { duration: 3000 });
+          this.notificationService.showSuccess('Alerta resuelta correctamente');
           this.loadData(false);
         },
         error: (error) => {
           console.error('Error resolviendo alerta:', error);
-          this.snackBar.open('Error al resolver alerta', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al resolver alerta');
         }
       });
   }
@@ -409,7 +478,7 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
 
     if (!threshold || !threshold.id) {
       console.error('Umbral de alerta no válido');
-      this.snackBar.open('Error: Umbral de alerta no válido', 'Cerrar', { duration: 3000 });
+      this.notificationService.showError('Error: Umbral de alerta no válido');
       return;
     }
 
@@ -419,12 +488,12 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (_updatedThreshold) => {
-          this.snackBar.open('Umbral de alerta actualizado correctamente', 'Cerrar', { duration: 3000 });
+          this.notificationService.showSuccess('Umbral de alerta actualizado correctamente');
           this.loadData(false);
         },
         error: (error) => {
           console.error('Error actualizando umbral de alerta:', error);
-          this.snackBar.open('Error al actualizar umbral de alerta', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al actualizar umbral de alerta');
         }
       });
   }

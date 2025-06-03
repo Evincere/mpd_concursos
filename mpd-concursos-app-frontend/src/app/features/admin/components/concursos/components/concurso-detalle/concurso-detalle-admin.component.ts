@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { Subject, forkJoin, of } from 'rxjs';
@@ -51,7 +51,7 @@ import { ConcursoInscripcionesComponent } from '../concurso-inscripciones/concur
     ConcursoInscripcionesComponent
   ]
 })
-export class ConcursoDetalleAdminComponent implements OnInit, OnDestroy {
+export class ConcursoDetalleAdminComponent implements OnInit, OnDestroy, AfterViewInit {
   concursoId!: number | string;
   concurso: Concurso | null = null;
   fechas: ContestDate[] = [];
@@ -84,17 +84,27 @@ export class ConcursoDetalleAdminComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     console.log('🔍 [ConcursoDetalleAdmin] Componente inicializado');
+
     this.route.paramMap.subscribe((params) => {
       const id = params.get('id');
       console.log('🔍 [ConcursoDetalleAdmin] Parámetro ID recibido:', id);
       if (id) {
         this.concursoId = id;
+        // Asegurar scroll al inicio antes de cargar contenido
+        this.scrollToTop();
         this.loadConcurso();
       } else {
         console.warn('🔍 [ConcursoDetalleAdmin] No se encontró ID, redirigiendo...');
         this.router.navigate(['/admin/concursos']);
       }
     });
+  }
+
+  ngAfterViewInit(): void {
+    // Ejecutar scroll después de que la vista esté completamente renderizada
+    setTimeout(() => {
+      this.scrollToTop();
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -187,8 +197,15 @@ export class ConcursoDetalleAdminComponent implements OnInit, OnDestroy {
     if (!this.concurso) return;
 
     this.dialogService.open(ConcursoFormDialogComponent, {
+      title: 'Editar Concurso',
+      icon: 'edit',
+      size: 'large',
       data: { mode: 'edit', concurso: this.concurso },
-      size: 'large'
+      panelClass: ['glassmorphism-dialog', 'concurso-form-dialog-container'],
+      showCloseButton: true,
+      showFooter: false,
+      showCancelButton: false,
+      showConfirmButton: false
     }).afterClosed$.subscribe((result: unknown) => {
       if (result) {
         this.loadConcurso();
@@ -278,5 +295,64 @@ export class ConcursoDetalleAdminComponent implements OnInit, OnDestroy {
 
   onRequisitosUpdated(_id?: string): void {
     this.loadRequisitos();
+  }
+
+  /**
+   * Desplaza la vista al inicio de la página
+   * Soluciona el problema de posición inicial del scroll en navegaciones
+   */
+  private scrollToTop(): void {
+    console.log('🔍 [ConcursoDetalleAdmin] Ejecutando scrollToTop()');
+
+    if (typeof window !== 'undefined') {
+      // Método 1: Scroll inmediato múltiple
+      const forceScrollToTop = () => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
+        // Resetear scroll de elementos específicos del layout admin
+        const adminElements = document.querySelectorAll(
+          '.admin-layout, .admin-content, .main-content, .router-outlet, ' +
+          '.concurso-detalle-container, .content, .scrollable, ' +
+          '[style*="overflow"], [style*="scroll"]'
+        );
+
+        adminElements.forEach((element: Element) => {
+          if (element instanceof HTMLElement) {
+            element.scrollTop = 0;
+            element.scrollLeft = 0;
+          }
+        });
+      };
+
+      // Ejecutar inmediatamente
+      forceScrollToTop();
+
+      // Ejecutar después de un micro-delay para asegurar que el DOM esté listo
+      setTimeout(forceScrollToTop, 0);
+
+      // Ejecutar después de un delay más largo para casos de carga lenta
+      setTimeout(forceScrollToTop, 50);
+
+      // Verificación final después de que todo esté renderizado
+      setTimeout(() => {
+        forceScrollToTop();
+        console.log('🔍 [ConcursoDetalleAdmin] Scroll forzado completado');
+
+        // Log de verificación
+        console.log('🔍 [ConcursoDetalleAdmin] Posición final:', {
+          window: { x: window.scrollX, y: window.scrollY },
+          documentElement: {
+            scrollTop: document.documentElement.scrollTop,
+            scrollLeft: document.documentElement.scrollLeft
+          },
+          body: {
+            scrollTop: document.body.scrollTop,
+            scrollLeft: document.body.scrollLeft
+          }
+        });
+      }, 150);
+    }
   }
 }

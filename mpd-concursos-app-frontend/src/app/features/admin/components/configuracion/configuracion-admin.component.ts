@@ -1,23 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialogModule } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { SystemConfigService } from '@core/services/admin/system-config.service';
 import { IntegrationsConfigComponent } from './components/integrations-config/integrations-config.component';
 import { ConfigHistoryComponent } from './components/config-history/config-history.component';
+import { NotificationService } from '@core/services/notification/notification.service';
 
 @Component({
   selector: 'app-configuracion-admin',
@@ -27,16 +17,6 @@ import { ConfigHistoryComponent } from './components/config-history/config-histo
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatCheckboxModule,
-    MatSnackBarModule,
-    MatDialogModule,
     IntegrationsConfigComponent,
     ConfigHistoryComponent
   ]
@@ -84,9 +64,12 @@ export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
 
+  // Estado de las pestañas
+  activeTab = 'general';
+
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar,
+    private notificationService: NotificationService,
     private systemConfigService: SystemConfigService
   ) {
     this.generalForm = this.fb.group({
@@ -131,6 +114,13 @@ export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Cambia la pestaña activa
+   */
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
   }
 
   /**
@@ -192,11 +182,11 @@ export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.snackBar.open('Configuración general guardada correctamente', 'Cerrar', { duration: 3000 });
+            this.notificationService.showSuccess('Configuración general guardada correctamente');
           },
           error: (error) => {
             console.error('Error guardando configuración general:', error);
-            this.snackBar.open('Error al guardar la configuración general', 'Cerrar', { duration: 3000 });
+            this.notificationService.showError('Error al guardar la configuración general');
           }
         });
     } else {
@@ -210,11 +200,11 @@ export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.snackBar.open('Configuración de seguridad guardada correctamente', 'Cerrar', { duration: 3000 });
+            this.notificationService.showSuccess('Configuración de seguridad guardada correctamente');
           },
           error: (error) => {
             console.error('Error guardando configuración de seguridad:', error);
-            this.snackBar.open('Error al guardar la configuración de seguridad', 'Cerrar', { duration: 3000 });
+            this.notificationService.showError('Error al guardar la configuración de seguridad');
           }
         });
     } else {
@@ -228,11 +218,11 @@ export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.snackBar.open('Configuración de notificaciones guardada correctamente', 'Cerrar', { duration: 3000 });
+            this.notificationService.showSuccess('Configuración de notificaciones guardada correctamente');
           },
           error: (error) => {
             console.error('Error guardando configuración de notificaciones:', error);
-            this.snackBar.open('Error al guardar la configuración de notificaciones', 'Cerrar', { duration: 3000 });
+            this.notificationService.showError('Error al guardar la configuración de notificaciones');
           }
         });
     } else {
@@ -246,11 +236,11 @@ export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            this.snackBar.open('Configuración de respaldo guardada correctamente', 'Cerrar', { duration: 3000 });
+            this.notificationService.showSuccess('Configuración de respaldo guardada correctamente');
           },
           error: (error) => {
             console.error('Error guardando configuración de respaldo:', error);
-            this.snackBar.open('Error al guardar la configuración de respaldo', 'Cerrar', { duration: 3000 });
+            this.notificationService.showError('Error al guardar la configuración de respaldo');
           }
         });
     } else {
@@ -263,12 +253,12 @@ export class ConfiguracionAdminComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open(`Configuración de ${formType} restablecida a valores predeterminados`, 'Cerrar', { duration: 3000 });
+          this.notificationService.showSuccess(`Configuración de ${formType} restablecida a valores predeterminados`);
           this.loadConfigurations();
         },
         error: (error) => {
           console.error(`Error restableciendo configuración de ${formType}:`, error);
-          this.snackBar.open(`Error al restablecer la configuración de ${formType}`, 'Cerrar', { duration: 3000 });
+          this.notificationService.showError(`Error al restablecer la configuración de ${formType}`);
         }
       });
   }

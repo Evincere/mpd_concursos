@@ -102,8 +102,16 @@ export class LoginComponent implements OnInit, AfterViewInit {
       this.authService.handleLogin(loginData)
         .subscribe({
           next: (_response) => {
-            console.log('[LoginComponent] Login exitoso, redirigiendo...');
-            this.router.navigate(['dashboard']);
+            console.log('[LoginComponent] Login exitoso, verificando rol del usuario...');
+
+            // Verificar si el usuario es administrador para redirigir apropiadamente
+            if (this.authService.hasRole('ROLE_ADMIN')) {
+              console.log('[LoginComponent] Usuario administrador detectado, redirigiendo al panel de administración...');
+              this.router.navigate(['/admin/dashboard']);
+            } else {
+              console.log('[LoginComponent] Usuario regular detectado, redirigiendo al dashboard...');
+              this.router.navigate(['/dashboard']);
+            }
           },
           error: (error: Error) => {
             console.error('[LoginComponent] Error en login:', error.message);

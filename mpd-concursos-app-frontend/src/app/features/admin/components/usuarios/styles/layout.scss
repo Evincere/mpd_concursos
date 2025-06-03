@@ -1,0 +1,43 @@
+// === LAYOUT GLASSMORPHISM PARA USUARIOS ===
+@use './variables' as vars;
+
+// Layout principal del módulo
+.app-usuarios-admin {
+  min-height: 100vh;
+  background: linear-gradient(135deg,
+    rgba(55, 65, 81, 0.95) 0%,
+    rgba(75, 85, 99, 0.9) 50%,
+    rgba(55, 65, 81, 0.95) 100%);
+  padding: 1.5rem;
+  color: vars.$text-primary;
+}
+
+// Layout del header
+.header {
+  @include vars.glass-card;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+}
+
+// Layout de la tabla
+.table-card {
+  @include vars.glass-card;
+  margin-bottom: 2rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+// Layout de paginación
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: vars.$glass-background-dark;
+  backdrop-filter: blur(16px);
+  border-top: 1px solid vars.$glass-border;
+  gap: 1rem;
+}

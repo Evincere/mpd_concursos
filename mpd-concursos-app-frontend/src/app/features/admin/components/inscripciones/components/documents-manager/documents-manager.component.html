@@ -1,9 +1,12 @@
 <div class="documents-manager-container">
   <div class="header">
-    <h1>Gestión de Documentos</h1>
+    <h1>
+      <i class="fas fa-file-alt"></i>
+      Gestión de Documentos
+    </h1>
     <div class="header-actions">
       <a class="button button-primary" routerLink="/admin/inscripciones/dashboard">
-        <span class="icon">🏠</span>
+        <i class="fas fa-home"></i>
         Dashboard
       </a>
     </div>
@@ -11,30 +14,57 @@
 
   <div class="content-card">
     <div class="tabs">
-      <button class="tab" [class.active]="activeTab === 0" (click)="activeTab = 0">Listado de Documentos</button>
-      <button class="tab" [class.active]="activeTab === 1" (click)="activeTab = 1" [disabled]="!selectedDocument">Visor de Documento</button>
+      <button class="tab" [class.active]="activeTab === 0" (click)="activeTab = 0">
+        <i class="fas fa-list"></i>
+        Listado de Documentos
+      </button>
+      <button class="tab" [class.active]="activeTab === 1" (click)="activeTab = 1" [disabled]="!selectedDocument">
+        <i class="fas fa-eye"></i>
+        Visor de Documento
+      </button>
     </div>
     <div class="tab-content" *ngIf="activeTab === 0">
       <div class="filter-card">
         <form [formGroup]="filterForm" class="filter-form">
           <div class="filter-row">
-            <input class="input" type="text" formControlName="search" placeholder="Buscar por nombre, tipo...">
-            <select class="input" formControlName="status">
-              <option *ngFor="let option of statusOptions" [value]="option.value">{{option.label}}</option>
-            </select>
-            <select class="input" formControlName="documentType">
-              <option value="">Todos</option>
-              <option *ngFor="let type of documentTypes" [value]="type.id">{{type.name}}</option>
-            </select>
-            <button type="button" class="button button-secondary" (click)="resetFilters()">Limpiar Filtros</button>
+            <div class="input-group">
+              <i class="fas fa-search input-icon"></i>
+              <input class="input" type="text" formControlName="search" placeholder="Buscar por nombre, tipo...">
+            </div>
+            <div class="input-group">
+              <i class="fas fa-filter input-icon"></i>
+              <select class="input" formControlName="status">
+                <option *ngFor="let option of statusOptions" [value]="option.value">{{option.label}}</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <i class="fas fa-file-alt input-icon"></i>
+              <select class="input" formControlName="documentType">
+                <option value="">Todos los tipos</option>
+                <option *ngFor="let type of documentTypes" [value]="type.id">{{type.name}}</option>
+              </select>
+            </div>
+            <button type="button" class="button button-secondary" (click)="resetFilters()">
+              <i class="fas fa-times"></i>
+              Limpiar Filtros
+            </button>
           </div>
         </form>
       </div>
       <div class="bulk-actions" *ngIf="getSelectedCount() > 0">
-        <span>{{getSelectedCount()}} documento(s) seleccionado(s)</span>
+        <div class="selection-info">
+          <i class="fas fa-check-circle"></i>
+          <span>{{getSelectedCount()}} documento(s) seleccionado(s)</span>
+        </div>
         <div class="action-buttons">
-          <button class="button button-primary" (click)="approveSelectedDocuments()">Aprobar Seleccionados</button>
-          <button class="button button-danger" (click)="rejectSelectedDocuments()">Rechazar Seleccionados</button>
+          <button class="button button-success" (click)="approveSelectedDocuments()">
+            <i class="fas fa-check"></i>
+            Aprobar Seleccionados
+          </button>
+          <button class="button button-danger" (click)="rejectSelectedDocuments()">
+            <i class="fas fa-times"></i>
+            Rechazar Seleccionados
+          </button>
         </div>
       </div>
       <div class="table-container">
@@ -54,7 +84,7 @@
               <td><input type="checkbox" [checked]="selectedDocuments[document.id]" (click)="$event.stopPropagation()" (change)="toggleSelection(document)"></td>
               <td>
                 <div class="file-name-cell">
-                  <span class="file-icon">📄</span>
+                  <i class="fas fa-file-pdf file-icon"></i>
                   <span class="file-name">{{document.fileName}}</span>
                 </div>
               </td>
@@ -66,7 +96,11 @@
                 </div>
               </td>
               <td>
-                <span class="status-badge" [ngClass]="getStatusClass(document.status)">{{getStatusLabel(document.status)}}</span>
+                <app-contest-status-badge
+                  [status]="document.status"
+                  [statusType]="'document'"
+                  [showIcon]="true">
+                </app-contest-status-badge>
               </td>
               <td>
                 <div class="action-buttons">
@@ -102,9 +136,12 @@
           <span class="loader"></span>
         </div>
         <div *ngIf="!isLoading && dataSource.length === 0" class="empty-state">
-          <span class="icon">📄</span>
+          <i class="fas fa-file-alt empty-icon"></i>
           <p>No se encontraron documentos con los filtros aplicados</p>
-          <button class="button button-primary" (click)="resetFilters()">Limpiar Filtros</button>
+          <button class="button button-primary" (click)="resetFilters()">
+            <i class="fas fa-refresh"></i>
+            Limpiar Filtros
+          </button>
         </div>
         <div class="paginator-container">
           <app-custom-paginator [length]="totalItems" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions" [pageIndex]="pageIndex" (page)="onPageChange($event)"></app-custom-paginator>
@@ -113,9 +150,12 @@
     </div>
     <div class="tab-content document-viewer-tab" *ngIf="activeTab === 1">
       <div *ngIf="!selectedDocument" class="no-document-selected">
-        <span class="icon">📄</span>
+        <i class="fas fa-file-alt empty-icon"></i>
         <p>Seleccione un documento para visualizarlo</p>
-        <button class="button button-primary" (click)="activeTab = 0">Volver al Listado</button>
+        <button class="button button-primary" (click)="activeTab = 0">
+          <i class="fas fa-arrow-left"></i>
+          Volver al Listado
+        </button>
       </div>
       <app-document-viewer *ngIf="selectedDocument" [document]="selectedDocument"></app-document-viewer>
     </div>

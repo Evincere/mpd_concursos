@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -30,6 +30,7 @@ import { OptimizedUserRepositoryAdapter } from './infrastructure/adapters/optimi
   selector: 'app-usuarios-admin',
   templateUrl: './usuarios-admin.component.html',
   styleUrls: ['./usuarios-admin.component.scss'],
+  encapsulation: ViewEncapsulation.None,
   standalone: true,
   imports: [
     CommonModule,
@@ -90,7 +91,8 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
     private dialogService: CustomDialogService,
     private notificationService: NotificationService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     // Hacer que el servicio de diálogo esté disponible globalmente para facilitar el cierre de diálogos
     (window as any).dialogService = this.dialogService;
@@ -331,12 +333,27 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
    * Abre el detalle de un usuario
    */
   openUserDetail(user: unknown): void {
+    console.log('🔍 Intentando abrir detalle de usuario:', user);
+    console.log('🔍 Estado actual - showUserDetail:', this.showUserDetail, 'selectedUserId:', this.selectedUserId);
+
     // Verificar que user es un objeto y tiene la propiedad id
     if (user && typeof user === 'object' && 'id' in user) {
-      this.selectedUserId = (user as User).id;
-      this.showUserDetail = true;
+      const userId = (user as User).id;
+      console.log('✅ Usuario válido, ID:', userId);
+
+      // Limpiar completamente el estado antes de abrir
+      this.resetUserDialogState();
+
+      // Usar setTimeout para asegurar que el estado se actualice completamente
+      setTimeout(() => {
+        this.selectedUserId = userId;
+        this.showUserDetail = true;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+        console.log('✅ Detalle de usuario abierto - showUserDetail:', this.showUserDetail, 'selectedUserId:', this.selectedUserId);
+      }, 100);
     } else {
-      console.error('Error: El usuario no tiene un ID válido', user);
+      console.error('❌ Error: El usuario no tiene un ID válido', user);
       this.notificationService.error('Error al abrir el detalle del usuario');
     }
   }
@@ -345,8 +362,33 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
    * Cierra el detalle de un usuario
    */
   closeUserDetail(): void {
+    console.log('🔒 Cerrando detalle de usuario - Estado antes:', { showUserDetail: this.showUserDetail, selectedUserId: this.selectedUserId });
     this.selectedUserId = null;
     this.showUserDetail = false;
+    this.cdr.detectChanges();
+    console.log('🔒 Detalle de usuario cerrado - Estado después:', { showUserDetail: this.showUserDetail, selectedUserId: this.selectedUserId });
+  }
+
+  /**
+   * Limpia completamente el estado de los diálogos de usuario
+   */
+  private resetUserDialogState(): void {
+    console.log('🧹 Limpiando estado completo de diálogos de usuario');
+    this.selectedUserId = null;
+    this.showUserDetail = false;
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * Método de debugging para verificar el estado actual
+   */
+  debugUserDetailState(): void {
+    console.log('🐛 DEBUG - Estado actual:', {
+      showUserDetail: this.showUserDetail,
+      selectedUserId: this.selectedUserId,
+      timestamp: new Date().toISOString()
+    });
   }
 
   /**
@@ -359,6 +401,9 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
       try {
         const userObj = user as User;
         if (userObj.id) {
+          // Limpiar completamente el estado antes de abrir el diálogo de edición
+          this.resetUserDialogState();
+
           // Importar dinámicamente el componente de edición
           import('./editar-usuario-dialog/editar-usuario-dialog.component').then(module => {
             const EditarUsuarioDialogComponent = module.EditarUsuarioDialogComponent;
@@ -382,6 +427,11 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
                 // Recargar la lista de usuarios
                 this.loadUsers();
                 this.notificationService.success('Usuario actualizado correctamente');
+              } else {
+                // Si se canceló la edición, simplemente cerrar todo y volver a la lista
+                console.log('Edición cancelada, volviendo a la lista de usuarios');
+                // Asegurar que el estado esté completamente limpio
+                this.resetUserDialogState();
               }
             });
           });
@@ -627,7 +677,35 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Obtiene la clase CSS para el badge de rol basado en el tipo de rol
+   * Implementa colores distintivos para diferentes roles siguiendo el sistema glassmorphism
+   */
+  getRoleClass(role: string): string {
+    const roleType = role.replace('ROLE_', '').toLowerCase();
 
+    switch (roleType) {
+      case 'admin':
+      case 'administrator':
+        return 'role-admin'; // Rojo - Máximo privilegio
+      case 'moderator':
+      case 'mod':
+        return 'role-moderator'; // Verde - Privilegios moderados
+      case 'user':
+      case 'usuario':
+        return 'role-user'; // Azul - Usuario estándar
+      case 'guest':
+      case 'invitado':
+        return 'role-guest'; // Gris - Acceso limitado
+      case 'editor':
+        return 'role-editor'; // Naranja - Permisos de edición
+      case 'viewer':
+      case 'visualizador':
+        return 'role-viewer'; // Cyan - Solo lectura
+      default:
+        return 'role-default'; // Color por defecto
+    }
+  }
 
   /**
    * Obtiene el número total de páginas

@@ -7,7 +7,7 @@ import { CustomButtonComponent } from '@shared/components/custom-form/custom-but
 import { AdminHeaderComponent } from './components/admin-header/admin-header.component';
 import { AdminSidebarComponent } from './components/admin-sidebar/admin-sidebar.component';
 import { AdminBreadcrumbsComponent } from './components/admin-breadcrumbs/admin-breadcrumbs.component';
-import { SectionIndicatorComponent } from '../../../shared/components/section-indicator/section-indicator.component';
+
 import { GlobalLoaderComponent } from '../../../shared/components/global-loader/global-loader.component';
 import { ContentTransitionComponent } from '../../../shared/components/content-transition/content-transition.component';
 import { KeyboardShortcutsHelpComponent } from '../../../shared/components/keyboard-shortcuts-help/keyboard-shortcuts-help.component';
@@ -31,7 +31,6 @@ import { KeyboardShortcutsHelpComponent } from '../../../shared/components/keybo
     AdminHeaderComponent,
     AdminSidebarComponent,
     AdminBreadcrumbsComponent,
-    SectionIndicatorComponent,
     GlobalLoaderComponent,
     ContentTransitionComponent,
     KeyboardShortcutsHelpComponent

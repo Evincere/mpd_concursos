@@ -1,11 +1,4 @@
-<div class="concurso-form-dialog">
-  <div class="dialog-header">
-    <h2>{{ isEditMode ? 'Editar Concurso' : 'Nuevo Concurso' }}</h2>
-    <button class="close-button" (click)="onCancel()">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-
+<div class="concurso-form-content">
   <div *ngIf="isLoading" class="loading-overlay">
     <app-custom-spinner [size]="'large'"></app-custom-spinner>
     <span>Cargando...</span>
@@ -165,22 +158,29 @@
       </app-custom-tabs>
     </div>
 
-    <div class="dialog-actions">
-      <app-custom-button
-        [label]="'Cancelar'"
-        [variant]="'stroked'"
-        [color]="'primary'"
-        [disabled]="isLoading"
-        (buttonClick)="onCancel()">
-      </app-custom-button>
-
-      <app-custom-button
-        [label]="isEditMode ? 'Guardar Cambios' : 'Crear Concurso'"
-        [variant]="'flat'"
-        [color]="'primary'"
-        [disabled]="concursoForm.invalid || isLoading"
-        [type]="'submit'">
-      </app-custom-button>
-    </div>
   </form>
+</div>
+
+<!-- Botones de acción en el footer del diálogo -->
+<div dialog-footer class="dialog-actions">
+  <app-custom-button
+    [label]="'Cancelar'"
+    [variant]="'stroked'"
+    [color]="'primary'"
+    [disabled]="isLoading"
+    [type]="'button'"
+    [ariaLabel]="'Cancelar edición del concurso'"
+    (buttonClick)="onCancel()">
+  </app-custom-button>
+
+  <app-custom-button
+    [label]="isEditMode ? 'Guardar Cambios' : 'Crear Concurso'"
+    [variant]="'flat'"
+    [color]="'primary'"
+    [disabled]="concursoForm.invalid || isLoading"
+    [type]="'submit'"
+    [loading]="isSubmitting"
+    [ariaLabel]="isEditMode ? 'Guardar cambios del concurso' : 'Crear nuevo concurso'"
+    (buttonClick)="onSubmit()">
+  </app-custom-button>
 </div>

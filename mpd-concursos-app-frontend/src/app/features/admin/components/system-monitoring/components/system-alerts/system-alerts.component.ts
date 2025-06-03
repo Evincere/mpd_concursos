@@ -1,94 +1,183 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { Subject } from 'rxjs';
+
+import { SystemAlert } from '@core/services/admin/system-monitoring.service';
 
 
 @Component({
   selector: 'app-system-alerts',
   standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule
+    CommonModule
   ],
-  template: `
-    <div class="system-alerts-container">
-      <mat-card class="alerts-card">
-        <mat-card-header>
-          <mat-card-title>Alertas del Sistema</mat-card-title>
-          <mat-card-subtitle>Notificaciones y alertas del sistema</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="placeholder-content">
-            <p>Componente en desarrollo. Próximamente se mostrarán alertas del sistema.</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .system-alerts-container {
-      padding: 16px;
-    }
-
-    .alerts-card {
-      margin-bottom: 16px;
-    }
-
-    .placeholder-content {
-      padding: 20px;
-      text-align: center;
-      background-color: rgba(0, 0, 0, 0.05);
-      border-radius: 4px;
-      margin: 16px 0;
-    }
-  `]
+  templateUrl: './system-alerts.component.html',
+  styleUrls: ['./system-alerts.component.scss']
 })
-export class SystemAlertsComponent implements OnInit, OnDestroy {
+export class SystemAlertsComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() systemAlerts: SystemAlert[] = [];
+  @Output() acknowledgeAlert = new EventEmitter<string>();
+  @Output() resolveAlert = new EventEmitter<string>();
+
   private destroy$ = new Subject<void>();
+
+  // Filtros para las alertas
+  alertFilters = {
+    type: 'all',
+    status: 'all',
+    category: 'all'
+  };
+
+  // Alertas filtradas
+  filteredAlerts: SystemAlert[] = [];
 
   constructor() {
     // Constructor vacío
   }
 
   ngOnInit(): void {
-    // Cargar alertas del sistema
-    this.loadSystemAlerts();
-
-    // Suscribirse a nuevas alertas
-    this.subscribeToNewAlerts();
+    console.log('System alerts component initialized');
+    this.applyFilters();
   }
 
-  /**
-   * Carga las alertas del sistema
-   */
-  private loadSystemAlerts(): void {
-    // En una implementación real, esto cargaría las alertas desde un servicio
-    console.log('Cargando alertas del sistema');
-  }
-
-  /**
-   * Se suscribe a nuevas alertas
-   */
-  private subscribeToNewAlerts(): void {
-    // En una implementación real, esto se suscribiría a un servicio de alertas
-    console.log('Suscribiéndose a nuevas alertas');
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['systemAlerts']) {
+      console.log('System alerts updated:', this.systemAlerts);
+      this.applyFilters();
+    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Aplica los filtros a las alertas
+   */
+  applyFilters(): void {
+    this.filteredAlerts = this.systemAlerts.filter(alert => {
+      const typeMatch = this.alertFilters.type === 'all' || alert.type === this.alertFilters.type;
+      const statusMatch = this.alertFilters.status === 'all' || alert.status === this.alertFilters.status;
+      const categoryMatch = this.alertFilters.category === 'all' || alert.category === this.alertFilters.category;
+
+      return typeMatch && statusMatch && categoryMatch;
+    });
+  }
+
+  /**
+   * Cambia el filtro de tipo
+   */
+  onTypeFilterChange(type: string): void {
+    this.alertFilters.type = type;
+    this.applyFilters();
+  }
+
+  /**
+   * Cambia el filtro de estado
+   */
+  onStatusFilterChange(status: string): void {
+    this.alertFilters.status = status;
+    this.applyFilters();
+  }
+
+  /**
+   * Cambia el filtro de categoría
+   */
+  onCategoryFilterChange(category: string): void {
+    this.alertFilters.category = category;
+    this.applyFilters();
+  }
+
+  /**
+   * Acusa recibo de una alerta
+   */
+  onAcknowledgeAlert(alertId: string): void {
+    this.acknowledgeAlert.emit(alertId);
+  }
+
+  /**
+   * Resuelve una alerta
+   */
+  onResolveAlert(alertId: string): void {
+    this.resolveAlert.emit(alertId);
+  }
+
+  /**
+   * Obtiene la clase CSS para el tipo de alerta
+   */
+  getAlertTypeClass(type: string): string {
+    switch (type) {
+      case 'info':
+        return 'alert-info';
+      case 'warning':
+        return 'alert-warning';
+      case 'error':
+        return 'alert-error';
+      case 'critical':
+        return 'alert-critical';
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Obtiene el icono para el tipo de alerta
+   */
+  getAlertTypeIcon(type: string): string {
+    switch (type) {
+      case 'info':
+        return 'ℹ️';
+      case 'warning':
+        return '⚠️';
+      case 'error':
+        return '❌';
+      case 'critical':
+        return '🚨';
+      default:
+        return '❓';
+    }
+  }
+
+  /**
+   * Obtiene la etiqueta para el estado de la alerta
+   */
+  getAlertStatusLabel(status: string): string {
+    switch (status) {
+      case 'active':
+        return 'Activa';
+      case 'acknowledged':
+        return 'Acusada';
+      case 'resolved':
+        return 'Resuelta';
+      default:
+        return 'Desconocido';
+    }
+  }
+
+  /**
+   * Obtiene la etiqueta para la categoría de la alerta
+   */
+  getAlertCategoryLabel(category: string): string {
+    switch (category) {
+      case 'performance':
+        return 'Rendimiento';
+      case 'database':
+        return 'Base de Datos';
+      case 'security':
+        return 'Seguridad';
+      case 'application':
+        return 'Aplicación';
+      default:
+        return 'General';
+    }
+  }
+
+  /**
+   * Formatea una fecha
+   */
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleString();
   }
 }

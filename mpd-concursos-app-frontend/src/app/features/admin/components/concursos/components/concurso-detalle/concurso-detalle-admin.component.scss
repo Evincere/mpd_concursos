@@ -1,78 +1,179 @@
-@use 'src/styles/variables' as vars;
+// Importar variables globales para consistencia visual
+@import '../../../../../../../styles/variables';
 
-.concurso-detalle-container {
-  padding: vars.$spacing-lg;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: vars.$color-background;
-  min-height: 100vh;
-  color: vars.$color-text-primary;
-  font-family: vars.$font-family-base;
+// ===== GLASSMORPHISM DESIGN SYSTEM - CONTEST DETAIL MODULE =====
+// Variables refinadas específicas para el módulo de detalle de concursos
+// Siguiendo el sistema establecido en dashboard administrativo
+
+// Paleta de colores glassmorphism refinada
+$glass-detail-primary: rgba(55, 65, 81, 0.8);        // #374151 con 80% opacidad
+$glass-detail-secondary: rgba(75, 85, 99, 0.9);      // #4b5563 con 90% opacidad
+$glass-detail-surface: rgba(55, 65, 81, 0.95);       // Superficie principal
+$glass-detail-overlay: rgba(31, 41, 55, 0.6);        // Overlay para modales
+
+// Colores de texto optimizados para contraste WCAG AA
+$text-primary-detail: #f9fafb;                       // Texto principal (4.5:1 ratio)
+$text-secondary-detail: #d1d5db;                     // Texto secundario (4.5:1 ratio)
+$text-tertiary-detail: #9ca3af;                      // Texto terciario
+$input-background-detail: #4b5563;                   // Fondos de input (4.5:1 ratio)
+
+// Color temático específico para concursos (verde)
+$detail-theme-color: #4CAF50;                        // Verde para concursos
+$detail-theme-light: rgba(76, 175, 80, 0.2);
+$detail-theme-border: rgba(76, 175, 80, 0.3);
+
+// Efectos glassmorphism
+$glass-detail-blur: blur(16px);
+$glass-detail-border: 1px solid rgba(156, 163, 175, 0.2);
+$glass-detail-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+$glass-detail-shadow-hover: 0 12px 30px rgba(0, 0, 0, 0.4);
+
+// Mixins para efectos glassmorphism
+@mixin glass-detail-card {
+  background: $glass-detail-primary;
+  backdrop-filter: $glass-detail-blur;
+  -webkit-backdrop-filter: $glass-detail-blur;
+  border: $glass-detail-border;
+  border-radius: 8px;
+  box-shadow: $glass-detail-shadow;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $glass-detail-shadow-hover;
+  }
 }
 
+@mixin glass-detail-surface {
+  background: $glass-detail-surface;
+  backdrop-filter: $glass-detail-blur;
+  -webkit-backdrop-filter: $glass-detail-blur;
+  border: $glass-detail-border;
+  border-radius: 8px;
+  box-shadow: $glass-detail-shadow;
+}
+
+.concurso-detalle-container {
+  // Padding adaptativo usando clamp()
+  padding: clamp(1rem, 3vw, 2rem);
+  max-width: clamp(60rem, 90vw, 80rem);
+  margin: 0 auto;
+
+  // Fondo glassmorphism con gradiente
+  background: linear-gradient(135deg,
+    rgba(31, 41, 55, 0.9) 0%,
+    rgba(17, 24, 39, 0.95) 100%);
+  min-height: 100vh;
+  color: $text-primary-detail;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  // Efecto de textura sutil
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 20% 50%, rgba(76, 175, 80, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+// ===== HEADER GLASSMORPHISM =====
 .header {
+  @include glass-detail-card;
+
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: vars.$spacing-xl;
-  padding-bottom: vars.$spacing-lg;
-  border-bottom: 1px solid vars.$color-border;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  padding: clamp(1rem, 3vw, 1.5rem);
+
+  // Borde inferior glassmorphism
+  border-bottom: 1px solid rgba(156, 163, 175, 0.3);
+
+  // Gradiente sutil en el fondo
+  background: linear-gradient(135deg,
+    $glass-detail-primary 0%,
+    rgba(75, 85, 99, 0.85) 100%);
 
   .header-title {
     display: flex;
     align-items: center;
-    gap: vars.$spacing-md;
+    gap: clamp(0.75rem, 2vw, 1rem);
 
     h1 {
       margin: 0;
-      font-size: vars.$font-size-xl;
-      font-weight: 500;
-      color: vars.$color-text-primary;
+      font-size: clamp(1.25rem, 4vw, 1.75rem);
+      font-weight: 600;
+      color: $text-primary-detail;
       display: flex;
       align-items: center;
+      letter-spacing: -0.025em;
 
       &::before {
-        content: '\f0ae'; // Icono de documento
-        font-family: 'Font Awesome 5 Free';
-        font-weight: 900;
-        margin-right: vars.$spacing-sm;
-        font-size: 1rem;
-        color: vars.$color-primary;
+        content: '📋';
+        margin-right: clamp(0.5rem, 1.5vw, 0.75rem);
+        font-size: clamp(1rem, 3vw, 1.25rem);
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
       }
     }
   }
 
   .header-actions {
     display: flex;
-    gap: vars.$spacing-sm;
+    gap: clamp(0.5rem, 1.5vw, 0.75rem);
+    flex-wrap: wrap;
   }
 }
 
-// Estilos para botones administrativos
+// ===== BOTONES GLASSMORPHISM =====
 .back-button, .action-button {
-  padding: vars.$spacing-sm vars.$spacing-md;
-  border: 1px solid transparent;
-  border-radius: vars.$border-radius-sm;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.75rem, 2vw, 1rem);
+  border: 1px solid rgba(156, 163, 175, 0.3);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: vars.$font-size-sm;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
   font-weight: 500;
-  font-family: vars.$font-family-base;
-  transition: vars.$transition-normal;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
-  gap: vars.$spacing-xs;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
   text-decoration: none;
   outline: none;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  // Efecto de brillo sutil
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+  }
+
+  &:hover::after {
+    left: 100%;
+  }
 
   &:focus {
-    box-shadow: 0 0 0 2px rgba(vars.$color-primary, 0.3);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.4);
+    outline: none;
   }
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: vars.$box-shadow-light;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   }
 
   &:active:not(:disabled) {
@@ -80,7 +181,7 @@
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
     box-shadow: none !important;
@@ -88,84 +189,102 @@
 }
 
 .back-button {
-  background-color: vars.$color-surface;
-  color: vars.$color-text-primary;
-  border-color: vars.$color-border;
+  background: linear-gradient(135deg,
+    rgba(75, 85, 99, 0.8) 0%,
+    rgba(55, 65, 81, 0.9) 100%);
+  color: $text-primary-detail;
+  border-color: rgba(156, 163, 175, 0.3);
 
   &:hover:not(:disabled) {
-    background-color: vars.$color-surface-light;
-    border-color: vars.$color-border-light;
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.9) 0%,
+      rgba(55, 65, 81, 1) 100%);
+    border-color: rgba(156, 163, 175, 0.5);
   }
 
   &::before {
-    content: '\f060'; // Icono de flecha izquierda
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    font-size: 0.8rem;
+    content: '←';
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
   }
 }
 
 .action-button {
   &.primary {
-    background-color: vars.$color-primary;
-    color: vars.$color-white;
-    border-color: vars.$color-primary;
+    background: linear-gradient(135deg,
+      $detail-theme-color 0%,
+      rgba(76, 175, 80, 0.9) 100%);
+    color: $text-primary-detail;
+    border-color: $detail-theme-border;
 
     &:hover:not(:disabled) {
-      background-color: vars.$color-primary-dark;
-      border-color: vars.$color-primary-dark;
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 1) 0%,
+        rgba(56, 142, 60, 1) 100%);
+      border-color: rgba(76, 175, 80, 0.6);
     }
 
     &::before {
-      content: '\f044'; // Icono de editar
-      font-family: 'Font Awesome 5 Free';
-      font-weight: 900;
-      font-size: 0.8rem;
+      content: '✏️';
+      font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
     }
   }
 
   &.danger {
-    background-color: vars.$color-error;
-    color: vars.$color-white;
-    border-color: vars.$color-error;
+    background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.8) 0%,
+      rgba(220, 38, 38, 0.9) 100%);
+    color: $text-primary-detail;
+    border-color: rgba(239, 68, 68, 0.4);
 
     &:hover:not(:disabled) {
-      background-color: vars.$color-error-dark;
-      border-color: vars.$color-error-dark;
+      background: linear-gradient(135deg,
+        rgba(239, 68, 68, 1) 0%,
+        rgba(220, 38, 38, 1) 100%);
+      border-color: rgba(239, 68, 68, 0.6);
     }
 
     &::before {
-      content: '\f2ed'; // Icono de eliminar
-      font-family: 'Font Awesome 5 Free';
-      font-weight: 900;
-      font-size: 0.8rem;
+      content: '🗑️';
+      font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
     }
   }
 }
 
-// Estilos para el contenido
+// ===== CONTENIDO GLASSMORPHISM =====
 .loading-container {
+  @include glass-detail-card;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: vars.$spacing-xl;
-  background-color: vars.$color-surface;
-  border-radius: vars.$border-radius;
-  box-shadow: vars.$box-shadow;
-  margin: vars.$spacing-lg 0;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  margin: clamp(1rem, 3vw, 1.5rem) 0;
+
+  // Gradiente específico para loading
+  background: linear-gradient(135deg,
+    rgba(75, 85, 99, 0.8) 0%,
+    rgba(55, 65, 81, 0.9) 100%);
 
   .spinner {
-    font-size: 2rem;
-    margin-bottom: vars.$spacing-md;
-    color: vars.$color-primary;
+    width: clamp(2rem, 5vw, 3rem);
+    height: clamp(2rem, 5vw, 3rem);
+    margin-bottom: clamp(0.75rem, 2vw, 1rem);
+    border: 3px solid rgba(76, 175, 80, 0.3);
+    border-top: 3px solid $detail-theme-color;
+    border-radius: 50%;
     animation: spin 1s linear infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   }
 
   p {
-    color: vars.$color-text-secondary;
-    font-size: vars.$font-size-md;
+    color: $text-secondary-detail;
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
     margin: 0;
+    text-align: center;
   }
 }
 
@@ -174,271 +293,356 @@
   to { transform: rotate(360deg); }
 }
 
+// ===== TARJETA HEADER DEL CONCURSO =====
 .concurso-header-card {
-  background-color: vars.$color-surface;
-  border-radius: vars.$border-radius;
-  padding: vars.$spacing-xl;
-  margin-bottom: vars.$spacing-xl;
-  box-shadow: vars.$box-shadow;
-  border: 1px solid vars.$color-border;
-  transition: vars.$transition-normal;
+  @include glass-detail-card;
+
+  padding: clamp(1.5rem, 4vw, 2rem);
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+
+  // Gradiente específico para header del concurso
+  background: linear-gradient(135deg,
+    $glass-detail-primary 0%,
+    rgba(75, 85, 99, 0.9) 100%);
+
+  // Borde izquierdo temático
+  border-left: 4px solid $detail-theme-color;
 
   &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
   }
 
   .concurso-title {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: vars.$spacing-lg;
-    gap: vars.$spacing-md;
+    margin-bottom: clamp(1rem, 3vw, 1.5rem);
+    gap: clamp(0.75rem, 2vw, 1rem);
+    flex-wrap: wrap;
 
     h2 {
       margin: 0;
-      color: vars.$color-text-primary;
-      font-size: vars.$font-size-lg;
-      font-weight: 600;
+      color: $text-primary-detail;
+      font-size: clamp(1.125rem, 3.5vw, 1.5rem);
+      font-weight: 700;
       line-height: 1.3;
       flex: 1;
+      min-width: 0; // Permite que el texto se ajuste
+      letter-spacing: -0.025em;
     }
 
     .status-badge {
-      padding: vars.$spacing-xs vars.$spacing-sm;
-      border-radius: vars.$border-radius-lg;
-      font-size: vars.$font-size-xs;
+      padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.5rem, 1.5vw, 0.75rem);
+      border-radius: 8px;
+      font-size: clamp(0.625rem, 1.5vw, 0.75rem);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       white-space: nowrap;
       display: inline-flex;
       align-items: center;
-      gap: vars.$spacing-xs;
+      gap: clamp(0.25rem, 0.5vw, 0.375rem);
+
+      // Efectos glassmorphism para badges
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
 
       &::before {
         content: '';
-        width: 6px;
-        height: 6px;
+        width: clamp(4px, 1vw, 6px);
+        height: clamp(4px, 1vw, 6px);
         border-radius: 50%;
         background-color: currentColor;
+        box-shadow: 0 0 8px currentColor;
+      }
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
       }
 
       &.status-active {
-        background-color: vars.$color-success-bg;
-        color: vars.$color-success;
-        border: 1px solid rgba(vars.$color-success, 0.3);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.8), rgba(22, 163, 74, 0.9));
+        color: #f0fdf4;
+        border: 1px solid rgba(34, 197, 94, 0.4);
       }
 
       &.status-draft {
-        background-color: vars.$color-warning-bg;
-        color: vars.$color-warning;
-        border: 1px solid rgba(vars.$color-warning, 0.3);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.9));
+        color: #fffbeb;
+        border: 1px solid rgba(245, 158, 11, 0.4);
       }
 
       &.status-in-progress {
-        background-color: vars.$color-info-light;
-        color: vars.$color-info;
-        border: 1px solid rgba(vars.$color-info, 0.3);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.8), rgba(37, 99, 235, 0.9));
+        color: #eff6ff;
+        border: 1px solid rgba(59, 130, 246, 0.4);
       }
 
       &.status-closed {
-        background-color: vars.$color-error-bg;
-        color: vars.$color-error;
-        border: 1px solid rgba(vars.$color-error, 0.3);
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.9));
+        color: #fef2f2;
+        border: 1px solid rgba(239, 68, 68, 0.4);
       }
 
       &.status-cancelled {
-        background-color: rgba(vars.$color-text-tertiary, 0.15);
-        color: vars.$color-text-tertiary;
-        border: 1px solid rgba(vars.$color-text-tertiary, 0.3);
+        background: linear-gradient(135deg, rgba(107, 114, 128, 0.8), rgba(75, 85, 99, 0.9));
+        color: #f9fafb;
+        border: 1px solid rgba(107, 114, 128, 0.4);
       }
     }
   }
 
   .concurso-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: vars.$spacing-lg;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(16rem, 40vw, 20rem), 1fr));
+    gap: clamp(0.75rem, 2vw, 1.25rem);
 
     .info-item {
       display: flex;
       align-items: center;
-      gap: vars.$spacing-sm;
-      padding: vars.$spacing-sm;
-      background-color: rgba(vars.$color-primary, 0.05);
-      border-radius: vars.$border-radius-sm;
-      border-left: 3px solid vars.$color-primary;
-      transition: vars.$transition-fast;
+      gap: clamp(0.5rem, 1.5vw, 0.75rem);
+      padding: clamp(0.75rem, 2vw, 1rem);
+
+      // Glassmorphism para items de información
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.1) 0%,
+        rgba(55, 65, 81, 0.2) 100%);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 8px;
+      border-left: 4px solid $detail-theme-color;
+      border: 1px solid rgba(156, 163, 175, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
 
       &:hover {
-        background-color: rgba(vars.$color-primary, 0.08);
-        transform: translateX(2px);
+        background: linear-gradient(135deg,
+          rgba(76, 175, 80, 0.15) 0%,
+          rgba(55, 65, 81, 0.3) 100%);
+        transform: translateX(4px) translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        border-left-color: rgba(76, 175, 80, 0.8);
       }
 
-      .icon {
-        font-size: 1.1rem;
-        color: vars.$color-primary;
-        min-width: 20px;
+      // Iconos CSS para items de información
+      &::before {
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        color: $detail-theme-color;
+        min-width: clamp(1.25rem, 3vw, 1.5rem);
         text-align: center;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        margin-right: clamp(0.5rem, 1.5vw, 0.75rem);
       }
+
+      &:nth-child(1)::before { content: '💼'; } // Posición
+      &:nth-child(2)::before { content: '🏢'; } // Departamento
+      &:nth-child(3)::before { content: '📂'; } // Categoría
+      &:nth-child(4)::before { content: '📅'; } // Fechas
 
       span {
-        color: vars.$color-text-primary;
-        font-size: vars.$font-size-sm;
+        color: $text-primary-detail;
+        font-size: clamp(0.75rem, 2vw, 0.875rem);
         font-weight: 500;
         line-height: 1.4;
+        flex: 1;
       }
     }
   }
 }
 
-// Estilos para pestañas
+// ===== PESTAÑAS GLASSMORPHISM =====
 .tabs-container {
-  background-color: vars.$color-surface;
-  border-radius: vars.$border-radius;
-  box-shadow: vars.$box-shadow;
-  border: 1px solid vars.$color-border;
+  @include glass-detail-card;
+
+  // Gradiente específico para pestañas
+  background: linear-gradient(135deg,
+    $glass-detail-primary 0%,
+    rgba(75, 85, 99, 0.9) 100%);
   overflow: hidden;
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
 
   .tabs-header {
     display: flex;
-    background-color: rgba(vars.$color-primary, 0.05);
-    border-bottom: 1px solid vars.$color-border;
+    background: linear-gradient(135deg,
+      rgba(76, 175, 80, 0.1) 0%,
+      rgba(55, 65, 81, 0.2) 100%);
+    border-bottom: 1px solid rgba(156, 163, 175, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 
     .tab-button {
       flex: 1;
-      padding: vars.$spacing-md vars.$spacing-lg;
+      padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.5rem);
       border: none;
       background: transparent;
       cursor: pointer;
-      font-size: vars.$font-size-sm;
+      font-size: clamp(0.75rem, 2vw, 0.875rem);
       font-weight: 500;
-      color: vars.$color-text-secondary;
-      transition: vars.$transition-normal;
+      color: $text-secondary-detail;
+      transition: all 0.3s ease;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: vars.$spacing-xs;
-      min-height: 48px;
+      gap: clamp(0.25rem, 1vw, 0.5rem);
+      min-height: clamp(3rem, 8vw, 4rem);
+      border-radius: 0;
 
+      // Efecto de línea inferior
       &::after {
         content: '';
         position: absolute;
         bottom: 0;
         left: 0;
         right: 0;
-        height: 2px;
-        background-color: transparent;
-        transition: vars.$transition-fast;
+        height: 3px;
+        background: transparent;
+        transition: all 0.3s ease;
       }
 
       &:hover:not(.active) {
-        background-color: rgba(vars.$color-primary, 0.08);
-        color: vars.$color-text-primary;
+        background: linear-gradient(135deg,
+          rgba(76, 175, 80, 0.15) 0%,
+          rgba(55, 65, 81, 0.3) 100%);
+        color: $text-primary-detail;
+        transform: translateY(-1px);
       }
 
       &.active {
-        background-color: vars.$color-primary;
-        color: vars.$color-white;
+        background: linear-gradient(135deg,
+          $detail-theme-color 0%,
+          rgba(76, 175, 80, 0.9) 100%);
+        color: $text-primary-detail;
+        font-weight: 600;
 
         &::after {
-          background-color: vars.$color-accent;
+          background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.8) 50%,
+            transparent 100%);
         }
       }
 
       &:focus {
         outline: none;
-        box-shadow: inset 0 0 0 2px rgba(vars.$color-primary, 0.3);
+        box-shadow: inset 0 0 0 2px rgba(76, 175, 80, 0.4);
       }
+
+      // Iconos específicos para cada pestaña
+      &:nth-child(1)::before { content: '📋 '; } // Información General
+      &:nth-child(2)::before { content: '📅 '; } // Fechas Importantes
+      &:nth-child(3)::before { content: '📝 '; } // Requisitos
+      &:nth-child(4)::before { content: '👥 '; } // Inscripciones
     }
   }
 
   .tab-content {
-    padding: vars.$spacing-xl;
+    padding: clamp(1.5rem, 4vw, 2rem);
 
     .tab-panel {
-      animation: fadeIn 0.3s ease-in-out;
+      animation: fadeIn 0.4s ease-in-out;
 
       .section {
-        margin-bottom: vars.$spacing-xl;
+        margin-bottom: clamp(1.5rem, 4vw, 2rem);
 
         &:last-child {
           margin-bottom: 0;
         }
 
         h3 {
-          margin: 0 0 vars.$spacing-md 0;
-          color: vars.$color-text-primary;
-          font-size: vars.$font-size-md;
+          margin: 0 0 clamp(0.75rem, 2vw, 1rem) 0;
+          color: $text-primary-detail;
+          font-size: clamp(1rem, 2.5vw, 1.125rem);
           font-weight: 600;
           display: flex;
           align-items: center;
-          gap: vars.$spacing-xs;
+          gap: clamp(0.375rem, 1vw, 0.5rem);
+          letter-spacing: -0.025em;
 
           &::before {
-            content: '\f0c9'; // Icono de lista
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            font-size: 0.8rem;
-            color: vars.$color-primary;
+            content: '📋';
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            color: $detail-theme-color;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
           }
         }
 
         p {
-          color: vars.$color-text-secondary;
+          color: $text-secondary-detail;
           line-height: 1.6;
           margin: 0;
+          font-size: clamp(0.875rem, 2vw, 1rem);
         }
 
         .empty-text {
-          color: vars.$color-text-tertiary;
+          color: $text-tertiary-detail;
           font-style: italic;
           text-align: center;
-          padding: vars.$spacing-lg;
-          background-color: rgba(vars.$color-text-tertiary, 0.05);
-          border-radius: vars.$border-radius-sm;
-          border: 1px dashed rgba(vars.$color-text-tertiary, 0.3);
+          padding: clamp(1rem, 3vw, 1.5rem);
+
+          // Glassmorphism para texto vacío
+          background: linear-gradient(135deg,
+            rgba(107, 114, 128, 0.1) 0%,
+            rgba(75, 85, 99, 0.2) 100%);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-radius: 8px;
+          border: 1px dashed rgba(156, 163, 175, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
       }
 
       .documents-list {
         display: flex;
         flex-direction: column;
-        gap: vars.$spacing-sm;
+        gap: clamp(0.5rem, 1.5vw, 0.75rem);
 
         .document-link {
           display: inline-flex;
           align-items: center;
-          gap: vars.$spacing-xs;
-          color: vars.$color-primary;
+          gap: clamp(0.5rem, 1.5vw, 0.75rem);
+          color: $text-primary-detail;
           text-decoration: none;
-          padding: vars.$spacing-sm;
-          border-radius: vars.$border-radius-sm;
-          transition: vars.$transition-fast;
-          background-color: rgba(vars.$color-primary, 0.05);
-          border: 1px solid rgba(vars.$color-primary, 0.2);
+          padding: clamp(0.75rem, 2vw, 1rem);
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          font-size: clamp(0.875rem, 2vw, 1rem);
+          font-weight: 500;
+
+          // Glassmorphism para enlaces de documentos
+          background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.1) 0%,
+            rgba(55, 65, 81, 0.2) 100%);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(76, 175, 80, 0.3);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
           &:hover {
-            background-color: rgba(vars.$color-primary, 0.1);
-            transform: translateX(4px);
+            background: linear-gradient(135deg,
+              rgba(76, 175, 80, 0.2) 0%,
+              rgba(55, 65, 81, 0.3) 100%);
+            transform: translateX(6px) translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
           }
 
           &::before {
-            content: '\f1c1'; // Icono de documento
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            font-size: 0.9rem;
+            content: '📄';
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
           }
 
           &::after {
-            content: '\f35d'; // Icono de enlace externo
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            font-size: 0.7rem;
+            content: '🔗';
+            font-size: clamp(0.75rem, 2vw, 1rem);
             margin-left: auto;
-            opacity: 0.7;
+            opacity: 0.8;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
           }
         }
       }
@@ -446,37 +650,57 @@
       .fechas-list, .requisitos-list {
         display: flex;
         flex-direction: column;
-        gap: vars.$spacing-md;
+        gap: clamp(0.75rem, 2vw, 1rem);
 
         .fecha-item, .requisito-item {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: vars.$spacing-md;
-          background-color: rgba(vars.$color-surface-light, 0.5);
-          border-radius: vars.$border-radius-sm;
-          border: 1px solid vars.$color-border;
-          transition: vars.$transition-fast;
+          padding: clamp(0.75rem, 2vw, 1rem);
+          border-radius: 8px;
+          transition: all 0.3s ease;
+
+          // Glassmorphism para items de listas
+          background: linear-gradient(135deg,
+            rgba(55, 65, 81, 0.6) 0%,
+            rgba(75, 85, 99, 0.7) 100%);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(156, 163, 175, 0.2);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 
           &:hover {
-            background-color: rgba(vars.$color-primary, 0.05);
-            border-color: rgba(vars.$color-primary, 0.3);
-            transform: translateX(2px);
+            background: linear-gradient(135deg,
+              rgba(76, 175, 80, 0.1) 0%,
+              rgba(55, 65, 81, 0.8) 100%);
+            border-color: rgba(76, 175, 80, 0.4);
+            transform: translateX(4px) translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
           }
 
           .fecha-title, .requisito-description {
             font-weight: 500;
-            color: vars.$color-text-primary;
+            color: $text-primary-detail;
             flex: 1;
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            line-height: 1.4;
           }
 
           .fecha-date, .requisito-category {
-            color: vars.$color-text-secondary;
-            font-size: vars.$font-size-sm;
-            background-color: rgba(vars.$color-primary, 0.1);
-            padding: vars.$spacing-xs vars.$spacing-sm;
-            border-radius: vars.$border-radius-lg;
-            font-weight: 500;
+            color: $text-primary-detail;
+            font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+            font-weight: 600;
+
+            // Badge glassmorphism
+            background: linear-gradient(135deg,
+              rgba(76, 175, 80, 0.8) 0%,
+              rgba(56, 142, 60, 0.9) 100%);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+            border-radius: 8px;
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
           }
         }
       }
@@ -484,10 +708,11 @@
   }
 }
 
+// ===== ANIMACIONES =====
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -495,348 +720,168 @@
   }
 }
 
+// ===== CONTENEDOR DE ERROR =====
 .error-container {
+  @include glass-detail-card;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: vars.$spacing-xl;
-  background-color: vars.$color-surface;
-  border-radius: vars.$border-radius;
-  box-shadow: vars.$box-shadow;
-  border: 1px solid vars.$color-border;
-  margin: vars.$spacing-lg 0;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  margin: clamp(1rem, 3vw, 1.5rem) 0;
+
+  // Gradiente específico para error
+  background: linear-gradient(135deg,
+    rgba(239, 68, 68, 0.1) 0%,
+    rgba(55, 65, 81, 0.9) 100%);
 
   &::before {
-    content: '\f071'; // Icono de advertencia
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-    font-size: 3rem;
-    color: vars.$color-error;
-    margin-bottom: vars.$spacing-md;
+    content: '⚠️';
+    font-size: clamp(2rem, 6vw, 3rem);
+    margin-bottom: clamp(0.75rem, 2vw, 1rem);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   }
 
   h2 {
-    color: vars.$color-error;
-    margin: 0 0 vars.$spacing-md 0;
-    font-size: vars.$font-size-lg;
+    color: #fca5a5; // Color de error suave
+    margin: 0 0 clamp(0.75rem, 2vw, 1rem) 0;
+    font-size: clamp(1.125rem, 3vw, 1.5rem);
     font-weight: 600;
   }
 
   p {
-    color: vars.$color-text-secondary;
-    margin: 0 0 vars.$spacing-lg 0;
+    color: $text-secondary-detail;
+    margin: 0 0 clamp(1rem, 3vw, 1.5rem) 0;
     line-height: 1.6;
-    max-width: 400px;
+    max-width: clamp(20rem, 60vw, 25rem);
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
   }
 }
 
-// Media queries para responsive design
-@media (max-width: 768px) {
-  .concurso-detalle-container {
-    padding: vars.$spacing-md;
-  }
+// ===== RESPONSIVE DESIGN GLASSMORPHISM =====
+// Usando diseño fluido con clamp() en lugar de breakpoints fijos
 
+// Ajustes específicos para tablets
+@media (max-width: 768px) {
   .header {
     flex-direction: column;
     align-items: flex-start;
-    gap: vars.$spacing-md;
+    gap: clamp(0.75rem, 2vw, 1rem);
 
     .header-title {
       width: 100%;
-
-      h1 {
-        font-size: vars.$font-size-lg;
-      }
     }
 
     .header-actions {
       width: 100%;
       justify-content: flex-start;
-      flex-wrap: wrap;
     }
   }
 
   .concurso-header-card {
-    padding: vars.$spacing-lg;
-
     .concurso-title {
       flex-direction: column;
       align-items: flex-start;
-      gap: vars.$spacing-sm;
-
-      h2 {
-        font-size: vars.$font-size-md;
-      }
+      gap: clamp(0.5rem, 1.5vw, 0.75rem);
     }
 
     .concurso-info {
       grid-template-columns: 1fr;
-      gap: vars.$spacing-sm;
     }
   }
 
   .tabs-container {
     .tabs-header {
-      flex-direction: column;
+      flex-wrap: wrap;
 
       .tab-button {
-        border-bottom: 1px solid vars.$color-border;
+        min-width: calc(50% - 0.25rem);
+        border-bottom: 1px solid rgba(156, 163, 175, 0.2);
+
+        &:nth-last-child(-n+2) {
+          border-bottom: none;
+        }
+      }
+    }
+  }
+}
+
+// Ajustes específicos para móviles
+@media (max-width: 480px) {
+  .tabs-container {
+    .tabs-header {
+      .tab-button {
+        min-width: 100%;
+        border-bottom: 1px solid rgba(156, 163, 175, 0.2);
 
         &:last-child {
           border-bottom: none;
         }
       }
     }
-
-    .tab-content {
-      padding: vars.$spacing-lg;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .concurso-detalle-container {
-    padding: vars.$spacing-sm;
-  }
-
-  .header {
-    .header-actions {
-      .back-button, .action-button {
-        font-size: vars.$font-size-xs;
-        padding: vars.$spacing-xs vars.$spacing-sm;
-      }
-    }
-  }
-
-  .tabs-container {
-    .tab-content {
-      padding: vars.$spacing-md;
-    }
-  }
-}
-
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .concurso-detalle-container {
-    background-color: vars.$color-background-dark;
-    color: vars.$color-text-primary-dark;
-  }
-
-  .header {
-    border-bottom-color: vars.$color-border-dark;
-
-    h1 {
-      color: vars.$color-text-primary-dark;
-
-      &::before {
-        color: vars.$color-primary-dark;
-      }
-    }
-  }
-
-  .back-button {
-    background-color: vars.$color-surface-dark;
-    color: vars.$color-text-primary-dark;
-    border-color: vars.$color-border-dark;
-
-    &:hover:not(:disabled) {
-      background-color: vars.$color-surface-light;
-      border-color: vars.$color-border-light;
-    }
-  }
-
-  .action-button {
-    &.primary {
-      background-color: vars.$color-primary-dark;
-      border-color: vars.$color-primary-dark;
-
-      &:hover:not(:disabled) {
-        background-color: lighten(vars.$color-primary-dark, 10%);
-        border-color: lighten(vars.$color-primary-dark, 10%);
-      }
-    }
-
-    &.danger {
-      background-color: vars.$color-error-dark;
-      border-color: vars.$color-error-dark;
-
-      &:hover:not(:disabled) {
-        background-color: lighten(vars.$color-error-dark, 10%);
-        border-color: lighten(vars.$color-error-dark, 10%);
-      }
-    }
-  }
-
-  .loading-container {
-    background-color: vars.$color-surface-dark;
-    border-color: vars.$color-border-dark;
-
-    .spinner {
-      color: vars.$color-primary-dark;
-    }
-
-    p {
-      color: vars.$color-text-secondary-dark;
-    }
   }
 
   .concurso-header-card {
-    background-color: vars.$color-surface-dark;
-    border-color: vars.$color-border-dark;
-
-    .concurso-title {
-      h2 {
-        color: vars.$color-text-primary-dark;
-      }
-
-      .status-badge {
-        &.status-active {
-          background-color: rgba(vars.$color-success-dark, 0.2);
-          color: vars.$color-success-dark;
-          border-color: rgba(vars.$color-success-dark, 0.3);
-        }
-
-        &.status-draft {
-          background-color: rgba(vars.$color-warning-dark, 0.2);
-          color: vars.$color-warning-dark;
-          border-color: rgba(vars.$color-warning-dark, 0.3);
-        }
-
-        &.status-in-progress {
-          background-color: rgba(vars.$color-info-dark, 0.2);
-          color: vars.$color-info-dark;
-          border-color: rgba(vars.$color-info-dark, 0.3);
-        }
-
-        &.status-closed {
-          background-color: rgba(vars.$color-error-dark, 0.2);
-          color: vars.$color-error-dark;
-          border-color: rgba(vars.$color-error-dark, 0.3);
-        }
-      }
-    }
-
     .concurso-info {
       .info-item {
-        background-color: rgba(vars.$color-primary-dark, 0.1);
-        border-left-color: vars.$color-primary-dark;
-
-        &:hover {
-          background-color: rgba(vars.$color-primary-dark, 0.15);
-        }
-
-        .icon {
-          color: vars.$color-primary-dark;
-        }
-
-        span {
-          color: vars.$color-text-primary-dark;
-        }
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
       }
     }
   }
+}
 
-  .tabs-container {
-    background-color: vars.$color-surface-dark;
-    border-color: vars.$color-border-dark;
+// ===== ACCESIBILIDAD Y OPTIMIZACIONES =====
+// El sistema glassmorphism ya maneja el tema oscuro por defecto
+// Optimizaciones adicionales para accesibilidad
 
-    .tabs-header {
-      background-color: rgba(vars.$color-primary-dark, 0.1);
-      border-bottom-color: vars.$color-border-dark;
+// Reducir movimiento para usuarios con preferencias de accesibilidad
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
-      .tab-button {
-        color: vars.$color-text-secondary-dark;
-
-        &:hover:not(.active) {
-          background-color: rgba(vars.$color-primary-dark, 0.15);
-          color: vars.$color-text-primary-dark;
-        }
-
-        &.active {
-          background-color: vars.$color-primary-dark;
-          color: vars.$color-white;
-
-          &::after {
-            background-color: vars.$color-accent-dark;
-          }
-        }
-      }
+// Mejoras de contraste para usuarios con necesidades específicas
+@media (prefers-contrast: high) {
+  .concurso-detalle-container {
+    .header, .concurso-header-card, .tabs-container {
+      border-width: 2px;
+      border-color: rgba(255, 255, 255, 0.6);
     }
 
-    .tab-content {
-      .tab-panel {
-        .section {
-          h3 {
-            color: vars.$color-text-primary-dark;
-
-            &::before {
-              color: vars.$color-primary-dark;
-            }
-          }
-
-          p {
-            color: vars.$color-text-secondary-dark;
-          }
-
-          .empty-text {
-            color: vars.$color-text-tertiary-dark;
-            background-color: rgba(vars.$color-text-tertiary-dark, 0.1);
-            border-color: rgba(vars.$color-text-tertiary-dark, 0.3);
-          }
-        }
-
-        .documents-list {
-          .document-link {
-            color: vars.$color-primary-dark;
-            background-color: rgba(vars.$color-primary-dark, 0.1);
-            border-color: rgba(vars.$color-primary-dark, 0.3);
-
-            &:hover {
-              background-color: rgba(vars.$color-primary-dark, 0.2);
-            }
-          }
-        }
-
-        .fechas-list, .requisitos-list {
-          .fecha-item, .requisito-item {
-            background-color: rgba(vars.$color-surface-light, 0.3);
-            border-color: vars.$color-border-dark;
-
-            &:hover {
-              background-color: rgba(vars.$color-primary-dark, 0.1);
-              border-color: rgba(vars.$color-primary-dark, 0.3);
-            }
-
-            .fecha-title, .requisito-description {
-              color: vars.$color-text-primary-dark;
-            }
-
-            .fecha-date, .requisito-category {
-              color: vars.$color-text-secondary-dark;
-              background-color: rgba(vars.$color-primary-dark, 0.2);
-            }
-          }
-        }
-      }
+    .status-badge {
+      border-width: 2px;
+      font-weight: 700;
     }
   }
+}
 
-  .error-container {
-    background-color: vars.$color-surface-dark;
-    border-color: vars.$color-border-dark;
+// Optimización para impresión
+@media print {
+  .concurso-detalle-container {
+    background: white !important;
+    color: black !important;
 
-    &::before {
-      color: vars.$color-error-dark;
+    .header-actions,
+    .back-button,
+    .action-button {
+      display: none !important;
     }
 
-    h2 {
-      color: vars.$color-error-dark;
-    }
+    .tabs-container {
+      .tabs-header {
+        display: none !important;
+      }
 
-    p {
-      color: vars.$color-text-secondary-dark;
+      .tab-content .tab-panel {
+        display: block !important;
+      }
     }
   }
 }

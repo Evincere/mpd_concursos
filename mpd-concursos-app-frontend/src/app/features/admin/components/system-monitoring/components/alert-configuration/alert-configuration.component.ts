@@ -1,15 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from    '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
+
+import { AlertThreshold } from '@core/services/admin/system-monitoring.service';
 
 
 @Component({
@@ -18,82 +12,203 @@ import { Subject } from 'rxjs';
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatSlideToggleModule
+    ReactiveFormsModule
   ],
-  template: `
-    <div class="alert-config-container">
-      <mat-card class="config-card">
-        <mat-card-header>
-          <mat-card-title>Configuración de Alertas</mat-card-title>
-          <mat-card-subtitle>Personaliza las alertas del sistema</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="placeholder-content">
-            <p>Componente en desarrollo. Próximamente se podrán configurar las alertas del sistema.</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .alert-config-container {
-      padding: 16px;
-    }
-
-    .config-card {
-      margin-bottom: 16px;
-    }
-
-    .placeholder-content {
-      padding: 20px;
-      text-align: center;
-      background-color: rgba(0, 0, 0, 0.05);
-      border-radius: 4px;
-      margin: 16px 0;
-    }
-  `]
+  templateUrl: './alert-configuration.component.html',
+  styleUrls: ['./alert-configuration.component.scss']
 })
-export class AlertConfigurationComponent implements OnInit, OnDestroy {
+export class AlertConfigurationComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() alertThresholds: AlertThreshold[] = [];
+  @Output() updateThreshold = new EventEmitter<AlertThreshold>();
+
   private destroy$ = new Subject<void>();
 
-  constructor() {
-    // Constructor vacío
+  // Formulario de configuración
+  configForm: FormGroup;
+
+  // Tipos de métricas disponibles
+  metricTypes = [
+    { value: 'cpu.usage', label: 'Uso de CPU (%)' },
+    { value: 'memory.usage', label: 'Uso de Memoria (%)' },
+    { value: 'disk.usage', label: 'Uso de Disco (%)' },
+    { value: 'api.responseTime', label: 'Tiempo de Respuesta (ms)' },
+    { value: 'api.errorRate', label: 'Tasa de Errores (%)' },
+    { value: 'database.connections', label: 'Conexiones Activas' }
+  ];
+
+  // Tipos de severidad
+  severityTypes = [
+    { value: 'info', label: 'Información' },
+    { value: 'warning', label: 'Advertencia' },
+    { value: 'error', label: 'Error' },
+    { value: 'critical', label: 'Crítica' }
+  ];
+
+  // Operadores disponibles
+  operators = [
+    { value: '>', label: 'Mayor que (>)' },
+    { value: '<', label: 'Menor que (<)' },
+    { value: '>=', label: 'Mayor o igual (>=)' },
+    { value: '<=', label: 'Menor o igual (<=)' },
+    { value: '==', label: 'Igual a (==)' },
+    { value: '!=', label: 'Diferente de (!=)' }
+  ];
+
+  constructor(private fb: FormBuilder) {
+    this.configForm = this.createForm();
   }
 
   ngOnInit(): void {
-    // Cargar configuraciones de alertas
-    this.loadAlertConfigurations();
-
-    // Suscribirse a cambios en tiempo real
-    this.subscribeToRealTimeUpdates();
+    console.log('Alert configuration component initialized');
   }
 
-  /**
-   * Carga las configuraciones de alertas
-   */
-  private loadAlertConfigurations(): void {
-    // En una implementación real, esto cargaría las configuraciones desde un servicio
-    console.log('Cargando configuraciones de alertas');
-  }
-
-  /**
-   * Se suscribe a actualizaciones en tiempo real
-   */
-  private subscribeToRealTimeUpdates(): void {
-    // En una implementación real, esto se suscribiría a un servicio de tiempo real
-    console.log('Suscribiéndose a actualizaciones en tiempo real');
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['alertThresholds']) {
+      console.log('Alert thresholds updated:', this.alertThresholds);
+    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Crea el formulario de configuración
+   */
+  private createForm(): FormGroup {
+    return this.fb.group({
+      name: ['', Validators.required],
+      description: [''],
+      metricName: ['', Validators.required],
+      operator: ['>', Validators.required],
+      threshold: ['', [Validators.required, Validators.min(0)]],
+      severity: ['warning', Validators.required],
+      enabled: [true],
+      cooldownMinutes: [15, [Validators.required, Validators.min(1)]]
+    });
+  }
+
+  /**
+   * Guarda una nueva configuración de alerta
+   */
+  onSaveThreshold(): void {
+    if (this.configForm.valid) {
+      const formValue = this.configForm.value;
+      const newThreshold: AlertThreshold = {
+        id: this.generateId(),
+        name: formValue.name,
+        description: formValue.description || '',
+        metricName: formValue.metricName,
+        operator: formValue.operator,
+        threshold: formValue.threshold,
+        severity: formValue.severity,
+        enabled: formValue.enabled,
+        notificationChannels: ['system'],
+        cooldownMinutes: formValue.cooldownMinutes
+      };
+
+      this.updateThreshold.emit(newThreshold);
+      this.configForm.reset();
+      this.configForm.patchValue({
+        enabled: true,
+        operator: '>',
+        severity: 'warning',
+        cooldownMinutes: 15
+      });
+    }
+  }
+
+  /**
+   * Actualiza una configuración existente
+   */
+  onUpdateThreshold(threshold: AlertThreshold): void {
+    this.updateThreshold.emit(threshold);
+  }
+
+  /**
+   * Alterna el estado habilitado/deshabilitado de una alerta
+   */
+  onToggleThreshold(threshold: AlertThreshold): void {
+    const updatedThreshold: AlertThreshold = {
+      ...threshold,
+      enabled: !threshold.enabled
+    };
+    this.updateThreshold.emit(updatedThreshold);
+  }
+
+  /**
+   * Obtiene la etiqueta para un tipo de métrica
+   */
+  getMetricTypeLabel(metricName: string): string {
+    const metric = this.metricTypes.find(m => m.value === metricName);
+    return metric ? metric.label : metricName;
+  }
+
+  /**
+   * Obtiene la etiqueta para un tipo de severidad
+   */
+  getSeverityLabel(severity: string): string {
+    const sev = this.severityTypes.find(s => s.value === severity);
+    return sev ? sev.label : severity;
+  }
+
+  /**
+   * Obtiene la clase CSS para el tipo de severidad
+   */
+  getSeverityClass(severity: string): string {
+    switch (severity) {
+      case 'info':
+        return 'alert-info';
+      case 'warning':
+        return 'alert-warning';
+      case 'error':
+        return 'alert-error';
+      case 'critical':
+        return 'alert-critical';
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Obtiene el icono para el tipo de severidad
+   */
+  getSeverityIcon(severity: string): string {
+    switch (severity) {
+      case 'info':
+        return 'ℹ️';
+      case 'warning':
+        return '⚠️';
+      case 'error':
+        return '❌';
+      case 'critical':
+        return '🚨';
+      default:
+        return '📊';
+    }
+  }
+
+  /**
+   * Obtiene la etiqueta para un operador
+   */
+  getOperatorLabel(operator: string): string {
+    const op = this.operators.find(o => o.value === operator);
+    return op ? op.label : operator;
+  }
+
+  /**
+   * Formatea una fecha
+   */
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleString();
+  }
+
+  /**
+   * Genera un ID único
+   */
+  private generateId(): string {
+    return 'threshold_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 }

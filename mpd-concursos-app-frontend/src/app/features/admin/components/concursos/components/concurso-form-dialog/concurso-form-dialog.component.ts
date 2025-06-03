@@ -1,13 +1,13 @@
-import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { AdminConcursosService, ConcursoCreateRequest, ConcursoUpdateRequest } from '../../../../../../core/services/admin/admin-concursos.service';
 import { Concurso, ContestStatus } from '@shared/interfaces/concurso/concurso.interface';
 import { NotificationService } from '@shared/services/notification.service';
+import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
 
 // Componentes personalizados
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
@@ -71,8 +71,8 @@ export class ConcursoFormDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private concursosService: AdminConcursosService,
     private notificationService: NotificationService,
-    public dialogRef: MatDialogRef<ConcursoFormDialogComponent, Concurso>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
+    public dialogRef: UnifiedDialogRef<Concurso>,
+    @Inject(DIALOG_DATA) public data: DialogData
   ) {
     this.concursoForm = this.fb.group({
       title: ['', [Validators.required]],
@@ -251,7 +251,41 @@ export class ConcursoFormDialogComponent implements OnInit, OnDestroy {
   }
 
   onCancel(): void {
-    this.dialogRef.close();
+    console.log('🔍 [ConcursoFormDialog] onCancel() llamado');
+    console.log('🔍 [ConcursoFormDialog] dialogRef:', this.dialogRef);
+
+    try {
+      // Usar el dialogRef con el callback mejorado
+      this.dialogRef.close();
+      console.log('✅ [ConcursoFormDialog] Diálogo cerrado con dialogRef.close()');
+
+    } catch (error) {
+      console.error('❌ [ConcursoFormDialog] Error cerrando diálogo:', error);
+
+      // Fallback: Forzar cierre manual
+      this.forceCloseDialog();
+    }
+  }
+
+  /**
+   * Fuerza el cierre del diálogo como último recurso
+   */
+  private forceCloseDialog(): void {
+    try {
+      console.log('🔧 [ConcursoFormDialog] Intentando cierre forzado del diálogo');
+
+      // Buscar y eliminar el contenedor del diálogo
+      const dialogContainer = document.querySelector('.unified-dialog-container');
+      if (dialogContainer && dialogContainer.parentNode) {
+        dialogContainer.parentNode.removeChild(dialogContainer);
+        console.log('✅ [ConcursoFormDialog] Diálogo cerrado forzadamente');
+
+        // Restaurar el scroll del body
+        document.body.style.overflow = '';
+      }
+    } catch (error) {
+      console.error('❌ [ConcursoFormDialog] Error en cierre forzado:', error);
+    }
   }
 
   getErrorMessage(controlName: string): string {

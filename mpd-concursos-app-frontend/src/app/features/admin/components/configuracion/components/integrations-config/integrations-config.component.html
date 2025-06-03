@@ -1,260 +1,315 @@
 <div class="integrations-config-container">
-  <div class="header">
-    <h3>Configuración de Integraciones</h3>
-    <p class="description">
+  <!-- Header glassmorphism -->
+  <div class="integrations-header">
+    <h3 class="integrations-title">Configuración de Integraciones</h3>
+    <p class="integrations-description">
       Configure las integraciones con servicios externos y APIs.
     </p>
   </div>
-  
+
+  <!-- Loading state -->
   <div *ngIf="isLoading" class="loading-overlay">
-    <mat-spinner diameter="40"></mat-spinner>
-    <span>Cargando configuración...</span>
+    <div class="loading-spinner"></div>
+    <span class="loading-text">Cargando configuración...</span>
   </div>
-  
-  <form [formGroup]="integrationsForm" *ngIf="!isLoading" class="config-form">
-    <mat-accordion>
-      <!-- Google Maps -->
-      <mat-expansion-panel expanded>
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <div class="panel-title">
-              <mat-icon>map</mat-icon>
-              <span>Google Maps</span>
-            </div>
-          </mat-panel-title>
-          <mat-panel-description>
-            <mat-slide-toggle formControlName="googleMapsEnabled" color="primary">
+
+  <!-- Formulario principal -->
+  <form [formGroup]="integrationsForm" *ngIf="!isLoading" class="integrations-form">
+    <div class="integrations-sections">
+
+      <!-- Google Maps Section -->
+      <div class="integration-section">
+        <div class="section-header" (click)="toggleSection('googleMaps')">
+          <div class="section-title">
+            <span class="section-icon">🗺️</span>
+            <span class="section-name">Google Maps</span>
+          </div>
+          <div class="section-toggle">
+            <label class="toggle-switch">
+              <input type="checkbox" formControlName="googleMapsEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">
               {{integrationsForm.get('googleMapsEnabled')?.value ? 'Habilitado' : 'Deshabilitado'}}
-            </mat-slide-toggle>
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-        
-        <div class="panel-content">
+            </span>
+          </div>
+          <button type="button" class="expand-button" [class.expanded]="expandedSections.googleMaps">
+            <span class="expand-icon">▼</span>
+          </button>
+        </div>
+
+        <div class="section-content" *ngIf="expandedSections.googleMaps">
           <p class="section-description">
             Configure la integración con Google Maps para habilitar la funcionalidad de mapas y geocodificación.
           </p>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>API Key de Google Maps</mat-label>
-              <input matInput formControlName="googleMapsApiKey" placeholder="Ingrese la API Key de Google Maps">
-              <mat-hint>Obtenga una API Key en la <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Consola de Google Cloud</a></mat-hint>
-            </mat-form-field>
+
+          <div class="form-field">
+            <label class="field-label">API Key de Google Maps</label>
+            <input
+              type="text"
+              class="form-input"
+              formControlName="googleMapsApiKey"
+              placeholder="Ingrese la API Key de Google Maps">
+            <div class="field-hint">
+              Obtenga una API Key en la <a href="https://console.cloud.google.com/google/maps-apis" target="_blank" class="field-link">Consola de Google Cloud</a>
+            </div>
           </div>
         </div>
-      </mat-expansion-panel>
-      
-      <!-- reCAPTCHA -->
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <div class="panel-title">
-              <mat-icon>security</mat-icon>
-              <span>reCAPTCHA</span>
-            </div>
-          </mat-panel-title>
-          <mat-panel-description>
-            <mat-slide-toggle formControlName="recaptchaEnabled" color="primary">
+      </div>
+
+      <!-- reCAPTCHA Section -->
+      <div class="integration-section">
+        <div class="section-header" (click)="toggleSection('recaptcha')">
+          <div class="section-title">
+            <span class="section-icon">🔒</span>
+            <span class="section-name">reCAPTCHA</span>
+          </div>
+          <div class="section-toggle">
+            <label class="toggle-switch">
+              <input type="checkbox" formControlName="recaptchaEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">
               {{integrationsForm.get('recaptchaEnabled')?.value ? 'Habilitado' : 'Deshabilitado'}}
-            </mat-slide-toggle>
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-        
-        <div class="panel-content">
+            </span>
+          </div>
+          <button type="button" class="expand-button" [class.expanded]="expandedSections.recaptcha">
+            <span class="expand-icon">▼</span>
+          </button>
+        </div>
+
+        <div class="section-content" *ngIf="expandedSections.recaptcha">
           <p class="section-description">
             Configure la integración con Google reCAPTCHA para proteger su sitio contra spam y abuso.
           </p>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Site Key</mat-label>
-              <input matInput formControlName="recaptchaSiteKey" placeholder="Ingrese la Site Key de reCAPTCHA">
-            </mat-form-field>
+
+          <div class="form-field">
+            <label class="field-label">Site Key</label>
+            <input
+              type="text"
+              class="form-input"
+              formControlName="recaptchaSiteKey"
+              placeholder="Ingrese la Site Key de reCAPTCHA">
           </div>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Secret Key</mat-label>
-              <input matInput formControlName="recaptchaSecretKey" placeholder="Ingrese la Secret Key de reCAPTCHA" type="password">
-              <mat-hint>Obtenga las claves en la <a href="https://www.google.com/recaptcha/admin" target="_blank">Consola de reCAPTCHA</a></mat-hint>
-            </mat-form-field>
+
+          <div class="form-field">
+            <label class="field-label">Secret Key</label>
+            <input
+              type="password"
+              class="form-input"
+              formControlName="recaptchaSecretKey"
+              placeholder="Ingrese la Secret Key de reCAPTCHA">
+            <div class="field-hint">
+              Obtenga las claves en la <a href="https://www.google.com/recaptcha/admin" target="_blank" class="field-link">Consola de reCAPTCHA</a>
+            </div>
           </div>
         </div>
-      </mat-expansion-panel>
-      
-      <!-- Google Analytics -->
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <div class="panel-title">
-              <mat-icon>analytics</mat-icon>
-              <span>Google Analytics</span>
-            </div>
-          </mat-panel-title>
-          <mat-panel-description>
-            <mat-slide-toggle formControlName="googleAnalyticsEnabled" color="primary">
+      </div>
+
+      <!-- Google Analytics Section -->
+      <div class="integration-section">
+        <div class="section-header" (click)="toggleSection('googleAnalytics')">
+          <div class="section-title">
+            <span class="section-icon">📊</span>
+            <span class="section-name">Google Analytics</span>
+          </div>
+          <div class="section-toggle">
+            <label class="toggle-switch">
+              <input type="checkbox" formControlName="googleAnalyticsEnabled">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">
               {{integrationsForm.get('googleAnalyticsEnabled')?.value ? 'Habilitado' : 'Deshabilitado'}}
-            </mat-slide-toggle>
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-        
-        <div class="panel-content">
+            </span>
+          </div>
+          <button type="button" class="expand-button" [class.expanded]="expandedSections.googleAnalytics">
+            <span class="expand-icon">▼</span>
+          </button>
+        </div>
+
+        <div class="section-content" *ngIf="expandedSections.googleAnalytics">
           <p class="section-description">
             Configure la integración con Google Analytics para realizar un seguimiento del tráfico y el comportamiento de los usuarios.
           </p>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>ID de Google Analytics</mat-label>
-              <input matInput formControlName="googleAnalyticsId" placeholder="Ej: G-XXXXXXXXXX o UA-XXXXXXXX-X">
-              <mat-hint>Obtenga un ID en la <a href="https://analytics.google.com/" target="_blank">Consola de Google Analytics</a></mat-hint>
-            </mat-form-field>
+
+          <div class="form-field">
+            <label class="field-label">ID de Google Analytics</label>
+            <input
+              type="text"
+              class="form-input"
+              formControlName="googleAnalyticsId"
+              placeholder="Ej: G-XXXXXXXXXX o UA-XXXXXXXX-X">
+            <div class="field-hint">
+              Obtenga un ID en la <a href="https://analytics.google.com/" target="_blank" class="field-link">Consola de Google Analytics</a>
+            </div>
           </div>
         </div>
-      </mat-expansion-panel>
-      
-      <!-- Proveedores de Autenticación Externa -->
-      <mat-expansion-panel formGroupName="externalAuthProviders">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <div class="panel-title">
-              <mat-icon>login</mat-icon>
-              <span>Autenticación Externa</span>
-            </div>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        
-        <div class="panel-content">
+      </div>
+
+      <!-- Autenticación Externa Section -->
+      <div class="integration-section" formGroupName="externalAuthProviders">
+        <div class="section-header" (click)="toggleSection('authProviders')">
+          <div class="section-title">
+            <span class="section-icon">🔐</span>
+            <span class="section-name">Autenticación Externa</span>
+          </div>
+          <button type="button" class="expand-button" [class.expanded]="expandedSections.authProviders">
+            <span class="expand-icon">▼</span>
+          </button>
+        </div>
+
+        <div class="section-content" *ngIf="expandedSections.authProviders">
           <p class="section-description">
             Configure los proveedores de autenticación externa para permitir a los usuarios iniciar sesión con sus cuentas existentes.
           </p>
-          
+
           <div class="auth-providers">
             <div class="auth-provider">
               <div class="provider-info">
                 <div class="provider-icon google-icon">G</div>
                 <div class="provider-name">Google</div>
               </div>
-              <mat-slide-toggle formControlName="google" color="primary">
-                {{integrationsForm.get('externalAuthProviders.google')?.value ? 'Habilitado' : 'Deshabilitado'}}
-              </mat-slide-toggle>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="google">
+                <span class="toggle-slider"></span>
+              </label>
             </div>
-            
+
             <div class="auth-provider">
               <div class="provider-info">
                 <div class="provider-icon microsoft-icon">M</div>
                 <div class="provider-name">Microsoft</div>
               </div>
-              <mat-slide-toggle formControlName="microsoft" color="primary">
-                {{integrationsForm.get('externalAuthProviders.microsoft')?.value ? 'Habilitado' : 'Deshabilitado'}}
-              </mat-slide-toggle>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="microsoft">
+                <span class="toggle-slider"></span>
+              </label>
             </div>
-            
+
             <div class="auth-provider">
               <div class="provider-info">
                 <div class="provider-icon facebook-icon">f</div>
                 <div class="provider-name">Facebook</div>
               </div>
-              <mat-slide-toggle formControlName="facebook" color="primary">
-                {{integrationsForm.get('externalAuthProviders.facebook')?.value ? 'Habilitado' : 'Deshabilitado'}}
-              </mat-slide-toggle>
+              <label class="toggle-switch">
+                <input type="checkbox" formControlName="facebook">
+                <span class="toggle-slider"></span>
+              </label>
             </div>
           </div>
-          
+
           <p class="auth-note">
             Nota: Para configurar los detalles de cada proveedor, contacte al administrador del sistema.
           </p>
         </div>
-      </mat-expansion-panel>
-      
-      <!-- API Keys -->
-      <mat-expansion-panel>
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <div class="panel-title">
-              <mat-icon>vpn_key</mat-icon>
-              <span>API Keys</span>
-            </div>
-          </mat-panel-title>
-          <mat-panel-description>
+      </div>
+
+      <!-- API Keys Section -->
+      <div class="integration-section">
+        <div class="section-header" (click)="toggleSection('apiKeys')">
+          <div class="section-title">
+            <span class="section-icon">🔑</span>
+            <span class="section-name">API Keys</span>
+          </div>
+          <div class="section-badge">
             {{apiKeysArray.length}} claves
-          </mat-panel-description>
-        </mat-expansion-panel-header>
-        
-        <div class="panel-content">
+          </div>
+          <button type="button" class="expand-button" [class.expanded]="expandedSections.apiKeys">
+            <span class="expand-icon">▼</span>
+          </button>
+        </div>
+
+        <div class="section-content" *ngIf="expandedSections.apiKeys">
           <p class="section-description">
             Gestione las claves API para permitir el acceso a la API del sistema desde aplicaciones externas.
           </p>
-          
-          <div formArrayName="apiKeys">
+
+          <div formArrayName="apiKeys" class="api-keys-container">
             <div *ngFor="let apiKeyGroup of apiKeysArray.controls; let i = index" [formGroupName]="i" class="api-key-item">
               <div class="api-key-header">
-                <h4>API Key #{{i + 1}}</h4>
-                <button mat-icon-button color="warn" type="button" (click)="removeApiKey(i)" matTooltip="Eliminar API Key">
-                  <mat-icon>delete</mat-icon>
+                <h4 class="api-key-title">API Key #{{i + 1}}</h4>
+                <button type="button" class="btn-delete" (click)="removeApiKey(i)" title="Eliminar API Key">
+                  🗑️
                 </button>
               </div>
-              
-              <div class="form-row two-columns">
-                <mat-form-field appearance="outline">
-                  <mat-label>Nombre</mat-label>
-                  <input matInput formControlName="name" placeholder="Nombre descriptivo">
-                  <mat-error *ngIf="apiKeysArray.at(i).get('name')?.hasError('required')">
-                    El nombre es requerido
-                  </mat-error>
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>Fecha de expiración</mat-label>
-                  <input matInput [matDatepicker]="picker" formControlName="expirationDate">
-                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                  <mat-datepicker #picker></mat-datepicker>
-                  <mat-hint>Dejar en blanco para que no expire</mat-hint>
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="key-field">
-                  <mat-label>Clave API</mat-label>
-                  <input matInput formControlName="key" placeholder="Clave API">
-                  <button mat-icon-button matSuffix type="button" (click)="generateApiKey(i)" matTooltip="Generar clave aleatoria">
-                    <mat-icon>refresh</mat-icon>
-                  </button>
-                  <mat-error *ngIf="apiKeysArray.at(i).get('key')?.hasError('required')">
+
+              <div class="api-key-form">
+                <div class="form-row">
+                  <div class="form-field">
+                    <label class="field-label">Nombre</label>
+                    <input
+                      type="text"
+                      class="form-input"
+                      formControlName="name"
+                      placeholder="Nombre descriptivo">
+                    <div *ngIf="apiKeysArray.at(i).get('name')?.hasError('required')" class="field-error">
+                      El nombre es requerido
+                    </div>
+                  </div>
+
+                  <div class="form-field">
+                    <label class="field-label">Fecha de expiración</label>
+                    <input
+                      type="date"
+                      class="form-input"
+                      formControlName="expirationDate">
+                    <div class="field-hint">Dejar en blanco para que no expire</div>
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Clave API</label>
+                  <div class="input-with-button">
+                    <input
+                      type="text"
+                      class="form-input"
+                      formControlName="key"
+                      placeholder="Clave API">
+                    <button type="button" class="btn-generate" (click)="generateApiKey(i)" title="Generar clave aleatoria">
+                      🔄
+                    </button>
+                  </div>
+                  <div *ngIf="apiKeysArray.at(i).get('key')?.hasError('required')" class="field-error">
                     La clave API es requerida
-                  </mat-error>
-                </mat-form-field>
-                
-                <div class="key-enabled">
-                  <mat-slide-toggle formControlName="enabled" color="primary">
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label class="toggle-switch">
+                    <input type="checkbox" formControlName="enabled">
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <span class="toggle-label">
                     {{apiKeysArray.at(i).get('enabled')?.value ? 'Habilitada' : 'Deshabilitada'}}
-                  </mat-slide-toggle>
+                  </span>
                 </div>
               </div>
-              
-              <mat-divider *ngIf="i < apiKeysArray.length - 1"></mat-divider>
+
+              <div *ngIf="i < apiKeysArray.length - 1" class="api-key-divider"></div>
             </div>
-            
+
             <div class="add-api-key">
-              <button mat-stroked-button color="primary" type="button" (click)="addApiKey()">
-                <mat-icon>add</mat-icon>
+              <button type="button" class="btn-secondary" (click)="addApiKey()">
+                <span class="btn-icon">➕</span>
                 Agregar API Key
               </button>
             </div>
           </div>
         </div>
-      </mat-expansion-panel>
-    </mat-accordion>
-    
+      </div>
+
+    </div>
+
+    <!-- Form Actions -->
     <div class="form-actions">
-      <button mat-stroked-button color="warn" type="button" (click)="resetConfig()" [disabled]="isSaving">
-        <mat-icon>restore</mat-icon>
+      <button type="button" class="btn-secondary" (click)="resetConfig()" [disabled]="isSaving">
+        <span class="btn-icon">🔄</span>
         Restablecer
       </button>
-      
-      <button mat-raised-button color="primary" type="button" (click)="saveConfig()" [disabled]="isSaving">
-        <mat-icon>save</mat-icon>
-        Guardar
+
+      <button type="button" class="btn-primary" (click)="saveConfig()" [disabled]="isSaving">
+        <span class="btn-icon">💾</span>
+        {{isSaving ? 'Guardando...' : 'Guardar'}}
       </button>
     </div>
   </form>

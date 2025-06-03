@@ -1,262 +1,541 @@
 @use 'src/styles/variables' as *;
 
+/* Enhanced Glassmorphism Design System Variables - Consistent with Admin Dashboard */
+$glass-background-primary: rgba(55, 65, 81, 0.8);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(31, 41, 55, 0.85);
+$glass-hover-primary: rgba(75, 85, 99, 0.6);
+$glass-active-primary: rgba(55, 65, 81, 0.95);
+
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-muted: #9ca3af;
+
+$focus-color: #3b82f6;
+$focus-color-secondary: rgba(59, 130, 246, 0.2);
+
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+/* Glassmorphism Effects */
+$border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.2);
+
+$card-shadow-base: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+$card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+
+/* Lifecycle Theme Colors */
+$theme-lifecycle-primary: #4CAF50;
+$theme-lifecycle-light: rgba(76, 175, 80, 0.1);
+$theme-lifecycle-medium: rgba(76, 175, 80, 0.2);
+
 .lifecycle-manager-container {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  background: transparent; /* Inherit dashboard background */
+  min-height: calc(100vh - 64px);
+  position: relative;
 }
 
+/* Enhanced Glassmorphism Header */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  /* Premium glassmorphism header */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-secondary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 80% 20%, $theme-lifecycle-light 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-lg;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all $transition-smooth;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $card-shadow-hover;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 
   h1 {
     margin: 0;
-    font-size: $font-size-xl;
-    font-weight: 500;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    &::before {
+      content: '🔄';
+      font-size: 1.25rem;
+      opacity: 0.8;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
   }
 }
 
-// Layout principal
+/* Flexible Responsive Layout */
 .content-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   position: relative;
-  
+
   &.with-selection {
-    .inscriptions-panel {
-      flex: 1;
+    grid-template-columns: minmax(400px, 1fr) minmax(500px, 1.5fr);
+
+    @media (max-width: 1200px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
     }
-    
-    .lifecycle-panel {
-      flex: 2;
-      min-width: 500px;
-    }
+  }
+
+  @media (min-width: 768px) {
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    gap: 2rem;
   }
 }
 
-// Panel de inscripciones
+/* Enhanced Inscriptions Panel */
 .inscriptions-panel {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0; /* Prevent flex overflow */
 }
 
-// Tarjeta de filtros
-.filter-card {
-  border-radius: $border-radius;
-  box-shadow: $box-shadow;
-  background-color: $color-surface;
-  
-  .card-body {
-    padding: 1.5rem;
-  }
-}
+/* Enhanced Glassmorphism Filter Cards */
+::ng-deep app-custom-card.filters-card {
+  .custom-card {
+    /* Premium glassmorphism base */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-secondary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(circle at 70% 30%, $theme-lifecycle-light 0%, transparent 50%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-lg;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: all $transition-smooth;
+    overflow: hidden;
+    position: relative;
 
-.filter-form {
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    
-    &:last-child {
-      margin-bottom: 0;
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: $card-shadow-hover;
+      border-color: rgba(255, 255, 255, 0.2);
     }
-    
-    .form-group {
-      flex: 1;
-      min-width: 200px;
-      
-      label {
-        color: $color-text-secondary;
-        margin-bottom: 0.5rem;
-      }
-      
-      .form-control,
-      .form-select {
-        background-color: $color-surface-light;
-        border: 1px solid $color-border;
-        color: $color-text-primary;
-        
-        &:focus {
-          border-color: $color-primary;
-          box-shadow: 0 0 0 2px rgba($color-primary, 0.25);
+
+    .card-header {
+      padding: 1rem 1.25rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 1rem;
+
+      h3 {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: $text-primary;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &::before {
+          content: '🔍';
+          font-size: 1rem;
+          opacity: 0.8;
         }
       }
     }
-    
-    .date-range {
-      display: flex;
-      gap: 1rem;
-      flex: 2;
+
+    .card-content {
+      padding: 0 1.25rem 1.25rem;
     }
   }
-  
-  .filter-actions {
-    display: flex;
-    justify-content: flex-end;
-    
-    .btn-link {
-      color: $color-primary;
-      text-decoration: none;
-      
-      &:hover {
-        color: darken($color-primary, 10%);
+}
+
+/* Enhanced Filter Form Layout */
+.filters-form {
+  .filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .filter-field {
+      min-width: 0; /* Prevent overflow */
+    }
+  }
+}
+
+/* Enhanced Custom Form Field Integration */
+::ng-deep .filters-form {
+  app-custom-form-field,
+  app-custom-select,
+  app-custom-datepicker {
+    .form-field-container {
+      .form-field {
+        background: rgba(75, 85, 99, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: $text-primary;
+        border-radius: $border-radius-md;
+        transition: all $transition-normal;
+
+        &:focus,
+        &:focus-within {
+          border-color: $focus-color;
+          box-shadow: 0 0 0 2px $focus-color-secondary;
+          background: rgba(75, 85, 99, 0.8);
+        }
+
+        &::placeholder {
+          color: $text-muted;
+        }
       }
-      
-      i {
-        margin-right: 0.5rem;
+
+      .form-label {
+        color: $text-secondary;
+        font-weight: 500;
+        font-size: 0.8125rem;
+      }
+    }
+
+    .select-dropdown {
+      background: rgba(75, 85, 99, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: $border-radius-md;
+      backdrop-filter: blur(8px);
+      box-shadow: $card-shadow-base;
+
+      .select-option {
+        color: $text-primary;
+        transition: all $transition-normal;
+
+        &:hover {
+          background: rgba(59, 130, 246, 0.2);
+        }
+
+        &.selected {
+          background: rgba(76, 175, 80, 0.2);
+          color: $text-primary;
+        }
       }
     }
   }
 }
 
-// Tabla de inscripciones
+/* Enhanced Glassmorphism Table Card */
+::ng-deep app-custom-card.table-card {
+  .custom-card {
+    /* Premium glassmorphism base */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-secondary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(circle at 90% 10%, $theme-lifecycle-light 0%, transparent 50%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-lg;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transition: all $transition-smooth;
+    overflow: hidden;
+    position: relative;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: $card-shadow-hover;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card-header {
+      padding: 1rem 1.25rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h3 {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: $text-primary;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &::before {
+          content: '📋';
+          font-size: 1rem;
+          opacity: 0.8;
+        }
+      }
+
+      .results-count {
+        font-size: 0.75rem;
+        color: $text-secondary;
+        background: rgba(76, 175, 80, 0.15);
+        padding: 0.25rem 0.5rem;
+        border-radius: $border-radius-sm;
+        border: 1px solid rgba(76, 175, 80, 0.2);
+      }
+    }
+
+    .card-content {
+      padding: 0;
+    }
+  }
+}
+
+/* Enhanced Table Container with Modern Glassmorphism */
 .table-container {
   position: relative;
   min-height: 400px;
-  border-radius: 8px;
+  border-radius: 0 0 $border-radius-lg $border-radius-lg;
   overflow: hidden;
-  background-color: $color-surface;
-  
-  table {
-    width: 100%;
+  background: transparent;
+
+  /* Enhanced Custom Table Integration */
+  ::ng-deep app-custom-table {
+    .table-wrapper {
+      background: transparent;
+      border-radius: 0;
+
+      .table-header {
+        background: rgba(31, 41, 55, 0.6);
+        backdrop-filter: blur(6px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+        .header-cell {
+          color: $text-primary;
+          font-weight: 600;
+          font-size: 0.8125rem;
+          padding: 0.875rem 1rem;
+          border-right: 1px solid rgba(255, 255, 255, 0.05);
+
+          &:last-child {
+            border-right: none;
+          }
+        }
+      }
+
+      .table-body {
+        .table-row {
+          background: rgba(55, 65, 81, 0.3);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          transition: all $transition-normal;
+          cursor: pointer;
+
+          &:hover {
+            background: rgba(75, 85, 99, 0.4);
+            transform: translateY(-1px);
+          }
+
+          &.selected {
+            background: rgba(76, 175, 80, 0.15);
+            border-color: rgba(76, 175, 80, 0.3);
+          }
+
+          .table-cell {
+            padding: 1rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: top;
+
+            &:last-child {
+              border-right: none;
+            }
+          }
+        }
+      }
+    }
   }
-  
-  .user-info-cell,
-  .contest-info-cell {
-    .user-name,
+
+  /* Enhanced Cell Content Styling */
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .user-name {
+      font-weight: 600;
+      color: $text-primary;
+      font-size: 0.875rem;
+    }
+
+    .user-email,
+    .user-dni {
+      font-size: 0.75rem;
+      color: $text-secondary;
+    }
+  }
+
+  .contest-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
     .contest-title {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
+      font-weight: 600;
+      color: $text-primary;
+      font-size: 0.875rem;
     }
-    
-    .user-details,
-    .contest-details {
-      display: flex;
-      flex-direction: column;
-      font-size: $font-size-xs;
-      color: $color-text-secondary;
-      
-      .user-dni,
-      .contest-category {
-        margin-bottom: 0.25rem;
-      }
+
+    .contest-category,
+    .contest-department {
+      font-size: 0.75rem;
+      color: $text-secondary;
     }
   }
-  
-  .dates-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    
-    .date-item {
-      display: flex;
-      flex-direction: column;
-      
-      .date-label {
-        font-size: $font-size-xs;
-        color: $color-text-secondary;
-      }
-      
-      .date-value {
-        font-size: $font-size-sm;
-      }
-    }
+
+  .date-cell {
+    font-size: 0.75rem;
+    color: $text-secondary;
   }
-  
-  .selected-row {
-    background-color: rgba($color-primary, 0.05);
-  }
-  
-  .loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.7);
+
+  .actions-cell {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1;
-  }
-  
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    
-    i {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      color: $color-text-tertiary;
-    }
-    
-    p {
-      margin-bottom: 1.5rem;
-      color: $color-text-secondary;
-      text-align: center;
-    }
-  }
-  
-  // Detalles de inscripción
-  .inscription-details {
-    margin-top: 1.5rem;
-    
-    .detail-item {
-      margin-bottom: 0.5rem;
-      color: $color-text-secondary;
-      font-size: $font-size-sm;
-      
-      strong {
-        color: $color-text-light;
-        font-weight: 500;
-        margin-right: 0.5rem;
-      }
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
   }
 }
 
-// Panel de gestión de ciclo de vida
+/* Enhanced Glassmorphism Lifecycle Panel */
 .lifecycle-panel {
-  background-color: $color-surface;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* Premium glassmorphism base */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-secondary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 80% 20%, $theme-lifecycle-light 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-lg;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all $transition-smooth;
   display: flex;
   flex-direction: column;
-  
+  overflow: hidden;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $card-shadow-hover;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
   .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid $color-border;
-    
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(31, 41, 55, 0.3);
+    backdrop-filter: blur(6px);
+
     h2 {
       margin: 0;
-      font-size: $font-size-lg;
-      font-weight: 500;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: $text-primary;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &::before {
+        content: '⚙️';
+        font-size: 1rem;
+        opacity: 0.8;
+      }
     }
   }
-  
+
   .panel-content {
     flex: 1;
     overflow: auto;
+    padding: 1.25rem;
+
+    .lifecycle-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .current-state-section,
+      .transition-section {
+        .state-card,
+        .transition-form {
+          background: rgba(31, 41, 55, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: $border-radius-md;
+          padding: 1rem;
+          backdrop-filter: blur(4px);
+        }
+
+        h3 {
+          margin: 0 0 0.75rem 0;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: $text-primary;
+        }
+      }
+
+      .transition-form {
+        .form-row {
+          margin-bottom: 1rem;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 0.75rem;
+          justify-content: flex-end;
+        }
+      }
+    }
   }
 }
 
-// Mensaje de selección
+/* Enhanced Selection Message */
 .selection-message {
   position: absolute;
   top: 50%;
@@ -267,163 +546,312 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background-color: rgba($color-surface, 0.8);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  mat-icon {
+  /* Premium glassmorphism base */
+  background: linear-gradient(135deg,
+    rgba(55, 65, 81, 0.9) 0%,
+    rgba(75, 85, 99, 0.8) 100%);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(10px);
+  border-radius: $border-radius-lg;
+  box-shadow: $card-shadow-base;
+  transition: all $transition-smooth;
+
+  i {
     font-size: 3rem;
-    width: 3rem;
-    height: 3rem;
     margin-bottom: 1rem;
-    color: $color-primary;
+    color: $theme-lifecycle-primary;
+    opacity: 0.8;
   }
-  
+
   p {
     margin: 0;
     text-align: center;
-    color: $color-text-secondary;
+    color: $text-secondary;
+    font-size: 0.875rem;
   }
 }
 
-// Estilos para badges de estado
+/* Enhanced Glassmorphism Status Badges */
 .status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: $font-size-xs;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: $border-radius-lg;
+  font-size: 0.6875rem;
+  font-weight: 600;
   text-align: center;
-  
-  &.status-pending {
-    background-color: rgba($color-warning, 0.15);
-    color: $color-warning;
-  }
-  
-  &.status-approved {
-    background-color: rgba($color-success, 0.15);
-    color: $color-success;
-  }
-  
-  &.status-rejected {
-    background-color: rgba($color-error, 0.15);
-    color: $color-error;
-  }
-  
-  &.status-cancelled {
-    background-color: rgba($color-text-tertiary, 0.15);
-    color: $color-text-tertiary;
-  }
-  
-  &.status-in-process {
-    background-color: rgba($color-info, 0.15);
-    color: $color-info;
-  }
-}
+  border: 1px solid transparent;
+  backdrop-filter: blur(4px);
+  transition: all $transition-normal;
+  position: relative;
+  overflow: hidden;
 
-// Media queries para responsive
-@media (max-width: 992px) {
-  .content-layout {
-    flex-direction: column;
-    
-    &.with-selection {
-      .inscriptions-panel,
-      .lifecycle-panel {
-        flex: auto;
-        width: 100%;
-      }
+  /* Base glassmorphism effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border-radius: inherit;
+    z-index: -1;
+  }
+
+  &:hover {
+    transform: translateY(-1px) scale(1.02);
+  }
+
+  /* Status-specific styling with WCAG AA compliance */
+  &.status-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.3);
+
+    &::before {
+      content: '⏳';
+      position: static;
+      margin-right: 0.25rem;
     }
   }
-  
-  .selection-message {
-    display: none;
+
+  &.status-approved {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.3);
+
+    &::before {
+      content: '✅';
+      position: static;
+      margin-right: 0.25rem;
+    }
+  }
+
+  &.status-rejected {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+
+    &::before {
+      content: '❌';
+      position: static;
+      margin-right: 0.25rem;
+    }
+  }
+
+  &.status-cancelled {
+    background: rgba(156, 163, 175, 0.2);
+    color: #d1d5db;
+    border-color: rgba(156, 163, 175, 0.3);
+
+    &::before {
+      content: '🚫';
+      position: static;
+      margin-right: 0.25rem;
+    }
+  }
+
+  &.status-in-process {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
+
+    &::before {
+      content: '🔄';
+      position: static;
+      margin-right: 0.25rem;
+    }
+  }
+
+  /* State badges in lifecycle panel */
+  .state-badge {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: $border-radius-md;
+  }
+}
+
+/* Enhanced Loading and Empty States */
+.loading-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+
+  .loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid rgba(76, 175, 80, 0.2);
+    border-top: 2px solid $theme-lifecycle-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: $theme-lifecycle-primary;
+    opacity: 0.6;
+  }
+
+  h4 {
+    margin: 0 0 0.5rem 0;
+    color: $text-primary;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 1.5rem 0;
+    color: $text-secondary;
+    font-size: 0.8125rem;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Responsive Design with CSS Grid/Flexbox */
+@media (max-width: 1200px) {
+  .lifecycle-manager-container {
+    padding: 1rem;
+  }
+
+  .content-layout.with-selection {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    .lifecycle-panel {
+      order: -1; /* Show lifecycle panel first on mobile */
+    }
   }
 }
 
 @media (max-width: 768px) {
+  .lifecycle-manager-container {
+    padding: 0.75rem;
+    min-height: calc(100vh - 56px);
+  }
+
   .header {
     flex-direction: column;
     align-items: flex-start;
-    
+    padding: 0.875rem 1rem;
+
     h1 {
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
     }
   }
-  
-  .filter-form {
-    .filter-row {
-      flex-direction: column;
-      gap: 0;
-      
-      .date-range {
-        flex-direction: column;
-        gap: 0;
-      }
-    }
+
+  .filters-form .filters-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
-  
+
   .table-container {
     overflow-x: auto;
+    min-height: 300px;
+
+    ::ng-deep app-custom-table .table-wrapper {
+      min-width: 600px; /* Ensure table doesn't get too cramped */
+    }
+  }
+
+  .lifecycle-panel {
+    .panel-content {
+      padding: 1rem;
+    }
+
+    .lifecycle-content {
+      gap: 1rem;
+    }
+  }
+
+  .selection-message {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 2rem 0;
+    padding: 1.5rem;
+
+    i {
+      font-size: 2rem;
+    }
+
+    p {
+      font-size: 0.8125rem;
+    }
+  }
+
+  /* Mobile optimizations for glassmorphism performance */
+  .header,
+  ::ng-deep app-custom-card .custom-card,
+  .lifecycle-panel,
+  .selection-message {
+    backdrop-filter: blur(6px); /* Reduce blur for better mobile performance */
   }
 }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .filter-card,
-  .table-container,
+@media (max-width: 480px) {
+  .lifecycle-manager-container {
+    padding: 0.5rem;
+  }
+
+  .header {
+    padding: 0.75rem;
+  }
+
+  .content-layout {
+    gap: 0.75rem;
+  }
+
+  ::ng-deep app-custom-card .custom-card {
+    .card-header,
+    .card-content {
+      padding: 0.875rem;
+    }
+  }
+
+  .status-badge {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .status-badge {
+    border-width: 2px;
+    font-weight: 700;
+  }
+
+  ::ng-deep app-custom-card .custom-card,
   .lifecycle-panel,
   .selection-message {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .lifecycle-panel {
-    .panel-header {
-      border-bottom-color: $color-border-dark;
-    }
-  }
-  
-  .table-container {
-    .loading-overlay {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    .empty-state {
-      mat-icon {
-        color: $color-text-tertiary-dark;
-      }
-      
-      p {
-        color: $color-text-secondary-dark;
-      }
-    }
-    
-    .selected-row {
-      background-color: rgba($color-primary-dark, 0.1);
-    }
-    
-    .user-info-cell,
-    .contest-info-cell {
-      .user-details,
-      .contest-details {
-        color: $color-text-secondary-dark;
-      }
-    }
-    
-    .dates-cell {
-      .date-item {
-        .date-label {
-          color: $color-text-secondary-dark;
-        }
-      }
-    }
-  }
-  
-  .selection-message {
-    background-color: rgba($color-surface-dark, 0.8);
-    
-    p {
-      color: $color-text-secondary-dark;
-    }
+    border-width: 2px;
   }
 }

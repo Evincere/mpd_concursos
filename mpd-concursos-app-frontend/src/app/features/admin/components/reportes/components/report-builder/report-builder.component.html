@@ -1,46 +1,117 @@
+<!-- ===== CONSTRUCTOR DE REPORTES GLASSMORPHISM PREMIUM ===== -->
 <div class="report-builder-container">
-  <div class="header">
-    <h1>Constructor de Reportes</h1>
+  <!-- Header Premium -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-tools"></i>
+        Constructor de Reportes Avanzado
+      </h1>
+      <p class="page-subtitle">
+        Cree reportes personalizados con filtros avanzados y exportación múltiple
+      </p>
+    </div>
     <div class="header-actions">
-      <button mat-stroked-button color="primary" (click)="resetForm()" [disabled]="isLoading">
-        <mat-icon>refresh</mat-icon>
-        Reiniciar
+      <button
+        class="btn-secondary"
+        (click)="resetForm()"
+        [disabled]="isLoading"
+        [attr.aria-label]="'Reiniciar formulario'">
+        <i class="fas fa-redo-alt"></i>
+        <span>Reiniciar</span>
       </button>
     </div>
   </div>
 
-  <!-- Indicador de carga -->
+  <!-- Indicador de carga glassmorphism -->
   <div *ngIf="isLoading" class="loading-overlay">
-    <mat-spinner diameter="50"></mat-spinner>
-    <span>Procesando...</span>
+    <div class="loading-content">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+      </div>
+      <span class="loading-text">Procesando reporte...</span>
+    </div>
   </div>
 
-  <mat-card class="report-builder-card">
-    <mat-horizontal-stepper [linear]="true" #stepper [(selectedIndex)]="activeStep">
+  <!-- Stepper Container Premium -->
+  <div class="stepper-container">
+    <!-- Stepper Header -->
+    <div class="stepper-header">
+      <div class="step-indicator"
+           [class.active]="activeStep === 0"
+           [class.completed]="activeStep > 0">
+        <div class="step-number">1</div>
+        <div class="step-label">Campos</div>
+      </div>
+      <div class="step-connector" [class.active]="activeStep > 0"></div>
+      <div class="step-indicator"
+           [class.active]="activeStep === 1"
+           [class.completed]="activeStep > 1">
+        <div class="step-number">2</div>
+        <div class="step-label">Filtros</div>
+      </div>
+      <div class="step-connector" [class.active]="activeStep > 1"></div>
+      <div class="step-indicator"
+           [class.active]="activeStep === 2"
+           [class.completed]="activeStep > 2">
+        <div class="step-number">3</div>
+        <div class="step-label">Resultados</div>
+      </div>
+    </div>
+
+    <!-- Stepper Content -->
+    <div class="stepper-content">
       <!-- Paso 1: Selección de campos -->
-      <mat-step label="Selección de Campos">
+      <div *ngIf="activeStep === 0" class="step-panel">
         <form [formGroup]="reportForm" class="report-form">
           <div class="step-content">
+            <!-- Información del Reporte -->
             <div class="form-section">
-              <h2>Información del Reporte</h2>
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Nombre del Reporte</mat-label>
-                  <input matInput formControlName="reportName" placeholder="Ingrese un nombre para el reporte">
-                </mat-form-field>
+              <div class="section-header">
+                <h2>
+                  <i class="fas fa-info-circle"></i>
+                  Información del Reporte
+                </h2>
+                <p class="section-description">Configure los datos básicos de su reporte personalizado</p>
               </div>
 
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Plantilla</mat-label>
-                  <mat-select formControlName="template" (selectionChange)="loadTemplate($event.value)">
-                    <mat-option value="custom">Personalizado</mat-option>
-                    <mat-option *ngFor="let template of reportTemplates" [value]="template.id">
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="reportName">Nombre del Reporte *</label>
+                  <input
+                    id="reportName"
+                    type="text"
+                    class="form-input"
+                    [class.error]="hasFieldError('reportName')"
+                    formControlName="reportName"
+                    placeholder="Ingrese un nombre descriptivo"
+                    [attr.aria-describedby]="'reportName-hint'"
+                    [attr.aria-invalid]="hasFieldError('reportName')">
+                  <div id="reportName-hint" class="form-hint">
+                    Este nombre aparecerá en el archivo exportado
+                  </div>
+                  <div *ngIf="getFieldError('reportName')" class="form-error">
+                    {{getFieldError('reportName')}}
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="template">Plantilla Base</label>
+                  <select
+                    id="template"
+                    class="form-select"
+                    formControlName="template"
+                    (change)="loadTemplate($any($event.target).value)"
+                    [attr.aria-describedby]="'template-hint'">
+                    <option value="custom">Personalizado</option>
+                    <option *ngFor="let template of reportTemplates" [value]="template.id">
                       {{template.name}}
-                    </mat-option>
-                  </mat-select>
-                  <mat-hint>Seleccione una plantilla predefinida o cree un reporte personalizado</mat-hint>
-                </mat-form-field>
+                    </option>
+                  </select>
+                  <div id="template-hint" class="form-hint">
+                    Seleccione una plantilla predefinida o cree un reporte personalizado
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -60,32 +131,61 @@
                         'Documentos'}}
                     </h4>
                     <div class="field-list">
-                      <div class="field-item" *ngFor="let field of availableFields | filterByGroup:group"
+                      <div class="field-item available"
+                           *ngFor="let field of availableFields | filterByGroup:group"
                            (click)="addField(field.id)"
                            (keydown.enter)="addField(field.id)"
                            (keydown.space)="addField(field.id)"
                            tabindex="0"
                            role="button"
-                           [class.selected]="fieldsArray.value.includes(field.id)">
-                        <mat-icon>add</mat-icon>
-                        <span>{{field.label}}</span>
+                           [class.selected]="fieldsArray.value.includes(field.id)"
+                           [attr.aria-label]="'Agregar campo ' + field.label">
+                        <div class="field-icon">
+                          <i class="fas fa-plus" *ngIf="!fieldsArray.value.includes(field.id)"></i>
+                          <i class="fas fa-check" *ngIf="fieldsArray.value.includes(field.id)"></i>
+                        </div>
+                        <div class="field-content">
+                          <span class="field-label">{{field.label}}</span>
+                          <span class="field-type">{{field.type}}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div class="selected-fields">
-                  <h3>Campos Seleccionados</h3>
+                  <div class="fields-header">
+                    <h3>
+                      <i class="fas fa-check-circle"></i>
+                      Campos Seleccionados
+                    </h3>
+                    <div class="fields-counter">
+                      {{fieldsArray.length}} seleccionados
+                    </div>
+                  </div>
+
                   <div class="field-list">
-                    <div class="field-item selected" *ngFor="let fieldId of fieldsArray.value; let i = index">
-                      <span>{{getFieldLabel(fieldId)}}</span>
-                      <button mat-icon-button color="warn" (click)="removeField(i)">
-                        <mat-icon>remove</mat-icon>
+                    <div class="field-item selected"
+                         *ngFor="let fieldId of fieldsArray.value; let i = index"
+                         [attr.aria-label]="'Campo seleccionado: ' + getFieldLabel(fieldId)">
+                      <div class="field-content">
+                        <span class="field-label">{{getFieldLabel(fieldId)}}</span>
+                        <span class="field-order">{{i + 1}}</span>
+                      </div>
+                      <button
+                        class="btn-remove"
+                        (click)="removeField(i)"
+                        [attr.aria-label]="'Remover campo ' + getFieldLabel(fieldId)">
+                        <i class="fas fa-times"></i>
                       </button>
                     </div>
 
-                    <div *ngIf="fieldsArray.length === 0" class="empty-message">
-                      No hay campos seleccionados
+                    <div *ngIf="fieldsArray.length === 0" class="empty-state">
+                      <div class="empty-icon">
+                        <i class="fas fa-inbox"></i>
+                      </div>
+                      <p class="empty-message">No hay campos seleccionados</p>
+                      <p class="empty-hint">Seleccione campos de la lista de la izquierda</p>
                     </div>
                   </div>
                 </div>
@@ -93,187 +193,374 @@
             </div>
           </div>
 
+          <!-- Step Actions -->
           <div class="step-actions">
-            <button mat-button matStepperNext [disabled]="fieldsArray.length === 0">
-              Siguiente
-              <mat-icon>arrow_forward</mat-icon>
+            <button
+              class="btn-primary"
+              (click)="activeStep = 1"
+              [disabled]="!canAdvanceToStep(1)"
+              [attr.aria-label]="'Continuar al paso de filtros'">
+              <span>Siguiente</span>
+              <i class="fas fa-arrow-right"></i>
             </button>
           </div>
         </form>
-      </mat-step>
+      </div>
 
       <!-- Paso 2: Filtros y Agrupación -->
-      <mat-step label="Filtros y Agrupación">
+      <div *ngIf="activeStep === 1" class="step-panel">
         <form [formGroup]="reportForm" class="report-form">
           <div class="step-content" formGroupName="filters">
+            <!-- Filtros -->
             <div class="form-section">
-              <h2>Filtros</h2>
-              <p class="section-description">Aplique filtros para limitar los resultados del reporte</p>
+              <div class="section-header">
+                <h2>
+                  <i class="fas fa-filter"></i>
+                  Filtros de Datos
+                </h2>
+                <p class="section-description">Aplique filtros para limitar los resultados del reporte</p>
+              </div>
 
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Estado de Inscripción</mat-label>
-                  <mat-select formControlName="inscriptionState">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option value="NO_INSCRIPTO">No inscripto</mat-option>
-                    <mat-option value="IN_PROCESS">En proceso</mat-option>
-                    <mat-option value="PENDING">Pendiente</mat-option>
-                    <mat-option value="APPROVED">Aprobada</mat-option>
-                    <mat-option value="REJECTED">Rechazada</mat-option>
-                    <mat-option value="CANCELLED">Cancelada</mat-option>
-                  </mat-select>
-                </mat-form-field>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="inscriptionState">Estado de Inscripción</label>
+                  <select
+                    id="inscriptionState"
+                    class="form-select"
+                    formControlName="inscriptionState"
+                    [attr.aria-describedby]="'inscriptionState-hint'">
+                    <option value="">Todos los estados</option>
+                    <option value="NO_INSCRIPTO">No inscripto</option>
+                    <option value="IN_PROCESS">En proceso</option>
+                    <option value="PENDING">Pendiente</option>
+                    <option value="APPROVED">Aprobada</option>
+                    <option value="REJECTED">Rechazada</option>
+                    <option value="CANCELLED">Cancelada</option>
+                  </select>
+                  <div id="inscriptionState-hint" class="form-hint">
+                    Filtre por el estado actual de las inscripciones
+                  </div>
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Concurso</mat-label>
-                  <mat-select formControlName="contestId">
-                    <mat-option value="">Todos</mat-option>
+                <div class="form-field">
+                  <label class="form-label" for="contestId">Concurso</label>
+                  <select
+                    id="contestId"
+                    class="form-select"
+                    formControlName="contestId"
+                    [attr.aria-describedby]="'contestId-hint'">
+                    <option value="">Todos los concursos</option>
                     <!-- Aquí irían las opciones de concursos -->
-                  </mat-select>
-                </mat-form-field>
+                  </select>
+                  <div id="contestId-hint" class="form-hint">
+                    Seleccione un concurso específico o todos
+                  </div>
+                </div>
               </div>
 
-              <div class="form-row" formGroupName="dateRange">
-                <mat-form-field appearance="outline">
-                  <mat-label>Fecha desde</mat-label>
-                  <input matInput [matDatepicker]="startPicker" formControlName="startDate">
-                  <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-                  <mat-datepicker #startPicker></mat-datepicker>
-                </mat-form-field>
+              <div class="form-grid" formGroupName="dateRange">
+                <div class="form-field">
+                  <label class="form-label" for="startDate">Fecha desde</label>
+                  <input
+                    id="startDate"
+                    type="date"
+                    class="form-input"
+                    [class.error]="getDateRangeError()"
+                    formControlName="startDate"
+                    [attr.aria-describedby]="'startDate-hint'"
+                    [attr.aria-invalid]="!!getDateRangeError()">
+                  <div id="startDate-hint" class="form-hint">
+                    Fecha de inicio del rango de búsqueda
+                  </div>
+                </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Fecha hasta</mat-label>
-                  <input matInput [matDatepicker]="endPicker" formControlName="endDate">
-                  <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-                  <mat-datepicker #endPicker></mat-datepicker>
-                </mat-form-field>
+                <div class="form-field">
+                  <label class="form-label" for="endDate">Fecha hasta</label>
+                  <input
+                    id="endDate"
+                    type="date"
+                    class="form-input"
+                    [class.error]="getDateRangeError()"
+                    formControlName="endDate"
+                    [attr.aria-describedby]="'endDate-hint'"
+                    [attr.aria-invalid]="!!getDateRangeError()">
+                  <div id="endDate-hint" class="form-hint">
+                    Fecha de fin del rango de búsqueda
+                  </div>
+                </div>
               </div>
 
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Búsqueda</mat-label>
-                  <input matInput formControlName="searchText" placeholder="Buscar por nombre, DNI, etc.">
-                  <mat-icon matSuffix>search</mat-icon>
-                </mat-form-field>
+              <!-- Error del rango de fechas -->
+              <div *ngIf="getDateRangeError()" class="form-error-section">
+                <div class="form-error">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  {{getDateRangeError()}}
+                </div>
               </div>
-            </div>
 
-            <div class="form-section" formGroupName="grouping">
-              <h2>Agrupación y Ordenamiento</h2>
-              <p class="section-description">Configure cómo se agruparán y ordenarán los resultados</p>
-
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Agrupar por</mat-label>
-                  <mat-select formControlName="groupBy">
-                    <mat-option value="">Sin agrupación</mat-option>
-                    <mat-option *ngFor="let field of availableFields" [value]="field.id">
-                      {{field.label}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Ordenar por</mat-label>
-                  <mat-select formControlName="sortBy">
-                    <mat-option *ngFor="let field of availableFields" [value]="field.id">
-                      {{field.label}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Dirección</mat-label>
-                  <mat-select formControlName="sortDirection">
-                    <mat-option value="asc">Ascendente</mat-option>
-                    <mat-option value="desc">Descendente</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-            </div>
-          </div>
-
-          <div class="step-actions">
-            <button mat-button matStepperPrevious>
-              <mat-icon>arrow_back</mat-icon>
-              Anterior
-            </button>
-            <button mat-raised-button color="primary" (click)="generateReport()" [disabled]="isLoading">
-              <mat-icon>play_arrow</mat-icon>
-              Generar Reporte
-            </button>
-          </div>
-        </form>
-      </mat-step>
-
-      <!-- Paso 3: Resultados y Exportación -->
-      <mat-step label="Resultados">
-        <form [formGroup]="reportForm" class="report-form">
-          <div class="step-content">
-            <div class="form-section" formGroupName="export">
-              <h2>Opciones de Exportación</h2>
-              <p class="section-description">Configure las opciones para exportar el reporte</p>
-
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Formato</mat-label>
-                  <mat-select formControlName="format">
-                    <mat-option *ngFor="let format of exportFormats" [value]="format.value">
-                      <mat-icon>{{format.icon}}</mat-icon>
-                      {{format.label}}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Nombre del archivo</mat-label>
-                  <input matInput formControlName="fileName">
-                </mat-form-field>
-
-                <div class="checkbox-field">
-                  <mat-checkbox formControlName="includeHeaders">Incluir encabezados</mat-checkbox>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="searchText">Búsqueda de Texto</label>
+                  <div class="search-input-container">
+                    <input
+                      id="searchText"
+                      type="text"
+                      class="form-input search-input"
+                      formControlName="searchText"
+                      placeholder="Buscar por nombre, DNI, email..."
+                      [attr.aria-describedby]="'searchText-hint'">
+                    <i class="fas fa-search search-icon"></i>
+                  </div>
+                  <div id="searchText-hint" class="form-hint">
+                    Busque por cualquier campo de texto en los registros
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div *ngIf="!reportGenerated" class="empty-results">
-              <mat-icon>info</mat-icon>
-              <p>Genere el reporte para ver los resultados</p>
-            </div>
-
-            <div *ngIf="reportGenerated" class="report-results">
-              <h2>{{reportForm.get('reportName')?.value}}</h2>
-
-              <div class="table-container mat-elevation-z2">
-                <table mat-table [dataSource]="reportData">
-                  <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column">
-                    <th mat-header-cell *matHeaderCellDef>{{getFieldLabel(column)}}</th>
-                    <td mat-cell *matCellDef="let row">{{row[column]}}</td>
-                  </ng-container>
-
-                  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                </table>
+            <!-- Agrupación y Ordenamiento -->
+            <div class="form-section" formGroupName="grouping">
+              <div class="section-header">
+                <h2>
+                  <i class="fas fa-layer-group"></i>
+                  Agrupación y Ordenamiento
+                </h2>
+                <p class="section-description">Configure cómo se agruparán y ordenarán los resultados</p>
               </div>
 
-              <div class="results-summary">
-                <p>Total de registros: {{reportData.length}}</p>
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="groupBy">Agrupar por</label>
+                  <select
+                    id="groupBy"
+                    class="form-select"
+                    formControlName="groupBy"
+                    [attr.aria-describedby]="'groupBy-hint'">
+                    <option value="">Sin agrupación</option>
+                    <option *ngFor="let field of availableFields" [value]="field.id">
+                      {{field.label}}
+                    </option>
+                  </select>
+                  <div id="groupBy-hint" class="form-hint">
+                    Agrupe los resultados por un campo específico
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="sortBy">Ordenar por</label>
+                  <select
+                    id="sortBy"
+                    class="form-select"
+                    formControlName="sortBy"
+                    [attr.aria-describedby]="'sortBy-hint'">
+                    <option *ngFor="let field of availableFields" [value]="field.id">
+                      {{field.label}}
+                    </option>
+                  </select>
+                  <div id="sortBy-hint" class="form-hint">
+                    Campo principal para ordenar los resultados
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="sortDirection">Dirección</label>
+                  <select
+                    id="sortDirection"
+                    class="form-select"
+                    formControlName="sortDirection"
+                    [attr.aria-describedby]="'sortDirection-hint'">
+                    <option value="asc">Ascendente (A-Z, 1-9)</option>
+                    <option value="desc">Descendente (Z-A, 9-1)</option>
+                  </select>
+                  <div id="sortDirection-hint" class="form-hint">
+                    Dirección del ordenamiento de los datos
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
+          <!-- Step Actions -->
           <div class="step-actions">
-            <button mat-button matStepperPrevious>
-              <mat-icon>arrow_back</mat-icon>
-              Anterior
+            <button
+              class="btn-secondary"
+              (click)="activeStep = 0"
+              [attr.aria-label]="'Volver al paso anterior'">
+              <i class="fas fa-arrow-left"></i>
+              <span>Anterior</span>
             </button>
-            <button mat-raised-button color="primary" (click)="exportReport()" [disabled]="!reportGenerated || isLoading">
-              <mat-icon>download</mat-icon>
-              Exportar
+            <button
+              class="btn-primary"
+              (click)="generateReport()"
+              [disabled]="isLoading"
+              [attr.aria-label]="'Generar reporte con los filtros seleccionados'">
+              <span>Generar Reporte</span>
+              <i class="fas fa-play"></i>
             </button>
           </div>
         </form>
-      </mat-step>
-    </mat-horizontal-stepper>
-  </mat-card>
+      </div>
+
+      <!-- Paso 3: Resultados y Exportación -->
+      <div *ngIf="activeStep === 2" class="step-panel">
+        <form [formGroup]="reportForm" class="report-form">
+          <div class="step-content">
+            <!-- Opciones de Exportación -->
+            <div class="form-section" formGroupName="export">
+              <div class="section-header">
+                <h2>
+                  <i class="fas fa-download"></i>
+                  Opciones de Exportación
+                </h2>
+                <p class="section-description">Configure las opciones para exportar el reporte generado</p>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label class="form-label" for="format">Formato de Exportación</label>
+                  <select
+                    id="format"
+                    class="form-select"
+                    formControlName="format"
+                    [attr.aria-describedby]="'format-hint'">
+                    <option *ngFor="let format of exportFormats" [value]="format.value">
+                      {{format.label}} - {{format.description}}
+                    </option>
+                  </select>
+                  <div id="format-hint" class="form-hint">
+                    Seleccione el formato de archivo para la exportación
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label class="form-label" for="fileName">Nombre del Archivo</label>
+                  <input
+                    id="fileName"
+                    type="text"
+                    class="form-input"
+                    [class.error]="hasFieldError('export.fileName')"
+                    formControlName="fileName"
+                    placeholder="reporte-inscripciones"
+                    [attr.aria-describedby]="'fileName-hint'"
+                    [attr.aria-invalid]="hasFieldError('export.fileName')">
+                  <div id="fileName-hint" class="form-hint">
+                    Nombre base del archivo (sin extensión)
+                  </div>
+                  <div *ngIf="getFieldError('export.fileName')" class="form-error">
+                    {{getFieldError('export.fileName')}}
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <div class="checkbox-container">
+                    <label class="checkbox-label">
+                      <input
+                        type="checkbox"
+                        class="checkbox-input"
+                        formControlName="includeHeaders">
+                      <span class="checkbox-custom"></span>
+                      <span class="checkbox-text">Incluir encabezados de columna</span>
+                    </label>
+                    <div class="form-hint">
+                      Incluye los nombres de las columnas en la primera fila
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado sin reporte generado -->
+            <div *ngIf="!reportGenerated" class="empty-state">
+              <div class="empty-icon">
+                <i class="fas fa-chart-bar"></i>
+              </div>
+              <p class="empty-message">Reporte no generado</p>
+              <p class="empty-hint">Vuelva al paso anterior y genere el reporte para ver los resultados aquí</p>
+            </div>
+
+            <!-- Resultados del reporte -->
+            <div *ngIf="reportGenerated" class="report-results">
+              <div class="results-header">
+                <h2>{{reportForm.get('reportName')?.value}}</h2>
+                <div class="results-stats">
+                  <div class="stat-item">
+                    <i class="fas fa-table"></i>
+                    <span>{{reportData.length}} registros</span>
+                  </div>
+                  <div class="stat-item">
+                    <i class="fas fa-columns"></i>
+                    <span>{{displayedColumns.length}} columnas</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gráficos Interactivos -->
+              <app-report-charts
+                [reportData]="reportData"
+                [displayedColumns]="displayedColumns">
+              </app-report-charts>
+
+              <!-- Tabla de resultados glassmorphism -->
+              <div class="table-container">
+                <div class="table-wrapper">
+                  <table class="results-table">
+                    <thead>
+                      <tr>
+                        <th *ngFor="let column of displayedColumns" class="table-header">
+                          {{getFieldLabel(column)}}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let row of reportData; let i = index"
+                          class="table-row"
+                          [class.even]="i % 2 === 0">
+                        <td *ngFor="let column of displayedColumns" class="table-cell">
+                          {{row[column]}}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Resumen de resultados -->
+              <div class="results-summary">
+                <div class="summary-content">
+                  <div class="summary-item">
+                    <strong>Total de registros:</strong> {{reportData.length}}
+                  </div>
+                  <div class="summary-item">
+                    <strong>Campos incluidos:</strong> {{displayedColumns.length}}
+                  </div>
+                  <div class="summary-item">
+                    <strong>Generado:</strong> {{reportGeneratedDate}}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step Actions -->
+          <div class="step-actions">
+            <button
+              class="btn-secondary"
+              (click)="activeStep = 1"
+              [attr.aria-label]="'Volver al paso anterior'">
+              <i class="fas fa-arrow-left"></i>
+              <span>Anterior</span>
+            </button>
+            <button
+              class="btn-primary"
+              (click)="exportReport()"
+              [disabled]="!reportGenerated || isLoading"
+              [attr.aria-label]="'Exportar reporte en el formato seleccionado'">
+              <span>Exportar Reporte</span>
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>

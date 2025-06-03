@@ -157,6 +157,92 @@ export class TemplateVariablesService {
       category: 'system',
       placeholder: '{{system.datetime}}',
       example: '01/06/2023 14:30'
+    },
+
+    // Variables de notificación
+    {
+      id: 'notification.type',
+      name: 'Tipo de notificación',
+      description: 'Tipo de la notificación enviada',
+      category: 'notification',
+      placeholder: '{{notification.type}}',
+      example: 'Sistema'
+    },
+    {
+      id: 'notification.acknowledgementLevel',
+      name: 'Nivel de confirmación',
+      description: 'Nivel de confirmación requerido para la notificación',
+      category: 'notification',
+      placeholder: '{{notification.acknowledgementLevel}}',
+      example: 'Acuse simple'
+    },
+    {
+      id: 'notification.subject',
+      name: 'Asunto de la notificación',
+      description: 'Asunto o título de la notificación',
+      category: 'notification',
+      placeholder: '{{notification.subject}}',
+      example: 'Actualización importante del concurso'
+    },
+
+    // Variables de examen
+    {
+      id: 'exam.date',
+      name: 'Fecha del examen',
+      description: 'Fecha programada para el examen',
+      category: 'exam',
+      placeholder: '{{exam.date}}',
+      example: '15/06/2023'
+    },
+    {
+      id: 'exam.time',
+      name: 'Hora del examen',
+      description: 'Hora programada para el examen',
+      category: 'exam',
+      placeholder: '{{exam.time}}',
+      example: '09:00'
+    },
+    {
+      id: 'exam.location',
+      name: 'Ubicación del examen',
+      description: 'Lugar donde se realizará el examen',
+      category: 'exam',
+      placeholder: '{{exam.location}}',
+      example: 'Aula Magna - Universidad Nacional'
+    },
+    {
+      id: 'exam.status',
+      name: 'Estado del examen',
+      description: 'Estado actual del examen',
+      category: 'exam',
+      placeholder: '{{exam.status}}',
+      example: 'Programado'
+    },
+
+    // Variables de documento
+    {
+      id: 'document.name',
+      name: 'Nombre del documento',
+      description: 'Nombre del documento',
+      category: 'document',
+      placeholder: '{{document.name}}',
+      example: 'Certificado de Antecedentes Penales'
+    },
+    {
+      id: 'document.type',
+      name: 'Tipo de documento',
+      description: 'Tipo o categoría del documento',
+      category: 'document',
+      placeholder: '{{document.type}}',
+      example: 'Certificado'
+    },
+    {
+      id: 'document.uploadDate',
+      name: 'Fecha de carga',
+      description: 'Fecha en que se cargó el documento',
+      category: 'document',
+      placeholder: '{{document.uploadDate}}',
+      example: '10/05/2023'
     }
   ];
 
@@ -176,6 +262,21 @@ export class TemplateVariablesService {
       id: 'inscription',
       name: 'Inscripción',
       description: 'Variables relacionadas con las inscripciones'
+    },
+    {
+      id: 'notification',
+      name: 'Notificación',
+      description: 'Variables relacionadas con la notificación actual'
+    },
+    {
+      id: 'exam',
+      name: 'Examen',
+      description: 'Variables relacionadas con exámenes y evaluaciones'
+    },
+    {
+      id: 'document',
+      name: 'Documento',
+      description: 'Variables relacionadas con documentos y archivos'
     },
     {
       id: 'system',

@@ -1,21 +1,21 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+// Servicios y modelos
 import { AdminRolesService, Role, Permission, RoleAuditLog } from '@core/services/admin/admin-roles.service';
+import { NotificationService } from '@shared/services/notification.service';
+import { DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
+
+// Componentes personalizados
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
+
+// Token para datos del diálogo
+export interface RoleDetailDialogData {
+  roleId: string;
+}
 
 interface PermissionGroup {
   module: string;
@@ -29,18 +29,8 @@ interface PermissionGroup {
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatCardModule,
-    MatChipsModule,
-    MatDividerModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-    MatTooltipModule,
-    MatExpansionModule
+    CustomButtonComponent,
+    CustomCardComponent
   ]
 })
 export class RoleDetailDialogComponent implements OnInit, OnDestroy {
@@ -57,9 +47,8 @@ export class RoleDetailDialogComponent implements OnInit, OnDestroy {
 
   constructor(
     private rolesService: AdminRolesService,
-    private snackBar: MatSnackBar,
-    public dialogRef: MatDialogRef<RoleDetailDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { roleId: string }
+    private notificationService: NotificationService,
+    @Inject(DIALOG_DATA) public data: RoleDetailDialogData
   ) { }
 
   ngOnInit(): void {
@@ -84,7 +73,7 @@ export class RoleDetailDialogComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando rol:', error);
-          this.snackBar.open('Error al cargar los datos del rol', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al cargar los datos del rol');
           this.isLoading = false;
         }
       });
@@ -100,7 +89,7 @@ export class RoleDetailDialogComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando historial de auditoría:', error);
-          this.snackBar.open('Error al cargar el historial de auditoría', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al cargar el historial de auditoría');
           this.isLoading = false;
         }
       });
@@ -133,13 +122,13 @@ export class RoleDetailDialogComponent implements OnInit, OnDestroy {
   
   getActionIcon(action: string): string {
     switch (action) {
-      case 'READ': return 'visibility';
-      case 'WRITE': return 'edit';
-      case 'DELETE': return 'delete';
-      case 'ADMIN': return 'admin_panel_settings';
-      case 'CREATE': return 'add_circle';
-      case 'UPDATE': return 'edit';
-      default: return 'check';
+      case 'READ': return 'fa-eye';
+      case 'WRITE': return 'fa-edit';
+      case 'DELETE': return 'fa-trash';
+      case 'ADMIN': return 'fa-user-shield';
+      case 'CREATE': return 'fa-plus-circle';
+      case 'UPDATE': return 'fa-edit';
+      default: return 'fa-check';
     }
   }
   
@@ -157,14 +146,14 @@ export class RoleDetailDialogComponent implements OnInit, OnDestroy {
   
   getModuleIcon(module: string): string {
     switch (module.toLowerCase()) {
-      case 'users': return 'people';
-      case 'roles': return 'admin_panel_settings';
-      case 'profile': return 'person';
-      case 'contests': return 'gavel';
-      case 'inscriptions': return 'assignment';
-      case 'documents': return 'description';
-      case 'system': return 'settings';
-      default: return 'folder';
+      case 'users': return 'fa-users';
+      case 'roles': return 'fa-user-shield';
+      case 'profile': return 'fa-user';
+      case 'contests': return 'fa-gavel';
+      case 'inscriptions': return 'fa-clipboard-list';
+      case 'documents': return 'fa-file-alt';
+      case 'system': return 'fa-cogs';
+      default: return 'fa-folder';
     }
   }
   

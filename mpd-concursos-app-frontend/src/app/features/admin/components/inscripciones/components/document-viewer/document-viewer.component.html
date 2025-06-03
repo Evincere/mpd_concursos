@@ -1,141 +1,234 @@
 <div class="document-viewer-container">
+  <!-- Enhanced Header with Glassmorphism -->
   <div class="document-header">
     <div class="document-info">
-      <h3 class="document-title">{{document.fileName}}</h3>
+      <h3 class="document-title">
+        <i class="fas fa-file-pdf document-icon"></i>
+        {{document.fileName}}
+      </h3>
       <div class="document-meta">
-        <span class="document-type">{{document.documentType}}</span>
-        <span class="document-size">{{formatFileSize(document.fileSize)}}</span>
-        <span class="document-date">Subido: {{formatDate(document.uploadDate)}}</span>
+        <div class="meta-item">
+          <i class="fas fa-tag"></i>
+          <span>{{document.documentType}}</span>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-weight-hanging"></i>
+          <span>{{formatFileSize(document.fileSize)}}</span>
+        </div>
+        <div class="meta-item">
+          <i class="fas fa-calendar-alt"></i>
+          <span>{{formatDate(document.uploadDate)}}</span>
+        </div>
       </div>
     </div>
-    
+
     <div class="document-status">
-      <span class="status-badge" [ngClass]="getStatusClass()">
-        {{getStatusLabel()}}
-      </span>
+      <app-contest-status-badge
+        [status]="document.status"
+        [statusType]="'document'"
+        [showIcon]="true">
+      </app-contest-status-badge>
     </div>
   </div>
   
+  <!-- Enhanced Document Content with Glassmorphism -->
   <div class="document-content">
+    <!-- Enhanced Loading State -->
     <div class="loading-overlay" *ngIf="isLoading">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Cargando documento...</p>
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+      </div>
+      <p class="loading-text">Cargando documento...</p>
     </div>
-    
+
+    <!-- Enhanced PDF Container -->
     <div class="pdf-container" *ngIf="!isLoading && pdfSrc">
+      <!-- Enhanced Toolbar with Glassmorphism -->
       <div class="pdf-toolbar">
         <div class="page-navigation">
-          <button mat-icon-button (click)="prevPage()" [disabled]="currentPage === 1" matTooltip="Página anterior">
-            <mat-icon>navigate_before</mat-icon>
-          </button>
+          <app-custom-button
+            [variant]="'icon'"
+            [icon]="'chevron-left'"
+            [disabled]="currentPage === 1"
+            [tooltip]="'Página anterior'"
+            (buttonClick)="prevPage()">
+          </app-custom-button>
           <span class="page-indicator">{{currentPage}} / {{totalPages}}</span>
-          <button mat-icon-button (click)="nextPage()" [disabled]="currentPage === totalPages" matTooltip="Página siguiente">
-            <mat-icon>navigate_next</mat-icon>
-          </button>
+          <app-custom-button
+            [variant]="'icon'"
+            [icon]="'chevron-right'"
+            [disabled]="currentPage === totalPages"
+            [tooltip]="'Página siguiente'"
+            (buttonClick)="nextPage()">
+          </app-custom-button>
         </div>
-        
+
         <div class="zoom-controls">
-          <button mat-icon-button (click)="zoomOut()" matTooltip="Reducir">
-            <mat-icon>zoom_out</mat-icon>
-          </button>
+          <app-custom-button
+            [variant]="'icon'"
+            [icon]="'search-minus'"
+            [tooltip]="'Reducir'"
+            (buttonClick)="zoomOut()">
+          </app-custom-button>
           <span class="zoom-level">{{(zoom * 100).toFixed(0)}}%</span>
-          <button mat-icon-button (click)="zoomIn()" matTooltip="Ampliar">
-            <mat-icon>zoom_in</mat-icon>
-          </button>
+          <app-custom-button
+            [variant]="'icon'"
+            [icon]="'search-plus'"
+            [tooltip]="'Ampliar'"
+            (buttonClick)="zoomIn()">
+          </app-custom-button>
         </div>
-        
+
         <div class="view-controls">
-          <button mat-icon-button (click)="rotate()" matTooltip="Rotar">
-            <mat-icon>rotate_right</mat-icon>
-          </button>
-          <button mat-icon-button (click)="resetView()" matTooltip="Restablecer vista">
-            <mat-icon>refresh</mat-icon>
-          </button>
+          <app-custom-button
+            [variant]="'icon'"
+            [icon]="'redo'"
+            [tooltip]="'Rotar'"
+            (buttonClick)="rotate()">
+          </app-custom-button>
+          <app-custom-button
+            [variant]="'icon'"
+            [icon]="'refresh'"
+            [tooltip]="'Restablecer vista'"
+            (buttonClick)="resetView()">
+          </app-custom-button>
         </div>
       </div>
-      
+
+      <!-- Enhanced PDF Viewer -->
       <div class="pdf-viewer" #pdfViewer>
-        <!-- Aquí se renderizaría el PDF con pdf.js o similar -->
         <div class="pdf-placeholder" [style.transform]="'scale(' + zoom + ') rotate(' + rotation + 'deg)'">
           <img *ngIf="pdfSrc" [src]="pdfSrc" alt="Vista previa del documento" />
           <div *ngIf="!pdfSrc" class="no-preview">
-            <mat-icon>description</mat-icon>
+            <i class="fas fa-file-pdf no-preview-icon"></i>
             <p>Vista previa no disponible</p>
           </div>
         </div>
       </div>
     </div>
     
+    <!-- Enhanced Document Details with Glassmorphism -->
     <div class="document-details">
       <div class="details-section">
-        <h4>Detalles del Documento</h4>
-        
+        <h4 class="section-title">
+          <i class="fas fa-info-circle"></i>
+          Detalles del Documento
+        </h4>
+
         <div class="detail-item">
-          <span class="detail-label">Nombre:</span>
+          <span class="detail-label">
+            <i class="fas fa-file"></i>
+            Nombre:
+          </span>
           <span class="detail-value">{{document.fileName}}</span>
         </div>
-        
+
         <div class="detail-item">
-          <span class="detail-label">Tipo:</span>
+          <span class="detail-label">
+            <i class="fas fa-tag"></i>
+            Tipo:
+          </span>
           <span class="detail-value">{{document.documentType}}</span>
         </div>
-        
+
         <div class="detail-item">
-          <span class="detail-label">Tamaño:</span>
+          <span class="detail-label">
+            <i class="fas fa-weight-hanging"></i>
+            Tamaño:
+          </span>
           <span class="detail-value">{{formatFileSize(document.fileSize)}}</span>
         </div>
-        
+
         <div class="detail-item">
-          <span class="detail-label">Fecha de carga:</span>
+          <span class="detail-label">
+            <i class="fas fa-calendar-alt"></i>
+            Fecha de carga:
+          </span>
           <span class="detail-value">{{formatDate(document.uploadDate)}}</span>
         </div>
-        
+
         <div class="detail-item" *ngIf="document.reviewDate">
-          <span class="detail-label">Fecha de revisión:</span>
+          <span class="detail-label">
+            <i class="fas fa-calendar-check"></i>
+            Fecha de revisión:
+          </span>
           <span class="detail-value">{{formatDate(document.reviewDate)}}</span>
         </div>
-        
+
         <div class="detail-item" *ngIf="document.reviewedBy">
-          <span class="detail-label">Revisado por:</span>
+          <span class="detail-label">
+            <i class="fas fa-user-check"></i>
+            Revisado por:
+          </span>
           <span class="detail-value">{{document.reviewedBy}}</span>
         </div>
       </div>
-      
+
+      <!-- Enhanced Observations Section -->
       <div class="observations-section" *ngIf="document.observations">
-        <h4>Observaciones</h4>
-        <p class="observations-text">{{document.observations}}</p>
+        <h4 class="section-title">
+          <i class="fas fa-comment-alt"></i>
+          Observaciones
+        </h4>
+        <div class="observations-content">
+          <p class="observations-text">{{document.observations}}</p>
+        </div>
       </div>
-      
+
+      <!-- Enhanced Actions Section -->
       <div class="actions-section" *ngIf="document.status === 'PENDING'">
-        <h4>Acciones</h4>
-        
+        <h4 class="section-title">
+          <i class="fas fa-tasks"></i>
+          Acciones
+        </h4>
+
         <form [formGroup]="commentForm" class="comment-form">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Observaciones</mat-label>
-            <textarea matInput formControlName="observations" rows="3" placeholder="Ingrese observaciones sobre este documento"></textarea>
-            <mat-hint align="end">{{commentForm.get('observations')?.value?.length || 0}}/500</mat-hint>
-          </mat-form-field>
+          <div class="input-group">
+            <label class="input-label">
+              <i class="fas fa-comment"></i>
+              Observaciones
+            </label>
+            <textarea
+              class="custom-textarea"
+              formControlName="observations"
+              rows="3"
+              placeholder="Ingrese observaciones sobre este documento">
+            </textarea>
+            <div class="input-hint">{{commentForm.get('observations')?.value?.length || 0}}/500</div>
+          </div>
         </form>
-        
+
         <div class="action-buttons">
-          <button mat-raised-button color="primary" (click)="approveDocument()" [disabled]="isLoading">
-            <mat-icon>check_circle</mat-icon>
-            Aprobar Documento
-          </button>
-          
-          <button mat-raised-button color="warn" (click)="rejectDocument()" [disabled]="isLoading">
-            <mat-icon>cancel</mat-icon>
-            Rechazar Documento
-          </button>
+          <app-custom-button
+            [variant]="'primary'"
+            [icon]="'check-circle'"
+            [label]="'Aprobar Documento'"
+            [disabled]="isLoading"
+            (buttonClick)="approveDocument()">
+          </app-custom-button>
+
+          <app-custom-button
+            [variant]="'flat'"
+            [color]="'warn'"
+            [icon]="'times-circle'"
+            [label]="'Rechazar Documento'"
+            [disabled]="isLoading"
+            (buttonClick)="rejectDocument()">
+          </app-custom-button>
         </div>
       </div>
     </div>
   </div>
   
+  <!-- Enhanced Footer with Glassmorphism -->
   <div class="document-footer">
-    <button mat-stroked-button color="primary" (click)="downloadDocument()" [disabled]="isLoading">
-      <mat-icon>download</mat-icon>
-      Descargar Documento
-    </button>
+    <app-custom-button
+      [variant]="'stroked'"
+      [color]="'primary'"
+      [icon]="'download'"
+      [label]="'Descargar Documento'"
+      [disabled]="isLoading"
+      (buttonClick)="downloadDocument()">
+    </app-custom-button>
   </div>
 </div>

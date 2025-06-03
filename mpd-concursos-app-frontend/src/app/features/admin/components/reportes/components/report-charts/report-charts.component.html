@@ -1,0 +1,189 @@
+<!-- ===== GRÁFICOS INTERACTIVOS GLASSMORPHISM ===== -->
+<div class="charts-container">
+  <!-- Header de Gráficos -->
+  <div class="charts-header">
+    <div class="header-content">
+      <h3>
+        <i class="fas fa-chart-line"></i>
+        Análisis Visual de Datos
+      </h3>
+      <p class="header-description">
+        Visualización interactiva de los datos del reporte generado
+      </p>
+    </div>
+    
+    <div class="header-actions">
+      <button 
+        class="btn-toggle"
+        (click)="toggleCharts()"
+        [class.active]="showCharts"
+        [attr.aria-label]="showCharts ? 'Ocultar gráficos' : 'Mostrar gráficos'">
+        <i class="fas" [class.fa-eye]="!showCharts" [class.fa-eye-slash]="showCharts"></i>
+        <span>{{showCharts ? 'Ocultar' : 'Mostrar'}}</span>
+      </button>
+      
+      <button 
+        class="btn-refresh"
+        (click)="updateCharts()"
+        [disabled]="!chartsLoaded"
+        [attr.aria-label]="'Actualizar gráficos'">
+        <i class="fas fa-sync-alt"></i>
+        <span>Actualizar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Estadísticas Resumidas -->
+  <div class="stats-summary" *ngIf="showCharts">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-database"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{getChartStats().totalRecords}}</div>
+        <div class="stat-label">Total Registros</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-tags"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{getChartStats().uniqueStates}}</div>
+        <div class="stat-label">Estados Únicos</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-trophy"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{getChartStats().uniqueContests}}</div>
+        <div class="stat-label">Concursos</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{getChartStats().dateRange}}</div>
+        <div class="stat-label">Rango de Fechas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor de Gráficos -->
+  <div class="charts-grid" *ngIf="showCharts">
+    <!-- Gráfico de Estados de Inscripción -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h4>
+          <i class="fas fa-chart-pie"></i>
+          Estados de Inscripción
+        </h4>
+        <button 
+          class="btn-export"
+          (click)="exportChart('inscriptionsByStateChart')"
+          [attr.aria-label]="'Exportar gráfico de estados'">
+          <i class="fas fa-download"></i>
+        </button>
+      </div>
+      <div class="chart-content">
+        <canvas 
+          id="inscriptionsByStateChart"
+          width="400" 
+          height="300"
+          [attr.aria-label]="'Gráfico de distribución por estado de inscripción'">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico de Tendencia Mensual -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h4>
+          <i class="fas fa-chart-line"></i>
+          Tendencia Mensual
+        </h4>
+        <button 
+          class="btn-export"
+          (click)="exportChart('inscriptionsByMonthChart')"
+          [attr.aria-label]="'Exportar gráfico de tendencia mensual'">
+          <i class="fas fa-download"></i>
+        </button>
+      </div>
+      <div class="chart-content">
+        <canvas 
+          id="inscriptionsByMonthChart"
+          width="400" 
+          height="300"
+          [attr.aria-label]="'Gráfico de tendencia de inscripciones por mes'">
+        </canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico de Participación por Concurso -->
+    <div class="chart-card full-width">
+      <div class="chart-header">
+        <h4>
+          <i class="fas fa-chart-bar"></i>
+          Participación por Concurso
+        </h4>
+        <button 
+          class="btn-export"
+          (click)="exportChart('contestParticipationChart')"
+          [attr.aria-label]="'Exportar gráfico de participación por concurso'">
+          <i class="fas fa-download"></i>
+        </button>
+      </div>
+      <div class="chart-content">
+        <canvas 
+          id="contestParticipationChart"
+          width="800" 
+          height="400"
+          [attr.aria-label]="'Gráfico de participación por concurso'">
+        </canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de Carga -->
+  <div class="loading-state" *ngIf="showCharts && !chartsLoaded">
+    <div class="loading-content">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+      </div>
+      <p class="loading-text">Generando gráficos interactivos...</p>
+    </div>
+  </div>
+
+  <!-- Estado Sin Datos -->
+  <div class="empty-state" *ngIf="showCharts && chartsLoaded && reportData.length === 0">
+    <div class="empty-icon">
+      <i class="fas fa-chart-line"></i>
+    </div>
+    <h4 class="empty-title">Sin Datos para Visualizar</h4>
+    <p class="empty-message">
+      No hay datos suficientes para generar gráficos. 
+      Genere un reporte con datos para ver las visualizaciones.
+    </p>
+  </div>
+
+  <!-- Estado Oculto -->
+  <div class="hidden-state" *ngIf="!showCharts">
+    <div class="hidden-content">
+      <div class="hidden-icon">
+        <i class="fas fa-eye-slash"></i>
+      </div>
+      <h4 class="hidden-title">Gráficos Ocultos</h4>
+      <p class="hidden-message">
+        Los gráficos están ocultos para mejorar el rendimiento. 
+        Haga clic en "Mostrar" para visualizar los datos.
+      </p>
+    </div>
+  </div>
+</div>

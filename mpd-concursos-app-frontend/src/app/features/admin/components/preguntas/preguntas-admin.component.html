@@ -1,189 +1,352 @@
-<div class="container">
-  <h1 class="mat-headline-4">Administración de Preguntas</h1>
+<!-- Enhanced Preguntas Admin - Premium Glassmorphism -->
+<div class="dashboard-container">
+  <!-- Enhanced Header -->
+  <div class="header">
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-question-circle"></i>
+        <h1>Administración de Preguntas</h1>
+      </div>
+      <p class="header-description">
+        Gestiona el banco de preguntas y asigna preguntas a los exámenes
+      </p>
+    </div>
+  </div>
 
-  <mat-card class="mb-4">
-    <mat-card-header>
-      <mat-card-title>{{ editando ? 'Editar Pregunta' : 'Nueva Pregunta' }}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+  <!-- Enhanced Question Form Card -->
+  <div class="form-card">
+    <div class="form-header">
+      <h3>
+        <i class="fas fa-edit"></i>
+        {{ editando ? 'Editar Pregunta' : 'Nueva Pregunta' }}
+      </h3>
+    </div>
+    <div class="form-content">
       <form [formGroup]="preguntaForm" (ngSubmit)="guardarPregunta()">
-        <div class="row">
-          <div class="col-md-12">
-            <mat-form-field appearance="outline" class="w-100">
-              <mat-label>Texto de la pregunta</mat-label>
-              <textarea matInput formControlName="texto" rows="3" placeholder="Ingrese el texto de la pregunta"></textarea>
-              <mat-error *ngIf="preguntaForm.get('texto')?.hasError('required')">
-                El texto de la pregunta es requerido
-              </mat-error>
-              <mat-error *ngIf="preguntaForm.get('texto')?.hasError('minlength')">
-                El texto debe tener al menos 10 caracteres
-              </mat-error>
-            </mat-form-field>
+        <!-- Question Text Field -->
+        <div class="form-field">
+          <label for="texto">Texto de la pregunta</label>
+          <div class="input-container">
+            <textarea
+              id="texto"
+              formControlName="texto"
+              rows="3"
+              placeholder="Ingrese el texto de la pregunta"
+              class="form-textarea"
+            ></textarea>
+          </div>
+          <div class="field-errors" *ngIf="preguntaForm.get('texto')?.touched && preguntaForm.get('texto')?.errors">
+            <div class="error-message" *ngIf="preguntaForm.get('texto')?.hasError('required')">
+              <i class="fas fa-exclamation-circle"></i>
+              El texto de la pregunta es requerido
+            </div>
+            <div class="error-message" *ngIf="preguntaForm.get('texto')?.hasError('minlength')">
+              <i class="fas fa-exclamation-circle"></i>
+              El texto debe tener al menos 10 caracteres
+            </div>
           </div>
         </div>
 
-        <div class="row">
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100">
-              <mat-label>Tipo de pregunta</mat-label>
-              <mat-select formControlName="tipo">
-                <mat-option *ngFor="let tipo of tiposPregunta" [value]="tipo.value">
-                  {{tipo.label}}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="preguntaForm.get('tipo')?.hasError('required')">
+        <!-- Type and Score Fields -->
+        <div class="form-row">
+          <div class="form-field">
+            <label for="tipo">Tipo de pregunta</label>
+            <div class="select-container">
+              <select id="tipo" formControlName="tipo" class="form-select">
+                <option *ngFor="let tipo of tiposPregunta" [value]="tipo.value">
+                  {{ tipo.label }}
+                </option>
+              </select>
+              <i class="fas fa-chevron-down select-icon"></i>
+            </div>
+            <div class="field-errors" *ngIf="preguntaForm.get('tipo')?.touched && preguntaForm.get('tipo')?.errors">
+              <div class="error-message" *ngIf="preguntaForm.get('tipo')?.hasError('required')">
+                <i class="fas fa-exclamation-circle"></i>
                 El tipo de pregunta es obligatorio
-              </mat-error>
-            </mat-form-field>
+              </div>
+            </div>
           </div>
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100">
-              <mat-label>Puntaje</mat-label>
-              <input matInput type="number" formControlName="puntaje" min="1" max="100">
-              <mat-error *ngIf="preguntaForm.get('puntaje')?.hasError('required')">
+
+          <div class="form-field">
+            <label for="puntaje">Puntaje</label>
+            <div class="input-container">
+              <input
+                id="puntaje"
+                type="number"
+                formControlName="puntaje"
+                min="1"
+                max="100"
+                placeholder="Puntaje"
+                class="form-input"
+              />
+            </div>
+            <div class="field-errors" *ngIf="preguntaForm.get('puntaje')?.touched && preguntaForm.get('puntaje')?.errors">
+              <div class="error-message" *ngIf="preguntaForm.get('puntaje')?.hasError('required')">
+                <i class="fas fa-exclamation-circle"></i>
                 El puntaje es requerido
-              </mat-error>
-              <mat-error *ngIf="preguntaForm.get('puntaje')?.hasError('min')">
+              </div>
+              <div class="error-message" *ngIf="preguntaForm.get('puntaje')?.hasError('min')">
+                <i class="fas fa-exclamation-circle"></i>
                 El puntaje debe ser al menos 1
-              </mat-error>
-            </mat-form-field>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div *ngIf="preguntaForm.get('tipo')?.value !== TIPO_PREGUNTA.DESARROLLO" class="opciones-container">
-          <h3>Opciones</h3>
+        <!-- Options Section -->
+        <div *ngIf="preguntaForm.get('tipo')?.value !== TIPO_PREGUNTA.DESARROLLO" class="options-section">
+          <div class="options-header">
+            <h4>
+              <i class="fas fa-list"></i>
+              Opciones de Respuesta
+            </h4>
+          </div>
 
-          <div formArrayName="opciones">
-            <div *ngFor="let opcion of opciones.controls; let i = index" [formGroupName]="i" class="opcion-item">
-              <div class="row">
-                <div class="col-md-10">
-                  <mat-form-field appearance="outline" class="w-100">
-                    <mat-label>Opción {{ i + 1 }}</mat-label>
-                    <input matInput formControlName="texto" placeholder="Ingrese el texto de la opción">
-                    <mat-error *ngIf="opcion.get('texto')?.hasError('required')">
+          <div formArrayName="opciones" class="options-container">
+            <div *ngFor="let opcion of opciones.controls; let i = index"
+                 [formGroupName]="i"
+                 class="option-item">
+              <div class="option-content">
+                <div class="option-field">
+                  <label [for]="'opcion-' + i">Opción {{ i + 1 }}</label>
+                  <div class="input-container">
+                    <input
+                      [id]="'opcion-' + i"
+                      formControlName="texto"
+                      placeholder="Ingrese el texto de la opción"
+                      class="form-input"
+                    />
+                  </div>
+                  <div class="field-errors" *ngIf="opcion.get('texto')?.touched && opcion.get('texto')?.errors">
+                    <div class="error-message" *ngIf="opcion.get('texto')?.hasError('required')">
+                      <i class="fas fa-exclamation-circle"></i>
                       El texto de la opción es requerido
-                    </mat-error>
-                  </mat-form-field>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-md-2 d-flex align-items-center">
-                  <button type="button" mat-icon-button color="warn" (click)="eliminarOpcion(i)"
-                          [disabled]="preguntaForm.get('tipo')?.value === TIPO_PREGUNTA.VERDADERO_FALSO">
-                    <mat-icon>delete</mat-icon>
+
+                <div class="option-actions">
+                  <button
+                    type="button"
+                    class="action-button danger"
+                    (click)="eliminarOpcion(i)"
+                    [disabled]="preguntaForm.get('tipo')?.value === TIPO_PREGUNTA.VERDADERO_FALSO"
+                    [attr.aria-label]="'Eliminar opción ' + (i + 1)">
+                    <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </div>
             </div>
 
-            <button type="button" mat-stroked-button color="primary" (click)="agregarOpcion()"
-                    *ngIf="preguntaForm.get('tipo')?.value !== TIPO_PREGUNTA.VERDADERO_FALSO">
-              <mat-icon>add</mat-icon> Agregar opción
+            <button
+              type="button"
+              class="action-button secondary add-option-btn"
+              (click)="agregarOpcion()"
+              *ngIf="preguntaForm.get('tipo')?.value !== TIPO_PREGUNTA.VERDADERO_FALSO">
+              <i class="fas fa-plus"></i>
+              <span>Agregar Opción</span>
             </button>
           </div>
         </div>
 
-        <div class="actions mt-3">
-          <button type="button" mat-button (click)="cancelarEdicion()">Cancelar</button>
-          <button type="submit" mat-raised-button color="primary" [disabled]="cargando">
-            <mat-spinner diameter="20" *ngIf="cargando"></mat-spinner>
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="action-button secondary" (click)="cancelarEdicion()">
+            <i class="fas fa-times"></i>
+            <span>Cancelar</span>
+          </button>
+          <button type="submit" class="action-button primary" [disabled]="cargando || preguntaForm.invalid">
+            <div *ngIf="cargando" class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+            <i *ngIf="!cargando" class="fas fa-save"></i>
             <span *ngIf="!cargando">{{ editando ? 'Actualizar' : 'Guardar' }}</span>
           </button>
         </div>
       </form>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 
-  <mat-card class="mb-4">
-    <mat-card-header>
-      <mat-card-title>Asignar Preguntas a Examen</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+  <!-- Enhanced Assignment Card -->
+  <div class="assignment-card">
+    <div class="assignment-header">
+      <h3>
+        <i class="fas fa-link"></i>
+        Asignar Preguntas a Examen
+      </h3>
+    </div>
+    <div class="assignment-content">
       <form [formGroup]="asignacionForm" (ngSubmit)="asignarPreguntasAExamen()">
-        <div class="row">
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100">
-              <mat-label>Seleccione un examen</mat-label>
-              <mat-select formControlName="examenId">
-                <mat-option *ngFor="let examen of examenes" [value]="examen.id">
+        <div class="form-row">
+          <div class="form-field">
+            <label for="examenId">Seleccione un examen</label>
+            <div class="select-container">
+              <select id="examenId" formControlName="examenId" class="form-select">
+                <option value="">-- Seleccione un examen --</option>
+                <option *ngFor="let examen of examenes" [value]="examen.id">
                   {{ examen.titulo }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="asignacionForm.get('examenId')?.hasError('required')">
+                </option>
+              </select>
+              <i class="fas fa-chevron-down select-icon"></i>
+            </div>
+            <div class="field-errors" *ngIf="asignacionForm.get('examenId')?.touched && asignacionForm.get('examenId')?.errors">
+              <div class="error-message" *ngIf="asignacionForm.get('examenId')?.hasError('required')">
+                <i class="fas fa-exclamation-circle"></i>
                 Debe seleccionar un examen
-              </mat-error>
-            </mat-form-field>
+              </div>
+            </div>
           </div>
-          <div class="col-md-6">
-            <mat-form-field appearance="outline" class="w-100">
-              <mat-label>Seleccione preguntas</mat-label>
-              <mat-select formControlName="preguntaIds" multiple>
-                <mat-option *ngFor="let pregunta of preguntas" [value]="pregunta.id">
-                  {{ pregunta.texto }}
-                </mat-option>
-              </mat-select>
-              <mat-error *ngIf="asignacionForm.get('preguntaIds')?.hasError('required')">
+
+          <div class="form-field">
+            <label for="preguntaIds">Seleccione preguntas</label>
+            <div class="multi-select-container">
+              <div class="multi-select-header" (click)="toggleMultiSelect()">
+                <span *ngIf="getSelectedQuestionsText() === 'Ninguna pregunta seleccionada'; else selectedText">
+                  -- Seleccione preguntas --
+                </span>
+                <ng-template #selectedText>
+                  {{ getSelectedQuestionsText() }}
+                </ng-template>
+                <i class="fas fa-chevron-down" [class.rotated]="multiSelectOpen"></i>
+              </div>
+
+              <div class="multi-select-dropdown" [class.show]="multiSelectOpen">
+                <div *ngFor="let pregunta of preguntas" class="multi-select-option">
+                  <label class="checkbox-label">
+                    <input
+                      type="checkbox"
+                      [value]="pregunta.id"
+                      (change)="onQuestionSelectionChange($event, pregunta.id)"
+                      [checked]="isQuestionSelected(pregunta.id)"
+                    />
+                    <span class="checkbox-custom"></span>
+                    <span class="question-text">{{ pregunta.texto | slice:0:60 }}{{ pregunta.texto.length > 60 ? '...' : '' }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="field-errors" *ngIf="asignacionForm.get('preguntaIds')?.touched && asignacionForm.get('preguntaIds')?.errors">
+              <div class="error-message" *ngIf="asignacionForm.get('preguntaIds')?.hasError('required')">
+                <i class="fas fa-exclamation-circle"></i>
                 Debe seleccionar al menos una pregunta
-              </mat-error>
-            </mat-form-field>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="actions mt-3">
-          <button type="submit" mat-raised-button color="primary" [disabled]="cargando">
-            <mat-spinner diameter="20" *ngIf="cargando"></mat-spinner>
+        <div class="form-actions">
+          <button type="submit" class="action-button primary" [disabled]="cargando || asignacionForm.invalid">
+            <div *ngIf="cargando" class="loading-spinner">
+              <div class="spinner"></div>
+            </div>
+            <i *ngIf="!cargando" class="fas fa-link"></i>
             <span *ngIf="!cargando">Asignar Preguntas</span>
           </button>
         </div>
       </form>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </div>
 
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>Listado de Preguntas</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
+  <!-- Enhanced Questions List Card -->
+  <div class="questions-list-card">
+    <div class="questions-header">
+      <h3>
+        <i class="fas fa-list-ul"></i>
+        Banco de Preguntas
+      </h3>
+    </div>
+    <div class="questions-content">
+      <!-- Loading State -->
       <div *ngIf="cargando" class="loading-container">
-        <mat-spinner></mat-spinner>
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Cargando preguntas...</p>
+        </div>
       </div>
 
+      <!-- Empty State -->
       <div *ngIf="!cargando && preguntas.length === 0" class="empty-state">
-        <p>No hay preguntas disponibles</p>
+        <div class="empty-icon">
+          <i class="fas fa-question-circle"></i>
+        </div>
+        <h4>No hay preguntas disponibles</h4>
+        <p>Comience creando su primera pregunta para el banco de preguntas</p>
       </div>
 
-      <mat-accordion *ngIf="!cargando && preguntas.length > 0">
-        <mat-expansion-panel *ngFor="let pregunta of preguntas">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              {{ pregunta.texto | slice:0:50 }}{{ pregunta.texto.length > 50 ? '...' : '' }}
-            </mat-panel-title>
-            <mat-panel-description>
-              {{ getTipoPreguntaTexto(pregunta.tipo) }} - {{ pregunta.puntaje }} puntos
-            </mat-panel-description>
-          </mat-expansion-panel-header>
-
-          <div class="pregunta-content">
-            <p><strong>Texto completo:</strong> {{ pregunta.texto }}</p>
-
-            <div *ngIf="pregunta.opciones && pregunta.opciones.length > 0">
-              <p><strong>Opciones:</strong></p>
-              <ul>
-                <li *ngFor="let opcion of pregunta.opciones">
-                  {{ opcion.texto }}
-                </li>
-              </ul>
+      <!-- Questions Accordion -->
+      <div *ngIf="!cargando && preguntas.length > 0" class="questions-accordion">
+        <div *ngFor="let pregunta of preguntas; trackBy: trackByQuestionId" class="question-panel">
+          <div class="question-header" (click)="toggleQuestion(pregunta.id)">
+            <div class="question-summary">
+              <div class="question-title">
+                {{ pregunta.texto | slice:0:80 }}{{ pregunta.texto.length > 80 ? '...' : '' }}
+              </div>
+              <div class="question-meta">
+                <span class="question-type" [class]="getQuestionTypeClass(pregunta.tipo)">
+                  <i [class]="getQuestionTypeIcon(pregunta.tipo)"></i>
+                  {{ getTipoPreguntaTexto(pregunta.tipo) }}
+                </span>
+                <span class="question-score">
+                  <i class="fas fa-star"></i>
+                  {{ pregunta.puntaje }} puntos
+                </span>
+              </div>
             </div>
-
-            <div class="actions mt-3">
-              <button mat-button color="primary" (click)="editarPregunta(pregunta)">
-                <mat-icon>edit</mat-icon> Editar
-              </button>
-              <button mat-button color="warn" (click)="eliminarPregunta(pregunta)">
-                <mat-icon>delete</mat-icon> Eliminar
-              </button>
+            <div class="question-toggle">
+              <i class="fas fa-chevron-down" [class.rotated]="isQuestionExpanded(pregunta.id)"></i>
             </div>
           </div>
-        </mat-expansion-panel>
-      </mat-accordion>
-    </mat-card-content>
-  </mat-card>
+
+          <div class="question-content" [class.expanded]="isQuestionExpanded(pregunta.id)">
+            <div class="question-details">
+              <div class="detail-section">
+                <h5>
+                  <i class="fas fa-align-left"></i>
+                  Texto completo
+                </h5>
+                <p class="question-full-text">{{ pregunta.texto }}</p>
+              </div>
+
+              <div *ngIf="pregunta.opciones && pregunta.opciones.length > 0" class="detail-section">
+                <h5>
+                  <i class="fas fa-list"></i>
+                  Opciones de respuesta
+                </h5>
+                <div class="options-list">
+                  <div *ngFor="let opcion of pregunta.opciones; let i = index" class="option-item">
+                    <span class="option-letter">{{ getOptionLetter(i) }}</span>
+                    <span class="option-text">{{ opcion.texto }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="question-actions">
+                <button class="action-button secondary" (click)="editarPregunta(pregunta)">
+                  <i class="fas fa-edit"></i>
+                  <span>Editar</span>
+                </button>
+                <button class="action-button danger" (click)="eliminarPregunta(pregunta)">
+                  <i class="fas fa-trash"></i>
+                  <span>Eliminar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Notification -->
+  <div class="notification"
+       [class.show]="showNotification"
+       [class]="notificationType">
+    <div class="notification-content">
+      <i [class]="getNotificationIcon()"></i>
+      <span>{{ notificationMessage }}</span>
+    </div>
+    <button class="notification-close" (click)="closeNotification()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
 </div>

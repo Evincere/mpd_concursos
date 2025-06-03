@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 
@@ -182,21 +182,10 @@ export interface MonitoringFilter {
 })
 export class SystemMonitoringService {
   private apiUrl = `${environment.apiUrl}/admin/monitoring`;
-  private http: HttpClient;
+  private http = inject(HttpClient);
 
   constructor() {
-    // En una implementación real, se inyectaría HttpClient
-    this.http = {
-      get: <T>(_url: string, _options?: { params?: HttpParams }): Observable<T> => {
-        return of({} as T);
-      },
-      put: <T>(_url: string, _body: unknown): Observable<T> => {
-        return of({} as T);
-      },
-      post: <T>(_url: string, _body: unknown): Observable<T> => {
-        return of({} as T);
-      }
-    } as HttpClient;
+    // Constructor vacío - HttpClient se inyecta usando inject()
   }
 
 
@@ -204,11 +193,13 @@ export class SystemMonitoringService {
    * Obtiene las métricas de rendimiento de la aplicación
    * @param filter Filtros para los datos
    */
-  getAppPerformanceMetrics(_filter?: MonitoringFilter): Observable<AppPerformanceMetrics> {
-    // En una implementación real, esto sería una llamada a la API
+  getAppPerformanceMetrics(filter?: MonitoringFilter): Observable<AppPerformanceMetrics> {
+    // Para desarrollo, usar datos mock
+    // En producción, descomentar la línea siguiente:
     // return this.http.get<AppPerformanceMetrics>(`${this.apiUrl}/app-performance`, { params: this.buildParams(filter) });
 
     // Implementación mock para desarrollo
+    console.log('Loading app performance metrics with filter:', filter);
     return of(this.getMockAppPerformanceMetrics());
   }
 
@@ -216,11 +207,13 @@ export class SystemMonitoringService {
    * Obtiene las métricas de base de datos
    * @param filter Filtros para los datos
    */
-  getDatabaseMetrics(_filter?: MonitoringFilter): Observable<DatabaseMetrics> {
-    // En una implementación real, esto sería una llamada a la API
+  getDatabaseMetrics(filter?: MonitoringFilter): Observable<DatabaseMetrics> {
+    // Para desarrollo, usar datos mock
+    // En producción, descomentar la línea siguiente:
     // return this.http.get<DatabaseMetrics>(`${this.apiUrl}/database`, { params: this.buildParams(filter) });
 
     // Implementación mock para desarrollo
+    console.log('Loading database metrics with filter:', filter);
     return of(this.getMockDatabaseMetrics());
   }
 
@@ -228,11 +221,13 @@ export class SystemMonitoringService {
    * Obtiene las alertas del sistema
    * @param filter Filtros para los datos
    */
-  getSystemAlerts(_filter?: MonitoringFilter): Observable<SystemAlert[]> {
-    // En una implementación real, esto sería una llamada a la API
+  getSystemAlerts(filter?: MonitoringFilter): Observable<SystemAlert[]> {
+    // Para desarrollo, usar datos mock
+    // En producción, descomentar la línea siguiente:
     // return this.http.get<SystemAlert[]>(`${this.apiUrl}/alerts`, { params: this.buildParams(filter) });
 
     // Implementación mock para desarrollo
+    console.log('Loading system alerts with filter:', filter);
     return of(this.getMockSystemAlerts());
   }
 
@@ -240,10 +235,12 @@ export class SystemMonitoringService {
    * Obtiene la configuración de umbrales de alerta
    */
   getAlertThresholds(): Observable<AlertThreshold[]> {
-    // En una implementación real, esto sería una llamada a la API
+    // Para desarrollo, usar datos mock
+    // En producción, descomentar la línea siguiente:
     // return this.http.get<AlertThreshold[]>(`${this.apiUrl}/alert-thresholds`);
 
     // Implementación mock para desarrollo
+    console.log('Loading alert thresholds');
     return of(this.getMockAlertThresholds());
   }
 
@@ -252,7 +249,8 @@ export class SystemMonitoringService {
    * @param threshold Umbral de alerta a actualizar
    */
   updateAlertThreshold(threshold: AlertThreshold): Observable<AlertThreshold> {
-    // En una implementación real, esto sería una llamada a la API
+    // Para desarrollo, usar datos mock
+    // En producción, descomentar la línea siguiente:
     // return this.http.put<AlertThreshold>(`${this.apiUrl}/alert-thresholds/${threshold.id}`, threshold);
 
     // Implementación mock para desarrollo
@@ -265,10 +263,12 @@ export class SystemMonitoringService {
    * @param alertId ID de la alerta
    */
   acknowledgeAlert(alertId: string): Observable<SystemAlert> {
-    // En una implementación real, esto sería una llamada a la API
+    // Para desarrollo, usar datos mock
+    // En producción, descomentar la línea siguiente:
     // return this.http.post<SystemAlert>(`${this.apiUrl}/alerts/${alertId}/acknowledge`, {});
 
     // Implementación mock para desarrollo
+    console.log('Acknowledging alert:', alertId);
     const alerts = this.getMockSystemAlerts();
     const alert = alerts.find(a => a.id === alertId);
 
@@ -286,10 +286,12 @@ export class SystemMonitoringService {
    * @param alertId ID de la alerta
    */
   resolveAlert(alertId: string): Observable<SystemAlert> {
-    // En una implementación real, esto sería una llamada a la API
+    // Para desarrollo, usar datos mock
+    // En producción, descomentar la línea siguiente:
     // return this.http.post<SystemAlert>(`${this.apiUrl}/alerts/${alertId}/resolve`, {});
 
     // Implementación mock para desarrollo
+    console.log('Resolving alert:', alertId);
     const alerts = this.getMockSystemAlerts();
     const alert = alerts.find(a => a.id === alertId);
 

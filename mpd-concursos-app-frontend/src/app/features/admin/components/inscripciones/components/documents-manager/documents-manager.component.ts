@@ -26,6 +26,7 @@ import { DocumentViewerComponent } from '../document-viewer/document-viewer.comp
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { CustomPageEvent, CustomPaginatorComponent } from '@shared/components/custom-paginator/custom-paginator.component';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
 
 interface DocumentFilter {
   status: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -44,25 +45,10 @@ interface DocumentFilter {
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatTabsModule,
     DocumentViewerComponent,
     CustomPaginatorComponent,
-    CustomButtonComponent
+    CustomButtonComponent,
+    ContestStatusBadgeComponent
   ]
 })
 export class DocumentsManagerComponent implements OnInit, OnDestroy {
@@ -96,9 +82,7 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private inscriptionsService: AdminInscriptionsService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private inscriptionsService: AdminInscriptionsService
   ) {
     this.filterForm = this.fb.group({
       status: ['PENDING'],
@@ -296,97 +280,61 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
     const selectedDocs = this.getSelectedDocuments();
 
     if (selectedDocs.length === 0) {
-      this.snackBar.open('No hay documentos seleccionados', 'Cerrar', { duration: 3000 });
+      console.log('No hay documentos seleccionados');
       return;
     }
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Aprobar Documentos',
-        message: `¿Está seguro que desea aprobar ${selectedDocs.length} documento(s) seleccionado(s)?`,
-        confirmText: 'Aprobar',
-        cancelText: 'Cancelar',
-        showTextarea: true,
-        textareaLabel: 'Observaciones (opcional)'
-      }
-    });
+    this.isLoading = true;
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.isLoading = true;
+    // Simulamos la aprobación masiva
+    setTimeout(() => {
+      selectedDocs.forEach(doc => {
+        const index = this.dataSource.findIndex(d => d.id === doc.id);
+        if (index !== -1) {
+          this.dataSource[index] = {
+            ...doc,
+            status: 'APPROVED',
+            reviewedBy: 'Admin Usuario',
+            reviewDate: new Date()
+          };
+        }
+      });
 
-        // Aquí procesaríamos la aprobación masiva
-        // Por ahora, simulamos el proceso
-        setTimeout(() => {
-          selectedDocs.forEach(doc => {
-            const index = this.dataSource.findIndex(d => d.id === doc.id);
-            if (index !== -1) {
-              this.dataSource[index] = {
-                ...doc,
-                status: 'APPROVED',
-                observations: result.textareaValue || undefined,
-                reviewedBy: 'Admin Usuario',
-                reviewDate: new Date()
-              };
-            }
-          });
-
-          this.resetSelection();
-          this.isLoading = false;
-          this.snackBar.open(`${selectedDocs.length} documento(s) aprobado(s) correctamente`, 'Cerrar', { duration: 3000 });
-        }, 1000);
-      }
-    });
+      this.resetSelection();
+      this.isLoading = false;
+      console.log(`${selectedDocs.length} documento(s) aprobado(s) correctamente`);
+    }, 1000);
   }
 
   rejectSelectedDocuments(): void {
     const selectedDocs = this.getSelectedDocuments();
 
     if (selectedDocs.length === 0) {
-      this.snackBar.open('No hay documentos seleccionados', 'Cerrar', { duration: 3000 });
+      console.log('No hay documentos seleccionados');
       return;
     }
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Rechazar Documentos',
-        message: `¿Está seguro que desea rechazar ${selectedDocs.length} documento(s) seleccionado(s)?`,
-        confirmText: 'Rechazar',
-        cancelText: 'Cancelar',
-        showTextarea: true,
-        textareaLabel: 'Motivo del rechazo (obligatorio)',
-        textareaRequired: true
-      }
-    });
+    this.isLoading = true;
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.textareaValue) {
-        this.isLoading = true;
+    // Simulamos el rechazo masivo
+    setTimeout(() => {
+      selectedDocs.forEach(doc => {
+        const index = this.dataSource.findIndex(d => d.id === doc.id);
+        if (index !== -1) {
+          this.dataSource[index] = {
+            ...doc,
+            status: 'REJECTED',
+            observations: 'Documento rechazado',
+            reviewedBy: 'Admin Usuario',
+            reviewDate: new Date()
+          };
+        }
+      });
 
-        // Aquí procesaríamos el rechazo masivo
-        // Por ahora, simulamos el proceso
-        setTimeout(() => {
-          selectedDocs.forEach(doc => {
-            const index = this.dataSource.findIndex(d => d.id === doc.id);
-            if (index !== -1) {
-              this.dataSource[index] = {
-                ...doc,
-                status: 'REJECTED',
-                observations: result.textareaValue,
-                reviewedBy: 'Admin Usuario',
-                reviewDate: new Date()
-              };
-            }
-          });
-
-          this.resetSelection();
-          this.isLoading = false;
-          this.snackBar.open(`${selectedDocs.length} documento(s) rechazado(s) correctamente`, 'Cerrar', { duration: 3000 });
-        }, 1000);
-      }
-    });
+      this.resetSelection();
+      this.isLoading = false;
+      console.log(`${selectedDocs.length} documento(s) rechazado(s) correctamente`);
+    }, 1000);
   }
 
   getStatusClass(status: string): string {

@@ -1,230 +1,1474 @@
 <div class="comunicaciones-container">
-  <div class="header">
-    <h1>Comunicaciones Masivas</h1>
-    <div class="header-actions">
-      <app-custom-button
-        [label]="'Nueva Plantilla'"
-        [icon]="'plus'"
-        [color]="'primary'"
-        (buttonClick)="openTemplateDialog()">
-      </app-custom-button>
+  <!-- Header -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-comments"></i>
+        Módulo de Comunicaciones
+      </h1>
+      <p class="page-subtitle">
+        Gestión de comunicaciones masivas y notificaciones del sistema
+      </p>
     </div>
   </div>
 
-  <app-custom-card class="main-card">
-    <app-custom-tabs [(selectedIndex)]="activeTab">
-      <!-- Pestaña de Crear Comunicación -->
-      <app-custom-tab [label]="'Crear Comunicación'">
-        <div class="tab-content">
-          <form [formGroup]="comunicacionForm" (ngSubmit)="sendNotification()">
-            <div class="form-section">
-              <h2>Plantillas</h2>
-              <div class="templates-container">
-                <div class="template-card"
-                     *ngFor="let template of templates"
-                     [class.selected]="selectedTemplate?.id === template.id"
-                     (click)="selectTemplate(template)"
-                     (keydown.enter)="selectTemplate(template)"
-                     (keydown.space)="selectTemplate(template)"
-                     tabindex="0"
-                     role="button">
-                  <div class="template-header">
-                    <h3>{{template.name}}</h3>
-                    <app-custom-button
-                      [icon]="'edit'"
-                      [variant]="'icon'"
-                      [color]="'primary'"
-                      [tooltip]="'Editar plantilla'"
-                      (buttonClick)="openTemplateDialog(template); $event.stopPropagation()">
-                    </app-custom-button>
-                  </div>
-                  <p class="template-subject">{{template.subject}}</p>
-                  <p class="template-preview">{{template.content | slice:0:100}}{{template.content.length > 100 ? '...' : ''}}</p>
-                </div>
+  <!-- Navigation Tabs -->
+  <div class="tabs-container">
+    <div class="tab-navigation">
+      <button
+        *ngFor="let tab of tabs; let i = index"
+        class="tab-button"
+        [class.active]="activeTab === i"
+        (click)="setActiveTab(i)"
+        [attr.aria-selected]="activeTab === i"
+        role="tab">
+        <i class="fas fa-{{tab.icon}}"></i>
+        <span>{{tab.label}}</span>
+      </button>
+    </div>
+  </div>
 
-                <div class="template-card add-template"
-                     (click)="openTemplateDialog()"
-                     (keydown.enter)="openTemplateDialog()"
-                     (keydown.space)="openTemplateDialog()"
-                     tabindex="0"
-                     role="button">
-                  <div class="add-template-content">
-                    <i class="fas fa-plus-circle"></i>
-                    <p>Crear nueva plantilla</p>
-                  </div>
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Tab 1: Enviar Mensajes -->
+    <div *ngIf="activeTab === 0" class="tab-panel" role="tabpanel">
+      <form [formGroup]="comunicacionForm" (ngSubmit)="sendNotification()" class="communication-form">
+        
+        <!-- Plantillas Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-file-alt"></i>
+              Plantillas Disponibles
+            </h2>
+            <p class="section-description">Seleccione una plantilla predefinida o cree su mensaje personalizado</p>
+          </div>
+
+          <div class="templates-grid" *ngIf="templates.length > 0; else noTemplates">
+            <div
+              *ngFor="let template of templates"
+              class="template-card"
+              [class.selected]="selectedTemplate?.id === template.id"
+              (click)="selectTemplate(template)"
+              [attr.tabindex]="0"
+              role="button"
+              [attr.aria-pressed]="selectedTemplate?.id === template.id">
+              <div class="template-header">
+                <div class="template-icon">
+                  <i class="fas fa-{{getNotificationTypeIcon(template.type)}}"></i>
+                </div>
+                <div class="template-info">
+                  <h3>{{template.name}}</h3>
+                  <span class="template-type">{{getNotificationTypeLabel(template.type)}}</span>
+                </div>
+              </div>
+              <div class="template-preview">
+                <p>{{template.subject}}</p>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #noTemplates>
+            <div class="empty-state">
+              <i class="fas fa-file-alt"></i>
+              <p>No hay plantillas disponibles</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Message Content Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-edit"></i>
+              Contenido del Mensaje
+            </h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label">Asunto *</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  formControlName="subject"
+                  placeholder="Ingrese el asunto de la notificación"
+                  maxlength="255">
+                <div *ngIf="comunicacionForm.get('subject')?.invalid && comunicacionForm.get('subject')?.touched" class="form-error">
+                  El asunto es requerido (mínimo 3 caracteres)
                 </div>
               </div>
             </div>
 
-            <div class="form-section">
-              <h2>Detalles de la Comunicación</h2>
-              <div class="form-row">
-                <app-custom-form-field
-                  [label]="'Asunto'"
-                  [placeholder]="'Ingrese el asunto de la comunicación'"
-                  [formControl]="$any(comunicacionForm.get('subject'))"
-                  [required]="true"
-                  [errorMessage]="comunicacionForm.get('subject')?.hasError('required') ? 'El asunto es requerido' : ''">
-                </app-custom-form-field>
-              </div>
-
-              <div class="form-row">
-                <div class="editor-container">
-                  <div class="editor-main">
-                    <div class="content-field">
-                      <label class="field-label">Contenido <span class="required-mark">*</span></label>
-                      <textarea
-                        class="content-textarea"
-                        [formControl]="$any(comunicacionForm.get('content'))"
-                        placeholder="Ingrese el contenido de la comunicación"
-                        rows="8"
-                        required></textarea>
-                      <div *ngIf="comunicacionForm.get('content')?.hasError('required') && comunicacionForm.get('content')?.touched"
-                           class="error-message">
-                        El contenido es requerido
-                      </div>
-                    </div>
-                  </div>
-                  <div class="editor-sidebar">
-                    <app-variable-selector (variableSelected)="insertVariable($event)"></app-variable-selector>
-                  </div>
+            <div class="form-group full-width">
+              <div class="form-field">
+                <label class="form-label">Contenido *</label>
+                <textarea
+                  class="form-textarea"
+                  formControlName="content"
+                  placeholder="Escriba el contenido de la notificación..."
+                  rows="6"
+                  maxlength="5000">
+                </textarea>
+                <div *ngIf="comunicacionForm.get('content')?.invalid && comunicacionForm.get('content')?.touched" class="form-error">
+                  El contenido es requerido (mínimo 10 caracteres)
                 </div>
               </div>
+            </div>
 
-              <div class="form-row">
-                <div class="preview-container">
-                  <app-communication-preview
-                    [subject]="comunicacionForm.get('subject')?.value"
-                    [content]="comunicacionForm.get('content')?.value"
-                    [type]="comunicacionForm.get('type')?.value"
-                    [acknowledgementLevel]="comunicacionForm.get('acknowledgementLevel')?.value">
-                  </app-communication-preview>
-                </div>
-              </div>
-
-              <div class="form-row two-columns">
-                <app-custom-select
-                  [label]="'Tipo de Notificación'"
-                  [formControl]="$any(comunicacionForm.get('type'))"
-                  [required]="true">
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label">Tipo de Notificación *</label>
+                <select class="form-select" formControlName="type">
                   <option *ngFor="let type of notificationTypes" [value]="type">
-                    {{type}}
+                    {{getNotificationTypeLabel(type)}}
                   </option>
-                </app-custom-select>
+                </select>
+              </div>
+            </div>
 
-                <app-custom-select
-                  [label]="'Nivel de Confirmación'"
-                  [formControl]="$any(comunicacionForm.get('acknowledgementLevel'))"
-                  [required]="true">
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label">Nivel de Confirmación *</label>
+                <select class="form-select" formControlName="acknowledgementLevel">
                   <option *ngFor="let level of acknowledgementLevels" [value]="level">
-                    {{level}}
+                    {{getAcknowledgementLevelLabel(level)}}
                   </option>
-                </app-custom-select>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label">Programar Envío (Opcional)</label>
+                <input
+                  type="datetime-local"
+                  class="form-input"
+                  formControlName="scheduledTime"
+                  placeholder="Seleccione fecha y hora">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipients Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-users"></i>
+              Destinatarios
+            </h2>
+            <p class="section-description">Seleccione quién recibirá esta notificación</p>
+          </div>
+
+          <div class="recipients-config">
+            <div class="recipient-mode-selector">
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="recipientMode"
+                  value="all"
+                  formControlName="recipientMode">
+                <span class="radio-custom"></span>
+                <div class="option-content">
+                  <strong>Todos los usuarios</strong>
+                  <small>Enviar a todos los usuarios registrados</small>
+                </div>
+              </label>
+
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="recipientMode"
+                  value="roles"
+                  formControlName="recipientMode">
+                <span class="radio-custom"></span>
+                <div class="option-content">
+                  <strong>Por roles</strong>
+                  <small>Enviar a usuarios con roles específicos</small>
+                </div>
+              </label>
+
+              <label class="radio-option">
+                <input
+                  type="radio"
+                  name="recipientMode"
+                  value="users"
+                  formControlName="recipientMode">
+                <span class="radio-custom"></span>
+                <div class="option-content">
+                  <strong>Usuarios específicos</strong>
+                  <small>Seleccionar usuarios individuales</small>
+                </div>
+              </label>
+            </div>
+
+            <!-- Role Selection -->
+            <div *ngIf="recipientMode === 'roles'" class="recipient-selection">
+              <label class="form-label">Seleccionar Roles:</label>
+              <select
+                multiple
+                class="form-select"
+                (change)="onRoleSelectionChange($event)"
+                [attr.aria-label]="'Seleccionar roles'">
+                <option *ngFor="let role of availableRoles" [value]="role.value">
+                  {{role.label}}
+                </option>
+              </select>
+              <small class="form-help">Mantenga presionado Ctrl para seleccionar múltiples roles</small>
+            </div>
+
+            <!-- User Selection -->
+            <div *ngIf="recipientMode === 'users'" class="recipient-selection">
+              <label class="form-label">Seleccionar Usuarios:</label>
+              <select
+                multiple
+                class="form-select"
+                (change)="onUserSelectionChange($event)"
+                [attr.aria-label]="'Seleccionar usuarios'">
+                <option *ngFor="let user of availableUsers" [value]="user.id">
+                  {{user.firstName}} {{user.lastName}} ({{user.email}})
+                </option>
+              </select>
+              <small class="form-help">Mantenga presionado Ctrl para seleccionar múltiples usuarios</small>
+            </div>
+
+            <!-- Recipients Summary -->
+            <div class="recipients-summary">
+              <div class="summary-card">
+                <i class="fas fa-users"></i>
+                <div class="summary-content">
+                  <span class="summary-number">{{getTotalRecipients()}}</span>
+                  <span class="summary-label">Destinatarios seleccionados</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="resetForm()"
+            [disabled]="isSending">
+            <i class="fas fa-refresh"></i>
+            Limpiar Formulario
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="!canSendNotification()">
+            <i class="fas" [class.fa-paper-plane]="!isSending" [class.fa-spinner]="isSending" [class.fa-spin]="isSending"></i>
+            {{isSending ? 'Enviando...' : 'Enviar Notificación'}}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tab 2: Gestión de Plantillas -->
+    <div *ngIf="activeTab === 1" class="tab-panel" role="tabpanel">
+      <div class="templates-management">
+        <div class="section-header">
+          <h2>
+            <i class="fas fa-file-alt"></i>
+            Gestión de Plantillas
+          </h2>
+          <p class="section-description">Cree, edite y administre plantillas reutilizables para comunicaciones</p>
+
+          <div class="header-actions">
+            <button class="btn btn-primary" (click)="openTemplateDialog()">
+              <i class="fas fa-plus"></i>
+              Nueva Plantilla
+            </button>
+          </div>
+        </div>
+
+        <!-- Templates List -->
+        <div class="templates-list" *ngIf="templates.length > 0; else noTemplatesFound">
+          <div class="templates-grid">
+            <div
+              *ngFor="let template of templates; trackBy: trackByTemplateId"
+              class="template-item"
+              [class.selected]="selectedTemplate?.id === template.id">
+
+              <div class="template-header">
+                <div class="template-icon">
+                  <i class="fas fa-{{getNotificationTypeIcon(template.type)}}"></i>
+                </div>
+                <div class="template-info">
+                  <h3>{{template.name}}</h3>
+                  <span class="template-type-badge">{{getNotificationTypeLabel(template.type)}}</span>
+                  <span class="template-ack-level">{{getAcknowledgementLevelLabel(template.acknowledgementLevel)}}</span>
+                </div>
+                <div class="template-actions">
+                  <button class="btn-icon" (click)="previewTemplate(template)" title="Vista previa">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-icon" (click)="editTemplate(template)" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-icon btn-danger" (click)="deleteTemplate(template)" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </div>
 
-              <div class="form-row">
-                <div class="custom-datepicker">
-                  <label class="datepicker-label">Programar Envío (Opcional)</label>
-                  <div class="datepicker-container">
-                    <input
-                      type="date"
-                      class="datepicker-input"
-                      [formControl]="$any(comunicacionForm.get('scheduledTime'))"
-                      placeholder="Seleccione una fecha"
-                    />
-                  </div>
+              <div class="template-content">
+                <div class="template-subject">
+                  <strong>Asunto:</strong> {{template.subject}}
+                </div>
+                <div class="template-preview">
+                  <p>{{template.content | slice:0:150}}{{template.content.length > 150 ? '...' : ''}}</p>
+                </div>
+              </div>
+
+              <div class="template-footer">
+                <div class="template-variables" *ngIf="getTemplateVariables(template.content).length > 0">
+                  <span class="variables-label">Variables:</span>
+                  <span
+                    *ngFor="let variable of getTemplateVariables(template.content)"
+                    class="variable-tag">
+                    {{variable}}
+                  </span>
+                </div>
+                <div class="template-meta">
+                  <small>Creada: {{template.createdAt | date:'short'}}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Templates Found -->
+        <ng-template #noTemplatesFound>
+          <div class="empty-state">
+            <i class="fas fa-file-alt"></i>
+            <h3>No hay plantillas disponibles</h3>
+            <p>Cree su primera plantilla para comenzar a enviar comunicaciones más eficientemente</p>
+            <button class="btn btn-primary" (click)="openTemplateDialog()">
+              <i class="fas fa-plus"></i>
+              Crear Primera Plantilla
+            </button>
+          </div>
+        </ng-template>
+
+        <!-- Template Variables Reference -->
+        <div class="variables-reference">
+          <div class="section-header">
+            <h3>
+              <i class="fas fa-code"></i>
+              Variables Disponibles
+            </h3>
+            <p class="section-description">Use estas variables en sus plantillas para personalización automática</p>
+          </div>
+
+          <div class="variables-categories">
+            <div class="variable-category">
+              <h4><i class="fas fa-user"></i> Variables de Usuario</h4>
+              <div class="variables-list">
+                <div class="variable-item" *ngFor="let variable of userVariables">
+                  <code>{{variable.placeholder}}</code>
+                  <span>{{variable.description}}</span>
+                  <small>Ej: {{variable.example}}</small>
                 </div>
               </div>
             </div>
 
-            <div class="form-section">
-              <h2>Destinatarios</h2>
-              <div class="form-row">
-                <div class="checkbox-wrapper">
-                  <label class="custom-checkbox">
-                    <input
-                      type="checkbox"
-                      [formControl]="$any(comunicacionForm.get('sendToAllUsers'))"
-                    />
-                    <span class="checkbox-label">Enviar a todos los usuarios</span>
-                  </label>
+            <div class="variable-category">
+              <h4><i class="fas fa-trophy"></i> Variables de Concurso</h4>
+              <div class="variables-list">
+                <div class="variable-item" *ngFor="let variable of contestVariables">
+                  <code>{{variable.placeholder}}</code>
+                  <span>{{variable.description}}</span>
+                  <small>Ej: {{variable.example}}</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="variable-category">
+              <h4><i class="fas fa-cog"></i> Variables de Sistema</h4>
+              <div class="variables-list">
+                <div class="variable-item" *ngFor="let variable of systemVariables">
+                  <code>{{variable.placeholder}}</code>
+                  <span>{{variable.description}}</span>
+                  <small>Ej: {{variable.example}}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Historial de Envíos -->
+    <div *ngIf="activeTab === 2" class="tab-panel" role="tabpanel">
+      <div class="history-management">
+        <div class="section-header">
+          <div class="header-info">
+            <h2>
+              <i class="fas fa-history"></i>
+              Historial de Envíos
+            </h2>
+            <p class="section-description">Consulte el historial completo de comunicaciones enviadas</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" (click)="refreshHistory()">
+              <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingHistory"></i>
+              Actualizar
+            </button>
+            <button class="btn btn-primary" (click)="exportHistory()">
+              <i class="fas fa-download"></i>
+              Exportar
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros y Búsqueda -->
+        <div class="filters-section">
+          <div class="search-filters">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="Buscar por asunto, destinatario o ID..."
+                [(ngModel)]="historyFilters.search"
+                (input)="applyHistoryFilters()">
+            </div>
+
+            <div class="filter-group">
+              <select class="form-select" [(ngModel)]="historyFilters.status" (change)="applyHistoryFilters()">
+                <option value="">Todos los estados</option>
+                <option value="COMPLETED">Completado</option>
+                <option value="PROCESSING">Procesando</option>
+                <option value="FAILED">Fallido</option>
+                <option value="SCHEDULED">Programado</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <select class="form-select" [(ngModel)]="historyFilters.type" (change)="applyHistoryFilters()">
+                <option value="">Todos los tipos</option>
+                <option *ngFor="let type of notificationTypes" [value]="type">
+                  {{getNotificationTypeLabel(type)}}
+                </option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <input
+                type="date"
+                class="form-input"
+                [(ngModel)]="historyFilters.dateFrom"
+                (change)="applyHistoryFilters()"
+                placeholder="Desde">
+            </div>
+
+            <div class="filter-group">
+              <input
+                type="date"
+                class="form-input"
+                [(ngModel)]="historyFilters.dateTo"
+                (change)="applyHistoryFilters()"
+                placeholder="Hasta">
+            </div>
+
+            <button class="btn btn-secondary" (click)="clearHistoryFilters()">
+              <i class="fas fa-times"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de Envíos -->
+        <div class="history-list" *ngIf="filteredHistory.length > 0">
+          <div
+            *ngFor="let item of paginatedHistory; trackBy: trackByHistoryId"
+            class="history-item"
+            [class.expanded]="expandedHistoryItem === item.id">
+
+            <div class="history-header" (click)="toggleHistoryItem(item.id)">
+              <div class="history-main-info">
+                <div class="history-title">
+                  <h3>{{item.subject}}</h3>
+                  <span class="history-id">#{{item.batchId}}</span>
+                </div>
+                <div class="history-meta">
+                  <span class="history-date">
+                    <i class="fas fa-calendar"></i>
+                    {{item.sentAt | date:'dd/MM/yyyy HH:mm'}}
+                  </span>
+                  <span class="history-recipients">
+                    <i class="fas fa-users"></i>
+                    {{item.totalRecipients}} destinatarios
+                  </span>
+                  <span class="history-type">
+                    <i class="fas" [class]="'fa-' + getNotificationTypeIcon(item.type)"></i>
+                    {{getNotificationTypeLabel(item.type)}}
+                  </span>
                 </div>
               </div>
 
-              <div *ngIf="!comunicacionForm.value.sendToAllUsers" class="recipients-section">
-                <div class="recipients-header">
-                  <h3>Destinatarios seleccionados</h3>
-                  <app-custom-button
-                    [label]="'Seleccionar Destinatarios'"
-                    [icon]="'user-plus'"
-                    [color]="'primary'"
-                    (buttonClick)="openRecipientsDialog()">
-                  </app-custom-button>
+              <div class="history-status">
+                <div class="status-badge" [class]="'status-' + item.status.toLowerCase()">
+                  <i class="fas" [class]="getStatusIcon(item.status)"></i>
+                  {{getStatusLabel(item.status)}}
+                </div>
+                <div class="delivery-stats">
+                  <div class="stat-item success">
+                    <span class="stat-value">{{item.successCount}}</span>
+                    <span class="stat-label">Exitosos</span>
+                  </div>
+                  <div class="stat-item error" *ngIf="item.failureCount > 0">
+                    <span class="stat-value">{{item.failureCount}}</span>
+                    <span class="stat-label">Fallidos</span>
+                  </div>
+                </div>
+                <i class="fas fa-chevron-down expand-icon"
+                   [class.rotated]="expandedHistoryItem === item.id"></i>
+              </div>
+            </div>
+
+            <!-- Detalles Expandibles -->
+            <div class="history-details" *ngIf="expandedHistoryItem === item.id">
+              <div class="details-grid">
+                <!-- Información General -->
+                <div class="detail-section">
+                  <h4>
+                    <i class="fas fa-info-circle"></i>
+                    Información General
+                  </h4>
+                  <div class="detail-content">
+                    <div class="detail-row">
+                      <span class="detail-label">ID del Lote:</span>
+                      <span class="detail-value">{{item.batchId}}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Enviado por:</span>
+                      <span class="detail-value">{{item.sentBy}}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Plantilla:</span>
+                      <span class="detail-value">{{item.templateName || 'Mensaje personalizado'}}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Nivel de Confirmación:</span>
+                      <span class="detail-value">{{getAcknowledgementLevelLabel(item.acknowledgementLevel)}}</span>
+                    </div>
+                    <div class="detail-row" *ngIf="item.scheduledTime">
+                      <span class="detail-label">Programado para:</span>
+                      <span class="detail-value">{{item.scheduledTime | date:'dd/MM/yyyy HH:mm'}}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="recipients-summary">
-                  <div *ngIf="selectedUsers.length > 0" class="recipients-group">
-                    <h4>Usuarios ({{selectedUsers.length}})</h4>
-                    <div class="custom-chip-set">
-                      <div class="custom-chip" *ngFor="let user of selectedUsers.slice(0, 5)">
-                        {{user.firstName}} {{user.lastName}}
+                <!-- Métricas de Entrega -->
+                <div class="detail-section">
+                  <h4>
+                    <i class="fas fa-chart-pie"></i>
+                    Métricas de Entrega
+                  </h4>
+                  <div class="detail-content">
+                    <div class="metrics-chart">
+                      <div class="metric-item">
+                        <div class="metric-circle success">
+                          <span class="metric-percentage">{{getSuccessPercentage(item)}}%</span>
+                        </div>
+                        <span class="metric-label">Tasa de Éxito</span>
                       </div>
-                      <div class="custom-chip" *ngIf="selectedUsers.length > 5">
-                        +{{selectedUsers.length - 5}} más
+                      <div class="metric-stats">
+                        <div class="stat-row">
+                          <span class="stat-icon success"><i class="fas fa-check"></i></span>
+                          <span class="stat-text">{{item.successCount}} entregados</span>
+                        </div>
+                        <div class="stat-row" *ngIf="item.failureCount > 0">
+                          <span class="stat-icon error"><i class="fas fa-times"></i></span>
+                          <span class="stat-text">{{item.failureCount}} fallidos</span>
+                        </div>
+                        <div class="stat-row" *ngIf="item.readCount">
+                          <span class="stat-icon info"><i class="fas fa-eye"></i></span>
+                          <span class="stat-text">{{item.readCount}} leídos</span>
+                        </div>
+                        <div class="stat-row" *ngIf="item.acknowledgedCount">
+                          <span class="stat-icon warning"><i class="fas fa-check-double"></i></span>
+                          <span class="stat-text">{{item.acknowledgedCount}} confirmados</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div *ngIf="selectedRoles.length > 0" class="recipients-group">
-                    <h4>Roles ({{selectedRoles.length}})</h4>
-                    <div class="custom-chip-set">
-                      <div class="custom-chip" *ngFor="let role of selectedRoles">
-                        {{role}}
-                      </div>
+              <!-- Contenido del Mensaje -->
+              <div class="detail-section full-width">
+                <h4>
+                  <i class="fas fa-envelope"></i>
+                  Contenido del Mensaje
+                </h4>
+                <div class="detail-content">
+                  <div class="message-preview">
+                    <div class="message-subject">
+                      <strong>Asunto:</strong> {{item.subject}}
+                    </div>
+                    <div class="message-content">
+                      <strong>Contenido:</strong>
+                      <div class="content-text">{{item.content}}</div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div *ngIf="selectedUsers.length === 0 && selectedRoles.length === 0" class="no-recipients">
-                    <p>No hay destinatarios seleccionados</p>
+              <!-- Destinatarios -->
+              <div class="detail-section full-width">
+                <h4>
+                  <i class="fas fa-users"></i>
+                  Destinatarios ({{item.recipientDetails.length}})
+                </h4>
+                <div class="detail-content">
+                  <div class="recipients-list">
+                    <div
+                      *ngFor="let recipient of item.recipientDetails.slice(0, showAllRecipients[item.id] ? item.recipientDetails.length : 5)"
+                      class="recipient-item">
+                      <div class="recipient-info">
+                        <span class="recipient-name">{{recipient.name}}</span>
+                        <span class="recipient-email">{{recipient.email}}</span>
+                      </div>
+                      <div class="recipient-status">
+                        <span class="status-badge" [class]="'status-' + recipient.status.toLowerCase()">
+                          <i class="fas" [class]="getRecipientStatusIcon(recipient.status)"></i>
+                          {{getRecipientStatusLabel(recipient.status)}}
+                        </span>
+                        <span class="recipient-time" *ngIf="recipient.deliveredAt">
+                          {{recipient.deliveredAt | date:'dd/MM HH:mm'}}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      *ngIf="item.recipientDetails.length > 5"
+                      class="btn btn-link"
+                      (click)="toggleShowAllRecipients(item.id)">
+                      {{showAllRecipients[item.id] ? 'Mostrar menos' : 'Mostrar todos (' + item.recipientDetails.length + ')'}}
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="form-actions">
-              <app-custom-button
-                [label]="'Cancelar'"
-                [variant]="'stroked'"
-                [color]="'primary'"
-                (buttonClick)="resetForm()">
-              </app-custom-button>
-
-              <app-custom-button
-                [label]="'Enviar Comunicación'"
-                [icon]="'paper-plane'"
-                [color]="'primary'"
-                [disabled]="isLoading"
-                [loading]="isLoading"
-                [type]="'submit'">
-              </app-custom-button>
+            <!-- Acciones -->
+            <div class="history-actions">
+              <button class="btn btn-secondary" (click)="viewFullDetails(item)">
+                <i class="fas fa-eye"></i>
+                Ver Detalles Completos
+              </button>
+              <button class="btn btn-secondary" (click)="downloadReport(item)">
+                <i class="fas fa-download"></i>
+                Descargar Reporte
+              </button>
+              <button
+                *ngIf="item.failureCount > 0"
+                class="btn btn-warning"
+                (click)="retryFailedRecipients(item)">
+                <i class="fas fa-redo"></i>
+                Reintentar Fallidos ({{item.failureCount}})
+              </button>
+              <button
+                *ngIf="canDuplicateMessage(item)"
+                class="btn btn-primary"
+                (click)="duplicateMessage(item)">
+                <i class="fas fa-copy"></i>
+                Duplicar Mensaje
+              </button>
             </div>
-          </form>
+          </div>
         </div>
-      </app-custom-tab>
 
-      <!-- Pestaña de Historial de Comunicaciones -->
-      <app-custom-tab [label]="'Historial de Comunicaciones'">
-        <div class="tab-content">
-          <app-communication-history></app-communication-history>
-        </div>
-      </app-custom-tab>
+        <!-- Paginación -->
+        <div class="pagination-section" *ngIf="filteredHistory.length > historyPageSize">
+          <div class="pagination-info">
+            Mostrando {{(currentHistoryPage - 1) * historyPageSize + 1}} -
+            {{Math.min(currentHistoryPage * historyPageSize, filteredHistory.length)}}
+            de {{filteredHistory.length}} envíos
+          </div>
+          <div class="pagination-controls">
+            <button
+              class="btn btn-secondary"
+              [disabled]="currentHistoryPage === 1"
+              (click)="goToHistoryPage(currentHistoryPage - 1)">
+              <i class="fas fa-chevron-left"></i>
+              Anterior
+            </button>
 
-      <!-- Pestaña de Estadísticas -->
-      <app-custom-tab [label]="'Estadísticas'">
-        <div class="tab-content">
-          <p class="coming-soon">Funcionalidad en desarrollo. Estará disponible próximamente.</p>
+            <span class="page-numbers">
+              <button
+                *ngFor="let page of getHistoryPageNumbers()"
+                class="btn"
+                [class.btn-primary]="page === currentHistoryPage"
+                [class.btn-secondary]="page !== currentHistoryPage"
+                (click)="goToHistoryPage(page)">
+                {{page}}
+              </button>
+            </span>
+
+            <button
+              class="btn btn-secondary"
+              [disabled]="currentHistoryPage === getTotalHistoryPages()"
+              (click)="goToHistoryPage(currentHistoryPage + 1)">
+              Siguiente
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
-      </app-custom-tab>
-    </app-custom-tabs>
-  </app-custom-card>
+
+        <!-- Estado Vacío -->
+        <div class="empty-state" *ngIf="filteredHistory.length === 0 && !isLoadingHistory">
+          <div class="empty-content">
+            <i class="fas fa-inbox"></i>
+            <h3>No se encontraron envíos</h3>
+            <p *ngIf="hasActiveFilters()">
+              No hay envíos que coincidan con los filtros aplicados.
+              <button class="btn btn-link" (click)="clearHistoryFilters()">Limpiar filtros</button>
+            </p>
+            <p *ngIf="!hasActiveFilters()">
+              Aún no se han realizado envíos masivos de notificaciones.
+            </p>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoadingHistory">
+          <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando historial de envíos...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Estadísticas y Reportes -->
+    <div *ngIf="activeTab === 3" class="tab-panel" role="tabpanel">
+      <div class="statistics-management">
+        <div class="section-header">
+          <div class="header-info">
+            <h2>
+              <i class="fas fa-chart-bar"></i>
+              Estadísticas y Reportes
+            </h2>
+            <p class="section-description">Analice métricas de entrega y efectividad de comunicaciones</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" (click)="refreshStatistics()">
+              <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingStatistics"></i>
+              Actualizar
+            </button>
+            <button class="btn btn-secondary" (click)="exportStatistics('pdf')">
+              <i class="fas fa-file-pdf"></i>
+              Exportar PDF
+            </button>
+            <button class="btn btn-primary" (click)="exportStatistics('excel')">
+              <i class="fas fa-file-excel"></i>
+              Exportar Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros de Período -->
+        <div class="period-filters">
+          <div class="filter-tabs">
+            <button
+              *ngFor="let period of statisticsPeriods"
+              class="period-tab"
+              [class.active]="selectedPeriod === period.value"
+              (click)="setStatisticsPeriod(period.value)">
+              {{period.label}}
+            </button>
+          </div>
+          <div class="custom-range" *ngIf="selectedPeriod === 'custom'">
+            <div class="date-inputs">
+              <input
+                type="date"
+                class="form-input"
+                [(ngModel)]="customDateRange.from"
+                (change)="updateStatistics()"
+                placeholder="Desde">
+              <span class="date-separator">hasta</span>
+              <input
+                type="date"
+                class="form-input"
+                [(ngModel)]="customDateRange.to"
+                (change)="updateStatistics()"
+                placeholder="Hasta">
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard de Métricas Principales -->
+        <div class="metrics-dashboard">
+          <div class="metric-cards">
+            <div class="metric-card primary">
+              <div class="metric-icon">
+                <i class="fas fa-paper-plane"></i>
+              </div>
+              <div class="metric-content">
+                <div class="metric-value">{{overallStats.totalSent | number}}</div>
+                <div class="metric-label">Total Enviados</div>
+                <div class="metric-change" [class]="getChangeClass(overallStats.sentChange)">
+                  <i class="fas" [class]="getChangeIcon(overallStats.sentChange)"></i>
+                  {{Math.abs(overallStats.sentChange)}}% vs período anterior
+                </div>
+              </div>
+            </div>
+
+            <div class="metric-card success">
+              <div class="metric-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="metric-content">
+                <div class="metric-value">{{overallStats.deliveryRate}}%</div>
+                <div class="metric-label">Tasa de Entrega</div>
+                <div class="metric-change" [class]="getChangeClass(overallStats.deliveryChange)">
+                  <i class="fas" [class]="getChangeIcon(overallStats.deliveryChange)"></i>
+                  {{Math.abs(overallStats.deliveryChange)}}% vs período anterior
+                </div>
+              </div>
+            </div>
+
+            <div class="metric-card info">
+              <div class="metric-icon">
+                <i class="fas fa-eye"></i>
+              </div>
+              <div class="metric-content">
+                <div class="metric-value">{{overallStats.readRate}}%</div>
+                <div class="metric-label">Tasa de Lectura</div>
+                <div class="metric-change" [class]="getChangeClass(overallStats.readChange)">
+                  <i class="fas" [class]="getChangeIcon(overallStats.readChange)"></i>
+                  {{Math.abs(overallStats.readChange)}}% vs período anterior
+                </div>
+              </div>
+            </div>
+
+            <div class="metric-card warning">
+              <div class="metric-icon">
+                <i class="fas fa-check-double"></i>
+              </div>
+              <div class="metric-content">
+                <div class="metric-value">{{overallStats.acknowledgmentRate}}%</div>
+                <div class="metric-label">Tasa de Confirmación</div>
+                <div class="metric-change" [class]="getChangeClass(overallStats.ackChange)">
+                  <i class="fas" [class]="getChangeIcon(overallStats.ackChange)"></i>
+                  {{Math.abs(overallStats.ackChange)}}% vs período anterior
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos y Análisis -->
+        <div class="charts-section">
+          <!-- Gráfico de Tendencias Temporales -->
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>
+                <i class="fas fa-chart-line"></i>
+                Tendencias Temporales
+              </h3>
+              <div class="chart-controls">
+                <select class="form-select" [(ngModel)]="selectedMetric" (change)="updateTrendChart()">
+                  <option value="sent">Envíos</option>
+                  <option value="delivered">Entregados</option>
+                  <option value="read">Leídos</option>
+                  <option value="acknowledged">Confirmados</option>
+                </select>
+              </div>
+            </div>
+            <div class="chart-content">
+              <div class="trend-chart" #trendChart>
+                <!-- Simulación de gráfico de líneas -->
+                <div class="chart-placeholder">
+                  <div class="chart-lines">
+                    <div
+                      *ngFor="let point of trendData; let i = index"
+                      class="chart-point"
+                      [style.left.%]="(i / (trendData.length - 1)) * 100"
+                      [style.bottom.%]="(point.value / getMaxValue(trendData)) * 80"
+                      [title]="point.date + ': ' + point.value">
+                    </div>
+                    <svg class="chart-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      <polyline
+                        [attr.points]="getTrendLinePoints()"
+                        fill="none"
+                        stroke="var(--focus-color)"
+                        stroke-width="2"
+                        vector-effect="non-scaling-stroke">
+                      </polyline>
+                    </svg>
+                  </div>
+                  <div class="chart-axes">
+                    <div class="y-axis">
+                      <div *ngFor="let tick of getYAxisTicks()" class="y-tick">
+                        <span class="tick-label">{{tick}}</span>
+                      </div>
+                    </div>
+                    <div class="x-axis">
+                      <div *ngFor="let point of trendData; let i = index"
+                           class="x-tick"
+                           [style.left.%]="(i / (trendData.length - 1)) * 100">
+                        <span class="tick-label">{{formatDate(point.date)}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estadísticas por Tipo de Notificación -->
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>
+                <i class="fas fa-chart-pie"></i>
+                Distribución por Tipo
+              </h3>
+            </div>
+            <div class="chart-content">
+              <div class="type-stats">
+                <div class="type-chart">
+                  <div class="pie-chart">
+                    <div
+                      *ngFor="let type of typeStats; let i = index"
+                      class="pie-slice"
+                      [style.--start-angle]="getSliceStartAngle(i) + 'deg'"
+                      [style.--end-angle]="getSliceEndAngle(i) + 'deg'"
+                      [style.--slice-color]="getTypeColor(type.type)">
+                    </div>
+                  </div>
+                  <div class="chart-center">
+                    <div class="center-value">{{getTotalNotifications()}}</div>
+                    <div class="center-label">Total</div>
+                  </div>
+                </div>
+                <div class="type-legend">
+                  <div
+                    *ngFor="let type of typeStats"
+                    class="legend-item">
+                    <div class="legend-color" [style.background-color]="getTypeColor(type.type)"></div>
+                    <div class="legend-content">
+                      <div class="legend-label">{{getNotificationTypeLabel(type.type)}}</div>
+                      <div class="legend-stats">
+                        <span class="legend-count">{{type.count}} envíos</span>
+                        <span class="legend-percentage">({{type.percentage}}%)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Análisis Detallado -->
+        <div class="detailed-analysis">
+          <!-- Métricas de Efectividad -->
+          <div class="analysis-section">
+            <div class="section-header">
+              <h3>
+                <i class="fas fa-bullseye"></i>
+                Análisis de Efectividad
+              </h3>
+            </div>
+            <div class="effectiveness-grid">
+              <div class="effectiveness-card">
+                <div class="card-header">
+                  <h4>Mejor Rendimiento</h4>
+                  <i class="fas fa-trophy"></i>
+                </div>
+                <div class="card-content">
+                  <div class="best-performer">
+                    <div class="performer-type">{{bestPerformer.type}}</div>
+                    <div class="performer-stats">
+                      <span class="stat-value">{{bestPerformer.rate}}%</span>
+                      <span class="stat-label">tasa de éxito</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="effectiveness-card">
+                <div class="card-header">
+                  <h4>Horario Óptimo</h4>
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="card-content">
+                  <div class="optimal-time">
+                    <div class="time-range">{{optimalTime.range}}</div>
+                    <div class="time-stats">
+                      <span class="stat-value">{{optimalTime.readRate}}%</span>
+                      <span class="stat-label">tasa de lectura</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="effectiveness-card">
+                <div class="card-header">
+                  <h4>Día de la Semana</h4>
+                  <i class="fas fa-calendar-week"></i>
+                </div>
+                <div class="card-content">
+                  <div class="best-day">
+                    <div class="day-name">{{bestDay.name}}</div>
+                    <div class="day-stats">
+                      <span class="stat-value">{{bestDay.engagement}}%</span>
+                      <span class="stat-label">engagement</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="effectiveness-card">
+                <div class="card-header">
+                  <h4>Tiempo Promedio</h4>
+                  <i class="fas fa-stopwatch"></i>
+                </div>
+                <div class="card-content">
+                  <div class="avg-time">
+                    <div class="time-value">{{averageResponseTime.value}}</div>
+                    <div class="time-unit">{{averageResponseTime.unit}}</div>
+                    <div class="time-label">tiempo de respuesta</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de Rendimiento por Tipo -->
+          <div class="analysis-section">
+            <div class="section-header">
+              <h3>
+                <i class="fas fa-table"></i>
+                Rendimiento por Tipo de Notificación
+              </h3>
+            </div>
+            <div class="performance-table">
+              <table class="stats-table">
+                <thead>
+                  <tr>
+                    <th>Tipo de Notificación</th>
+                    <th>Total Enviados</th>
+                    <th>Tasa Entrega</th>
+                    <th>Tasa Lectura</th>
+                    <th>Tasa Confirmación</th>
+                    <th>Tiempo Promedio</th>
+                    <th>Tendencia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let performance of performanceByType">
+                    <td>
+                      <div class="type-cell">
+                        <i class="fas" [class]="'fa-' + getNotificationTypeIcon(performance.type)"></i>
+                        {{getNotificationTypeLabel(performance.type)}}
+                      </div>
+                    </td>
+                    <td class="number-cell">{{performance.totalSent | number}}</td>
+                    <td class="percentage-cell">
+                      <div class="percentage-bar">
+                        <div class="bar-fill delivery" [style.width.%]="performance.deliveryRate"></div>
+                        <span class="percentage-text">{{performance.deliveryRate}}%</span>
+                      </div>
+                    </td>
+                    <td class="percentage-cell">
+                      <div class="percentage-bar">
+                        <div class="bar-fill read" [style.width.%]="performance.readRate"></div>
+                        <span class="percentage-text">{{performance.readRate}}%</span>
+                      </div>
+                    </td>
+                    <td class="percentage-cell">
+                      <div class="percentage-bar">
+                        <div class="bar-fill acknowledgment" [style.width.%]="performance.acknowledgmentRate"></div>
+                        <span class="percentage-text">{{performance.acknowledgmentRate}}%</span>
+                      </div>
+                    </td>
+                    <td class="time-cell">{{performance.avgResponseTime}}</td>
+                    <td class="trend-cell">
+                      <div class="trend-indicator" [class]="getTrendClass(performance.trend)">
+                        <i class="fas" [class]="getTrendIcon(performance.trend)"></i>
+                        {{performance.trendValue}}%
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Gráfico de Comparación Temporal -->
+          <div class="analysis-section">
+            <div class="section-header">
+              <h3>
+                <i class="fas fa-chart-area"></i>
+                Comparación de Períodos
+              </h3>
+            </div>
+            <div class="comparison-chart">
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-color current"></div>
+                  <span>Período Actual</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color previous"></div>
+                  <span>Período Anterior</span>
+                </div>
+              </div>
+              <div class="comparison-bars">
+                <div *ngFor="let comparison of periodComparison" class="comparison-group">
+                  <div class="group-label">{{comparison.label}}</div>
+                  <div class="bars-container">
+                    <div class="bar-group">
+                      <div class="bar current" [style.height.%]="comparison.current.percentage">
+                        <span class="bar-value">{{comparison.current.value}}</span>
+                      </div>
+                      <div class="bar previous" [style.height.%]="comparison.previous.percentage">
+                        <span class="bar-value">{{comparison.previous.value}}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="comparison-change" [class]="getChangeClass(comparison.change)">
+                    <i class="fas" [class]="getChangeIcon(comparison.change)"></i>
+                    {{Math.abs(comparison.change)}}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recomendaciones -->
+          <div class="analysis-section">
+            <div class="section-header">
+              <h3>
+                <i class="fas fa-lightbulb"></i>
+                Recomendaciones de Mejora
+              </h3>
+            </div>
+            <div class="recommendations">
+              <div *ngFor="let recommendation of recommendations" class="recommendation-card">
+                <div class="recommendation-icon" [class]="recommendation.priority">
+                  <i class="fas" [class]="recommendation.icon"></i>
+                </div>
+                <div class="recommendation-content">
+                  <h4>{{recommendation.title}}</h4>
+                  <p>{{recommendation.description}}</p>
+                  <div class="recommendation-impact">
+                    <span class="impact-label">Impacto estimado:</span>
+                    <span class="impact-value">{{recommendation.impact}}</span>
+                  </div>
+                </div>
+                <div class="recommendation-action">
+                  <button class="btn btn-secondary btn-sm" (click)="applyRecommendation(recommendation)">
+                    Aplicar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoadingStatistics">
+          <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando estadísticas...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p>Cargando datos...</p>
+    </div>
+  </div>
+
+  <!-- Template Dialog -->
+  <div *ngIf="showTemplateDialog" class="dialog-overlay" (click)="closeTemplateDialog()">
+    <div class="dialog-container" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h2>
+          <i class="fas fa-file-alt"></i>
+          {{editingTemplate ? 'Editar Plantilla' : 'Nueva Plantilla'}}
+        </h2>
+        <button class="btn-close" (click)="closeTemplateDialog()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="dialog-content">
+        <form [formGroup]="templateForm" (ngSubmit)="saveTemplate()">
+          <div class="form-grid">
+            <!-- Template Name -->
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label">Nombre de la Plantilla *</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  formControlName="name"
+                  placeholder="Ej: Bienvenida a nuevo concurso"
+                  maxlength="100">
+                <div *ngIf="templateForm.get('name')?.invalid && templateForm.get('name')?.touched" class="form-error">
+                  El nombre es requerido (mínimo 3 caracteres)
+                </div>
+              </div>
+            </div>
+
+            <!-- Template Type -->
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label">Tipo de Notificación *</label>
+                <select class="form-select" formControlName="type">
+                  <option *ngFor="let type of notificationTypes" [value]="type">
+                    {{getNotificationTypeLabel(type)}}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Acknowledgement Level -->
+            <div class="form-group">
+              <div class="form-field">
+                <label class="form-label">Nivel de Confirmación *</label>
+                <select class="form-select" formControlName="acknowledgementLevel">
+                  <option *ngFor="let level of acknowledgementLevels" [value]="level">
+                    {{getAcknowledgementLevelLabel(level)}}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Template Subject -->
+            <div class="form-group full-width">
+              <div class="form-field">
+                <label class="form-label">Asunto *</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  formControlName="subject"
+                  placeholder="Asunto de la notificación"
+                  maxlength="255">
+                <div *ngIf="templateForm.get('subject')?.invalid && templateForm.get('subject')?.touched" class="form-error">
+                  El asunto es requerido (mínimo 3 caracteres)
+                </div>
+              </div>
+            </div>
+
+            <!-- Template Content -->
+            <div class="form-group full-width">
+              <div class="form-field">
+                <label class="form-label">Contenido *</label>
+                <div class="content-editor">
+                  <div class="editor-toolbar">
+                    <div class="variable-buttons">
+                      <span class="toolbar-label">Variables rápidas:</span>
+                      <button
+                        type="button"
+                        class="btn-variable"
+                        *ngFor="let variable of getQuickVariables()"
+                        (click)="insertVariable(variable.placeholder)"
+                        title="{{variable.description}}">
+                        {{variable.placeholder}}
+                      </button>
+                    </div>
+                  </div>
+                  <textarea
+                    #contentTextarea
+                    class="form-textarea content-textarea"
+                    formControlName="content"
+                    placeholder="Escriba el contenido de la plantilla..."
+                    rows="8"
+                    maxlength="5000">
+                  </textarea>
+                  <div class="character-count">
+                    {{templateForm.get('content')?.value?.length || 0}} / 5000 caracteres
+                  </div>
+                </div>
+                <div *ngIf="templateForm.get('content')?.invalid && templateForm.get('content')?.touched" class="form-error">
+                  El contenido es requerido (mínimo 10 caracteres)
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="form-group full-width" *ngIf="templateForm.get('content')?.value">
+              <div class="form-field">
+                <label class="form-label">Vista Previa</label>
+                <div class="template-preview-container">
+                  <div class="preview-header">
+                    <strong>{{templateForm.get('subject')?.value || 'Sin asunto'}}</strong>
+                    <span class="preview-type">{{getNotificationTypeLabel(templateForm.get('type')?.value)}}</span>
+                  </div>
+                  <div class="preview-content">
+                    {{getPreviewContent()}}
+                  </div>
+                  <div class="preview-variables" *ngIf="getTemplateVariables(templateForm.get('content')?.value || '').length > 0">
+                    <span class="variables-label">Variables detectadas:</span>
+                    <span
+                      *ngFor="let variable of getTemplateVariables(templateForm.get('content')?.value || '')"
+                      class="variable-tag">
+                      {{variable}}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeTemplateDialog()">
+          <i class="fas fa-times"></i>
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="saveTemplate()"
+          [disabled]="!templateForm.valid || isSavingTemplate">
+          <i class="fas" [class.fa-save]="!isSavingTemplate" [class.fa-spinner]="isSavingTemplate" [class.fa-spin]="isSavingTemplate"></i>
+          {{isSavingTemplate ? 'Guardando...' : (editingTemplate ? 'Actualizar' : 'Crear Plantilla')}}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DIÁLOGO DE VISTA PREVIA DE PLANTILLA (FUERA DEL CONTENEDOR PRINCIPAL) ===== -->
+<div class="dialog-overlay" *ngIf="showPreviewDialog" (click)="closePreviewDialog()">
+  <div class="dialog-container preview-dialog" (click)="$event.stopPropagation()">
+    <!-- Header del diálogo -->
+    <div class="dialog-header">
+      <h2>
+        <i class="fas fa-eye"></i>
+        Vista Previa de Plantilla
+      </h2>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="closePreviewDialog()"
+        aria-label="Cerrar vista previa">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Contenido del diálogo -->
+    <div class="dialog-content" *ngIf="previewTemplate_">
+      <!-- Información de la plantilla -->
+      <div class="template-info-section">
+        <div class="info-grid">
+          <div class="info-item">
+            <label class="info-label">Nombre de la plantilla:</label>
+            <span class="info-value">{{ previewTemplate_.name }}</span>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">Tipo de notificación:</label>
+            <span class="info-badge" [class]="'badge-' + previewTemplate_.type.toLowerCase()">
+              <i class="fas fa-tag"></i>
+              {{ getNotificationTypeLabel(previewTemplate_.type) }}
+            </span>
+          </div>
+
+          <div class="info-item">
+            <label class="info-label">Nivel de confirmación:</label>
+            <span class="info-badge badge-acknowledgement">
+              <i class="fas fa-check-circle"></i>
+              {{ getAcknowledgementLevelLabel(previewTemplate_.acknowledgementLevel) }}
+            </span>
+          </div>
+
+          <div class="info-item" *ngIf="previewTemplate_.createdAt">
+            <label class="info-label">Fecha de creación:</label>
+            <span class="info-value">{{ previewTemplate_.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asunto de la plantilla -->
+      <div class="template-subject-section">
+        <h3>
+          <i class="fas fa-envelope"></i>
+          Asunto
+        </h3>
+        <div class="subject-preview">
+          <div class="original-content">
+            <h4>Plantilla original:</h4>
+            <p>{{ previewTemplate_.subject }}</p>
+          </div>
+          <div class="rendered-content">
+            <h4>Vista previa renderizada:</h4>
+            <p>{{ renderTemplatePreview(previewTemplate_.subject) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido de la plantilla -->
+      <div class="template-content-section">
+        <h3>
+          <i class="fas fa-file-text"></i>
+          Contenido del mensaje
+        </h3>
+        <div class="content-preview">
+          <div class="original-content">
+            <h4>Plantilla original:</h4>
+            <div class="content-text">{{ previewTemplate_.content }}</div>
+          </div>
+          <div class="rendered-content">
+            <h4>Vista previa renderizada:</h4>
+            <div class="content-text rendered">{{ renderTemplatePreview(previewTemplate_.content) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variables detectadas -->
+      <div class="template-variables-section" *ngIf="getTemplateVariables(previewTemplate_.content + ' ' + previewTemplate_.subject).length > 0">
+        <h3>
+          <i class="fas fa-code"></i>
+          Variables detectadas
+        </h3>
+        <div class="variables-list">
+          <span
+            class="variable-tag"
+            *ngFor="let variable of getTemplateVariables(previewTemplate_.content + ' ' + previewTemplate_.subject)">
+            {{ variable }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer del diálogo -->
+    <div class="dialog-footer">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="closePreviewDialog()">
+        <i class="fas fa-times"></i>
+        Cerrar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="editTemplate(previewTemplate_!); closePreviewDialog()">
+        <i class="fas fa-edit"></i>
+        Editar Plantilla
+      </button>
+    </div>
+  </div>
 </div>

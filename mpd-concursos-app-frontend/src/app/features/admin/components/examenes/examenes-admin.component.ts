@@ -1,19 +1,52 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ESTADO_EXAMEN, TipoExamen } from '@shared/interfaces/examen/examen.interface';
 import { ExamenFormComponent } from './examen-form/examen-form.component';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatTableModule } from '@angular/material/table';
-import { MatMenuModule } from '@angular/material/menu';
+
+// Custom Data Source for table functionality
+class CustomDataSource {
+  private _data: any[] = [];
+  private _filteredData: any[] = [];
+  private _filter = '';
+
+  get data(): any[] {
+    return this._data;
+  }
+
+  set data(value: any[]) {
+    this._data = value;
+    this.applyFilter();
+  }
+
+  get filteredData(): any[] {
+    return this._filteredData;
+  }
+
+  get filter(): string {
+    return this._filter;
+  }
+
+  set filter(value: string) {
+    this._filter = value.toLowerCase();
+    this.applyFilter();
+  }
+
+  private applyFilter(): void {
+    if (!this._filter) {
+      this._filteredData = [...this._data];
+    } else {
+      this._filteredData = this._data.filter(item =>
+        Object.values(item).some(val =>
+          val?.toString().toLowerCase().includes(this._filter)
+        )
+      );
+    }
+  }
+}
 
 @Component({
   selector: 'app-examenes-admin',
@@ -22,25 +55,35 @@ import { MatMenuModule } from '@angular/material/menu';
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatMenuModule
+    FormsModule,
+    ExamenFormComponent
   ]
 })
-export class ExamenesAdminComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['id', 'titulo', 'tipo', 'estado', 'fechaInicio', 'duracion', 'puntajeMaximo', 'acciones'];
-  dataSource = new MatTableDataSource<Record<string, unknown>>([]);
+export class ExamenesAdminComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  // Data management
+  dataSource = new CustomDataSource();
+
+  // Pagination
+  currentPage = 0;
+  pageSize = 10;
+
+  // UI State
+  cargando = false;
+  activeMenuId: string | null = null;
+  sortColumn = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
+  // Notification system
+  showNotification = false;
+  notificationMessage = '';
+  notificationType: 'success' | 'error' | 'warning' | 'info' = 'info';
+
+  // Form modal management
+  showExamenForm = false;
+  formMode: 'create' | 'edit' = 'create';
+  selectedExamen: any = null;
 
   // Datos hardcodeados para la demostración
   examenes = [
@@ -127,101 +170,136 @@ export class ExamenesAdminComponent implements OnInit, AfterViewInit {
   ];
 
   constructor(
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.dataSource.data = this.examenes;
+    this.loadExamenes();
   }
 
-  ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  applyFilter(event: Event) {
+  // Data loading
+  loadExamenes(): void {
+    this.cargando = true;
+    // Simular carga de datos
+    setTimeout(() => {
+      this.dataSource.data = this.examenes;
+      this.cargando = false;
+    }, 1000);
+  }
+
+  // Filter functionality
+  applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dataSource.filter = filterValue.trim().toLowerCase();
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+    this.currentPage = 0; // Reset to first page when filtering
   }
 
-  crearExamen() {
-    const dialogRef = this.dialog.open(ExamenFormComponent, {
-      width: '800px',
-      data: { mode: 'create' }
-    });
-
-    dialogRef.afterClosed().subscribe((result: unknown) => {
-      if (result) {
-        // Simular creación de examen
-        const resultObj = result as Record<string, any>;
-        const nuevoExamen = {
-          id: (this.examenes.length + 1).toString(),
-          estado: ESTADO_EXAMEN.BORRADOR,
-          titulo: resultObj['titulo'] || '',
-          descripcion: resultObj['descripcion'] || '',
-          tipo: resultObj['tipo'] || TipoExamen.TECNICO_JURIDICO,
-          duracion: resultObj['duracion'] || 0,
-          puntajeMaximo: resultObj['puntajeMaximo'] || 0,
-          fechaInicio: resultObj['fechaInicio'] || new Date().toISOString(),
-          intentosPermitidos: resultObj['intentosPermitidos'] || 1,
-          requisitos: resultObj['requisitos'] || [],
-          reglasExamen: resultObj['reglasExamen'] || [],
-          materialesPermitidos: resultObj['materialesPermitidos'] || []
-        };
-        this.examenes.push(nuevoExamen as any);
-        this.dataSource.data = this.examenes;
-        this.snackBar.open('Examen creado correctamente', 'Cerrar', { duration: 3000 });
-      }
-    });
+  // CRUD Operations
+  crearExamen(): void {
+    this.formMode = 'create';
+    this.selectedExamen = null;
+    this.showExamenForm = true;
   }
 
-  editarExamen(examen: unknown) {
-    const examenObj = examen as Record<string, any>;
-    const dialogRef = this.dialog.open(ExamenFormComponent, {
-      width: '800px',
-      data: { mode: 'edit', examen }
-    });
-
-    dialogRef.afterClosed().subscribe((result: unknown) => {
-      if (result) {
-        // Simular actualización de examen
-        const resultObj = result as Record<string, any>;
-        const index = this.examenes.findIndex(e => e.id === examenObj['id']);
-        if (index !== -1) {
-          this.examenes[index] = { ...this.examenes[index], ...resultObj };
-          this.dataSource.data = this.examenes;
-          this.snackBar.open('Examen actualizado correctamente', 'Cerrar', { duration: 3000 });
-        }
-      }
-    });
+  editarExamen(examen: any): void {
+    this.closeMenu();
+    this.formMode = 'edit';
+    this.selectedExamen = { ...examen }; // Crear una copia para editar
+    this.showExamenForm = true;
   }
 
-  cambiarEstado(examen: unknown, nuevoEstado: ESTADO_EXAMEN) {
+  verDetalles(examen: any): void {
+    this.closeMenu();
+    // Simular vista de detalles con notificación
+    this.showNotificationMessage(`Viendo detalles de: ${examen.titulo}`, 'info');
+
+    // TODO: Implementar modal o página de detalles
+    // this.router.navigate(['/admin/examenes/detalle', examen.id]);
+  }
+
+  exportarExamenes(): void {
+    // Simular exportación
+    this.showNotificationMessage('Exportando exámenes...', 'info');
+    setTimeout(() => {
+      this.showNotificationMessage('Exámenes exportados correctamente', 'success');
+    }, 2000);
+  }
+
+  cambiarEstadoExamen(examen: any, nuevoEstado: string): void {
+    this.closeMenu();
     // Simular cambio de estado
-    const examenObj = examen as Record<string, any>;
-    const index = this.examenes.findIndex(e => e.id === examenObj['id']);
+    const index = this.examenes.findIndex(e => e.id === examen.id);
     if (index !== -1) {
-      this.examenes[index].estado = nuevoEstado;
+      this.examenes[index].estado = nuevoEstado as ESTADO_EXAMEN;
       this.dataSource.data = this.examenes;
-      this.snackBar.open(`Estado del examen cambiado a ${nuevoEstado}`, 'Cerrar', { duration: 3000 });
+      this.showNotificationMessage(`Estado del examen cambiado a ${this.getEstadoText(nuevoEstado as ESTADO_EXAMEN)}`, 'success');
     }
   }
 
-  eliminarExamen(examen: unknown) {
-    const examenObj = examen as Record<string, any>;
-    if (confirm(`¿Está seguro de eliminar el examen "${examenObj['titulo']}"?`)) {
+  eliminarExamen(examen: any): void {
+    this.closeMenu();
+    if (confirm(`¿Está seguro de eliminar el examen "${examen.titulo}"?`)) {
       // Simular eliminación
-      this.examenes = this.examenes.filter(e => e.id !== examenObj['id']);
+      this.examenes = this.examenes.filter(e => e.id !== examen.id);
       this.dataSource.data = this.examenes;
-      this.snackBar.open('Examen eliminado correctamente', 'Cerrar', { duration: 3000 });
+      this.showNotificationMessage('Examen eliminado correctamente', 'success');
     }
   }
 
+  // Form event handlers
+  onFormSubmit(formData: any): void {
+    if (this.formMode === 'create') {
+      // Crear nuevo examen
+      const newExamen = {
+        ...formData,
+        id: (this.examenes.length + 1).toString(),
+        estado: ESTADO_EXAMEN.BORRADOR,
+        intentosRealizados: 0,
+        fechaCreacion: new Date().toISOString(),
+        fechaModificacion: new Date().toISOString()
+      };
+
+      this.examenes.push(newExamen);
+      this.dataSource.data = this.examenes;
+      this.showNotificationMessage('Examen creado correctamente', 'success');
+    } else if (this.formMode === 'edit') {
+      // Actualizar examen existente
+      const index = this.examenes.findIndex(e => e.id === this.selectedExamen.id);
+      if (index !== -1) {
+        this.examenes[index] = {
+          ...this.examenes[index],
+          ...formData,
+          fechaModificacion: new Date().toISOString()
+        };
+        this.dataSource.data = this.examenes;
+        this.showNotificationMessage('Examen actualizado correctamente', 'success');
+      }
+    }
+
+    this.closeForm();
+  }
+
+  onFormCancel(): void {
+    this.closeForm();
+  }
+
+  private closeForm(): void {
+    this.showExamenForm = false;
+    this.selectedExamen = null;
+    this.formMode = 'create';
+  }
+
+  // Stats methods
+  getExamenesPorEstado(estado: string): any[] {
+    return this.examenes.filter(examen => examen.estado === estado);
+  }
+
+  // UI Helper methods
   getTipoExamenText(tipo: TipoExamen): string {
     switch (tipo) {
       case TipoExamen.TECNICO_JURIDICO:
@@ -235,22 +313,215 @@ export class ExamenesAdminComponent implements OnInit, AfterViewInit {
     }
   }
 
+  getTipoClass(tipo: TipoExamen): string {
+    switch (tipo) {
+      case TipoExamen.TECNICO_JURIDICO:
+        return 'type-juridico';
+      case TipoExamen.TECNICO_ADMINISTRATIVO:
+        return 'type-administrativo';
+      case TipoExamen.PSICOLOGICO:
+        return 'type-psicologico';
+      default:
+        return 'type-default';
+    }
+  }
+
+  getTipoIcon(tipo: TipoExamen): string {
+    switch (tipo) {
+      case TipoExamen.TECNICO_JURIDICO:
+        return 'fas fa-balance-scale';
+      case TipoExamen.TECNICO_ADMINISTRATIVO:
+        return 'fas fa-cogs';
+      case TipoExamen.PSICOLOGICO:
+        return 'fas fa-brain';
+      default:
+        return 'fas fa-question';
+    }
+  }
+
+  getEstadoText(estado: ESTADO_EXAMEN): string {
+    switch (estado) {
+      case ESTADO_EXAMEN.ACTIVO:
+        return 'Activo';
+      case ESTADO_EXAMEN.BORRADOR:
+        return 'Borrador';
+      case ESTADO_EXAMEN.FINALIZADO:
+        return 'Finalizado';
+      case ESTADO_EXAMEN.ANULADO:
+        return 'Anulado';
+      case ESTADO_EXAMEN.DISPONIBLE:
+        return 'Disponible';
+      case ESTADO_EXAMEN.EN_CURSO:
+        return 'En Curso';
+      default:
+        return 'Desconocido';
+    }
+  }
+
   getEstadoClass(estado: ESTADO_EXAMEN): string {
     switch (estado) {
       case ESTADO_EXAMEN.ACTIVO:
-        return 'estado-activo';
+        return 'status-active';
       case ESTADO_EXAMEN.BORRADOR:
-        return 'estado-borrador';
+        return 'status-draft';
       case ESTADO_EXAMEN.FINALIZADO:
-        return 'estado-finalizado';
+        return 'status-completed';
       case ESTADO_EXAMEN.ANULADO:
-        return 'estado-anulado';
+        return 'status-cancelled';
       case ESTADO_EXAMEN.DISPONIBLE:
-        return 'estado-disponible';
+        return 'status-available';
       case ESTADO_EXAMEN.EN_CURSO:
-        return 'estado-en-curso';
+        return 'status-in-progress';
       default:
-        return '';
+        return 'status-default';
+    }
+  }
+
+  getEstadoIcon(estado: ESTADO_EXAMEN): string {
+    switch (estado) {
+      case ESTADO_EXAMEN.ACTIVO:
+        return 'fas fa-play-circle';
+      case ESTADO_EXAMEN.BORRADOR:
+        return 'fas fa-edit';
+      case ESTADO_EXAMEN.FINALIZADO:
+        return 'fas fa-check-circle';
+      case ESTADO_EXAMEN.ANULADO:
+        return 'fas fa-ban';
+      case ESTADO_EXAMEN.DISPONIBLE:
+        return 'fas fa-calendar-check';
+      case ESTADO_EXAMEN.EN_CURSO:
+        return 'fas fa-clock';
+      default:
+        return 'fas fa-question-circle';
+    }
+  }
+
+  // Date formatting
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  // Table functionality
+  trackByExamenId(index: number, examen: any): string {
+    return examen.id;
+  }
+
+  sortData(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+
+    this.dataSource.filteredData.sort((a, b) => {
+      const aValue = a[column];
+      const bValue = b[column];
+
+      if (aValue < bValue) {
+        return this.sortDirection === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return this.sortDirection === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }
+
+  // Menu functionality
+  toggleMenu(examenId: string): void {
+    this.activeMenuId = this.activeMenuId === examenId ? null : examenId;
+  }
+
+  closeMenu(): void {
+    this.activeMenuId = null;
+  }
+
+  // Pagination
+  getStartIndex(): number {
+    return this.currentPage * this.pageSize;
+  }
+
+  getEndIndex(): number {
+    const endIndex = (this.currentPage + 1) * this.pageSize;
+    return Math.min(endIndex, this.dataSource.filteredData.length);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.dataSource.filteredData.length / this.pageSize);
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(0, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages - 1, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(0, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.getTotalPages() - 1) {
+      this.currentPage++;
+    }
+  }
+
+  goToPage(page: number): void {
+    this.currentPage = page;
+  }
+
+  onPageSizeChange(): void {
+    this.currentPage = 0;
+  }
+
+  // Notification system
+  showNotificationMessage(message: string, type: 'success' | 'error' | 'warning' | 'info'): void {
+    this.notificationMessage = message;
+    this.notificationType = type;
+    this.showNotification = true;
+
+    setTimeout(() => {
+      this.closeNotification();
+    }, 5000);
+  }
+
+  closeNotification(): void {
+    this.showNotification = false;
+  }
+
+  getNotificationIcon(): string {
+    switch (this.notificationType) {
+      case 'success':
+        return 'fas fa-check-circle';
+      case 'error':
+        return 'fas fa-exclamation-circle';
+      case 'warning':
+        return 'fas fa-exclamation-triangle';
+      case 'info':
+        return 'fas fa-info-circle';
+      default:
+        return 'fas fa-info-circle';
     }
   }
 }

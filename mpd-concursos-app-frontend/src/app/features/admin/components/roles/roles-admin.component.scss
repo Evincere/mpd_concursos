@@ -1,246 +1,528 @@
-@use 'src/styles/variables' as *;
+/* ===== ROLES ADMIN GLASSMORPHISM COMPONENT ===== */
 
+// Importar variables y mixins del sistema de diseño
+@import '../usuarios/styles/variables';
+
+// Importar solución para dropdown cortado
+@import './styles/dropdown-fix';
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
 .roles-admin-container {
   padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+  min-height: 100vh;
+  background: transparent;
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
+  // Asegurar que los dropdowns no se corten en el contenedor principal
+  overflow: visible !important;
 
-  h1 {
-    margin: 0;
-    font-size: $font-size-xl;
-    font-weight: 500;
-  }
-}
-
-// Tarjeta de filtros
-.filter-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-  
-  mat-card-content {
-    padding: 1rem;
-  }
-}
-
-.filter-form {
-  .filter-row {
+  /* ===== HEADER ===== */
+  .header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    
-    mat-form-field {
-      flex: 1;
-      min-width: 200px;
-    }
-    
-    .filter-actions {
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+
+    h1 {
+      margin: 0;
+      color: $text-primary;
+      font-size: 1.75rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
-      flex: 1;
-      min-width: 150px;
+      gap: 0.75rem;
+
+      &::before {
+        content: '🛡️';
+        font-size: 1.5rem;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+  }
+
+  /* ===== FILTROS CARD ===== */
+  .filters-card {
+    margin-bottom: 1.5rem;
+
+    // Solución completa para dropdown cortado
+    ::ng-deep .custom-card {
+      @include glass-card;
+      overflow: visible !important;
+
+      // Sobrescribir el overflow: hidden del CustomCardComponent
+      .card-content {
+        overflow: visible !important;
+      }
+    }
+
+    // Asegurar que el contenedor de filtros no corte el dropdown
+    ::ng-deep .filter-form {
+      overflow: visible !important;
+
+      .filter-row {
+        overflow: visible !important;
+      }
+    }
+
+    // Solución específica para CustomSelectComponent
+    ::ng-deep app-custom-select {
+      // Asegurar que el contenedor del select no corte el dropdown
+      .custom-select {
+        overflow: visible !important;
+        position: relative;
+        z-index: 10;
+      }
+
+      // Asegurar que el dropdown tenga el z-index más alto
+      .select-dropdown {
+        z-index: 9999999 !important;
+        position: absolute !important;
+        // Forzar que el dropdown se muestre por encima de todo
+        top: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        margin-top: 0.25rem !important;
+      }
+
+      // Asegurar que el contenedor del select permita overflow
+      .custom-select-container {
+        overflow: visible !important;
+      }
+    }
+
+    .filter-form {
+      overflow: visible !important;
+
+      .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: end;
+        overflow: visible !important;
+
+        > * {
+          flex: 1;
+          min-width: 200px;
+        }
+
+        .filter-actions {
+          flex: 0 0 auto;
+          min-width: auto;
+        }
+      }
+    }
+  }
+
+  /* ===== TABLA CARD ===== */
+  .table-card {
+    @include glass-card;
+    overflow: hidden;
+    margin-bottom: 2rem;
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(249, 250, 251, 0.1);
+
+      h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+        color: $text-primary;
+        font-size: 1.2rem;
+        font-weight: 600;
+
+        i {
+          color: #3b82f6; // Color azul para roles
+          font-size: 1.1rem;
+        }
+      }
+
+      .results-count {
+        color: $text-secondary;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+    }
+
+    /* ===== TABLA PERSONALIZADA ===== */
+    .custom-table-container {
+      position: relative;
+      min-height: 200px;
+
+      /* ===== LOADING OVERLAY ===== */
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        background: rgba(55, 65, 81, 0.8);
+        backdrop-filter: blur(8px);
+        z-index: 10;
+
+        .spinner {
+          width: 2rem;
+          height: 2rem;
+          border: 2px solid rgba(59, 130, 246, 0.3);
+          border-top: 2px solid #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        span {
+          color: $text-primary;
+          font-weight: 500;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      }
+
+      /* ===== EMPTY STATE ===== */
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+        text-align: center;
+        background: rgba(55, 65, 81, 0.3);
+        border-radius: 8px;
+        margin: 1rem;
+
+        i {
+          font-size: 3rem;
+          color: $text-tertiary;
+          margin-bottom: 1rem;
+        }
+
+        h3 {
+          color: $text-primary;
+          margin-bottom: 0.5rem;
+        }
+
+        p {
+          color: $text-secondary;
+          margin-bottom: 1.5rem;
+        }
+      }
+
+      /* ===== TABLA ===== */
+      .table-scroll-container {
+        overflow-x: auto;
+        border-radius: 8px;
+
+        .custom-table {
+          width: 100%;
+          border-collapse: collapse;
+          background: transparent;
+
+          /* ===== HEADER ===== */
+          thead {
+            background: rgba(55, 65, 81, 0.6);
+            backdrop-filter: blur(8px);
+
+            th {
+              padding: 1rem;
+              text-align: left;
+              border-bottom: 1px solid rgba(249, 250, 251, 0.1);
+              color: $text-primary;
+              font-weight: 600;
+              font-size: 0.875rem;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+
+              .header-cell {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+              }
+
+              // Anchos específicos para columnas
+              &.col-nombre { width: 20%; }
+              &.col-descripcion { width: 25%; }
+              &.col-permisos { width: 25%; }
+              &.col-usuarios { width: 10%; }
+              &.col-tipo { width: 10%; }
+              &.col-acciones { width: 10%; }
+            }
+          }
+
+          /* ===== BODY ===== */
+          tbody {
+            tr {
+              background: rgba(55, 65, 81, 0.3);
+              border-bottom: 1px solid rgba(249, 250, 251, 0.05);
+              transition: all 0.3s ease;
+
+              &:hover {
+                background: rgba(75, 85, 99, 0.5);
+                transform: translateY(-1px);
+                cursor: pointer;
+              }
+
+              &.clickable {
+                cursor: pointer;
+              }
+
+              td {
+                padding: 1rem;
+                vertical-align: middle;
+                color: $text-secondary;
+                font-size: 0.875rem;
+
+                /* ===== COLUMNA NOMBRE ===== */
+                &.col-nombre {
+                  .role-name {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+
+                    .role-name-text {
+                      font-weight: 600;
+                      color: $text-primary;
+                    }
+
+                    .system-icon {
+                      color: #f59e0b; // Amber para sistema
+                      font-size: 0.875rem;
+                    }
+                  }
+                }
+
+                /* ===== COLUMNA DESCRIPCIÓN ===== */
+                &.col-descripcion {
+                  .truncate-with-tooltip {
+                    max-width: 200px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                  }
+                }
+
+                /* ===== COLUMNA PERMISOS ===== */
+                &.col-permisos {
+                  .permissions-display {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
+                    max-width: 250px;
+
+                    .permission-badges {
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 0.25rem;
+                      align-items: center;
+
+                      .permission-badge {
+                        @include glass-badge(#3b82f6); // Azul para permisos
+                        font-size: 0.6875rem;
+                        padding: 0.125rem 0.375rem;
+                        font-weight: 500;
+                        white-space: nowrap;
+                        max-width: 120px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+
+                        &.more-permissions {
+                          @include glass-badge(#6b7280); // Gris para "más"
+                          font-weight: 600;
+                          cursor: pointer;
+
+                          &:hover {
+                            @include glass-badge(#f59e0b); // Amber en hover
+                            transform: translateY(-1px);
+                          }
+                        }
+                      }
+                    }
+
+                    .no-permissions {
+                      color: $text-tertiary;
+                      font-style: italic;
+                      font-size: 0.75rem;
+                    }
+                  }
+                }
+
+                /* ===== COLUMNA USUARIOS ===== */
+                &.col-usuarios {
+                  text-align: center;
+
+                  .user-count {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 2rem;
+                    height: 2rem;
+                    border-radius: 50%;
+                    background: rgba(107, 114, 128, 0.2);
+                    color: $text-secondary;
+                    font-weight: 600;
+                    font-size: 0.875rem;
+
+                    &.has-users {
+                      background: rgba(34, 197, 94, 0.2);
+                      color: #22c55e;
+                    }
+                  }
+                }
+
+                /* ===== COLUMNA TIPO ===== */
+                &.col-tipo {
+                  .role-type {
+                    @include glass-badge(#6b7280);
+                    font-size: 0.75rem;
+                    padding: 0.25rem 0.5rem;
+
+                    &.system-role {
+                      @include glass-badge(#f59e0b); // Amber para sistema
+                    }
+
+                    &.custom-role {
+                      @include glass-badge(#10b981); // Verde para personalizado
+                    }
+                  }
+                }
+
+                /* ===== COLUMNA ACCIONES ===== */
+                &.col-acciones {
+                  .action-buttons {
+                    display: flex;
+                    gap: 0.375rem;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0.25rem;
+
+                    // Glassmorphism container para acciones
+                    background: rgba(55, 65, 81, 0.3);
+                    border-radius: 6px;
+                    backdrop-filter: blur(4px);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+
+                    app-custom-button {
+                      // Colores semánticos para acciones
+                      &:nth-child(1) {
+                        // Ver - Azul (info)
+                        --button-color: #3b82f6;
+                        --button-hover-color: #2563eb;
+                      }
+
+                      &:nth-child(2) {
+                        // Editar - Verde (success)
+                        --button-color: #10b981;
+                        --button-hover-color: #059669;
+                      }
+
+                      &:nth-child(3) {
+                        // Eliminar - Rojo (danger)
+                        --button-color: #ef4444;
+                        --button-hover-color: #dc2626;
+                      }
+
+                      // Estado deshabilitado
+                      &[disabled] {
+                        --button-color: #6b7280;
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    /* ===== PAGINACIÓN ===== */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(249, 250, 251, 0.1);
+      background: rgba(55, 65, 81, 0.3);
+
+      .pagination-info {
+        color: $text-secondary;
+        font-size: 0.875rem;
+      }
+
+      .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .page-info {
+          color: $text-primary;
+          font-weight: 600;
+          font-size: 0.875rem;
+        }
+      }
     }
   }
 }
 
-// Tabla de roles
-.table-container {
-  position: relative;
-  min-height: 400px;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: $color-surface;
-  
-  table {
-    width: 100%;
-  }
-  
-  .mat-column-name {
-    min-width: 150px;
-  }
-  
-  .mat-column-description {
-    min-width: 200px;
-  }
-  
-  .mat-column-permissions {
-    width: 120px;
-    text-align: center;
-  }
-  
-  .mat-column-userCount {
-    width: 100px;
-    text-align: center;
-  }
-  
-  .mat-column-isSystem {
-    width: 120px;
-  }
-  
-  .mat-column-actions {
-    width: 60px;
-    text-align: center;
-  }
-  
-  // Celdas personalizadas
-  .role-name {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    
-    .system-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      color: $color-primary;
-    }
-  }
-  
-  .user-count {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: $font-size-xs;
-    font-weight: 500;
-    background-color: rgba($color-text-tertiary, 0.1);
-    color: $color-text-tertiary;
-    
-    &.has-users {
-      background-color: rgba($color-primary, 0.1);
-      color: $color-primary;
-    }
-  }
-  
-  .role-type {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: $font-size-xs;
-    font-weight: 500;
-    
-    &.system-role {
-      background-color: rgba($color-info, 0.1);
-      color: $color-info;
-    }
-    
-    &.custom-role {
-      background-color: rgba($color-success, 0.1);
-      color: $color-success;
-    }
-  }
-  
-  // Fila de rol
-  .role-row {
-    &:hover {
-      background-color: rgba($color-primary, 0.05);
-    }
-  }
-  
-  // Estado de carga
-  .loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-  }
-  
-  // Estado vacío
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    
-    mat-icon {
-      font-size: 3rem;
-      width: 3rem;
-      height: 3rem;
-      margin-bottom: 1rem;
-      color: $color-text-tertiary;
-    }
-    
-    p {
-      margin-bottom: 1.5rem;
-      color: $color-text-secondary;
-      text-align: center;
-    }
-  }
-}
-
-// Estilos para menú de acciones
-.delete-action {
-  color: $color-error;
-}
-
-// Media queries para responsive
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    
-    h1 {
-      margin-bottom: 1rem;
-    }
-  }
-  
-  .filter-form {
-    .filter-row {
-      flex-direction: column;
-      gap: 0;
-      
-      .filter-actions {
-        justify-content: flex-start;
-        margin-top: 1rem;
-      }
-    }
-  }
-  
-  .table-container {
-    overflow-x: auto;
-  }
-}
+  .roles-admin-container {
+    padding: 1rem;
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .filter-card,
-  .table-container {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .table-container {
-    .loading-overlay {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    .empty-state {
-      mat-icon {
-        color: $color-text-tertiary-dark;
-      }
-      
-      p {
-        color: $color-text-secondary-dark;
+    .header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: stretch;
+
+      h1 {
+        font-size: 1.5rem;
       }
     }
-    
-    .role-row {
-      &:hover {
-        background-color: rgba($color-primary-dark, 0.1);
+
+    .filters-card .filter-form .filter-row {
+      flex-direction: column;
+
+      > * {
+        min-width: 100%;
+      }
+    }
+
+    .table-card {
+      .custom-table-container .table-scroll-container {
+        .custom-table {
+          font-size: 0.75rem;
+
+          th, td {
+            padding: 0.75rem 0.5rem;
+          }
+
+          // Ocultar columnas menos importantes en móvil
+          .col-descripcion,
+          .col-tipo {
+            display: none;
+          }
+        }
+      }
+
+      .pagination-container {
+        flex-direction: column;
+        gap: 1rem;
       }
     }
   }

@@ -1,180 +1,115 @@
-<h2 mat-dialog-title>Detalles del Rol</h2>
-
-<mat-dialog-content>
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p>Cargando información...</p>
+<div class="role-detail-dialog">
+  <!-- Header -->
+  <div class="dialog-header">
+    <h2>Detalles del Rol</h2>
   </div>
-  
-  <div *ngIf="!isLoading && role" class="role-details">
-    <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
-      <!-- Pestaña de Información General -->
-      <mat-tab label="Información General">
-        <div class="tab-content">
-          <div class="role-header">
-            <div class="role-icon">
-              <div class="icon-placeholder" [ngClass]="{'system-role': role.isSystem}">
-                <mat-icon>{{role.isSystem ? 'shield' : 'assignment_ind'}}</mat-icon>
-              </div>
-            </div>
-            
-            <div class="role-info">
-              <h3>{{role.name}}</h3>
-              <div class="role-meta">
-                <span class="role-type" [ngClass]="{'system-role': role.isSystem, 'custom-role': !role.isSystem}">
-                  {{role.isSystem ? 'Rol del Sistema' : 'Rol Personalizado'}}
-                </span>
-              </div>
-              <p class="role-description">{{role.description}}</p>
-            </div>
+
+  <!-- Content -->
+  <div class="dialog-content">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando información...</p>
+    </div>
+
+    <!-- Role Details -->
+    <div *ngIf="!isLoading && role" class="role-details">
+      <!-- Role Header -->
+      <app-custom-card class="role-header-card">
+        <div class="role-header">
+          <div class="role-icon">
+            <i class="fas" [ngClass]="role.isSystem ? 'fa-shield-alt' : 'fa-user-tag'"></i>
           </div>
-          
-          <mat-divider></mat-divider>
-          
-          <div class="info-section">
-            <h4>Información del Rol</h4>
-            
-            <div class="info-grid">
-              <div class="info-item">
-                <div class="info-label">
-                  <mat-icon>event</mat-icon>
-                  <span>Fecha de Creación</span>
-                </div>
-                <div class="info-value">{{formatDate(role.createdAt)}}</div>
-              </div>
-              
-              <div class="info-item" *ngIf="role.updatedAt">
-                <div class="info-label">
-                  <mat-icon>update</mat-icon>
-                  <span>Última Modificación</span>
-                </div>
-                <div class="info-value">{{formatDate(role.updatedAt)}}</div>
-              </div>
-              
-              <div class="info-item">
-                <div class="info-label">
-                  <mat-icon>people</mat-icon>
-                  <span>Usuarios Asignados</span>
-                </div>
-                <div class="info-value">{{role.userCount || 0}}</div>
-              </div>
-              
-              <div class="info-item">
-                <div class="info-label">
-                  <mat-icon>vpn_key</mat-icon>
-                  <span>Permisos</span>
-                </div>
-                <div class="info-value">{{role.permissions.length || 0}}</div>
-              </div>
+
+          <div class="role-info">
+            <h3>{{ role.name }}</h3>
+            <div class="role-meta">
+              <span class="role-type" [ngClass]="{'system-role': role.isSystem, 'custom-role': !role.isSystem}">
+                {{ role.isSystem ? 'Rol del Sistema' : 'Rol Personalizado' }}
+              </span>
             </div>
+            <p class="role-description">{{ role.description }}</p>
           </div>
         </div>
-      </mat-tab>
-      
-      <!-- Pestaña de Permisos -->
-      <mat-tab label="Permisos">
-        <div class="tab-content">
-          <h4>Permisos Asignados</h4>
-          
-          <div class="permissions-container">
-            <mat-accordion>
-              <mat-expansion-panel *ngFor="let group of permissionGroups">
-                <mat-expansion-panel-header>
-                  <mat-panel-title>
-                    <div class="module-header">
-                      <mat-icon>{{getModuleIcon(group.module)}}</mat-icon>
-                      <span class="module-name">{{group.module}}</span>
+      </app-custom-card>
+
+      <!-- Role Information -->
+      <app-custom-card class="role-info-card">
+        <h4>Información del Rol</h4>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">
+              <i class="fas fa-calendar-plus"></i>
+              <span>Fecha de Creación</span>
+            </div>
+            <div class="info-value">{{ formatDate(role.createdAt) }}</div>
+          </div>
+
+          <div class="info-item" *ngIf="role.updatedAt">
+            <div class="info-label">
+              <i class="fas fa-calendar-edit"></i>
+              <span>Última Modificación</span>
+            </div>
+            <div class="info-value">{{ formatDate(role.updatedAt) }}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">
+              <i class="fas fa-users"></i>
+              <span>Usuarios Asignados</span>
+            </div>
+            <div class="info-value">{{ role.userCount || 0 }}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">
+              <i class="fas fa-key"></i>
+              <span>Permisos</span>
+            </div>
+            <div class="info-value">{{ role.permissions.length || 0 }}</div>
+          </div>
+        </div>
+      </app-custom-card>
+
+      <!-- Permissions Section -->
+      <app-custom-card class="permissions-card">
+        <h4>Permisos Asignados</h4>
+
+        <div class="permissions-container">
+          <!-- Permission Groups -->
+          <div *ngFor="let group of permissionGroups" class="permission-group">
+            <div class="module-header">
+              <i class="fas" [ngClass]="getModuleIcon(group.module)"></i>
+              <span class="module-name">{{ group.module }}</span>
+              <span class="permission-count">{{ group.permissions.length }} permisos</span>
+            </div>
+
+            <div class="permission-list">
+              <div *ngFor="let permission of group.permissions" class="permission-item">
+                <div class="permission-info">
+                  <div class="permission-name">
+                    <div class="action-icon" [ngClass]="getActionClass(permission.action)">
+                      <i class="fas" [ngClass]="getActionIcon(permission.action)"></i>
                     </div>
-                  </mat-panel-title>
-                  <mat-panel-description>
-                    <div class="permission-count">
-                      {{group.permissions.length}} permisos
-                    </div>
-                  </mat-panel-description>
-                </mat-expansion-panel-header>
-                
-                <div class="permission-list">
-                  <div *ngFor="let permission of group.permissions" class="permission-item">
-                    <div class="permission-info">
-                      <div class="permission-name">
-                        <div class="action-icon" [ngClass]="getActionClass(permission.action)">
-                          <mat-icon>{{getActionIcon(permission.action)}}</mat-icon>
-                        </div>
-                        <span>{{permission.name}}</span>
-                      </div>
-                      <div class="permission-description">
-                        {{permission.description}}
-                      </div>
-                    </div>
+                    <span>{{ permission.name }}</span>
+                  </div>
+                  <div class="permission-description">
+                    {{ permission.description }}
                   </div>
                 </div>
-              </mat-expansion-panel>
-            </mat-accordion>
-            
-            <!-- Empty State -->
-            <div *ngIf="permissionGroups.length === 0" class="empty-state">
-              <mat-icon>vpn_key_off</mat-icon>
-              <p>Este rol no tiene permisos asignados</p>
+              </div>
             </div>
           </div>
-        </div>
-      </mat-tab>
-      
-      <!-- Pestaña de Historial -->
-      <mat-tab label="Historial">
-        <div class="tab-content">
-          <h4>Historial de Cambios</h4>
-          
-          <div class="table-container mat-elevation-z1">
-            <table mat-table [dataSource]="auditLogs">
-              <!-- Action Column -->
-              <ng-container matColumnDef="action">
-                <th mat-header-cell *matHeaderCellDef>Acción</th>
-                <td mat-cell *matCellDef="let log">
-                  <div class="action-cell">
-                    <div class="action-icon" [ngClass]="getActionClass(log.action)">
-                      <mat-icon>{{getActionIcon(log.action)}}</mat-icon>
-                    </div>
-                    <span>{{log.action}}</span>
-                  </div>
-                </td>
-              </ng-container>
-              
-              <!-- Details Column -->
-              <ng-container matColumnDef="details">
-                <th mat-header-cell *matHeaderCellDef>Detalles</th>
-                <td mat-cell *matCellDef="let log">{{log.details}}</td>
-              </ng-container>
-              
-              <!-- Performed By Column -->
-              <ng-container matColumnDef="performedBy">
-                <th mat-header-cell *matHeaderCellDef>Realizado por</th>
-                <td mat-cell *matCellDef="let log">{{log.performedBy}}</td>
-              </ng-container>
-              
-              <!-- Performed At Column -->
-              <ng-container matColumnDef="performedAt">
-                <th mat-header-cell *matHeaderCellDef>Fecha</th>
-                <td mat-cell *matCellDef="let log">{{formatDate(log.performedAt)}}</td>
-              </ng-container>
-              
-              <tr mat-header-row *matHeaderRowDef="auditColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: auditColumns;"></tr>
-            </table>
-            
-            <!-- Empty State -->
-            <div *ngIf="auditLogs.length === 0" class="empty-state">
-              <mat-icon>history</mat-icon>
-              <p>No hay registros de cambios disponibles</p>
-            </div>
-          </div>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
-  </div>
-</mat-dialog-content>
 
-<mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Cerrar</button>
-</mat-dialog-actions>
+          <!-- Empty State -->
+          <div *ngIf="permissionGroups.length === 0" class="empty-state">
+            <i class="fas fa-key"></i>
+            <p>Este rol no tiene permisos asignados</p>
+          </div>
+        </div>
+      </app-custom-card>
+    </div>
+  </div>
+</div>
 

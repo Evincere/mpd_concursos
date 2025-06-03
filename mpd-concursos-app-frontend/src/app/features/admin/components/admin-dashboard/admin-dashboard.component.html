@@ -1,6 +1,16 @@
 <div class="dashboard-container">
   <div class="header">
     <h1>Panel de Administración</h1>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" [routerLink]="['/admin/usuarios']">
+        <mat-icon>people</mat-icon>
+        Gestionar Usuarios
+      </button>
+      <button mat-raised-button color="accent" [routerLink]="['/admin/reportes']">
+        <mat-icon>analytics</mat-icon>
+        Ver Reportes
+      </button>
+    </div>
   </div>
 
   <!-- Indicador de carga -->
@@ -64,151 +74,205 @@
       </div>
     </div>
 
-    <!-- Pestañas de contenido -->
-    <mat-card class="tabs-card">
-      <mat-card-content>
-        <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
-          <!-- Pestaña de Resumen -->
-          <mat-tab label="Resumen">
-            <div class="tab-content">
-              <div class="dashboard-content">
-                <!-- Gráficos de estadísticas -->
-                <div class="charts-section">
-                  <div class="chart-container">
-                    <app-stats-chart
-                      title="Inscripciones por Estado"
-                      [chartType]="'doughnut'"
-                      [chartData]="inscripcionesChartData"
-                      height="250px"
-                    ></app-stats-chart>
-                  </div>
+    <!-- Sistema de pestañas personalizado -->
+    <div class="tabs-card">
+      <div class="tabs-header">
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 0"
+          (click)="activeTab = 0"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab === 0"
+          aria-controls="tab-content-0">
+          <i class="fas fa-chart-pie" aria-hidden="true"></i>
+          <span>Resumen</span>
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 1"
+          (click)="activeTab = 1"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab === 1"
+          aria-controls="tab-content-1">
+          <i class="fas fa-th-large" aria-hidden="true"></i>
+          <span>Navegación Rápida</span>
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 2"
+          (click)="activeTab = 2"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab === 2"
+          aria-controls="tab-content-2">
+          <i class="fas fa-chart-bar" aria-hidden="true"></i>
+          <span>Estadísticas</span>
+        </button>
+      </div>
 
-                  <div class="chart-container">
-                    <app-stats-chart
-                      title="Concursos por Estado"
-                      [chartType]="'pie'"
-                      [chartData]="concursosChartData"
-                      height="250px"
-                    ></app-stats-chart>
-                  </div>
-                </div>
+      <div class="tabs-content">
+        <!-- Pestaña de Resumen -->
+        <div
+          class="tab-content"
+          [class.active]="activeTab === 0"
+          id="tab-content-0"
+          role="tabpanel"
+          [attr.aria-hidden]="activeTab !== 0">
+          <div class="dashboard-content">
+            <!-- Gráficos de estadísticas -->
+            <div class="charts-section">
+              <div class="chart-container">
+                <app-stats-chart
+                  title="Inscripciones por Estado"
+                  [chartType]="'doughnut'"
+                  [chartData]="inscripcionesChartData"
+                  height="250px"
+                ></app-stats-chart>
+              </div>
 
-                <!-- Actividad reciente -->
-                <div class="activity-section">
-                  <app-activity-feed
-                    [activities]="recentActivities"
-                    title="Actividad Reciente"
-                    viewAllLink="/admin/reportes"
-                    [maxItems]="5"
-                  ></app-activity-feed>
+              <div class="chart-container">
+                <app-stats-chart
+                  title="Concursos por Estado"
+                  [chartType]="'pie'"
+                  [chartData]="concursosChartData"
+                  height="250px"
+                ></app-stats-chart>
+              </div>
+            </div>
+
+            <!-- Actividad reciente -->
+            <div class="activity-section">
+              <app-activity-feed
+                [activities]="recentActivities"
+                title="Actividad Reciente"
+                viewAllLink="/admin/reportes"
+                [maxItems]="5"
+              ></app-activity-feed>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pestaña de Navegación Rápida -->
+        <div
+          class="tab-content"
+          [class.active]="activeTab === 1"
+          id="tab-content-1"
+          role="tabpanel"
+          [attr.aria-hidden]="activeTab !== 1">
+          <div class="menu-section">
+            <div class="menu-cards">
+              <div
+                class="menu-card"
+                *ngFor="let item of menuItems"
+                (click)="navigateTo(item.route)"
+                (keydown.enter)="navigateTo(item.route)"
+                (keydown.space)="navigateTo(item.route)"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Ir a ' + item.label">
+                <div class="menu-card-content">
+                  <i class="fas fa-{{item.icon}} menu-icon" aria-hidden="true"></i>
+                  <h3 class="menu-title">{{item.label}}</h3>
+                  <p class="menu-description">{{item.description}}</p>
                 </div>
               </div>
             </div>
-          </mat-tab>
+          </div>
+        </div>
 
-          <!-- Pestaña de Navegación Rápida -->
-          <mat-tab label="Navegación Rápida">
-            <div class="tab-content">
-              <div class="menu-section">
-                <div class="menu-cards">
-                  <mat-card class="menu-card" *ngFor="let item of menuItems" (click)="navigateTo(item.route)" (keydown.enter)="navigateTo(item.route)" (keydown.space)="navigateTo(item.route)" tabindex="0" role="button" [attr.aria-label]="'Ir a ' + item.label">
-                    <mat-card-content>
-                      <mat-icon class="menu-icon" aria-hidden="true">{{item.icon}}</mat-icon>
-                      <h3 class="menu-title">{{item.label}}</h3>
-                      <p class="menu-description">{{item.description}}</p>
-                    </mat-card-content>
-                  </mat-card>
-                </div>
+        <!-- Pestaña de Estadísticas -->
+        <div
+          class="tab-content"
+          [class.active]="activeTab === 2"
+          id="tab-content-2"
+          role="tabpanel"
+          [attr.aria-hidden]="activeTab !== 2">
+          <div class="stats-grid">
+            <div class="stats-row">
+              <div class="stats-col">
+                <app-stats-chart
+                  title="Usuarios por Rol"
+                  [chartType]="'pie'"
+                  [chartData]="usuariosChartData"
+                  height="300px"
+                ></app-stats-chart>
+              </div>
+
+              <div class="stats-col">
+                <app-stats-chart
+                  title="Inscripciones por Estado"
+                  [chartType]="'bar'"
+                  [chartData]="inscripcionesChartData"
+                  height="300px"
+                ></app-stats-chart>
               </div>
             </div>
-          </mat-tab>
 
-          <!-- Pestaña de Estadísticas -->
-          <mat-tab label="Estadísticas">
-            <div class="tab-content">
-              <div class="stats-grid">
-                <div class="stats-row">
-                  <div class="stats-col">
-                    <app-stats-chart
-                      title="Usuarios por Rol"
-                      [chartType]="'pie'"
-                      [chartData]="usuariosChartData"
-                      height="300px"
-                    ></app-stats-chart>
+            <div class="stats-row">
+              <div class="stats-col">
+                <app-stats-chart
+                  title="Concursos por Estado"
+                  [chartType]="'bar'"
+                  [chartData]="concursosChartData"
+                  height="300px"
+                ></app-stats-chart>
+              </div>
+
+              <div class="stats-col">
+                <div class="stats-detail-card">
+                  <div class="stats-detail-header">
+                    <h3 class="stats-detail-title">
+                      <i class="fas fa-chart-line" aria-hidden="true"></i>
+                      Detalles de Estadísticas
+                    </h3>
                   </div>
+                  <div class="stats-detail-content">
+                    <div class="stats-detail-section">
+                      <h4>Usuarios</h4>
+                      <div class="stats-detail-item">
+                        <span class="detail-label">Total:</span>
+                        <span class="detail-value">{{dashboardStats.usuarios.total}}</span>
+                      </div>
+                      <div class="stats-detail-item">
+                        <span class="detail-label">Nuevos:</span>
+                        <span class="detail-value">{{dashboardStats.usuarios.nuevos}}</span>
+                      </div>
+                      <div class="stats-detail-item">
+                        <span class="detail-label">Activos:</span>
+                        <span class="detail-value">{{dashboardStats.usuarios.activos}}</span>
+                      </div>
+                    </div>
 
-                  <div class="stats-col">
-                    <app-stats-chart
-                      title="Inscripciones por Estado"
-                      [chartType]="'bar'"
-                      [chartData]="inscripcionesChartData"
-                      height="300px"
-                    ></app-stats-chart>
-                  </div>
-                </div>
+                    <div class="stats-detail-divider"></div>
 
-                <div class="stats-row">
-                  <div class="stats-col">
-                    <app-stats-chart
-                      title="Concursos por Estado"
-                      [chartType]="'bar'"
-                      [chartData]="concursosChartData"
-                      height="300px"
-                    ></app-stats-chart>
-                  </div>
-
-                  <div class="stats-col">
-                    <mat-card class="stats-detail-card">
-                      <mat-card-header>
-                        <mat-card-title>Detalles de Estadísticas</mat-card-title>
-                      </mat-card-header>
-                      <mat-card-content>
-                        <div class="stats-detail-section">
-                          <h3>Usuarios</h3>
-                          <div class="stats-detail-item">
-                            <span class="detail-label">Total:</span>
-                            <span class="detail-value">{{dashboardStats.usuarios.total}}</span>
-                          </div>
-                          <div class="stats-detail-item">
-                            <span class="detail-label">Nuevos:</span>
-                            <span class="detail-value">{{dashboardStats.usuarios.nuevos}}</span>
-                          </div>
-                          <div class="stats-detail-item">
-                            <span class="detail-label">Activos:</span>
-                            <span class="detail-value">{{dashboardStats.usuarios.activos}}</span>
-                          </div>
-                        </div>
-
-                        <mat-divider></mat-divider>
-
-                        <div class="stats-detail-section">
-                          <h3>Documentos</h3>
-                          <div class="stats-detail-item">
-                            <span class="detail-label">Total:</span>
-                            <span class="detail-value">{{dashboardStats.documentos.total}}</span>
-                          </div>
-                          <div class="stats-detail-item">
-                            <span class="detail-label">Pendientes:</span>
-                            <span class="detail-value">{{dashboardStats.documentos.pendientes}}</span>
-                          </div>
-                          <div class="stats-detail-item">
-                            <span class="detail-label">Aprobados:</span>
-                            <span class="detail-value">{{dashboardStats.documentos.aprobados}}</span>
-                          </div>
-                          <div class="stats-detail-item">
-                            <span class="detail-label">Rechazados:</span>
-                            <span class="detail-value">{{dashboardStats.documentos.rechazados}}</span>
-                          </div>
-                        </div>
-                      </mat-card-content>
-                    </mat-card>
+                    <div class="stats-detail-section">
+                      <h4>Documentos</h4>
+                      <div class="stats-detail-item">
+                        <span class="detail-label">Total:</span>
+                        <span class="detail-value">{{dashboardStats.documentos.total}}</span>
+                      </div>
+                      <div class="stats-detail-item">
+                        <span class="detail-label">Pendientes:</span>
+                        <span class="detail-value">{{dashboardStats.documentos.pendientes}}</span>
+                      </div>
+                      <div class="stats-detail-item">
+                        <span class="detail-label">Aprobados:</span>
+                        <span class="detail-value">{{dashboardStats.documentos.aprobados}}</span>
+                      </div>
+                      <div class="stats-detail-item">
+                        <span class="detail-label">Rechazados:</span>
+                        <span class="detail-value">{{dashboardStats.documentos.rechazados}}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </mat-tab>
-        </mat-tab-group>
-      </mat-card-content>
-    </mat-card>
+          </div>
+        </div>
+      </div>
+    </div>
   </ng-container>
 </div>

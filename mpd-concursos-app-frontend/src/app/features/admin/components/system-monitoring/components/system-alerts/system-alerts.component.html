@@ -1,0 +1,223 @@
+<div class="system-alerts-container">
+  <div class="section-header">
+    <h2 class="section-title">
+      <span class="section-icon">🚨</span>
+      Alertas del Sistema
+    </h2>
+    <p class="section-description">
+      Gestión y monitoreo de alertas del sistema en tiempo real.
+    </p>
+  </div>
+
+  <!-- Filtros de alertas glassmorphism -->
+  <div class="alerts-filters">
+    <div class="filters-header">
+      <h3 class="filters-title">Filtros de Alertas</h3>
+    </div>
+    
+    <div class="filters-grid">
+      <!-- Filtro por tipo -->
+      <div class="filter-group">
+        <label class="filter-label">Tipo de Alerta</label>
+        <div class="filter-buttons">
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.type === 'all'"
+            (click)="onTypeFilterChange('all')">
+            Todas
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn filter-info" 
+            [class.active]="alertFilters.type === 'info'"
+            (click)="onTypeFilterChange('info')">
+            <span class="btn-icon">ℹ️</span>
+            Info
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn filter-warning" 
+            [class.active]="alertFilters.type === 'warning'"
+            (click)="onTypeFilterChange('warning')">
+            <span class="btn-icon">⚠️</span>
+            Advertencia
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn filter-error" 
+            [class.active]="alertFilters.type === 'error'"
+            (click)="onTypeFilterChange('error')">
+            <span class="btn-icon">❌</span>
+            Error
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn filter-critical" 
+            [class.active]="alertFilters.type === 'critical'"
+            (click)="onTypeFilterChange('critical')">
+            <span class="btn-icon">🚨</span>
+            Crítica
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtro por estado -->
+      <div class="filter-group">
+        <label class="filter-label">Estado</label>
+        <div class="filter-buttons">
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.status === 'all'"
+            (click)="onStatusFilterChange('all')">
+            Todos
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.status === 'active'"
+            (click)="onStatusFilterChange('active')">
+            Activas
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.status === 'acknowledged'"
+            (click)="onStatusFilterChange('acknowledged')">
+            Acusadas
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.status === 'resolved'"
+            (click)="onStatusFilterChange('resolved')">
+            Resueltas
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtro por categoría -->
+      <div class="filter-group">
+        <label class="filter-label">Categoría</label>
+        <div class="filter-buttons">
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.category === 'all'"
+            (click)="onCategoryFilterChange('all')">
+            Todas
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.category === 'performance'"
+            (click)="onCategoryFilterChange('performance')">
+            Rendimiento
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.category === 'database'"
+            (click)="onCategoryFilterChange('database')">
+            Base de Datos
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.category === 'security'"
+            (click)="onCategoryFilterChange('security')">
+            Seguridad
+          </button>
+          <button 
+            type="button" 
+            class="filter-btn" 
+            [class.active]="alertFilters.category === 'application'"
+            (click)="onCategoryFilterChange('application')">
+            Aplicación
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío glassmorphism -->
+  <div *ngIf="filteredAlerts.length === 0" class="empty-state">
+    <div class="empty-icon">🚨</div>
+    <p class="empty-text">No hay alertas que coincidan con los filtros seleccionados</p>
+  </div>
+
+  <!-- Lista de alertas glassmorphism -->
+  <div *ngIf="filteredAlerts.length > 0" class="alerts-list">
+    <div class="alerts-header">
+      <h3 class="alerts-count">
+        {{filteredAlerts.length}} alerta{{filteredAlerts.length !== 1 ? 's' : ''}} encontrada{{filteredAlerts.length !== 1 ? 's' : ''}}
+      </h3>
+    </div>
+
+    <div class="alerts-grid">
+      <div *ngFor="let alert of filteredAlerts" class="alert-card" [ngClass]="getAlertTypeClass(alert.type)">
+        <div class="alert-header">
+          <div class="alert-icon">
+            <span>{{getAlertTypeIcon(alert.type)}}</span>
+          </div>
+          <div class="alert-info">
+            <div class="alert-title">{{alert.message || 'Sin mensaje'}}</div>
+            <div class="alert-meta">
+              <span class="alert-timestamp">{{formatDate(alert.timestamp)}}</span>
+              <span class="alert-category">{{getAlertCategoryLabel(alert.category)}}</span>
+            </div>
+          </div>
+          <div class="alert-status-badge" [ngClass]="'status-' + alert.status">
+            {{getAlertStatusLabel(alert.status)}}
+          </div>
+        </div>
+
+        <div class="alert-details">
+          {{alert.details || 'Sin detalles adicionales'}}
+        </div>
+
+        <div class="alert-metrics" *ngIf="alert.metrics && alert.metrics.length > 0">
+          <h4 class="metrics-title">Métricas relacionadas:</h4>
+          <div class="metrics-list">
+            <div class="metric-item" *ngFor="let metric of alert.metrics">
+              <span class="metric-name">{{metric.name}}:</span>
+              <span class="metric-value">{{metric.value}} {{metric.unit}}</span>
+              <span class="metric-threshold" *ngIf="metric.threshold">
+                (Umbral: {{metric.threshold}} {{metric.unit}})
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert-actions">
+          <button 
+            *ngIf="alert.status === 'active'" 
+            type="button" 
+            class="btn-primary"
+            (click)="onAcknowledgeAlert(alert.id)">
+            <span class="btn-icon">✅</span>
+            <span class="btn-label">Acusar recibo</span>
+          </button>
+          
+          <button 
+            *ngIf="alert.status === 'acknowledged'" 
+            type="button" 
+            class="btn-success"
+            (click)="onResolveAlert(alert.id)">
+            <span class="btn-icon">✅</span>
+            <span class="btn-label">Resolver</span>
+          </button>
+          
+          <div *ngIf="alert.status === 'resolved'" class="alert-resolved">
+            <span class="resolved-icon">✅</span>
+            <span class="resolved-text">Resuelta</span>
+            <div class="resolved-info" *ngIf="alert.resolvedBy">
+              por {{alert.resolvedBy}} el {{formatDate(alert.resolvedAt || '')}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

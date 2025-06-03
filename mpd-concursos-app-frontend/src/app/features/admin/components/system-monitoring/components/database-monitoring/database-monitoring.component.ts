@@ -1,62 +1,22 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { Subject } from 'rxjs';
+
+import { DatabaseMetrics } from '@core/services/admin/system-monitoring.service';
 
 
 @Component({
   selector: 'app-database-monitoring',
   standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule
+    CommonModule
   ],
-  template: `
-    <div class="database-monitoring-container">
-      <mat-card class="monitoring-card">
-        <mat-card-header>
-          <mat-card-title>Monitoreo de Base de Datos</mat-card-title>
-          <mat-card-subtitle>Métricas y estadísticas de la base de datos</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="placeholder-content">
-            <p>Componente en desarrollo. Próximamente se mostrarán métricas de la base de datos.</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .database-monitoring-container {
-      padding: 16px;
-    }
-
-    .monitoring-card {
-      margin-bottom: 16px;
-    }
-
-    .placeholder-content {
-      padding: 20px;
-      text-align: center;
-      background-color: rgba(0, 0, 0, 0.05);
-      border-radius: 4px;
-      margin: 16px 0;
-    }
-  `]
+  templateUrl: './database-monitoring.component.html',
+  styleUrls: ['./database-monitoring.component.scss']
 })
-export class DatabaseMonitoringComponent implements OnInit, OnDestroy {
+export class DatabaseMonitoringComponent implements OnInit, OnDestroy, OnChanges {
+  @Input() databaseMetrics: DatabaseMetrics | null = null;
+
   private destroy$ = new Subject<void>();
 
   constructor() {
@@ -64,31 +24,70 @@ export class DatabaseMonitoringComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Cargar métricas de la base de datos
-    this.loadDatabaseMetrics();
-
-    // Iniciar monitoreo en tiempo real
-    this.startRealTimeMonitoring();
+    console.log('Database monitoring component initialized');
   }
 
-  /**
-   * Carga las métricas de la base de datos
-   */
-  private loadDatabaseMetrics(): void {
-    // En una implementación real, esto cargaría las métricas desde un servicio
-    console.log('Cargando métricas de la base de datos');
-  }
-
-  /**
-   * Inicia el monitoreo en tiempo real
-   */
-  private startRealTimeMonitoring(): void {
-    // En una implementación real, esto iniciaría un monitoreo en tiempo real
-    console.log('Iniciando monitoreo en tiempo real');
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['databaseMetrics'] && this.databaseMetrics) {
+      console.log('Database metrics updated:', this.databaseMetrics);
+    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Formatea el tamaño en MB
+   * @param mb Tamaño en MB
+   * @returns Tamaño formateado
+   */
+  formatSize(mb: number): string {
+    if (mb < 1024) {
+      return `${mb.toFixed(2)} MB`;
+    } else {
+      return `${(mb / 1024).toFixed(2)} GB`;
+    }
+  }
+
+  /**
+   * Obtiene la clase CSS para el estado de una consulta
+   * @param executionTime Tiempo de ejecución en ms
+   * @returns Clase CSS
+   */
+  getQueryStatusClass(executionTime: number): string {
+    if (executionTime < 100) {
+      return 'query-fast';
+    } else if (executionTime < 1000) {
+      return 'query-normal';
+    } else {
+      return 'query-slow';
+    }
+  }
+
+  /**
+   * Obtiene el icono para el estado de una consulta
+   * @param executionTime Tiempo de ejecución en ms
+   * @returns Icono emoji
+   */
+  getQueryStatusIcon(executionTime: number): string {
+    if (executionTime < 100) {
+      return '⚡';
+    } else if (executionTime < 1000) {
+      return '⏱️';
+    } else {
+      return '🐌';
+    }
+  }
+
+  /**
+   * Formatea una fecha
+   * @param dateString Fecha en formato ISO
+   * @returns Fecha formateada
+   */
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleString();
   }
 }

@@ -1,412 +1,781 @@
 @use 'src/styles/variables' as *;
 
+// Variables glassmorphism locales
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-tertiary: #9ca3af;
+$contest-theme-color: #4CAF50;
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$transition-fast: 0.15s;
+$transition-duration: 0.3s;
+$transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+
+// Mixins glassmorphism
+@mixin glass-card {
+  background: rgba(55, 65, 81, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 250, 251, 0.1);
+  border-radius: $border-radius-md;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+@mixin glass-card-dark {
+  background: rgba(31, 41, 55, 0.9);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(249, 250, 251, 0.08);
+  border-radius: $border-radius-md;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+@mixin glass-button {
+  background: rgba(249, 250, 251, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(249, 250, 251, 0.1);
+  border-radius: $border-radius-md;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast $transition-timing;
+
+  &:hover {
+    background: rgba(249, 250, 251, 0.1);
+    border-color: rgba(249, 250, 251, 0.2);
+    transform: translateY(-1px);
+  }
+}
+
+@mixin glass-badge {
+  background: rgba(55, 65, 81, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(249, 250, 251, 0.2);
+}
+
 .profile-stats-container {
   padding: 1rem 0;
+  min-height: 100vh;
 }
 
-// Estado vacío
-.loading-container {
+/* ===== ESTADO SIN ESTADÍSTICAS GLASSMORPHISM ===== */
+.no-stats-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  min-height: 400px;
   padding: 3rem 1rem;
-  
-  mat-icon {
-    font-size: 3rem;
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: 1rem;
-    color: $color-text-tertiary;
-  }
-  
-  p {
-    margin: 0;
-    color: $color-text-secondary;
+
+  .no-stats-content {
+    @include glass-card;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
+    padding: 3rem 2rem;
+    max-width: 400px;
+
+    .no-stats-icon {
+      font-size: 4rem;
+      color: $text-tertiary;
+      margin-bottom: 1.5rem;
+      opacity: 0.6;
+    }
+
+    h4 {
+      color: $text-primary;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+    }
+
+    p {
+      color: $text-secondary;
+      font-size: 1rem;
+      margin: 0;
+      line-height: 1.5;
+    }
   }
 }
 
-// Contenido de estadísticas
+/* ===== CONTENIDO DE ESTADÍSTICAS ===== */
 .stats-content {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== RESUMEN DE ESTADÍSTICAS GLASSMORPHISM ===== */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
-// Resumen de estadísticas
-.stats-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
 .stats-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  mat-card-content {
+  @include glass-card;
+  position: relative;
+  overflow: hidden;
+  transition: all $transition-duration $transition-timing;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-content {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1.5rem;
+    gap: 1.5rem;
+    padding: 2rem;
+    position: relative;
+    z-index: 2;
   }
-  
+
   .stats-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    background-color: rgba($color-primary, 0.1);
-    
-    mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-      color: $color-primary;
+    background: linear-gradient(135deg, rgba(249, 250, 251, 0.2), rgba(249, 250, 251, 0.1));
+    border: 1px solid rgba(249, 250, 251, 0.2);
+    backdrop-filter: blur(4px);
+    transition: all $transition-fast $transition-timing;
+
+    i {
+      font-size: 1.5rem;
+      color: $text-primary;
     }
   }
-  
+
   .stats-data {
     flex: 1;
-    
+
     .stats-value {
-      font-size: $font-size-xl;
-      font-weight: 500;
-      color: $color-text-primary;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: $text-primary;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    
+
     .stats-label {
-      font-size: $font-size-sm;
-      color: $color-text-secondary;
-    }
-  }
-}
-
-// Sección de completitud
-.completion-section {
-  background-color: $color-surface;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  
-  h4 {
-    font-size: $font-size-md;
-    font-weight: 500;
-    margin: 0 0 1rem;
-    color: $color-text-primary;
-  }
-  
-  .completion-bar {
-    position: relative;
-    margin-bottom: 1rem;
-    
-    mat-progress-bar {
-      height: 8px;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    
-    .completion-percentage {
-      position: absolute;
-      top: -1.5rem;
-      right: 0;
-      font-size: $font-size-sm;
+      font-size: 0.9rem;
+      color: $text-secondary;
       font-weight: 500;
-      color: $color-primary;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
   }
-  
-  .completion-legend {
-    display: flex;
-    gap: 2rem;
-    
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      
-      .legend-color {
-        width: 16px;
-        height: 16px;
-        border-radius: 4px;
-        
-        &.complete {
-          background-color: $color-primary;
-        }
-        
-        &.incomplete {
-          background-color: $color-text-tertiary;
-        }
-      }
-      
-      .legend-label {
-        font-size: $font-size-sm;
-        color: $color-text-secondary;
-      }
-      
-      .legend-value {
-        font-size: $font-size-sm;
-        font-weight: 500;
-        color: $color-text-primary;
+
+  .card-accent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+
+    &.total {
+      --accent-color: #{$contest-theme-color};
+    }
+
+    &.complete {
+      --accent-color: #{$contest-theme-color};
+    }
+
+    &.incomplete {
+      --accent-color: #f59e0b;
+    }
+  }
+
+  &.total {
+    .stats-icon {
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+      border-color: rgba(76, 175, 80, 0.3);
+
+      i {
+        color: $contest-theme-color;
       }
     }
   }
-}
 
-// Tarjetas de detalle
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
-}
+  &.complete {
+    .stats-icon {
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.2), rgba(76, 175, 80, 0.1));
+      border-color: rgba(76, 175, 80, 0.3);
 
-.stats-detail-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  mat-card-header {
-    padding: 1rem 1rem 0;
+      i {
+        color: $contest-theme-color;
+      }
+    }
   }
-  
-  mat-card-content {
-    padding: 1rem;
+
+  &.incomplete {
+    .stats-icon {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+      border-color: rgba(245, 158, 11, 0.3);
+
+      i {
+        color: #f59e0b;
+      }
+    }
   }
 }
 
-// Distribución por estado
-.status-distribution {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  
-  .status-item {
-    .status-header {
+/* ===== SECCIÓN DE COMPLETITUD GLASSMORPHISM ===== */
+.completion-section {
+  @include glass-card;
+  padding: 2rem;
+
+  .section-header {
+    margin-bottom: 2rem;
+
+    h4 {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      margin-bottom: 0.5rem;
-      
-      .status-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        
-        &.status-active {
-          background-color: rgba($color-success, 0.1);
-          color: $color-success;
-        }
-        
-        &.status-inactive {
-          background-color: rgba($color-text-tertiary, 0.1);
-          color: $color-text-tertiary;
-        }
-        
-        &.status-blocked {
-          background-color: rgba($color-error, 0.1);
-          color: $color-error;
-        }
-        
-        mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-        }
-      }
-      
-      .status-info {
-        flex: 1;
-        
-        .status-name {
-          font-weight: 500;
-          margin-bottom: 0.25rem;
-        }
-        
-        .status-count {
-          font-size: $font-size-xs;
-          color: $color-text-secondary;
-        }
-      }
-      
-      .status-percentage {
-        font-size: $font-size-sm;
-        font-weight: 500;
-        color: $color-text-primary;
+      margin: 0;
+      color: $text-primary;
+      font-size: 1.3rem;
+      font-weight: 600;
+
+      i {
+        color: $contest-theme-color;
+        font-size: 1.2rem;
       }
     }
-    
-    mat-progress-bar {
-      height: 6px;
-      border-radius: 3px;
-      overflow: hidden;
-      
-      &.status-active ::ng-deep .mat-progress-bar-fill::after {
-        background-color: $color-success;
+  }
+
+  .completion-card {
+    @include glass-card-dark;
+    padding: 2rem;
+    border-radius: $border-radius-lg;
+
+    .completion-visual {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3rem;
+
+      .completion-circle {
+        flex-shrink: 0;
+
+        .circle-progress {
+          position: relative;
+          width: 150px;
+          height: 150px;
+          border-radius: 50%;
+          background: conic-gradient(
+            $contest-theme-color 0deg,
+            $contest-theme-color calc(var(--progress) * 3.6deg),
+            rgba(75, 85, 99, 0.3) calc(var(--progress) * 3.6deg),
+            rgba(75, 85, 99, 0.3) 360deg
+          );
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          .circle-inner {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            @include glass-card;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+
+            .percentage-text {
+              font-size: 2rem;
+              font-weight: 700;
+              color: $text-primary;
+              line-height: 1;
+            }
+
+            .percentage-label {
+              font-size: 0.8rem;
+              color: $text-secondary;
+              font-weight: 500;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              margin-top: 0.25rem;
+            }
+          }
+        }
       }
-      
-      &.status-inactive ::ng-deep .mat-progress-bar-fill::after {
-        background-color: $color-text-tertiary;
-      }
-      
-      &.status-blocked ::ng-deep .mat-progress-bar-fill::after {
-        background-color: $color-error;
+
+      .completion-legend {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          padding: 1rem;
+          @include glass-card;
+          border-radius: $border-radius-md;
+          transition: all $transition-fast $transition-timing;
+
+          &:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+          }
+
+          .legend-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+          }
+
+          .legend-info {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .legend-label {
+              font-size: 0.9rem;
+              color: $text-secondary;
+              font-weight: 500;
+            }
+
+            .legend-value {
+              font-size: 1.1rem;
+              font-weight: 600;
+              color: $text-primary;
+            }
+          }
+
+          &.complete {
+            .legend-indicator {
+              background: $contest-theme-color;
+              box-shadow: 0 0 12px rgba(76, 175, 80, 0.4);
+            }
+          }
+
+          &.incomplete {
+            .legend-indicator {
+              background: #f59e0b;
+              box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+            }
+          }
+        }
       }
     }
   }
 }
 
-// Distribución de documentos
+/* ===== GRID DE ESTADÍSTICAS DETALLADAS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.stats-detail-card {
+  @include glass-card;
+  overflow: hidden;
+  transition: all $transition-duration $transition-timing;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-header {
+    padding: 1.5rem 1.5rem 0;
+    border-bottom: 1px solid rgba(249, 250, 251, 0.1);
+    margin-bottom: 1.5rem;
+
+    h5 {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0;
+      color: $text-primary;
+      font-size: 1.1rem;
+      font-weight: 600;
+
+      i {
+        color: $contest-theme-color;
+        font-size: 1rem;
+      }
+    }
+  }
+
+  .card-content {
+    padding: 0 1.5rem 1.5rem;
+  }
+}
+
+/* ===== DISTRIBUCIONES GLASSMORPHISM ===== */
+.status-distribution,
 .document-distribution,
 .title-distribution {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  
+  gap: 1.5rem;
+
+  .status-item,
   .document-item,
   .title-item {
+    .status-header,
     .document-header,
     .title-header {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-      
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+
+      .status-icon,
       .document-icon,
       .title-icon {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
-        background-color: rgba($color-primary, 0.1);
-        color: $color-primary;
-        
-        mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-        }
-      }
-      
-      .document-info,
-      .title-info {
-        flex: 1;
-        
-        .document-name,
-        .title-name {
-          font-weight: 500;
-          margin-bottom: 0.25rem;
-        }
-        
-        .document-count,
-        .title-count {
-          font-size: $font-size-xs;
-          color: $color-text-secondary;
-        }
-      }
-      
-      .document-percentage,
-      .title-percentage {
-        font-size: $font-size-sm;
-        font-weight: 500;
-        color: $color-text-primary;
-      }
-    }
-    
-    mat-progress-bar {
-      height: 6px;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-  }
-}
+        transition: all $transition-fast $transition-timing;
 
-// Media queries para responsive
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .completion-legend {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
+        i {
+          font-size: 1rem;
+        }
+      }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .loading-container {
-    mat-icon {
-      color: $color-text-tertiary-dark;
-    }
-    
-    p {
-      color: $color-text-secondary-dark;
-    }
-  }
-  
-  .stats-card,
-  .completion-section,
-  .stats-detail-card {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .stats-card {
-    .stats-data {
-      .stats-value {
-        color: $color-text-primary-dark;
-      }
-      
-      .stats-label {
-        color: $color-text-secondary-dark;
-      }
-    }
-  }
-  
-  h4 {
-    color: $color-text-primary-dark !important;
-  }
-  
-  .completion-legend {
-    .legend-item {
-      .legend-label {
-        color: $color-text-secondary-dark;
-      }
-      
-      .legend-value {
-        color: $color-text-primary-dark;
-      }
-    }
-  }
-  
-  .status-distribution,
-  .document-distribution,
-  .title-distribution {
-    .status-item,
-    .document-item,
-    .title-item {
       .status-info,
       .document-info,
       .title-info {
+        flex: 1;
+
+        .status-name,
+        .document-name,
+        .title-name {
+          font-weight: 600;
+          color: $text-primary;
+          margin-bottom: 0.25rem;
+          font-size: 0.95rem;
+        }
+
         .status-count,
         .document-count,
         .title-count {
-          color: $color-text-secondary-dark;
+          font-size: 0.8rem;
+          color: $text-secondary;
+          font-weight: 500;
         }
       }
-      
+
       .status-percentage,
       .document-percentage,
       .title-percentage {
-        color: $color-text-primary-dark;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: $text-primary;
+        min-width: 50px;
+        text-align: right;
       }
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(75, 85, 99, 0.3);
+      overflow: hidden;
+      position: relative;
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.8s ease-out;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          animation: shimmer 2s infinite;
+        }
+      }
+
+      &.status-active .progress-fill {
+        background: linear-gradient(90deg, $contest-theme-color, rgba(76, 175, 80, 0.8));
+      }
+
+      &.status-inactive .progress-fill {
+        background: linear-gradient(90deg, #6b7280, rgba(107, 114, 128, 0.8));
+      }
+
+      &.status-blocked .progress-fill {
+        background: linear-gradient(90deg, #ef4444, rgba(239, 68, 68, 0.8));
+      }
+
+      &.document .progress-fill {
+        background: linear-gradient(90deg, #3b82f6, rgba(59, 130, 246, 0.8));
+      }
+
+      &.professional .progress-fill {
+        background: linear-gradient(90deg, $contest-theme-color, rgba(76, 175, 80, 0.8));
+      }
+    }
+  }
+
+  // Iconos específicos por estado
+  .status-item {
+    .status-icon {
+      &.status-active {
+        background: rgba(76, 175, 80, 0.15);
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        color: $contest-theme-color;
+      }
+
+      &.status-inactive {
+        background: rgba(107, 114, 128, 0.15);
+        border: 1px solid rgba(107, 114, 128, 0.3);
+        color: #6b7280;
+      }
+
+      &.status-blocked {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+      }
+    }
+  }
+
+  // Iconos para documentos
+  .document-item {
+    .document-icon {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #3b82f6;
+    }
+  }
+
+  // Iconos para títulos profesionales
+  .title-item {
+    .title-icon {
+      background: rgba(76, 175, 80, 0.15);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      color: $contest-theme-color;
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  }
+
+  .completion-visual {
+    gap: 2rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-stats-container {
+    padding: 0.5rem 0;
+  }
+
+  .stats-summary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .completion-section {
+    padding: 1.5rem;
+
+    .completion-card {
+      padding: 1.5rem;
+
+      .completion-visual {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+
+        .completion-circle {
+          align-self: center;
+
+          .circle-progress {
+            width: 120px;
+            height: 120px;
+
+            .circle-inner {
+              width: 90px;
+              height: 90px;
+
+              .percentage-text {
+                font-size: 1.5rem;
+              }
+
+              .percentage-label {
+                font-size: 0.7rem;
+              }
+            }
+          }
+        }
+
+        .completion-legend {
+          gap: 1rem;
+        }
+      }
+    }
+  }
+
+  .stats-detail-card {
+    .card-header {
+      padding: 1rem 1rem 0;
+
+      h5 {
+        font-size: 1rem;
+      }
+    }
+
+    .card-content {
+      padding: 0 1rem 1rem;
+    }
+  }
+
+  .status-distribution,
+  .document-distribution,
+  .title-distribution {
+    gap: 1rem;
+
+    .status-item,
+    .document-item,
+    .title-item {
+      .status-header,
+      .document-header,
+      .title-header {
+        gap: 0.75rem;
+
+        .status-icon,
+        .document-icon,
+        .title-icon {
+          width: 36px;
+          height: 36px;
+
+          i {
+            font-size: 0.9rem;
+          }
+        }
+
+        .status-info,
+        .document-info,
+        .title-info {
+          .status-name,
+          .document-name,
+          .title-name {
+            font-size: 0.9rem;
+          }
+
+          .status-count,
+          .document-count,
+          .title-count {
+            font-size: 0.75rem;
+          }
+        }
+
+        .status-percentage,
+        .document-percentage,
+        .title-percentage {
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-card {
+    .card-content {
+      padding: 1.5rem;
+      gap: 1rem;
+    }
+
+    .stats-icon {
+      width: 50px;
+      height: 50px;
+
+      i {
+        font-size: 1.2rem;
+      }
+    }
+
+    .stats-data {
+      .stats-value {
+        font-size: 2rem;
+      }
+
+      .stats-label {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .completion-visual {
+    .completion-circle {
+      .circle-progress {
+        width: 100px;
+        height: 100px;
+
+        .circle-inner {
+          width: 75px;
+          height: 75px;
+
+          .percentage-text {
+            font-size: 1.2rem;
+          }
+
+          .percentage-label {
+            font-size: 0.6rem;
+          }
+        }
+      }
+    }
+  }
+
+  .no-stats-content {
+    padding: 2rem 1.5rem;
+
+    .no-stats-icon {
+      font-size: 3rem;
+    }
+
+    h4 {
+      font-size: 1.1rem;
+    }
+
+    p {
+      font-size: 0.9rem;
     }
   }
 }

@@ -1,16 +1,19 @@
 <div class="roles-admin-container">
+  <!-- Header -->
   <div class="header">
     <h1>Gestión de Roles y Permisos</h1>
     <div class="header-actions">
       <app-custom-button
         [label]="'Nuevo Rol'"
         [icon]="'plus'"
-        (buttonClick)="openRoleFormDialog()">
+        [color]="'primary'"
+        (buttonClick)="openCreateRoleDialog()">
       </app-custom-button>
     </div>
   </div>
 
-  <app-custom-card [elevated]="true">
+  <!-- Filtros -->
+  <app-custom-card [elevated]="true" class="filters-card">
     <form [formGroup]="filterForm" class="filter-form">
       <div class="filter-row">
         <app-custom-form-field
@@ -23,11 +26,9 @@
         <app-custom-select
           [label]="'Tipo'"
           [formControl]="$any(filterForm.get('isSystem'))"
-          [options]="[
-            { value: '', label: 'Todos' },
-            { value: true, label: 'Sistema' },
-            { value: false, label: 'Personalizados' }
-          ]">
+          [options]="tipoOptions"
+          class="filter-select-dropdown-fix"
+          appDropdownOverflowFix>
         </app-custom-select>
 
         <div class="filter-actions">
@@ -42,99 +43,198 @@
     </form>
   </app-custom-card>
 
-  <app-custom-table
-    [data]="dataSource"
-    [columns]="tableColumns"
-    [loading]="isLoading"
-    [paginated]="true"
-    [pageSize]="pageSize"
-    [pageIndex]="pageIndex"
-    [totalItems]="totalItems"
-    [pageSizeOptions]="pageSizeOptions"
-    [emptyMessage]="'No se encontraron roles con los filtros aplicados'"
-    [rowClickable]="true"
-    (rowClick)="openRoleDetailDialog($any($event))"
-    (sortChange)="onSortChange($event)"
-    (pageChange)="onPageChange($event)">
+  <!-- Tabla de Roles -->
+  <div class="table-card">
+    <div class="card-header">
+      <h3>
+        <i class="fas fa-users-cog"></i>
+        Listado de Roles
+      </h3>
+      <span class="results-count" *ngIf="totalRoles > 0">
+        {{ totalRoles }} resultados
+      </span>
+    </div>
 
-    <!-- Columna Nombre -->
-    <app-custom-table-column property="name" header="Nombre" [sortable]="true">
-      <ng-template let-role>
-        <div class="role-name">
-          <span>{{role.name}}</span>
-          <i *ngIf="role.isSystem"
-             class="fas fa-shield-alt system-icon"
-             title="Rol del sistema"></i>
-        </div>
-      </ng-template>
-    </app-custom-table-column>
+    <!-- Tabla nativa HTML -->
+    <div class="custom-table-container">
+      <!-- Estado de carga -->
+      <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+        <span>Cargando roles...</span>
+      </div>
 
-    <!-- Columna Descripción -->
-    <app-custom-table-column property="description" header="Descripción" [sortable]="true">
-      <ng-template let-role>
-        {{role.description}}
-      </ng-template>
-    </app-custom-table-column>
-
-    <!-- Columna Permisos -->
-    <app-custom-table-column property="permissions" header="Permisos">
-      <ng-template let-role>
+      <!-- Estado vacío -->
+      <div *ngIf="!isLoading && (!roles || roles.length === 0)" class="empty-state">
+        <i class="fas fa-users-slash"></i>
+        <h3>No se encontraron roles</h3>
+        <p>No hay roles que coincidan con los filtros aplicados.</p>
         <app-custom-button
-          [label]="'Ver permisos'"
-          [variant]="'stroked'"
-          (buttonClick)="openRoleDetailDialog(role); $event.stopPropagation()">
-          <span class="permission-badge">{{getPermissionCount(role)}}</span>
+          [label]="'Crear Primer Rol'"
+          [icon]="'plus'"
+          [color]="'primary'"
+          (buttonClick)="openCreateRoleDialog()">
         </app-custom-button>
-      </ng-template>
-    </app-custom-table-column>
+      </div>
 
-    <!-- Columna Usuarios -->
-    <app-custom-table-column property="userCount" header="Usuarios" [sortable]="true">
-      <ng-template let-role>
-        <span class="user-count" [ngClass]="{'has-users': role.userCount > 0}">
-          {{role.userCount || 0}}
-        </span>
-      </ng-template>
-    </app-custom-table-column>
+      <!-- Tabla de roles -->
+      <div class="table-scroll-container">
+        <table *ngIf="!isLoading && roles && roles.length > 0" class="custom-table">
+          <thead>
+            <tr>
+              <th class="col-nombre">
+                <div class="header-cell">
+                  Nombre
+                </div>
+              </th>
+              <th class="col-descripcion">
+                <div class="header-cell">
+                  Descripción
+                </div>
+              </th>
+              <th class="col-permisos">
+                <div class="header-cell">
+                  Permisos
+                </div>
+              </th>
+              <th class="col-usuarios">
+                <div class="header-cell">
+                  Usuarios
+                </div>
+              </th>
+              <th class="col-tipo">
+                <div class="header-cell">
+                  Tipo
+                </div>
+              </th>
+              <th class="col-acciones">
+                <div class="header-cell">
+                  Acciones
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let role of roles" class="clickable" (click)="openRoleDetailDialog(role)">
+              <!-- Columna Nombre -->
+              <td class="col-nombre">
+                <div class="role-name">
+                  <span class="role-name-text">{{ role.name }}</span>
+                  <i *ngIf="role.isSystem" 
+                     class="fas fa-shield-alt system-icon" 
+                     title="Rol del sistema"></i>
+                </div>
+              </td>
 
-    <!-- Columna Tipo -->
-    <app-custom-table-column property="isSystem" header="Tipo" [sortable]="true">
-      <ng-template let-role>
-        <span class="role-type" [ngClass]="{'system-role': role.isSystem, 'custom-role': !role.isSystem}">
-          {{role.isSystem ? 'Sistema' : 'Personalizado'}}
-        </span>
-      </ng-template>
-    </app-custom-table-column>
+              <!-- Columna Descripción -->
+              <td class="col-descripcion">
+                <div class="truncate-with-tooltip" [attr.data-full-text]="role.description">
+                  {{ role.description }}
+                </div>
+              </td>
 
-    <!-- Columna Acciones -->
-    <app-custom-table-column property="actions" header="Acciones">
-      <ng-template let-role>
-        <div class="action-buttons">
-          <app-custom-button
-            [icon]="'eye'"
-            [variant]="'icon'"
-            (buttonClick)="openRoleDetailDialog(role); $event.stopPropagation()"
-            title="Ver detalles">
-          </app-custom-button>
+              <!-- Columna Permisos -->
+              <td class="col-permisos">
+                <div class="permissions-display">
+                  <!-- Mostrar primeros 3 permisos como badges -->
+                  <div class="permission-badges" *ngIf="role.permissions && role.permissions.length > 0">
+                    <span 
+                      *ngFor="let permission of role.permissions.slice(0, 3)" 
+                      class="permission-badge"
+                      [title]="permission.description">
+                      {{ permission.name }}
+                    </span>
+                    <!-- Indicador de más permisos -->
+                    <span 
+                      *ngIf="role.permissions.length > 3" 
+                      class="permission-badge more-permissions"
+                      [title]="'Ver todos los permisos (' + role.permissions.length + ' total)'">
+                      +{{ role.permissions.length - 3 }} más
+                    </span>
+                  </div>
+                  <!-- Mensaje cuando no hay permisos -->
+                  <span *ngIf="!role.permissions || role.permissions.length === 0" class="no-permissions">
+                    Sin permisos asignados
+                  </span>
+                </div>
+              </td>
 
-          <app-custom-button
-            [icon]="'edit'"
-            [variant]="'icon'"
-            [disabled]="role.isSystem"
-            (buttonClick)="openRoleFormDialog(role); $event.stopPropagation()"
-            title="Editar">
-          </app-custom-button>
+              <!-- Columna Usuarios -->
+              <td class="col-usuarios">
+                <span class="user-count" [ngClass]="{'has-users': role.userCount && role.userCount > 0}">
+                  {{ role.userCount || 0 }}
+                </span>
+              </td>
 
-          <app-custom-button
-            [icon]="'trash'"
-            [variant]="'icon'"
-            [color]="'warn'"
-            [disabled]="role.isSystem || (role.userCount && role.userCount > 0)"
-            (buttonClick)="deleteRole(role); $event.stopPropagation()"
-            title="Eliminar">
-          </app-custom-button>
-        </div>
-      </ng-template>
-    </app-custom-table-column>
-  </app-custom-table>
+              <!-- Columna Tipo -->
+              <td class="col-tipo">
+                <span class="role-type" [ngClass]="getRoleTypeClass(role.isSystem)">
+                  {{ getRoleTypeLabel(role.isSystem) }}
+                </span>
+              </td>
+
+              <!-- Columna Acciones -->
+              <td class="col-acciones">
+                <div class="action-buttons">
+                  <!-- Botón Ver -->
+                  <app-custom-button
+                    [icon]="'eye'"
+                    [variant]="'icon'"
+                    [color]="'primary'"
+                    (buttonClick)="openRoleDetailDialog(role); $event.stopPropagation()"
+                    [title]="'Ver detalles del rol'">
+                  </app-custom-button>
+
+                  <!-- Botón Editar -->
+                  <app-custom-button
+                    [icon]="'edit'"
+                    [variant]="'icon'"
+                    [color]="'success'"
+                    [disabled]="role.isSystem"
+                    (buttonClick)="openEditRoleDialog(role, $event)"
+                    [title]="role.isSystem ? 'No se pueden editar roles del sistema' : 'Editar rol'">
+                  </app-custom-button>
+
+                  <!-- Botón Eliminar -->
+                  <app-custom-button
+                    [icon]="'trash'"
+                    [variant]="'icon'"
+                    [color]="'danger'"
+                    [disabled]="role.isSystem || !!(role.userCount && role.userCount > 0)"
+                    (buttonClick)="deleteRole(role, $event)"
+                    [title]="getDeleteButtonTitle(role)">
+                  </app-custom-button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div *ngIf="!isLoading && roles && roles.length > 0" class="pagination-container">
+      <div class="pagination-info">
+        Mostrando {{ (pageIndex * pageSize) + 1 }} - {{ Math.min((pageIndex + 1) * pageSize, totalRoles) }} de {{ totalRoles }} roles
+      </div>
+      <div class="pagination-controls">
+        <app-custom-button
+          [icon]="'chevron-left'"
+          [variant]="'icon'"
+          [disabled]="pageIndex === 0"
+          (buttonClick)="onPageChange({pageIndex: pageIndex - 1, pageSize: pageSize})"
+          title="Página anterior">
+        </app-custom-button>
+        
+        <span class="page-info">{{ pageIndex + 1 }} / {{ Math.ceil(totalRoles / pageSize) }}</span>
+        
+        <app-custom-button
+          [icon]="'chevron-right'"
+          [variant]="'icon'"
+          [disabled]="(pageIndex + 1) * pageSize >= totalRoles"
+          (buttonClick)="onPageChange({pageIndex: pageIndex + 1, pageSize: pageSize})"
+          title="Página siguiente">
+        </app-custom-button>
+      </div>
+    </div>
+  </div>
 </div>

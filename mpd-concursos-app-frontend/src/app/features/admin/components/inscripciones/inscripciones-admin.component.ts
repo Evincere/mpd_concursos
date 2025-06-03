@@ -4,16 +4,14 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angul
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTable, MatTableModule } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from  '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
+// Servicios personalizados (reemplazan Material UI)
+import { CustomDialogService } from '@shared/components/custom-dialog/custom-dialog.service';
+import { CustomNotificationService } from '@shared/services/custom-notification.service';
 
 // Componentes personalizados
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
-import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { CustomConfirmDialogComponent } from '@shared/components/custom-confirm-dialog/custom-confirm-dialog.component';
 import { CustomInscriptionsTableComponent } from './components/custom-inscriptions-table/custom-inscriptions-table.component';
 import { CustomInscriptionDetailComponent } from './components/custom-inscription-detail/custom-inscription-detail.component';
 import { CustomDocumentViewerComponent } from './components/custom-document-viewer/custom-document-viewer.component';
@@ -37,14 +35,10 @@ import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enu
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
+    // Componentes personalizados (sin Material UI)
     CustomButtonComponent,
     CustomCardComponent,
-    ConfirmDialogComponent,
+    CustomConfirmDialogComponent,
     CustomInscriptionsTableComponent,
     CustomInscriptionDetailComponent,
     CustomDocumentViewerComponent
@@ -83,10 +77,8 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
   isLoading = false;
   activeTab = 0;
 
-  // ViewChild para tabla y paginación
-  @ViewChild(MatTable) table!: MatTable<AdminInscription>;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  // Estado de ordenamiento (reemplaza MatSort)
+  currentSort: { property: string, direction: 'asc' | 'desc' } = { property: 'id', direction: 'desc' };
 
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
@@ -95,8 +87,8 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private inscripcionesService: AdminInscriptionsService,
     private concursosService: AdminConcursosService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
+    private customDialogService: CustomDialogService,
+    private customNotificationService: CustomNotificationService,
     private notificationService: NotificationService,
     private route: ActivatedRoute
   ) {
@@ -195,8 +187,8 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
       endDate: this.filterForm.get('endDate')?.value,
       page: this.pageIndex,
       size: this.pageSize,
-      sort: this.sort?.active,
-      direction: this.sort?.direction as 'asc' | 'desc'
+      sort: this.currentSort.property,
+      direction: this.currentSort.direction
     };
 
     this.inscripcionesService.getInscriptions(filters)
@@ -209,7 +201,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando inscripciones:', error);
-          this.snackBar.open('Error al cargar las inscripciones', 'Cerrar', { duration: 3000 });
+          this.customNotificationService.showError('Error al cargar las inscripciones');
           this.isLoading = false;
         }
       });
@@ -223,6 +215,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
 
   onSortChange(sort: { property: string, direction: 'asc' | 'desc' }): void {
     // Actualizar el ordenamiento según los valores de sort.property y sort.direction
+    this.currentSort = sort;
     console.log('Ordenando por:', sort.property, 'en dirección:', sort.direction);
     this.loadInscripciones();
   }
@@ -241,14 +234,13 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
   }
 
   viewInscripcion(inscripcion: AdminInscription): void {
-    const dialogRef = this.dialog.open(InscripcionDetalleAdminComponent, {
+    const dialogRef = this.customDialogService.open(InscripcionDetalleAdminComponent, {
       width: '90%',
-      maxWidth: '1200px',
       height: '90%',
       data: { inscriptionId: inscripcion.id }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
         this.loadInscripciones();
       }
@@ -263,19 +255,18 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
         InscripcionState.ACTIVE) :
       newStatus;
 
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+    const dialogRef = this.customDialogService.open(CustomConfirmDialogComponent, {
       width: '400px',
       data: {
         title: `Cambiar Estado de Inscripción`,
         message: `¿Está seguro que desea cambiar el estado de la inscripción a "${this.getStatusLabel(status)}"?`,
-        confirmText: 'Cambiar Estado',
-        cancelText: 'Cancelar',
-        showTextarea: true,
-        textareaLabel: 'Observaciones (opcional)'
+        confirmButtonText: 'Cambiar Estado',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: 'primary'
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
         this.isLoading = true;
         this.inscripcionesService.updateInscriptionStatus(inscripcion.id, {
@@ -286,11 +277,11 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               this.loadInscripciones();
-              this.snackBar.open(`Estado de inscripción cambiado a ${this.getStatusLabel(status)}`, 'Cerrar', { duration: 3000 });
+              this.customNotificationService.showSuccess(`Estado de inscripción cambiado a ${this.getStatusLabel(status)}`);
             },
             error: (error) => {
               console.error('Error cambiando estado de inscripción:', error);
-              this.snackBar.open('Error al cambiar el estado de la inscripción', 'Cerrar', { duration: 3000 });
+              this.customNotificationService.showError('Error al cambiar el estado de la inscripción');
               this.isLoading = false;
             }
           });

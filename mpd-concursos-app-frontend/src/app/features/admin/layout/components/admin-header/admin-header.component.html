@@ -12,10 +12,15 @@
       ></app-custom-button>
     </div>
 
-    <!-- Título de la sección (se puede hacer dinámico basado en la ruta actual) -->
-    <h1 class="header-title">Panel de Administración</h1>
+    <!-- Título de la sección con icono -->
+    <div class="header-title-container">
+      <div class="title-icon">
+        <i class="fas fa-user-shield"></i>
+      </div>
+      <h1 class="header-title">Panel de Administración</h1>
+    </div>
 
-    <!-- El botón para volver al área de usuario ahora está en el indicador de sección -->
+
   </div>
 
   <div class="header-right">
@@ -61,10 +66,6 @@
     </div>
 
     <app-custom-menu #userMenu [xPosition]="'before'">
-      <app-custom-menu-item icon="home" routerLink="/dashboard">
-        Ir al Dashboard Principal
-      </app-custom-menu-item>
-      <app-custom-divider></app-custom-divider>
       <app-custom-menu-item icon="person" routerLink="/admin/perfil">
         Mi Perfil
       </app-custom-menu-item>

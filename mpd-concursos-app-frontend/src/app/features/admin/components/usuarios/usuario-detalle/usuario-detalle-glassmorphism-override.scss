@@ -1,0 +1,257 @@
+// === OVERRIDE GLASSMORPHISM FORZADO PARA DETALLES DE USUARIO ===
+// Este archivo fuerza los estilos glassmorphism con máxima especificidad para el diálogo de detalles
+
+// Variables glassmorphism
+$glass-background: rgba(55, 65, 81, 0.8);
+$glass-background-dark: rgba(55, 65, 81, 0.9);
+$glass-background-light: rgba(55, 65, 81, 0.6);
+$glass-border: rgba(249, 250, 251, 0.1);
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$focus-color: #3b82f6;
+$success-color: #4CAF50;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+$info-color: #06b6d4;
+
+// === DIÁLOGO GLASSMORPHISM FORZADO ===
+html body app-usuario-detalle,
+html body .app-usuario-detalle,
+html body .usuario-detalle-container {
+  
+  // Fondo del diálogo principal
+  app-custom-dialog .dialog-container {
+    background: $glass-background-dark !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid $glass-border !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  // Header del usuario glassmorphism
+  .user-header {
+    background: $glass-background !important;
+    background-image: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      rgba(255, 255, 255, 0.05) 100%) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid $glass-border !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+    color: $text-primary !important;
+  }
+  
+  .user-header:hover {
+    background: $glass-background-dark !important;
+    border-color: rgba(249, 250, 251, 0.15) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18) !important;
+  }
+  
+  // Avatar del usuario
+  .user-avatar i {
+    color: $focus-color !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  // Información del usuario
+  .user-info h2 {
+    color: $text-primary !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .user-dni {
+    color: $text-secondary !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  // Estados del usuario glassmorphism
+  .user-status.estado-activo {
+    background: rgba($success-color, 0.15) !important;
+    color: $success-color !important;
+    border: 1px solid rgba($success-color, 0.3) !important;
+    backdrop-filter: blur(4px) !important;
+    border-radius: 8px !important;
+  }
+  
+  .user-status.estado-inactivo {
+    background: rgba($warning-color, 0.15) !important;
+    color: $warning-color !important;
+    border: 1px solid rgba($warning-color, 0.3) !important;
+    backdrop-filter: blur(4px) !important;
+    border-radius: 8px !important;
+  }
+  
+  .user-status.estado-bloqueado {
+    background: rgba($danger-color, 0.15) !important;
+    color: $danger-color !important;
+    border: 1px solid rgba($danger-color, 0.3) !important;
+    backdrop-filter: blur(4px) !important;
+    border-radius: 8px !important;
+  }
+  
+  // Tarjetas personalizadas glassmorphism
+  app-custom-card .custom-card {
+    background: $glass-background !important;
+    background-image: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      rgba(255, 255, 255, 0.05) 100%) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid $glass-border !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  app-custom-card .custom-card:hover {
+    background: $glass-background-dark !important;
+    border-color: rgba(249, 250, 251, 0.15) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18) !important;
+  }
+  
+  // Headers de las tarjetas
+  app-custom-card .card-header {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(249, 250, 251, 0.1) !important;
+  }
+  
+  app-custom-card .card-title {
+    color: $text-primary !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  app-custom-card .card-title i {
+    color: $focus-color !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  // Contenido de las tarjetas
+  app-custom-card .card-content {
+    background: transparent !important;
+  }
+  
+  // Items de detalle
+  .detail-label {
+    color: $text-secondary !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  .detail-value {
+    color: $text-primary !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .detail-value a {
+    color: $focus-color !important;
+  }
+  
+  .detail-value a:hover {
+    color: lighten($focus-color, 10%) !important;
+    background: rgba($focus-color, 0.1) !important;
+  }
+  
+  .no-data {
+    color: #9ca3af !important;
+    opacity: 0.8 !important;
+  }
+  
+  // Badges de roles glassmorphism
+  .role-badge {
+    background: rgba($focus-color, 0.15) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba($focus-color, 0.3) !important;
+    color: $focus-color !important;
+    border-radius: 8px !important;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .role-badge:hover {
+    background: rgba($focus-color, 0.25) !important;
+    border-color: rgba($focus-color, 0.5) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  // Colores semánticos para roles
+  .role-badge[data-role*="admin"],
+  .role-badge[data-role*="ADMIN"] {
+    background: rgba($danger-color, 0.15) !important;
+    border-color: rgba($danger-color, 0.3) !important;
+    color: $danger-color !important;
+  }
+  
+  .role-badge[data-role*="moderator"],
+  .role-badge[data-role*="MODERATOR"] {
+    background: rgba($success-color, 0.15) !important;
+    border-color: rgba($success-color, 0.3) !important;
+    color: $success-color !important;
+  }
+  
+  .role-badge[data-role*="editor"],
+  .role-badge[data-role*="EDITOR"] {
+    background: rgba($warning-color, 0.15) !important;
+    border-color: rgba($warning-color, 0.3) !important;
+    color: $warning-color !important;
+  }
+  
+  .role-badge[data-role*="viewer"],
+  .role-badge[data-role*="VIEWER"] {
+    background: rgba($info-color, 0.15) !important;
+    border-color: rgba($info-color, 0.3) !important;
+    color: $info-color !important;
+  }
+  
+  // Botón de editar glassmorphism
+  .user-actions app-custom-button .custom-button {
+    background: rgba($success-color, 0.15) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba($success-color, 0.3) !important;
+    border-radius: 8px !important;
+    color: $success-color !important;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+  
+  .user-actions app-custom-button .custom-button:hover {
+    background: rgba($success-color, 0.25) !important;
+    border-color: rgba($success-color, 0.5) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  // Loading container glassmorphism
+  .loading-container {
+    background: $glass-background !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid $glass-border !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  }
+  
+  .loading-container p {
+    color: $text-secondary !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .spinner {
+    border-color: rgba($focus-color, 0.2) !important;
+    border-top-color: $focus-color !important;
+  }
+  
+  // Error message glassmorphism
+  .error-message {
+    background: rgba($danger-color, 0.15) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba($danger-color, 0.3) !important;
+    color: $danger-color !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+  }
+}

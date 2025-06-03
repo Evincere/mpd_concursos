@@ -100,6 +100,7 @@
               <a
                 [routerLink]="item.children ? null : item.route"
                 [routerLinkActive]="item.children ? '' : 'active'"
+                [routerLinkActiveOptions]="{ exact: true }"
                 [class.has-children]="item.children"
                 (click)="item.children ? (item.expanded = !item.expanded) : null">
                 <i class="fas fa-{{item.icon}} nav-icon" aria-hidden="true"></i>
@@ -136,7 +137,8 @@
                   <li *ngFor="let child of item.children" class="submenu-item">
                     <a
                       [routerLink]="child.route"
-                      routerLinkActive="active">
+                      routerLinkActive="active"
+                      [routerLinkActiveOptions]="{ exact: true }">
                       <i class="fas fa-{{child.icon}} submenu-icon" aria-hidden="true"></i>
                       <span class="submenu-label">{{child.label}}</span>
 
@@ -172,6 +174,7 @@
         <a
           [routerLink]="item.children ? null : item.route"
           [routerLinkActive]="item.children ? '' : 'active'"
+          [routerLinkActiveOptions]="{ exact: true }"
           [class.has-children]="item.children"
           (click)="toggleSubMenu(item, $event)"
           [appTooltip]="collapsed && !item.children ? item.label : ''"
@@ -191,6 +194,7 @@
               <a
                 [routerLink]="child.route"
                 routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
               >
                 <i class="fas fa-{{child.icon}} submenu-icon"></i>
                 <span class="submenu-label">{{child.label}}</span>
@@ -217,6 +221,7 @@
         <a
           [routerLink]="item.route"
           routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
           (click)="activeFloatingModule = null">
           <i class="fas fa-{{item.icon}} floating-icon" aria-hidden="true"></i>
           <span class="floating-label">{{item.label}}</span>
@@ -240,7 +245,7 @@
     </div>
     <ul class="floating-menu-list">
       <li *ngFor="let child of activeFloatingMenu.children" class="floating-menu-item">
-        <a [routerLink]="child.route" routerLinkActive="active" (click)="closeFloatingMenu()">
+        <a [routerLink]="child.route" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeFloatingMenu()">
           <i class="fas fa-{{child.icon}} floating-menu-item-icon"></i>
           <span class="floating-menu-item-label">{{child.label}}</span>
         </a>

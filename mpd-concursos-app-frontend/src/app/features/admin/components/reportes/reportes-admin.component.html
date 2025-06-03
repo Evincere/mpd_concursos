@@ -1,460 +1,656 @@
-<div class="container">
-  <div class="header">
-    <h1>Reportes y Estadísticas</h1>
-    <div class="export-options">
-      <mat-form-field appearance="outline" class="export-format-select">
-        <mat-label>Formato</mat-label>
-        <mat-select [(ngModel)]="selectedExportFormat">
-          <mat-option value="excel">Excel (.xlsx)</mat-option>
-          <mat-option value="csv">CSV (.csv)</mat-option>
-          <mat-option value="pdf">PDF (.pdf)</mat-option>
-        </mat-select>
-      </mat-form-field>
-      <button mat-raised-button color="primary" (click)="exportarReporte(selectedExportFormat)" [disabled]="isLoading">
-        <mat-icon>download</mat-icon>
-        Exportar
+﻿<!-- REPORTES PREDEFINIDOS -->
+<div *ngIf="!isDashboardMode" class="reportes-predefinidos">
+  <!-- Header Premium Glassmorphism -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-file-alt"></i>
+        Reportes Predefinidos
+      </h1>
+      <p>Acceso rápido a reportes estándar del sistema con plantillas preconfiguradas</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary" (click)="navigateToReportBuilder()">
+        <i class="fas fa-plus"></i>
+        <span>Crear Personalizado</span>
       </button>
     </div>
   </div>
 
   <!-- Indicador de carga -->
   <div *ngIf="isLoading" class="loading-overlay">
-    <mat-spinner diameter="50"></mat-spinner>
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <span>Generando reporte...</span>
+  </div>
+
+  <!-- Sección de Reportes Rápidos -->
+  <div class="quick-reports-section">
+    <div class="section-header">
+      <h2>
+        <i class="fas fa-bolt"></i>
+        Reportes Rápidos
+      </h2>
+      <p>Reportes más utilizados con un solo clic</p>
+    </div>
+
+    <div class="quick-reports-grid">
+      <div class="quick-report-card" (click)="generateQuickReport('inscripciones-pendientes')">
+        <div class="report-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="report-info">
+          <h3>Inscripciones Pendientes</h3>
+          <p>Lista de inscripciones que requieren revisión</p>
+          <span class="report-count">{{getQuickReportCount('pendientes')}} registros</span>
+        </div>
+        <div class="report-action">
+          <i class="fas fa-download"></i>
+        </div>
+      </div>
+
+      <div class="quick-report-card" (click)="generateQuickReport('usuarios-activos')">
+        <div class="report-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="report-info">
+          <h3>Usuarios Activos</h3>
+          <p>Listado completo de usuarios activos del sistema</p>
+          <span class="report-count">{{getQuickReportCount('activos')}} registros</span>
+        </div>
+        <div class="report-action">
+          <i class="fas fa-download"></i>
+        </div>
+      </div>
+
+      <div class="quick-report-card" (click)="generateQuickReport('concursos-vigentes')">
+        <div class="report-icon">
+          <i class="fas fa-gavel"></i>
+        </div>
+        <div class="report-info">
+          <h3>Concursos Vigentes</h3>
+          <p>Concursos activos y próximos a iniciar</p>
+          <span class="report-count">{{getQuickReportCount('vigentes')}} registros</span>
+        </div>
+        <div class="report-action">
+          <i class="fas fa-download"></i>
+        </div>
+      </div>
+
+      <div class="quick-report-card" (click)="generateQuickReport('estadisticas-mensuales')">
+        <div class="report-icon">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="report-info">
+          <h3>Estadísticas Mensuales</h3>
+          <p>Resumen estadístico del mes actual</p>
+          <span class="report-count">Datos actualizados</span>
+        </div>
+        <div class="report-action">
+          <i class="fas fa-download"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Plantillas de Reportes -->
+  <div class="report-templates-section">
+    <div class="section-header">
+      <h2>
+        <i class="fas fa-layer-group"></i>
+        Plantillas de Reportes
+      </h2>
+      <p>Plantillas preconfiguradas para diferentes tipos de análisis</p>
+    </div>
+
+    <div class="templates-grid">
+      <div class="template-card" (click)="useTemplate('inscripciones-por-estado')">
+        <div class="template-header">
+          <div class="template-icon">
+            <i class="fas fa-list-alt"></i>
+          </div>
+          <h3>Inscripciones por Estado</h3>
+        </div>
+        <div class="template-content">
+          <p>Reporte detallado de inscripciones agrupadas por estado de revisión</p>
+          <div class="template-features">
+            <span class="feature-tag">Filtros avanzados</span>
+            <span class="feature-tag">Exportación múltiple</span>
+            <span class="feature-tag">Gráficos incluidos</span>
+          </div>
+        </div>
+        <div class="template-footer">
+          <span class="template-usage">Usado 45 veces este mes</span>
+          <button class="use-template-btn">
+            <i class="fas fa-play"></i>
+            Usar Plantilla
+          </button>
+        </div>
+      </div>
+
+      <div class="template-card" (click)="useTemplate('usuarios-por-rol')">
+        <div class="template-header">
+          <div class="template-icon">
+            <i class="fas fa-user-tag"></i>
+          </div>
+          <h3>Usuarios por Rol</h3>
+        </div>
+        <div class="template-content">
+          <p>Análisis de distribución de usuarios según roles asignados</p>
+          <div class="template-features">
+            <span class="feature-tag">Segmentación</span>
+            <span class="feature-tag">Estadísticas</span>
+            <span class="feature-tag">Comparativas</span>
+          </div>
+        </div>
+        <div class="template-footer">
+          <span class="template-usage">Usado 32 veces este mes</span>
+          <button class="use-template-btn">
+            <i class="fas fa-play"></i>
+            Usar Plantilla
+          </button>
+        </div>
+      </div>
+
+      <div class="template-card" (click)="useTemplate('estado-documentos')">
+        <div class="template-header">
+          <div class="template-icon">
+            <i class="fas fa-file-check"></i>
+          </div>
+          <h3>Estado de Documentos</h3>
+        </div>
+        <div class="template-content">
+          <p>Reporte del estado de documentos por inscripción y tipo</p>
+          <div class="template-features">
+            <span class="feature-tag">Por tipo</span>
+            <span class="feature-tag">Estados</span>
+            <span class="feature-tag">Métricas</span>
+          </div>
+        </div>
+        <div class="template-footer">
+          <span class="template-usage">Usado 28 veces este mes</span>
+          <button class="use-template-btn">
+            <i class="fas fa-play"></i>
+            Usar Plantilla
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD ANALÍTICO -->
+<div *ngIf="isDashboardMode" class="dashboard-analitico">
+  <!-- Header Premium Glassmorphism -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-chart-line"></i>
+        Dashboard Analítico
+      </h1>
+      <p>Centro de control para análisis avanzado, métricas del sistema y generación de reportes inteligentes</p>
+    </div>
+    <div class="header-actions">
+      <div class="export-format-container">
+        <label for="export-format" class="export-label">Formato:</label>
+        <select
+          id="export-format"
+          [(ngModel)]="selectedExportFormat"
+          class="export-select"
+          aria-label="Seleccionar formato de exportación">
+          <option value="excel">Excel (.xlsx)</option>
+          <option value="csv">CSV (.csv)</option>
+          <option value="pdf">PDF (.pdf)</option>
+        </select>
+      </div>
+      <button
+        class="export-button"
+        (click)="exportarReporte(selectedExportFormat)"
+        [disabled]="isLoading"
+        [attr.aria-label]="'Exportar reporte en formato ' + selectedExportFormat">
+        <i class="fas fa-download"></i>
+        <span>Exportar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
     <span>Cargando datos...</span>
   </div>
 
-  <mat-tab-group (selectedTabChange)="onTabChange($event)">
-    <!-- Pestaña de Exámenes -->
-    <mat-tab label="Exámenes">
-      <div class="tab-content">
-        <div class="stats-cards">
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>assignment</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{examenes.length}}</span>
-                  <span class="stat-label">Exámenes</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+  <!-- Pestañas del Dashboard -->
+  <div class="tabs-card">
+    <div class="tabs-header">
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'examenes'"
+        (click)="setActiveTab('examenes')"
+        [attr.aria-selected]="activeTab === 'examenes'"
+        role="tab">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Exámenes</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'usuarios'"
+        (click)="setActiveTab('usuarios')"
+        [attr.aria-selected]="activeTab === 'usuarios'"
+        role="tab">
+        <i class="fas fa-users"></i>
+        <span>Usuarios</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'sistema'"
+        (click)="setActiveTab('sistema')"
+        [attr.aria-selected]="activeTab === 'sistema'"
+        role="tab">
+        <i class="fas fa-server"></i>
+        <span>Sistema</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'constructor'"
+        (click)="setActiveTab('constructor')"
+        [attr.aria-selected]="activeTab === 'constructor'"
+        role="tab">
+        <i class="fas fa-tools"></i>
+        <span>Constructor</span>
+      </button>
+    </div>
 
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>people</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{getTotalParticipantes()}}</span>
-                  <span class="stat-label">Participantes</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+    <!-- Contenido de Pestañas -->
+    <div class="tab-content">
+      <!-- Pestaña Exámenes -->
+      <div *ngIf="activeTab === 'examenes'" class="tab-panel" role="tabpanel">
+        <!-- Métricas Resumen -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="metric-content">
+              <h3>{{getTotalParticipantes()}}</h3>
+              <p>Total Participantes</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                +12% vs mes anterior
+              </span>
+            </div>
+          </div>
 
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>done_all</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{getTotalCompletados()}}</span>
-                  <span class="stat-label">Completados</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="metric-content">
+              <h3>{{getTotalCompletados()}}</h3>
+              <p>Exámenes Completados</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                +8% vs mes anterior
+              </span>
+            </div>
+          </div>
 
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>grade</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{getPromedioCalificacion()}}</span>
-                  <span class="stat-label">Promedio</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="metric-content">
+              <h3>{{getPromedioCalificacion()}}</h3>
+              <p>Promedio General</p>
+              <span class="metric-trend neutral">
+                <i class="fas fa-minus"></i>
+                Sin cambios
+              </span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="metric-content">
+              <h3>52 min</h3>
+              <p>Tiempo Promedio</p>
+              <span class="metric-trend negative">
+                <i class="fas fa-arrow-down"></i>
+                -5% vs mes anterior
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div class="charts-container">
-          <mat-card class="chart-card">
-            <mat-card-header>
-              <mat-card-title>Participación por Examen</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <!-- Aquí iría el gráfico de barras -->
-              <div class="chart-placeholder">
-                <div class="chart-bar" *ngFor="let examen of examenes; let i = index">
-                  <div class="chart-label">{{examen.titulo.substring(0, 15)}}...</div>
-                  <div class="chart-value-container">
-                    <div class="chart-value participants" [style.width.%]="examen.participantes * 2">
-                      <span>{{examen.participantes}}</span>
+        <!-- Tabla de Exámenes -->
+        <div class="data-table-container">
+          <div class="table-header">
+            <h3>
+              <i class="fas fa-list"></i>
+              Detalle de Exámenes
+            </h3>
+            <div class="table-actions">
+              <button class="btn-secondary" (click)="exportarReporte('excel')">
+                <i class="fas fa-file-excel"></i>
+                Exportar
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Examen</th>
+                  <th>Tipo</th>
+                  <th>Participantes</th>
+                  <th>Completados</th>
+                  <th>Aprobados</th>
+                  <th>Promedio</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let examen of examenes" (click)="selectExamen(examen)">
+                  <td>
+                    <div class="exam-info">
+                      <strong>{{examen.titulo}}</strong>
+                      <small>{{examen.fechaInicio | date:'dd/MM/yyyy'}} - {{examen.fechaFin | date:'dd/MM/yyyy'}}</small>
                     </div>
-                    <div class="chart-value approved" [style.width.%]="examen.aprobados * 2">
-                      <span>{{examen.aprobados}}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="chart-legend">
-                  <div class="legend-item">
-                    <div class="legend-color participants"></div>
-                    <span>Participantes</span>
-                  </div>
-                  <div class="legend-item">
-                    <div class="legend-color approved"></div>
-                    <span>Aprobados</span>
-                  </div>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card class="chart-card">
-            <mat-card-header>
-              <mat-card-title>Resultados Generales</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <!-- Aquí iría el gráfico circular -->
-              <div class="chart-placeholder pie-chart">
-                <div class="pie-segment" style="--percentage: 85%; --color: rgba(25, 118, 210, 0.5);">
-                  <span class="pie-label">Aprobados</span>
-                </div>
-                <div class="pie-segment" style="--percentage: 10%; --color: rgba(244, 67, 54, 0.5);">
-                  <span class="pie-label">Reprobados</span>
-                </div>
-                <div class="pie-segment" style="--percentage: 5%; --color: rgba(255, 152, 0, 0.5);">
-                  <span class="pie-label">No completados</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
-        <h2>Detalle de Exámenes</h2>
-        <div class="exams-list">
-          <mat-card *ngFor="let examen of examenes" class="exam-card" (click)="selectExamen(examen)" [class.selected]="selectedExamen === examen">
-            <mat-card-header>
-              <mat-card-title>{{examen.titulo}}</mat-card-title>
-              <mat-card-subtitle>{{getTipoExamenText(examen.tipo)}}</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="exam-stats">
-                <div class="exam-stat">
-                  <span class="stat-label">Participantes:</span>
-                  <span class="stat-value">{{examen.participantes}}</span>
-                </div>
-                <div class="exam-stat">
-                  <span class="stat-label">Completados:</span>
-                  <span class="stat-value">{{examen.completados}}</span>
-                </div>
-                <div class="exam-stat">
-                  <span class="stat-label">Aprobados:</span>
-                  <span class="stat-value">{{examen.aprobados}}</span>
-                </div>
-                <div class="exam-stat">
-                  <span class="stat-label">Promedio:</span>
-                  <span class="stat-value">{{examen.promedioCalificacion}}</span>
-                </div>
-                <div class="exam-stat">
-                  <span class="stat-label">Tiempo Promedio:</span>
-                  <span class="stat-value">{{examen.tiempoPromedio}} min</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
-        <div *ngIf="selectedExamen" class="selected-exam-details">
-          <h3>Detalles de {{getTituloExamen()}}</h3>
-          <p>Aquí se mostrarían estadísticas detalladas del examen seleccionado, incluyendo distribución de calificaciones, tiempo por pregunta, etc.</p>
+                  </td>
+                  <td>
+                    <span class="type-badge" [class]="'type-' + examen.tipo">
+                      {{getTipoExamenText(examen.tipo)}}
+                    </span>
+                  </td>
+                  <td>{{examen.participantes}}</td>
+                  <td>{{examen.completados}}</td>
+                  <td>{{examen.aprobados}}</td>
+                  <td>{{examen.promedioCalificacion}}%</td>
+                  <td>
+                    <span class="status-badge active">Activo</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </mat-tab>
 
-    <!-- Pestaña de Usuarios -->
-    <mat-tab label="Usuarios">
-      <div class="tab-content">
-        <div class="stats-cards">
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>people</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{systemStats?.users?.total || 0}}</span>
-                  <span class="stat-label">Total Usuarios</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>person_add</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">
-                    {{systemStats?.users?.newByPeriod ? calculateTotalNewUsers() : 0}}
-                  </span>
-                  <span class="stat-label">Nuevos (2023)</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>admin_panel_settings</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{getAdminCount()}}</span>
-                  <span class="stat-label">Administradores</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>person_off</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{calculateInactiveUsers()}}</span>
-                  <span class="stat-label">Inactivos</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
-        <div class="charts-container">
-          <mat-card class="chart-card">
-            <mat-card-header>
-              <mat-card-title>Nuevos Usuarios por Mes (2023)</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <!-- Aquí iría el gráfico de líneas -->
-              <div class="chart-placeholder">
-                <div class="line-chart">
-                  <div class="line-point" style="--height: 45%; --index: 0;">
-                    <div class="point-value">45</div>
-                  </div>
-                  <div class="line-point" style="--height: 38%; --index: 1;">
-                    <div class="point-value">38</div>
-                  </div>
-                  <div class="line-point" style="--height: 52%; --index: 2;">
-                    <div class="point-value">52</div>
-                  </div>
-                  <div class="line-point" style="--height: 35%; --index: 3;">
-                    <div class="point-value">35</div>
-                  </div>
-                  <div class="line-point" style="--height: 15%; --index: 4;">
-                    <div class="point-value">15</div>
-                  </div>
-                </div>
-                <div class="line-labels">
-                  <div class="line-label">Ene</div>
-                  <div class="line-label">Feb</div>
-                  <div class="line-label">Mar</div>
-                  <div class="line-label">Abr</div>
-                  <div class="line-label">May</div>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card class="chart-card">
-            <mat-card-header>
-              <mat-card-title>Distribución por Rol</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <!-- Aquí iría el gráfico circular -->
-              <div class="chart-placeholder pie-chart">
-                <div class="pie-segment" style="--percentage: 15%; --color: rgba(25, 118, 210, 0.5);">
-                  <span class="pie-label">Admin</span>
-                </div>
-                <div class="pie-segment" style="--percentage: 25%; --color: rgba(76, 175, 80, 0.5);">
-                  <span class="pie-label">Evaluador</span>
-                </div>
-                <div class="pie-segment" style="--percentage: 60%; --color: rgba(255, 152, 0, 0.5);">
-                  <span class="pie-label">Usuario</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
-        <h2>Actividad de Usuarios</h2>
-        <div class="activity-list">
-          <div class="activity-item" *ngFor="let item of actividad; trackBy: trackByIndex">
-            <div class="activity-icon">
-              <mat-icon>
-                {{item.tipo === 'login' ? 'login' :
-                  (item.tipo === 'examen_iniciado' || item.tipo === 'examen_finalizado') ? 'assignment' :
-                  item.tipo === 'perfil_actualizado' ? 'edit' : 'description'}}
-              </mat-icon>
+      <!-- Pestaña Usuarios -->
+      <div *ngIf="activeTab === 'usuarios'" class="tab-panel" role="tabpanel">
+        <!-- Métricas de Usuarios -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-user-plus"></i>
             </div>
-            <div class="activity-content">
-              <div class="activity-text">
-                {{item.tipo === 'login' ? 'Inicios de sesión' :
-                  item.tipo === 'examen_iniciado' ? 'Exámenes iniciados' :
-                  item.tipo === 'examen_finalizado' ? 'Exámenes finalizados' :
-                  item.tipo === 'perfil_actualizado' ? 'Perfiles actualizados' :
-                  'Postulaciones'}}
+            <div class="metric-content">
+              <h3>{{usuarios.total}}</h3>
+              <p>Total Usuarios</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                +15% vs mes anterior
+              </span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-user-check"></i>
+            </div>
+            <div class="metric-content">
+              <h3>{{getUsuariosActivos()}}</h3>
+              <p>Usuarios Activos</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                +8% vs mes anterior
+              </span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-user-clock"></i>
+            </div>
+            <div class="metric-content">
+              <h3>{{getUsuariosPendientes()}}</h3>
+              <p>Pendientes Validación</p>
+              <span class="metric-trend neutral">
+                <i class="fas fa-minus"></i>
+                Sin cambios
+              </span>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-percentage"></i>
+            </div>
+            <div class="metric-content">
+              <h3>{{getTasaActivacion()}}%</h3>
+              <p>Tasa de Activación</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                +3% vs mes anterior
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráfico de Distribución por Roles -->
+        <div class="chart-container">
+          <div class="chart-header">
+            <h3>
+              <i class="fas fa-chart-pie"></i>
+              Distribución por Roles
+            </h3>
+          </div>
+          <div class="chart-content">
+            <div class="role-stats">
+              <div class="role-stat" *ngFor="let role of roleStats">
+                <div class="role-indicator" [style.background-color]="role.color"></div>
+                <div class="role-info">
+                  <span class="role-name">{{role.name}}</span>
+                  <span class="role-count">{{role.count}} usuarios</span>
+                  <span class="role-percentage">{{role.percentage}}%</span>
+                </div>
               </div>
-              <div class="activity-time">
-                {{item.cantidad}} usuarios ({{item.porcentaje}}%)
+            </div>
+          </div>
+        </div>
+
+        <!-- Actividad Reciente -->
+        <div class="activity-container">
+          <div class="activity-header">
+            <h3>
+              <i class="fas fa-history"></i>
+              Actividad Reciente
+            </h3>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item" *ngFor="let activity of actividad">
+              <div class="activity-icon">
+                <i class="fas" [class]="getActivityIcon(activity.tipo)"></i>
+              </div>
+              <div class="activity-content">
+                <span class="activity-type">{{getActivityText(activity.tipo)}}</span>
+                <span class="activity-count">{{activity.cantidad}} eventos</span>
+                <span class="activity-percentage">{{activity.porcentaje}}% del total</span>
+              </div>
+              <div class="activity-progress">
+                <div class="progress-bar" [style.width.%]="activity.porcentaje"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </mat-tab>
 
-    <!-- Pestaña de Sistema -->
-    <mat-tab label="Sistema">
-      <div class="tab-content">
-        <div class="stats-cards">
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>speed</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{systemStats?.performance?.averageResponseTime || 0}} ms</span>
-                  <span class="stat-label">Tiempo de respuesta</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+      <!-- Pestaña Sistema -->
+      <div *ngIf="activeTab === 'sistema'" class="tab-panel" role="tabpanel">
+        <!-- Métricas del Sistema -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-server"></i>
+            </div>
+            <div class="metric-content">
+              <h3>99.8%</h3>
+              <p>Disponibilidad</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                +0.2% vs mes anterior
+              </span>
+            </div>
+          </div>
 
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>error_outline</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{systemStats?.performance?.errorRate || 0}}%</span>
-                  <span class="stat-label">Tasa de errores</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="metric-content">
+              <h3>235ms</h3>
+              <p>Tiempo Respuesta</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-down"></i>
+                -15ms vs mes anterior
+              </span>
+            </div>
+          </div>
 
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>memory</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{systemStats?.performance?.serverLoad || 0}}%</span>
-                  <span class="stat-label">Carga del servidor</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="metric-content">
+              <h3>0.5%</h3>
+              <p>Tasa de Error</p>
+              <span class="metric-trend positive">
+                <i class="fas fa-arrow-down"></i>
+                -0.1% vs mes anterior
+              </span>
+            </div>
+          </div>
 
-          <mat-card class="stats-card">
-            <mat-card-content>
-              <div class="stat-item">
-                <mat-icon>storage</mat-icon>
-                <div class="stat-info">
-                  <span class="stat-value">{{systemStats?.documents?.total || 0}}</span>
-                  <span class="stat-label">Documentos totales</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
+          <div class="metric-card">
+            <div class="metric-icon">
+              <i class="fas fa-memory"></i>
+            </div>
+            <div class="metric-content">
+              <h3>35%</h3>
+              <p>Uso de Servidor</p>
+              <span class="metric-trend neutral">
+                <i class="fas fa-minus"></i>
+                Sin cambios
+              </span>
+            </div>
+          </div>
         </div>
 
-        <h2>Rendimiento del Sistema</h2>
-        <div class="performance-metrics">
-          <mat-card class="performance-card">
-            <mat-card-header>
-              <mat-card-title>Distribución de Documentos</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="chart-placeholder pie-chart">
-                <div class="pie-segment" style="--percentage: 80%; --color: rgba(76, 175, 80, 0.5);">
-                  <span class="pie-label">Aprobados</span>
-                </div>
-                <div class="pie-segment" style="--percentage: 10%; --color: rgba(255, 152, 0, 0.5);">
-                  <span class="pie-label">Pendientes</span>
-                </div>
-                <div class="pie-segment" style="--percentage: 10%; --color: rgba(244, 67, 54, 0.5);">
-                  <span class="pie-label">Rechazados</span>
-                </div>
+        <!-- Estado de Servicios -->
+        <div class="services-status">
+          <div class="services-header">
+            <h3>
+              <i class="fas fa-cogs"></i>
+              Estado de Servicios
+            </h3>
+          </div>
+          <div class="services-grid">
+            <div class="service-card">
+              <div class="service-status online"></div>
+              <div class="service-info">
+                <h4>Base de Datos</h4>
+                <p>Operacional</p>
+                <span class="service-uptime">99.9% uptime</span>
               </div>
-            </mat-card-content>
-          </mat-card>
+            </div>
 
-          <mat-card class="performance-card">
-            <mat-card-header>
-              <mat-card-title>Uso del Sistema</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="usage-metrics">
-                <div class="usage-metric">
-                  <div class="metric-label">Carga del servidor</div>
-                  <div class="metric-bar-container">
-                    <div class="metric-bar" [style.width.%]="systemStats?.performance?.serverLoad || 0"
-                      [ngClass]="{
-                        'low': getServerLoad() < 50,
-                        'medium': getServerLoad() >= 50 && getServerLoad() < 80,
-                        'high': getServerLoad() >= 80
-                      }">
-                      {{systemStats?.performance?.serverLoad || 0}}%
-                    </div>
-                  </div>
-                </div>
-                <div class="usage-metric">
-                  <div class="metric-label">Tasa de errores</div>
-                  <div class="metric-bar-container">
-                    <div class="metric-bar" [style.width.%]="(systemStats?.performance?.errorRate || 0) * 10"
-                      [ngClass]="{
-                        'low': getErrorRate() < 1,
-                        'medium': getErrorRate() >= 1 && getErrorRate() < 5,
-                        'high': getErrorRate() >= 5
-                      }">
-                      {{systemStats?.performance?.errorRate || 0}}%
-                    </div>
-                  </div>
-                </div>
-                <div class="usage-metric">
-                  <div class="metric-label">Tiempo de respuesta</div>
-                  <div class="metric-bar-container">
-                    <div class="metric-bar" [style.width.%]="(systemStats?.performance?.averageResponseTime || 0) / 10"
-                      [ngClass]="{
-                        'low': getResponseTime() < 200,
-                        'medium': getResponseTime() >= 200 && getResponseTime() < 500,
-                        'high': getResponseTime() >= 500
-                      }">
-                      {{systemStats?.performance?.averageResponseTime || 0}} ms
-                    </div>
-                  </div>
-                </div>
+            <div class="service-card">
+              <div class="service-status online"></div>
+              <div class="service-info">
+                <h4>API Principal</h4>
+                <p>Operacional</p>
+                <span class="service-uptime">99.8% uptime</span>
               </div>
-            </mat-card-content>
-          </mat-card>
+            </div>
+
+            <div class="service-card">
+              <div class="service-status online"></div>
+              <div class="service-info">
+                <h4>Autenticación</h4>
+                <p>Operacional</p>
+                <span class="service-uptime">100% uptime</span>
+              </div>
+            </div>
+
+            <div class="service-card">
+              <div class="service-status warning"></div>
+              <div class="service-info">
+                <h4>Notificaciones</h4>
+                <p>Degradado</p>
+                <span class="service-uptime">95.2% uptime</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </mat-tab>
 
-    <!-- Pestaña de Constructor de Reportes -->
-    <mat-tab label="Constructor de Reportes">
-      <div class="tab-content">
+      <!-- Pestaña Constructor -->
+      <div *ngIf="activeTab === 'constructor'" class="tab-panel" role="tabpanel">
         <div class="report-builder">
-          <h2>Constructor de Reportes Personalizados</h2>
-          <p class="section-description">
-            Utilice esta herramienta para crear reportes personalizados con los datos que necesite.
-            Seleccione los campos, aplique filtros y exporte el resultado en el formato que prefiera.
-          </p>
+          <div class="builder-header">
+            <h2>
+              <i class="fas fa-tools"></i>
+              Constructor de Reportes Avanzado
+            </h2>
+            <p class="section-description">
+              Cree reportes personalizados con filtros avanzados y exportación múltiple
+            </p>
+          </div>
 
           <div class="report-builder-actions">
-            <button mat-raised-button color="primary" routerLink="/admin/inscripciones/reportes">
-              <mat-icon>build</mat-icon>
-              Ir al Constructor de Reportes
+            <button
+              class="btn-primary"
+              (click)="navigateToReportBuilder()"
+              [attr.aria-label]="'Abrir constructor de reportes avanzado'">
+              <i class="fas fa-external-link-alt"></i>
+              <span>Abrir Constructor Completo</span>
             </button>
+
+            <button
+              class="btn-secondary"
+              (click)="createQuickReport()"
+              [attr.aria-label]="'Crear reporte rápido'">
+              <i class="fas fa-bolt"></i>
+              <span>Reporte Rápido</span>
+            </button>
+          </div>
+
+          <div class="builder-features">
+            <div class="feature-item">
+              <i class="fas fa-filter"></i>
+              <span>Filtros Avanzados</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-chart-bar"></i>
+              <span>Gráficos Interactivos</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-download"></i>
+              <span>Exportación Múltiple</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-save"></i>
+              <span>Plantillas Personalizadas</span>
+            </div>
           </div>
         </div>
       </div>
-    </mat-tab>
-  </mat-tab-group>
+    </div>
+  </div>
 </div>

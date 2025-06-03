@@ -1,119 +1,297 @@
 @import 'src/styles/variables';
 @import 'src/styles/mixins';
 
+// ===== VARIABLES GLASSMORPHISM PARA TABLA DE INSCRIPCIONES =====
+// Colores base glassmorphism
+$glass-background-primary: rgba(55, 65, 81, 0.95);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(55, 65, 81, 0.85);
+
+// Colores de texto WCAG AA
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-tertiary: #9ca3af;
+$text-muted: #6b7280;
+
+// Colores de tema para inscripciones (verde concursos)
+$theme-inscripciones: #4CAF50;
+$theme-inscripciones-light: rgba(76, 175, 80, 0.1);
+$theme-inscripciones-medium: rgba(76, 175, 80, 0.3);
+
+// Bordes glassmorphism
+$border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.2);
+
+// Sombras glassmorphism
+$card-shadow-base: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+$card-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.15);
+
+// Transiciones
+$transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+// ===== CONTENEDOR PRINCIPAL CON GLASSMORPHISM =====
 .inscriptions-table-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
   width: 100%;
+  position: relative;
 }
 
-// Estilos para la tarjeta de filtros
+// ===== TARJETA DE FILTROS CON GLASSMORPHISM REFINADO =====
 .filters-card {
   width: 100%;
-  
+
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-    
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
     h3 {
       margin: 0;
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: $color-text-primary;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $text-primary;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+      background: linear-gradient(135deg, $text-primary 0%, #e5e7eb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
   }
-  
+
   .filters-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    
+    gap: 1.5rem;
+
     .filters-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
       .filter-field {
-        flex: 1;
-        min-width: 200px;
-        
-        @media (max-width: 768px) {
-          min-width: 100%;
+        position: relative;
+
+        // Estilos para campos de formulario con glassmorphism
+        ::ng-deep {
+          .form-field-container {
+            background: linear-gradient(135deg,
+              rgba(75, 85, 99, 0.4) 0%,
+              rgba(55, 65, 81, 0.6) 100%);
+            border: $border-glass-light;
+            border-radius: $border-radius-md;
+            backdrop-filter: blur(8px);
+            transition: $transition-smooth;
+
+            &:hover {
+              border-color: rgba(255, 255, 255, 0.2);
+              background: linear-gradient(135deg,
+                rgba(75, 85, 99, 0.5) 0%,
+                rgba(55, 65, 81, 0.7) 100%);
+            }
+
+            &:focus-within {
+              border-color: $theme-inscripciones-medium;
+              box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+            }
+          }
+
+          input, select {
+            background: transparent;
+            color: $text-primary;
+            border: none;
+
+            &::placeholder {
+              color: $text-muted;
+            }
+
+            &:focus {
+              outline: none;
+            }
+          }
+
+          label {
+            color: $text-secondary;
+            font-weight: 500;
+          }
         }
       }
     }
   }
 }
 
-// Estilos para la tarjeta de tabla
+// ===== TARJETA DE TABLA CON GLASSMORPHISM REFINADO =====
 .table-card {
   width: 100%;
-  
+
   .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
-    
+    margin-bottom: 0;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg,
+      rgba(76, 175, 80, 0.05) 0%,
+      rgba(55, 65, 81, 0.1) 100%);
+    border-radius: $border-radius-lg $border-radius-lg 0 0;
+
     h3 {
       margin: 0;
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: $color-text-primary;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $text-primary;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+      background: linear-gradient(135deg, $text-primary 0%, #e5e7eb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    
+
     .results-count {
-      font-size: 0.9rem;
-      color: $color-text-secondary;
-      background-color: $color-background-light;
-      padding: 0.25rem 0.75rem;
-      border-radius: 1rem;
+      background: linear-gradient(135deg,
+        $theme-inscripciones-light 0%,
+        rgba(76, 175, 80, 0.15) 100%);
+      color: $text-secondary;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 1px solid rgba(76, 175, 80, 0.2);
+      backdrop-filter: blur(4px);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &::before {
+        content: '📊';
+        font-size: 0.875rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      text-align: center;
+
+      .results-count {
+        align-self: center;
+      }
     }
   }
-  
+
   .table-container {
     width: 100%;
     overflow-x: auto;
+    border-radius: 0 0 $border-radius-lg $border-radius-lg;
+
+    // Scrollbar personalizado con tema de inscripciones
+    scrollbar-width: thin;
+    scrollbar-color: rgba(76, 175, 80, 0.6) rgba(55, 65, 81, 0.3);
+
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(55, 65, 81, 0.3);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.6) 0%,
+        rgba(76, 175, 80, 0.8) 100%);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(76, 175, 80, 0.8) 0%,
+          $theme-inscripciones 100%);
+      }
+    }
   }
 }
 
-// Estilos para las celdas de la tabla
+// ===== ESTILOS PARA CELDAS DE TABLA CON GLASSMORPHISM =====
 .id-cell {
-  font-family: $font-family-mono;
-  font-size: 0.85rem;
-  color: $color-text-secondary;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: $text-tertiary;
+  background: linear-gradient(135deg,
+    rgba(76, 175, 80, 0.1) 0%,
+    rgba(76, 175, 80, 0.05) 100%);
+  padding: 0.25rem 0.5rem;
+  border-radius: $border-radius-sm;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  font-weight: 500;
+  text-align: center;
+  backdrop-filter: blur(4px);
+  display: inline-block;
+  min-width: 4rem;
 }
 
 .user-info {
   display: flex;
   flex-direction: column;
-  
+  gap: 0.25rem;
+
   .user-name {
-    font-weight: 500;
-    color: $color-text-primary;
+    font-weight: 600;
+    color: $text-primary;
+    font-size: 0.875rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    line-height: 1.3;
   }
-  
+
   .user-email, .user-dni {
-    font-size: 0.85rem;
-    color: $color-text-secondary;
+    font-size: 0.75rem;
+    color: $text-secondary;
+    opacity: 0.9;
+    font-weight: 400;
   }
 }
 
 .contest-info {
   display: flex;
   flex-direction: column;
-  
+  gap: 0.25rem;
+
   .contest-title {
-    font-weight: 500;
-    color: $color-text-primary;
+    font-weight: 600;
+    color: $text-primary;
+    font-size: 0.875rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    line-height: 1.3;
   }
-  
+
   .contest-category, .contest-department {
-    font-size: 0.85rem;
-    color: $color-text-secondary;
+    font-size: 0.75rem;
+    color: $text-secondary;
+    opacity: 0.9;
+    font-weight: 400;
   }
 }
 
@@ -121,95 +299,202 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  
+  gap: 0.375rem;
+
   .documents-count {
-    font-weight: 500;
-    font-size: 1.1rem;
-    color: $color-text-primary;
+    font-weight: 600;
+    font-size: 1rem;
+    color: $text-primary;
+    background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.15) 0%,
+      rgba(59, 130, 246, 0.1) 100%);
+    padding: 0.375rem 0.625rem;
+    border-radius: 50%;
+    min-width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    backdrop-filter: blur(4px);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
-  
+
   .documents-status {
-    font-size: 0.8rem;
-    
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
     .status-approved {
-      color: $color-success;
+      color: #22c55e;
+      text-shadow: 0 1px 2px rgba(34, 197, 94, 0.3);
     }
-    
+
     .status-pending {
-      color: $color-warning;
+      color: #f59e0b;
+      text-shadow: 0 1px 2px rgba(245, 158, 11, 0.3);
     }
-    
+
     .status-rejected {
-      color: $color-danger;
+      color: #ef4444;
+      text-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);
     }
   }
 }
 
+// ===== BADGES DE ESTADO CON GLASSMORPHISM PREMIUM =====
 .status-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.85rem;
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-align: center;
-  
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
+  border: 1px solid;
+  transition: $transition-smooth;
+  position: relative;
+  overflow: hidden;
+
+  // Efecto de brillo sutil
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
+    transition: left 0.6s ease;
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+
   &.status-pending {
-    background-color: rgba($color-warning, 0.15);
-    color: darken($color-warning, 15%);
+    background: linear-gradient(135deg,
+      rgba(245, 158, 11, 0.15) 0%,
+      rgba(245, 158, 11, 0.1) 100%);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.3);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
   }
-  
+
   &.status-approved {
-    background-color: rgba($color-success, 0.15);
-    color: darken($color-success, 15%);
+    background: linear-gradient(135deg,
+      rgba(34, 197, 94, 0.15) 0%,
+      rgba(34, 197, 94, 0.1) 100%);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.3);
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
   }
-  
+
   &.status-rejected {
-    background-color: rgba($color-danger, 0.15);
-    color: darken($color-danger, 15%);
+    background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.15) 0%,
+      rgba(239, 68, 68, 0.1) 100%);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
   }
-  
+
   &.status-cancelled {
-    background-color: rgba($color-text-secondary, 0.15);
-    color: darken($color-text-secondary, 15%);
+    background: linear-gradient(135deg,
+      rgba(107, 114, 128, 0.15) 0%,
+      rgba(107, 114, 128, 0.1) 100%);
+    color: $text-tertiary;
+    border-color: rgba(107, 114, 128, 0.3);
+    box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+    }
   }
-  
+
   &.status-in-process {
-    background-color: rgba($color-info, 0.15);
-    color: darken($color-info, 15%);
+    background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.15) 0%,
+      rgba(59, 130, 246, 0.1) 100%);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
   }
 }
 
 .date-cell {
-  font-size: 0.85rem;
-  color: $color-text-secondary;
+  font-size: 0.75rem;
+  color: $text-secondary;
+  font-weight: 500;
+  opacity: 0.9;
+  line-height: 1.4;
 }
 
 .actions-cell {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
+  align-items: center;
 }
 
-// Estilos para estados de carga y vacío
+// ===== ESTADOS DE CARGA Y VACÍO CON GLASSMORPHISM =====
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 0;
-  
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  border-radius: $border-radius-lg;
+  backdrop-filter: blur(8px);
+  border: $border-glass-light;
+
   .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba($color-primary, 0.3);
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(76, 175, 80, 0.3);
     border-radius: 50%;
-    border-top-color: $color-primary;
+    border-top-color: $theme-inscripciones;
     animation: spin 1s ease-in-out infinite;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   }
-  
+
   p {
-    color: $color-text-secondary;
+    color: $text-secondary;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
   }
 }
 
@@ -218,25 +503,78 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 0;
-  
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  border-radius: $border-radius-lg;
+  backdrop-filter: blur(8px);
+  border: $border-glass-light;
+
   .empty-icon {
-    font-size: 3rem;
-    color: $color-text-disabled;
-    margin-bottom: 1rem;
+    font-size: 4rem;
+    color: $text-tertiary;
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
   }
-  
+
   h4 {
-    margin: 0 0 0.5rem;
-    color: $color-text-primary;
+    margin: 0 0 0.75rem;
+    color: $text-primary;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-align: center;
   }
-  
+
   p {
     margin: 0;
-    color: $color-text-secondary;
+    color: $text-secondary;
+    font-size: 0.875rem;
+    text-align: center;
+    opacity: 0.9;
   }
 }
 
+// ===== ANIMACIONES =====
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ===== RESPONSIVE DESIGN =====
+@media (max-width: 768px) {
+  .table-card .card-header {
+    .results-count::before {
+      display: none; // Ocultar emoji en móvil para ahorrar espacio
+    }
+  }
+
+  .status-badge {
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.625rem;
+  }
+
+  .documents-info .documents-count {
+    min-width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .id-cell {
+    font-size: 0.6875rem;
+    padding: 0.1875rem 0.375rem;
+  }
+
+  .user-info, .contest-info {
+    .user-name, .contest-title {
+      font-size: 0.8125rem;
+    }
+
+    .user-email, .user-dni, .contest-category, .contest-department {
+      font-size: 0.6875rem;
+    }
+  }
 }

@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
-import { AuthService } from '@core/services/auth.service';
+import { AuthService } from '@core/services/auth/auth.service';
 import { isArray, safeArrayMethod, safeGet } from '@shared/utils/safe-access.utils';
 import { SectionNavigationService } from '@core/services/navigation/section-navigation.service';
 import { AdminNotificationsComponent } from '../admin-notifications/admin-notifications.component';
@@ -65,21 +65,11 @@ export class AdminHeaderComponent implements OnInit {
   userInitials = '';
   unreadNotifications = 0;
 
-  private authService: {
-    getToken: () => string | null;
-    logout: () => void;
-  };
-
   constructor(
     private router: Router,
+    private authService: AuthService,
     private sectionNavigationService: SectionNavigationService
-  ) {
-    // En una implementación real, se inyectaría AuthService
-    this.authService = {
-      getToken: () => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsImF1dGhvcml0aWVzIjpbeyJhdXRob3JpdHkiOiJST0xFX0FETUlOIn1dfQ.signature',
-      logout: () => console.log('Cerrando sesión...')
-    };
-  }
+  ) {}
 
   ngOnInit(): void {
     // Obtener información del usuario actual desde el token
@@ -118,13 +108,7 @@ export class AdminHeaderComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-  }
-
-  /**
-   * Navega al dashboard de usuario
-   */
-  goToUserDashboard(): void {
-    this.sectionNavigationService.navigateToUserSection();
+    this.router.navigate(['/login']);
   }
 
   private getInitials(name: string): string {

@@ -1,293 +1,1054 @@
 @use 'src/styles/variables' as *;
 
+// Variables glassmorphism locales
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-tertiary: #9ca3af;
+$contest-theme-color: #4CAF50;
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$transition-fast: 0.15s;
+$transition-duration: 0.3s;
+$transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+
+// Mixins glassmorphism
+@mixin glass-card {
+  background: rgba(55, 65, 81, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(249, 250, 251, 0.1);
+  border-radius: $border-radius-md;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+@mixin glass-card-dark {
+  background: rgba(31, 41, 55, 0.9);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(249, 250, 251, 0.08);
+  border-radius: $border-radius-md;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+@mixin glass-button {
+  background: rgba(249, 250, 251, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(249, 250, 251, 0.1);
+  border-radius: $border-radius-md;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all $transition-fast $transition-timing;
+
+  &:hover {
+    background: rgba(249, 250, 251, 0.1);
+    border-color: rgba(249, 250, 251, 0.2);
+    transform: translateY(-1px);
+  }
+}
+
+@mixin glass-input {
+  background: rgba(75, 85, 99, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(249, 250, 251, 0.1);
+  border-radius: $border-radius-md;
+  color: $text-primary;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  transition: all $transition-fast $transition-timing;
+
+  &::placeholder {
+    color: $text-tertiary;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: rgba(249, 250, 251, 0.3);
+    background: rgba(75, 85, 99, 0.8);
+  }
+}
+
+@mixin glass-badge {
+  background: rgba(55, 65, 81, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(249, 250, 251, 0.2);
+}
+
+@mixin glass-loading-overlay {
+  background: rgba(55, 65, 81, 0.95);
+  backdrop-filter: blur(16px);
+}
+
 .profiles-admin-container {
-  padding: 1.5rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 
   h1 {
     margin: 0;
-    font-size: $font-size-xl;
-    font-weight: 500;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+    color: $text-primary;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }
 
-// Contenido de pestañas
-.tab-content {
-  padding: 1.5rem 0;
+/* ===== SISTEMA DE PESTAÑAS GLASSMORPHISM ===== */
+.custom-tabs {
+  .tab-header {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-radius: $border-radius-lg;
+    padding: 0.5rem;
+    @include glass-card;
+
+    .tab-button {
+      @include glass-button;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: transparent;
+      color: $text-secondary;
+      font-weight: 500;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all $transition-duration $transition-timing;
+      border-radius: $border-radius-md;
+
+      i {
+        font-size: 1rem;
+      }
+
+      &:hover {
+        background: rgba(249, 250, 251, 0.1);
+        color: $text-primary;
+        transform: translateY(-1px);
+      }
+
+      &.active {
+        background: rgba(76, 175, 80, 0.15);
+        color: $contest-theme-color;
+        border: 1px solid rgba(76, 175, 80, 0.3);
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+
+        &:hover {
+          background: rgba(76, 175, 80, 0.2);
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+
+  .tab-content {
+    animation: fadeIn 0.3s ease-in-out;
+  }
 }
 
-// Tarjeta de filtros
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== TARJETA DE FILTROS GLASSMORPHISM ===== */
 .filter-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-  
-  mat-card-content {
-    padding: 1rem;
+  @include glass-card;
+  margin-bottom: 2rem;
+  overflow: hidden;
+
+  .card-header {
+    padding: 1.5rem 1.5rem 0;
+    border-bottom: 1px solid rgba(249, 250, 251, 0.1);
+    margin-bottom: 1.5rem;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0;
+      color: $text-primary;
+      font-size: 1.2rem;
+      font-weight: 600;
+
+      i {
+        color: $contest-theme-color;
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  .card-content {
+    padding: 0 1.5rem 1.5rem;
   }
 }
 
 .filter-form {
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    
-    mat-form-field {
-      flex: 1;
-      min-width: 200px;
-    }
-    
-    .filter-actions {
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+
+    .form-group {
       display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      flex: 1;
-      min-width: 150px;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      label {
+        color: $text-primary;
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .input-container,
+      .select-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .glass-input,
+      .glass-select {
+        @include glass-input;
+        width: 100%;
+        padding-right: 2.5rem;
+
+        &:focus {
+          border-color: $contest-theme-color;
+          box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+      }
+
+      .input-icon,
+      .select-icon {
+        position: absolute;
+        right: 0.75rem;
+        color: $text-tertiary;
+        font-size: 0.9rem;
+        pointer-events: none;
+        transition: color $transition-fast $transition-timing;
+      }
+
+      &:focus-within .input-icon,
+      &:focus-within .select-icon {
+        color: $contest-theme-color;
+      }
+
+      &.filter-actions {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
     }
   }
 }
 
-// Tabla de perfiles
+/* ===== TABLA GLASSMORPHISM PERSONALIZADA ===== */
 .table-container {
-  position: relative;
-  min-height: 400px;
-  border-radius: 8px;
+  @include glass-card;
+  margin-bottom: 2rem;
   overflow: hidden;
-  background-color: $color-surface;
-  
-  table {
+
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(249, 250, 251, 0.1);
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0;
+      color: $text-primary;
+      font-size: 1.2rem;
+      font-weight: 600;
+
+      i {
+        color: $contest-theme-color;
+        font-size: 1.1rem;
+      }
+    }
+
+    .table-actions {
+      .results-count {
+        color: $text-secondary;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    max-height: 70vh;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(75, 85, 99, 0.3);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(249, 250, 251, 0.3);
+      border-radius: 4px;
+
+      &:hover {
+        background: rgba(249, 250, 251, 0.5);
+      }
+    }
+  }
+
+  .glass-table {
     width: 100%;
+    border-collapse: collapse;
+    background: transparent;
+
+    thead {
+      tr {
+        background: rgba(75, 85, 99, 0.3);
+        backdrop-filter: blur(4px);
+
+        th {
+          padding: 1rem 0.75rem;
+          text-align: left;
+          color: $text-primary;
+          font-weight: 600;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border-bottom: 1px solid rgba(249, 250, 251, 0.1);
+          position: sticky;
+          top: 0;
+          z-index: 10;
+
+          &.sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: all $transition-fast $transition-timing;
+
+            &:hover {
+              background: rgba(249, 250, 251, 0.1);
+              color: $contest-theme-color;
+            }
+
+            .sort-icon {
+              margin-left: 0.5rem;
+              opacity: 0.5;
+              transition: all $transition-fast $transition-timing;
+            }
+
+            &:hover .sort-icon {
+              opacity: 1;
+              color: $contest-theme-color;
+            }
+          }
+
+          // Anchos de columnas
+          &.col-avatar { width: 60px; }
+          &.col-name { min-width: 200px; }
+          &.col-email { min-width: 220px; }
+          &.col-dni { width: 120px; }
+          &.col-professional { min-width: 180px; }
+          &.col-documents { width: 160px; text-align: center; }
+          &.col-status { width: 130px; }
+          &.col-actions { width: 120px; text-align: center; }
+        }
+      }
+    }
+
+    tbody {
+      tr.profile-row {
+        transition: all $transition-fast $transition-timing;
+        border-bottom: 1px solid rgba(249, 250, 251, 0.05);
+
+        &:hover {
+          background: rgba(76, 175, 80, 0.05);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        td {
+          padding: 1rem 0.75rem;
+          vertical-align: middle;
+          color: $text-primary;
+          font-size: 0.9rem;
+        }
+      }
+    }
   }
-  
-  .mat-column-avatar {
-    width: 60px;
-    padding-right: 0;
+}
+/* ===== CELDAS PERSONALIZADAS GLASSMORPHISM ===== */
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: 2px solid rgba(249, 250, 251, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all $transition-fast $transition-timing;
+
+    &:hover {
+      transform: scale(1.05);
+      border-color: $contest-theme-color;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    }
   }
-  
-  .mat-column-name {
-    min-width: 180px;
-  }
-  
-  .mat-column-email {
-    min-width: 200px;
-  }
-  
-  .mat-column-dni {
-    width: 120px;
-  }
-  
-  .mat-column-professionalInfo {
-    min-width: 150px;
-  }
-  
-  .mat-column-documents {
-    width: 150px;
-    text-align: center;
-  }
-  
-  .mat-column-status {
-    width: 120px;
-  }
-  
-  .mat-column-actions {
-    width: 60px;
-    text-align: center;
-  }
-  
-  // Celdas personalizadas
-  .avatar-container {
+
+  .avatar-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $contest-theme-color, rgba(76, 175, 80, 0.8));
+    color: white;
     display: flex;
     justify-content: center;
     align-items: center;
-    
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-    
-    .avatar-placeholder {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background-color: $color-primary;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: 500;
-      font-size: $font-size-sm;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 2px solid rgba(249, 250, 251, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all $transition-fast $transition-timing;
+
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     }
   }
-  
-  .name-cell {
-    display: flex;
-    flex-direction: column;
-    
-    .full-name {
-      font-weight: 500;
-    }
-    
-    .username {
-      font-size: $font-size-xs;
-      color: $color-text-secondary;
-    }
+}
+
+.name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .full-name {
+    font-weight: 600;
+    color: $text-primary;
+    font-size: 0.95rem;
   }
-  
-  .professional-info-cell {
+
+  .username {
+    font-size: 0.8rem;
+    color: $text-tertiary;
+    font-weight: 400;
+  }
+}
+
+.email-text {
+  color: $text-secondary;
+  font-size: 0.9rem;
+}
+
+.dni-text {
+  color: $text-secondary;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+.professional-info-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .info-icon {
+    color: $contest-theme-color;
+    font-size: 1rem;
+  }
+
+  span {
+    color: $text-secondary;
+    font-size: 0.9rem;
+  }
+}
+
+.documents-cell {
+  display: flex;
+  justify-content: center;
+
+  .glass-button {
+    @include glass-button;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    
-    .info-icon {
-      font-size: 18px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    position: relative;
+
+    &.info {
+      border-color: rgba(59, 130, 246, 0.3);
+      color: #3b82f6;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.5);
+        color: #3b82f6;
+      }
+    }
+
+    &.small {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.75rem;
+    }
+
+    .badge {
+      background: #3b82f6;
+      color: white;
+      border-radius: 50%;
       width: 18px;
       height: 18px;
-      color: $color-primary;
-    }
-  }
-  
-  .status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: $font-size-xs;
-    font-weight: 500;
-    
-    &.status-active {
-      background-color: rgba($color-success, 0.1);
-      color: $color-success;
-    }
-    
-    &.status-inactive {
-      background-color: rgba($color-text-tertiary, 0.1);
-      color: $color-text-tertiary;
-    }
-    
-    &.status-blocked {
-      background-color: rgba($color-error, 0.1);
-      color: $color-error;
-    }
-  }
-  
-  // Fila de perfil
-  .profile-row {
-    &:hover {
-      background-color: rgba($color-primary, 0.05);
-    }
-  }
-  
-  // Estado de carga
-  .loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-  }
-  
-  // Estado vacío
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    
-    mat-icon {
-      font-size: 3rem;
-      width: 3rem;
-      height: 3rem;
-      margin-bottom: 1rem;
-      color: $color-text-tertiary;
-    }
-    
-    p {
-      margin-bottom: 1.5rem;
-      color: $color-text-secondary;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 0.25rem;
     }
   }
 }
 
-// Media queries para responsive
+.status-badge {
+  @include glass-badge;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  .status-icon {
+    font-size: 0.9rem;
+  }
+
+  &.status-active {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: rgba(76, 175, 80, 0.3);
+    color: $contest-theme-color;
+
+    .status-icon {
+      color: $contest-theme-color;
+    }
+  }
+
+  &.status-inactive {
+    background: rgba(107, 114, 128, 0.15);
+    border-color: rgba(107, 114, 128, 0.3);
+    color: #6b7280;
+
+    .status-icon {
+      color: #6b7280;
+    }
+  }
+
+  &.status-blocked {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+
+    .status-icon {
+      color: #ef4444;
+    }
+  }
+}
+/* ===== BOTONES DE ACCIONES DIRECTOS GLASSMORPHISM ===== */
+.actions-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+
+  .action-button {
+    @include glass-button;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    transition: all $transition-fast $transition-timing;
+
+    i {
+      font-size: 0.9rem;
+    }
+
+    // Botón Ver detalles (azul)
+    &.view-button {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+
+      &:hover {
+        color: #2563eb;
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+    }
+
+    // Botón Editar perfil (verde)
+    &.edit-button {
+      color: $contest-theme-color;
+      background: rgba(76, 175, 80, 0.1);
+      border: 1px solid rgba(76, 175, 80, 0.2);
+
+      &:hover {
+        color: #388e3c;
+        background: rgba(76, 175, 80, 0.2);
+        border-color: rgba(76, 175, 80, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      }
+    }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== ESTADOS DE CARGA Y VACÍO GLASSMORPHISM ===== */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  @include glass-loading-overlay;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+
+  .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    .spinner {
+      position: relative;
+      width: 60px;
+      height: 60px;
+
+      .spinner-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid transparent;
+        border-top-color: $contest-theme-color;
+        border-radius: 50%;
+        animation: spin 1.5s linear infinite;
+
+        &:nth-child(2) {
+          width: 80%;
+          height: 80%;
+          top: 10%;
+          left: 10%;
+          border-top-color: rgba(76, 175, 80, 0.6);
+          animation-delay: -0.5s;
+        }
+
+        &:nth-child(3) {
+          width: 60%;
+          height: 60%;
+          top: 20%;
+          left: 20%;
+          border-top-color: rgba(76, 175, 80, 0.3);
+          animation-delay: -1s;
+        }
+      }
+    }
+
+    p {
+      color: $text-primary;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 3rem 1rem;
+
+  .empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 400px;
+
+    .empty-icon {
+      font-size: 4rem;
+      color: $text-tertiary;
+      margin-bottom: 1.5rem;
+      opacity: 0.6;
+    }
+
+    h4 {
+      color: $text-primary;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+    }
+
+    p {
+      color: $text-secondary;
+      font-size: 1rem;
+      margin: 0 0 2rem 0;
+      line-height: 1.5;
+    }
+
+    .glass-button {
+      @include glass-button;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+
+      &.primary {
+        background: rgba(76, 175, 80, 0.15);
+        border-color: rgba(76, 175, 80, 0.3);
+        color: $contest-theme-color;
+
+        &:hover {
+          background: rgba(76, 175, 80, 0.25);
+          border-color: rgba(76, 175, 80, 0.5);
+        }
+      }
+    }
+  }
+}
+
+/* ===== PAGINACIÓN GLASSMORPHISM ===== */
+.pagination-container {
+  @include glass-card;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  .pagination-info {
+    color: $text-secondary;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .pagination-button {
+      @include glass-button;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border-radius: 50%;
+      color: $text-secondary;
+      transition: all $transition-fast $transition-timing;
+
+      &:hover:not(:disabled) {
+        color: $contest-theme-color;
+        background: rgba(76, 175, 80, 0.1);
+        border-color: rgba(76, 175, 80, 0.3);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+
+        &:hover {
+          transform: none;
+          background: transparent;
+          border-color: rgba(249, 250, 251, 0.1);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+
+    .page-numbers {
+      display: flex;
+      gap: 0.25rem;
+      margin: 0 0.5rem;
+
+      .page-number {
+        @include glass-button;
+        min-width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.5rem;
+        border-radius: 50%;
+        color: $text-secondary;
+        font-weight: 500;
+        transition: all $transition-fast $transition-timing;
+
+        &:hover:not(:disabled) {
+          color: $contest-theme-color;
+          background: rgba(76, 175, 80, 0.1);
+          border-color: rgba(76, 175, 80, 0.3);
+        }
+
+        &.active {
+          background: rgba(76, 175, 80, 0.2);
+          border-color: rgba(76, 175, 80, 0.4);
+          color: $contest-theme-color;
+          font-weight: 600;
+        }
+
+        &.ellipsis {
+          cursor: default;
+          background: transparent;
+          border: none;
+          color: $text-tertiary;
+
+          &:hover {
+            transform: none;
+            background: transparent;
+            border: none;
+          }
+        }
+      }
+    }
+  }
+
+  .page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    label {
+      color: $text-secondary;
+      font-size: 0.9rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .glass-select {
+      @include glass-input;
+      min-width: 80px;
+      padding: 0.5rem 2rem 0.5rem 0.75rem;
+
+      &.small {
+        font-size: 0.85rem;
+        padding: 0.4rem 1.8rem 0.4rem 0.6rem;
+      }
+
+      &:focus {
+        border-color: $contest-theme-color;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+      }
+    }
+  }
+}
+
+/* ===== BOTONES GLASSMORPHISM GLOBALES ===== */
+.glass-button {
+  @include glass-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all $transition-fast $transition-timing;
+
+  &.primary {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: rgba(76, 175, 80, 0.3);
+    color: $contest-theme-color;
+
+    &:hover {
+      background: rgba(76, 175, 80, 0.25);
+      border-color: rgba(76, 175, 80, 0.5);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.secondary {
+    background: rgba(107, 114, 128, 0.1);
+    border-color: rgba(107, 114, 128, 0.2);
+    color: #6b7280;
+
+    &:hover {
+      background: rgba(107, 114, 128, 0.2);
+      border-color: rgba(107, 114, 128, 0.3);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: #3b82f6;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.3);
+      transform: translateY(-1px);
+    }
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1200px) {
+  .filter-form .filter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .profiles-admin-container {
+    padding: 1rem;
+  }
+
   .header {
     flex-direction: column;
     align-items: flex-start;
-    
+    margin-bottom: 1.5rem;
+
     h1 {
-      margin-bottom: 1rem;
+      font-size: 1.5rem;
     }
   }
-  
-  .filter-form {
-    .filter-row {
-      flex-direction: column;
-      gap: 0;
-      
-      .filter-actions {
-        justify-content: flex-start;
-        margin-top: 1rem;
-      }
+
+  .custom-tabs .tab-header {
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .tab-button {
+      width: 100%;
+      justify-content: center;
+      padding: 1rem;
     }
   }
-  
-  .table-container {
-    overflow-x: auto;
+
+  .filter-form .filter-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+
+    .form-group.filter-actions {
+      justify-content: center;
+    }
+  }
+
+  .table-wrapper {
+    max-height: 60vh;
+  }
+
+  .glass-table {
+    font-size: 0.8rem;
+
+    th, td {
+      padding: 0.75rem 0.5rem;
+    }
+
+    .col-email,
+    .col-professional {
+      display: none;
+    }
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+
+    .pagination-controls {
+      order: 1;
+    }
+
+    .pagination-info {
+      order: 2;
+    }
+
+    .page-size-selector {
+      order: 3;
+      justify-content: center;
+    }
+  }
+
+  .actions-container .action-menu {
+    right: -50px;
+    left: auto;
   }
 }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .filter-card,
-  .table-container {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+@media (max-width: 480px) {
+  .glass-table {
+    .col-dni,
+    .col-documents {
+      display: none;
+    }
+
+    .name-cell .username {
+      display: none;
+    }
   }
-  
-  .table-container {
-    .loading-overlay {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    .empty-state {
-      mat-icon {
-        color: $color-text-tertiary-dark;
-      }
-      
-      p {
-        color: $color-text-secondary-dark;
-      }
-    }
-    
-    .profile-row {
-      &:hover {
-        background-color: rgba($color-primary-dark, 0.1);
-      }
-    }
-    
-    .name-cell {
-      .username {
-        color: $color-text-secondary-dark;
-      }
+
+  .pagination-controls .page-numbers {
+    .page-number:not(.active):not(.ellipsis) {
+      display: none;
     }
   }
 }

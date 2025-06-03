@@ -1,78 +1,125 @@
-@use 'src/styles/variables' as *;
+/* Glassmorphism Design System - Permissions Matrix Component */
+/* Siguiendo las especificaciones del glassmorphism-design-system-guide.md */
 
 .permissions-matrix-container {
-  padding: 1rem 0;
+  padding: 1rem 0; /* $spacing-lg */
+  background: transparent; /* Permite que el fondo del dashboard se vea */
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  
+  margin-bottom: 1.5rem; /* $spacing-2xl */
+
   h2 {
     margin: 0;
-    font-size: $font-size-lg;
-    font-weight: 500;
-    color: $color-text-primary;
+    font-size: 0.9375rem; /* $font-size-lg */
+    font-weight: 600; /* $font-weight-semibold */
+    color: #f9fafb; /* $text-primary */
+    line-height: 1.3; /* $line-height-tight */
   }
 }
 
 .header-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.75rem; /* $spacing-md */
 }
 
+/* Glassmorphism Notice Card */
 .system-role-notice {
   display: flex;
   align-items: center;
-  background-color: rgba($color-info, 0.1);
-  border-left: 4px solid $color-info;
-  padding: 0.75rem 1rem;
-  border-radius: $border-radius;
-  margin-bottom: 1.5rem;
-  
+  background: rgba(59, 130, 246, 0.15); /* $badge-blue */
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-left: 4px solid #3b82f6; /* $focus-color */
+  backdrop-filter: blur(8px);
+  padding: 0.75rem 1rem; /* $spacing-md $spacing-lg */
+  border-radius: 8px; /* $border-radius-lg */
+  margin-bottom: 1.5rem; /* $spacing-2xl */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* $shadow-sm */
+
   mat-icon {
-    color: $color-info;
-    margin-right: 0.75rem;
+    color: #60a5fa; /* $focus-light */
+    margin-right: 0.75rem; /* $spacing-md */
   }
-  
+
   span {
-    color: $color-text-primary;
-    font-size: $font-size-sm;
+    color: #f9fafb; /* $text-primary */
+    font-size: 0.75rem; /* $font-size-sm */
+    font-weight: 500; /* $font-weight-medium */
   }
 }
 
+/* Loading State con Glassmorphism */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  
+  padding: 2rem; /* $spacing-3xl */
+  background: rgba(55, 65, 81, 0.8); /* $glass-background-primary */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* $border-primary */
+  backdrop-filter: blur(8px);
+  border-radius: 8px; /* $border-radius-lg */
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1); /* $shadow-md + $shadow-inset */
+
   span {
-    margin-top: 1rem;
-    color: $color-text-secondary;
+    margin-top: 1rem; /* $spacing-lg */
+    color: #d1d5db; /* $text-secondary */
+    font-size: 0.875rem; /* $font-size-md */
   }
 }
 
+/* Glassmorphism Accordion */
 mat-accordion {
   display: block;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem; /* $spacing-2xl */
+
+  /* Override Material accordion styles for glassmorphism */
+  .mat-expansion-panel {
+    background: rgba(55, 65, 81, 0.8); /* $glass-background-primary */
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1); /* $border-primary */
+    backdrop-filter: blur(8px);
+    border-radius: 8px; /* $border-radius-lg */
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.2),
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1); /* $shadow-md + $shadow-inset */
+    margin-bottom: 0.75rem; /* $spacing-md */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* $transition-normal */
+
+    &:hover {
+      background: rgba(75, 85, 99, 0.9); /* $glass-background-hover */
+      transform: translateY(-1px); /* $transform-button-hover */
+      border-color: rgba(255, 255, 255, 0.2); /* $border-hover */
+    }
+  }
 }
 
 .category-header {
   display: flex;
   align-items: center;
-  
+
   .category-name {
-    font-weight: 500;
+    font-weight: 600; /* $font-weight-semibold */
+    color: #f9fafb; /* $text-primary */
+    font-size: 0.875rem; /* $font-size-md */
   }
-  
+
   .category-count {
-    margin-left: 0.5rem;
-    color: $color-text-secondary;
-    font-size: $font-size-sm;
+    margin-left: 0.5rem; /* $spacing-sm */
+    color: #9ca3af; /* $text-tertiary */
+    font-size: 0.75rem; /* $font-size-sm */
+    background: rgba(156, 163, 175, 0.15); /* $badge-gray */
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px; /* $border-radius-sm */
+    border: 1px solid rgba(156, 163, 175, 0.3);
   }
 }
 
@@ -81,60 +128,135 @@ mat-accordion {
   align-items: center;
 }
 
+/* Permissions Grid con Glassmorphism */
 .permissions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: 1rem; /* $spacing-lg */
+  margin-top: 1rem; /* $spacing-lg */
 }
 
 .permission-item {
-  padding: 0.5rem;
-  border-radius: $border-radius-sm;
-  transition: background-color 0.2s;
-  
+  padding: 0.5rem; /* $spacing-sm */
+  border-radius: 6px; /* $border-radius-md */
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* $transition-normal */
+
   &:hover {
-    background-color: rgba($color-primary, 0.05);
+    background: rgba(59, 130, 246, 0.05); /* Subtle blue hover */
+    border-color: rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px); /* $transform-button-hover */
   }
 }
 
 .permission-info {
   display: flex;
   flex-direction: column;
-  
+
   .permission-name {
-    font-weight: 500;
-    color: $color-text-primary;
+    font-weight: 500; /* $font-weight-medium */
+    color: #f9fafb; /* $text-primary */
+    font-size: 0.8125rem; /* $font-size-base */
+    line-height: 1.4; /* $line-height-normal */
   }
-  
+
   .permission-description {
-    font-size: $font-size-sm;
-    color: $color-text-secondary;
-    margin-top: 0.25rem;
+    font-size: 0.75rem; /* $font-size-sm */
+    color: #d1d5db; /* $text-secondary */
+    margin-top: 0.25rem; /* $spacing-xs */
+    line-height: 1.5; /* $line-height-relaxed */
   }
 }
 
-// Estilos para los checkboxes
-::ng-deep .mat-mdc-checkbox .mdc-checkbox .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
-  background-color: $color-primary !important;
-  border-color: $color-primary !important;
+/* Material UI Overrides para Glassmorphism */
+::ng-deep .mat-mdc-checkbox {
+  .mdc-checkbox .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
+    background-color: #3b82f6 !important; /* $focus-color */
+    border-color: #3b82f6 !important; /* $focus-color */
+  }
+
+  .mdc-checkbox .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+    background-color: #60a5fa !important; /* $focus-light */
+    border-color: #60a5fa !important; /* $focus-light */
+  }
+
+  .mdc-form-field {
+    width: 100%;
+  }
+
+  .mdc-checkbox__checkmark {
+    color: #ffffff !important;
+  }
 }
 
-::ng-deep .mat-mdc-checkbox .mdc-form-field {
-  width: 100%;
+/* Material Expansion Panel Overrides */
+::ng-deep .mat-expansion-panel {
+  &.mat-expanded {
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15) !important; /* $shadow-lg */
+  }
 }
 
-// Estilos para los paneles de expansión
 ::ng-deep .mat-expansion-panel-header {
   height: auto !important;
-  padding: 1rem !important;
+  padding: 1rem 1.25rem !important; /* $card-padding */
+  background: transparent !important;
+  color: #f9fafb !important; /* $text-primary */
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .mat-expansion-indicator::after {
+    color: #d1d5db !important; /* $text-secondary */
+  }
 }
 
 ::ng-deep .mat-expansion-panel-header-title,
 ::ng-deep .mat-expansion-panel-header-description {
   margin-right: 0 !important;
+  color: #f9fafb !important; /* $text-primary */
 }
 
 ::ng-deep .mat-expansion-panel-body {
-  padding: 0 1rem 1rem !important;
+  padding: 0 1.25rem 1rem !important; /* $card-padding */
+  background: transparent !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .permissions-matrix-container {
+    padding: 0.75rem 0; /* $spacing-md */
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem; /* $spacing-lg */
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .permissions-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem; /* $spacing-md */
+  }
+
+  .permission-item {
+    padding: 0.375rem; /* Smaller padding on mobile */
+  }
+
+  ::ng-deep .mat-expansion-panel-header {
+    padding: 0.75rem 1rem !important;
+  }
+
+  ::ng-deep .mat-expansion-panel-body {
+    padding: 0 1rem 0.75rem !important;
+  }
 }

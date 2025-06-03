@@ -1,368 +1,902 @@
 @use 'src/styles/variables' as *;
 
+// ===== VARIABLES GLASSMORPHISM PARA INSCRIPCIONES =====
+// Colores base glassmorphism
+$glass-background-primary: rgba(55, 65, 81, 0.95);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(55, 65, 81, 0.85);
+
+// Colores de texto WCAG AA
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-tertiary: #9ca3af;
+$text-muted: #6b7280;
+
+// Colores de tema para inscripciones (verde concursos)
+$theme-inscripciones: #4CAF50;
+$theme-inscripciones-light: rgba(76, 175, 80, 0.1);
+$theme-inscripciones-medium: rgba(76, 175, 80, 0.3);
+
+// Bordes glassmorphism
+$border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.2);
+
+// Sombras glassmorphism
+$card-shadow-base: 0 8px 24px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+$card-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.15);
+
+// Transiciones
+$transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+// ===== CONTENEDOR PRINCIPAL CON GLASSMORPHISM =====
 .inscripciones-admin-container {
   padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+  background: transparent; // Heredar el background del dashboard
+  min-height: 100vh;
+  position: relative;
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-
-  h1 {
-    margin: 0;
-    font-size: $font-size-xl;
-    font-weight: 500;
-  }
-}
-
-// Tarjeta de filtros
-.filter-card {
-  margin-bottom: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  mat-card-content {
+  // Responsive design
+  @media (max-width: 768px) {
     padding: 1rem;
   }
 }
 
-.filter-form {
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    
-    mat-form-field {
-      flex: 1;
-      min-width: 200px;
-    }
-    
-    .date-range {
-      display: flex;
-      gap: 1rem;
-      flex: 2;
-      
-      mat-form-field {
-        flex: 1;
-      }
-    }
-  }
-  
-  .filter-actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-}
+// ===== HEADER CON GLASSMORPHISM REFINADO =====
+.header {
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
 
-// Tabla de inscripciones
-.table-container {
+  /* Premium glassmorphism base */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-secondary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 80% 20%, $theme-inscripciones-light 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: $border-radius-lg;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  transition: $transition-smooth;
   position: relative;
-  min-height: 400px;
-  border-radius: 8px;
   overflow: hidden;
-  background-color: $color-surface;
-  
-  table {
-    width: 100%;
-  }
-  
-  .mat-column-id {
-    width: 100px;
-  }
-  
-  .mat-column-userInfo,
-  .mat-column-contestInfo {
-    min-width: 200px;
-  }
-  
-  .mat-column-documents {
-    min-width: 180px;
-  }
-  
-  .mat-column-dates {
-    min-width: 180px;
-  }
-  
-  .mat-column-status {
-    width: 120px;
-  }
-  
-  .mat-column-actions {
-    width: 100px;
-    text-align: center;
-  }
-  
-  .action-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 0.25rem;
-  }
-  
-  .clickable-row {
-    cursor: pointer;
-    
-    &:hover {
-      background-color: rgba($color-primary, 0.05);
-    }
-  }
-  
-  // Celdas personalizadas
-  .id-cell {
-    font-family: monospace;
-    font-size: $font-size-xs;
-    color: $color-text-secondary;
-  }
-  
-  .user-info-cell {
-    .user-name {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-    
-    .user-details {
-      display: flex;
-      flex-direction: column;
-      font-size: $font-size-xs;
-      color: $color-text-secondary;
-      
-      .user-dni {
-        margin-bottom: 0.25rem;
-      }
-    }
-  }
-  
-  .contest-info-cell {
-    .contest-title {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-    
-    .contest-details {
-      display: flex;
-      flex-direction: column;
-      font-size: $font-size-xs;
-      color: $color-text-secondary;
-      
-      .contest-category {
-        margin-bottom: 0.25rem;
-      }
-    }
-  }
-  
-  .documents-cell {
-    .document-count {
-      margin-bottom: 0.5rem;
-      
-      .total-count {
-        font-weight: 500;
-      }
-    }
-    
-    .document-status {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      font-size: $font-size-xs;
-      
-      span {
-        display: flex;
-        align-items: center;
-        
-        mat-icon {
-          margin-right: 0.25rem;
-          font-size: 16px;
-          width: 16px;
-          height: 16px;
-        }
-      }
-      
-      .pending-count {
-        color: $color-warning;
-      }
-      
-      .approved-count {
-        color: $color-success;
-      }
-      
-      .rejected-count {
-        color: $color-error;
-      }
-    }
-  }
-  
-  .dates-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    
-    .date-item {
-      display: flex;
-      flex-direction: column;
-      
-      .date-label {
-        font-size: $font-size-xs;
-        color: $color-text-secondary;
-      }
-      
-      .date-value {
-        font-size: $font-size-sm;
-      }
-    }
-  }
-  
-  .status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: $font-size-xs;
-    font-weight: 500;
-    text-align: center;
-    
-    &.status-pending {
-      background-color: rgba($color-warning, 0.15);
-      color: $color-warning;
-    }
-    
-    &.status-approved {
-      background-color: rgba($color-success, 0.15);
-      color: $color-success;
-    }
-    
-    &.status-rejected {
-      background-color: rgba($color-error, 0.15);
-      color: $color-error;
-    }
-    
-    &.status-cancelled {
-      background-color: rgba($color-text-tertiary, 0.15);
-      color: $color-text-tertiary;
-    }
-    
-    &.status-in-process {
-      background-color: rgba($color-info, 0.15);
-      color: $color-info;
-    }
-  }
-  
-  // Estado de carga
-  .loading-overlay {
+
+  // Efecto de brillo sutil en hover
+  &::before {
+    content: '';
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      $theme-inscripciones-light,
+      transparent);
+    transition: left 0.8s ease;
     z-index: 1;
   }
-  
-  // Estado vacío
-  .empty-state {
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $card-shadow-hover;
+    border-color: $theme-inscripciones-medium;
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .header-icon {
+    font-size: 1.5rem;
+    color: $theme-inscripciones;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.3));
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 600;
+    color: $text-primary;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+    background: linear-gradient(135deg, $text-primary 0%, #e5e7eb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-actions {
+    position: relative;
+    z-index: 2;
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    .header-content {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .header-title {
+      justify-content: center;
+    }
+
+    padding: 1rem 1.5rem;
+  }
+}
+
+// ===== INTEGRACIÓN CON CUSTOM-INSCRIPTIONS-TABLE =====
+// Aplicar glassmorphism a los componentes de tabla personalizados
+::ng-deep app-custom-inscriptions-table {
+
+  // Tarjeta de filtros con glassmorphism refinado
+  .filters-card {
+    margin-bottom: 2rem;
+
+    .custom-card {
+      /* Premium glassmorphism base con tema de inscripciones */
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%) !important;
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 80% 20%, $theme-inscripciones-light 0%, transparent 50%) !important;
+      border: $border-glass-medium !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border-radius: $border-radius-lg !important;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1) !important;
+      transition: $transition-smooth !important;
+      position: relative;
+      overflow: hidden;
+
+      // Efecto de brillo sutil en hover
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent,
+          $theme-inscripciones-light,
+          transparent);
+        transition: left 0.8s ease;
+        z-index: 1;
+      }
+
+      &:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: $card-shadow-hover !important;
+        border-color: $theme-inscripciones-medium !important;
+
+        &::before {
+          left: 100%;
+        }
+      }
+
+      .card-content {
+        padding: 2rem;
+        background: transparent !important;
+        position: relative;
+        z-index: 2;
+      }
+    }
+
+    // Header de filtros
+    .card-header {
+      h3 {
+        color: $text-primary;
+        font-weight: 600;
+        font-size: 1.125rem;
+        margin: 0 0 1.5rem 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    // Formulario de filtros
+    .filters-form {
+      .filters-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .filter-field {
+          position: relative;
+        }
+      }
+    }
+  }
+
+  // Tarjeta de tabla con glassmorphism refinado
+  .table-card {
+    .custom-card {
+      /* Premium glassmorphism base con tema de inscripciones */
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%) !important;
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 90% 10%, $theme-inscripciones-light 0%, transparent 50%) !important;
+      border: $border-glass-medium !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border-radius: $border-radius-lg !important;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1) !important;
+      transition: $transition-smooth !important;
+      position: relative;
+      overflow: hidden;
+
+      // Efecto de brillo sutil en hover
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent,
+          rgba(76, 175, 80, 0.03),
+          transparent);
+        transition: left 1.2s ease;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      &:hover::before {
+        left: 100%;
+      }
+
+      .card-content {
+        padding: 0;
+        background: transparent !important;
+        position: relative;
+        z-index: 2;
+      }
+    }
+
+    // Header de tabla
+    .card-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.05) 0%,
+        rgba(55, 65, 81, 0.1) 100%);
+
+      h3 {
+        color: $text-primary;
+        font-weight: 600;
+        font-size: 1.125rem;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .results-count {
+        background: linear-gradient(135deg,
+          $theme-inscripciones-light 0%,
+          rgba(76, 175, 80, 0.15) 100%);
+        color: $text-secondary;
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border: 1px solid rgba(76, 175, 80, 0.2);
+        backdrop-filter: blur(4px);
+      }
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border-radius: 0 0 $border-radius-lg $border-radius-lg;
+
+      // Scrollbar personalizado
+      scrollbar-width: thin;
+      scrollbar-color: rgba(76, 175, 80, 0.6) rgba(55, 65, 81, 0.3);
+
+      &::-webkit-scrollbar {
+        height: 8px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: rgba(55, 65, 81, 0.3);
+        border-radius: 4px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg,
+          rgba(76, 175, 80, 0.6) 0%,
+          rgba(76, 175, 80, 0.8) 100%);
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        &:hover {
+          background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.8) 0%,
+            $theme-inscripciones 100%);
+        }
+      }
+    }
+  }
+}
+
+// ===== ESTILOS PARA CELDAS DE TABLA CON GLASSMORPHISM =====
+::ng-deep app-custom-inscriptions-table {
+
+  // Estilos para celdas específicas
+  .id-cell {
+    font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+    font-size: 0.75rem;
+    color: $text-tertiary;
+    background: linear-gradient(135deg,
+      rgba(76, 175, 80, 0.1) 0%,
+      rgba(76, 175, 80, 0.05) 100%);
+    padding: 0.25rem 0.5rem;
+    border-radius: $border-radius-sm;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    font-weight: 500;
+    text-align: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .user-name {
+      font-weight: 600;
+      color: $text-primary;
+      font-size: 0.875rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .user-email, .user-dni {
+      font-size: 0.75rem;
+      color: $text-secondary;
+      opacity: 0.9;
+    }
+  }
+
+  .contest-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .contest-title {
+      font-weight: 600;
+      color: $text-primary;
+      font-size: 0.875rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      line-height: 1.3;
+    }
+
+    .contest-category, .contest-department {
+      font-size: 0.75rem;
+      color: $text-secondary;
+      opacity: 0.9;
+    }
+  }
+
+  .documents-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+
+    .documents-count {
+      font-weight: 600;
+      font-size: 1rem;
+      color: $text-primary;
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.15) 0%,
+        rgba(59, 130, 246, 0.1) 100%);
+      padding: 0.25rem 0.5rem;
+      border-radius: 50%;
+      min-width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      backdrop-filter: blur(4px);
+    }
+
+    .documents-status {
+      font-size: 0.6875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      .status-approved {
+        color: #22c55e;
+      }
+
+      .status-pending {
+        color: #f59e0b;
+      }
+
+      .status-rejected {
+        color: #ef4444;
+      }
+    }
+  }
+
+  // Badges de estado con glassmorphism
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(8px);
+    border: 1px solid;
+    transition: $transition-smooth;
+
+    &.status-pending {
+      background: linear-gradient(135deg,
+        rgba(245, 158, 11, 0.15) 0%,
+        rgba(245, 158, 11, 0.1) 100%);
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.3);
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+    }
+
+    &.status-approved {
+      background: linear-gradient(135deg,
+        rgba(34, 197, 94, 0.15) 0%,
+        rgba(34, 197, 94, 0.1) 100%);
+      color: #22c55e;
+      border-color: rgba(34, 197, 94, 0.3);
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+    }
+
+    &.status-rejected {
+      background: linear-gradient(135deg,
+        rgba(239, 68, 68, 0.15) 0%,
+        rgba(239, 68, 68, 0.1) 100%);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.3);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+    }
+
+    &.status-cancelled {
+      background: linear-gradient(135deg,
+        rgba(107, 114, 128, 0.15) 0%,
+        rgba(107, 114, 128, 0.1) 100%);
+      color: $text-tertiary;
+      border-color: rgba(107, 114, 128, 0.3);
+      box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+    }
+
+    &.status-in-process {
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.15) 0%,
+        rgba(59, 130, 246, 0.1) 100%);
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.3);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    }
+  }
+
+  .date-cell {
+    font-size: 0.75rem;
+    color: $text-secondary;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  // Estados de carga y vacío con glassmorphism
+  .loading-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 1rem;
-    
-    mat-icon {
-      font-size: 3rem;
-      width: 3rem;
-      height: 3rem;
-      margin-bottom: 1rem;
-      color: $color-text-tertiary;
-    }
-    
-    p {
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-tertiary 100%);
+    border-radius: $border-radius-lg;
+    backdrop-filter: blur(8px);
+    border: $border-glass-light;
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(76, 175, 80, 0.3);
+      border-radius: 50%;
+      border-top-color: $theme-inscripciones;
+      animation: spin 1s ease-in-out infinite;
       margin-bottom: 1.5rem;
-      color: $color-text-secondary;
+    }
+
+    p {
+      color: $text-secondary;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
+      margin: 0;
+    }
+  }
+
+  .empty-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-tertiary 100%);
+    border-radius: $border-radius-lg;
+    backdrop-filter: blur(8px);
+    border: $border-glass-light;
+
+    .empty-icon {
+      font-size: 4rem;
+      color: $text-tertiary;
+      margin-bottom: 1.5rem;
+      opacity: 0.7;
+    }
+
+    h4 {
+      margin: 0 0 0.75rem;
+      color: $text-primary;
+      font-size: 1.125rem;
+      font-weight: 600;
       text-align: center;
     }
+
+    p {
+      margin: 0;
+      color: $text-secondary;
+      font-size: 0.875rem;
+      text-align: center;
+      opacity: 0.9;
+    }
   }
 }
 
-// Media queries para responsive
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    
-    h1 {
-      margin-bottom: 1rem;
-    }
-  }
-  
-  .filter-form {
-    .filter-row {
-      flex-direction: column;
-      gap: 0;
-      
-      .date-range {
-        flex-direction: column;
-        gap: 0;
-      }
-    }
-  }
-  
-  .table-container {
-    overflow-x: auto;
+// ===== ANIMACIONES GLASSMORPHISM =====
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .filter-card {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
   }
-  
-  .table-container {
-    background-color: $color-surface-dark;
-    
-    .loading-overlay {
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-    
-    .empty-state {
-      mat-icon {
-        color: $color-text-tertiary-dark;
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+// ===== INTEGRACIÓN CON CUSTOM-TABLE PARA PAGINACIÓN =====
+::ng-deep app-custom-inscriptions-table {
+  app-custom-table {
+    .pagination-container {
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%) !important;
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 50% 50%, $theme-inscripciones-light 0%, transparent 50%) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border: $border-glass-medium !important;
+      border-radius: $border-radius-lg !important;
+      box-shadow: $card-shadow-base !important;
+      border-top: none !important;
+      margin-top: 0 !important;
+      position: relative;
+      overflow: hidden;
+      transition: $transition-smooth !important;
+
+      // Efecto de brillo sutil en hover
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent,
+          $theme-inscripciones-light,
+          transparent);
+        transition: left 1s ease;
+        z-index: 1;
+        pointer-events: none;
       }
-      
-      p {
-        color: $color-text-secondary-dark;
-      }
-    }
-    
-    .clickable-row {
+
       &:hover {
-        background-color: rgba($color-primary-dark, 0.1);
-      }
-    }
-    
-    .id-cell {
-      color: $color-text-secondary-dark;
-    }
-    
-    .user-info-cell,
-    .contest-info-cell {
-      .user-details,
-      .contest-details {
-        color: $color-text-secondary-dark;
-      }
-    }
-    
-    .dates-cell {
-      .date-item {
-        .date-label {
-          color: $color-text-secondary-dark;
+        transform: translateY(-1px) !important;
+        box-shadow: $card-shadow-hover !important;
+        border-color: $theme-inscripciones-medium !important;
+
+        &::before {
+          left: 100%;
         }
       }
+
+      // Contenido de paginación
+      .pagination-content {
+        position: relative;
+        z-index: 2;
+      }
+
+      // Estilos para controles de paginación
+      .pagination-info {
+        color: $text-secondary !important;
+        font-weight: 500;
+      }
+
+      .pagination-controls {
+        button {
+          background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.1) 0%,
+            rgba(76, 175, 80, 0.05) 100%) !important;
+          color: $text-primary !important;
+          border: 1px solid rgba(76, 175, 80, 0.2) !important;
+          border-radius: $border-radius-md !important;
+          backdrop-filter: blur(4px) !important;
+          transition: $transition-smooth !important;
+
+          &:hover:not(:disabled) {
+            background: linear-gradient(135deg,
+              rgba(76, 175, 80, 0.2) 0%,
+              rgba(76, 175, 80, 0.1) 100%) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
+          }
+
+          &:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+          }
+        }
+      }
+
+      .page-size-selector {
+        select {
+          background: linear-gradient(135deg,
+            $glass-background-secondary 0%,
+            $glass-background-tertiary 100%) !important;
+          color: $text-primary !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          border-radius: $border-radius-md !important;
+          backdrop-filter: blur(4px) !important;
+          padding: 0.5rem !important;
+        }
+      }
+    }
+  }
+}
+
+// ===== RESPONSIVE DESIGN MODERNO =====
+@media (max-width: 1200px) {
+  .inscripciones-admin-container {
+    padding: 1rem;
+  }
+
+  .header {
+    padding: 1.25rem 1.5rem;
+
+    h1 {
+      font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .inscripciones-admin-container {
+    padding: 0.75rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    text-align: center;
+
+    h1 {
+      font-size: 1.25rem;
+      margin-bottom: 0;
+    }
+
+    .header-actions {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  // Ajustes para filtros en móvil
+  ::ng-deep app-custom-inscriptions-table {
+    .filters-card .custom-card .card-content {
+      padding: 1.5rem;
+    }
+
+    .filters-form .filters-row {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .table-card .card-header {
+      padding: 1rem 1.5rem;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: center;
+
+      h3 {
+        font-size: 1rem;
+      }
+
+      .results-count {
+        align-self: center;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .inscripciones-admin-container {
+    padding: 0.5rem;
+  }
+
+  .header {
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  ::ng-deep app-custom-inscriptions-table {
+    .filters-card .custom-card .card-content {
+      padding: 1rem;
+    }
+
+    .table-card .card-header {
+      padding: 0.75rem 1rem;
+    }
+  }
+}
+
+// ===== OPTIMIZACIONES PARA RENDIMIENTO =====
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  ::ng-deep app-custom-inscriptions-table {
+    .custom-card::before {
+      display: none;
+    }
+  }
+
+  .header::before {
+    display: none;
+  }
+}
+
+// ===== SOPORTE PARA ALTO CONTRASTE =====
+@media (prefers-contrast: high) {
+  .header {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  ::ng-deep app-custom-inscriptions-table {
+    .custom-card {
+      border-width: 2px;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .status-badge {
+      border-width: 2px;
+      font-weight: 700;
+    }
+
+    .id-cell {
+      border-width: 2px;
+      font-weight: 600;
+    }
+  }
+}
+
+// ===== FALLBACKS PARA NAVEGADORES SIN SOPORTE =====
+@supports not (backdrop-filter: blur(12px)) {
+  .header,
+  ::ng-deep app-custom-inscriptions-table .custom-card {
+    background: rgba(55, 65, 81, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+// ===== PRINT STYLES =====
+@media print {
+  .inscripciones-admin-container {
+    background: white !important;
+    color: black !important;
+    padding: 0;
+  }
+
+  .header {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    page-break-after: avoid;
+  }
+
+  ::ng-deep app-custom-inscriptions-table {
+    .custom-card {
+      background: white !important;
+      color: black !important;
+      border: 1px solid #ccc !important;
+      box-shadow: none !important;
+    }
+
+    .filters-card {
+      display: none; // Ocultar filtros en impresión
+    }
+
+    .pagination-container {
+      display: none; // Ocultar paginación en impresión
     }
   }
 }

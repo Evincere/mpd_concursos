@@ -19,9 +19,7 @@ import { CustomSelectComponent } from '@shared/components/custom-form/custom-sel
 import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
 import { CustomTableComponent, TableColumn, SortEvent, PageEvent } from '@shared/components/custom-form/custom-table/custom-table.component';
 import { CustomTableColumnComponent } from '@shared/components/custom-form/custom-table/custom-table-column.component';
-import { CustomMenuComponent } from '@shared/components/custom-form/custom-menu/custom-menu.component';
-import { CustomMenuItemComponent } from '@shared/components/custom-form/custom-menu/custom-menu-item.component';
-import { CustomMenuTriggerDirective } from '@shared/components/custom-form/custom-menu/custom-menu-trigger.directive';
+
 import { ConcursoFormDialogComponent } from './components/concurso-form-dialog/concurso-form-dialog.component';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -42,9 +40,6 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
     CustomDatepickerComponent,
     CustomTableComponent,
     CustomTableColumnComponent,
-    CustomMenuComponent,
-    CustomMenuItemComponent,
-    CustomMenuTriggerDirective,
     ConfirmDialogComponent
   ]
 })
@@ -61,18 +56,14 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
   departments: string[] = [];
   positions: string[] = [];
   categories: string[] = [];
-  statusOptions: { value: ContestStatus | 'ALL', label: string }[] = [
-    { value: 'ALL', label: 'Todos' },
-    { value: 'DRAFT', label: 'Borrador' },
-    { value: 'ACTIVE', label: 'Activo' },
-    { value: 'IN_PROGRESS', label: 'En Proceso' },
-    { value: 'CLOSED', label: 'Cerrado' },
-    { value: 'CANCELLED', label: 'Cancelado' }
-  ];
+
 
   // Estado de la UI
   isLoading = false;
   viewMode: 'cards' | 'table' = 'cards';
+
+  // Menú de acciones
+  openMenuId: string | null = null;
 
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
@@ -100,6 +91,7 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     this.loadFilterOptions();
     this.setupFilterListeners();
     this.loadConcursos();
+    this.setupDocumentClickListener();
   }
 
   ngOnDestroy(): void {
@@ -228,7 +220,12 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       title: 'Editar Concurso',
       icon: 'edit',
       size: 'large',
-      data: { mode: 'edit', concurso: concurso }
+      data: { mode: 'edit', concurso: concurso },
+      panelClass: ['glassmorphism-dialog', 'concurso-form-dialog-container'],
+      showCloseButton: true,
+      showFooter: false,
+      showCancelButton: false,
+      showConfirmButton: false
     });
 
     dialogRef.afterClosed$.subscribe((result: unknown) => {
@@ -276,31 +273,21 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  changeStatus(concurso: Concurso, newStatus: ContestStatus | 'ALL'): void {
-    // Si el estado es 'ALL', no hacemos nada
-    if (newStatus === 'ALL') {
-      return;
-    }
-    this.isLoading = true;
-    this.concursosService.changeStatus(concurso.id, newStatus)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.loadConcursos();
-          this.notificationService.success(`Estado del concurso cambiado a ${this.getStatusLabel(newStatus)}`);
-        },
-        error: (error) => {
-          console.error('Error cambiando estado del concurso:', error);
-          this.notificationService.error('Error al cambiar el estado del concurso');
-          this.isLoading = false;
-        }
-      });
-  }
+
 
   getStatusLabel(status: ContestStatus | string): string {
     if (!status) return 'Sin estado';
-    const statusOption = this.statusOptions.find(option => option.value === status);
-    return statusOption ? statusOption.label : status;
+
+    // Mapeo directo de estados sin depender de statusOptions
+    const statusLabels: Record<string, string> = {
+      'DRAFT': 'Borrador',
+      'ACTIVE': 'Activo',
+      'IN_PROGRESS': 'En Proceso',
+      'CLOSED': 'Cerrado',
+      'CANCELLED': 'Cancelado'
+    };
+
+    return statusLabels[status] || status;
   }
 
   getStatusClass(status: ContestStatus | string): string {
@@ -343,6 +330,17 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     return [
       { value: '', label: 'Todas las categorías' },
       ...this.categories.map(cat => ({ value: cat, label: cat }))
+    ];
+  }
+
+  getStatusOptions(): { value: string; label: string }[] {
+    return [
+      { value: 'ALL', label: 'Todos' },
+      { value: 'DRAFT', label: 'Borrador' },
+      { value: 'ACTIVE', label: 'Activo' },
+      { value: 'IN_PROGRESS', label: 'En Proceso' },
+      { value: 'CLOSED', label: 'Cerrado' },
+      { value: 'CANCELLED', label: 'Cancelado' }
     ];
   }
 
@@ -401,6 +399,37 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       this.pageIndex++;
       this.loadConcursos();
     }
+  }
+
+  // Métodos para el menú de acciones
+  toggleActionMenu(concursoId: string, event: Event): void {
+    event.stopPropagation();
+    this.openMenuId = this.openMenuId === concursoId ? null : concursoId;
+  }
+
+  viewConcursoDetails(concurso: Concurso): void {
+    this.closeActionMenu();
+    this.router.navigate(['/admin/concursos/detalle', concurso.id]);
+  }
+
+  manageConcursoDates(concurso: Concurso): void {
+    this.closeActionMenu();
+    this.router.navigate(['/admin/concursos/fechas', concurso.id]);
+  }
+
+
+
+  private closeActionMenu(): void {
+    this.openMenuId = null;
+  }
+
+  private setupDocumentClickListener(): void {
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.action-menu-container')) {
+        this.closeActionMenu();
+      }
+    });
   }
 
   // Exponer Math para el template

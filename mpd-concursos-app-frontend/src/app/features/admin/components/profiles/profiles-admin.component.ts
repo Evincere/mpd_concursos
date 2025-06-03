@@ -2,23 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -37,28 +22,10 @@ import { ProfileStatsComponent } from './components/profile-stats/profile-stats.
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatMenuModule,
-    MatBadgeModule,
-    MatTabsModule,
     ProfileStatsComponent
   ]
 })
 export class ProfilesAdminComponent implements OnInit, OnDestroy {
-  displayedColumns: string[] = ['avatar', 'name', 'email', 'dni', 'professionalInfo', 'documents', 'status', 'actions'];
   dataSource: UserProfile[] = [];
 
   isLoading = false;
@@ -71,6 +38,12 @@ export class ProfilesAdminComponent implements OnInit, OnDestroy {
 
   stats: ProfileStats | null = null;
   activeTab = 0;
+
+
+
+  // Propiedades para ordenamiento
+  currentSort: string = 'lastName';
+  currentDirection: 'asc' | 'desc' = 'asc';
 
   private destroy$ = new Subject<void>();
 
@@ -145,8 +118,8 @@ export class ProfilesAdminComponent implements OnInit, OnDestroy {
       hasProfessionalInfo: this.filterForm.get('hasProfessionalInfo')?.value === '' ? undefined : this.filterForm.get('hasProfessionalInfo')?.value === 'true',
       page: this.pageIndex,
       size: this.pageSize,
-      sort: 'lastName',
-      direction: 'asc'
+      sort: this.currentSort,
+      direction: this.currentDirection
     };
 
     this.profilesService.getProfiles(filters)
@@ -178,14 +151,22 @@ export class ProfilesAdminComponent implements OnInit, OnDestroy {
       });
   }
 
-  onPageChange(event: PageEvent): void {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
+  onPageChange(pageIndex: number, pageSize?: number): void {
+    this.pageIndex = pageIndex;
+    if (pageSize) {
+      this.pageSize = pageSize;
+    }
     this.loadProfiles();
   }
 
-  onSort(_sort: Sort): void {
-    // Implementar ordenamiento
+  onSort(column: string): void {
+    if (this.currentSort === column) {
+      this.currentDirection = this.currentDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.currentSort = column;
+      this.currentDirection = 'asc';
+    }
+    this.pageIndex = 0;
     this.loadProfiles();
   }
 
@@ -262,5 +243,118 @@ export class ProfilesAdminComponent implements OnInit, OnDestroy {
   formatDate(date: string): string {
     if (!date) return '';
     return new Date(date).toLocaleDateString();
+  }
+
+
+
+  // Métodos para iconos de estado
+  getStatusIconClass(status: string): string {
+    switch (status) {
+      case 'ACTIVE': return 'fas fa-check-circle';
+      case 'INACTIVE': return 'fas fa-pause-circle';
+      case 'BLOCKED': return 'fas fa-ban';
+      default: return 'fas fa-question-circle';
+    }
+  }
+
+  // Métodos para paginación personalizada
+  getTotalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize);
+  }
+
+  getStartIndex(): number {
+    return this.pageIndex * this.pageSize + 1;
+  }
+
+  getEndIndex(): number {
+    const end = (this.pageIndex + 1) * this.pageSize;
+    return Math.min(end, this.totalItems);
+  }
+
+  getVisiblePages(): (number | string)[] {
+    const totalPages = this.getTotalPages();
+    const currentPage = this.pageIndex + 1;
+    const pages: (number | string)[] = [];
+
+    if (totalPages <= 7) {
+      // Mostrar todas las páginas si son 7 o menos
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Lógica para mostrar páginas con elipsis
+      if (currentPage <= 4) {
+        for (let i = 1; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  }
+
+  goToFirstPage(): void {
+    if (this.pageIndex > 0) {
+      this.onPageChange(0);
+    }
+  }
+
+  goToPreviousPage(): void {
+    if (this.pageIndex > 0) {
+      this.onPageChange(this.pageIndex - 1);
+    }
+  }
+
+  goToNextPage(): void {
+    if (this.pageIndex < this.getTotalPages() - 1) {
+      this.onPageChange(this.pageIndex + 1);
+    }
+  }
+
+  goToLastPage(): void {
+    const lastPage = this.getTotalPages() - 1;
+    if (this.pageIndex < lastPage) {
+      this.onPageChange(lastPage);
+    }
+  }
+
+  goToPage(pageIndex: number): void {
+    if (pageIndex >= 0 && pageIndex < this.getTotalPages()) {
+      this.onPageChange(pageIndex);
+    }
+  }
+
+  goToPageNumber(page: number | string): void {
+    if (typeof page === 'number' && page !== this.pageIndex + 1) {
+      this.goToPage(page - 1);
+    }
+  }
+
+  onPageSizeChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const newPageSize = parseInt(target.value, 10);
+    this.pageIndex = 0; // Reset to first page
+    this.onPageChange(0, newPageSize);
+  }
+
+  // Método para trackBy en ngFor
+  trackByProfileId(index: number, profile: UserProfile): string {
+    return profile.id;
   }
 }

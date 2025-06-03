@@ -1,0 +1,363 @@
+<!-- Enhanced Examenes Admin - Premium Glassmorphism -->
+<div class="dashboard-container">
+  <!-- Enhanced Header -->
+  <div class="header">
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-clipboard-list"></i>
+        <h1>Gestión de Exámenes</h1>
+      </div>
+      <p class="header-description">
+        Administra y configura los exámenes del sistema de concursos
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="action-button primary" (click)="crearExamen()">
+        <i class="fas fa-plus"></i>
+        <span>Nuevo Examen</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Enhanced Stats Cards -->
+  <div class="stats-cards">
+    <div class="stats-card">
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-clipboard-check"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ examenes.length }}</div>
+          <div class="stat-label">Total Exámenes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-play-circle"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ getExamenesPorEstado('ACTIVO').length }}</div>
+          <div class="stat-label">Activos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-edit"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ getExamenesPorEstado('BORRADOR').length }}</div>
+          <div class="stat-label">Borradores</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stat-item">
+        <div class="stat-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ getExamenesPorEstado('FINALIZADO').length }}</div>
+          <div class="stat-label">Finalizados</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Filter Card -->
+  <div class="filter-card">
+    <div class="filter-header">
+      <h3>
+        <i class="fas fa-filter"></i>
+        Filtros de Búsqueda
+      </h3>
+    </div>
+    <div class="filter-content">
+      <div class="filter-field">
+        <label for="searchInput">Buscar exámenes</label>
+        <div class="input-container">
+          <i class="fas fa-search"></i>
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Buscar por título, tipo o descripción..."
+            (input)="applyFilter($event)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Enhanced Table Card -->
+  <div class="table-card">
+    <div class="table-header">
+      <h3>
+        <i class="fas fa-list"></i>
+        Lista de Exámenes
+      </h3>
+      <div class="table-actions">
+        <button class="action-button secondary" (click)="exportarExamenes()">
+          <i class="fas fa-download"></i>
+          <span>Exportar</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="table-content">
+      <!-- Loading State -->
+      <div *ngIf="cargando" class="loading-container">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Cargando exámenes...</p>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!cargando && dataSource.filteredData.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-clipboard-list"></i>
+        </div>
+        <h3>No hay exámenes disponibles</h3>
+        <p>Comienza creando tu primer examen para el sistema</p>
+        <button class="action-button primary" (click)="crearExamen()">
+          <i class="fas fa-plus"></i>
+          <span>Crear Primer Examen</span>
+        </button>
+      </div>
+
+      <!-- Enhanced Custom Table -->
+      <div *ngIf="!cargando && dataSource.filteredData.length > 0" class="custom-table-container">
+        <div class="table-wrapper">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th class="sortable" (click)="sortData('id')">
+                  <span>ID</span>
+                  <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" (click)="sortData('titulo')">
+                  <span>Título</span>
+                  <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" (click)="sortData('tipo')">
+                  <span>Tipo</span>
+                  <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" (click)="sortData('estado')">
+                  <span>Estado</span>
+                  <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" (click)="sortData('fechaInicio')">
+                  <span>Fecha Inicio</span>
+                  <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" (click)="sortData('duracion')">
+                  <span>Duración</span>
+                  <i class="fas fa-sort"></i>
+                </th>
+                <th class="sortable" (click)="sortData('puntajeMaximo')">
+                  <span>Puntaje</span>
+                  <i class="fas fa-sort"></i>
+                </th>
+                <th class="actions-column">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let examen of dataSource.filteredData; trackBy: trackByExamenId"
+                  class="table-row"
+                  [attr.aria-label]="'Examen: ' + examen.titulo">
+
+                <!-- ID Column -->
+                <td class="id-cell">
+                  <div class="id-badge">
+                    {{ examen.id }}
+                  </div>
+                </td>
+
+                <!-- Título Column -->
+                <td class="title-cell">
+                  <div class="title-content">
+                    <h4>{{ examen.titulo }}</h4>
+                    <p>{{ examen.descripcion | slice:0:60 }}{{ examen.descripcion.length > 60 ? '...' : '' }}</p>
+                  </div>
+                </td>
+
+                <!-- Tipo Column -->
+                <td class="type-cell">
+                  <div class="type-badge" [class]="getTipoClass(examen.tipo)">
+                    <i [class]="getTipoIcon(examen.tipo)"></i>
+                    <span>{{ getTipoExamenText(examen.tipo) }}</span>
+                  </div>
+                </td>
+
+                <!-- Estado Column -->
+                <td class="status-cell">
+                  <div class="status-badge" [class]="getEstadoClass(examen.estado)">
+                    <i [class]="getEstadoIcon(examen.estado)"></i>
+                    <span>{{ getEstadoText(examen.estado) }}</span>
+                  </div>
+                </td>
+
+                <!-- Fecha Column -->
+                <td class="date-cell">
+                  <div class="date-content">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>{{ formatDate(examen.fechaInicio) }}</span>
+                  </div>
+                </td>
+
+                <!-- Duración Column -->
+                <td class="duration-cell">
+                  <div class="duration-content">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ examen.duracion }} min</span>
+                  </div>
+                </td>
+
+                <!-- Puntaje Column -->
+                <td class="score-cell">
+                  <div class="score-content">
+                    <i class="fas fa-star"></i>
+                    <span>{{ examen.puntajeMaximo }} pts</span>
+                  </div>
+                </td>
+
+                <!-- Actions Column -->
+                <td class="actions-cell">
+                  <div class="actions-menu">
+                    <button class="action-btn"
+                            [class.menu-open]="activeMenuId === examen.id"
+                            (click)="toggleMenu(examen.id)"
+                            [attr.aria-label]="'Acciones para ' + examen.titulo">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+
+                    <div class="dropdown-menu"
+                         [class.show]="activeMenuId === examen.id"
+                         (clickOutside)="closeMenu()">
+
+                      <button class="dropdown-item" (click)="editarExamen(examen)">
+                        <i class="fas fa-edit"></i>
+                        <span>Editar</span>
+                      </button>
+
+                      <button class="dropdown-item" (click)="verDetalles(examen)">
+                        <i class="fas fa-eye"></i>
+                        <span>Ver Detalles</span>
+                      </button>
+
+                      <div class="dropdown-divider"></div>
+
+                      <button class="dropdown-item"
+                              *ngIf="examen.estado === 'BORRADOR'"
+                              (click)="cambiarEstadoExamen(examen, 'ACTIVO')">
+                        <i class="fas fa-play"></i>
+                        <span>Activar</span>
+                      </button>
+
+                      <button class="dropdown-item"
+                              *ngIf="examen.estado === 'ACTIVO'"
+                              (click)="cambiarEstadoExamen(examen, 'FINALIZADO')">
+                        <i class="fas fa-stop"></i>
+                        <span>Finalizar</span>
+                      </button>
+
+                      <button class="dropdown-item warning"
+                              *ngIf="examen.estado !== 'ANULADO'"
+                              (click)="cambiarEstadoExamen(examen, 'ANULADO')">
+                        <i class="fas fa-ban"></i>
+                        <span>Anular</span>
+                      </button>
+
+                      <div class="dropdown-divider"></div>
+
+                      <button class="dropdown-item danger" (click)="eliminarExamen(examen)">
+                        <i class="fas fa-trash"></i>
+                        <span>Eliminar</span>
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Enhanced Custom Pagination -->
+        <div class="custom-pagination">
+          <div class="pagination-info">
+            <span>Mostrando {{ getStartIndex() + 1 }} - {{ getEndIndex() }} de {{ dataSource.filteredData.length }} exámenes</span>
+          </div>
+
+          <div class="pagination-controls">
+            <button class="pagination-btn"
+                    [disabled]="currentPage === 0"
+                    (click)="previousPage()"
+                    [attr.aria-label]="'Página anterior'">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div class="page-numbers">
+              <button *ngFor="let page of getPageNumbers()"
+                      class="page-btn"
+                      [class.active]="page === currentPage"
+                      (click)="goToPage(page)"
+                      [attr.aria-label]="'Ir a página ' + (page + 1)">
+                {{ page + 1 }}
+              </button>
+            </div>
+
+            <button class="pagination-btn"
+                    [disabled]="currentPage >= getTotalPages() - 1"
+                    (click)="nextPage()"
+                    [attr.aria-label]="'Página siguiente'">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <div class="pagination-size">
+            <label for="pageSize">Elementos por página:</label>
+            <select id="pageSize"
+                    [(ngModel)]="pageSize"
+                    (change)="onPageSizeChange()"
+                    class="page-size-select">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Examen Form Modal -->
+<app-examen-form
+  *ngIf="showExamenForm"
+  [isVisible]="showExamenForm"
+  [mode]="formMode"
+  [examenData]="selectedExamen"
+  (formSubmit)="onFormSubmit($event)"
+  (formCancel)="onFormCancel()">
+</app-examen-form>
+
+<!-- Custom Notification -->
+<div class="notification"
+     [class.show]="showNotification"
+     [class]="notificationType">
+  <div class="notification-content">
+    <i [class]="getNotificationIcon()"></i>
+    <span>{{ notificationMessage }}</span>
+  </div>
+  <button class="notification-close" (click)="closeNotification()">
+    <i class="fas fa-times"></i>
+  </button>
+</div>

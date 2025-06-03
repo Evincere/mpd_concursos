@@ -1,58 +1,80 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { AdminRolesService, Role, RoleFilter } from '@core/services/admin/admin-roles.service';
+// Servicios y modelos
+import { AdminRolesService, Role, RoleFilter, Permission } from '@core/services/admin/admin-roles.service';
+import { NotificationService } from '@shared/services/notification.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
+
+// Componentes personalizados
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
+import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
+import { CustomSelectComponent } from '@shared/components/custom-form/custom-select/custom-select.component';
+
+// Directivas
+import { DropdownOverflowFixDirective } from '@shared/directives/dropdown-overflow-fix.directive';
+
+// Componentes de diálogo
 import { RoleFormDialogComponent } from './components/role-form-dialog/role-form-dialog.component';
 import { RoleDetailDialogComponent } from './components/role-detail-dialog/role-detail-dialog.component';
-
-// Importar componentes personalizados
-import { CustomFormModule } from '@shared/components/custom-form/custom-form.module';
-import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
-import { TableColumn, SortEvent, PageEvent } from '@shared/components/custom-form/custom-table/custom-table.component';
 
 @Component({
   selector: 'app-roles-admin',
   templateUrl: './roles-admin.component.html',
   styleUrls: ['./roles-admin.component.scss'],
+  encapsulation: ViewEncapsulation.None,
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    CustomFormModule
+    CustomButtonComponent,
+    CustomCardComponent,
+    CustomFormFieldComponent,
+    CustomSelectComponent,
+    DropdownOverflowFixDirective
   ]
 })
 export class RolesAdminComponent implements OnInit, OnDestroy {
-  tableColumns: TableColumn[] = [
-    { property: 'name', header: 'Nombre', sortable: true },
-    { property: 'description', header: 'Descripción', sortable: true },
-    { property: 'permissions', header: 'Permisos' },
-    { property: 'userCount', header: 'Usuarios', sortable: true },
-    { property: 'isSystem', header: 'Tipo', sortable: true },
-    { property: 'actions', header: 'Acciones' }
-  ];
+  // Exponer Math para usar en el template
+  Math = Math;
 
-  dataSource: Role[] = [];
+  // Datos
+  roles: Role[] = [];
 
+  // Estado de la UI
   isLoading = false;
-  totalItems = 0;
+  
+  // Paginación
+  totalRoles = 0;
   pageSize = 10;
   pageIndex = 0;
   pageSizeOptions: number[] = [5, 10, 25, 50];
-
+  
+  // Filtros
   filterForm: FormGroup;
-
+  currentFilters: RoleFilter = {};
+  
+  // Opciones para filtros
+  tipoOptions = [
+    { value: '', label: 'Todos' },
+    { value: true, label: 'Sistema' },
+    { value: false, label: 'Personalizados' }
+  ];
+  
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private rolesService: AdminRolesService,
-    private dialogService: CustomDialogService
+    private notificationService: NotificationService,
+    private dialogService: UnifiedDialogService
   ) {
     this.filterForm = this.fb.group({
       search: [''],
@@ -96,20 +118,22 @@ export class RolesAdminComponent implements OnInit, OnDestroy {
     this.isLoading = true;
 
     const filters: RoleFilter = {
-      search: this.filterForm.get('search')?.value,
-      isSystem: this.filterForm.get('isSystem')?.value,
+      search: this.filterForm.get('search')?.value || '',
+      isSystem: this.filterForm.get('isSystem')?.value !== '' ? this.filterForm.get('isSystem')?.value : undefined,
       page: this.pageIndex,
       size: this.pageSize,
       sort: 'name',
       direction: 'asc'
     };
 
+    this.currentFilters = filters;
+
     this.rolesService.getRoles(filters)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.dataSource = response.roles;
-          this.totalItems = response.total;
+          this.roles = response.roles;
+          this.totalRoles = response.total;
           this.isLoading = false;
         },
         error: (error) => {
@@ -120,14 +144,9 @@ export class RolesAdminComponent implements OnInit, OnDestroy {
       });
   }
 
-  onPageChange(event: PageEvent): void {
+  onPageChange(event: { pageIndex: number; pageSize: number }): void {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
-    this.loadRoles();
-  }
-
-  onSortChange(_sort: SortEvent): void {
-    // Implementar ordenamiento
     this.loadRoles();
   }
 
@@ -140,17 +159,20 @@ export class RolesAdminComponent implements OnInit, OnDestroy {
     this.loadRoles();
   }
 
-  openRoleFormDialog(role?: Role): void {
+  // === ACCIONES DE ROLES ===
+
+  openCreateRoleDialog(): void {
     const dialogRef = this.dialogService.open(RoleFormDialogComponent, {
-      title: role ? 'Editar Rol' : 'Nuevo Rol',
-      icon: role ? 'edit' : 'plus',
+      title: 'Nuevo Rol',
+      icon: 'plus',
       size: 'large',
-      data: { role }
+      data: { role: null }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadRoles();
+        this.showNotification('Rol creado correctamente', 'success');
       }
     });
   }
@@ -164,7 +186,32 @@ export class RolesAdminComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteRole(role: Role): void {
+  openEditRoleDialog(role: Role, event: Event): void {
+    event.stopPropagation();
+    
+    if (role.isSystem) {
+      this.showNotification('No se pueden editar roles del sistema', 'error');
+      return;
+    }
+
+    const dialogRef = this.dialogService.open(RoleFormDialogComponent, {
+      title: 'Editar Rol',
+      icon: 'edit',
+      size: 'large',
+      data: { role }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadRoles();
+        this.showNotification('Rol actualizado correctamente', 'success');
+      }
+    });
+  }
+
+  deleteRole(role: Role, event: Event): void {
+    event.stopPropagation();
+    
     if (role.isSystem) {
       this.showNotification('No se pueden eliminar roles del sistema', 'error');
       return;
@@ -175,52 +222,70 @@ export class RolesAdminComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const dialogRef = this.dialogService.open(RoleDetailDialogComponent, {
-      title: 'Eliminar rol',
-      icon: 'trash',
-      size: 'small',
-      confirmButtonText: 'Eliminar',
-      confirmButtonColor: 'warn',
-      data: {
-        message: `¿Está seguro que desea eliminar el rol "${role.name}"? Esta acción no se puede deshacer.`
-      }
-    });
+    // Aquí implementarías el diálogo de confirmación
+    // Por ahora, simulamos la confirmación
+    if (confirm(`¿Está seguro que desea eliminar el rol "${role.name}"?`)) {
+      this.isLoading = true;
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.isLoading = true;
-
-        this.rolesService.deleteRole(role.id)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: () => {
-              this.showNotification('Rol eliminado correctamente', 'success');
-              this.loadRoles();
-            },
-            error: (error) => {
-              console.error('Error al eliminar rol:', error);
-              this.showNotification('Error al eliminar el rol', 'error');
-              this.isLoading = false;
-            }
-          });
-      }
-    });
+      this.rolesService.deleteRole(role.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.showNotification('Rol eliminado correctamente', 'success');
+            this.loadRoles();
+          },
+          error: (error) => {
+            console.error('Error al eliminar rol:', error);
+            this.showNotification('Error al eliminar el rol', 'error');
+            this.isLoading = false;
+          }
+        });
+    }
   }
+
+  // === MÉTODOS AUXILIARES ===
 
   getPermissionCount(role: Role): number {
     return role.permissions ? role.permissions.length : 0;
   }
 
-  formatDate(date: string): string {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString();
+  getPermissionNames(role: Role): string[] {
+    if (!role.permissions || role.permissions.length === 0) {
+      return [];
+    }
+    return role.permissions.map(p => p.name);
+  }
+
+  getDeleteButtonTitle(role: Role): string {
+    if (role.isSystem) {
+      return 'No se pueden eliminar roles del sistema';
+    }
+    if (role.userCount && role.userCount > 0) {
+      return `No se puede eliminar: ${role.userCount} usuarios asignados`;
+    }
+    return 'Eliminar rol';
+  }
+
+  getRoleTypeLabel(isSystem: boolean): string {
+    return isSystem ? 'Sistema' : 'Personalizado';
+  }
+
+  getRoleTypeClass(isSystem: boolean): string {
+    return isSystem ? 'system-role' : 'custom-role';
   }
 
   private showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
-    // Implementar notificación personalizada
-    console.log(`[${type}] ${message}`);
-
-    // TODO: Implementar servicio de notificaciones personalizado
-    // this.notificationService.show(message, type);
+    switch (type) {
+      case 'success':
+        this.notificationService.success(message);
+        break;
+      case 'error':
+        this.notificationService.error(message);
+        break;
+      case 'info':
+      default:
+        this.notificationService.info(message);
+        break;
+    }
   }
 }

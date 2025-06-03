@@ -1,229 +1,476 @@
-@use 'src/styles/variables' as *;
+/* ===================================================================
+   APP PERFORMANCE - GLASSMORPHISM PREMIUM DESIGN
+   Componente de métricas de rendimiento con design system glassmorphism
+   =================================================================== */
+
+/* Variables del Design System Glassmorphism */
+:root {
+  --glass-background-primary: rgba(55, 65, 81, 0.8);
+  --glass-background-secondary: rgba(75, 85, 99, 0.9);
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #6b7280;
+  --focus-color: #3b82f6;
+  --focus-light: #60a5fa;
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --input-background: #4b5563;
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --border-focus: rgba(59, 130, 246, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===================================================================
+   CONTENEDOR PRINCIPAL
+   =================================================================== */
 
 .app-performance-container {
-  padding: 1rem 0;
+  padding: 0;
+  animation: fadeIn 0.6s ease-out;
 }
+
+/* ===================================================================
+   HEADER DE SECCIÓN
+   =================================================================== */
 
 .section-header {
-  margin-bottom: 1.5rem;
-  
-  h2 {
-    font-size: $font-size-lg;
-    font-weight: 500;
-    margin: 0 0 0.5rem;
-    color: $color-text-primary;
-  }
-  
-  h3 {
-    font-size: $font-size-md;
-    font-weight: 500;
-    margin: 1.5rem 0 1rem;
-    color: $color-text-primary;
-  }
-  
-  .section-description {
-    color: $color-text-secondary;
-    margin: 0;
-    font-size: $font-size-sm;
-  }
+  margin-bottom: 2rem;
 }
 
-// Estado vacío
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.5rem 0;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: 600;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--focus-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.section-description {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* ===================================================================
+   ESTADO VACÍO GLASSMORPHISM
+   =================================================================== */
+
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
-  background-color: $color-surface-light;
-  border-radius: $border-radius;
-  
-  mat-icon {
-    font-size: 48px;
-    color: $color-text-secondary;
-    margin-bottom: 1rem;
-  }
-  
-  p {
-    color: $color-text-secondary;
-    font-size: $font-size-md;
-    margin: 0;
-  }
+  padding: 3rem 2rem;
+  text-align: center;
+  background: var(--glass-background-primary);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid var(--border-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md), var(--shadow-inset);
+  margin-bottom: 2rem;
 }
 
-// Métricas de rendimiento
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.empty-text {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ===================================================================
+   MÉTRICAS DE RENDIMIENTO GLASSMORPHISM
+   =================================================================== */
+
 .performance-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
   margin-bottom: 2rem;
 }
 
 .metrics-card {
-  border-radius: $border-radius;
-  box-shadow: $box-shadow-sm;
-  height: 100%;
-  
-  mat-card-header {
-    padding: 1rem 1rem 0.5rem;
-  }
-  
-  mat-card-title {
-    font-size: $font-size-md;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: $color-text-primary;
-  }
-  
-  mat-card-content {
-    padding: 0 1rem 1rem;
-  }
+  background: var(--glass-background-primary);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid var(--border-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md), var(--shadow-inset);
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  height: fit-content;
 }
 
-// Grid de información
+.metrics-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.metrics-card:hover::before {
+  left: 100%;
+}
+
+.metrics-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), var(--shadow-inset);
+}
+
+.card-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-icon {
+  font-size: 1.25rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+/* ===================================================================
+   GRID DE INFORMACIÓN GLASSMORPHISM
+   =================================================================== */
+
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 .info-item {
-  margin-bottom: 0.75rem;
-  
-  .info-label {
-    font-size: $font-size-sm;
-    color: $color-text-secondary;
-    margin-bottom: 0.25rem;
-  }
-  
-  .info-value {
-    font-weight: 500;
-    color: $color-text-primary;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-// Usuarios por rol
+.info-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* ===================================================================
+   USUARIOS POR ROL GLASSMORPHISM
+   =================================================================== */
+
 .users-by-role {
   margin-top: 1.5rem;
-  
-  h3 {
-    font-size: $font-size-sm;
-    font-weight: 500;
-    margin: 0 0 0.75rem;
-    color: $color-text-primary;
-  }
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.role-title {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .role-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .role-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
-  background-color: $color-surface-light;
-  border-radius: $border-radius-sm;
-  
-  .role-name {
-    font-weight: 500;
-    color: $color-text-primary;
-  }
-  
-  .role-count {
-    font-weight: 500;
-    color: $color-primary;
-  }
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  transition: var(--transition-normal);
 }
 
-// Secciones de endpoints y errores
-.endpoints-section, .errors-section {
+.role-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-hover);
+}
+
+.role-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.role-count {
+  font-weight: 600;
+  color: var(--focus-color);
+  font-size: 1.125rem;
+}
+
+/* ===================================================================
+   SECCIONES DE ENDPOINTS Y ERRORES GLASSMORPHISM
+   =================================================================== */
+
+.endpoints-section,
+.errors-section {
   margin-bottom: 2rem;
-  
-  h3 {
-    font-size: $font-size-md;
-    font-weight: 500;
-    margin: 0 0 1rem;
-    color: $color-text-primary;
-  }
 }
 
-// Tablas
+/* ===================================================================
+   TABLAS GLASSMORPHISM
+   =================================================================== */
+
 .table-container {
-  overflow-x: auto;
-  border-radius: $border-radius;
-  
-  table {
-    width: 100%;
-  }
-  
-  th {
-    font-weight: 500;
-    color: $color-text-primary;
-    background-color: $color-surface-light;
-  }
-  
-  td, th {
-    padding: 0.75rem 1rem;
-  }
-  
-  tr:nth-child(even) {
-    background-color: $color-surface-light;
-  }
+  background: var(--glass-background-primary);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid var(--border-primary);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md), var(--shadow-inset);
+  overflow: hidden;
 }
 
-// Método HTTP
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.endpoints-table,
+.errors-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-header {
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.header-cell {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.table-row {
+  transition: var(--transition-normal);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.table-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-cell {
+  padding: 0.875rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+/* ===================================================================
+   BADGES Y INDICADORES GLASSMORPHISM
+   =================================================================== */
+
 .method-badge {
   display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: $border-radius-sm;
-  font-size: $font-size-xs;
-  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
   color: white;
-  
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
   &.method-get {
-    background-color: #4caf50; // Green
+    background: var(--success-color);
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
   }
-  
+
   &.method-post {
-    background-color: #2196f3; // Blue
+    background: var(--focus-color);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
   }
-  
+
   &.method-put {
-    background-color: #ff9800; // Orange
+    background: var(--warning-color);
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
   }
-  
+
   &.method-delete {
-    background-color: #f44336; // Red
+    background: var(--error-color);
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
   }
 }
 
-// Indicador de estado
+.error-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--error-color);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
 .status-indicator {
   display: flex;
   align-items: center;
-  
+  gap: 0.5rem;
+
   &.status-healthy {
-    color: $color-success;
+    color: var(--success-color);
   }
-  
+
   &.status-warning {
-    color: $color-warning;
+    color: var(--warning-color);
   }
-  
+
   &.status-critical {
-    color: $color-error;
+    color: var(--error-color);
   }
-  
-  mat-icon {
-    font-size: 16px;
-    margin-right: 0.25rem;
+}
+
+.status-icon {
+  font-size: 1rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.status-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ===================================================================
+   ANIMACIONES
+   =================================================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-  
-  span {
-    font-size: $font-size-sm;
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================================================================
+   RESPONSIVE DESIGN
+   =================================================================== */
+
+@media (max-width: 1024px) {
+  .performance-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .performance-metrics {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card-header,
+  .card-content {
+    padding: 1rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .table-cell,
+  .header-cell {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .method-badge,
+  .error-type-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-icon {
+    font-size: 2.5rem;
+  }
+
+  .section-title {
+    font-size: 1.125rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .table-wrapper {
+    font-size: 0.75rem;
   }
 }

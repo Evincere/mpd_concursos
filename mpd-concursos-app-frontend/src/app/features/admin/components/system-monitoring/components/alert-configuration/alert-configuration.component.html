@@ -1,0 +1,239 @@
+<div class="alert-config-container">
+  <div class="section-header">
+    <h2 class="section-title">
+      <span class="section-icon">⚙️</span>
+      Configuración de Alertas
+    </h2>
+    <p class="section-description">
+      Personaliza los umbrales y configuraciones de las alertas del sistema.
+    </p>
+  </div>
+
+  <!-- Formulario de nueva configuración glassmorphism -->
+  <div class="config-form-section">
+    <div class="form-header">
+      <h3 class="form-title">
+        <span class="form-icon">➕</span>
+        Nueva Configuración de Alerta
+      </h3>
+    </div>
+
+    <form [formGroup]="configForm" (ngSubmit)="onSaveThreshold()" class="config-form">
+      <div class="form-grid">
+        <!-- Nombre -->
+        <div class="form-group">
+          <label class="form-label" for="name">Nombre de la Alerta</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="form-input"
+            placeholder="Ej: Alto uso de CPU"
+            [class.error]="configForm.get('name')?.invalid && configForm.get('name')?.touched">
+          <div *ngIf="configForm.get('name')?.invalid && configForm.get('name')?.touched" class="error-message">
+            El nombre es requerido
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-group">
+          <label class="form-label" for="description">Descripción</label>
+          <input
+            id="description"
+            type="text"
+            formControlName="description"
+            class="form-input"
+            placeholder="Descripción opcional de la alerta">
+        </div>
+
+        <!-- Tipo de métrica -->
+        <div class="form-group">
+          <label class="form-label" for="metricName">Tipo de Métrica</label>
+          <select
+            id="metricName"
+            formControlName="metricName"
+            class="form-select"
+            [class.error]="configForm.get('metricName')?.invalid && configForm.get('metricName')?.touched">
+            <option value="">Seleccionar métrica</option>
+            <option *ngFor="let metric of metricTypes" [value]="metric.value">
+              {{metric.label}}
+            </option>
+          </select>
+          <div *ngIf="configForm.get('metricName')?.invalid && configForm.get('metricName')?.touched" class="error-message">
+            El tipo de métrica es requerido
+          </div>
+        </div>
+
+        <!-- Operador -->
+        <div class="form-group">
+          <label class="form-label" for="operator">Operador</label>
+          <select
+            id="operator"
+            formControlName="operator"
+            class="form-select"
+            [class.error]="configForm.get('operator')?.invalid && configForm.get('operator')?.touched">
+            <option *ngFor="let op of operators" [value]="op.value">
+              {{op.label}}
+            </option>
+          </select>
+          <div *ngIf="configForm.get('operator')?.invalid && configForm.get('operator')?.touched" class="error-message">
+            El operador es requerido
+          </div>
+        </div>
+
+        <!-- Severidad -->
+        <div class="form-group">
+          <label class="form-label" for="severity">Severidad</label>
+          <select
+            id="severity"
+            formControlName="severity"
+            class="form-select"
+            [class.error]="configForm.get('severity')?.invalid && configForm.get('severity')?.touched">
+            <option *ngFor="let sev of severityTypes" [value]="sev.value">
+              {{sev.label}}
+            </option>
+          </select>
+          <div *ngIf="configForm.get('severity')?.invalid && configForm.get('severity')?.touched" class="error-message">
+            La severidad es requerida
+          </div>
+        </div>
+
+        <!-- Umbral -->
+        <div class="form-group">
+          <label class="form-label" for="threshold">Umbral</label>
+          <input
+            id="threshold"
+            type="number"
+            formControlName="threshold"
+            class="form-input"
+            placeholder="Ingrese el valor del umbral"
+            [class.error]="configForm.get('threshold')?.invalid && configForm.get('threshold')?.touched">
+          <div *ngIf="configForm.get('threshold')?.invalid && configForm.get('threshold')?.touched" class="error-message">
+            <span *ngIf="configForm.get('threshold')?.errors?.['required']">El umbral es requerido</span>
+            <span *ngIf="configForm.get('threshold')?.errors?.['min']">El umbral debe ser mayor a 0</span>
+          </div>
+        </div>
+
+        <!-- Cooldown -->
+        <div class="form-group">
+          <label class="form-label" for="cooldownMinutes">Cooldown (minutos)</label>
+          <input
+            id="cooldownMinutes"
+            type="number"
+            formControlName="cooldownMinutes"
+            class="form-input"
+            placeholder="15"
+            [class.error]="configForm.get('cooldownMinutes')?.invalid && configForm.get('cooldownMinutes')?.touched">
+          <div *ngIf="configForm.get('cooldownMinutes')?.invalid && configForm.get('cooldownMinutes')?.touched" class="error-message">
+            <span *ngIf="configForm.get('cooldownMinutes')?.errors?.['required']">El cooldown es requerido</span>
+            <span *ngIf="configForm.get('cooldownMinutes')?.errors?.['min']">El cooldown debe ser mayor a 0</span>
+          </div>
+        </div>
+
+        <!-- Estado habilitado -->
+        <div class="form-group">
+          <label class="form-label checkbox-label">
+            <input
+              type="checkbox"
+              formControlName="enabled"
+              class="form-checkbox">
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">Alerta habilitada</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-secondary"
+          (click)="configForm.reset(); configForm.patchValue({ enabled: true })">
+          <span class="btn-icon">🔄</span>
+          <span class="btn-label">Limpiar</span>
+        </button>
+        <button 
+          type="submit" 
+          class="btn-primary"
+          [disabled]="configForm.invalid">
+          <span class="btn-icon">💾</span>
+          <span class="btn-label">Guardar Configuración</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Lista de configuraciones existentes glassmorphism -->
+  <div class="existing-configs-section">
+    <div class="configs-header">
+      <h3 class="configs-title">
+        <span class="configs-icon">📋</span>
+        Configuraciones Existentes
+      </h3>
+      <div class="configs-count" *ngIf="alertThresholds.length > 0">
+        {{alertThresholds.length}} configuración{{alertThresholds.length !== 1 ? 'es' : ''}}
+      </div>
+    </div>
+
+    <!-- Estado vacío -->
+    <div *ngIf="alertThresholds.length === 0" class="empty-state">
+      <div class="empty-icon">⚙️</div>
+      <p class="empty-text">No hay configuraciones de alertas definidas</p>
+      <p class="empty-subtext">Crea tu primera configuración usando el formulario anterior</p>
+    </div>
+
+    <!-- Lista de configuraciones -->
+    <div *ngIf="alertThresholds.length > 0" class="configs-grid">
+      <div *ngFor="let threshold of alertThresholds" class="config-card" [ngClass]="getSeverityClass(threshold.severity)">
+        <div class="config-header">
+          <div class="config-icon">
+            <span>{{getSeverityIcon(threshold.severity)}}</span>
+          </div>
+          <div class="config-info">
+            <div class="config-title">{{threshold.name}}</div>
+            <div class="config-meta">
+              <span class="config-metric">{{getMetricTypeLabel(threshold.metricName)}}</span>
+              <span class="config-condition">{{getOperatorLabel(threshold.operator)}} {{threshold.threshold}}</span>
+              <span class="config-severity">{{getSeverityLabel(threshold.severity)}}</span>
+            </div>
+          </div>
+          <div class="config-status">
+            <label class="toggle-switch">
+              <input
+                type="checkbox"
+                [checked]="threshold.enabled"
+                (change)="onToggleThreshold(threshold)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="config-details">
+          <div class="config-description" *ngIf="threshold.description">
+            <span class="description-label">Descripción:</span>
+            <span class="description-text">{{threshold.description}}</span>
+          </div>
+          <div class="config-settings">
+            <div class="setting-item">
+              <span class="setting-label">Cooldown:</span>
+              <span class="setting-value">{{threshold.cooldownMinutes}} minutos</span>
+            </div>
+            <div class="setting-item" *ngIf="threshold.notificationChannels?.length">
+              <span class="setting-label">Canales:</span>
+              <span class="setting-value">{{threshold.notificationChannels.join(', ')}}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-actions">
+          <button
+            type="button"
+            class="btn-edit"
+            (click)="onUpdateThreshold(threshold)">
+            <span class="btn-icon">✏️</span>
+            <span class="btn-label">Editar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

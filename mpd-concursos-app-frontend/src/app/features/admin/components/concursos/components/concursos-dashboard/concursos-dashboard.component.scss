@@ -1,67 +1,588 @@
 @use 'src/styles/variables' as *;
 
+/* Enhanced Glassmorphism Design System Variables - Consistent with Admin Dashboard */
+$glass-background-primary: rgba(55, 65, 81, 0.8);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(31, 41, 55, 0.85);
+$glass-hover-primary: rgba(75, 85, 99, 0.6);
+$glass-active-primary: rgba(55, 65, 81, 0.95);
+
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-muted: #9ca3af;
+
+$focus-color: #3b82f6;
+$focus-color-secondary: rgba(59, 130, 246, 0.2);
+
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+/* Card Enhancement Variables */
+$card-shadow-base: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+$card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+$card-shadow-active: 0 12px 32px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.25);
+
+/* Border Enhancement Variables */
+$border-glass-subtle: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
+
 .dashboard-container {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  /* Transparent background to inherit admin layout background */
+  background: transparent;
 }
 
+/* Enhanced Header - Premium Glassmorphism */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  /* Premium glassmorphism background */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-secondary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle top highlight */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+      rgba(59, 130, 246, 0.6) 0%,
+      rgba(139, 92, 246, 0.4) 50%,
+      rgba(59, 130, 246, 0.6) 100%);
+    opacity: 0.8;
+  }
 
   h1 {
     margin: 0;
-    font-size: $font-size-xl;
-    font-weight: 500;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $text-primary;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.025em;
+    position: relative;
+    z-index: 1;
+
+    /* Contest-specific accent */
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg,
+        rgba(76, 175, 80, 0.8) 0%,
+        rgba(76, 175, 80, 0.4) 100%);
+      border-radius: 2px;
+    }
+  }
+
+  .header-actions {
+    position: relative;
+    z-index: 1;
+
+    /* Enhanced button styling */
+    ::ng-deep button {
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 100%) !important;
+      border: $border-glass-medium !important;
+      backdrop-filter: blur(4px);
+      border-radius: $border-radius-lg !important;
+      color: $text-primary !important;
+      font-weight: 600 !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      transition: all $transition-smooth;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.2) 0%,
+          rgba(255, 255, 255, 0.1) 100%) !important;
+        border: $border-glass-strong !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      &:focus {
+        outline: 2px solid $focus-color;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 4px $focus-color-secondary;
+      }
+
+      mat-icon {
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+      }
+    }
   }
 }
 
-// Indicador de carga
+/* Enhanced Loading Container - Premium Glassmorphism */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 0;
-  
+  padding: 4rem 2rem;
+  /* Premium glassmorphism background */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(10px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle animation background */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  /* Enhanced spinner styling */
+  ::ng-deep mat-spinner {
+    position: relative;
+    z-index: 1;
+
+    circle {
+      stroke: $focus-color !important;
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+    }
+  }
+
   p {
-    margin-top: 1rem;
-    color: $color-text-secondary;
-    font-size: $font-size-md;
+    margin-top: 1.5rem;
+    color: $text-secondary;
+    font-size: 1rem;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    letter-spacing: 0.025em;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.1);
+    }
   }
 }
 
-// Tarjetas de estadísticas
+/* Enhanced Stats Cards - Inherit Admin Dashboard Glassmorphism */
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
-}
 
-// Tarjeta de contenido
-.content-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  
-  .tab-content {
-    padding: 1.5rem;
+  /* Apply premium glassmorphism to stat cards - consistent with admin dashboard */
+  ::ng-deep app-stat-card {
+    .stat-card {
+      /* Premium glassmorphism base */
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 70% 30%, rgba(76, 175, 80, 0.1) 0%, transparent 50%);
+      border: $border-glass-medium;
+      backdrop-filter: blur(10px);
+      border-radius: $border-radius-lg;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      transition: all $transition-smooth;
+      position: relative;
+      overflow: hidden;
+
+      /* Contest-specific glow effect */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(76, 175, 80, 0.4) 50%,
+          transparent 100%);
+        opacity: 0;
+        transition: opacity $transition-normal;
+      }
+
+      &:hover {
+        /* Enhanced hover state */
+        background: linear-gradient(135deg,
+          $glass-hover-primary 0%,
+          $glass-background-secondary 100%);
+        background-image:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%),
+          radial-gradient(circle at 70% 30%, rgba(76, 175, 80, 0.15) 0%, transparent 50%);
+        transform: translateY(-3px) scale(1.02);
+        border: $border-glass-strong;
+        box-shadow:
+          $card-shadow-hover,
+          0 1px 6px rgba(76, 175, 80, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+
+        &::before {
+          opacity: 1;
+        }
+      }
+
+      /* Focus state for accessibility */
+      &:focus-within {
+        outline: 2px solid $focus-color;
+        outline-offset: 2px;
+        box-shadow:
+          0 0 0 4px $focus-color-secondary,
+          $card-shadow-base,
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+
+      /* Enhanced content styling */
+      mat-card-content {
+        position: relative;
+        z-index: 1;
+        background: transparent;
+      }
+
+      /* Icon container enhancement */
+      .stat-icon {
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(4px);
+        transition: all $transition-normal;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        mat-icon {
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+          transition: all $transition-normal;
+        }
+      }
+
+      &:hover .stat-icon {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.2);
+
+        mat-icon {
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+        }
+      }
+
+      /* Typography enhancements */
+      .stat-title {
+        color: $text-primary !important;
+        font-weight: 600 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      .stat-value {
+        color: $text-primary !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+
+      .stat-subtitle {
+        color: $text-secondary !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+    }
   }
 }
 
-// Sección de gráficos
+/* Enhanced Content Card - Premium Glassmorphism with Tabs */
+.content-card {
+  /* Premium glassmorphism base */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 90% 10%, rgba(76, 175, 80, 0.08) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+
+  /* Contest-specific top highlight */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+      rgba(76, 175, 80, 0.6) 0%,
+      rgba(139, 92, 246, 0.4) 50%,
+      rgba(76, 175, 80, 0.6) 100%);
+    opacity: 0.8;
+  }
+
+  mat-card-content {
+    padding: 0;
+    background: transparent;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tab-content {
+    padding: 2rem;
+    background: transparent;
+    position: relative;
+  }
+
+  /* Enhanced Material tabs styling - Contest theme */
+  ::ng-deep .mat-mdc-tab-group {
+    .mat-mdc-tab-header {
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.04) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(4px);
+      border-radius: $border-radius-xl $border-radius-xl 0 0;
+      position: relative;
+
+      /* Tab header glow */
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(76, 175, 80, 0.3) 50%,
+          transparent 100%);
+      }
+    }
+
+    .mat-mdc-tab {
+      color: $text-secondary;
+      font-weight: 500;
+      transition: all $transition-normal;
+      position: relative;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+      /* Tab hover effect */
+      &:hover:not(.mdc-tab--active) {
+        color: rgba(249, 250, 251, 0.8);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      &.mdc-tab--active {
+        color: $text-primary;
+        font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+        /* Contest-specific active tab indicator */
+        .mdc-tab-indicator__content--underline {
+          background: linear-gradient(90deg,
+            rgba(76, 175, 80, 0.8) 0%,
+            rgba(76, 175, 80, 1) 50%,
+            rgba(76, 175, 80, 0.8) 100%);
+          height: 3px;
+          border-radius: 2px;
+          box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+        }
+      }
+
+      /* Tab ripple effect enhancement */
+      .mat-ripple-element {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      background: transparent;
+      position: relative;
+    }
+
+    .mat-mdc-tab-body-content {
+      background: transparent;
+    }
+  }
+
+  /* Tab content animations */
+  .tab-content {
+    animation: fadeInUp 0.4s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Enhanced Charts Section - Premium Glassmorphism */
 .charts-section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
-  
+  grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
   .chart-container {
     height: 100%;
+    position: relative;
+
+    /* Premium glassmorphism for chart components - Contest theme */
+    ::ng-deep app-stats-chart {
+      .chart-card {
+        /* Enhanced glassmorphism base */
+        background: linear-gradient(135deg,
+          $glass-background-primary 0%,
+          $glass-background-tertiary 100%);
+        background-image:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+          radial-gradient(circle at 80% 20%, rgba(76, 175, 80, 0.08) 0%, transparent 50%);
+        border: $border-glass-medium;
+        backdrop-filter: blur(12px);
+        border-radius: $border-radius-xl;
+        box-shadow:
+          $card-shadow-base,
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        transition: all $transition-smooth;
+        position: relative;
+        overflow: hidden;
+
+        /* Contest chart glow effect */
+        &::after {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.1) 0%,
+            rgba(139, 92, 246, 0.05) 50%,
+            transparent 100%);
+          border-radius: $border-radius-xl;
+          opacity: 0;
+          transition: opacity $transition-normal;
+          z-index: -1;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          border: $border-glass-strong;
+          box-shadow:
+            $card-shadow-hover,
+            0 2px 8px rgba(76, 175, 80, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+          &::after {
+            opacity: 1;
+          }
+        }
+
+        /* Enhanced header styling */
+        mat-card-header {
+          background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.04) 100%);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(4px);
+          border-radius: $border-radius-xl $border-radius-xl 0 0;
+          position: relative;
+
+          mat-card-title {
+            color: $text-primary !important;
+            font-weight: 600 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            font-size: 1.1rem !important;
+          }
+
+          mat-card-subtitle {
+            color: $text-secondary !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+          }
+        }
+
+        /* Chart content area */
+        mat-card-content {
+          background: transparent;
+          position: relative;
+          z-index: 1;
+
+          /* Chart canvas enhancement */
+          canvas {
+            border-radius: $border-radius-md;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+          }
+        }
+      }
+    }
   }
 }
 
@@ -88,90 +609,293 @@
   
   .stats-detail-card {
     height: 100%;
-    
+    /* Premium glassmorphism for detail cards - Contest theme */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-tertiary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(circle at 85% 15%, rgba(76, 175, 80, 0.08) 0%, transparent 50%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-xl;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    transition: all $transition-smooth;
+    position: relative;
+    overflow: hidden;
+
+    /* Contest detail card subtle glow */
+    &::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.1) 0%,
+        rgba(59, 130, 246, 0.05) 100%);
+      border-radius: $border-radius-xl;
+      opacity: 0;
+      transition: opacity $transition-normal;
+      z-index: -1;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      border: $border-glass-strong;
+      box-shadow:
+        $card-shadow-hover,
+        0 2px 8px rgba(76, 175, 80, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+      &::after {
+        opacity: 1;
+      }
+    }
+
     mat-card-header {
-      padding: 1rem 1rem 0.5rem;
-      
+      padding: 1.5rem 1.5rem 0.75rem;
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.04) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border-radius: $border-radius-xl $border-radius-xl 0 0;
+
       mat-card-title {
-        font-size: $font-size-md;
-        font-weight: 500;
+        font-size: 1.1rem;
+        font-weight: 600;
         margin: 0;
+        color: $text-primary !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       }
     }
-    
+
     mat-card-content {
-      padding: 0 1rem 1rem;
+      padding: 1.5rem;
+      background: transparent;
+      position: relative;
+      z-index: 1;
     }
-    
+
     .stats-detail-section {
-      margin-bottom: 1rem;
-      
-      h3 {
-        font-size: $font-size-md;
-        font-weight: 500;
-        margin: 0.75rem 0;
-        color: $color-text-primary;
+      margin-bottom: 1.5rem;
+      position: relative;
+
+      /* Section separator */
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: -0.75rem;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.2) 50%,
+          transparent 100%);
       }
-      
+
+      h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        color: $text-primary !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        letter-spacing: 0.025em;
+        position: relative;
+
+        /* Contest-specific section title accent */
+        &::before {
+          content: '';
+          position: absolute;
+          left: -8px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 16px;
+          background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.8) 0%,
+            rgba(139, 92, 246, 0.6) 100%);
+          border-radius: 2px;
+        }
+      }
+
       .stats-detail-item {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
-        
-        .detail-label {
-          color: $color-text-secondary;
-          font-size: $font-size-sm;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0;
+        transition: all $transition-normal;
+        border-radius: $border-radius-md;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          padding-left: 0.5rem;
+          padding-right: 0.5rem;
         }
-        
-        .detail-value {
+
+        .detail-label {
+          color: $text-secondary !important;
+          font-size: 0.875rem;
           font-weight: 500;
-          font-size: $font-size-sm;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-value {
+          font-weight: 700;
+          font-size: 0.875rem;
+          color: $text-primary !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 100%);
+          padding: 0.25rem 0.5rem;
+          border-radius: $border-radius-sm;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(2px);
+          min-width: 3rem;
+          text-align: center;
         }
       }
     }
   }
 }
 
-// Próximamente
+/* Enhanced Coming Soon Section - Premium Glassmorphism */
 .coming-soon {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
-  
+  padding: 4rem 2rem;
+  /* Premium glassmorphism background */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+    radial-gradient(circle at 50% 50%, rgba(76, 175, 80, 0.08) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(10px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle animation background */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(76, 175, 80, 0.05) 0%, transparent 70%);
+    animation: pulse 4s ease-in-out infinite;
+    z-index: 0;
+  }
+
   mat-icon {
-    font-size: 3rem;
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: 1rem;
-    color: $color-text-tertiary;
+    font-size: 3.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 1.5rem;
+    color: rgba(76, 175, 80, 0.8);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    position: relative;
+    z-index: 1;
+    transition: all $transition-smooth;
+
+    /* Icon glow effect */
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(76, 175, 80, 0.3) 0%, transparent 70%);
+      opacity: 0.6;
+      animation: iconGlow 3s ease-in-out infinite;
+      z-index: -1;
+    }
   }
-  
+
   h3 {
-    font-size: $font-size-lg;
-    font-weight: 500;
-    margin: 0 0 0.5rem;
-    color: $color-text-primary;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    color: $text-primary;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.025em;
   }
-  
+
   p {
     margin: 0;
     text-align: center;
-    color: $color-text-secondary;
+    color: $text-secondary;
+    font-size: 1rem;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1;
+    line-height: 1.5;
+    max-width: 400px;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes iconGlow {
+    0%, 100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.2);
+    }
   }
 }
 
-// Media queries para responsive
+/* Enhanced Responsive Design - Contest Dashboard */
 @media (max-width: 992px) {
   .charts-section {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
-  
+
   .stats-grid {
     .stats-row {
       grid-template-columns: 1fr;
+      gap: 1rem;
     }
+  }
+
+  /* Tablet optimizations for glassmorphism */
+  .header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .content-card .tab-content {
+    padding: 1.5rem;
   }
 }
 
@@ -179,65 +903,166 @@
   .dashboard-container {
     padding: 1rem;
   }
-  
+
   .header {
     flex-direction: column;
     align-items: flex-start;
-    
+    padding: 1rem 1.25rem;
+
     h1 {
       margin-bottom: 1rem;
+      font-size: 1.5rem;
     }
   }
-  
+
   .stats-cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Mobile optimizations for glassmorphism */
+  .header,
+  .loading-container,
+  .content-card,
+  .coming-soon,
+  .stats-cards ::ng-deep app-stat-card .stat-card,
+  .charts-section ::ng-deep app-stats-chart .chart-card,
+  .stats-grid .stats-detail-card {
+    /* Reduce blur for better mobile performance */
+    backdrop-filter: blur(6px);
+
+    /* Simplify hover effects on mobile */
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .content-card .tab-content {
+    padding: 1rem;
+  }
+
+  .coming-soon {
+    padding: 3rem 1.5rem;
+
+    mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+    }
   }
 }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .loading-container {
-    p {
-      color: $color-text-secondary-dark;
-    }
-  }
-  
-  .content-card {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .stats-detail-card {
-    background-color: $color-surface-dark;
-    
-    .stats-detail-section {
-      h3 {
-        color: $color-text-primary-dark;
-      }
-      
-      .stats-detail-item {
-        .detail-label {
-          color: $color-text-secondary-dark;
-        }
-        
-        .detail-value {
-          color: $color-text-primary-dark;
-        }
+/* Enhanced Accessibility Support - Contest Dashboard */
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .dashboard-container {
+    .header,
+    .loading-container,
+    .content-card,
+    .coming-soon,
+    .stats-cards ::ng-deep app-stat-card .stat-card,
+    .charts-section ::ng-deep app-stats-chart .chart-card,
+    .stats-grid .stats-detail-card {
+      border-width: 2px;
+      border-color: rgba(255, 255, 255, 0.4);
+
+      &:hover,
+      &:focus-within {
+        border-color: rgba(255, 255, 255, 0.7);
+        background: rgba(75, 85, 99, 0.95);
       }
     }
-  }
-  
-  .coming-soon {
-    mat-icon {
-      color: $color-text-tertiary-dark;
+
+    .stats-grid .stats-detail-card .stats-detail-section h3::before {
+      background: rgba(76, 175, 80, 1);
+      width: 4px;
+      height: 20px;
     }
-    
-    h3 {
-      color: $color-text-primary-dark;
-    }
-    
-    p {
-      color: $color-text-secondary-dark;
+
+    .stats-grid .stats-detail-card .detail-value {
+      border-width: 2px !important;
+      border-color: rgba(255, 255, 255, 0.3) !important;
     }
   }
 }
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-container {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .header,
+    .loading-container,
+    .content-card,
+    .coming-soon,
+    .stats-cards ::ng-deep app-stat-card .stat-card,
+    .charts-section ::ng-deep app-stats-chart .chart-card,
+    .stats-grid .stats-detail-card {
+      transform: none !important;
+
+      &:hover,
+      &:focus-within {
+        transform: none !important;
+      }
+    }
+
+    .content-card .tab-content {
+      animation: none !important;
+    }
+
+    .coming-soon {
+      &::before {
+        animation: none !important;
+      }
+
+      mat-icon::after {
+        animation: none !important;
+      }
+    }
+  }
+}
+
+/* Focus Management for Keyboard Navigation */
+.dashboard-container {
+  /* Ensure all interactive elements are focusable */
+  .header .header-actions button,
+  .content-card ::ng-deep .mat-mdc-tab,
+  .stats-cards ::ng-deep app-stat-card .stat-card[routerLink] {
+    &:focus-visible {
+      outline: 3px solid $focus-color;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px $focus-color-secondary;
+    }
+  }
+
+  /* Skip to content functionality */
+  .skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: $focus-color;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+    transition: top 0.3s;
+
+    &:focus {
+      top: 6px;
+    }
+  }
+}
+
+/* Contest Dashboard - Glassmorphism theme replaces dark mode styles */
+/* All components now use consistent glassmorphism design system */

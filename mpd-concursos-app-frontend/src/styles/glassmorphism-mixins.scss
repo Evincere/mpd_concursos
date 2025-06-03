@@ -1,0 +1,271 @@
+/* ===== GLASSMORPHISM DESIGN SYSTEM - MIXINS ===== */
+/* Mixins consolidados para eliminar duplicaciones de código */
+/* Siguiendo las especificaciones del glassmorphism-design-system-guide.md */
+
+/* === MIXIN BASE GLASSMORPHISM === */
+@mixin glassmorphism-base {
+  background: var(--glass-background-primary);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid var(--border-primary);
+  backdrop-filter: var(--card-backdrop-filter);
+  -webkit-backdrop-filter: var(--card-backdrop-filter);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md), var(--shadow-inset);
+  transition: var(--transition-normal);
+}
+
+/* === MIXIN GLASSMORPHISM HOVER === */
+@mixin glassmorphism-hover {
+  &:hover {
+    background: var(--glass-background-hover);
+    transform: var(--transform-hover);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-hover);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM CARD === */
+@mixin glassmorphism-card {
+  @include glassmorphism-base;
+  @include glassmorphism-hover;
+  padding: var(--card-padding);
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* === MIXIN GLASSMORPHISM TABLE === */
+@mixin glassmorphism-table {
+  @include glassmorphism-base;
+  overflow: hidden;
+  
+  th {
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    background: var(--glass-background-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  td {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  tr {
+    transition: var(--transition-normal);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+}
+
+/* === MIXIN GLASSMORPHISM DIALOG === */
+@mixin glassmorphism-dialog {
+  background: var(--background-color);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: var(--card-backdrop-filter);
+  -webkit-backdrop-filter: var(--card-backdrop-filter);
+  color: var(--text-color);
+}
+
+/* === MIXIN GLASSMORPHISM FORM FIELD === */
+@mixin glassmorphism-form-field {
+  background-color: var(--input-background);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--border-radius-md);
+  padding: var(--input-padding);
+  transition: var(--transition-normal);
+  
+  &:focus {
+    border-color: var(--focus-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    outline: none;
+  }
+  
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM BUTTON === */
+@mixin glassmorphism-button($variant: 'primary') {
+  padding: var(--button-padding);
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  transition: var(--transition-normal);
+  border: 1px solid transparent;
+  
+  @if $variant == 'primary' {
+    background: rgba(59, 130, 246, 0.8);
+    color: var(--text-primary);
+    border-color: rgba(59, 130, 246, 0.5);
+    
+    &:hover {
+      background: rgba(59, 130, 246, 0.9);
+      transform: var(--transform-button-hover);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+  } @else if $variant == 'stroked' {
+    background: transparent;
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-hover);
+      transform: var(--transform-button-hover);
+    }
+  }
+  
+  &:focus {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 2px;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+}
+
+/* === MIXIN GLASSMORPHISM BADGE === */
+@mixin glassmorphism-badge($color: 'blue') {
+  display: inline-block;
+  padding: var(--badge-padding);
+  border-radius: var(--border-radius-md);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: var(--transition-normal);
+  
+  @if $color == 'blue' {
+    background: var(--badge-blue);
+    color: var(--focus-color);
+    border-color: rgba(59, 130, 246, 0.3);
+  } @else if $color == 'green' {
+    background: var(--badge-green);
+    color: var(--success-color);
+    border-color: rgba(34, 197, 94, 0.3);
+  } @else if $color == 'orange' {
+    background: var(--badge-orange);
+    color: var(--warning-color);
+    border-color: rgba(245, 158, 11, 0.3);
+  } @else if $color == 'red' {
+    background: var(--badge-red);
+    color: var(--error-color);
+    border-color: rgba(239, 68, 68, 0.3);
+  } @else if $color == 'gray' {
+    background: var(--badge-gray);
+    color: var(--text-tertiary);
+    border-color: rgba(156, 163, 175, 0.3);
+  }
+  
+  &:hover {
+    transform: var(--transform-button-hover);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* === MIXIN CUSTOM SCROLLBAR === */
+@mixin glassmorphism-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+/* === MIXIN RESPONSIVE GLASSMORPHISM === */
+@mixin glassmorphism-responsive {
+  @media (max-width: 768px) {
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm);
+    border-radius: var(--border-radius-md);
+  }
+}
+
+/* === MIXIN ACCESSIBILITY === */
+@mixin glassmorphism-accessibility {
+  /* High Contrast Support */
+  @media (prefers-contrast: high) {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    transform: none !important;
+  }
+}
+
+/* === MIXIN LOADING STATE === */
+@mixin glassmorphism-loading {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--glass-background-primary);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+}
+
+/* === MIXIN EMPTY STATE === */
+@mixin glassmorphism-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  color: var(--text-secondary);
+  text-align: center;
+  
+  i {
+    font-size: 48px;
+    color: var(--text-tertiary);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  p {
+    margin-bottom: var(--spacing-2xl);
+    font-size: 0.875rem;
+  }
+}

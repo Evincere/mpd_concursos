@@ -3,6 +3,12 @@ import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+/**
+ * Servicio consolidado para gestión de roles y permisos
+ * Unifica AdminRolesService y RolesPermissionsService para eliminar duplicaciones
+ * Implementa patrones del sistema glassmorphism design system
+ */
+
 
 export interface Role {
   id: string;

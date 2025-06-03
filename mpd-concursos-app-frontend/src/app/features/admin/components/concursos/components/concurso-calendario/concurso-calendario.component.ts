@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
@@ -45,16 +45,20 @@ import { ContestDate } from '@shared/interfaces/concurso/contest-date.interface'
 export class ConcursoCalendarioComponent implements OnInit, OnDestroy {
   isLoading = false;
   filterForm: FormGroup;
-  
+
   // Datos del calendario
   currentDate = new Date();
   currentMonth: number;
   currentYear: number;
   calendarDays: CalendarDay[] = [];
-  
+
   // Eventos y fechas importantes
   allDates: (ContestDate & { contestTitle?: string })[] = [];
-  
+
+  // Estados para selectores glassmorphism
+  monthSelectOpen = false;
+  yearSelectOpen = false;
+
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
   
@@ -273,6 +277,112 @@ export class ConcursoCalendarioComponent implements OnInit, OnDestroy {
     return date.getDate() === today.getDate() &&
            date.getMonth() === today.getMonth() &&
            date.getFullYear() === today.getFullYear();
+  }
+
+  // ===== MÉTODOS PARA SELECTORES GLASSMORPHISM =====
+
+  toggleMonthSelect(): void {
+    this.monthSelectOpen = !this.monthSelectOpen;
+    if (this.monthSelectOpen) {
+      this.yearSelectOpen = false;
+    }
+  }
+
+  toggleYearSelect(): void {
+    this.yearSelectOpen = !this.yearSelectOpen;
+    if (this.yearSelectOpen) {
+      this.monthSelectOpen = false;
+    }
+  }
+
+  selectMonth(month: number): void {
+    this.filterForm.patchValue({ month });
+    this.monthSelectOpen = false;
+  }
+
+  selectYear(year: number): void {
+    this.filterForm.patchValue({ year });
+    this.yearSelectOpen = false;
+  }
+
+  // ===== MÉTODOS PARA ACCESIBILIDAD Y UI MEJORADA =====
+
+  getDayAriaLabel(day: CalendarDay): string {
+    const dateStr = `${day.day} de ${this.getMonthName(this.currentMonth)} de ${this.currentYear}`;
+    const isToday = this.isToday(day.date) ? ', hoy' : '';
+    const eventsCount = day.events.length > 0 ? `, ${day.events.length} evento${day.events.length > 1 ? 's' : ''}` : '';
+    const monthStatus = !day.isCurrentMonth ? ', mes anterior/siguiente' : '';
+
+    return `${dateStr}${isToday}${eventsCount}${monthStatus}`;
+  }
+
+  getEventIcon(event: any): string {
+    // Mapear tipos de eventos a iconos
+    const eventTypeIcons: { [key: string]: string } = {
+      'inscription_start': '📝',
+      'inscription_end': '⏰',
+      'exam_date': '📋',
+      'results_publication': '📊',
+      'interview_date': '🎤',
+      'document_submission': '📄',
+      'default': '📅'
+    };
+
+    return eventTypeIcons[event.type] || eventTypeIcons['default'];
+  }
+
+  getEventPriority(event: any): string {
+    // Determinar prioridad basada en el tipo de evento
+    const highPriorityTypes = ['inscription_end', 'exam_date'];
+    const mediumPriorityTypes = ['inscription_start', 'results_publication', 'interview_date'];
+    const lowPriorityTypes = ['document_submission'];
+
+    if (highPriorityTypes.includes(event.type)) {
+      return 'high';
+    } else if (mediumPriorityTypes.includes(event.type)) {
+      return 'medium';
+    } else if (lowPriorityTypes.includes(event.type)) {
+      return 'low';
+    }
+
+    // Prioridad por defecto basada en proximidad de fecha
+    const eventDate = new Date(event.date);
+    const today = new Date();
+    const diffDays = Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+
+    if (diffDays <= 7) {
+      return 'high';
+    } else if (diffDays <= 30) {
+      return 'medium';
+    } else {
+      return 'low';
+    }
+  }
+
+  // ===== MÉTODOS PARA CERRAR SELECTORES AL HACER CLICK FUERA =====
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const selectElements = document.querySelectorAll('.custom-select');
+
+    let clickedInsideSelect = false;
+    selectElements.forEach(select => {
+      if (select.contains(target)) {
+        clickedInsideSelect = true;
+      }
+    });
+
+    if (!clickedInsideSelect) {
+      this.monthSelectOpen = false;
+      this.yearSelectOpen = false;
+    }
+  }
+
+  @HostListener('keydown.escape')
+  onEscapeKey(): void {
+    this.monthSelectOpen = false;
+    this.yearSelectOpen = false;
   }
 }
 

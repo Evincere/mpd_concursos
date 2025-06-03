@@ -1,15 +1,7 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { TipoExamen } from '@shared/interfaces/examen/examen.interface';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 
 @Component({
   selector: 'app-examen-form',
@@ -18,20 +10,18 @@ import { MatNativeDateModule } from '@angular/material/core';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatIconModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    ReactiveFormsModule
   ]
 })
 export class ExamenFormComponent implements OnInit {
+  @Input() mode: 'create' | 'edit' = 'create';
+  @Input() examenData: Record<string, unknown> | null = null;
+  @Input() isVisible = false;
+
+  @Output() formSubmit = new EventEmitter<any>();
+  @Output() formCancel = new EventEmitter<void>();
+
   examenForm: FormGroup;
-  mode: 'create' | 'edit' = 'create';
   title = 'Crear Examen';
 
   tiposExamen = [
@@ -40,11 +30,7 @@ export class ExamenFormComponent implements OnInit {
     { value: TipoExamen.PSICOLOGICO, label: 'Psicológico' }
   ];
 
-  constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<ExamenFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: 'create' | 'edit'; examen?: Record<string, unknown> }
-  ) {
+  constructor(private fb: FormBuilder) {
     this.examenForm = this.fb.group({
       titulo: ['', [Validators.required, Validators.minLength(5)]],
       descripcion: ['', [Validators.required, Validators.minLength(10)]],
@@ -57,20 +43,16 @@ export class ExamenFormComponent implements OnInit {
       reglasExamen: this.fb.array([this.createRegla()]),
       materialesPermitidos: this.fb.array([this.createMaterial()])
     });
-
-    if (data) {
-      this.mode = data.mode;
-      if (this.mode === 'edit' && data.examen) {
-        this.title = 'Editar Examen';
-        this.populateForm(data.examen);
-      }
-    }
   }
 
   ngOnInit(): void {
-    // Verificar si hay datos de examen para editar
-    if (this.data && this.data.examen) {
-      console.log('Inicializando formulario con datos de examen:', this.data.examen);
+    // Configurar el título según el modo
+    this.title = this.mode === 'edit' ? 'Editar Examen' : 'Crear Examen';
+
+    // Si hay datos de examen para editar, poblar el formulario
+    if (this.mode === 'edit' && this.examenData) {
+      console.log('Inicializando formulario con datos de examen:', this.examenData);
+      this.populateForm(this.examenData);
     } else {
       console.log('Inicializando formulario para nuevo examen');
     }
@@ -181,14 +163,14 @@ export class ExamenFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.examenForm.valid) {
-      this.dialogRef.close(this.examenForm.value);
+      this.formSubmit.emit(this.examenForm.value);
     } else {
       this.markFormGroupTouched(this.examenForm);
     }
   }
 
   onCancel(): void {
-    this.dialogRef.close();
+    this.formCancel.emit();
   }
 
   // Marcar todos los controles como tocados para mostrar errores

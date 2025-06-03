@@ -33,6 +33,7 @@ export class DialogService {
       confirmButtonText?: string;
       confirmButtonColor?: 'primary' | 'accent' | 'warn';
       icon?: string;
+      panelClass?: string | string[];
     }
   ): DialogRef<R> {
     const dialogRef = this.unifiedDialogService.open<T, D, R>(component, options);

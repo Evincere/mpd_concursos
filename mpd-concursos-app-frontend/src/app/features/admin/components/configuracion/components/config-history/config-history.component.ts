@@ -1,23 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatTableModule } from '@angular/material/table';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -26,6 +9,7 @@ import {
   ConfigChangeHistoryItem,
   ConfigHistoryFilter
 } from '@core/services/admin/system-config.service';
+import { NotificationService } from '@core/services/notification/notification.service';
 
 @Component({
   selector: 'app-config-history',
@@ -35,24 +19,7 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatExpansionModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule
+    ReactiveFormsModule
   ]
 })
 export class ConfigHistoryComponent implements OnInit, OnDestroy {
@@ -88,14 +55,13 @@ export class ConfigHistoryComponent implements OnInit, OnDestroy {
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
 
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
+  // Exponer Math para el template
+  Math = Math;
 
   constructor(
     private fb: FormBuilder,
     private systemConfigService: SystemConfigService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private notificationService: NotificationService
   ) {
     this.filterForm = this.fb.group({
       dateRange: this.fb.group({
@@ -141,7 +107,7 @@ export class ConfigHistoryComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando historial de configuración:', error);
-          this.snackBar.open('Error al cargar historial de configuración', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al cargar historial de configuración');
           this.isLoading = false;
         }
       });
@@ -256,6 +222,6 @@ export class ConfigHistoryComponent implements OnInit, OnDestroy {
   revertChange(_item: ConfigChangeHistoryItem): void {
     // En una implementación real, esto revertiría el cambio usando el ID del elemento
     console.log('Intentando revertir cambio:', _item.id);
-    this.snackBar.open('Funcionalidad no implementada', 'Cerrar', { duration: 3000 });
+    this.notificationService.showInfo('Funcionalidad no implementada');
   }
 }

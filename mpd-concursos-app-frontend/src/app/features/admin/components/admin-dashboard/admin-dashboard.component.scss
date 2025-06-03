@@ -1,25 +1,160 @@
 @use 'src/styles/variables' as *;
 
+/* Enhanced Glassmorphism Design System Variables - Consistent with Sidebar */
+$glass-background-primary: rgba(55, 65, 81, 0.8);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(31, 41, 55, 0.85);
+$glass-hover-primary: rgba(75, 85, 99, 0.6);
+$glass-active-primary: rgba(55, 65, 81, 0.95);
+
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-muted: #9ca3af;
+
+$focus-color: #3b82f6;
+$focus-color-secondary: rgba(59, 130, 246, 0.2);
+
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+/* Card Enhancement Variables */
+$card-shadow-base: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+$card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+$card-shadow-active: 0 12px 32px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.25);
+
+/* Border Enhancement Variables */
+$border-glass-subtle: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
+
 .dashboard-container {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  /* Transparent background to inherit main layout background */
+  background: transparent;
 }
 
+/* Enhanced Header - Premium Glassmorphism */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  /* Premium glassmorphism background */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-secondary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle top highlight */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+      rgba(59, 130, 246, 0.6) 0%,
+      rgba(139, 92, 246, 0.4) 50%,
+      rgba(59, 130, 246, 0.6) 100%);
+    opacity: 0.8;
+  }
 
   h1 {
     margin: 0;
-    font-size: $font-size-xl;
-    font-weight: 500;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $text-primary;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.025em;
+    position: relative;
+    z-index: 1;
+
+    /* Admin-specific accent */
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg,
+        rgba(59, 130, 246, 0.8) 0%,
+        rgba(59, 130, 246, 0.4) 100%);
+      border-radius: 2px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+
+    /* Enhanced button styling */
+    ::ng-deep button {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: $text-primary;
+      border-radius: $border-radius-lg;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all $transition-smooth;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 1) 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+      }
+
+      /* Button with accent color */
+      &[color="accent"] {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.8) 0%, rgba(124, 58, 237, 0.9) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+
+        &:hover {
+          box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(124, 58, 237, 1) 100%);
+        }
+
+        &:active {
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+        }
+      }
+    }
   }
 }
 
-// Indicador de carga
+/* Indicador de carga */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -29,17 +164,150 @@
 
   p {
     margin-top: 1rem;
-    color: $color-text-secondary;
-    font-size: $font-size-md;
+    color: $text-secondary;
+    font-size: 0.875rem;
   }
 }
 
-// Tarjetas de estadísticas
+/* Tarjetas de estadísticas - Glassmorphism */
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.25rem;
   margin-bottom: 2rem;
+
+  /* Enhanced Premium Glassmorphism for Stat Cards */
+  ::ng-deep app-stat-card {
+    .stat-card {
+      /* Premium glassmorphism base */
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+      border: $border-glass-medium;
+      backdrop-filter: blur(10px);
+      border-radius: $border-radius-lg;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      transition: all $transition-smooth;
+      position: relative;
+      overflow: hidden;
+
+      /* Subtle glow effect */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.3) 50%,
+          transparent 100%);
+        opacity: 0;
+        transition: opacity $transition-normal;
+      }
+
+      &:hover {
+        /* Enhanced hover state */
+        background: linear-gradient(135deg,
+          $glass-hover-primary 0%,
+          $glass-background-secondary 100%);
+        background-image:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%),
+          radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        transform: translateY(-3px) scale(1.02);
+        border: $border-glass-strong;
+        box-shadow:
+          $card-shadow-hover,
+          0 1px 6px rgba(59, 130, 246, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+
+        &::before {
+          opacity: 1;
+        }
+      }
+
+      /* Focus state for accessibility */
+      &:focus-within {
+        outline: 2px solid $focus-color;
+        outline-offset: 2px;
+        box-shadow:
+          0 0 0 4px $focus-color-secondary,
+          $card-shadow-base,
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+
+      /* Enhanced content styling */
+      mat-card-content {
+        position: relative;
+        z-index: 1;
+        background: transparent;
+      }
+
+      /* Icon container enhancement */
+      .stat-icon {
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(4px);
+        transition: all $transition-normal;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        mat-icon {
+          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+          transition: all $transition-normal;
+        }
+      }
+
+      &:hover .stat-icon {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.2);
+
+        mat-icon {
+          filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+        }
+      }
+
+      /* Typography enhancements */
+      .stat-title {
+        color: $text-primary !important;
+        font-weight: 600 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      .stat-value {
+        color: $text-primary !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+
+      .stat-subtitle {
+        color: $text-secondary !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .stat-trend {
+        &.positive {
+          color: #10b981 !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        &.negative {
+          color: #ef4444 !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+      }
+    }
+  }
 }
 
 // Widgets de acceso rápido
@@ -60,84 +328,462 @@
   }
 }
 
-// Tarjeta de pestañas
+/* Enhanced Tabs Card - Premium Glassmorphism */
 .tabs-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* Premium glassmorphism base */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle top highlight */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+      rgba(59, 130, 246, 0.6) 0%,
+      rgba(139, 92, 246, 0.4) 50%,
+      rgba(59, 130, 246, 0.6) 100%);
+    opacity: 0.7;
+  }
 
   mat-card-content {
     padding: 0;
+    background: transparent;
+    position: relative;
+    z-index: 1;
   }
 
   .tab-content {
-    padding: 1.5rem;
+    padding: 2rem;
+    background: transparent;
+    position: relative;
+  }
+
+  /* Custom Tabs Header - Premium Glassmorphism */
+  .tabs-header {
+    display: flex;
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+    border-radius: $border-radius-xl $border-radius-xl 0 0;
+    position: relative;
+    overflow: hidden;
+
+    /* Tab header glow */
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%);
+    }
+
+    .tab-button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem 1.5rem;
+      background: transparent;
+      border: none;
+      color: $text-secondary;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all $transition-normal;
+      position: relative;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      border-radius: 0;
+
+      /* Tab button icon */
+      i {
+        font-size: 1rem;
+        transition: all $transition-normal;
+      }
+
+      /* Tab hover effect */
+      &:hover:not(.active) {
+        color: rgba(249, 250, 251, 0.8);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      /* Active tab styling */
+      &.active {
+        color: $text-primary;
+        font-weight: 600;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+
+        /* Active tab indicator */
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60%;
+          height: 3px;
+          background: linear-gradient(90deg,
+            rgba(59, 130, 246, 0.8) 0%,
+            rgba(59, 130, 246, 1) 50%,
+            rgba(59, 130, 246, 0.8) 100%);
+          border-radius: 2px;
+          box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+        }
+
+        i {
+          color: $focus-color;
+          transform: scale(1.1);
+        }
+      }
+
+      /* Focus state for accessibility */
+      &:focus-visible {
+        outline: 2px solid $focus-color;
+        outline-offset: -2px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  /* Custom Tabs Content */
+  .tabs-content {
+    background: transparent;
+    position: relative;
+    min-height: 400px;
+  }
+
+  /* Tab content animations and visibility */
+  .tab-content {
+    display: none;
+    padding: 2rem;
+    background: transparent;
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease-out;
+
+    &.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+      animation: fadeInUp 0.4s ease-out;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
-// Contenido del dashboard
+/* Contenido del dashboard */
 .dashboard-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
 }
 
-// Sección de gráficos
+/* Enhanced Charts Section - Premium Glassmorphism */
 .charts-section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 
   .chart-container {
     height: 100%;
+    position: relative;
+
+    /* Premium glassmorphism for chart components */
+    ::ng-deep app-stats-chart {
+      .chart-card {
+        /* Enhanced glassmorphism base */
+        background: linear-gradient(135deg,
+          $glass-background-primary 0%,
+          $glass-background-tertiary 100%);
+        background-image:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+          radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+        border: $border-glass-medium;
+        backdrop-filter: blur(12px);
+        border-radius: $border-radius-xl;
+        box-shadow:
+          $card-shadow-base,
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        transition: all $transition-smooth;
+        position: relative;
+        overflow: hidden;
+
+        /* Chart glow effect */
+        &::after {
+          content: '';
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.1) 0%,
+            rgba(139, 92, 246, 0.05) 50%,
+            transparent 100%);
+          border-radius: $border-radius-xl;
+          opacity: 0;
+          transition: opacity $transition-normal;
+          z-index: -1;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          border: $border-glass-strong;
+          box-shadow:
+            $card-shadow-hover,
+            0 2px 8px rgba(59, 130, 246, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+          &::after {
+            opacity: 1;
+          }
+        }
+
+        /* Enhanced header styling */
+        mat-card-header {
+          background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.08) 0%,
+            rgba(255, 255, 255, 0.04) 100%);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(4px);
+          border-radius: $border-radius-lg $border-radius-lg 0 0;
+          position: relative;
+
+          mat-card-title {
+            color: $text-primary !important;
+            font-weight: 600 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            font-size: 1.1rem !important;
+          }
+
+          mat-card-subtitle {
+            color: $text-secondary !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+          }
+        }
+
+        /* Chart content area */
+        mat-card-content {
+          background: transparent;
+          position: relative;
+          z-index: 1;
+
+          /* Chart canvas enhancement */
+          canvas {
+            border-radius: $border-radius-md;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+          }
+        }
+
+        /* Chart actions/menu */
+        .chart-actions {
+          position: absolute;
+          top: 1rem;
+          right: 1rem;
+          z-index: 10;
+
+          button {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+            color: $text-secondary !important;
+            transition: all $transition-normal;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.2) !important;
+              border-color: rgba(255, 255, 255, 0.2) !important;
+              color: $text-primary !important;
+              transform: scale(1.1);
+            }
+          }
+        }
+      }
+    }
   }
 }
 
-// Sección de menú
+/* Enhanced Menu Section - Premium Glassmorphism */
 .menu-section {
   .menu-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
 
     .menu-card {
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      /* Premium glassmorphism menu cards */
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 60% 40%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+      border: $border-glass-medium;
+      backdrop-filter: blur(10px);
+      border-radius: $border-radius-xl;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: all $transition-smooth;
+      position: relative;
+      overflow: hidden;
 
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+      /* Menu card glow effect */
+      &::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg,
+          rgba(59, 130, 246, 0.1) 0%,
+          rgba(139, 92, 246, 0.05) 100%);
+        border-radius: $border-radius-xl;
+        opacity: 0;
+        transition: opacity $transition-normal;
+        z-index: -1;
       }
 
-      mat-card-content {
+      &:hover {
+        /* Enhanced hover state */
+        background: linear-gradient(135deg,
+          $glass-hover-primary 0%,
+          $glass-background-secondary 100%);
+        background-image:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%),
+          radial-gradient(circle at 60% 40%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        transform: translateY(-4px) scale(1.02);
+        border: $border-glass-strong;
+        box-shadow:
+          $card-shadow-hover,
+          0 2px 8px rgba(59, 130, 246, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+        &::before {
+          opacity: 1;
+        }
+      }
+
+      /* Focus state for accessibility */
+      &:focus-within {
+        outline: 2px solid $focus-color;
+        outline-offset: 2px;
+        box-shadow:
+          0 0 0 4px $focus-color-secondary,
+          $card-shadow-base;
+      }
+
+      .menu-card-content {
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
+        background: transparent;
+        position: relative;
+        z-index: 1;
       }
 
       .menu-icon {
-        font-size: 2.25rem;
-        width: 2.25rem;
-        height: 2.25rem;
-        color: $color-primary;
-        margin-bottom: 0.75rem;
+        font-size: 2.5rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        color: $focus-color;
+        margin-bottom: 1rem;
+        transition: all $transition-smooth;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        position: relative;
+
+        /* Icon glow effect */
+        &::after {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+          opacity: 0;
+          transition: opacity $transition-normal;
+          z-index: -1;
+        }
       }
 
       .menu-title {
-        font-size: $font-size-md;
-        font-weight: 500;
+        font-size: 0.95rem;
+        font-weight: 600;
         margin: 0 0 0.75rem 0;
+        color: $text-primary;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        letter-spacing: 0.025em;
       }
 
       .menu-description {
-        font-size: $font-size-sm;
-        color: $color-text-secondary;
+        font-size: 0.8rem;
+        color: $text-secondary;
         margin: 0;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        line-height: 1.4;
+      }
+
+      &:hover {
+        .menu-icon {
+          color: rgba(59, 130, 246, 0.9);
+          transform: scale(1.1);
+          filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
+
+          &::after {
+            opacity: 1;
+          }
+        }
+
+        .menu-title {
+          color: rgba(249, 250, 251, 0.95);
+        }
+
+        .menu-description {
+          color: rgba(209, 213, 219, 0.9);
+        }
       }
     }
   }
@@ -161,45 +807,191 @@
 
   .stats-detail-card {
     height: 100%;
+    /* Premium glassmorphism for detail cards */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-tertiary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(circle at 85% 15%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-xl;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    transition: all $transition-smooth;
+    position: relative;
+    overflow: hidden;
 
-    mat-card-header {
-      padding: 1rem 1rem 0.5rem;
+    /* Detail card subtle glow */
+    &::after {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      right: -1px;
+      bottom: -1px;
+      background: linear-gradient(135deg,
+        rgba(139, 92, 246, 0.1) 0%,
+        rgba(59, 130, 246, 0.05) 100%);
+      border-radius: $border-radius-xl;
+      opacity: 0;
+      transition: opacity $transition-normal;
+      z-index: -1;
+    }
 
-      mat-card-title {
-        font-size: $font-size-md;
-        font-weight: 500;
-        margin: 0;
+    &:hover {
+      transform: translateY(-2px);
+      border: $border-glass-strong;
+      box-shadow:
+        $card-shadow-hover,
+        0 2px 8px rgba(139, 92, 246, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+      &::after {
+        opacity: 1;
       }
     }
 
-    mat-card-content {
-      padding: 0 1rem 1rem;
+    .stats-detail-header {
+      padding: 1.5rem 1.5rem 0.75rem;
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.04) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border-radius: $border-radius-xl $border-radius-xl 0 0;
+
+      .stats-detail-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        color: $text-primary;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        i {
+          color: $focus-color;
+          font-size: 1rem;
+        }
+      }
+    }
+
+    .stats-detail-content {
+      padding: 1.5rem;
+      background: transparent;
+      position: relative;
+      z-index: 1;
     }
 
     .stats-detail-section {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      position: relative;
 
-      h3 {
-        font-size: $font-size-md;
-        font-weight: 500;
-        margin: 0.75rem 0;
-        color: $color-text-primary;
+      /* Section separator */
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        bottom: -0.75rem;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.2) 50%,
+          transparent 100%);
+      }
+
+      h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+        color: $text-primary;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        letter-spacing: 0.025em;
+        position: relative;
+
+        /* Section title accent */
+        &::before {
+          content: '';
+          position: absolute;
+          left: -8px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 16px;
+          background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.8) 0%,
+            rgba(139, 92, 246, 0.6) 100%);
+          border-radius: 2px;
+        }
       }
 
       .stats-detail-item {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0;
+        transition: all $transition-normal;
+        border-radius: $border-radius-md;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          padding-left: 0.5rem;
+          padding-right: 0.5rem;
+        }
 
         .detail-label {
-          color: $color-text-secondary;
-          font-size: $font-size-sm;
+          color: $text-secondary !important;
+          font-size: 0.875rem;
+          font-weight: 500;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .detail-value {
-          font-weight: 500;
-          font-size: $font-size-sm;
+          font-weight: 700;
+          font-size: 0.875rem;
+          color: $text-primary !important;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 100%);
+          padding: 0.25rem 0.5rem;
+          border-radius: $border-radius-sm;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(2px);
+          min-width: 3rem;
+          text-align: center;
         }
+      }
+    }
+
+    /* Custom divider for stats detail sections */
+    .stats-detail-divider {
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 100%);
+      margin: 1.5rem 0;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 4px;
+        height: 4px;
+        background: $focus-color;
+        border-radius: 50%;
+        box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
       }
     }
   }
@@ -226,10 +1018,26 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
+    padding: 1rem 1.25rem;
+    gap: 1rem;
 
     h1 {
-      margin-bottom: 1rem;
+      margin-bottom: 0;
+      font-size: clamp(1.125rem, 3vw, 1.5rem);
     }
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-start;
+
+      ::ng-deep button {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+      }
+    }
+
+    /* Reduce header blur on mobile */
+    backdrop-filter: blur(8px);
   }
 
   .stats-cards,
@@ -237,6 +1045,130 @@
   .charts-section,
   .menu-cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Mobile optimizations for glassmorphism */
+  ::ng-deep app-stat-card .stat-card,
+  ::ng-deep app-stats-chart .chart-card,
+  .tabs-card,
+  .menu-section .menu-card,
+  .stats-detail-card {
+    /* Reduce blur for better mobile performance */
+    backdrop-filter: blur(6px);
+
+    /* Simplify hover effects on mobile */
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .tabs-card .tab-content {
+    padding: 1rem;
+  }
+
+  .menu-section .menu-card .menu-card-content {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* Enhanced Accessibility Support */
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .dashboard-container {
+    ::ng-deep app-stat-card .stat-card,
+    ::ng-deep app-stats-chart .chart-card,
+    .tabs-card,
+    .menu-section .menu-card,
+    .stats-detail-card {
+      border-width: 2px;
+      border-color: rgba(255, 255, 255, 0.4);
+
+      &:hover,
+      &:focus-within {
+        border-color: rgba(255, 255, 255, 0.7);
+        background: rgba(75, 85, 99, 0.95);
+      }
+    }
+
+    .stats-detail-section h4::before {
+      background: rgba(59, 130, 246, 1);
+      width: 4px;
+      height: 20px;
+    }
+
+    .detail-value {
+      border-width: 2px !important;
+      border-color: rgba(255, 255, 255, 0.3) !important;
+    }
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-container {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    ::ng-deep app-stat-card .stat-card,
+    ::ng-deep app-stats-chart .chart-card,
+    .tabs-card,
+    .menu-section .menu-card,
+    .stats-detail-card {
+      transform: none !important;
+
+      &:hover,
+      &:focus-within {
+        transform: none !important;
+      }
+    }
+
+    .tab-content {
+      animation: none !important;
+    }
+
+    .menu-section .menu-card .menu-icon {
+      &:hover {
+        transform: none !important;
+      }
+    }
+  }
+}
+
+/* Focus Management for Keyboard Navigation */
+.dashboard-container {
+  /* Ensure all interactive elements are focusable */
+  ::ng-deep app-stat-card .stat-card[routerLink],
+  .menu-section .menu-card[routerLink],
+  .tabs-card .tab-button {
+    &:focus-visible {
+      outline: 3px solid $focus-color;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 6px $focus-color-secondary;
+    }
+  }
+
+  /* Skip to content functionality */
+  .skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: $focus-color;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+    transition: top 0.3s;
+
+    &:focus {
+      top: 6px;
+    }
   }
 }
 

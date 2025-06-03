@@ -1,8 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
 import { ActivityItem } from '../../../../../../core/services/admin/admin-dashboard.service';
 
@@ -13,9 +11,7 @@ import { ActivityItem } from '../../../../../../core/services/admin/admin-dashbo
   standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
     MatIconModule,
-    MatButtonModule,
     RouterModule
   ]
 })

@@ -1,0 +1,131 @@
+<!-- CONTENIDO DEMO PARA AUDITORÍA -->
+<div *ngIf="mode === 'audit'" class="audit-content">
+  <div class="audit-header">
+    <h3 class="audit-title">👥 Auditoría de Usuarios</h3>
+    <p class="audit-description">Registros de actividad y acciones de usuarios del sistema</p>
+  </div>
+  
+  <div class="audit-stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">👤</div>
+      <div class="stat-info">
+        <div class="stat-label">Usuarios Activos</div>
+        <div class="stat-value">127</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔐</div>
+      <div class="stat-info">
+        <div class="stat-label">Inicios de Sesión</div>
+        <div class="stat-value">1,234</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-info">
+        <div class="stat-label">Intentos Fallidos</div>
+        <div class="stat-value">23</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="audit-table-container">
+    <h4 class="table-title">Actividad Reciente de Usuarios</h4>
+    <div class="audit-table">
+      <div class="table-header">
+        <div class="header-cell">Usuario</div>
+        <div class="header-cell">Acción</div>
+        <div class="header-cell">Fecha</div>
+        <div class="header-cell">IP</div>
+        <div class="header-cell">Estado</div>
+      </div>
+      <div class="table-row">
+        <div class="table-cell">admin@mpd.gov.py</div>
+        <div class="table-cell">Inicio de sesión</div>
+        <div class="table-cell">2025-06-02 14:30</div>
+        <div class="table-cell">192.168.1.100</div>
+        <div class="table-cell"><span class="status-success">Exitoso</span></div>
+      </div>
+      <div class="table-row">
+        <div class="table-cell">user@mpd.gov.py</div>
+        <div class="table-cell">Modificar perfil</div>
+        <div class="table-cell">2025-06-02 14:25</div>
+        <div class="table-cell">192.168.1.101</div>
+        <div class="table-cell"><span class="status-success">Exitoso</span></div>
+      </div>
+      <div class="table-row">
+        <div class="table-cell">test@mpd.gov.py</div>
+        <div class="table-cell">Intento de acceso</div>
+        <div class="table-cell">2025-06-02 14:20</div>
+        <div class="table-cell">192.168.1.102</div>
+        <div class="table-cell"><span class="status-error">Fallido</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENIDO DEMO PARA BACKUP -->
+<div *ngIf="mode === 'backup'" class="audit-content">
+  <div class="audit-header">
+    <h3 class="audit-title">💾 Gestión de Backups</h3>
+    <p class="audit-description">Administración de copias de seguridad automáticas y manuales</p>
+  </div>
+  
+  <div class="audit-stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">🔄</div>
+      <div class="stat-info">
+        <div class="stat-label">Backups Automáticos</div>
+        <div class="stat-value">45</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📁</div>
+      <div class="stat-info">
+        <div class="stat-label">Backups Manuales</div>
+        <div class="stat-value">12</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💿</div>
+      <div class="stat-info">
+        <div class="stat-label">Espacio Usado</div>
+        <div class="stat-value">2.4GB</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="audit-table-container">
+    <h4 class="table-title">Backups Recientes</h4>
+    <div class="audit-table">
+      <div class="table-header">
+        <div class="header-cell">Nombre</div>
+        <div class="header-cell">Tipo</div>
+        <div class="header-cell">Fecha</div>
+        <div class="header-cell">Tamaño</div>
+        <div class="header-cell">Estado</div>
+      </div>
+      <div class="table-row">
+        <div class="table-cell">backup_2025-06-02_14-30</div>
+        <div class="table-cell">Automático</div>
+        <div class="table-cell">2025-06-02 14:30</div>
+        <div class="table-cell">245MB</div>
+        <div class="table-cell"><span class="status-success">Completado</span></div>
+      </div>
+      <div class="table-row">
+        <div class="table-cell">backup_manual_usuarios</div>
+        <div class="table-cell">Manual</div>
+        <div class="table-cell">2025-06-02 12:15</div>
+        <div class="table-cell">89MB</div>
+        <div class="table-cell"><span class="status-success">Completado</span></div>
+      </div>
+      <div class="table-row">
+        <div class="table-cell">backup_2025-06-02_06-00</div>
+        <div class="table-cell">Automático</div>
+        <div class="table-cell">2025-06-02 06:00</div>
+        <div class="table-cell">--</div>
+        <div class="table-cell"><span class="status-error">Fallido</span></div>
+      </div>
+    </div>
+  </div>
+</div>

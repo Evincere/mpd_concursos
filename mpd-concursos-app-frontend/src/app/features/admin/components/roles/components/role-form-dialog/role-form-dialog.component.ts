@@ -1,23 +1,21 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from  '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { AdminRolesService, Role, Permission, CreateRoleRequest, UpdateRoleRequest } from '@core/services/admin/admin-roles.service';
+import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
+import { NotificationService } from '@core/services/notification/notification.service';
+
+// Componentes personalizados
+import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
+import { CustomTextareaComponent } from '@shared/components/custom-form/custom-textarea/custom-textarea.component';
+import { CustomSelectComponent } from '@shared/components/custom-form/custom-select/custom-select.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
+import { CustomCheckboxComponent } from '@shared/components/custom-form/custom-checkbox/custom-checkbox.component';
+import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
 
 interface PermissionGroup {
   module: string;
@@ -33,19 +31,13 @@ interface PermissionGroup {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatDividerModule,
-    MatTooltipModule,
-    MatExpansionModule
+    CustomFormFieldComponent,
+    CustomTextareaComponent,
+    CustomSelectComponent,
+    CustomButtonComponent,
+    CustomCardComponent,
+    CustomCheckboxComponent,
+    ContestStatusBadgeComponent
   ]
 })
 export class RoleFormDialogComponent implements OnInit, OnDestroy {
@@ -61,9 +53,9 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private rolesService: AdminRolesService,
-    private snackBar: MatSnackBar,
-    public dialogRef: MatDialogRef<RoleFormDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { role?: Role }
+    private notificationService: NotificationService,
+    public dialogRef: UnifiedDialogRef<boolean>,
+    @Inject(DIALOG_DATA) public data: { role?: Role }
   ) {
     this.roleForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -87,7 +79,7 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
       // Si es un rol del sistema, deshabilitar campos
       if (this.data.role?.isSystem) {
         this.roleForm.disable();
-        this.snackBar.open('Los roles del sistema no pueden ser modificados', 'Cerrar', { duration: 3000 });
+        this.notificationService.showWarning('Los roles del sistema no pueden ser modificados');
       }
     }
   }
@@ -110,7 +102,7 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando permisos:', error);
-          this.snackBar.open('Error al cargar los permisos disponibles', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al cargar los permisos disponibles');
           this.isLoading = false;
         }
       });
@@ -164,12 +156,12 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (_role) => {
-          this.snackBar.open('Rol creado correctamente', 'Cerrar', { duration: 3000 });
+          this.notificationService.showSuccess('Rol creado correctamente');
           this.dialogRef.close(true);
         },
         error: (error) => {
           console.error('Error al crear rol:', error);
-          this.snackBar.open('Error al crear el rol', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al crear el rol');
           this.isLoading = false;
         }
       });
@@ -189,12 +181,12 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (_role) => {
-          this.snackBar.open('Rol actualizado correctamente', 'Cerrar', { duration: 3000 });
+          this.notificationService.showSuccess('Rol actualizado correctamente');
           this.dialogRef.close(true);
         },
         error: (error) => {
           console.error('Error al actualizar rol:', error);
-          this.snackBar.open('Error al actualizar el rol', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al actualizar el rol');
           this.isLoading = false;
         }
       });
@@ -272,10 +264,10 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
 
   getActionIcon(action: string): string {
     switch (action) {
-      case 'READ': return 'visibility';
+      case 'READ': return 'eye';
       case 'WRITE': return 'edit';
-      case 'DELETE': return 'delete';
-      case 'ADMIN': return 'admin_panel_settings';
+      case 'DELETE': return 'trash';
+      case 'ADMIN': return 'cog';
       default: return 'check';
     }
   }
@@ -292,13 +284,13 @@ export class RoleFormDialogComponent implements OnInit, OnDestroy {
 
   getModuleIcon(module: string): string {
     switch (module.toLowerCase()) {
-      case 'users': return 'people';
-      case 'roles': return 'admin_panel_settings';
-      case 'profile': return 'person';
-      case 'contests': return 'gavel';
-      case 'inscriptions': return 'assignment';
-      case 'documents': return 'description';
-      case 'system': return 'settings';
+      case 'users': return 'users';
+      case 'roles': return 'shield-alt';
+      case 'profile': return 'user';
+      case 'contests': return 'trophy';
+      case 'inscriptions': return 'clipboard-list';
+      case 'documents': return 'file-alt';
+      case 'system': return 'cogs';
       default: return 'folder';
     }
   }

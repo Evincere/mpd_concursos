@@ -1,22 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -24,6 +8,7 @@ import {
   SystemConfigService,
   IntegrationsConfig
 } from '@core/services/admin/system-config.service';
+import { NotificationService } from '@core/services/notification/notification.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -35,22 +20,6 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatSlideToggleModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatExpansionModule,
-    MatDividerModule,
-    MatTooltipModule,
-    MatSnackBarModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
     ConfirmDialogComponent
   ]
 })
@@ -59,13 +28,21 @@ export class IntegrationsConfigComponent implements OnInit, OnDestroy {
   isLoading = false;
   isSaving = false;
 
+  // Estado de las secciones expandidas
+  expandedSections = {
+    googleMaps: true,
+    recaptcha: false,
+    googleAnalytics: false,
+    authProviders: false,
+    apiKeys: false
+  };
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private systemConfigService: SystemConfigService,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private notificationService: NotificationService
   ) {
     this.integrationsForm = this.createForm();
   }
@@ -116,7 +93,7 @@ export class IntegrationsConfigComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando configuración de integraciones:', error);
-          this.snackBar.open('Error al cargar la configuración de integraciones', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al cargar la configuración de integraciones');
           this.isLoading = false;
         }
       });
@@ -162,7 +139,7 @@ export class IntegrationsConfigComponent implements OnInit, OnDestroy {
   saveConfig(): void {
     if (this.integrationsForm.invalid) {
       this.markFormGroupTouched(this.integrationsForm);
-      this.snackBar.open('Por favor, corrija los errores en el formulario', 'Cerrar', { duration: 3000 });
+      this.notificationService.showError('Por favor, corrija los errores en el formulario');
       return;
     }
 
@@ -174,12 +151,12 @@ export class IntegrationsConfigComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.snackBar.open('Configuración de integraciones guardada correctamente', 'Cerrar', { duration: 3000 });
+          this.notificationService.showSuccess('Configuración de integraciones guardada correctamente');
           this.isSaving = false;
         },
         error: (error) => {
           console.error('Error guardando configuración de integraciones:', error);
-          this.snackBar.open('Error al guardar la configuración de integraciones', 'Cerrar', { duration: 3000 });
+          this.notificationService.showError('Error al guardar la configuración de integraciones');
           this.isSaving = false;
         }
       });
@@ -189,35 +166,32 @@ export class IntegrationsConfigComponent implements OnInit, OnDestroy {
    * Restablece la configuración de integraciones a los valores predeterminados
    */
   resetConfig(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Restablecer configuración',
-        message: '¿Está seguro de que desea restablecer la configuración de integraciones a los valores predeterminados?',
-        confirmText: 'Restablecer',
-        cancelText: 'Cancelar'
-      }
-    });
+    const confirmed = confirm('¿Está seguro de que desea restablecer la configuración de integraciones a los valores predeterminados?');
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.isLoading = true;
+    if (confirmed) {
+      this.isLoading = true;
 
-        this.systemConfigService.resetConfig('integrations')
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: () => {
-              this.snackBar.open('Configuración de integraciones restablecida correctamente', 'Cerrar', { duration: 3000 });
-              this.loadConfig();
-            },
-            error: (error) => {
-              console.error('Error restableciendo configuración de integraciones:', error);
-              this.snackBar.open('Error al restablecer la configuración de integraciones', 'Cerrar', { duration: 3000 });
-              this.isLoading = false;
-            }
-          });
-      }
-    });
+      this.systemConfigService.resetConfig('integrations')
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.notificationService.showSuccess('Configuración de integraciones restablecida correctamente');
+            this.loadConfig();
+          },
+          error: (error) => {
+            console.error('Error restableciendo configuración de integraciones:', error);
+            this.notificationService.showError('Error al restablecer la configuración de integraciones');
+            this.isLoading = false;
+          }
+        });
+    }
+  }
+
+  /**
+   * Alterna el estado expandido de una sección
+   */
+  toggleSection(section: keyof typeof this.expandedSections): void {
+    this.expandedSections[section] = !this.expandedSections[section];
   }
 
   /**

@@ -1,93 +1,175 @@
+<!-- ===== ENHANCED GLASSMORPHISM CALENDAR COMPONENT ===== -->
 <div class="calendario-container">
+  <!-- Premium Glassmorphism Header -->
   <div class="header">
-    <h1>Calendario de Concursos</h1>
+    <div class="header-content">
+      <h1 class="page-title">Calendario de Concursos</h1>
+      <p class="page-subtitle">Visualiza las fechas importantes de todos los concursos</p>
+    </div>
     <div class="header-actions">
-      <button mat-stroked-button [routerLink]="['/admin/concursos/listado']">
-        <mat-icon>list</mat-icon>
-        Ver Listado
+      <button class="custom-button stroked" [routerLink]="['/admin/concursos/listado']">
+        <span class="button-icon">📋</span>
+        <span class="button-text">Ver Listado</span>
       </button>
     </div>
   </div>
 
+  <!-- Enhanced Calendar Controls with Glassmorphism -->
   <div class="calendar-controls">
     <div class="month-navigation">
-      <button mat-icon-button (click)="prevMonth()">
-        <mat-icon>chevron_left</mat-icon>
+      <button class="nav-button prev" (click)="prevMonth()" [attr.aria-label]="'Mes anterior'">
+        <span class="nav-icon">◀</span>
       </button>
-      <h2>{{ getMonthName(currentMonth) }} {{ currentYear }}</h2>
-      <button mat-icon-button (click)="nextMonth()">
-        <mat-icon>chevron_right</mat-icon>
+      <h2 class="current-month">{{ getMonthName(currentMonth) }} {{ currentYear }}</h2>
+      <button class="nav-button next" (click)="nextMonth()" [attr.aria-label]="'Mes siguiente'">
+        <span class="nav-icon">▶</span>
       </button>
     </div>
 
+    <!-- Custom Glassmorphism Selectors -->
     <form [formGroup]="filterForm" class="filter-form">
-      <mat-form-field appearance="outline">
-        <mat-label>Mes</mat-label>
-        <mat-select formControlName="month">
-          <mat-option *ngFor="let month of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; let i = index" [value]="i">
-            {{ getMonthName(i) }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="custom-select-field">
+        <label class="field-label">Mes</label>
+        <div class="custom-select" [class.open]="monthSelectOpen">
+          <div class="select-trigger" (click)="toggleMonthSelect()">
+            <span class="select-value">{{ getMonthName(filterForm.get('month')?.value) }}</span>
+            <span class="select-arrow">{{ monthSelectOpen ? '▲' : '▼' }}</span>
+          </div>
+          <div class="select-dropdown" *ngIf="monthSelectOpen">
+            <div *ngFor="let month of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; let i = index"
+                 class="select-option"
+                 [class.selected]="i === filterForm.get('month')?.value"
+                 (click)="selectMonth(i)">
+              {{ getMonthName(i) }}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Año</mat-label>
-        <mat-select formControlName="year">
-          <mat-option *ngFor="let year of [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]" [value]="year">
-            {{ year }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="custom-select-field">
+        <label class="field-label">Año</label>
+        <div class="custom-select" [class.open]="yearSelectOpen">
+          <div class="select-trigger" (click)="toggleYearSelect()">
+            <span class="select-value">{{ filterForm.get('year')?.value }}</span>
+            <span class="select-arrow">{{ yearSelectOpen ? '▲' : '▼' }}</span>
+          </div>
+          <div class="select-dropdown" *ngIf="yearSelectOpen">
+            <div *ngFor="let year of [currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]"
+                 class="select-option"
+                 [class.selected]="year === filterForm.get('year')?.value"
+                 (click)="selectYear(year)">
+              {{ year }}
+            </div>
+          </div>
+        </div>
+      </div>
     </form>
   </div>
 
+  <!-- Enhanced Loading State with Glassmorphism -->
   <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner diameter="40"></mat-spinner>
+    <div class="spinner">🔄</div>
     <p>Cargando calendario...</p>
   </div>
 
+  <!-- Enhanced Glassmorphism Calendar -->
   <div *ngIf="!isLoading" class="calendar">
+    <!-- Clean Calendar Header -->
     <div class="calendar-header">
-      <div class="weekday">Domingo</div>
-      <div class="weekday">Lunes</div>
-      <div class="weekday">Martes</div>
-      <div class="weekday">Miércoles</div>
-      <div class="weekday">Jueves</div>
-      <div class="weekday">Viernes</div>
-      <div class="weekday">Sábado</div>
+      <div class="weekday">
+        <span class="weekday-text">Domingo</span>
+      </div>
+      <div class="weekday">
+        <span class="weekday-text">Lunes</span>
+      </div>
+      <div class="weekday">
+        <span class="weekday-text">Martes</span>
+      </div>
+      <div class="weekday">
+        <span class="weekday-text">Miércoles</span>
+      </div>
+      <div class="weekday">
+        <span class="weekday-text">Jueves</span>
+      </div>
+      <div class="weekday">
+        <span class="weekday-text">Viernes</span>
+      </div>
+      <div class="weekday">
+        <span class="weekday-text">Sábado</span>
+      </div>
     </div>
 
+    <!-- Enhanced Calendar Body with Glassmorphism -->
     <div class="calendar-body">
-      <div *ngFor="let day of calendarDays" 
-           class="calendar-day" 
+      <div *ngFor="let day of calendarDays"
+           class="calendar-day"
            [class.other-month]="!day.isCurrentMonth"
-           [class.today]="isToday(day.date)">
-        <div class="day-number">{{ day.day }}</div>
-        
+           [class.today]="isToday(day.date)"
+           [class.has-events]="day.events.length > 0"
+           [attr.aria-label]="getDayAriaLabel(day)"
+           tabindex="0">
+
+        <!-- Day Number with Enhanced Styling -->
+        <div class="day-number">
+          <span class="day-text">{{ day.day }}</span>
+          <div *ngIf="isToday(day.date)" class="today-indicator">HOY</div>
+        </div>
+
+        <!-- Clean Event Display -->
         <div class="day-events" *ngIf="day.events.length > 0">
-          <div *ngFor="let event of day.events.slice(0, 3)" class="event">
-            <div class="event-dot"></div>
-            <div class="event-title">
-              {{ event.title || event.label }}
-              <span *ngIf="event.contestTitle" class="event-contest">
-                ({{ event.contestTitle }})
-              </span>
+          <div *ngFor="let event of day.events.slice(0, 3)"
+               class="event"
+               [class.high-priority]="getEventPriority(event) === 'high'"
+               [class.medium-priority]="getEventPriority(event) === 'medium'"
+               [class.low-priority]="getEventPriority(event) === 'low'">
+            <div class="event-badge">
+              <span class="event-dot"></span>
+            </div>
+            <div class="event-content">
+              <div class="event-title">{{ event.title || event.label }}</div>
+              <div *ngIf="event.contestTitle" class="event-contest">
+                {{ event.contestTitle }}
+              </div>
             </div>
           </div>
-          
+
+          <!-- Clean More Events Indicator -->
           <div *ngIf="day.events.length > 3" class="more-events">
-            +{{ day.events.length - 3 }} más
+            <span class="more-text">+{{ day.events.length - 3 }} más</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Enhanced Glassmorphism Legend -->
   <div class="calendar-legend">
-    <h3>Leyenda</h3>
-    <div class="legend-item">
-      <div class="legend-dot"></div>
-      <span>Fechas importantes de concursos</span>
+    <div class="legend-header">
+      <h3 class="legend-title">Leyenda de Eventos</h3>
+      <span class="legend-icon">🏆</span>
+    </div>
+    <div class="legend-items">
+      <div class="legend-item high-priority">
+        <div class="legend-badge">
+          <span class="legend-dot"></span>
+          <span class="priority-icon">🔴</span>
+        </div>
+        <span class="legend-text">Fechas críticas (inscripciones, exámenes)</span>
+      </div>
+      <div class="legend-item medium-priority">
+        <div class="legend-badge">
+          <span class="legend-dot"></span>
+          <span class="priority-icon">🟡</span>
+        </div>
+        <span class="legend-text">Fechas importantes (publicaciones)</span>
+      </div>
+      <div class="legend-item low-priority">
+        <div class="legend-badge">
+          <span class="legend-dot"></span>
+          <span class="priority-icon">🟢</span>
+        </div>
+        <span class="legend-text">Fechas informativas</span>
+      </div>
     </div>
   </div>
 </div>

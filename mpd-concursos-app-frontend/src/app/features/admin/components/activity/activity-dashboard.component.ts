@@ -2,29 +2,27 @@ import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from  '@angular/
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { AdminActivityService, ActivityLog, ActivityFilter, ActivityStats } from '@core/services/admin/admin-activity.service';
 import { ActivityDetailDialogComponent } from './components/activity-detail-dialog/activity-detail-dialog.component';
 import { ActivityChartComponent } from './components/activity-chart/activity-chart.component';
+
+// Custom interfaces to replace Material UI types
+interface PageEvent {
+  pageIndex: number;
+  pageSize: number;
+  length: number;
+}
+
+interface Sort {
+  active: string;
+  direction: 'asc' | 'desc' | '';
+}
 
 @Component({
   selector: 'app-activity-dashboard',
@@ -37,23 +35,7 @@ import { ActivityChartComponent } from './components/activity-chart/activity-cha
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    MatButtonModule,
     MatIconModule,
-    MatCardModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatChipsModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatTabsModule,
     ActivityChartComponent
   ]
 })
@@ -313,5 +295,50 @@ export class ActivityDashboardComponent implements OnInit, OnDestroy {
   formatTime(date: string): string {
     if (!date) return '';
     return new Date(date).toLocaleTimeString();
+  }
+
+  // Custom Paginator Methods
+  getPaginatorInfo(): string {
+    const start = this.pageIndex * this.pageSize + 1;
+    const end = Math.min((this.pageIndex + 1) * this.pageSize, this.totalItems);
+    return `${start} - ${end} de ${this.totalItems} registros`;
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.totalItems / this.pageSize);
+  }
+
+  goToFirstPage(): void {
+    if (this.pageIndex !== 0) {
+      this.pageIndex = 0;
+      this.loadActivityLogs();
+    }
+  }
+
+  goToPreviousPage(): void {
+    if (this.pageIndex > 0) {
+      this.pageIndex--;
+      this.loadActivityLogs();
+    }
+  }
+
+  goToNextPage(): void {
+    if (this.pageIndex < this.getTotalPages() - 1) {
+      this.pageIndex++;
+      this.loadActivityLogs();
+    }
+  }
+
+  goToLastPage(): void {
+    const lastPage = this.getTotalPages() - 1;
+    if (this.pageIndex !== lastPage) {
+      this.pageIndex = lastPage;
+      this.loadActivityLogs();
+    }
+  }
+
+  onPageSizeChange(): void {
+    this.pageIndex = 0;
+    this.loadActivityLogs();
   }
 }

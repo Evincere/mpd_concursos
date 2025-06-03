@@ -1,269 +1,338 @@
-<div class="system-monitoring-container">
-  <div class="header">
-    <h1>Monitoreo del Sistema</h1>
+<div class="monitoring-container">
+  <!-- Header glassmorphism -->
+  <div class="monitoring-header">
+    <h3 class="monitoring-title">{{getCurrentModeConfig().title}}</h3>
+    <p class="monitoring-description">
+      {{getCurrentModeConfig().description}}
+    </p>
+
     <div class="header-actions">
-      <button mat-stroked-button color="primary" (click)="loadData()" [disabled]="isLoading">
-        <mat-icon>refresh</mat-icon>
-        Actualizar
+      <button type="button" class="btn-refresh" (click)="loadData()" [disabled]="isLoading">
+        <span class="btn-icon">🔄</span>
+        <span class="btn-label">Actualizar</span>
       </button>
     </div>
   </div>
 
-  <!-- Indicador de carga -->
+  <!-- Indicador de carga glassmorphism -->
   <div *ngIf="isLoading" class="loading-overlay">
-    <mat-spinner diameter="50"></mat-spinner>
-    <span>Cargando datos...</span>
+    <div class="loading-spinner"></div>
+    <span class="loading-text">Cargando datos del sistema...</span>
   </div>
 
-  <!-- Filtros -->
-  <mat-card class="filter-card">
-    <mat-card-content>
-      <form [formGroup]="filterForm" class="filter-form">
-        <div class="filter-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Intervalo de tiempo</mat-label>
-            <mat-select formControlName="timeInterval">
-              <mat-option *ngFor="let interval of timeIntervals" [value]="interval.value">
-                {{interval.label}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+  <!-- Filtros glassmorphism -->
+  <div class="filters-container">
+    <div class="filters-header">
+      <h4 class="filters-title">Filtros de Monitoreo</h4>
+      <p class="filters-description">Configure los parámetros de visualización</p>
+    </div>
 
-          <div formGroupName="dateRange" class="date-range" *ngIf="filterForm.get('timeInterval')?.value === 'custom'">
-            <mat-form-field appearance="outline">
-              <mat-label>Fecha desde</mat-label>
-              <input matInput [matDatepicker]="startPicker" formControlName="startDate">
-              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-              <mat-datepicker #startPicker></mat-datepicker>
-            </mat-form-field>
+    <form [formGroup]="filterForm" class="filters-form">
+      <div class="filters-grid">
+        <!-- Intervalo de tiempo -->
+        <div class="form-field">
+          <label class="field-label">Intervalo de tiempo</label>
+          <select formControlName="timeInterval" class="form-select">
+            <option *ngFor="let interval of timeIntervals" [value]="interval.value">
+              {{ interval.label }}
+            </option>
+          </select>
+        </div>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Fecha hasta</mat-label>
-              <input matInput [matDatepicker]="endPicker" formControlName="endDate">
-              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-              <mat-datepicker #endPicker></mat-datepicker>
-            </mat-form-field>
+        <!-- Rango de fechas personalizado -->
+        <div class="form-field date-range" *ngIf="filterForm.get('timeInterval')?.value === 'custom'">
+          <label class="field-label">Rango personalizado</label>
+          <div class="date-inputs" formGroupName="dateRange">
+            <input type="date" formControlName="startDate" class="form-input" placeholder="Fecha inicio">
+            <input type="date" formControlName="endDate" class="form-input" placeholder="Fecha fin">
           </div>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Categoría</mat-label>
-            <mat-select formControlName="category">
-              <mat-option value="">Todas</mat-option>
-              <mat-option value="performance">Rendimiento</mat-option>
-              <mat-option value="database">Base de datos</mat-option>
-              <mat-option value="security">Seguridad</mat-option>
-              <mat-option value="application">Aplicación</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Severidad</mat-label>
-            <mat-select formControlName="severity">
-              <mat-option value="">Todas</mat-option>
-              <mat-option value="info">Información</mat-option>
-              <mat-option value="warning">Advertencia</mat-option>
-              <mat-option value="error">Error</mat-option>
-              <mat-option value="critical">Crítico</mat-option>
-            </mat-select>
-          </mat-form-field>
         </div>
 
-        <div class="filter-actions">
-          <button mat-stroked-button color="primary" (click)="resetFilters()">
-            <mat-icon>refresh</mat-icon>
-            Reiniciar
-          </button>
-          <button mat-raised-button color="primary" (click)="applyFilters()">
-            <mat-icon>filter_list</mat-icon>
-            Aplicar Filtros
-          </button>
+        <!-- Categoría -->
+        <div class="form-field">
+          <label class="field-label">Categoría</label>
+          <select formControlName="category" class="form-select">
+            <option value="">Todas las categorías</option>
+            <option value="performance">Rendimiento</option>
+            <option value="database">Base de datos</option>
+            <option value="security">Seguridad</option>
+            <option value="application">Aplicación</option>
+          </select>
         </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
 
-  <!-- Resumen de estado del sistema -->
+        <!-- Severidad -->
+        <div class="form-field">
+          <label class="field-label">Severidad</label>
+          <select formControlName="severity" class="form-select">
+            <option value="">Todas las severidades</option>
+            <option value="info">Información</option>
+            <option value="warning">Advertencia</option>
+            <option value="error">Error</option>
+            <option value="critical">Crítico</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filters-actions">
+        <button type="button" class="btn-secondary" (click)="resetFilters()">
+          <span class="btn-icon">🔄</span>
+          <span class="btn-label">Limpiar</span>
+        </button>
+        <button type="button" class="btn-primary" (click)="applyFilters()">
+          <span class="btn-icon">🔍</span>
+          <span class="btn-label">Aplicar Filtros</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Resumen de estado del sistema glassmorphism -->
   <div class="system-status-summary" *ngIf="appPerformanceMetrics && appPerformanceMetrics.apiMetrics">
-    <mat-card class="status-card" [ngClass]="{
+    <div class="status-card" [ngClass]="{
       'status-healthy': appPerformanceMetrics.apiMetrics.errorRate < 1,
       'status-warning': appPerformanceMetrics.apiMetrics.errorRate >= 1 && appPerformanceMetrics.apiMetrics.errorRate < 5,
       'status-critical': appPerformanceMetrics.apiMetrics.errorRate >= 5
     }">
-      <mat-card-content>
-        <div class="status-icon">
-          <mat-icon *ngIf="appPerformanceMetrics.apiMetrics.errorRate < 1">check_circle</mat-icon>
-          <mat-icon *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 1 && appPerformanceMetrics.apiMetrics.errorRate < 5">warning</mat-icon>
-          <mat-icon *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 5">error</mat-icon>
+      <div class="status-icon">
+        <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate < 1">✅</span>
+        <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 1 && appPerformanceMetrics.apiMetrics.errorRate < 5">⚠️</span>
+        <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 5">❌</span>
+      </div>
+      <div class="status-info">
+        <div class="status-title">Estado del Sistema</div>
+        <div class="status-value">
+          <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate < 1">Saludable</span>
+          <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 1 && appPerformanceMetrics.apiMetrics.errorRate < 5">Advertencia</span>
+          <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 5">Crítico</span>
         </div>
-        <div class="status-info">
-          <div class="status-title">Estado del Sistema</div>
-          <div class="status-value">
-            <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate < 1">Saludable</span>
-            <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 1 && appPerformanceMetrics.apiMetrics.errorRate < 5">Advertencia</span>
-            <span *ngIf="appPerformanceMetrics.apiMetrics.errorRate >= 5">Crítico</span>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
 
-    <mat-card class="metric-card">
-      <mat-card-content>
-        <div class="metric-icon">
-          <mat-icon>memory</mat-icon>
-        </div>
-        <div class="metric-info">
-          <div class="metric-title">Uso de CPU</div>
-          <div class="metric-value">{{appPerformanceMetrics.cpuUsage.percentage || 0}}%</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <div class="metric-card">
+      <div class="metric-icon">
+        <span>🖥️</span>
+      </div>
+      <div class="metric-info">
+        <div class="metric-title">Uso de CPU</div>
+        <div class="metric-value">{{appPerformanceMetrics.cpuUsage.percentage || 0}}%</div>
+      </div>
+    </div>
 
-    <mat-card class="metric-card">
-      <mat-card-content>
-        <div class="metric-icon">
-          <mat-icon>storage</mat-icon>
-        </div>
-        <div class="metric-info">
-          <div class="metric-title">Uso de Memoria</div>
-          <div class="metric-value">{{appPerformanceMetrics.memoryUsage.percentage || 0}}%</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <div class="metric-card">
+      <div class="metric-icon">
+        <span>💾</span>
+      </div>
+      <div class="metric-info">
+        <div class="metric-title">Uso de Memoria</div>
+        <div class="metric-value">{{appPerformanceMetrics.memoryUsage.percentage || 0}}%</div>
+      </div>
+    </div>
 
-    <mat-card class="metric-card">
-      <mat-card-content>
-        <div class="metric-icon">
-          <mat-icon>speed</mat-icon>
-        </div>
-        <div class="metric-info">
-          <div class="metric-title">Tiempo de Respuesta</div>
-          <div class="metric-value">{{appPerformanceMetrics.apiMetrics.averageResponseTime || 0}} ms</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <div class="metric-card">
+      <div class="metric-icon">
+        <span>⚡</span>
+      </div>
+      <div class="metric-info">
+        <div class="metric-title">Tiempo de Respuesta</div>
+        <div class="metric-value">{{appPerformanceMetrics.apiMetrics.averageResponseTime || 0}} ms</div>
+      </div>
+    </div>
 
-    <mat-card class="metric-card">
-      <mat-card-content>
-        <div class="metric-icon">
-          <mat-icon>error_outline</mat-icon>
-        </div>
-        <div class="metric-info">
-          <div class="metric-title">Tasa de Errores</div>
-          <div class="metric-value">{{appPerformanceMetrics.apiMetrics.errorRate || 0}}%</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <div class="metric-card">
+      <div class="metric-icon">
+        <span>⚠️</span>
+      </div>
+      <div class="metric-info">
+        <div class="metric-title">Tasa de Errores</div>
+        <div class="metric-value">{{appPerformanceMetrics.apiMetrics.errorRate || 0}}%</div>
+      </div>
+    </div>
 
-    <mat-card class="metric-card">
-      <mat-card-content>
-        <div class="metric-icon">
-          <mat-icon>people</mat-icon>
-        </div>
-        <div class="metric-info">
-          <div class="metric-title">Usuarios Activos</div>
-          <div class="metric-value">{{appPerformanceMetrics.sessionMetrics.activeSessions || 0}}</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <div class="metric-card">
+      <div class="metric-icon">
+        <span>👥</span>
+      </div>
+      <div class="metric-info">
+        <div class="metric-title">Usuarios Activos</div>
+        <div class="metric-value">{{appPerformanceMetrics.sessionMetrics.activeSessions || 0}}</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Alertas activas -->
+  <!-- Alertas activas glassmorphism -->
   <div class="active-alerts" *ngIf="systemAlerts && systemAlerts.length > 0">
-    <h2>Alertas Activas</h2>
+    <h2 class="alerts-title">Alertas Activas</h2>
     <div class="alerts-container">
-      <mat-card *ngFor="let alert of systemAlerts | slice:0:3" class="alert-card" [ngClass]="{
+      <div *ngFor="let alert of systemAlerts | slice:0:3" class="alert-card" [ngClass]="{
         'alert-info': alert.type === 'info',
         'alert-warning': alert.type === 'warning',
         'alert-error': alert.type === 'error',
         'alert-critical': alert.type === 'critical'
       }">
-        <mat-card-content>
-          <div class="alert-header">
-            <div class="alert-icon">
-              <mat-icon *ngIf="alert.type === 'info'">info</mat-icon>
-              <mat-icon *ngIf="alert.type === 'warning'">warning</mat-icon>
-              <mat-icon *ngIf="alert.type === 'error'">error</mat-icon>
-              <mat-icon *ngIf="alert.type === 'critical'">report</mat-icon>
-            </div>
-            <div class="alert-info">
-              <div class="alert-title">{{alert.message || 'Sin mensaje'}}</div>
-              <div class="alert-timestamp">{{alert.timestamp | date:'dd/MM/yyyy HH:mm:ss'}}</div>
-            </div>
+        <div class="alert-header">
+          <div class="alert-icon">
+            <span *ngIf="alert.type === 'info'">ℹ️</span>
+            <span *ngIf="alert.type === 'warning'">⚠️</span>
+            <span *ngIf="alert.type === 'error'">❌</span>
+            <span *ngIf="alert.type === 'critical'">🚨</span>
           </div>
-          <div class="alert-details">
-            {{alert.details || 'Sin detalles'}}
+          <div class="alert-info">
+            <div class="alert-title">{{alert.message || 'Sin mensaje'}}</div>
+            <div class="alert-timestamp">{{alert.timestamp | date:'dd/MM/yyyy HH:mm:ss'}}</div>
           </div>
-          <div class="alert-metrics" *ngIf="alert.metrics && alert.metrics.length > 0">
-            <div class="alert-metric" *ngFor="let metric of alert.metrics">
-              <span class="metric-name">{{metric.name || 'Métrica'}}:</span>
-              <span class="metric-value">{{metric.value || 0}} {{metric.unit || ''}}</span>
-              <span class="metric-threshold" *ngIf="metric.threshold">(Umbral: {{metric.threshold}} {{metric.unit || ''}})</span>
-            </div>
+        </div>
+        <div class="alert-details">
+          {{alert.details || 'Sin detalles'}}
+        </div>
+        <div class="alert-metrics" *ngIf="alert.metrics && alert.metrics.length > 0">
+          <div class="alert-metric" *ngFor="let metric of alert.metrics">
+            <span class="metric-name">{{metric.name || 'Métrica'}}:</span>
+            <span class="metric-value">{{metric.value || 0}} {{metric.unit || ''}}</span>
+            <span class="metric-threshold" *ngIf="metric.threshold">(Umbral: {{metric.threshold}} {{metric.unit || ''}})</span>
           </div>
-          <div class="alert-actions">
-            <button mat-button color="primary" *ngIf="alert.status === 'active'" (click)="acknowledgeAlert(alert.id)">
-              <mat-icon>check</mat-icon>
-              Acusar recibo
-            </button>
-            <button mat-button color="accent" *ngIf="alert.status === 'acknowledged'" (click)="resolveAlert(alert.id)">
-              <mat-icon>done_all</mat-icon>
-              Resolver
-            </button>
-            <span class="alert-status" *ngIf="alert.status === 'resolved'">
-              <mat-icon>done_all</mat-icon>
-              Resuelta
-            </span>
-          </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+        <div class="alert-actions">
+          <button type="button" class="btn-primary" *ngIf="alert.status === 'active'" (click)="acknowledgeAlert(alert.id)">
+            <span class="btn-icon">✅</span>
+            <span class="btn-label">Acusar recibo</span>
+          </button>
+          <button type="button" class="btn-success" *ngIf="alert.status === 'acknowledged'" (click)="resolveAlert(alert.id)">
+            <span class="btn-icon">✅</span>
+            <span class="btn-label">Resolver</span>
+          </button>
+          <span class="alert-status" *ngIf="alert.status === 'resolved'">
+            <span class="status-icon">✅</span>
+            <span class="status-text">Resuelta</span>
+          </span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Pestañas de monitoreo -->
-  <mat-card class="content-card">
-    <mat-card-content>
-      <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms" (selectedIndexChange)="onTabChange($event)">
-        <!-- Pestaña de Rendimiento de Aplicación -->
-        <mat-tab label="Rendimiento de Aplicación">
-          <div class="tab-content">
+  <!-- Sistema de tabs glassmorphism -->
+  <div class="monitoring-tabs-container">
+    <div class="monitoring-tabs">
+      <button
+        *ngFor="let tab of activeTabs"
+        type="button"
+        class="tab-button"
+        [class.active]="activeTab === tab.id"
+        (click)="setActiveTab(tab.id)">
+        <span class="tab-icon">{{tab.icon}}</span>
+        <span class="tab-label">{{tab.label}}</span>
+      </button>
+    </div>
+
+    <div class="tab-content-container">
+      <!-- Contenido dinámico basado en modo y tab activa -->
+      <div class="tab-content">
+
+        <!-- Contenido para modo MONITORING -->
+        <div *ngIf="mode === 'monitoring'">
+          <!-- Rendimiento de Aplicación -->
+          <div *ngIf="activeTab === 'performance'">
             <app-app-performance
               [appPerformanceMetrics]="appPerformanceMetrics">
             </app-app-performance>
           </div>
-        </mat-tab>
 
-        <!-- Pestaña de Base de Datos -->
-        <mat-tab label="Base de Datos">
-          <div class="tab-content">
+          <!-- Base de Datos -->
+          <div *ngIf="activeTab === 'database'">
             <app-database-monitoring
               [databaseMetrics]="databaseMetrics">
             </app-database-monitoring>
           </div>
-        </mat-tab>
 
-        <!-- Pestaña de Alertas -->
-        <mat-tab label="Alertas">
-          <div class="tab-content">
+          <!-- Alertas -->
+          <div *ngIf="activeTab === 'alerts'">
             <app-system-alerts
               [systemAlerts]="systemAlerts"
               (acknowledgeAlert)="acknowledgeAlert($event)"
               (resolveAlert)="resolveAlert($event)">
             </app-system-alerts>
           </div>
-        </mat-tab>
 
-        <!-- Pestaña de Configuración de Alertas -->
-        <mat-tab label="Configuración de Alertas">
-          <div class="tab-content">
+          <!-- Configuración -->
+          <div *ngIf="activeTab === 'config'">
             <app-alert-configuration
               [alertThresholds]="alertThresholds"
               (updateThreshold)="updateAlertThreshold($event)">
             </app-alert-configuration>
           </div>
-        </mat-tab>
-      </mat-tab-group>
-    </mat-card-content>
-  </mat-card>
+        </div>
+
+        <!-- Contenido para modo AUDIT -->
+        <div *ngIf="mode === 'audit'" class="audit-mode-container">
+          <div class="mode-indicator audit-indicator">
+            <h2>🔍 MODO AUDITORÍA ACTIVO</h2>
+            <p>Este contenido es diferente al modo Monitoreo</p>
+          </div>
+          <!-- Usuarios -->
+          <div *ngIf="activeTab === 'users'" class="temp-placeholder">
+            <h3>� Auditoría de Usuarios</h3>
+            <p>Registros de actividad de usuarios</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+
+          <!-- Sistema -->
+          <div *ngIf="activeTab === 'system'" class="temp-placeholder">
+            <h3>�️ Auditoría del Sistema</h3>
+            <p>Eventos y cambios del sistema</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+
+          <!-- Seguridad -->
+          <div *ngIf="activeTab === 'security'" class="temp-placeholder">
+            <h3>🔒 Auditoría de Seguridad</h3>
+            <p>Eventos de seguridad y accesos</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+
+          <!-- Reportes -->
+          <div *ngIf="activeTab === 'reports'" class="temp-placeholder">
+            <h3>📋 Reportes de Auditoría</h3>
+            <p>Generación de reportes de auditoría</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+        </div>
+
+        <!-- Contenido para modo BACKUP -->
+        <div *ngIf="mode === 'backup'" class="backup-mode-container">
+          <div class="mode-indicator backup-indicator">
+            <h2>💾 MODO COPIAS DE SEGURIDAD ACTIVO</h2>
+            <p>Este contenido es diferente al modo Monitoreo y Auditoría</p>
+          </div>
+          <!-- Automáticos -->
+          <div *ngIf="activeTab === 'automatic'" class="temp-placeholder">
+            <h3>� Backups Automáticos</h3>
+            <p>Gestión de copias de seguridad automáticas</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+
+          <!-- Manuales -->
+          <div *ngIf="activeTab === 'manual'" class="temp-placeholder">
+            <h3>📁 Backups Manuales</h3>
+            <p>Creación y gestión de backups manuales</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+
+          <!-- Programación -->
+          <div *ngIf="activeTab === 'schedule'" class="temp-placeholder">
+            <h3>⏰ Programación de Backups</h3>
+            <p>Configuración de horarios de backup</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+
+          <!-- Restaurar -->
+          <div *ngIf="activeTab === 'restore'" class="temp-placeholder">
+            <h3>↩️ Restaurar Backups</h3>
+            <p>Restauración desde copias de seguridad</p>
+            <p>Estado: Funcionalidad en desarrollo</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 

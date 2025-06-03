@@ -11,7 +11,7 @@
   <!-- Encabezado -->
   <div class="header">
     <div class="header-title">
-      <h1>Gestión de Usuarios</h1>
+      <h1>👥 Gestión de Usuarios</h1>
       <!-- Indicador de filtro activo -->
       <div class="filter-indicator" *ngIf="currentFilters.status">
         <span class="filter-badge" [ngClass]="getStatusClass(currentFilters.status)">
@@ -55,7 +55,7 @@
   </app-usuario-filtros>
 
   <!-- Tabla de Usuarios -->
-  <app-custom-card class="table-card">
+  <div class="table-card">
     <div class="card-header">
       <h3>Listado de Usuarios</h3>
       <span class="results-count" *ngIf="totalUsuarios > 0">
@@ -166,8 +166,7 @@
               <!-- Columna Usuario -->
               <td class="col-username">
                 <div class="username-cell truncate-with-tooltip" [attr.data-full-text]="user.username">
-                  <i class="fas fa-user-circle user-icon"></i>
-                  <span>{{ user.username }}</span>
+                  <span class="username-text">{{ user.username }}</span>
                 </div>
               </td>
 
@@ -183,15 +182,14 @@
                 <a href="mailto:{{ user.email }}" class="email-link truncate-with-tooltip"
                    [attr.data-full-text]="user.email"
                    (click)="$event.stopPropagation()">
-                  <i class="fas fa-envelope"></i>
-                  <span>{{ user.email }}</span>
+                  <span class="email-text">{{ user.email }}</span>
                 </a>
               </td>
 
               <!-- Columna Roles -->
               <td class="col-roles">
                 <div class="roles-container">
-                  <span *ngFor="let role of user.roles" class="role-badge">
+                  <span *ngFor="let role of user.roles" class="role-badge" [ngClass]="getRoleClass(role)">
                     {{ role.replace('ROLE_', '') }}
                   </span>
                 </div>
@@ -208,23 +206,22 @@
               <td class="col-fecha">
                 <div class="date-cell truncate-with-tooltip"
                      [attr.data-full-text]="user.createdAt | date:'dd/MM/yyyy HH:mm'">
-                  <i class="fas fa-calendar-alt"></i>
-                  <span>{{ user.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span class="date-text">{{ user.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
               </td>
 
               <!-- Columna Acciones -->
               <td class="col-acciones">
                 <div class="actions-container">
-                  <!-- Botón Ver Detalles -->
-                  <button class="action-button primary"
+                  <!-- Botón Ver Detalles - Azul (Info) -->
+                  <button class="action-button info"
                           title="Ver detalles"
                           (click)="openUserDetail(user); $event.stopPropagation()">
                     <i class="fas fa-eye"></i>
                   </button>
 
-                  <!-- Botón Editar -->
-                  <button class="action-button accent"
+                  <!-- Botón Editar - Verde (Success/Positive) -->
+                  <button class="action-button success"
                           title="Editar usuario"
                           (click)="editUser(user); $event.stopPropagation()">
                     <i class="fas fa-edit"></i>
@@ -232,7 +229,7 @@
 
                   <!-- Botón Bloquear/Activar -->
                   <button *ngIf="user.status !== 'BLOCKED'"
-                          class="action-button warn"
+                          class="action-button warning"
                           title="Bloquear usuario"
                           (click)="changeUserStatus(user, UserStatus.BLOCKED); $event.stopPropagation()">
                     <i class="fas fa-user-lock"></i>
@@ -245,7 +242,7 @@
                     <i class="fas fa-user-check"></i>
                   </button>
 
-                  <!-- Botón Eliminar -->
+                  <!-- Botón Eliminar - Rojo (Danger/Destructive) -->
                   <button class="action-button danger"
                           title="Eliminar usuario"
                           (click)="deleteUser(user); $event.stopPropagation()">
@@ -301,7 +298,7 @@
         </div>
       </div>
     </div>
-  </app-custom-card>
+  </div>
 
   <!-- Detalle de Usuario (Diálogo lateral) -->
   <app-usuario-detalle

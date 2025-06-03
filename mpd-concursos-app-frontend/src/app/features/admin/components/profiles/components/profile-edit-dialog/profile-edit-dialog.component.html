@@ -1,339 +1,702 @@
-<h2 mat-dialog-title>Editar Perfil: {{getFullName()}}</h2>
+<!-- Header del diálogo glassmorphism -->
+<div class="dialog-header">
+  <div class="header-content">
+    <h2>
+      <i class="fas fa-user-edit"></i>
+      Editar Perfil: {{getFullName()}}
+    </h2>
+    <button
+      type="button"
+      class="close-button"
+      (click)="dialogRef.close()"
+      [attr.aria-label]="'Cerrar diálogo'">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
 
-<mat-dialog-content>
+<!-- Contenido del diálogo -->
+<div class="dialog-content">
+  <!-- Estado de carga glassmorphism -->
   <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p>Cargando información...</p>
+    <div class="loading-content">
+      <div class="spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+      </div>
+      <p>Cargando información del perfil...</p>
+    </div>
   </div>
-  
+
+  <!-- Formulario de edición -->
   <div *ngIf="!isLoading && profile" class="profile-edit-form">
-    <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
-      <!-- Pestaña de Información Personal -->
-      <mat-tab label="Información Personal">
-        <div class="tab-content">
-          <form [formGroup]="personalForm">
-            <div class="form-section">
-              <h4>Datos Personales</h4>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Nombre</mat-label>
-                  <input matInput formControlName="firstName" placeholder="Ingrese nombre">
-                  <mat-error *ngIf="personalForm.get('firstName')?.hasError('required')">
-                    El nombre es obligatorio
-                  </mat-error>
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>Apellido</mat-label>
-                  <input matInput formControlName="lastName" placeholder="Ingrese apellido">
-                  <mat-error *ngIf="personalForm.get('lastName')?.hasError('required')">
-                    El apellido es obligatorio
-                  </mat-error>
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Email</mat-label>
-                  <input matInput formControlName="email" placeholder="Ingrese email" type="email">
-                  <mat-error *ngIf="personalForm.get('email')?.hasError('required')">
-                    El email es obligatorio
-                  </mat-error>
-                  <mat-error *ngIf="personalForm.get('email')?.hasError('email')">
-                    Ingrese un email válido
-                  </mat-error>
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>Teléfono</mat-label>
-                  <input matInput formControlName="phone" placeholder="Ingrese teléfono">
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>DNI</mat-label>
-                  <input matInput formControlName="dni" placeholder="Ingrese DNI">
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>CUIT</mat-label>
-                  <input matInput formControlName="cuit" placeholder="Ingrese CUIT">
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Fecha de Nacimiento</mat-label>
-                  <input matInput [matDatepicker]="birthDatePicker" formControlName="birthDate">
-                  <mat-datepicker-toggle matSuffix [for]="birthDatePicker"></mat-datepicker-toggle>
-                  <mat-datepicker #birthDatePicker></mat-datepicker>
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>Género</mat-label>
-                  <mat-select formControlName="gender">
-                    <mat-option value="Masculino">Masculino</mat-option>
-                    <mat-option value="Femenino">Femenino</mat-option>
-                    <mat-option value="No binario">No binario</mat-option>
-                    <mat-option value="Prefiero no decir">Prefiero no decir</mat-option>
-                  </mat-select>
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Nacionalidad</mat-label>
-                  <input matInput formControlName="nationality" placeholder="Ingrese nacionalidad">
-                </mat-form-field>
-              </div>
+    <!-- Sistema de pestañas glassmorphism -->
+    <div class="custom-tabs">
+      <div class="tab-header">
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 0"
+          (click)="activeTab = 0">
+          <i class="fas fa-user"></i>
+          Información Personal
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 1"
+          (click)="activeTab = 1">
+          <i class="fas fa-map-marker-alt"></i>
+          Dirección
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 2"
+          (click)="activeTab = 2">
+          <i class="fas fa-briefcase"></i>
+          Información Profesional
+        </button>
+        <button
+          type="button"
+          class="tab-button"
+          [class.active]="activeTab === 3"
+          (click)="activeTab = 3">
+          <i class="fas fa-cog"></i>
+          Preferencias
+        </button>
+      </div>
+
+      <!-- Contenido de pestaña: Información Personal -->
+      <div class="tab-content" *ngIf="activeTab === 0">
+        <form [formGroup]="personalForm">
+          <div class="form-section">
+            <div class="section-header">
+              <h4>
+                <i class="fas fa-id-card"></i>
+                Datos Personales
+              </h4>
             </div>
-          </form>
-        </div>
-      </mat-tab>
-      
-      <!-- Pestaña de Dirección -->
-      <mat-tab label="Dirección">
-        <div class="tab-content">
-          <form [formGroup]="addressForm">
-            <div class="form-section">
-              <h4>Dirección</h4>
-              
-              <div formGroupName="address">
-                <div class="form-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Calle</mat-label>
-                    <input matInput formControlName="street" placeholder="Ingrese calle">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline" class="number-field">
-                    <mat-label>Número</mat-label>
-                    <input matInput formControlName="number" placeholder="Ingrese número">
-                  </mat-form-field>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="firstName">
+                  <i class="fas fa-user"></i>
+                  Nombre *
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  formControlName="firstName"
+                  placeholder="Ingrese nombre"
+                  [class.error]="personalForm.get('firstName')?.hasError('required') && personalForm.get('firstName')?.touched">
+                <div class="error-message" *ngIf="personalForm.get('firstName')?.hasError('required') && personalForm.get('firstName')?.touched">
+                  El nombre es obligatorio
                 </div>
-                
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="number-field">
-                    <mat-label>Piso</mat-label>
-                    <input matInput formControlName="floor" placeholder="Ingrese piso">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline" class="number-field">
-                    <mat-label>Departamento</mat-label>
-                    <input matInput formControlName="apartment" placeholder="Ingrese departamento">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline">
-                    <mat-label>Código Postal</mat-label>
-                    <input matInput formControlName="postalCode" placeholder="Ingrese código postal">
-                  </mat-form-field>
-                </div>
-                
-                <div class="form-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Ciudad</mat-label>
-                    <input matInput formControlName="city" placeholder="Ingrese ciudad">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline">
-                    <mat-label>Provincia</mat-label>
-                    <input matInput formControlName="province" placeholder="Ingrese provincia">
-                  </mat-form-field>
-                </div>
-                
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>País</mat-label>
-                    <input matInput formControlName="country" placeholder="Ingrese país">
-                  </mat-form-field>
+              </div>
+
+              <div class="form-field">
+                <label for="lastName">
+                  <i class="fas fa-user"></i>
+                  Apellido *
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  formControlName="lastName"
+                  placeholder="Ingrese apellido"
+                  [class.error]="personalForm.get('lastName')?.hasError('required') && personalForm.get('lastName')?.touched">
+                <div class="error-message" *ngIf="personalForm.get('lastName')?.hasError('required') && personalForm.get('lastName')?.touched">
+                  El apellido es obligatorio
                 </div>
               </div>
             </div>
-            
-            <mat-divider></mat-divider>
-            
-            <div class="form-section">
-              <div class="section-header">
-                <h4>Centro de Vida</h4>
-                <mat-checkbox formControlName="sameCentroDeVida">Usar la misma dirección</mat-checkbox>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="email">
+                  <i class="fas fa-envelope"></i>
+                  Email *
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  formControlName="email"
+                  placeholder="Ingrese email"
+                  [class.error]="(personalForm.get('email')?.hasError('required') || personalForm.get('email')?.hasError('email')) && personalForm.get('email')?.touched">
+                <div class="error-message" *ngIf="personalForm.get('email')?.hasError('required') && personalForm.get('email')?.touched">
+                  El email es obligatorio
+                </div>
+                <div class="error-message" *ngIf="personalForm.get('email')?.hasError('email') && personalForm.get('email')?.touched">
+                  Ingrese un email válido
+                </div>
               </div>
-              
-              <div formGroupName="centroDeVida">
-                <div class="form-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Calle</mat-label>
-                    <input matInput formControlName="street" placeholder="Ingrese calle">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline" class="number-field">
-                    <mat-label>Número</mat-label>
-                    <input matInput formControlName="number" placeholder="Ingrese número">
-                  </mat-form-field>
-                </div>
-                
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="number-field">
-                    <mat-label>Piso</mat-label>
-                    <input matInput formControlName="floor" placeholder="Ingrese piso">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline" class="number-field">
-                    <mat-label>Departamento</mat-label>
-                    <input matInput formControlName="apartment" placeholder="Ingrese departamento">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline">
-                    <mat-label>Código Postal</mat-label>
-                    <input matInput formControlName="postalCode" placeholder="Ingrese código postal">
-                  </mat-form-field>
-                </div>
-                
-                <div class="form-row">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Ciudad</mat-label>
-                    <input matInput formControlName="city" placeholder="Ingrese ciudad">
-                  </mat-form-field>
-                  
-                  <mat-form-field appearance="outline">
-                    <mat-label>Provincia</mat-label>
-                    <input matInput formControlName="province" placeholder="Ingrese provincia">
-                  </mat-form-field>
-                </div>
-                
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>País</mat-label>
-                    <input matInput formControlName="country" placeholder="Ingrese país">
-                  </mat-form-field>
+
+              <div class="form-field">
+                <label for="phone">
+                  <i class="fas fa-phone"></i>
+                  Teléfono
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  formControlName="phone"
+                  placeholder="Ingrese teléfono">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="dni">
+                  <i class="fas fa-id-card"></i>
+                  DNI
+                </label>
+                <input
+                  id="dni"
+                  type="text"
+                  formControlName="dni"
+                  placeholder="Ingrese DNI">
+              </div>
+
+              <div class="form-field">
+                <label for="cuit">
+                  <i class="fas fa-credit-card"></i>
+                  CUIT
+                </label>
+                <input
+                  id="cuit"
+                  type="text"
+                  formControlName="cuit"
+                  placeholder="Ingrese CUIT">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="birthDate">
+                  <i class="fas fa-birthday-cake"></i>
+                  Fecha de Nacimiento
+                </label>
+                <input
+                  id="birthDate"
+                  type="date"
+                  formControlName="birthDate"
+                  placeholder="Seleccione fecha">
+              </div>
+
+              <div class="form-field">
+                <label for="gender">
+                  <i class="fas fa-venus-mars"></i>
+                  Género
+                </label>
+                <div class="custom-select">
+                  <select id="gender" formControlName="gender">
+                    <option value="">Seleccione género</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="No binario">No binario</option>
+                    <option value="Prefiero no decir">Prefiero no decir</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
                 </div>
               </div>
             </div>
-          </form>
-        </div>
-      </mat-tab>
-      
-      <!-- Pestaña de Información Profesional -->
-      <mat-tab label="Información Profesional">
-        <div class="tab-content">
-          <form [formGroup]="professionalForm">
-            <div class="form-section">
-              <h4>Datos Profesionales</h4>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Título</mat-label>
-                  <input matInput formControlName="title" placeholder="Ingrese título">
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>Especialización</mat-label>
-                  <input matInput formControlName="specialization" placeholder="Ingrese especialización">
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Número de Matrícula</mat-label>
-                  <input matInput formControlName="licenseNumber" placeholder="Ingrese número de matrícula">
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>Fecha de Graduación</mat-label>
-                  <input matInput [matDatepicker]="graduationDatePicker" formControlName="graduationDate">
-                  <mat-datepicker-toggle matSuffix [for]="graduationDatePicker"></mat-datepicker-toggle>
-                  <mat-datepicker #graduationDatePicker></mat-datepicker>
-                </mat-form-field>
-              </div>
-              
-              <div class="form-row">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Universidad</mat-label>
-                  <input matInput formControlName="university" placeholder="Ingrese universidad">
-                </mat-form-field>
+
+            <div class="form-row">
+              <div class="form-field full-width">
+                <label for="nationality">
+                  <i class="fas fa-flag"></i>
+                  Nacionalidad
+                </label>
+                <input
+                  id="nationality"
+                  type="text"
+                  formControlName="nationality"
+                  placeholder="Ingrese nacionalidad">
               </div>
             </div>
-          </form>
-        </div>
-      </mat-tab>
-      
-      <!-- Pestaña de Preferencias -->
-      <mat-tab label="Preferencias">
-        <div class="tab-content">
-          <form [formGroup]="preferencesForm">
-            <div class="form-section">
-              <h4>Preferencias de Usuario</h4>
-              
+          </div>
+        </form>
+      </div>
+
+      <!-- Contenido de pestaña: Dirección -->
+      <div class="tab-content" *ngIf="activeTab === 1">
+        <form [formGroup]="addressForm">
+          <div class="form-section">
+            <div class="section-header">
+              <h4>
+                <i class="fas fa-home"></i>
+                Dirección
+              </h4>
+            </div>
+
+            <div formGroupName="address">
               <div class="form-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Tema</mat-label>
-                  <mat-select formControlName="theme">
-                    <mat-option value="light">Claro</mat-option>
-                    <mat-option value="dark">Oscuro</mat-option>
-                    <mat-option value="system">Sistema</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                
-                <mat-form-field appearance="outline">
-                  <mat-label>Idioma</mat-label>
-                  <mat-select formControlName="language">
-                    <mat-option value="es">Español</mat-option>
-                    <mat-option value="en">Inglés</mat-option>
-                  </mat-select>
-                </mat-form-field>
+                <div class="form-field">
+                  <label for="street">
+                    <i class="fas fa-road"></i>
+                    Calle
+                  </label>
+                  <input
+                    id="street"
+                    type="text"
+                    formControlName="street"
+                    placeholder="Ingrese calle">
+                </div>
+
+                <div class="form-field number-field">
+                  <label for="number">
+                    <i class="fas fa-hashtag"></i>
+                    Número
+                  </label>
+                  <input
+                    id="number"
+                    type="text"
+                    formControlName="number"
+                    placeholder="Ingrese número">
+                </div>
               </div>
-              
-              <div formGroupName="notifications" class="preferences-section">
-                <h5>Notificaciones</h5>
-                
-                <div class="toggle-row">
-                  <mat-slide-toggle formControlName="email" color="primary">
+
+              <div class="form-row">
+                <div class="form-field number-field">
+                  <label for="floor">
+                    <i class="fas fa-layer-group"></i>
+                    Piso
+                  </label>
+                  <input
+                    id="floor"
+                    type="text"
+                    formControlName="floor"
+                    placeholder="Ingrese piso">
+                </div>
+
+                <div class="form-field number-field">
+                  <label for="apartment">
+                    <i class="fas fa-door-open"></i>
+                    Departamento
+                  </label>
+                  <input
+                    id="apartment"
+                    type="text"
+                    formControlName="apartment"
+                    placeholder="Ingrese departamento">
+                </div>
+
+                <div class="form-field">
+                  <label for="postalCode">
+                    <i class="fas fa-mail-bulk"></i>
+                    Código Postal
+                  </label>
+                  <input
+                    id="postalCode"
+                    type="text"
+                    formControlName="postalCode"
+                    placeholder="Ingrese código postal">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="city">
+                    <i class="fas fa-city"></i>
+                    Ciudad
+                  </label>
+                  <input
+                    id="city"
+                    type="text"
+                    formControlName="city"
+                    placeholder="Ingrese ciudad">
+                </div>
+
+                <div class="form-field">
+                  <label for="province">
+                    <i class="fas fa-map"></i>
+                    Provincia
+                  </label>
+                  <input
+                    id="province"
+                    type="text"
+                    formControlName="province"
+                    placeholder="Ingrese provincia">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field full-width">
+                  <label for="country">
+                    <i class="fas fa-globe"></i>
+                    País
+                  </label>
+                  <input
+                    id="country"
+                    type="text"
+                    formControlName="country"
+                    placeholder="Ingrese país">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div class="form-section">
+            <div class="section-header">
+              <h4>
+                <i class="fas fa-map-marker-alt"></i>
+                Centro de Vida
+              </h4>
+              <div class="custom-checkbox">
+                <input
+                  type="checkbox"
+                  id="sameCentroDeVida"
+                  formControlName="sameCentroDeVida">
+                <label for="sameCentroDeVida">
+                  <i class="fas fa-check"></i>
+                  Usar la misma dirección
+                </label>
+              </div>
+            </div>
+
+            <div formGroupName="centroDeVida">
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="centroStreet">
+                    <i class="fas fa-road"></i>
+                    Calle
+                  </label>
+                  <input
+                    id="centroStreet"
+                    type="text"
+                    formControlName="street"
+                    placeholder="Ingrese calle">
+                </div>
+
+                <div class="form-field number-field">
+                  <label for="centroNumber">
+                    <i class="fas fa-hashtag"></i>
+                    Número
+                  </label>
+                  <input
+                    id="centroNumber"
+                    type="text"
+                    formControlName="number"
+                    placeholder="Ingrese número">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field number-field">
+                  <label for="centroFloor">
+                    <i class="fas fa-layer-group"></i>
+                    Piso
+                  </label>
+                  <input
+                    id="centroFloor"
+                    type="text"
+                    formControlName="floor"
+                    placeholder="Ingrese piso">
+                </div>
+
+                <div class="form-field number-field">
+                  <label for="centroApartment">
+                    <i class="fas fa-door-open"></i>
+                    Departamento
+                  </label>
+                  <input
+                    id="centroApartment"
+                    type="text"
+                    formControlName="apartment"
+                    placeholder="Ingrese departamento">
+                </div>
+
+                <div class="form-field">
+                  <label for="centroPostalCode">
+                    <i class="fas fa-mail-bulk"></i>
+                    Código Postal
+                  </label>
+                  <input
+                    id="centroPostalCode"
+                    type="text"
+                    formControlName="postalCode"
+                    placeholder="Ingrese código postal">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="centroCity">
+                    <i class="fas fa-city"></i>
+                    Ciudad
+                  </label>
+                  <input
+                    id="centroCity"
+                    type="text"
+                    formControlName="city"
+                    placeholder="Ingrese ciudad">
+                </div>
+
+                <div class="form-field">
+                  <label for="centroProvince">
+                    <i class="fas fa-map"></i>
+                    Provincia
+                  </label>
+                  <input
+                    id="centroProvince"
+                    type="text"
+                    formControlName="province"
+                    placeholder="Ingrese provincia">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field full-width">
+                  <label for="centroCountry">
+                    <i class="fas fa-globe"></i>
+                    País
+                  </label>
+                  <input
+                    id="centroCountry"
+                    type="text"
+                    formControlName="country"
+                    placeholder="Ingrese país">
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Contenido de pestaña: Información Profesional -->
+      <div class="tab-content" *ngIf="activeTab === 2">
+        <form [formGroup]="professionalForm">
+          <div class="form-section">
+            <div class="section-header">
+              <h4>
+                <i class="fas fa-graduation-cap"></i>
+                Datos Profesionales
+              </h4>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="title">
+                  <i class="fas fa-graduation-cap"></i>
+                  Título
+                </label>
+                <input
+                  id="title"
+                  type="text"
+                  formControlName="title"
+                  placeholder="Ingrese título">
+              </div>
+
+              <div class="form-field">
+                <label for="specialization">
+                  <i class="fas fa-tags"></i>
+                  Especialización
+                </label>
+                <input
+                  id="specialization"
+                  type="text"
+                  formControlName="specialization"
+                  placeholder="Ingrese especialización">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="licenseNumber">
+                  <i class="fas fa-certificate"></i>
+                  Número de Matrícula
+                </label>
+                <input
+                  id="licenseNumber"
+                  type="text"
+                  formControlName="licenseNumber"
+                  placeholder="Ingrese número de matrícula">
+              </div>
+
+              <div class="form-field">
+                <label for="graduationDate">
+                  <i class="fas fa-calendar-check"></i>
+                  Fecha de Graduación
+                </label>
+                <input
+                  id="graduationDate"
+                  type="date"
+                  formControlName="graduationDate"
+                  placeholder="Seleccione fecha">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field full-width">
+                <label for="university">
+                  <i class="fas fa-university"></i>
+                  Universidad
+                </label>
+                <input
+                  id="university"
+                  type="text"
+                  formControlName="university"
+                  placeholder="Ingrese universidad">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Contenido de pestaña: Preferencias -->
+      <div class="tab-content" *ngIf="activeTab === 3">
+        <form [formGroup]="preferencesForm">
+          <div class="form-section">
+            <div class="section-header">
+              <h4>
+                <i class="fas fa-sliders-h"></i>
+                Preferencias de Usuario
+              </h4>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label for="theme">
+                  <i class="fas fa-palette"></i>
+                  Tema
+                </label>
+                <div class="custom-select">
+                  <select id="theme" formControlName="theme">
+                    <option value="light">Claro</option>
+                    <option value="dark">Oscuro</option>
+                    <option value="system">Sistema</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="language">
+                  <i class="fas fa-language"></i>
+                  Idioma
+                </label>
+                <div class="custom-select">
+                  <select id="language" formControlName="language">
+                    <option value="es">Español</option>
+                    <option value="en">Inglés</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+              </div>
+            </div>
+
+            <div formGroupName="notifications" class="preferences-section">
+              <h5>
+                <i class="fas fa-bell"></i>
+                Notificaciones
+              </h5>
+
+              <div class="toggle-row">
+                <div class="custom-toggle">
+                  <input type="checkbox" id="emailNotif" formControlName="email">
+                  <label for="emailNotif">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-envelope"></i>
                     Email
-                  </mat-slide-toggle>
-                  
-                  <mat-slide-toggle formControlName="push" color="primary">
-                    Push
-                  </mat-slide-toggle>
-                  
-                  <mat-slide-toggle formControlName="sms" color="primary">
-                    SMS
-                  </mat-slide-toggle>
+                  </label>
                 </div>
-              </div>
-              
-              <div formGroupName="accessibility" class="preferences-section">
-                <h5>Accesibilidad</h5>
-                
-                <div class="toggle-row">
-                  <mat-slide-toggle formControlName="highContrast" color="primary">
-                    Alto contraste
-                  </mat-slide-toggle>
-                  
-                  <mat-slide-toggle formControlName="largeText" color="primary">
-                    Texto grande
-                  </mat-slide-toggle>
-                  
-                  <mat-slide-toggle formControlName="screenReader" color="primary">
-                    Lector de pantalla
-                  </mat-slide-toggle>
+
+                <div class="custom-toggle">
+                  <input type="checkbox" id="pushNotif" formControlName="push">
+                  <label for="pushNotif">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-bell"></i>
+                    Push
+                  </label>
+                </div>
+
+                <div class="custom-toggle">
+                  <input type="checkbox" id="smsNotif" formControlName="sms">
+                  <label for="smsNotif">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-sms"></i>
+                    SMS
+                  </label>
                 </div>
               </div>
             </div>
-          </form>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
+
+            <div formGroupName="accessibility" class="preferences-section">
+              <h5>
+                <i class="fas fa-universal-access"></i>
+                Accesibilidad
+              </h5>
+
+              <div class="toggle-row">
+                <div class="custom-toggle">
+                  <input type="checkbox" id="highContrast" formControlName="highContrast">
+                  <label for="highContrast">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-adjust"></i>
+                    Alto contraste
+                  </label>
+                </div>
+
+                <div class="custom-toggle">
+                  <input type="checkbox" id="largeText" formControlName="largeText">
+                  <label for="largeText">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-text-height"></i>
+                    Texto grande
+                  </label>
+                </div>
+
+                <div class="custom-toggle">
+                  <input type="checkbox" id="screenReader" formControlName="screenReader">
+                  <label for="screenReader">
+                    <span class="toggle-slider"></span>
+                    <i class="fas fa-volume-up"></i>
+                    Lector de pantalla
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
-</mat-dialog-content>
+</div>
 
-<mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close [disabled]="isSaving">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="personalForm.invalid || isSaving">
-    <mat-icon>save</mat-icon>
-    Guardar Cambios
-  </button>
-</mat-dialog-actions>
+<!-- Footer del diálogo glassmorphism -->
+<div class="dialog-footer">
+  <div class="footer-actions">
+    <button
+      type="button"
+      class="cancel-button"
+      (click)="dialogRef.close()"
+      [disabled]="isSaving">
+      <i class="fas fa-times"></i>
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="save-button"
+      (click)="onSubmit()"
+      [disabled]="personalForm.invalid || isSaving">
+      <i class="fas fa-save"></i>
+      Guardar Cambios
+    </button>
+  </div>
+</div>
 
-<div *ngIf="isSaving" class="loading-overlay">
-  <mat-spinner diameter="40"></mat-spinner>
+<!-- Overlay de guardado -->
+<div *ngIf="isSaving" class="saving-overlay">
+  <div class="saving-content">
+    <div class="spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+    </div>
+    <p>Guardando cambios...</p>
+  </div>
 </div>

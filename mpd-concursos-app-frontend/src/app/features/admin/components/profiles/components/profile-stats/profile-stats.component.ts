@@ -1,10 +1,5 @@
 import { Component, OnInit, Input, SimpleChanges, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ProfileStats } from '@core/services/admin/admin-profiles.service';
 
@@ -14,12 +9,7 @@ import { ProfileStats } from '@core/services/admin/admin-profiles.service';
   styleUrls: ['./profile-stats.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressBarModule,
-    MatDividerModule,
-    MatTooltipModule
+    CommonModule
   ]
 })
 export class ProfileStatsComponent implements OnInit, OnChanges {
@@ -87,15 +77,15 @@ export class ProfileStatsComponent implements OnInit, OnChanges {
   
   getDocumentIcon(type: string): string {
     switch (type) {
-      case 'DNI': return 'badge';
-      case 'TITULO': return 'school';
-      case 'CERTIFICADO_ANTECEDENTES': return 'gavel';
-      case 'CURRICULUM': return 'description';
-      case 'MATRICULA': return 'card_membership';
-      default: return 'insert_drive_file';
+      case 'DNI': return 'fas fa-id-card';
+      case 'TITULO': return 'fas fa-graduation-cap';
+      case 'CERTIFICADO_ANTECEDENTES': return 'fas fa-gavel';
+      case 'CURRICULUM': return 'fas fa-file-alt';
+      case 'MATRICULA': return 'fas fa-certificate';
+      default: return 'fas fa-file';
     }
   }
-  
+
   getStatusText(status: string): string {
     switch (status) {
       case 'ACTIVE': return 'Activo';
@@ -104,7 +94,7 @@ export class ProfileStatsComponent implements OnInit, OnChanges {
       default: return status;
     }
   }
-  
+
   getStatusClass(status: string): string {
     switch (status) {
       case 'ACTIVE': return 'status-active';
@@ -113,13 +103,13 @@ export class ProfileStatsComponent implements OnInit, OnChanges {
       default: return '';
     }
   }
-  
+
   getStatusIcon(status: string): string {
     switch (status) {
-      case 'ACTIVE': return 'check_circle';
-      case 'INACTIVE': return 'cancel';
-      case 'BLOCKED': return 'block';
-      default: return 'help';
+      case 'ACTIVE': return 'fas fa-check-circle';
+      case 'INACTIVE': return 'fas fa-pause-circle';
+      case 'BLOCKED': return 'fas fa-ban';
+      default: return 'fas fa-question-circle';
     }
   }
   

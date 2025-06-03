@@ -1,400 +1,355 @@
-@use 'src/styles/variables' as *;
+/* ===== ROLE DETAIL DIALOG GLASSMORPHISM ===== */
 
-:host {
-  display: block;
-  position: relative;
+// Importar variables del sistema de diseño
+@import '../../../usuarios/styles/variables';
+
+.role-detail-dialog {
+  max-width: 800px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  /* Custom scrollbar para glassmorphism */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  .dialog-header {
+    padding: 1.5rem 1.5rem 0;
+
+    h2 {
+      margin: 0;
+      color: $text-primary;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+  }
+
+  .dialog-content {
+    padding: 1.5rem;
+  }
 }
 
-mat-dialog-content {
-  max-height: 70vh;
-  min-height: 300px;
-}
-
-// Contenedor de carga
+/* ===== LOADING STATE ===== */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  
+  padding: 3rem;
+  @include glass-card;
+
+  .spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
   p {
-    margin-top: 1rem;
-    color: $color-text-secondary;
+    margin: 0;
+    color: $text-secondary;
+    font-size: 0.875rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 }
 
-// Contenido de pestañas
-.tab-content {
-  padding: 1.5rem 0;
+/* ===== ROLE CARDS ===== */
+.role-header-card,
+.role-info-card,
+.permissions-card {
+  margin-bottom: 1.5rem;
+
+  ::ng-deep .custom-card {
+    @include glass-card;
+  }
 }
 
-// Encabezado de rol
+/* ===== ROLE HEADER ===== */
 .role-header {
   display: flex;
   gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  
-  .role-icon {
-    .icon-placeholder {
-      width: 64px;
-      height: 64px;
-      border-radius: 8px;
-      background-color: rgba($color-success, 0.1);
-      color: $color-success;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      
-      &.system-role {
-        background-color: rgba($color-primary, 0.1);
-        color: $color-primary;
-      }
-      
-      mat-icon {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-      }
-    }
-  }
-  
-  .role-info {
-    flex: 1;
-    
-    h3 {
-      margin: 0 0 0.5rem;
-      font-size: $font-size-lg;
-      font-weight: 500;
-    }
-    
-    .role-meta {
-      margin-bottom: 0.75rem;
-      
-      .role-type {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 1rem;
-        font-size: $font-size-xs;
-        font-weight: 500;
-        
-        &.system-role {
-          background-color: rgba($color-info, 0.1);
-          color: $color-info;
-        }
-        
-        &.custom-role {
-          background-color: rgba($color-success, 0.1);
-          color: $color-success;
-        }
-      }
-    }
-    
-    .role-description {
-      margin: 0;
-      color: $color-text-secondary;
-    }
-  }
-}
-
-// Secciones de información
-.info-section {
-  margin: 1.5rem 0;
-  
-  h4 {
-    font-size: $font-size-md;
-    font-weight: 500;
-    margin: 0 0 1rem;
-    color: $color-text-primary;
-  }
-  
-  .info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.25rem;
-    
-    .info-item {
-      .info-label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-        color: $color-text-secondary;
-        
-        mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-        }
-      }
-      
-      .info-value {
-        font-weight: 500;
-      }
-    }
-  }
-}
-
-// Contenedor de permisos
-.permissions-container {
-  margin-top: 1rem;
-}
-
-// Encabezado de módulo
-.module-header {
-  display: flex;
   align-items: center;
-  gap: 0.75rem;
-  
-  mat-icon {
-    color: $color-primary;
-  }
-  
-  .module-name {
-    text-transform: capitalize;
-    font-weight: 500;
-  }
-}
 
-// Contador de permisos
-.permission-count {
-  font-size: $font-size-sm;
-  color: $color-text-secondary;
-}
-
-// Lista de permisos
-.permission-list {
-  padding: 0.5rem 0;
-  
-  .permission-item {
-    margin-bottom: 0.75rem;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
-    
-    .permission-info {
-      display: flex;
-      flex-direction: column;
-      
-      .permission-name {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        
-        .action-icon {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          
-          &.action-read {
-            background-color: rgba($color-info, 0.1);
-            color: $color-info;
-          }
-          
-          &.action-write {
-            background-color: rgba($color-success, 0.1);
-            color: $color-success;
-          }
-          
-          &.action-delete {
-            background-color: rgba($color-error, 0.1);
-            color: $color-error;
-          }
-          
-          &.action-admin {
-            background-color: rgba($color-warning, 0.1);
-            color: $color-warning;
-          }
-          
-          &.action-success {
-            background-color: rgba($color-success, 0.1);
-            color: $color-success;
-          }
-          
-          &.action-warning {
-            background-color: rgba($color-warning, 0.1);
-            color: $color-warning;
-          }
-          
-          &.action-info {
-            background-color: rgba($color-info, 0.1);
-            color: $color-info;
-          }
-          
-          mat-icon {
-            font-size: 16px;
-            width: 16px;
-            height: 16px;
-          }
-        }
-      }
-      
-      .permission-description {
-        margin-left: 2.5rem;
-        font-size: $font-size-xs;
-        color: $color-text-secondary;
-      }
-    }
-  }
-}
-
-// Tabla de historial
-.table-container {
-  border-radius: 8px;
-  overflow: hidden;
-  
-  table {
-    width: 100%;
-  }
-  
-  .action-cell {
+  .role-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    
-    .action-icon {
+    justify-content: center;
+    @include glass-badge($success-color);
+    font-size: 2rem;
+    transition: all $transition-duration $transition-timing;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    i {
+      font-size: 2rem;
+    }
+  }
+
+  .role-info {
+    flex: 1;
+
+    h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $text-primary;
+      line-height: 1.3;
+    }
+
+    .role-meta {
+      margin-bottom: 0.75rem;
+
+      .role-type {
+        @include glass-badge($focus-color);
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+
+        &.system-role {
+          @include glass-badge($warning-color);
+        }
+
+        &.custom-role {
+          @include glass-badge($success-color);
+        }
+      }
+    }
+
+    .role-description {
+      margin: 0;
+      color: $text-secondary;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+/* ===== INFO GRID ===== */
+h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: $text-primary;
+  line-height: 1.3;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+
+  .info-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: $border-radius-md;
+    padding: 0.75rem 1rem;
+    transition: all $transition-duration $transition-timing;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .info-label {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      
-      &.action-success {
-        background-color: rgba($color-success, 0.1);
-        color: $color-success;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      color: $text-tertiary;
+      font-size: 0.75rem;
+      font-weight: 500;
+
+      i {
+        color: $focus-color;
+        font-size: 1rem;
       }
-      
-      &.action-warning {
-        background-color: rgba($color-warning, 0.1);
-        color: $color-warning;
-      }
-      
-      &.action-info {
-        background-color: rgba($color-info, 0.1);
-        color: $color-info;
-      }
-      
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
+    }
+
+    .info-value {
+      font-weight: 500;
+      color: $text-primary;
+      font-size: 0.875rem;
     }
   }
 }
 
-// Estado vacío
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  
-  mat-icon {
-    font-size: 3rem;
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: 1rem;
-    color: $color-text-tertiary;
-  }
-  
-  p {
-    margin: 0;
-    color: $color-text-secondary;
-    text-align: center;
-  }
-}
+/* ===== PERMISSIONS SECTION ===== */
+.permissions-container {
+  margin-top: 1rem;
 
-mat-divider {
-  margin: 1.5rem 0;
-}
+  .permission-group {
+    margin-bottom: 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: $border-radius-md;
+    padding: 1rem;
 
-// Media queries para responsive
-@media (max-width: 600px) {
-  .role-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    
-    .role-info {
-      .role-meta {
-        display: flex;
-        justify-content: center;
+    .module-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+      i {
+        color: $focus-color;
+        font-size: 1.25rem;
+      }
+
+      .module-name {
+        text-transform: capitalize;
+        font-weight: 600;
+        color: $text-primary;
+        font-size: 0.875rem;
+        flex: 1;
+      }
+
+      .permission-count {
+        @include glass-badge($text-tertiary);
+        font-size: 0.6875rem;
+        padding: 0.125rem 0.375rem;
       }
     }
   }
-  
-  .info-grid {
-    grid-template-columns: 1fr !important;
-  }
-  
-  .permission-info {
-    .permission-name {
-      flex-wrap: wrap;
-    }
-    
-    .permission-description {
-      margin-left: 0 !important;
-      margin-top: 0.25rem;
-    }
-  }
-  
-  .table-container {
-    overflow-x: auto;
-  }
-}
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .loading-container {
-    p {
-      color: $color-text-secondary-dark;
-    }
-  }
-  
-  h4 {
-    color: $color-text-primary-dark !important;
-  }
-  
-  .role-info {
-    .role-description {
-      color: $color-text-secondary-dark;
-    }
-  }
-  
-  .info-section {
-    .info-grid {
-      .info-item {
-        .info-label {
-          color: $color-text-secondary-dark;
+  .permission-list {
+    .permission-item {
+      margin-bottom: 0.75rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: $border-radius-md;
+      padding: 0.75rem;
+      transition: all $transition-duration $transition-timing;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .permission-info {
+        .permission-name {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          color: $text-primary;
+          font-weight: 500;
+          font-size: 0.875rem;
+
+          .action-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 1px solid transparent;
+
+            &.action-read, &.action-info {
+              @include glass-badge($focus-color);
+            }
+
+            &.action-write, &.action-success {
+              @include glass-badge($success-color);
+            }
+
+            &.action-delete {
+              @include glass-badge($danger-color);
+            }
+
+            &.action-admin, &.action-warning {
+              @include glass-badge($warning-color);
+            }
+
+            i {
+              font-size: 0.75rem;
+            }
+          }
+        }
+
+        .permission-description {
+          margin-left: 2.5rem;
+          margin-top: 0.25rem;
+          font-size: 0.75rem;
+          color: $text-secondary;
+          line-height: 1.5;
         }
       }
     }
   }
-  
-  .permission-count {
-    color: $color-text-secondary-dark;
-  }
-  
-  .permission-info {
-    .permission-description {
-      color: $color-text-secondary-dark;
-    }
-  }
-  
+
+  /* ===== EMPTY STATE ===== */
   .empty-state {
-    mat-icon {
-      color: $color-text-tertiary-dark;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    @include glass-card;
+    text-align: center;
+
+    i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: $text-tertiary;
     }
-    
+
     p {
-      color: $color-text-secondary-dark;
+      margin: 0;
+      color: $text-secondary;
+      font-size: 0.875rem;
     }
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .role-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .permission-info .permission-description {
+    margin-left: 0;
+    margin-top: 0.5rem;
   }
 }

@@ -1,321 +1,422 @@
-<div class="container">
-  <div class="header">
-    <h1>Configuración del Sistema</h1>
+<div class="config-container">
+  <!-- Header con glassmorphism -->
+  <div class="config-header">
+    <h1 class="config-title">Configuración del Sistema</h1>
+    <p class="config-subtitle">Administre la configuración general del sistema</p>
   </div>
 
-  <mat-tab-group>
-    <!-- Configuración General -->
-    <mat-tab label="General">
-      <div class="tab-content">
-        <form [formGroup]="generalForm" (ngSubmit)="saveGeneralConfig()">
-          <div class="form-section">
+  <!-- Sistema de tabs glassmorphism -->
+  <div class="config-tabs-container">
+    <div class="config-tabs">
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'general'"
+        (click)="setActiveTab('general')">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-label">General</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'security'"
+        (click)="setActiveTab('security')">
+        <span class="tab-icon">🔒</span>
+        <span class="tab-label">Seguridad</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'notifications'"
+        (click)="setActiveTab('notifications')">
+        <span class="tab-icon">🔔</span>
+        <span class="tab-label">Notificaciones</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'backup'"
+        (click)="setActiveTab('backup')">
+        <span class="tab-icon">💾</span>
+        <span class="tab-label">Respaldo</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'integrations'"
+        (click)="setActiveTab('integrations')">
+        <span class="tab-icon">🔗</span>
+        <span class="tab-label">Integraciones</span>
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 'history'"
+        (click)="setActiveTab('history')">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">Historial</span>
+      </button>
+    </div>
+
+    <!-- Contenido de las pestañas -->
+    <div class="tab-content-container">
+      <!-- Configuración General -->
+      <div class="tab-content" *ngIf="activeTab === 'general'">
+        <div class="config-card">
+          <div class="card-header">
             <h2 class="section-title">Configuración General</h2>
             <p class="section-description">
               Configure los parámetros generales de la aplicación.
             </p>
+          </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Nombre de la Aplicación</mat-label>
-                <input matInput formControlName="appName">
-                <mat-error *ngIf="generalForm.get('appName')?.hasError('required')">
+          <form [formGroup]="generalForm" (ngSubmit)="saveGeneralConfig()" class="config-form">
+            <div class="form-grid">
+              <div class="form-field full-width">
+                <label class="field-label">Nombre de la Aplicación</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  formControlName="appName"
+                  placeholder="Ingrese el nombre de la aplicación">
+                <div class="field-error" *ngIf="generalForm.get('appName')?.hasError('required') && generalForm.get('appName')?.touched">
                   El nombre de la aplicación es obligatorio
-                </mat-error>
-              </mat-form-field>
-            </div>
+                </div>
+              </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Logo de la Aplicación</mat-label>
-                <input matInput formControlName="appLogo">
-              </mat-form-field>
-            </div>
+              <div class="form-field full-width">
+                <label class="field-label">Logo de la Aplicación</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  formControlName="appLogo"
+                  placeholder="Ruta del logo de la aplicación">
+              </div>
 
-            <div class="form-row two-columns">
-              <mat-form-field appearance="outline">
-                <mat-label>Tema</mat-label>
-                <mat-select formControlName="appTheme">
-                  <mat-option value="light">Claro</mat-option>
-                  <mat-option value="dark">Oscuro</mat-option>
-                  <mat-option value="system">Sistema</mat-option>
-                </mat-select>
-                <mat-error *ngIf="generalForm.get('appTheme')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Tema</label>
+                <select class="form-select" formControlName="appTheme">
+                  <option value="light">Claro</option>
+                  <option value="dark">Oscuro</option>
+                  <option value="system">Sistema</option>
+                </select>
+                <div class="field-error" *ngIf="generalForm.get('appTheme')?.hasError('required') && generalForm.get('appTheme')?.touched">
                   El tema es obligatorio
-                </mat-error>
-              </mat-form-field>
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Idioma Predeterminado</mat-label>
-                <mat-select formControlName="defaultLanguage">
-                  <mat-option value="es">Español</mat-option>
-                  <mat-option value="en">Inglés</mat-option>
-                </mat-select>
-                <mat-error *ngIf="generalForm.get('defaultLanguage')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Idioma Predeterminado</label>
+                <select class="form-select" formControlName="defaultLanguage">
+                  <option value="es">Español</option>
+                  <option value="en">Inglés</option>
+                </select>
+                <div class="field-error" *ngIf="generalForm.get('defaultLanguage')?.hasError('required') && generalForm.get('defaultLanguage')?.touched">
                   El idioma es obligatorio
-                </mat-error>
-              </mat-form-field>
-            </div>
+                </div>
+              </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Elementos por Página</mat-label>
-                <input matInput type="number" formControlName="itemsPerPage">
-                <mat-error *ngIf="generalForm.get('itemsPerPage')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Elementos por Página</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  formControlName="itemsPerPage"
+                  placeholder="Número de elementos por página">
+                <div class="field-error" *ngIf="generalForm.get('itemsPerPage')?.hasError('required') && generalForm.get('itemsPerPage')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-                <mat-error *ngIf="generalForm.get('itemsPerPage')?.hasError('min')">
+                </div>
+                <div class="field-error" *ngIf="generalForm.get('itemsPerPage')?.hasError('min') && generalForm.get('itemsPerPage')?.touched">
                   El valor mínimo es 5
-                </mat-error>
-                <mat-error *ngIf="generalForm.get('itemsPerPage')?.hasError('max')">
+                </div>
+                <div class="field-error" *ngIf="generalForm.get('itemsPerPage')?.hasError('max') && generalForm.get('itemsPerPage')?.touched">
                   El valor máximo es 100
-                </mat-error>
-              </mat-form-field>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
-              <button type="button" mat-stroked-button color="warn" (click)="resetToDefaults('general')">
+              <button type="button" class="btn-secondary" (click)="resetToDefaults('general')">
+                <span class="btn-icon">🔄</span>
                 Restablecer
               </button>
-              <button type="submit" mat-raised-button color="primary">
+              <button type="submit" class="btn-primary">
+                <span class="btn-icon">💾</span>
                 Guardar
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </mat-tab>
 
-    <!-- Configuración de Seguridad -->
-    <mat-tab label="Seguridad">
-      <div class="tab-content">
-        <form [formGroup]="securityForm" (ngSubmit)="saveSecurityConfig()">
-          <div class="form-section">
+      <!-- Configuración de Seguridad -->
+      <div class="tab-content" *ngIf="activeTab === 'security'">
+        <div class="config-card">
+          <div class="card-header">
             <h2 class="section-title">Configuración de Seguridad</h2>
             <p class="section-description">
               Configure los parámetros de seguridad de la aplicación.
             </p>
+          </div>
 
-            <div class="form-row two-columns">
-              <mat-form-field appearance="outline">
-                <mat-label>Tiempo de Sesión (minutos)</mat-label>
-                <input matInput type="number" formControlName="sessionTimeout">
-                <mat-error *ngIf="securityForm.get('sessionTimeout')?.hasError('required')">
+          <form [formGroup]="securityForm" (ngSubmit)="saveSecurityConfig()" class="config-form">
+            <div class="form-grid">
+              <div class="form-field">
+                <label class="field-label">Tiempo de Sesión (minutos)</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  formControlName="sessionTimeout"
+                  placeholder="Tiempo en minutos">
+                <div class="field-error" *ngIf="securityForm.get('sessionTimeout')?.hasError('required') && securityForm.get('sessionTimeout')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-                <mat-error *ngIf="securityForm.get('sessionTimeout')?.hasError('min')">
+                </div>
+                <div class="field-error" *ngIf="securityForm.get('sessionTimeout')?.hasError('min') && securityForm.get('sessionTimeout')?.touched">
                   El valor mínimo es 5 minutos
-                </mat-error>
-                <mat-error *ngIf="securityForm.get('sessionTimeout')?.hasError('max')">
+                </div>
+                <div class="field-error" *ngIf="securityForm.get('sessionTimeout')?.hasError('max') && securityForm.get('sessionTimeout')?.touched">
                   El valor máximo es 120 minutos
-                </mat-error>
-              </mat-form-field>
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Intentos Máximos de Inicio de Sesión</mat-label>
-                <input matInput type="number" formControlName="maxLoginAttempts">
-                <mat-error *ngIf="securityForm.get('maxLoginAttempts')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Intentos Máximos de Inicio de Sesión</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  formControlName="maxLoginAttempts"
+                  placeholder="Número de intentos">
+                <div class="field-error" *ngIf="securityForm.get('maxLoginAttempts')?.hasError('required') && securityForm.get('maxLoginAttempts')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-                <mat-error *ngIf="securityForm.get('maxLoginAttempts')?.hasError('min')">
+                </div>
+                <div class="field-error" *ngIf="securityForm.get('maxLoginAttempts')?.hasError('min') && securityForm.get('maxLoginAttempts')?.touched">
                   El valor mínimo es 1
-                </mat-error>
-                <mat-error *ngIf="securityForm.get('maxLoginAttempts')?.hasError('max')">
+                </div>
+                <div class="field-error" *ngIf="securityForm.get('maxLoginAttempts')?.hasError('max') && securityForm.get('maxLoginAttempts')?.touched">
                   El valor máximo es 10
-                </mat-error>
-              </mat-form-field>
-            </div>
+                </div>
+              </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Longitud Mínima de Contraseña</mat-label>
-                <input matInput type="number" formControlName="passwordMinLength">
-                <mat-error *ngIf="securityForm.get('passwordMinLength')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Longitud Mínima de Contraseña</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  formControlName="passwordMinLength"
+                  placeholder="Número de caracteres">
+                <div class="field-error" *ngIf="securityForm.get('passwordMinLength')?.hasError('required') && securityForm.get('passwordMinLength')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-                <mat-error *ngIf="securityForm.get('passwordMinLength')?.hasError('min')">
+                </div>
+                <div class="field-error" *ngIf="securityForm.get('passwordMinLength')?.hasError('min') && securityForm.get('passwordMinLength')?.touched">
                   El valor mínimo es 6 caracteres
-                </mat-error>
-                <mat-error *ngIf="securityForm.get('passwordMinLength')?.hasError('max')">
+                </div>
+                <div class="field-error" *ngIf="securityForm.get('passwordMinLength')?.hasError('max') && securityForm.get('passwordMinLength')?.touched">
                   El valor máximo es 20 caracteres
-                </mat-error>
-              </mat-form-field>
-            </div>
+                </div>
+              </div>
 
-            <div class="form-row checkbox-group">
-              <mat-checkbox formControlName="passwordRequireSpecialChar">
-                Requerir caracteres especiales en contraseñas
-              </mat-checkbox>
+              <div class="form-field full-width">
+                <label class="field-label">Opciones de Contraseña</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="passwordRequireSpecialChar" class="form-checkbox">
+                    <span class="checkbox-label">Requerir caracteres especiales en contraseñas</span>
+                  </label>
 
-              <mat-checkbox formControlName="passwordRequireNumber">
-                Requerir números en contraseñas
-              </mat-checkbox>
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="passwordRequireNumber" class="form-checkbox">
+                    <span class="checkbox-label">Requerir números en contraseñas</span>
+                  </label>
 
-              <mat-checkbox formControlName="passwordRequireUppercase">
-                Requerir mayúsculas en contraseñas
-              </mat-checkbox>
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="passwordRequireUppercase" class="form-checkbox">
+                    <span class="checkbox-label">Requerir mayúsculas en contraseñas</span>
+                  </label>
 
-              <mat-checkbox formControlName="twoFactorAuth">
-                Habilitar autenticación de dos factores
-              </mat-checkbox>
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="twoFactorAuth" class="form-checkbox">
+                    <span class="checkbox-label">Habilitar autenticación de dos factores</span>
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
-              <button type="button" mat-stroked-button color="warn" (click)="resetToDefaults('security')">
+              <button type="button" class="btn-secondary" (click)="resetToDefaults('security')">
+                <span class="btn-icon">🔄</span>
                 Restablecer
               </button>
-              <button type="submit" mat-raised-button color="primary">
+              <button type="submit" class="btn-primary">
+                <span class="btn-icon">💾</span>
                 Guardar
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </mat-tab>
 
-    <!-- Configuración de Notificaciones -->
-    <mat-tab label="Notificaciones">
-      <div class="tab-content">
-        <form [formGroup]="notificationsForm" (ngSubmit)="saveNotificationsConfig()">
-          <div class="form-section">
+      <!-- Configuración de Notificaciones -->
+      <div class="tab-content" *ngIf="activeTab === 'notifications'">
+        <div class="config-card">
+          <div class="card-header">
             <h2 class="section-title">Configuración de Notificaciones</h2>
             <p class="section-description">
               Configure los parámetros de notificaciones de la aplicación.
             </p>
+          </div>
 
-            <div class="form-row checkbox-group">
-              <mat-checkbox formControlName="emailNotifications">
-                Habilitar notificaciones por correo electrónico
-              </mat-checkbox>
+          <form [formGroup]="notificationsForm" (ngSubmit)="saveNotificationsConfig()" class="config-form">
+            <div class="form-grid">
+              <div class="form-field full-width">
+                <label class="field-label">Opciones de Notificación</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="emailNotifications" class="form-checkbox">
+                    <span class="checkbox-label">Habilitar notificaciones por correo electrónico</span>
+                  </label>
 
-              <mat-checkbox formControlName="newExamNotification">
-                Notificar nuevos exámenes disponibles
-              </mat-checkbox>
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="newExamNotification" class="form-checkbox">
+                    <span class="checkbox-label">Notificar nuevos exámenes disponibles</span>
+                  </label>
 
-              <mat-checkbox formControlName="examResultNotification">
-                Notificar resultados de exámenes
-              </mat-checkbox>
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="examResultNotification" class="form-checkbox">
+                    <span class="checkbox-label">Notificar resultados de exámenes</span>
+                  </label>
 
-              <mat-checkbox formControlName="systemUpdatesNotification">
-                Notificar actualizaciones del sistema
-              </mat-checkbox>
-            </div>
+                  <label class="checkbox-item">
+                    <input type="checkbox" formControlName="systemUpdatesNotification" class="form-checkbox">
+                    <span class="checkbox-label">Notificar actualizaciones del sistema</span>
+                  </label>
+                </div>
+              </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Recordatorio antes del examen (horas)</mat-label>
-                <input matInput type="number" formControlName="reminderBeforeExam">
-                <mat-error *ngIf="notificationsForm.get('reminderBeforeExam')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Recordatorio antes del examen (horas)</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  formControlName="reminderBeforeExam"
+                  placeholder="Horas de anticipación">
+                <div class="field-error" *ngIf="notificationsForm.get('reminderBeforeExam')?.hasError('required') && notificationsForm.get('reminderBeforeExam')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-                <mat-error *ngIf="notificationsForm.get('reminderBeforeExam')?.hasError('min')">
+                </div>
+                <div class="field-error" *ngIf="notificationsForm.get('reminderBeforeExam')?.hasError('min') && notificationsForm.get('reminderBeforeExam')?.touched">
                   El valor mínimo es 1 hora
-                </mat-error>
-                <mat-error *ngIf="notificationsForm.get('reminderBeforeExam')?.hasError('max')">
+                </div>
+                <div class="field-error" *ngIf="notificationsForm.get('reminderBeforeExam')?.hasError('max') && notificationsForm.get('reminderBeforeExam')?.touched">
                   El valor máximo es 72 horas
-                </mat-error>
-              </mat-form-field>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
-              <button type="button" mat-stroked-button color="warn" (click)="resetToDefaults('notifications')">
+              <button type="button" class="btn-secondary" (click)="resetToDefaults('notifications')">
+                <span class="btn-icon">🔄</span>
                 Restablecer
               </button>
-              <button type="submit" mat-raised-button color="primary">
+              <button type="submit" class="btn-primary">
+                <span class="btn-icon">💾</span>
                 Guardar
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </mat-tab>
 
-    <!-- Configuración de Respaldo -->
-    <mat-tab label="Respaldo">
-      <div class="tab-content">
-        <form [formGroup]="backupForm" (ngSubmit)="saveBackupConfig()">
-          <div class="form-section">
+      <!-- Configuración de Respaldo -->
+      <div class="tab-content" *ngIf="activeTab === 'backup'">
+        <div class="config-card">
+          <div class="card-header">
             <h2 class="section-title">Configuración de Respaldo</h2>
             <p class="section-description">
               Configure los parámetros de respaldo de la aplicación.
             </p>
+          </div>
 
-            <div class="form-row">
-              <mat-checkbox formControlName="autoBackup">
-                Habilitar respaldo automático
-              </mat-checkbox>
-            </div>
+          <form [formGroup]="backupForm" (ngSubmit)="saveBackupConfig()" class="config-form">
+            <div class="form-grid">
+              <div class="form-field full-width">
+                <label class="checkbox-item">
+                  <input type="checkbox" formControlName="autoBackup" class="form-checkbox">
+                  <span class="checkbox-label">Habilitar respaldo automático</span>
+                </label>
+              </div>
 
-            <div class="form-row two-columns">
-              <mat-form-field appearance="outline">
-                <mat-label>Frecuencia de Respaldo</mat-label>
-                <mat-select formControlName="backupFrequency">
-                  <mat-option value="hourly">Cada hora</mat-option>
-                  <mat-option value="daily">Diario</mat-option>
-                  <mat-option value="weekly">Semanal</mat-option>
-                  <mat-option value="monthly">Mensual</mat-option>
-                </mat-select>
-                <mat-error *ngIf="backupForm.get('backupFrequency')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Frecuencia de Respaldo</label>
+                <select class="form-select" formControlName="backupFrequency">
+                  <option value="hourly">Cada hora</option>
+                  <option value="daily">Diario</option>
+                  <option value="weekly">Semanal</option>
+                  <option value="monthly">Mensual</option>
+                </select>
+                <div class="field-error" *ngIf="backupForm.get('backupFrequency')?.hasError('required') && backupForm.get('backupFrequency')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-              </mat-form-field>
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Hora de Respaldo</mat-label>
-                <input matInput formControlName="backupTime">
-                <mat-error *ngIf="backupForm.get('backupTime')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Hora de Respaldo</label>
+                <input
+                  type="time"
+                  class="form-input"
+                  formControlName="backupTime"
+                  placeholder="HH:MM">
+                <div class="field-error" *ngIf="backupForm.get('backupTime')?.hasError('required') && backupForm.get('backupTime')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-              </mat-form-field>
-            </div>
+                </div>
+              </div>
 
-            <div class="form-row two-columns">
-              <mat-form-field appearance="outline">
-                <mat-label>Mantener Respaldos (días)</mat-label>
-                <input matInput type="number" formControlName="keepBackupsFor">
-                <mat-error *ngIf="backupForm.get('keepBackupsFor')?.hasError('required')">
+              <div class="form-field">
+                <label class="field-label">Mantener Respaldos (días)</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  formControlName="keepBackupsFor"
+                  placeholder="Número de días">
+                <div class="field-error" *ngIf="backupForm.get('keepBackupsFor')?.hasError('required') && backupForm.get('keepBackupsFor')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-                <mat-error *ngIf="backupForm.get('keepBackupsFor')?.hasError('min')">
+                </div>
+                <div class="field-error" *ngIf="backupForm.get('keepBackupsFor')?.hasError('min') && backupForm.get('keepBackupsFor')?.touched">
                   El valor mínimo es 1 día
-                </mat-error>
-                <mat-error *ngIf="backupForm.get('keepBackupsFor')?.hasError('max')">
+                </div>
+                <div class="field-error" *ngIf="backupForm.get('keepBackupsFor')?.hasError('max') && backupForm.get('keepBackupsFor')?.touched">
                   El valor máximo es 365 días
-                </mat-error>
-              </mat-form-field>
+                </div>
+              </div>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Ubicación de Respaldo</mat-label>
-                <input matInput formControlName="backupLocation">
-                <mat-error *ngIf="backupForm.get('backupLocation')?.hasError('required')">
+              <div class="form-field full-width">
+                <label class="field-label">Ubicación de Respaldo</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  formControlName="backupLocation"
+                  placeholder="Ruta de almacenamiento de respaldos">
+                <div class="field-error" *ngIf="backupForm.get('backupLocation')?.hasError('required') && backupForm.get('backupLocation')?.touched">
                   Este campo es obligatorio
-                </mat-error>
-              </mat-form-field>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions">
-              <button type="button" mat-stroked-button color="warn" (click)="resetToDefaults('backup')">
+              <button type="button" class="btn-secondary" (click)="resetToDefaults('backup')">
+                <span class="btn-icon">🔄</span>
                 Restablecer
               </button>
-              <button type="submit" mat-raised-button color="primary">
+              <button type="submit" class="btn-primary">
+                <span class="btn-icon">💾</span>
                 Guardar
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
-    </mat-tab>
-    <!-- Configuración de Integraciones -->
-    <mat-tab label="Integraciones">
-      <div class="tab-content">
+
+      <!-- Configuración de Integraciones -->
+      <div class="tab-content" *ngIf="activeTab === 'integrations'">
         <app-integrations-config></app-integrations-config>
       </div>
-    </mat-tab>
 
-    <!-- Historial de Cambios -->
-    <mat-tab label="Historial de Cambios">
-      <div class="tab-content">
+      <!-- Historial de Cambios -->
+      <div class="tab-content" *ngIf="activeTab === 'history'">
         <app-config-history></app-config-history>
       </div>
-    </mat-tab>
-  </mat-tab-group>
+    </div>
+  </div>
 </div>

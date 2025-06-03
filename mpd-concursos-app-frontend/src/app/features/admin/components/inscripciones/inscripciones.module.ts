@@ -8,7 +8,7 @@ import { InscripcionesAdminComponent } from './inscripciones-admin.component';
 import { InscripcionesDashboardComponent } from './components/inscripciones-dashboard/inscripciones-dashboard.component';
 import { DocumentsManagerComponent } from './components/documents-manager/documents-manager.component';
 import { InscripcionesTrackingComponent } from './components/inscripciones-tracking/inscripciones-tracking.component';
-import { InscripcionesReportsComponent } from './components/inscripciones-reports/inscripciones-reports.component';
+
 import { InscripcionesLifecycleComponent } from './components/inscripciones-lifecycle/inscripciones-lifecycle.component';
 
 // Componentes compartidos
@@ -31,7 +31,6 @@ const routes: Routes = [
   { path: 'rechazadas', component: InscripcionesAdminComponent, data: { filter: { status: 'REJECTED' } } },
   { path: 'documentos', component: DocumentsManagerComponent },
   { path: 'seguimiento', component: InscripcionesTrackingComponent },
-  { path: 'reportes', component: InscripcionesReportsComponent },
   { path: 'ciclo-vida', component: InscripcionesLifecycleComponent }
 ];
 
@@ -41,13 +40,12 @@ const routes: Routes = [
     CommonModule,
     ReactiveFormsModule,
     RouterModule.forChild(routes),
-    
+
     // Componentes standalone
     InscripcionesAdminComponent,
     InscripcionesDashboardComponent,
     DocumentsManagerComponent,
     InscripcionesTrackingComponent,
-    InscripcionesReportsComponent,
     InscripcionesLifecycleComponent,
     CustomButtonComponent,
     CustomCardComponent,

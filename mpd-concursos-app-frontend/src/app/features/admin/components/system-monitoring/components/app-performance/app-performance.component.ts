@@ -1,13 +1,5 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
 
 import { AppPerformanceMetrics } from   '@core/services/admin/system-monitoring.service';
 
@@ -17,15 +9,7 @@ import { AppPerformanceMetrics } from   '@core/services/admin/system-monitoring.
   styleUrls: ['./app-performance.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    MatCardModule,
-    MatIconModule,
-    MatTableModule,
-    MatSortModule,
-    MatPaginatorModule,
-    MatTooltipModule,
-    MatChipsModule,
-    MatDividerModule
+    CommonModule
   ]
 })
 export class AppPerformanceComponent implements OnChanges {
@@ -123,18 +107,18 @@ export class AppPerformanceComponent implements OnChanges {
   /**
    * Obtiene el icono para el estado de un endpoint
    * @param status Estado del endpoint
-   * @returns Icono
+   * @returns Icono emoji
    */
   getEndpointStatusIcon(status: string): string {
     switch (status) {
       case 'healthy':
-        return 'check_circle';
+        return '✅';
       case 'warning':
-        return 'warning';
+        return '⚠️';
       case 'critical':
-        return 'error';
+        return '❌';
       default:
-        return 'help';
+        return '❓';
     }
   }
 

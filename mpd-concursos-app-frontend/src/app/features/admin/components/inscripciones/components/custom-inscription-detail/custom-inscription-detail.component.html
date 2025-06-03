@@ -85,7 +85,7 @@
     </app-custom-card>
 
     <!-- Pestañas de contenido -->
-    <app-custom-tabs [activeTab]="activeTab" (tabChange)="activeTab = $event">
+    <app-custom-tabs [activeTab]="activeTab" (tabChange)="setActiveTab($event)">
       <!-- Pestaña de Documentos -->
       <app-custom-tab title="Documentos" icon="description">
         <div class="documents-container">

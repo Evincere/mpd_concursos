@@ -1,0 +1,170 @@
+<div class="database-monitoring-container">
+  <div class="section-header">
+    <h2 class="section-title">
+      <span class="section-icon">🗄️</span>
+      Monitoreo de Base de Datos
+    </h2>
+    <p class="section-description">
+      Métricas de rendimiento de la base de datos, conexiones, consultas y estadísticas de tablas.
+    </p>
+  </div>
+
+  <!-- Estado vacío glassmorphism -->
+  <div *ngIf="!databaseMetrics" class="empty-state">
+    <div class="empty-icon">🗄️</div>
+    <p class="empty-text">No hay datos de base de datos disponibles</p>
+  </div>
+
+  <!-- Métricas de base de datos glassmorphism -->
+  <div *ngIf="databaseMetrics" class="database-metrics">
+    <!-- Pool de conexiones -->
+    <div class="metrics-card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="card-icon">🔗</span>
+          Pool de Conexiones
+        </h3>
+      </div>
+      <div class="card-content">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Conexiones activas</div>
+            <div class="info-value">{{databaseMetrics.connectionPoolStatus.active || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Conexiones inactivas</div>
+            <div class="info-value">{{databaseMetrics.connectionPoolStatus.idle || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Total de conexiones</div>
+            <div class="info-value">{{databaseMetrics.connectionPoolStatus.total || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Máximo activas</div>
+            <div class="info-value">{{databaseMetrics.connectionPoolStatus.maxActive || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Uso del pool</div>
+            <div class="info-value">{{databaseMetrics.connectionPoolStatus.usage || 0}}%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Métricas de consultas -->
+    <div class="metrics-card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="card-icon">⚡</span>
+          Métricas de Consultas
+        </h3>
+      </div>
+      <div class="card-content">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Total de consultas</div>
+            <div class="info-value">{{databaseMetrics.queryMetrics.totalQueries || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Tiempo promedio</div>
+            <div class="info-value">{{databaseMetrics.queryMetrics.averageExecutionTime || 0}} ms</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Consultas por segundo</div>
+            <div class="info-value">{{databaseMetrics.queryMetrics.queriesPerSecond || 0}}</div>
+          </div>
+
+          <div class="info-item">
+            <div class="info-label">Consultas lentas</div>
+            <div class="info-value">{{databaseMetrics.queryMetrics.slowQueries || 0}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consultas lentas glassmorphism -->
+  <div *ngIf="databaseMetrics?.slowQueriesDetails?.length" class="slow-queries-section">
+    <h3 class="section-title">
+      <span class="section-icon">🐌</span>
+      Consultas Lentas
+    </h3>
+
+    <div class="table-container">
+      <div class="table-wrapper">
+        <table class="slow-queries-table">
+          <thead>
+            <tr class="table-header">
+              <th class="table-cell header-cell">Consulta</th>
+              <th class="table-cell header-cell">Tiempo</th>
+              <th class="table-cell header-cell">Frecuencia</th>
+              <th class="table-cell header-cell">Última ejecución</th>
+              <th class="table-cell header-cell">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" *ngFor="let query of databaseMetrics?.slowQueriesDetails">
+              <td class="table-cell query-cell">
+                <div class="query-text">{{query.query || 'No disponible'}}</div>
+              </td>
+              <td class="table-cell">{{query.executionTime || 0}} ms</td>
+              <td class="table-cell">{{query.frequency || 0}}</td>
+              <td class="table-cell">{{formatDate(query.timestamp) || 'No disponible'}}</td>
+              <td class="table-cell">
+                <div class="query-status" [ngClass]="getQueryStatusClass(query.executionTime || 0)">
+                  <span class="status-icon">{{getQueryStatusIcon(query.executionTime || 0)}}</span>
+                  <span class="status-text">
+                    {{query.executionTime < 100 ? 'Rápida' : query.executionTime < 1000 ? 'Normal' : 'Lenta'}}
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas por tabla glassmorphism -->
+  <div *ngIf="databaseMetrics?.tableMetrics?.length" class="table-metrics-section">
+    <h3 class="section-title">
+      <span class="section-icon">📊</span>
+      Métricas por Tabla
+    </h3>
+
+    <div class="table-container">
+      <div class="table-wrapper">
+        <table class="table-metrics-table">
+          <thead>
+            <tr class="table-header">
+              <th class="table-cell header-cell">Tabla</th>
+              <th class="table-cell header-cell">Filas</th>
+              <th class="table-cell header-cell">Tamaño</th>
+              <th class="table-cell header-cell">Lecturas</th>
+              <th class="table-cell header-cell">Escrituras</th>
+              <th class="table-cell header-cell">Última actualización</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" *ngFor="let table of databaseMetrics?.tableMetrics">
+              <td class="table-cell">
+                <div class="table-name">{{table.tableName || 'No disponible'}}</div>
+              </td>
+              <td class="table-cell">{{table.rowCount || 0}}</td>
+              <td class="table-cell">{{formatSize(table.sizeInMB || 0)}}</td>
+              <td class="table-cell">{{table.readOperations || 0}}</td>
+              <td class="table-cell">{{table.writeOperations || 0}}</td>
+              <td class="table-cell">{{formatDate(table.lastUpdated) || 'No disponible'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

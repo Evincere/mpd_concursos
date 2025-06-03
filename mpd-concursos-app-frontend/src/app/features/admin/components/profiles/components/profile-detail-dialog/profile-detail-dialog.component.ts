@@ -1,15 +1,7 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -21,17 +13,7 @@ import { AdminProfilesService, UserProfile } from '@core/services/admin/admin-pr
   styleUrls: ['./profile-detail-dialog.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatCardModule,
-    MatChipsModule,
-    MatDividerModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule
+    CommonModule
   ]
 })
 export class ProfileDetailDialogComponent implements OnInit, OnDestroy {
@@ -137,6 +119,32 @@ export class ProfileDetailDialogComponent implements OnInit, OnDestroy {
       case 'MATRICULA': return 'card_membership';
       default: return 'insert_drive_file';
     }
+  }
+
+  getDocumentIconFA(type: string): string {
+    switch (type) {
+      case 'DNI': return 'fas fa-id-card';
+      case 'TITULO': return 'fas fa-graduation-cap';
+      case 'CERTIFICADO_ANTECEDENTES': return 'fas fa-gavel';
+      case 'CURRICULUM': return 'fas fa-file-alt';
+      case 'MATRICULA': return 'fas fa-certificate';
+      default: return 'fas fa-file';
+    }
+  }
+
+  getStatusIcon(): string {
+    if (!this.profile) return 'fas fa-question-circle';
+
+    switch (this.profile.status) {
+      case 'ACTIVE': return 'fas fa-check-circle';
+      case 'INACTIVE': return 'fas fa-pause-circle';
+      case 'BLOCKED': return 'fas fa-ban';
+      default: return 'fas fa-question-circle';
+    }
+  }
+
+  getVerificationIcon(verified: boolean): string {
+    return verified ? 'fas fa-check-circle' : 'fas fa-clock';
   }
 
   getVerificationStatus(verified: boolean): string {

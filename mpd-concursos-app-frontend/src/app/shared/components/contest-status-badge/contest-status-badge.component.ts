@@ -2,6 +2,17 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ContestStatus, ContestStatusConfig } from '@shared/interfaces/concurso/concurso.interface';
 
+export type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface DocumentStatusConfig {
+  value: DocumentStatus;
+  label: string;
+  color: string;
+  backgroundColor: string;
+  borderColor: string;
+  icon?: string;
+}
+
 @Component({
   selector: 'app-contest-status-badge',
   standalone: true,
@@ -21,8 +32,9 @@ import { ContestStatus, ContestStatusConfig } from '@shared/interfaces/concurso/
 export class ContestStatusBadgeComponent {
   @Input() status: ContestStatus | string = 'DRAFT';
   @Input() showIcon: boolean = true;
+  @Input() statusType: 'contest' | 'document' = 'contest';
 
-  private readonly statusConfigs: Record<ContestStatus, ContestStatusConfig> = {
+  private readonly contestStatusConfigs: Record<ContestStatus, ContestStatusConfig> = {
     'ACTIVE': {
       value: 'ACTIVE',
       label: 'Activo',
@@ -65,10 +77,42 @@ export class ContestStatusBadgeComponent {
     }
   };
 
-  get statusConfig(): ContestStatusConfig | undefined {
+  private readonly documentStatusConfigs: Record<DocumentStatus, DocumentStatusConfig> = {
+    'PENDING': {
+      value: 'PENDING',
+      label: 'Pendiente',
+      color: '#fefce8',
+      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      borderColor: 'rgba(245, 158, 11, 0.3)',
+      icon: 'fas fa-clock'
+    },
+    'APPROVED': {
+      value: 'APPROVED',
+      label: 'Aprobado',
+      color: '#f0fdf4',
+      backgroundColor: 'rgba(76, 175, 80, 0.15)',
+      borderColor: 'rgba(76, 175, 80, 0.3)',
+      icon: 'fas fa-check-circle'
+    },
+    'REJECTED': {
+      value: 'REJECTED',
+      label: 'Rechazado',
+      color: '#fef2f2',
+      backgroundColor: 'rgba(239, 68, 68, 0.15)',
+      borderColor: 'rgba(239, 68, 68, 0.3)',
+      icon: 'fas fa-times-circle'
+    }
+  };
+
+  get statusConfig(): ContestStatusConfig | DocumentStatusConfig | undefined {
     if (!this.status) return undefined;
-    const normalizedStatus = this.status.toUpperCase() as ContestStatus;
-    return this.statusConfigs[normalizedStatus];
+    const normalizedStatus = this.status.toUpperCase();
+
+    if (this.statusType === 'document') {
+      return this.documentStatusConfigs[normalizedStatus as DocumentStatus];
+    } else {
+      return this.contestStatusConfigs[normalizedStatus as ContestStatus];
+    }
   }
 
   getStatusLabel(): string {

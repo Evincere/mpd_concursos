@@ -1,14 +1,19 @@
 <div class="inscripciones-admin-container">
   <div class="header">
-    <h1>Gestión de Inscripciones</h1>
-    <div class="header-actions">
-      <app-custom-button
-        [variant]="'flat'"
-        [color]="'primary'"
-        [icon]="'dashboard'"
-        [routerLink]="['/admin/inscripciones/dashboard']">
-        Dashboard
-      </app-custom-button>
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-clipboard-list header-icon" aria-hidden="true"></i>
+        <h1>Gestión de Inscripciones</h1>
+      </div>
+      <div class="header-actions">
+        <app-custom-button
+          [variant]="'flat'"
+          [color]="'primary'"
+          [icon]="'dashboard'"
+          [routerLink]="['/admin/inscripciones/dashboard']">
+          Dashboard
+        </app-custom-button>
+      </div>
     </div>
   </div>
 

@@ -64,7 +64,9 @@
 
       <app-custom-card title="Roles y Permisos" icon="user-shield">
         <div class="roles-container">
-          <span *ngFor="let rol of usuario.roles" class="role-badge">
+          <span *ngFor="let rol of usuario.roles"
+                class="role-badge"
+                [attr.data-role]="rol">
             {{ rol }}
           </span>
           <span *ngIf="!usuario.roles || usuario.roles.length === 0" class="no-data">Sin roles asignados</span>

@@ -1,59 +1,792 @@
-mat-dialog-content {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: 0 16px;
+// ===================================================================
+// GLASSMORPHISM DESIGN SYSTEM - EXAMEN FORM COMPONENT
+// ===================================================================
+
+// Variables del sistema glassmorphism
+$glass-background-primary: rgba(55, 65, 81, 0.85);
+$glass-background-secondary: rgba(55, 65, 81, 0.75);
+$glass-background-light: rgba(255, 255, 255, 0.08);
+$glass-background-lighter: rgba(255, 255, 255, 0.12);
+
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-muted: #9ca3af;
+$text-error: #ef4444;
+
+$focus-color: #3b82f6;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$error-color: #ef4444;
+
+$border-radius-sm: 6px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+
+$border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.2);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.3);
+
+$transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ===================================================================
+// ANIMATIONS
+// ===================================================================
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// ===================================================================
+// DIALOG OVERLAY & CONTAINER
+// ===================================================================
+
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+.dialog-container {
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-secondary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(16px);
+  border: $border-glass-medium;
+  border-radius: $border-radius-lg;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 8px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+// ===================================================================
+// DIALOG HEADER
+// ===================================================================
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: $border-glass-light;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $text-primary;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  i {
+    font-size: 1.125rem;
+    color: $focus-color;
+    filter: drop-shadow(0 1px 2px rgba(59, 130, 246, 0.3));
+  }
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg,
+    rgba(239, 68, 68, 0.8) 0%,
+    rgba(220, 38, 38, 0.9) 100%);
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  color: $text-primary;
+  cursor: pointer;
+  transition: $transition-normal;
+  backdrop-filter: blur(8px);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.9) 0%,
+      rgba(220, 38, 38, 1) 100%);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+// ===================================================================
+// DIALOG CONTENT
+// ===================================================================
+
+.dialog-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.1) 100%);
+    border-radius: 4px;
+
+    &:hover {
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.2) 100%);
+    }
+  }
+}
+// ===================================================================
+// FORM LAYOUT
+// ===================================================================
+
 .form-row {
-  margin-bottom: 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  &.two-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  &.three-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
 }
 
 .full-width {
   width: 100%;
 }
 
-.two-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+// ===================================================================
+// CUSTOM FORM FIELDS
+// ===================================================================
+
+.custom-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
 }
 
-.three-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
-}
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $text-primary;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  margin-bottom: 0.25rem;
 
-.form-section {
-  margin-top: 24px;
-  margin-bottom: 24px;
-
-  h3 {
-    margin-bottom: 16px;
-    color: #283593;
-    font-weight: 500;
+  &::after {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: $focus-color;
+    border-radius: 50%;
+    margin-left: 0.25rem;
+    vertical-align: middle;
   }
 }
 
-.array-item {
+.custom-input,
+.custom-textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg,
+    rgba(75, 85, 99, 0.6) 0%,
+    rgba(75, 85, 99, 0.4) 100%);
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  color: $text-primary;
+  font-size: 0.875rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  transition: $transition-normal;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+
+  &::placeholder {
+    color: $text-muted;
+    font-weight: 400;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $focus-color;
+    box-shadow:
+      0 0 0 3px rgba(59, 130, 246, 0.1),
+      0 4px 12px rgba(59, 130, 246, 0.15);
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.7) 0%,
+      rgba(75, 85, 99, 0.5) 100%);
+  }
+
+  &.error {
+    border-color: $error-color;
+    box-shadow:
+      0 0 0 3px rgba(239, 68, 68, 0.1),
+      0 4px 12px rgba(239, 68, 68, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(75, 85, 99, 0.3);
+  }
+}
+
+.custom-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+// ===================================================================
+// CUSTOM SELECT
+// ===================================================================
+
+.custom-select-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+}
+
+.custom-select {
+  width: 100%;
+  padding: 0.875rem 2.5rem 0.875rem 1rem;
+  background: linear-gradient(135deg,
+    rgba(75, 85, 99, 0.6) 0%,
+    rgba(75, 85, 99, 0.4) 100%);
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  color: $text-primary;
+  font-size: 0.875rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+  transition: $transition-normal;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  appearance: none;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: $focus-color;
+    box-shadow:
+      0 0 0 3px rgba(59, 130, 246, 0.1),
+      0 4px 12px rgba(59, 130, 246, 0.15);
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.7) 0%,
+      rgba(75, 85, 99, 0.5) 100%);
+  }
+
+  &.error {
+    border-color: $error-color;
+    box-shadow:
+      0 0 0 3px rgba(239, 68, 68, 0.1),
+      0 4px 12px rgba(239, 68, 68, 0.15);
+  }
+
+  option {
+    background: rgba(55, 65, 81, 0.95);
+    color: $text-primary;
+    padding: 0.5rem;
+  }
+}
+
+.select-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-secondary;
+  font-size: 0.75rem;
+  pointer-events: none;
+  transition: $transition-fast;
+}
+
+.custom-select:focus + .select-icon {
+  color: $focus-color;
+  transform: translateY(-50%) rotate(180deg);
+}
+// ===================================================================
+// DATE INPUT
+// ===================================================================
+
+.date-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.date-input {
+  padding-right: 2.5rem !important;
+}
+
+.date-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $text-secondary;
+  font-size: 1rem;
+  pointer-events: none;
+  transition: $transition-fast;
+}
+
+.date-input:focus + .date-icon {
+  color: $focus-color;
+}
+
+// ===================================================================
+// ERROR MESSAGES
+// ===================================================================
+
+.error-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.error-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: $text-error;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  i {
+    font-size: 0.75rem;
+    filter: drop-shadow(0 1px 2px rgba(239, 68, 68, 0.3));
+  }
+}
+
+// ===================================================================
+// FORM SECTIONS
+// ===================================================================
+
+.form-section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.03) 100%);
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: $text-primary;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  i {
+    font-size: 1rem;
+    color: $focus-color;
+    filter: drop-shadow(0 1px 2px rgba(59, 130, 246, 0.3));
+  }
+}
+
+// ===================================================================
+// ARRAY ITEMS (DYNAMIC FIELDS)
+// ===================================================================
+
+.array-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.02) 100%);
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  backdrop-filter: blur(4px);
+  transition: $transition-normal;
+
+  &:hover {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.03) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .array-field {
   flex: 1;
-  margin-right: 8px;
+  margin: 0;
 }
 
-button[mat-stroked-button] {
-  margin-top: 8px;
+.remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: linear-gradient(135deg,
+    rgba(239, 68, 68, 0.7) 0%,
+    rgba(220, 38, 38, 0.8) 100%);
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  color: $text-primary;
+  cursor: pointer;
+  transition: $transition-normal;
+  backdrop-filter: blur(8px);
+  margin-top: 1.75rem; // Align with input field
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.8) 0%,
+      rgba(220, 38, 38, 0.9) 100%);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(107, 114, 128, 0.5);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  i {
+    font-size: 0.875rem;
+  }
 }
 
-mat-dialog-actions {
-  padding: 16px 0;
-  margin-bottom: 0;
+.add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.7) 0%,
+    rgba(37, 99, 235, 0.8) 100%);
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  color: $text-primary;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-normal;
+  backdrop-filter: blur(8px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  margin-top: 1rem;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.8) 0%,
+      rgba(37, 99, 235, 0.9) 100%);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  i {
+    font-size: 0.875rem;
+  }
+}
+// ===================================================================
+// DIALOG FOOTER
+// ===================================================================
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: $border-glass-light;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+// ===================================================================
+// DIALOG BUTTONS
+// ===================================================================
+
+.btn-primary,
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border: $border-glass-light;
+  border-radius: $border-radius-md;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition-normal;
+  backdrop-filter: blur(8px);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  min-width: 120px;
+
+  i {
+    font-size: 0.875rem;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.8) 0%,
+    rgba(37, 99, 235, 0.9) 100%);
+  color: $text-primary;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.9) 0%,
+      rgba(37, 99, 235, 1) 100%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg,
+    rgba(107, 114, 128, 0.7) 0%,
+    rgba(75, 85, 99, 0.8) 100%);
+  color: $text-primary;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+    background: linear-gradient(135deg,
+      rgba(107, 114, 128, 0.8) 0%,
+      rgba(75, 85, 99, 0.9) 100%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+// ===================================================================
+// RESPONSIVE DESIGN
+// ===================================================================
+
+@media (max-width: 768px) {
+  .dialog-container {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 2rem);
+  }
+
+  .dialog-header,
+  .dialog-footer {
+    padding: 1rem 1.5rem;
+  }
+
+  .dialog-content {
+    padding: 1.5rem;
+  }
+
+  .form-row {
+    &.two-columns,
+    &.three-columns {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .array-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .remove-btn {
+    margin-top: 0;
+    align-self: flex-end;
+    width: auto;
+    padding: 0.5rem 1rem;
+
+    &::before {
+      content: 'Eliminar ';
+    }
+  }
+
+  .dialog-footer {
+    flex-direction: column-reverse;
+    gap: 0.75rem;
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .dialog-overlay {
+    padding: 0.5rem;
+  }
+
+  .dialog-container {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+  }
+
+  .dialog-header {
+    padding: 1rem;
+  }
+
+  .dialog-content {
+    padding: 1rem;
+  }
+
+  .dialog-footer {
+    padding: 1rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .custom-input,
+  .custom-textarea,
+  .custom-select {
+    font-size: 16px; // Prevent zoom on iOS
+  }
+}
+
+// ===================================================================
+// ACCESSIBILITY ENHANCEMENTS
+// ===================================================================
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Focus visible for keyboard navigation
+.custom-input:focus-visible,
+.custom-textarea:focus-visible,
+.custom-select:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.add-btn:focus-visible,
+.remove-btn:focus-visible,
+.close-btn:focus-visible {
+  outline: 2px solid $focus-color;
+  outline-offset: 2px;
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .dialog-container {
+    border: 2px solid $text-primary;
+  }
+
+  .custom-input,
+  .custom-textarea,
+  .custom-select {
+    border: 2px solid $text-secondary;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .add-btn,
+  .remove-btn {
+    border: 2px solid $text-primary;
+  }
 }

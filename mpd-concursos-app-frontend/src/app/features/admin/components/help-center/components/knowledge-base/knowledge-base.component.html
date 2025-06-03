@@ -1,0 +1,113 @@
+<div class="knowledge-base">
+  <!-- Header Section -->
+  <div class="knowledge-header">
+    <h2 class="knowledge-title">Base de Conocimientos</h2>
+    <p class="knowledge-description">
+      Explore nuestra base de conocimientos para encontrar información detallada sobre todas las funcionalidades del sistema.
+    </p>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="filter-section">
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="filter-grid">
+        <!-- Category Filter -->
+        <div class="filter-group">
+          <label class="filter-label">Categoría</label>
+          <select formControlName="category" (change)="filterArticles()" class="filter-select">
+            <option value="">Todas</option>
+            <option *ngFor="let category of categories" [value]="category.id">
+              {{category.name}}
+            </option>
+          </select>
+        </div>
+
+        <!-- Subcategory Filter -->
+        <div class="filter-group" *ngIf="selectedCategory && selectedCategory.subcategories?.length">
+          <label class="filter-label">Subcategoría</label>
+          <select formControlName="subcategory" (change)="filterArticles()" class="filter-select">
+            <option value="">Todas</option>
+            <option *ngFor="let subcategory of selectedCategory.subcategories" [value]="subcategory.id">
+              {{subcategory.name}}
+            </option>
+          </select>
+        </div>
+
+        <!-- Level Filter -->
+        <div class="filter-group">
+          <label class="filter-label">Nivel</label>
+          <select formControlName="level" (change)="filterArticles()" class="filter-select">
+            <option value="">Todos</option>
+            <option value="basic">Básico</option>
+            <option value="intermediate">Intermedio</option>
+            <option value="advanced">Avanzado</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="filter-actions">
+          <button type="button" (click)="resetFilters()" class="btn-reset">
+            <span class="btn-icon">🔄</span>
+            <span class="btn-label">Limpiar</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <span class="loading-text">Cargando artículos...</span>
+    </div>
+  </div>
+
+  <!-- No Articles State -->
+  <div *ngIf="!isLoading && filteredArticles.length === 0" class="no-articles">
+    <div class="no-articles-icon">📄</div>
+    <p class="no-articles-text">No se encontraron artículos con los filtros seleccionados</p>
+    <button class="btn-secondary" (click)="resetFilters()">Limpiar filtros</button>
+  </div>
+
+  <!-- Articles Container -->
+  <div *ngIf="!isLoading && filteredArticles.length > 0" class="articles-container">
+    <div class="articles-grid">
+      <div *ngFor="let article of filteredArticles" class="article-card">
+        <!-- Article Header -->
+        <div class="article-header" (click)="toggleArticle(article.id)">
+          <div class="article-title-section">
+            <h3 class="article-title">{{article.title}}</h3>
+            <div class="article-meta">
+              <span class="article-category">{{getCategoryName(article.category)}}</span>
+              <span class="article-level" [ngClass]="getLevelClass(article.level)">
+                {{getLevelName(article.level)}}
+              </span>
+            </div>
+          </div>
+          <button class="expand-button" [class.expanded]="isArticleExpanded(article.id)">
+            <span class="expand-icon">{{isArticleExpanded(article.id) ? '−' : '+'}}</span>
+          </button>
+        </div>
+
+        <!-- Article Content (Expandable) -->
+        <div class="article-content" [class.expanded]="isArticleExpanded(article.id)">
+          <div class="article-summary">
+            {{article.summary}}
+          </div>
+
+          <div class="article-tags" *ngIf="article.tags && article.tags.length > 0">
+            <span class="tag" *ngFor="let tag of article.tags">{{tag}}</span>
+          </div>
+
+          <div class="article-actions">
+            <button class="btn-view-article" (click)="viewArticle(article.id)">
+              <span class="btn-icon">👁️</span>
+              <span class="btn-label">Ver artículo completo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,20 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialogModule } from '@angular/material/dialog';
+// Servicios custom para reemplazar Material UI
+import { NotificationService } from '@shared/services/notification.service';
 import { RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -41,20 +29,6 @@ import { HelpFeedbackComponent } from './components/help-feedback/help-feedback.
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTabsModule,
-    MatExpansionModule,
-    MatChipsModule,
-    MatBadgeModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatDialogModule,
     RouterModule,
     KnowledgeBaseComponent,
     ArticleViewerComponent,
@@ -87,7 +61,7 @@ export class AdminHelpCenterComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private adminHelpService: AdminHelpService,
-    private snackBar: MatSnackBar
+    private notificationService: NotificationService
   ) {
     this.searchForm = this.fb.group({
       query: [''],
@@ -126,7 +100,7 @@ export class AdminHelpCenterComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando categorías:', error);
-          this.snackBar.open('Error al cargar las categorías', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al cargar las categorías');
           this.isLoading = false;
         }
       });
@@ -212,7 +186,7 @@ export class AdminHelpCenterComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error realizando búsqueda:', error);
-          this.snackBar.open('Error al realizar la búsqueda', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al realizar la búsqueda');
           this.isLoading = false;
         }
       });
@@ -248,7 +222,7 @@ export class AdminHelpCenterComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando artículo:', error);
-          this.snackBar.open('Error al cargar el artículo', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al cargar el artículo');
           this.isLoading = false;
         }
       });
@@ -275,13 +249,13 @@ export class AdminHelpCenterComponent implements OnInit, OnDestroy {
                 this.isLoading = false;
               });
           } else {
-            this.snackBar.open('Error al iniciar el tutorial', 'Cerrar', { duration: 3000 });
+            this.notificationService.error('Error al iniciar el tutorial');
             this.isLoading = false;
           }
         },
         error: (error) => {
           console.error('Error iniciando tutorial:', error);
-          this.snackBar.open('Error al iniciar el tutorial', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al iniciar el tutorial');
           this.isLoading = false;
         }
       });

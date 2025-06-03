@@ -1,6 +1,7 @@
 @use '@angular/material' as mat;
 @use 'sass:map';
 @import './styles/variables';
+@import './styles/glassmorphism-mixins';
 @import './styles/responsive';
 @import './styles/touch';
 @import './styles/dialog-styles';
@@ -48,7 +49,8 @@ $dark-theme: mat.define-dark-theme((
   --card-border: rgba(255, 255, 255, 0.1);
   --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   --card-backdrop-filter: blur(8px);
-  --background-color: #121212;
+  --border-radius: 8px;
+  --background-color: rgba(55, 65, 81, 0.9);
   --background-color-rgb: 18, 18, 18;
 
   /* Variables para la tabla personalizada */
@@ -128,6 +130,83 @@ $dark-theme: mat.define-dark-theme((
   --color-warning-dark: #f57c00;
   --color-warning-rgb: 255, 152, 0;
   --color-warning-dark-rgb: 245, 124, 0;
+
+  /* ===== GLASSMORPHISM DESIGN SYSTEM EXTENSIONS ===== */
+  /* Variables específicas para el sistema glassmorphism según glassmorphism-design-system-guide.md */
+
+  /* Glassmorphism Core Variables */
+  --glass-background-primary: rgba(55, 65, 81, 0.8);
+  --glass-background-secondary: rgba(75, 85, 99, 0.9);
+  --glass-background-hover: rgba(75, 85, 99, 0.9);
+
+  /* Typography Variables (WCAG AA Compliant) */
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-muted: #6b7280;
+
+  /* Interactive Colors */
+  --focus-color: #3b82f6;
+  --focus-light: #60a5fa;
+  --focus-lighter: #93c5fd;
+
+  /* Semantic Colors */
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+
+  /* Badge Colors with Transparency */
+  --badge-blue: rgba(59, 130, 246, 0.15);
+  --badge-orange: rgba(245, 158, 11, 0.15);
+  --badge-green: rgba(34, 197, 94, 0.15);
+  --badge-red: rgba(239, 68, 68, 0.15);
+  --badge-gray: rgba(156, 163, 175, 0.15);
+
+  /* Border Colors */
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --border-focus: rgba(59, 130, 246, 0.3);
+
+  /* Shadow Layers */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  /* Input Backgrounds */
+  --input-background: #4b5563;
+
+  /* Spacing System */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.25rem;
+  --spacing-2xl: 1.5rem;
+  --spacing-3xl: 2rem;
+
+  /* Component Spacing */
+  --card-padding: 1rem 1.25rem;
+  --button-padding: 0.375rem 0.75rem;
+  --badge-padding: 0.25rem 0.5rem;
+  --input-padding: 0.75rem 1rem;
+
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 12px;
+
+  /* Transitions */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Transforms */
+  --transform-hover: translateY(-2px);
+  --transform-button-hover: translateY(-1px);
+  --transform-scale-hover: scale(1.02);
 }
 
 // Estilos globales
@@ -547,7 +626,10 @@ $_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
   }
 }
 
-// Estilos para la tabla personalizada
+// ===== ESTILOS GLASSMORPHISM PARA TABLA PERSONALIZADA =====
+// NOTA: Los estilos glassmorphism se aplican desde los componentes individuales
+// Comentado temporalmente para permitir que los estilos glassmorphism tomen precedencia
+/*
 app-custom-table {
   .custom-table-container {
     background-color: var(--color-surface) !important;
@@ -632,6 +714,7 @@ app-custom-table {
     }
   }
 }
+*/
 
 // Estilos para los badges de roles
 .role-badge {
@@ -1129,21 +1212,109 @@ app-custom-table {
     }
 }
 
-// Estilos para los selects
+// ===== GLASSMORPHISM STYLES FOR SELECT PANELS =====
 .mat-mdc-select-panel {
-  background-color: $color-surface !important;
-  border: 1px solid rgba($color-text-secondary, 0.15);
+  background: rgba(55, 65, 81, 0.95) !important;
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 8px !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
 
   .mat-mdc-option {
-    color: $color-text-primary !important;
+    color: #f9fafb !important;
+    background: transparent !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 
     &:hover:not(.mat-mdc-option-disabled) {
-      background-color: $color-surface-light !important;
+      background: rgba(75, 85, 99, 0.6) !important;
+      color: #f9fafb !important;
     }
 
     &.mat-mdc-option-selected {
-      background-color: rgba($color-primary, 0.2) !important;
+      background: rgba(59, 130, 246, 0.8) !important;
+      color: #f9fafb !important;
     }
+
+    &.mat-mdc-option-active {
+      background: rgba(59, 130, 246, 0.6) !important;
+      color: #f9fafb !important;
+    }
+  }
+}
+
+// ===== GLASSMORPHISM FOR NATIVE SELECT DROPDOWNS =====
+select {
+  background: linear-gradient(135deg,
+    rgba(75, 85, 99, 0.9) 0%,
+    rgba(55, 65, 81, 0.9) 100%) !important;
+  color: #f9fafb !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+
+  &:focus {
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.9) 0%,
+      rgba(55, 65, 81, 0.9) 100%) !important;
+    color: #f9fafb !important;
+    outline: none !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 1) 0%,
+      rgba(55, 65, 81, 1) 100%) !important;
+    color: #f9fafb !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+  }
+
+  option {
+    background: rgba(55, 65, 81, 0.95) !important;
+    color: #f9fafb !important;
+    padding: 0.5rem !important;
+  }
+}
+
+// ===== SPECIFIC GLASSMORPHISM FOR PAGINATION SELECTS =====
+.pagination-container select,
+.pagination-size select,
+app-custom-table select {
+  background: linear-gradient(135deg,
+    rgba(75, 85, 99, 0.9) 0%,
+    rgba(55, 65, 81, 0.9) 100%) !important;
+  color: #f9fafb !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+
+  &:focus,
+  &:active,
+  &:target {
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.9) 0%,
+      rgba(55, 65, 81, 0.9) 100%) !important;
+    color: #f9fafb !important;
+    outline: none !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 1) 0%,
+      rgba(55, 65, 81, 1) 100%) !important;
+    color: #f9fafb !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
   }
 }
 
@@ -1645,6 +1816,740 @@ $snackbar-action: rgba(255, 255, 255, 0.9);
     }
 }
 
+// ===== GLASSMORPHISM DIALOG STYLES FOR USER DETAILS =====
+// Extensión del sistema glassmorphism existente para custom-dialog
+
+// Aplicar variables del sistema a custom-dialog
+app-custom-dialog .dialog-backdrop {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+}
+
+app-custom-dialog .dialog-container {
+  background: var(--background-color) !important;
+  border: 1px solid var(--card-border) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--card-shadow) !important;
+  color: var(--text-color) !important;
+  min-width: 600px !important;
+  max-width: 800px !important;
+}
+
+// Header del diálogo usando variables del sistema
+app-custom-dialog .dialog-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  padding: 1.5rem 2rem !important;
+}
+
+app-custom-dialog .dialog-title {
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+app-custom-dialog .dialog-icon {
+  color: var(--primary-color) !important;
+}
+
+app-custom-dialog .close-button {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+  border-radius: 6px !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+app-custom-dialog .close-button:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+// Contenido del diálogo usando variables del sistema
+app-custom-dialog .dialog-content {
+  padding: 2rem !important;
+  background: transparent !important;
+  overflow-y: auto !important;
+  max-height: 70vh !important;
+}
+
+// Elementos específicos del usuario-detalle usando variables del sistema
+app-custom-dialog .user-header {
+  background: var(--background-color) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--card-shadow) !important;
+  color: var(--text-color) !important;
+  padding: 1.5rem !important;
+  margin-bottom: 1.5rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+}
+
+app-custom-dialog .user-header:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+// Elementos del usuario usando variables del sistema
+app-custom-dialog .user-avatar i {
+  color: var(--primary-color) !important;
+}
+
+app-custom-dialog .user-info h2 {
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+}
+
+app-custom-dialog .user-dni {
+  color: var(--text-secondary) !important;
+}
+
+// Estados del usuario usando variables del sistema
+app-custom-dialog .user-status {
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 0.375rem 0.75rem !important;
+  border: 1px solid transparent !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+// Estados semánticos (mantenemos colores específicos para semántica)
+app-custom-dialog .user-status.estado-activo {
+  background: rgba(76, 175, 80, 0.15) !important;
+  color: #4CAF50 !important;
+  border-color: rgba(76, 175, 80, 0.3) !important;
+}
+
+app-custom-dialog .user-status.estado-inactivo {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+app-custom-dialog .user-status.estado-bloqueado {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+// Tarjetas personalizadas usando variables del sistema
+app-custom-dialog app-custom-card .custom-card {
+  background: var(--background-color) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--card-shadow) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  margin-bottom: 1.5rem !important;
+}
+
+app-custom-dialog app-custom-card .custom-card:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-2px) !important;
+}
+
+// Headers y contenido de tarjetas usando variables del sistema
+app-custom-dialog app-custom-card .card-header {
+  background: transparent !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+app-custom-dialog app-custom-card .card-title {
+  color: var(--text-color) !important;
+  font-weight: 600 !important;
+  font-size: 1.125rem !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+app-custom-dialog app-custom-card .card-title i {
+  color: var(--primary-color) !important;
+  font-size: 1.25rem !important;
+}
+
+app-custom-dialog app-custom-card .card-content {
+  background: transparent !important;
+  padding: 1.5rem !important;
+}
+
+// Items de detalle usando variables del sistema
+app-custom-dialog .detail-item {
+  margin-bottom: 1rem !important;
+  padding: 0.75rem 0 !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+app-custom-dialog .detail-item:last-child {
+  margin-bottom: 0 !important;
+  border-bottom: none !important;
+}
+
+app-custom-dialog .detail-item:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-radius: 4px !important;
+  padding: 0.75rem !important;
+  margin: 0 -0.75rem 1rem !important;
+}
+
+app-custom-dialog .detail-label {
+  color: var(--text-secondary) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  display: inline-block !important;
+  min-width: 80px !important;
+  margin-right: 0.75rem !important;
+}
+
+app-custom-dialog .detail-value {
+  color: var(--text-color) !important;
+  font-weight: 500 !important;
+}
+
+app-custom-dialog .detail-value a {
+  color: var(--primary-color) !important;
+  text-decoration: none !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 4px !important;
+  margin: -0.25rem -0.5rem !important;
+}
+
+app-custom-dialog .detail-value a:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  text-decoration: underline !important;
+  transform: translateY(-1px) !important;
+}
+
+app-custom-dialog .no-data {
+  color: #9ca3af !important;
+  opacity: 0.8 !important;
+  font-style: italic !important;
+}
+
+// Badges de roles usando variables del sistema y colores semánticos
+app-custom-dialog .role-badge {
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border-radius: 8px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 0.375rem 0.875rem !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: inline-block !important;
+  margin: 0.25rem !important;
+
+  // Color por defecto (USER)
+  background: rgba(59, 130, 246, 0.15) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  color: #3b82f6 !important;
+}
+
+app-custom-dialog .role-badge:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+// Colores semánticos para roles (mantenemos para semántica)
+app-custom-dialog .role-badge[data-role*="admin"],
+app-custom-dialog .role-badge[data-role*="ADMIN"] {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+}
+
+app-custom-dialog .role-badge[data-role*="moderator"],
+app-custom-dialog .role-badge[data-role*="MODERATOR"] {
+  background: rgba(76, 175, 80, 0.15) !important;
+  border-color: rgba(76, 175, 80, 0.3) !important;
+  color: #4CAF50 !important;
+}
+
+app-custom-dialog .role-badge[data-role*="editor"],
+app-custom-dialog .role-badge[data-role*="EDITOR"] {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #f59e0b !important;
+}
+
+app-custom-dialog .role-badge[data-role*="viewer"],
+app-custom-dialog .role-badge[data-role*="VIEWER"] {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border-color: rgba(6, 182, 212, 0.3) !important;
+  color: #06b6d4 !important;
+}
+
+// Elementos adicionales usando variables del sistema
+app-custom-dialog .roles-container {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 0.75rem !important;
+  padding: 0.5rem 0 !important;
+}
+
+app-custom-dialog .user-actions app-custom-button .custom-button {
+  background: rgba(76, 175, 80, 0.15) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border: 1px solid rgba(76, 175, 80, 0.3) !important;
+  border-radius: 8px !important;
+  color: #4CAF50 !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 1.5rem !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+app-custom-dialog .user-actions app-custom-button .custom-button:hover {
+  background: rgba(76, 175, 80, 0.25) !important;
+  border-color: rgba(76, 175, 80, 0.5) !important;
+  transform: translateY(-1px) !important;
+  color: #66BB6A !important;
+}
+
+app-custom-dialog .loading-container {
+  background: var(--background-color) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--card-shadow) !important;
+  padding: 2rem !important;
+  text-align: center !important;
+}
+
+app-custom-dialog .loading-container p {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+}
+
+app-custom-dialog .error-message {
+  background: rgba(239, 68, 68, 0.15) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+  border-radius: 8px !important;
+  padding: 1rem !important;
+  text-align: center !important;
+  margin-bottom: 1rem !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+app-custom-dialog .error-message:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+// ===== GLASSMORPHISM STYLES FOR USER EDIT FORM =====
+// Extensión del sistema glassmorphism para formulario de edición de usuario
+
+// Contenedor principal del diálogo de usuario
+app-custom-dialog .custom-dialog-container {
+  background: var(--background-color) !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+  border: 1px solid var(--card-border) !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+// Formulario principal usando variables del sistema
+app-custom-dialog .user-form {
+  background: transparent !important;
+  color: var(--text-color) !important;
+  font-family: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+// Secciones del formulario
+app-custom-dialog .form-section {
+  background: var(--background-color) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 8px !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+  box-shadow: var(--card-shadow) !important;
+  margin-bottom: 1.5rem !important;
+  padding: 1.5rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+app-custom-dialog .form-section:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+// Headers de sección
+app-custom-dialog .form-section h3 {
+  color: var(--text-color) !important;
+  border-bottom: 2px solid var(--primary-color) !important;
+  margin: 0 0 1rem 0 !important;
+  padding-bottom: 0.5rem !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+app-custom-dialog .form-section h3::before {
+  color: var(--primary-color) !important;
+  font-family: 'Font Awesome 5 Free' !important;
+  font-weight: 900 !important;
+  font-size: 0.8rem !important;
+}
+
+// Filas del formulario
+app-custom-dialog .form-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+// Campos de formulario personalizados
+app-custom-dialog app-custom-form-field,
+app-custom-dialog app-custom-select {
+  flex: 1 !important;
+  min-width: 250px !important;
+}
+
+// Contenedores de campos de entrada
+app-custom-dialog app-custom-form-field .form-field-container,
+app-custom-dialog app-custom-select .custom-select-container,
+app-custom-dialog app-custom-form-field input,
+app-custom-dialog app-custom-form-field textarea {
+  background: rgba(75, 85, 99, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  color: var(--text-color) !important;
+}
+
+app-custom-dialog app-custom-form-field .form-field-container:hover,
+app-custom-dialog app-custom-select .custom-select-container:hover {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(75, 85, 99, 0.4) !important;
+}
+
+app-custom-dialog app-custom-form-field .form-field-container:focus-within,
+app-custom-dialog app-custom-select .custom-select-container:focus-within {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  background: rgba(75, 85, 99, 0.5) !important;
+}
+
+// Labels de campos
+app-custom-dialog app-custom-form-field label,
+app-custom-dialog app-custom-select label {
+  color: var(--text-secondary) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+// Inputs y selects
+app-custom-dialog app-custom-form-field input,
+app-custom-dialog app-custom-form-field textarea,
+app-custom-dialog app-custom-select select {
+  background: transparent !important;
+  color: var(--text-color) !important;
+  border: none !important;
+  outline: none !important;
+  width: 100% !important;
+  padding: 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+app-custom-dialog app-custom-form-field input::placeholder,
+app-custom-dialog app-custom-form-field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-style: italic !important;
+}
+
+// Mejoras específicas para los inputs
+app-custom-dialog app-custom-form-field input,
+app-custom-dialog app-custom-form-field textarea {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  padding: 0.75rem !important;
+}
+
+// Mejoras para los labels
+app-custom-dialog app-custom-form-field .form-label,
+app-custom-dialog app-custom-select .form-label {
+  color: var(--text-secondary) !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  margin-bottom: 0.5rem !important;
+  display: block !important;
+}
+
+// Estilos para campos requeridos
+app-custom-dialog app-custom-form-field[required] .form-label::after,
+app-custom-dialog app-custom-select[required] .form-label::after {
+  content: ' *' !important;
+  color: #ef4444 !important;
+  font-weight: bold !important;
+}
+
+// Contenedor de roles (checkboxes)
+app-custom-dialog .roles-container {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 0.75rem !important;
+  margin-top: 1rem !important;
+}
+
+app-custom-dialog .role-checkbox {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border-radius: 6px !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  -webkit-backdrop-filter: var(--card-backdrop-filter) !important;
+  padding: 0.75rem !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+}
+
+app-custom-dialog .role-checkbox:hover {
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+app-custom-dialog .role-checkbox.checked {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
+}
+
+app-custom-dialog .role-checkbox label {
+  color: var(--text-color) !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+app-custom-dialog .role-checkbox input[type="checkbox"] {
+  accent-color: var(--primary-color) !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+}
+
+// Mejoras específicas para los componentes custom
+app-custom-dialog app-custom-checkbox {
+  width: 100% !important;
+}
+
+app-custom-dialog app-custom-checkbox .checkbox-container {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+app-custom-dialog app-custom-checkbox .checkbox-container label {
+  color: var(--text-color) !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  cursor: pointer !important;
+  padding: 0.5rem !important;
+}
+
+app-custom-dialog app-custom-checkbox input[type="checkbox"] {
+  accent-color: var(--primary-color) !important;
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  border-radius: 3px !important;
+}
+
+// Botones de acción del formulario
+app-custom-dialog .form-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 1rem !important;
+  margin-top: 2rem !important;
+  padding-top: 1.5rem !important;
+  border-top: 1px solid var(--card-border) !important;
+}
+
+// Botón cancelar
+app-custom-dialog .form-actions app-custom-button[color="accent"] .custom-button {
+  background: rgba(156, 163, 175, 0.15) !important;
+  border: 1px solid rgba(156, 163, 175, 0.3) !important;
+  color: #9ca3af !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border-radius: 6px !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+app-custom-dialog .form-actions app-custom-button[color="accent"] .custom-button:hover {
+  background: rgba(156, 163, 175, 0.25) !important;
+  border-color: rgba(156, 163, 175, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+// Botón guardar/crear
+app-custom-dialog .form-actions app-custom-button[color="primary"] .custom-button,
+app-custom-dialog .form-actions app-custom-button[color="primary"] button {
+  background: rgba(76, 175, 80, 0.15) !important;
+  border: 1px solid rgba(76, 175, 80, 0.3) !important;
+  color: #4CAF50 !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border-radius: 6px !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  min-width: 140px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+}
+
+app-custom-dialog .form-actions app-custom-button[color="primary"] .custom-button:hover,
+app-custom-dialog .form-actions app-custom-button[color="primary"] button:hover {
+  background: rgba(76, 175, 80, 0.25) !important;
+  border-color: rgba(76, 175, 80, 0.5) !important;
+  transform: translateY(-1px) !important;
+  color: #66BB6A !important;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2) !important;
+}
+
+// Botón cancelar mejorado
+app-custom-dialog .form-actions app-custom-button[color="accent"] .custom-button,
+app-custom-dialog .form-actions app-custom-button[color="accent"] button {
+  background: rgba(156, 163, 175, 0.15) !important;
+  border: 1px solid rgba(156, 163, 175, 0.3) !important;
+  color: #9ca3af !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+  border-radius: 6px !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  min-width: 140px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+}
+
+app-custom-dialog .form-actions app-custom-button[color="accent"] .custom-button:hover,
+app-custom-dialog .form-actions app-custom-button[color="accent"] button:hover {
+  background: rgba(156, 163, 175, 0.25) !important;
+  border-color: rgba(156, 163, 175, 0.5) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(156, 163, 175, 0.2) !important;
+}
+
+// Estados de validación
+app-custom-dialog app-custom-form-field.ng-invalid.ng-touched .form-field-container {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+app-custom-dialog app-custom-form-field.ng-valid.ng-touched .form-field-container {
+  border-color: rgba(34, 197, 94, 0.6) !important;
+  background: rgba(34, 197, 94, 0.1) !important;
+}
+
+// Mensajes de error
+app-custom-dialog app-form-error .error-message {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+  border-radius: 4px !important;
+  padding: 0.5rem 0.75rem !important;
+  margin-top: 0.5rem !important;
+  font-size: 0.75rem !important;
+  backdrop-filter: var(--card-backdrop-filter) !important;
+}
+
+// Diseño responsivo para formulario de usuario
+@media (max-width: 768px) {
+  app-custom-dialog .form-row {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  app-custom-dialog app-custom-form-field,
+  app-custom-dialog app-custom-select {
+    min-width: unset !important;
+  }
+
+  app-custom-dialog .roles-container {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  app-custom-dialog .form-actions {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  app-custom-dialog .form-actions app-custom-button {
+    width: 100% !important;
+  }
+
+  app-custom-dialog .form-section {
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+}
+
+// Estados de carga
+app-custom-dialog .form-actions app-custom-button[loading="true"] .custom-button {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+// Mejoras de accesibilidad
+app-custom-dialog .user-form:focus-within {
+  outline: none !important;
+}
+
+app-custom-dialog .form-section:focus-within {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+// Estados disabled
+app-custom-dialog app-custom-form-field[disabled] .form-field-container,
+app-custom-dialog app-custom-select[disabled] .custom-select-container {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background: rgba(75, 85, 99, 0.2) !important;
+}
+
+app-custom-dialog app-custom-form-field[disabled] input,
+app-custom-dialog app-custom-form-field[disabled] textarea,
+app-custom-dialog app-custom-select[disabled] select {
+  cursor: not-allowed !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
 // Estilo para snackbar persistente durante penalización
 .persistent-snackbar {
   .mdc-snackbar__surface {
@@ -1662,26 +2567,385 @@ $snackbar-action: rgba(255, 255, 255, 0.9);
   }
 }
 
-// Estilos para diálogos con glassmorphism
-.glassmorphism-dialog {
-  .mat-mdc-dialog-container {
-    --mdc-dialog-container-color: transparent !important;
-    padding: 0 !important;
-    overflow: hidden;
+// ===== ESTILOS GLASSMORPHISM PARA DIÁLOGOS =====
+// Estilos con mayor especificidad para sobrescribir estilos del componente
+.unified-dialog-container.glassmorphism-dialog .dialog-backdrop,
+.unified-dialog-container.concurso-form-dialog-container .dialog-backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1050;
+}
+
+.unified-dialog-container.glassmorphism-dialog .dialog-container,
+.unified-dialog-container.concurso-form-dialog-container .dialog-container {
+  // Fondo glassmorphism premium
+  background: rgba(55, 65, 81, 0.85);
+  background-image: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(76, 175, 80, 0.08) 30%,
+    rgba(255, 255, 255, 0.12) 70%,
+    rgba(76, 175, 80, 0.06) 100%);
+
+  // Bordes y efectos
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+
+  // Sombras premium
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+
+  // Estructura y layout optimizado
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 500px;
+  max-width: 90vw;
+  min-height: 400px;
+  max-height: 90vh;
+  width: auto;
+  height: auto; // Altura automática basada en contenido
+
+  // Efecto de brillo superior
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
+    z-index: 10;
   }
 
-  .mdc-dialog__surface {
-    background: transparent !important;
-    box-shadow: none !important;
-    border-radius: 16px;
-    overflow: hidden;
+  // Tamaños específicos con layout consistente
+  &.small {
+    min-width: 400px;
+    max-width: 500px;
+    width: 85vw;
+    height: 70vh;
+    min-height: 400px;
   }
 
-  .mat-mdc-dialog-content {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-height: none !important;
-    overflow: hidden !important;
+  &.large {
+    min-width: 600px;
+    max-width: 95vw;
+    width: clamp(700px, 80vw, 1200px);
+    height: auto;
+    max-height: 90vh;
+    min-height: 500px; // Altura mínima optimizada
+  }
+
+  &.fullscreen {
+    width: 95vw;
+    height: 95vh;
+    max-width: none;
+    max-height: none;
+    min-width: 95vw;
+    min-height: 95vh;
+  }
+}
+
+// Header del diálogo - Fijo (no scrolleable)
+.unified-dialog-container.glassmorphism-dialog .dialog-header,
+.unified-dialog-container.concurso-form-dialog-container .dialog-header {
+  background: linear-gradient(135deg,
+    rgba(76, 175, 80, 0.15) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(76, 175, 80, 0.12) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1.5rem 2rem;
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0; // No se reduce cuando hay poco espacio
+  min-height: 80px; // Altura mínima garantizada
+
+  .dialog-title {
+    color: #f9fafb;
+    font-weight: 600;
+    font-size: 1.375rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .dialog-icon {
+      color: #4CAF50;
+      font-size: 1.25rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
+
+// Botón de cerrar
+.unified-dialog-container.glassmorphism-dialog .close-button,
+.unified-dialog-container.concurso-form-dialog-container .close-button,
+.unified-dialog-container.glassmorphism-dialog app-custom-button[variant="icon"],
+.unified-dialog-container.concurso-form-dialog-container app-custom-button[variant="icon"] {
+  ::ng-deep .custom-button {
+    background: rgba(55, 65, 81, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #d1d5db;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(244, 67, 54, 0.8);
+      border-color: rgba(244, 67, 54, 0.4);
+      color: #f9fafb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+    }
+  }
+}
+
+// Contenido del diálogo - Mejorado con scroll
+.unified-dialog-container.glassmorphism-dialog .dialog-content,
+.unified-dialog-container.concurso-form-dialog-container .dialog-content {
+  padding: 0;
+  background: transparent;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+  max-height: calc(85vh - 140px); // Optimizado con el nuevo padding del footer
+  min-height: 350px; // Altura mínima mejorada para mejor usabilidad
+
+  // Estilos para la barra de scroll personalizada
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(76, 175, 80, 0.6);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(76, 175, 80, 0.8);
+    }
+  }
+
+  // Para Firefox
+  scrollbar-width: thin;
+  scrollbar-color: rgba(76, 175, 80, 0.6) rgba(255, 255, 255, 0.1);
+}
+
+// Estilos específicos para el formulario de concursos dentro del diálogo
+.unified-dialog-container.glassmorphism-dialog .dialog-content,
+.unified-dialog-container.concurso-form-dialog-container .dialog-content {
+
+  // Contenedor del formulario
+  app-concurso-form-dialog {
+    display: block;
+    padding: 1rem 2rem; // Reducir padding vertical para ganar espacio
+    height: 100%; // Aprovechar toda la altura disponible
+
+    // Contenedor de pestañas
+    app-custom-tabs {
+      display: block;
+      height: 100%; // Aprovechar toda la altura
+
+      .tabs-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%; // Altura completa
+      }
+
+      .tabs-content {
+        padding: 0.75rem 0; // Reducir padding para ganar espacio
+        flex: 1; // Tomar todo el espacio disponible
+        overflow-y: auto; // Permitir scroll en el contenido de las pestañas
+
+        // Espaciado entre campos del formulario - Optimizado
+        .form-row {
+          margin-bottom: 1.25rem; // Reducir espaciado para ganar espacio
+
+          &:last-child {
+            margin-bottom: 1rem; // Reducir espacio final
+          }
+        }
+
+        // Campos del formulario - Espaciado optimizado
+        app-custom-form-field {
+          margin-bottom: 1rem; // Reducir espaciado
+          display: block;
+        }
+
+        // Campos de texto y select - Espaciado optimizado
+        app-custom-select,
+        app-custom-datepicker,
+        app-custom-textarea {
+          margin-bottom: 1rem; // Reducir espaciado
+          display: block;
+        }
+      }
+    }
+  }
+}
+
+// Footer del diálogo - Fijo (no scrolleable)
+.unified-dialog-container.glassmorphism-dialog .dialog-footer,
+.unified-dialog-container.concurso-form-dialog-container .dialog-footer {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(76, 175, 80, 0.03) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1.25rem 2rem; // Reducir padding vertical para ganar espacio
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0; // No se reduce cuando hay poco espacio
+  min-height: 70px; // Altura mínima optimizada
+
+  // Efecto de brillo en el borde superior
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 2rem;
+    right: 2rem;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent);
+  }
+
+  // Estilos para los botones del footer
+  .dialog-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    align-items: center;
+
+    app-custom-button {
+      ::ng-deep .custom-button {
+        min-width: 120px;
+        height: 44px;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+
+        &[data-variant="stroked"] {
+          background: rgba(55, 65, 81, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: #d1d5db;
+          backdrop-filter: blur(8px);
+
+          &:hover {
+            background: rgba(55, 65, 81, 0.8);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+          }
+        }
+
+        &[data-variant="flat"] {
+          background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+          border: 1px solid rgba(76, 175, 80, 0.3);
+          color: white;
+          box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+
+          &:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            transform: translateY(-1px);
+          }
+
+          &:disabled {
+            background: rgba(55, 65, 81, 0.4);
+            color: rgba(255, 255, 255, 0.5);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            transform: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .unified-dialog-container.glassmorphism-dialog .dialog-container,
+  .unified-dialog-container.concurso-form-dialog-container .dialog-container {
+    min-width: 90vw;
+    max-width: 95vw;
+    width: 90vw;
+    max-height: 90vh;
+
+    &.large {
+      min-width: 90vw;
+      max-width: 95vw;
+      width: 90vw;
+      max-height: 90vh;
+    }
+  }
+
+  .unified-dialog-container.glassmorphism-dialog .dialog-header,
+  .unified-dialog-container.concurso-form-dialog-container .dialog-header {
+    padding: 1.25rem 1.5rem;
+
+    .dialog-title {
+      font-size: 1.25rem;
+    }
+  }
+
+  .unified-dialog-container.glassmorphism-dialog .dialog-footer,
+  .unified-dialog-container.concurso-form-dialog-container .dialog-footer {
+    padding: 1.25rem 1.5rem;
+
+    &::before {
+      left: 1.5rem;
+      right: 1.5rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .unified-dialog-container.glassmorphism-dialog .dialog-container,
+  .unified-dialog-container.concurso-form-dialog-container .dialog-container {
+    min-width: 95vw;
+    max-width: 98vw;
+
+    &.large {
+      min-width: 95vw;
+      max-width: 98vw;
+      width: 95vw;
+    }
+  }
+
+  .unified-dialog-container.glassmorphism-dialog .dialog-header,
+  .unified-dialog-container.concurso-form-dialog-container .dialog-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .unified-dialog-container.glassmorphism-dialog .dialog-footer,
+  .unified-dialog-container.concurso-form-dialog-container .dialog-footer {
+    padding: 1rem 1.25rem;
+
+    &::before {
+      left: 1.25rem;
+      right: 1.25rem;
+    }
   }
 }
 
@@ -1703,4 +2967,53 @@ $snackbar-action: rgba(255, 255, 255, 0.9);
 .mat-mdc-tab-label.mat-mdc-tab-label-active:active {
   color: #03a9f4 !important;
   font-weight: 800 !important;
+}
+
+/* ===== SOLUCIÓN ÓPTIMA: DROPDOWN OVERFLOW FIX GLOBAL ===== */
+/* Permitir que los dropdowns se muestren correctamente en toda la aplicación */
+/* Esta es la solución más simple y eficiente para el problema de dropdowns cortados */
+
+app-custom-card:has(.filter-form),
+app-custom-card:has(.filter-row),
+app-custom-card .custom-card,
+.filter-card,
+.filter-container,
+.search-container,
+.form-container {
+  overflow: visible !important;
+}
+
+/* Sobrescribir el overflow: hidden del CustomCardComponent para cards con filtros */
+app-custom-card:has(.filter-form) .custom-card,
+app-custom-card:has(.filter-row) .custom-card,
+.filters-card .custom-card,
+.filter-container .custom-card {
+  overflow: visible !important;
+}
+
+app-custom-card:has(.filter-form) .card-content,
+app-custom-card:has(.filter-row) .card-content,
+.filters-card .card-content,
+.filter-container .card-content {
+  overflow: visible !important;
+}
+
+/* Z-index para dropdowns en filtros para asegurar que aparezcan encima */
+.filter-form app-custom-select,
+.filter-row app-custom-select,
+.search-container app-custom-select {
+  position: relative;
+  z-index: 100;
+}
+
+/* Asegurar que los dropdowns de custom-select tengan z-index adecuado */
+app-custom-select .select-dropdown {
+  z-index: 9999999 !important;
+  position: absolute !important;
+}
+
+/* Asegurar que el contenedor del select permita overflow */
+app-custom-select .custom-select,
+app-custom-select .custom-select-container {
+  overflow: visible !important;
 }

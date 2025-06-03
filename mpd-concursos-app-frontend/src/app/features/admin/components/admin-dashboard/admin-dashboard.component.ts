@@ -1,16 +1,14 @@
 import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+
+// Material UI imports
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { DashboardStats, ActivityItem, QuickAccessWidget, AdminDashboardService } from '../../../../core/services/admin/admin-dashboard.service';
 import { StatCardComponent } from './components/stat-card/stat-card.component';
@@ -34,12 +32,8 @@ interface MenuItem {
   imports: [
     CommonModule,
     RouterModule,
-    MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatListModule,
-    MatTabsModule,
-    MatDividerModule,
     MatProgressSpinnerModule,
     StatCardComponent,
     QuickAccessWidgetComponent,

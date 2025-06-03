@@ -1,10 +1,80 @@
-// Tema oscuro consistente con fechas-importantes-admin
+@use 'src/styles/variables' as *;
+
+// ===== GLASSMORPHISM DESIGN SYSTEM - FECHAS MODULE =====
+// Variables refinadas específicas para el módulo de fechas
+// Siguiendo el sistema establecido en dashboard administrativo
+
+// Paleta de colores glassmorphism refinada
+$glass-fechas-primary: rgba(55, 65, 81, 0.8);        // #374151 con 80% opacidad
+$glass-fechas-secondary: rgba(75, 85, 99, 0.9);      // #4b5563 con 90% opacidad
+$glass-fechas-accent: rgba(76, 175, 80, 0.15);       // Verde concursos con transparencia
+$fechas-theme-color: #4CAF50;                        // Verde específico de concursos
+$fechas-theme-light: #66BB6A;                        // Verde claro para hover
+$fechas-theme-dark: #388E3C;                         // Verde oscuro para activos
+
+// Colores de texto glassmorphism
+$text-primary-fechas: #f9fafb;
+$text-secondary-fechas: #d1d5db;
+$text-muted-fechas: #9ca3af;
+
+// Fondos glassmorphism
+$background-primary-fechas: rgba(55, 65, 81, 0.85);
+$background-secondary-fechas: rgba(75, 85, 99, 0.9);
+$input-background-fechas: rgba(75, 85, 99, 0.95);
+
+// Bordes glassmorphism
+$border-primary-fechas: rgba(255, 255, 255, 0.2);
+$border-secondary-fechas: rgba(255, 255, 255, 0.15);
+
+// Gradientes glassmorphism premium
+$gradient-fechas-primary: linear-gradient(135deg,
+  rgba(255, 255, 255, 0.15) 0%,
+  rgba(76, 175, 80, 0.08) 30%,
+  rgba(255, 255, 255, 0.12) 70%,
+  rgba(76, 175, 80, 0.06) 100%);
+
+$gradient-fechas-secondary: linear-gradient(135deg,
+  rgba(76, 175, 80, 0.12) 0%,
+  rgba(255, 255, 255, 0.08) 50%,
+  rgba(76, 175, 80, 0.10) 100%);
+
+$gradient-fechas-hover: linear-gradient(135deg,
+  rgba(255, 255, 255, 0.2) 0%,
+  rgba(76, 175, 80, 0.12) 30%,
+  rgba(255, 255, 255, 0.15) 70%,
+  rgba(76, 175, 80, 0.08) 100%);
+
+// Sombras glassmorphism premium
+$shadow-fechas-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
+$shadow-fechas-md: 0 8px 24px rgba(0, 0, 0, 0.2);
+$shadow-fechas-lg: 0 16px 40px rgba(0, 0, 0, 0.3);
+
+// Mixin glassmorphism refinado para fechas
+@mixin glass-fechas-card {
+  background: $glass-fechas-primary;
+  background-image: $gradient-fechas-primary;
+  border: 1px solid $border-primary-fechas;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 8px;
+  box-shadow: $shadow-fechas-md;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@mixin glass-fechas-hover {
+  background-image: $gradient-fechas-hover;
+  transform: translateY(-1px);
+  box-shadow: $shadow-fechas-lg;
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+// Enhanced glassmorphism tab content
 .tab-content {
   position: relative;
   padding: 1.5rem;
-  background: #1a1a1a;
+  background: transparent; // Inherit dashboard background
   min-height: 100vh;
-  color: #ffffff;
+  color: $text-primary-fechas;
 }
 
 .loading-overlay {
@@ -13,25 +83,30 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  /* Premium glassmorphism loading overlay */
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10;
-  border-radius: 4px;
+  border-radius: 8px;
 
   .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid #333333;
-    border-top: 3px solid #3498db;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid $fechas-theme-color;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   }
 
   p {
-    color: #ffffff;
+    color: $text-primary-fechas;
     margin-top: 1rem;
+    font-weight: 500;
   }
 }
 
@@ -41,26 +116,51 @@
   gap: 1.5rem;
 }
 
-// Sección del formulario
+// Enhanced glassmorphism form section
 .form-section {
-  background: #2a2a2a;
-  border-radius: 8px;
+  @include glass-fechas-card;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+
+  // Efecto de brillo sutil
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
+    transition: left 0.5s ease;
+  }
+
+  &:hover {
+    @include glass-fechas-hover;
+
+    &::before {
+      left: 100%;
+    }
+  }
 
   h3 {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0 0 1.5rem;
-    color: #ffffff;
+    color: $text-primary-fechas;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
     &::before {
       content: "📝";
       font-size: 1.5rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
   }
 
@@ -78,9 +178,24 @@
       display: flex;
       align-items: center;
       padding: 0 1rem;
-      background: rgba(52, 152, 219, 0.1);
+      /* Enhanced glassmorphism for checkbox */
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.15) 0%,
+        rgba(76, 175, 80, 0.08) 100%);
       border-radius: 6px;
-      border: 1px solid rgba(52, 152, 219, 0.2);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(76, 175, 80, 0.2) 0%,
+          rgba(76, 175, 80, 0.12) 100%);
+        border-color: rgba(76, 175, 80, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+      }
     }
   }
 
@@ -94,29 +209,68 @@
     gap: 0.75rem;
     margin-top: 1.5rem;
     padding-top: 1rem;
-    border-top: 1px solid #444444;
+    border-top: 1px solid $border-secondary-fechas;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(76, 175, 80, 0.3),
+        transparent);
+    }
   }
 }
 
-// Sección de lista de fechas
+// Enhanced glassmorphism dates list section
 .dates-list-section {
-  background: #2a2a2a;
-  border-radius: 8px;
+  @include glass-fechas-card;
   padding: 1.5rem;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+
+  // Efecto de brillo sutil
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
+    transition: left 0.5s ease;
+  }
+
+  &:hover {
+    @include glass-fechas-hover;
+
+    &::before {
+      left: 100%;
+    }
+  }
 
   h3 {
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0 0 1.5rem;
-    color: #ffffff;
+    color: $text-primary-fechas;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
     &::before {
       content: "📅";
       font-size: 1.5rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
   }
 
@@ -128,45 +282,99 @@
     overflow-y: auto;
     padding-right: 0.5rem;
 
+    // Enhanced glassmorphism scrollbar
     &::-webkit-scrollbar {
-      width: 6px;
+      width: 8px;
     }
 
     &::-webkit-scrollbar-track {
-      background: rgba(68, 68, 68, 0.5);
-      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #666666;
-      border-radius: 3px;
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.6) 0%,
+        rgba(76, 175, 80, 0.8) 100%);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
 
       &:hover {
-        background: #888888;
+        background: linear-gradient(135deg,
+          rgba(76, 175, 80, 0.8) 0%,
+          rgba(76, 175, 80, 1) 100%);
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
       }
     }
   }
 
   .date-item {
-    background-color: #333333;
+    /* Enhanced glassmorphism for date items */
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.8) 0%,
+      rgba(55, 65, 81, 0.9) 100%);
+    background-image: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: $shadow-fechas-sm;
     padding: 1rem;
-    border-left: 4px solid #3498db;
-    transition: all 0.2s ease;
+    border-left: 4px solid $fechas-theme-color;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+
+    // Efecto de brillo sutil
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent);
+      transition: left 0.5s ease;
+    }
 
     &:hover {
-      background-color: #3a3a3a;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      background-image: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(76, 175, 80, 0.08) 50%,
+        rgba(255, 255, 255, 0.08) 100%);
+      transform: translateY(-2px);
+      box-shadow: $shadow-fechas-md;
+      border-color: rgba(76, 175, 80, 0.3);
+
+      &::before {
+        left: 100%;
+      }
     }
 
     &.important {
       border-left-color: #f39c12;
-      background-color: rgba(243, 156, 18, 0.1);
+      background-image: linear-gradient(135deg,
+        rgba(243, 156, 18, 0.15) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(243, 156, 18, 0.1) 100%);
 
       &:hover {
-        background-color: rgba(243, 156, 18, 0.15);
+        background-image: linear-gradient(135deg,
+          rgba(243, 156, 18, 0.2) 0%,
+          rgba(255, 255, 255, 0.12) 50%,
+          rgba(243, 156, 18, 0.15) 100%);
+        border-left-color: #e67e22;
+        box-shadow:
+          $shadow-fechas-md,
+          0 0 20px rgba(243, 156, 18, 0.2);
       }
     }
 
@@ -175,6 +383,8 @@
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 0.75rem;
+      position: relative;
+      z-index: 1;
 
       .date-title {
         display: flex;
@@ -185,11 +395,15 @@
           margin: 0;
           font-size: 1.1rem;
           font-weight: 600;
-          color: #ffffff;
+          color: $text-primary-fechas;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .important-badge {
-          background: #f39c12;
+          /* Enhanced glassmorphism badge */
+          background: linear-gradient(135deg,
+            rgba(243, 156, 18, 0.9) 0%,
+            rgba(243, 156, 18, 0.8) 100%);
           color: white;
           padding: 0.25rem 0.5rem;
           border-radius: 4px;
@@ -197,6 +411,20 @@
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          border: 1px solid rgba(243, 156, 18, 0.5);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: linear-gradient(135deg,
+              rgba(243, 156, 18, 1) 0%,
+              rgba(243, 156, 18, 0.9) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+          }
         }
       }
 
@@ -207,6 +435,9 @@
     }
 
     .date-content {
+      position: relative;
+      z-index: 1;
+
       .date-info {
         display: flex;
         flex-wrap: wrap;
@@ -216,19 +447,36 @@
         .info-item {
           display: flex;
           align-items: center;
-          background: rgba(52, 152, 219, 0.1);
+          /* Enhanced glassmorphism for info items */
+          background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.15) 0%,
+            rgba(76, 175, 80, 0.08) 100%);
           padding: 0.25rem 0.5rem;
           border-radius: 4px;
+          border: 1px solid rgba(76, 175, 80, 0.2);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: linear-gradient(135deg,
+              rgba(76, 175, 80, 0.2) 0%,
+              rgba(76, 175, 80, 0.12) 100%);
+            border-color: rgba(76, 175, 80, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+          }
 
           i {
             font-size: 14px;
             margin-right: 0.5rem;
-            color: #3498db;
+            color: $fechas-theme-color;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
           }
 
           span {
             font-size: 0.875rem;
-            color: #b0b0b0;
+            color: $text-secondary-fechas;
             font-weight: 500;
           }
         }
@@ -237,10 +485,11 @@
       .date-description {
         margin: 0;
         font-size: 0.875rem;
-        color: #b0b0b0;
+        color: $text-secondary-fechas;
         white-space: pre-line;
         line-height: 1.4;
         padding: 0.5rem 0;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
     }
   }
@@ -251,33 +500,56 @@
     align-items: center;
     justify-content: center;
     padding: 3rem 1rem;
-    background-color: #333333;
+    /* Enhanced glassmorphism for empty state */
+    background: linear-gradient(135deg,
+      rgba(55, 65, 81, 0.6) 0%,
+      rgba(75, 85, 99, 0.8) 100%);
+    background-image: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 100%);
+    border: 2px dashed rgba(76, 175, 80, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-radius: 8px;
-    border: 2px dashed #666666;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: rgba(76, 175, 80, 0.6);
+      background-image: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(76, 175, 80, 0.06) 50%,
+        rgba(255, 255, 255, 0.08) 100%);
+    }
 
     i {
       font-size: 3rem;
       margin-bottom: 1rem;
-      color: #666666;
+      color: $text-muted-fechas;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      transition: all 0.3s ease;
     }
 
     h4 {
       margin: 0 0 0.5rem 0;
       font-size: 1.25rem;
       font-weight: 600;
-      color: #ffffff;
+      color: $text-primary-fechas;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     p {
       margin: 0;
       font-size: 0.875rem;
-      color: #b0b0b0;
+      color: $text-secondary-fechas;
       text-align: center;
+      font-weight: 500;
     }
   }
 }
 
-// Media queries para responsive
+// ===== RESPONSIVE DESIGN GLASSMORPHISM =====
+// Enhanced responsive design maintaining glassmorphism effects
+
 @media (max-width: 992px) {
   .fechas-container {
     grid-template-columns: 1fr;
@@ -286,6 +558,9 @@
   .form-section,
   .dates-list-section {
     margin-bottom: 1rem;
+    // Maintain glassmorphism on smaller screens
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 }
 
@@ -297,6 +572,17 @@
   .form-section,
   .dates-list-section {
     padding: 1rem;
+    // Optimize glassmorphism for mobile
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    h3 {
+      font-size: 1.125rem;
+
+      &::before {
+        font-size: 1.25rem;
+      }
+    }
   }
 
   .form-section .form-row {
@@ -305,16 +591,81 @@
     .important-checkbox {
       padding: 0.75rem;
       margin-top: 0.5rem;
+      // Enhanced mobile glassmorphism
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.2) 0%,
+        rgba(76, 175, 80, 0.12) 100%);
+      border-color: rgba(76, 175, 80, 0.4);
     }
   }
 
   .date-item {
+    padding: 0.875rem;
+
     .date-header {
       flex-direction: column;
       gap: 0.75rem;
 
       .date-actions {
         align-self: flex-end;
+      }
+
+      .date-title h4 {
+        font-size: 1rem;
+      }
+    }
+
+    .date-content .date-info {
+      gap: 0.5rem;
+
+      .info-item {
+        padding: 0.375rem 0.625rem;
+        font-size: 0.8125rem;
+      }
+    }
+  }
+
+  .empty-dates {
+    padding: 2rem 1rem;
+
+    i {
+      font-size: 2.5rem;
+    }
+
+    h4 {
+      font-size: 1.125rem;
+    }
+
+    p {
+      font-size: 0.8125rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-content {
+    padding: 0.75rem;
+  }
+
+  .form-section,
+  .dates-list-section {
+    padding: 0.875rem;
+    margin-bottom: 0.875rem;
+    // Minimal glassmorphism for very small screens
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .date-item {
+    padding: 0.75rem;
+
+    .date-content .date-info {
+      flex-direction: column;
+      gap: 0.375rem;
+
+      .info-item {
+        width: 100%;
+        justify-content: center;
       }
     }
   }

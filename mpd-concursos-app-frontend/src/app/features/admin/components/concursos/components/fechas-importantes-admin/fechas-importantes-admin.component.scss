@@ -1,12 +1,64 @@
+@use 'src/styles/variables' as *;
+
+/* ===== ENHANCED GLASSMORPHISM DESIGN SYSTEM - FECHAS IMPORTANTES ===== */
+/* Consistent with admin dashboard, contests module, and sidebar patterns */
+
+/* Glassmorphism Design System Variables */
+$glass-background-primary: rgba(55, 65, 81, 0.8);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(31, 41, 55, 0.85);
+$glass-hover-primary: rgba(75, 85, 99, 0.6);
+$glass-active-primary: rgba(55, 65, 81, 0.95);
+
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-muted: #9ca3af;
+
+$focus-color: #3b82f6;
+$focus-color-secondary: rgba(59, 130, 246, 0.2);
+$contest-theme-color: #4CAF50;
+$contest-theme-secondary: rgba(76, 175, 80, 0.2);
+
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+$border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.2);
+
+$card-shadow-base: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+$card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.25);
+
 .dashboard-container {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
-  background: #1a1a1a;
+  background: transparent; // Inherit dashboard background
   min-height: 100vh;
+  position: relative;
 
   .header {
     margin-bottom: 2rem;
+    /* Enhanced glassmorphism header */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-tertiary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(circle at 70% 30%, rgba(76, 175, 80, 0.1) 0%, transparent 50%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-lg;
+    padding: 1.5rem;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 
     h1 {
       display: flex;
@@ -14,17 +66,18 @@
       gap: 0.75rem;
       font-size: 2rem;
       font-weight: 600;
-      color: #ffffff;
+      color: $text-primary;
       margin: 0 0 0.75rem 0;
 
       i {
-        color: #3498db;
+        color: $contest-theme-color;
         font-size: 1.75rem;
+        filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
       }
     }
 
     .description {
-      color: #b0b0b0;
+      color: $text-secondary;
       margin: 0;
       font-size: 1rem;
       line-height: 1.5;
@@ -37,39 +90,144 @@
     align-items: center;
     justify-content: center;
     padding: 3rem;
-    color: #b0b0b0;
+    /* Enhanced glassmorphism loading container */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-secondary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-lg;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    color: $text-secondary;
 
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #333333;
-      border-top: 3px solid #3498db;
+      border: 3px solid rgba(75, 85, 99, 0.3);
+      border-top: 3px solid $contest-theme-color;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
+      filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
     }
 
     p {
       margin: 0;
       font-size: 1rem;
-      color: #ffffff;
+      color: $text-primary;
     }
   }
 
   .stats-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2rem;
   }
 
-  .filters-card {
+  /* Enhanced Premium Glassmorphism for Stat Cards */
+  ::ng-deep app-stat-card {
+    .stat-card {
+      /* Premium glassmorphism base */
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 70% 30%, rgba(76, 175, 80, 0.1) 0%, transparent 50%);
+      border: $border-glass-medium;
+      backdrop-filter: blur(10px);
+      border-radius: $border-radius-lg;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      transition: all $transition-smooth;
+      position: relative;
+      overflow: hidden;
+
+      /* Subtle animated gradient overlay */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          transparent 100%);
+        transition: left 0.6s ease;
+      }
+
+      &:hover {
+        background-image:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
+          radial-gradient(circle at 70% 30%, rgba(76, 175, 80, 0.15) 0%, transparent 50%);
+        transform: translateY(-2px);
+        box-shadow: $card-shadow-hover,
+          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+
+        &::before {
+          left: 100%;
+        }
+      }
+
+      /* Enhanced text colors for glassmorphism */
+      .stat-title {
+        color: $text-primary !important;
+        font-weight: 600;
+      }
+
+      .stat-value {
+        color: $text-primary !important;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      .stat-subtitle {
+        color: $text-secondary !important;
+      }
+
+      /* Contest theme icon colors */
+      .stat-icon {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      }
+    }
+  }
+
+  /* Enhanced Glassmorphism Filters Card */
+  ::ng-deep .filters-card {
     margin-bottom: 2rem;
+
+    /* Apply glassmorphism to custom card component */
+    .custom-card {
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 80% 20%, rgba(76, 175, 80, 0.08) 0%, transparent 50%);
+      border: $border-glass-medium;
+      backdrop-filter: blur(10px);
+      border-radius: $border-radius-lg;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    }
 
     .filters-form {
       .form-row {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
         margin-bottom: 1.5rem;
       }
@@ -82,7 +240,7 @@
         .field-label {
           font-size: 0.875rem;
           font-weight: 600;
-          color: #ffffff;
+          color: $text-primary;
           margin-bottom: 0.25rem;
         }
 
@@ -90,22 +248,31 @@
         .form-select {
           width: 100%;
           padding: 0.75rem 1rem;
-          border: 1px solid #444444;
-          border-radius: 6px;
-          background: #2a2a2a;
-          color: #ffffff;
+          border: $border-glass-light;
+          border-radius: $border-radius-md;
+          /* Enhanced glassmorphism inputs */
+          background: linear-gradient(135deg,
+            rgba(75, 85, 99, 0.6) 0%,
+            rgba(55, 65, 81, 0.7) 100%);
+          backdrop-filter: blur(6px);
+          color: $text-primary;
           font-size: 0.875rem;
-          transition: all 0.2s ease;
+          transition: all $transition-normal;
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 
           &:focus {
             outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-            background: #333333;
+            border-color: $focus-color;
+            box-shadow:
+              0 0 0 2px $focus-color-secondary,
+              inset 0 1px 3px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg,
+              rgba(75, 85, 99, 0.8) 0%,
+              rgba(55, 65, 81, 0.9) 100%);
           }
 
           &::placeholder {
-            color: #888888;
+            color: $text-muted;
           }
         }
 
@@ -114,8 +281,8 @@
 
           option {
             padding: 0.5rem;
-            background: #2a2a2a;
-            color: #ffffff;
+            background: rgba(55, 65, 81, 0.95);
+            color: $text-primary;
           }
         }
       }
@@ -124,55 +291,93 @@
         display: flex;
         gap: 1rem;
         justify-content: flex-start;
+        flex-wrap: wrap;
       }
     }
   }
 
-  .table-card {
+  /* Enhanced Glassmorphism Table Card */
+  ::ng-deep .table-card {
+    /* Apply glassmorphism to custom card component */
+    .custom-card {
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 90% 10%, rgba(76, 175, 80, 0.08) 0%, transparent 50%);
+      border: $border-glass-medium;
+      backdrop-filter: blur(10px);
+      border-radius: $border-radius-lg;
+      box-shadow:
+        $card-shadow-base,
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    }
+
     .table-container {
       overflow-x: auto;
+      border-radius: $border-radius-lg;
 
       .custom-table {
         width: 100%;
         min-width: 800px;
         border-collapse: collapse;
-        background: #2a2a2a;
-        border-radius: 8px;
+        /* Enhanced glassmorphism table background */
+        background: linear-gradient(135deg,
+          rgba(75, 85, 99, 0.6) 0%,
+          rgba(55, 65, 81, 0.7) 100%);
+        backdrop-filter: blur(8px);
+        border-radius: $border-radius-lg;
         overflow: hidden;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        box-shadow:
+          0 4px 16px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
         thead {
-          background: #333333;
+          /* Premium glassmorphism header */
+          background: linear-gradient(135deg,
+            $glass-background-secondary 0%,
+            $glass-background-primary 100%);
+          background-image:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
+            radial-gradient(circle at 50% 0%, rgba(76, 175, 80, 0.1) 0%, transparent 50%);
+          backdrop-filter: blur(10px);
 
           th {
             padding: 1rem 1.5rem;
             text-align: left;
             font-weight: 600;
-            color: #ffffff;
-            border-bottom: 2px solid #444444;
+            color: $text-primary;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
             font-size: 0.875rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            position: relative;
 
             &.sortable {
               cursor: pointer;
               user-select: none;
-              transition: background-color 0.2s ease;
+              transition: all $transition-normal;
 
               &:hover {
-                background: rgba(52, 152, 219, 0.1);
+                background: linear-gradient(135deg,
+                  rgba(76, 175, 80, 0.15) 0%,
+                  rgba(76, 175, 80, 0.1) 100%);
+                color: $text-primary;
               }
 
               .sort-icon {
                 margin-left: 0.5rem;
                 opacity: 0.5;
-                transition: opacity 0.2s ease;
-                color: #b0b0b0;
+                transition: all $transition-normal;
+                color: $text-secondary;
               }
 
               &:hover .sort-icon {
                 opacity: 1;
-                color: #3498db;
+                color: $contest-theme-color;
+                transform: translateY(-1px);
               }
             }
 
@@ -185,39 +390,58 @@
 
         tbody {
           .table-row {
-            transition: background-color 0.2s ease;
+            transition: all $transition-normal;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
             &:hover {
-              background: rgba(52, 152, 219, 0.08);
+              background: linear-gradient(135deg,
+                rgba(76, 175, 80, 0.08) 0%,
+                rgba(76, 175, 80, 0.05) 100%);
+              transform: translateY(-1px);
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             }
 
             &:nth-child(even) {
-              background: rgba(255, 255, 255, 0.02);
+              background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.03) 0%,
+                rgba(255, 255, 255, 0.01) 100%);
 
               &:hover {
-                background: rgba(52, 152, 219, 0.12);
+                background: linear-gradient(135deg,
+                  rgba(76, 175, 80, 0.1) 0%,
+                  rgba(76, 175, 80, 0.06) 100%);
               }
             }
 
             td {
               padding: 1rem 1.5rem;
-              border-bottom: 1px solid #444444;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.08);
               vertical-align: middle;
-              color: #ffffff;
+              color: $text-primary;
 
               &.contest-cell {
                 .contest-info {
                   .contest-title {
                     display: block;
                     font-weight: 600;
-                    color: #ffffff;
+                    color: $text-primary;
                     margin-bottom: 0.25rem;
+                    line-height: 1.4;
                   }
 
                   .contest-id {
-                    display: block;
+                    display: inline-block;
                     font-size: 0.75rem;
-                    color: #b0b0b0;
+                    color: $text-secondary;
+                    /* Enhanced glassmorphism badge for ID */
+                    background: linear-gradient(135deg,
+                      rgba(75, 85, 99, 0.6) 0%,
+                      rgba(55, 65, 81, 0.7) 100%);
+                    padding: 0.25rem 0.5rem;
+                    border-radius: $border-radius-sm;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(4px);
+                    font-weight: 500;
                   }
                 }
               }
@@ -228,30 +452,56 @@
                   align-items: center;
                   gap: 0.5rem;
                   padding: 0.5rem 0.75rem;
-                  border-radius: 4px;
+                  border-radius: $border-radius-lg;
                   font-size: 0.75rem;
                   font-weight: 600;
                   text-transform: uppercase;
                   letter-spacing: 0.5px;
+                  /* Enhanced glassmorphism badges */
+                  backdrop-filter: blur(6px);
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  transition: all $transition-normal;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+                  &:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                  }
 
                   &.type-inscription {
-                    background: rgba(52, 152, 219, 0.1);
-                    color: #3498db;
+                    background: linear-gradient(135deg,
+                      rgba(59, 130, 246, 0.2) 0%,
+                      rgba(59, 130, 246, 0.1) 100%);
+                    color: #60a5fa;
+                    border-color: rgba(59, 130, 246, 0.3);
                   }
 
                   &.type-exam {
-                    background: rgba(243, 156, 18, 0.1);
-                    color: #f39c12;
+                    background: linear-gradient(135deg,
+                      rgba(245, 158, 11, 0.2) 0%,
+                      rgba(245, 158, 11, 0.1) 100%);
+                    color: #fbbf24;
+                    border-color: rgba(245, 158, 11, 0.3);
                   }
 
                   &.type-results {
-                    background: rgba(46, 204, 113, 0.1);
-                    color: #2ecc71;
+                    background: linear-gradient(135deg,
+                      rgba(76, 175, 80, 0.2) 0%,
+                      rgba(76, 175, 80, 0.1) 100%);
+                    color: $contest-theme-color;
+                    border-color: rgba(76, 175, 80, 0.3);
                   }
 
                   &.type-other {
-                    background: rgba(155, 89, 182, 0.1);
-                    color: #9b59b6;
+                    background: linear-gradient(135deg,
+                      rgba(139, 92, 246, 0.2) 0%,
+                      rgba(139, 92, 246, 0.1) 100%);
+                    color: #a78bfa;
+                    border-color: rgba(139, 92, 246, 0.3);
+                  }
+
+                  i {
+                    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
                   }
                 }
               }
@@ -261,37 +511,56 @@
                   .date-value {
                     display: block;
                     font-weight: 600;
-                    color: #ffffff;
-                    margin-bottom: 0.25rem;
+                    color: $text-primary;
+                    margin-bottom: 0.5rem;
+                    font-size: 0.875rem;
                   }
 
                   .days-until {
                     display: inline-block;
-                    padding: 2px 0.5rem;
-                    border-radius: 4px;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: $border-radius-lg;
                     font-size: 0.7rem;
                     font-weight: 600;
                     text-transform: uppercase;
                     letter-spacing: 0.3px;
+                    /* Enhanced glassmorphism status badges */
+                    backdrop-filter: blur(4px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    transition: all $transition-normal;
+                    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 
                     &.status-upcoming {
-                      background: rgba(52, 152, 219, 0.1);
-                      color: #3498db;
+                      background: linear-gradient(135deg,
+                        rgba(59, 130, 246, 0.2) 0%,
+                        rgba(59, 130, 246, 0.1) 100%);
+                      color: #60a5fa;
+                      border-color: rgba(59, 130, 246, 0.2);
                     }
 
                     &.status-today {
-                      background: rgba(243, 156, 18, 0.1);
-                      color: #f39c12;
+                      background: linear-gradient(135deg,
+                        rgba(245, 158, 11, 0.2) 0%,
+                        rgba(245, 158, 11, 0.1) 100%);
+                      color: #fbbf24;
+                      border-color: rgba(245, 158, 11, 0.2);
+                      animation: pulse 2s infinite;
                     }
 
                     &.status-overdue {
-                      background: rgba(231, 76, 60, 0.1);
-                      color: #e74c3c;
+                      background: linear-gradient(135deg,
+                        rgba(239, 68, 68, 0.2) 0%,
+                        rgba(239, 68, 68, 0.1) 100%);
+                      color: #f87171;
+                      border-color: rgba(239, 68, 68, 0.2);
                     }
 
                     &.status-completed {
-                      background: rgba(46, 204, 113, 0.1);
-                      color: #2ecc71;
+                      background: linear-gradient(135deg,
+                        rgba(76, 175, 80, 0.2) 0%,
+                        rgba(76, 175, 80, 0.1) 100%);
+                      color: $contest-theme-color;
+                      border-color: rgba(76, 175, 80, 0.2);
                     }
                   }
                 }
@@ -303,30 +572,57 @@
                   align-items: center;
                   gap: 0.5rem;
                   padding: 0.5rem 0.75rem;
-                  border-radius: 4px;
+                  border-radius: $border-radius-lg;
                   font-size: 0.75rem;
                   font-weight: 600;
                   text-transform: uppercase;
                   letter-spacing: 0.5px;
+                  /* Enhanced glassmorphism status badges */
+                  backdrop-filter: blur(6px);
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  transition: all $transition-normal;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+                  &:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                  }
 
                   &.status-upcoming {
-                    background: rgba(52, 152, 219, 0.1);
-                    color: #3498db;
+                    background: linear-gradient(135deg,
+                      rgba(59, 130, 246, 0.2) 0%,
+                      rgba(59, 130, 246, 0.1) 100%);
+                    color: #60a5fa;
+                    border-color: rgba(59, 130, 246, 0.3);
                   }
 
                   &.status-today {
-                    background: rgba(243, 156, 18, 0.1);
-                    color: #f39c12;
+                    background: linear-gradient(135deg,
+                      rgba(245, 158, 11, 0.2) 0%,
+                      rgba(245, 158, 11, 0.1) 100%);
+                    color: #fbbf24;
+                    border-color: rgba(245, 158, 11, 0.3);
+                    animation: pulse 2s infinite;
                   }
 
                   &.status-overdue {
-                    background: rgba(231, 76, 60, 0.1);
-                    color: #e74c3c;
+                    background: linear-gradient(135deg,
+                      rgba(239, 68, 68, 0.2) 0%,
+                      rgba(239, 68, 68, 0.1) 100%);
+                    color: #f87171;
+                    border-color: rgba(239, 68, 68, 0.3);
                   }
 
                   &.status-completed {
-                    background: rgba(46, 204, 113, 0.1);
-                    color: #2ecc71;
+                    background: linear-gradient(135deg,
+                      rgba(76, 175, 80, 0.2) 0%,
+                      rgba(76, 175, 80, 0.1) 100%);
+                    color: $contest-theme-color;
+                    border-color: rgba(76, 175, 80, 0.3);
+                  }
+
+                  i {
+                    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
                   }
                 }
               }
@@ -340,48 +636,64 @@
                   justify-content: center;
                   align-items: center;
 
-                  // Estilos para botones de acción personalizados
                   .action-btn {
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 6px;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: $border-radius-lg;
                     border: none;
                     cursor: pointer;
-                    transition: all 0.2s ease;
+                    transition: all $transition-normal;
                     text-decoration: none;
                     font-size: 0.875rem;
+                    /* Enhanced glassmorphism action buttons */
+                    backdrop-filter: blur(6px);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
                     &.btn-view {
-                      background: rgba(52, 152, 219, 0.1);
-                      color: #3498db;
-                      border: 1px solid rgba(52, 152, 219, 0.2);
+                      background: linear-gradient(135deg,
+                        rgba(59, 130, 246, 0.2) 0%,
+                        rgba(59, 130, 246, 0.1) 100%);
+                      color: #60a5fa;
+                      border-color: rgba(59, 130, 246, 0.3);
 
                       &:hover {
-                        background: rgba(52, 152, 219, 0.2);
-                        border-color: #3498db;
-                        transform: translateY(-1px);
-                        box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+                        background: linear-gradient(135deg,
+                          rgba(59, 130, 246, 0.3) 0%,
+                          rgba(59, 130, 246, 0.2) 100%);
+                        border-color: rgba(59, 130, 246, 0.4);
+                        transform: translateY(-2px) scale(1.05);
+                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
                       }
                     }
 
                     &.btn-edit {
-                      background: rgba(243, 156, 18, 0.1);
-                      color: #f39c12;
-                      border: 1px solid rgba(243, 156, 18, 0.2);
+                      background: linear-gradient(135deg,
+                        rgba(76, 175, 80, 0.2) 0%,
+                        rgba(76, 175, 80, 0.1) 100%);
+                      color: $contest-theme-color;
+                      border-color: rgba(76, 175, 80, 0.3);
 
                       &:hover {
-                        background: rgba(243, 156, 18, 0.2);
-                        border-color: #f39c12;
-                        transform: translateY(-1px);
-                        box-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
+                        background: linear-gradient(135deg,
+                          rgba(76, 175, 80, 0.3) 0%,
+                          rgba(76, 175, 80, 0.2) 100%);
+                        border-color: rgba(76, 175, 80, 0.4);
+                        transform: translateY(-2px) scale(1.05);
+                        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
                       }
+                    }
+
+                    &:active {
+                      transform: translateY(0) scale(1.02);
                     }
 
                     i {
                       font-size: 0.875rem;
+                      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
                     }
                   }
                 }
@@ -393,48 +705,108 @@
     }
   }
 
+  /* Enhanced Glassmorphism No Data Section */
   .no-data {
     text-align: center;
     padding: 3rem;
-    color: #b0b0b0;
+    /* Enhanced glassmorphism no-data container */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-secondary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-lg;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    color: $text-secondary;
 
     i {
       font-size: 3rem;
       margin-bottom: 1.5rem;
-      opacity: 0.5;
-      color: #666666;
+      opacity: 0.6;
+      color: $text-muted;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
 
     h4 {
       margin: 0 0 0.75rem 0;
       font-size: 1.25rem;
       font-weight: 600;
-      color: #ffffff;
+      color: $text-primary;
     }
 
     p {
       margin: 0 0 1.5rem 0;
       font-size: 1rem;
       line-height: 1.5;
-      color: #b0b0b0;
+      color: $text-secondary;
     }
   }
 }
+
+/* ===== ANIMATIONS ===== */
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-// Responsive design
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+/* Enhanced responsive design with glassmorphism optimizations */
+
+@media (max-width: 1200px) {
+  .dashboard-container {
+    .stats-cards {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    ::ng-deep .filters-card .filters-form .form-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
 @media (max-width: 1024px) {
   .dashboard-container {
-    .filters-card .filters-form .form-row {
+    padding: 1.25rem;
+
+    .header {
+      padding: 1.25rem;
+
+      h1 {
+        font-size: 1.75rem;
+      }
+    }
+
+    ::ng-deep .filters-card .filters-form .form-row {
       grid-template-columns: 1fr 1fr;
+      gap: 1rem;
     }
 
     .stats-cards {
       grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    /* Optimize glassmorphism for tablets */
+    ::ng-deep app-stat-card .stat-card,
+    ::ng-deep .filters-card .custom-card,
+    ::ng-deep .table-card .custom-card {
+      backdrop-filter: blur(8px);
     }
   }
 }
@@ -443,16 +815,110 @@
   .dashboard-container {
     padding: 1rem;
 
-    .filters-card .filters-form .form-row {
-      grid-template-columns: 1fr;
+    .header {
+      padding: 1rem;
+
+      h1 {
+        font-size: 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+
+        i {
+          font-size: 1.5rem;
+        }
+      }
+    }
+
+    ::ng-deep .filters-card .filters-form {
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .filter-actions {
+        justify-content: stretch;
+
+        ::ng-deep app-custom-button {
+          flex: 1;
+        }
+      }
     }
 
     .stats-cards {
       grid-template-columns: 1fr;
+      gap: 1rem;
     }
 
-    .table-card .table-container .custom-table {
-      min-width: 600px;
+    ::ng-deep .table-card {
+      .table-container {
+        .custom-table {
+          min-width: 600px;
+          font-size: 0.875rem;
+
+          thead th {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+          }
+
+          tbody td {
+            padding: 0.75rem 1rem;
+
+            &.actions-cell .action-buttons .action-btn {
+              width: 32px;
+              height: 32px;
+            }
+          }
+        }
+      }
+    }
+
+    /* Mobile optimizations for glassmorphism */
+    ::ng-deep app-stat-card .stat-card,
+    ::ng-deep .filters-card .custom-card,
+    ::ng-deep .table-card .custom-card,
+    .loading-container,
+    .no-data {
+      /* Reduce blur for better mobile performance */
+      backdrop-filter: blur(6px);
+
+      /* Simplify hover effects on mobile */
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0.75rem;
+
+    .header {
+      padding: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stats-cards {
+      gap: 0.75rem;
+    }
+
+    ::ng-deep .table-card .table-container .custom-table {
+      min-width: 500px;
+
+      .type-badge,
+      .status-badge,
+      .days-until {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+      }
+    }
+
+    /* Further mobile optimizations */
+    ::ng-deep app-stat-card .stat-card,
+    ::ng-deep .filters-card .custom-card,
+    ::ng-deep .table-card .custom-card {
+      backdrop-filter: blur(4px);
     }
   }
 }

@@ -46,13 +46,25 @@ export const ADMIN_ROUTES: Routes = [
         path: 'reportes',
         children: [
           { path: '', component: ReportesAdminComponent },
+          { path: 'dashboard', component: ReportesAdminComponent },
           { path: 'constructor', component: ReportBuilderComponent }
         ]
       },
       { path: 'configuracion', component: ConfiguracionAdminComponent },
       { path: 'examenes', component: ExamenesAdminComponent },
       { path: 'preguntas', component: PreguntasAdminComponent },
-      { path: 'comunicaciones', component: ComunicacionesAdminComponent },
+      // Rutas para comunicaciones
+      {
+        path: 'comunicaciones',
+        children: [
+          { path: '', redirectTo: 'mensajes', pathMatch: 'full' },
+          { path: 'mensajes', component: ComunicacionesAdminComponent, data: { activeTab: 'mensajes' } },
+          { path: 'plantillas', component: ComunicacionesAdminComponent, data: { activeTab: 'plantillas' } },
+          { path: 'historial', component: ComunicacionesAdminComponent, data: { activeTab: 'historial' } },
+          { path: 'estadisticas', component: ComunicacionesAdminComponent, data: { activeTab: 'estadisticas' } },
+          { path: 'notificaciones', component: ComunicacionesAdminComponent, data: { activeTab: 'notificaciones' } }
+        ]
+      },
       // Rutas para concursos
       {
         path: 'concursos',
@@ -99,16 +111,49 @@ export const ADMIN_ROUTES: Routes = [
         ]
       },
 
-      // Rutas para monitoreo del sistema
+      // Rutas para sistema (monitoreo, auditoría, backups)
+      {
+        path: 'sistema',
+        children: [
+          // Rutas para monitoreo del sistema
+          {
+            path: 'monitoreo',
+            children: [
+              { path: '', component: SystemMonitoringComponent },
+              { path: 'rendimiento', component: SystemMonitoringComponent, data: { activeTab: 0 } },
+              { path: 'base-datos', component: SystemMonitoringComponent, data: { activeTab: 1 } },
+              { path: 'alertas', component: SystemMonitoringComponent, data: { activeTab: 2 } },
+              { path: 'configuracion', component: SystemMonitoringComponent, data: { activeTab: 3 } }
+            ]
+          },
+          // Rutas para auditoría del sistema
+          {
+            path: 'auditoria',
+            children: [
+              { path: '', component: SystemMonitoringComponent, data: { mode: 'audit' } },
+              { path: 'usuarios', component: SystemMonitoringComponent, data: { mode: 'audit', filter: 'users' } },
+              { path: 'sistema', component: SystemMonitoringComponent, data: { mode: 'audit', filter: 'system' } },
+              { path: 'seguridad', component: SystemMonitoringComponent, data: { mode: 'audit', filter: 'security' } }
+            ]
+          },
+          // Rutas para copias de seguridad
+          {
+            path: 'backups',
+            children: [
+              { path: '', component: SystemMonitoringComponent, data: { mode: 'backup' } },
+              { path: 'automaticos', component: SystemMonitoringComponent, data: { mode: 'backup', filter: 'auto' } },
+              { path: 'manuales', component: SystemMonitoringComponent, data: { mode: 'backup', filter: 'manual' } },
+              { path: 'configuracion', component: SystemMonitoringComponent, data: { mode: 'backup', filter: 'config' } }
+            ]
+          }
+        ]
+      },
+
+      // Ruta de compatibilidad para monitoreo directo
       {
         path: 'monitoreo',
-        children: [
-          { path: '', component: SystemMonitoringComponent },
-          { path: 'rendimiento', component: SystemMonitoringComponent, data: { activeTab: 0 } },
-          { path: 'base-datos', component: SystemMonitoringComponent, data: { activeTab: 1 } },
-          { path: 'alertas', component: SystemMonitoringComponent, data: { activeTab: 2 } },
-          { path: 'configuracion', component: SystemMonitoringComponent, data: { activeTab: 3 } }
-        ]
+        redirectTo: 'sistema/monitoreo',
+        pathMatch: 'full'
       },
 
       // Rutas para perfiles

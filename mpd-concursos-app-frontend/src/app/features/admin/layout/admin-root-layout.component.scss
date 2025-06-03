@@ -1,5 +1,14 @@
 @use 'src/styles/variables' as *;
 
+/* Glassmorphism Design System Variables */
+$glass-background-primary: rgba(55, 65, 81, 0.8);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$focus-color: #3b82f6;
+$border-radius-lg: 8px;
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
 .admin-root-layout {
   display: flex;
   flex-direction: column;
@@ -7,14 +16,17 @@
   width: 100%;
   overflow: hidden;
   position: relative;
-  background-color: $color-background;
-  color: $color-text-primary;
+  /* Glassmorphism background with gradient overlay */
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%);
+  background-attachment: fixed;
+  color: $text-primary;
 
-  // Asegurar que el indicador de sección esté siempre visible
-  app-section-indicator {
+  /* Header administrativo como elemento superior principal */
+  app-admin-header {
     position: sticky;
     top: 0;
     z-index: 1000;
+    flex-shrink: 0;
   }
 }
 
@@ -22,34 +34,59 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  /* Transparent background to let the main background show through */
+  background: transparent;
 }
 
 .admin-content {
   flex: 1;
   overflow-y: auto;
-  transition: margin-left 0.3s ease;
+  transition: margin-left $transition-normal;
   position: relative;
+  /* Transparent background for seamless integration */
+  background: transparent;
 
   &.sidebar-collapsed {
-    margin-left: 64px; // Ancho del sidebar colapsado
+    margin-left: 64px; /* Ancho del sidebar colapsado */
   }
 }
 
 .content-wrapper {
   padding: 1.5rem;
-  min-height: calc(100% - 48px); // Altura total menos la altura de breadcrumbs
+  min-height: calc(100% - 48px); /* Altura total menos la altura de breadcrumbs */
+  /* Transparent background to inherit dashboard background */
+  background: transparent;
 }
 
-// Botón flotante para abrir el sidebar en móvil
+/* Botón flotante para abrir el sidebar en móvil */
 .mobile-sidebar-toggle {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  /* Glassmorphism effect for mobile toggle */
+  background: $glass-background-primary;
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: $border-radius-lg;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: $transition-normal;
+
+  &:hover {
+    background: $glass-background-secondary;
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
 }
 
-// Media queries para responsive
+/* Media queries para responsive */
 @media (max-width: 767px) {
   .admin-content {
     margin-left: 0 !important;
@@ -58,17 +95,5 @@
 
   .content-wrapper {
     padding: 1rem;
-  }
-}
-
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .admin-root-layout {
-    background-color: $color-background-dark;
-    color: $color-text-primary-dark;
-  }
-
-  .mobile-sidebar-toggle {
-    background-color: $color-primary-dark;
   }
 }

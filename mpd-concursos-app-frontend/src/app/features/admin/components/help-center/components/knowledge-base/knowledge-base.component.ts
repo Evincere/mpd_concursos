@@ -1,17 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -23,224 +12,10 @@ import { AdminHelpService, HelpCategory, HelpArticle } from  '@core/services/adm
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatExpansionModule,
-    MatChipsModule,
-    MatDividerModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule
+    ReactiveFormsModule
   ],
-  template: `
-    <div class="knowledge-base">
-      <h2>Base de Conocimientos</h2>
-      <p class="section-description">
-        Explore nuestra base de conocimientos para encontrar información detallada sobre todas las funcionalidades del sistema.
-      </p>
-
-      <div class="filter-section">
-        <form [formGroup]="filterForm" class="filter-form">
-          <mat-form-field appearance="outline" class="category-filter">
-            <mat-label>Categoría</mat-label>
-            <mat-select formControlName="category" (selectionChange)="filterArticles()">
-              <mat-option value="">Todas</mat-option>
-              <mat-option *ngFor="let category of categories" [value]="category.id">
-                {{category.name}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="subcategory-filter" *ngIf="selectedCategory && selectedCategory.subcategories?.length">
-            <mat-label>Subcategoría</mat-label>
-            <mat-select formControlName="subcategory" (selectionChange)="filterArticles()">
-              <mat-option value="">Todas</mat-option>
-              <mat-option *ngFor="let subcategory of selectedCategory.subcategories" [value]="subcategory.id">
-                {{subcategory.name}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="level-filter">
-            <mat-label>Nivel</mat-label>
-            <mat-select formControlName="level" (selectionChange)="filterArticles()">
-              <mat-option value="">Todos</mat-option>
-              <mat-option value="basic">Básico</mat-option>
-              <mat-option value="intermediate">Intermedio</mat-option>
-              <mat-option value="advanced">Avanzado</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </form>
-      </div>
-
-      <div *ngIf="isLoading" class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <span>Cargando artículos...</span>
-      </div>
-
-      <div *ngIf="!isLoading && filteredArticles.length === 0" class="no-articles">
-        <mat-icon>search_off</mat-icon>
-        <p>No se encontraron artículos con los filtros seleccionados</p>
-        <button mat-stroked-button color="primary" (click)="resetFilters()">Limpiar filtros</button>
-      </div>
-
-      <div *ngIf="!isLoading && filteredArticles.length > 0" class="articles-container">
-        <mat-accordion>
-          <mat-expansion-panel *ngFor="let article of filteredArticles">
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                {{article.title}}
-              </mat-panel-title>
-              <mat-panel-description>
-                <div class="article-meta">
-                  <span class="article-category">{{getCategoryName(article.category)}}</span>
-                  <span class="article-level" [ngClass]="getLevelClass(article.level)">
-                    {{getLevelName(article.level)}}
-                  </span>
-                </div>
-              </mat-panel-description>
-            </mat-expansion-panel-header>
-
-            <div class="article-summary">
-              {{article.summary}}
-            </div>
-
-            <div class="article-tags">
-              <mat-chip *ngFor="let tag of article.tags">{{tag}}</mat-chip>
-            </div>
-
-            <mat-action-row>
-              <button mat-button color="primary" (click)="viewArticle(article.id)">
-                <mat-icon>visibility</mat-icon>
-                Ver artículo completo
-              </button>
-            </mat-action-row>
-          </mat-expansion-panel>
-        </mat-accordion>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .knowledge-base {
-      display: flex;
-      flex-direction: column;
-    }
-
-    h2 {
-      font-size: var(--font-size-lg);
-      font-weight: 500;
-      margin: 0 0 0.5rem;
-      color: var(--color-text-primary);
-    }
-
-    .section-description {
-      font-size: var(--font-size-sm);
-      color: var(--color-text-secondary);
-      margin: 0 0 1.5rem;
-    }
-
-    .filter-section {
-      margin-bottom: 1.5rem;
-    }
-
-    .filter-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-
-      .category-filter,
-      .subcategory-filter,
-      .level-filter {
-        flex: 1;
-        min-width: 200px;
-      }
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-
-      span {
-        margin-top: 1rem;
-        color: var(--color-text-secondary);
-      }
-    }
-
-    .no-articles {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 3rem;
-
-      mat-icon {
-        font-size: 48px;
-        color: var(--color-text-secondary);
-        margin-bottom: 1rem;
-      }
-
-      p {
-        color: var(--color-text-secondary);
-        margin-bottom: 1.5rem;
-      }
-    }
-
-    .articles-container {
-      mat-expansion-panel {
-        margin-bottom: 1rem;
-      }
-    }
-
-    .article-meta {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      .article-category {
-        color: var(--color-text-secondary);
-        font-size: var(--font-size-xs);
-      }
-
-      .article-level {
-        padding: 0.25rem 0.5rem;
-        border-radius: var(--border-radius-sm);
-        font-size: var(--font-size-xs);
-        font-weight: 500;
-
-        &.level-basic {
-          background-color: var(--color-success-light);
-          color: var(--color-success);
-        }
-
-        &.level-intermediate {
-          background-color: var(--color-info-light);
-          color: var(--color-info);
-        }
-
-        &.level-advanced {
-          background-color: var(--color-warn-light);
-          color: var(--color-warn);
-        }
-      }
-    }
-
-    .article-summary {
-      margin-bottom: 1rem;
-      color: var(--color-text-secondary);
-    }
-
-    .article-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-  `]
+  templateUrl: './knowledge-base.component.html',
+  styleUrls: ['./knowledge-base.component.scss']
 })
 export class KnowledgeBaseComponent implements OnInit, OnDestroy {
   @Input() categories: HelpCategory[] = [];
@@ -251,6 +26,7 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
 
   articles: HelpArticle[] = [];
   filteredArticles: HelpArticle[] = [];
+  expandedArticles = new Set<string>();
 
   private destroy$ = new Subject<void>();
 
@@ -347,6 +123,27 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
 
     this.previousCategory = '';
     this.loadArticles();
+  }
+
+  /**
+   * Alterna la expansión de un artículo
+   * @param articleId ID del artículo
+   */
+  toggleArticle(articleId: string): void {
+    if (this.expandedArticles.has(articleId)) {
+      this.expandedArticles.delete(articleId);
+    } else {
+      this.expandedArticles.add(articleId);
+    }
+  }
+
+  /**
+   * Verifica si un artículo está expandido
+   * @param articleId ID del artículo
+   * @returns true si está expandido
+   */
+  isArticleExpanded(articleId: string): boolean {
+    return this.expandedArticles.has(articleId);
   }
 
   /**

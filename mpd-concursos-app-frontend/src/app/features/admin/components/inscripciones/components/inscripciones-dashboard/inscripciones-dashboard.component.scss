@@ -1,243 +1,810 @@
 @use 'src/styles/variables' as *;
 
+/* Enhanced Glassmorphism Design System Variables - Consistent with Admin Dashboard */
+$glass-background-primary: rgba(55, 65, 81, 0.8);
+$glass-background-secondary: rgba(75, 85, 99, 0.9);
+$glass-background-tertiary: rgba(31, 41, 55, 0.85);
+$glass-hover-primary: rgba(75, 85, 99, 0.6);
+$glass-active-primary: rgba(55, 65, 81, 0.95);
+
+$text-primary: #f9fafb;
+$text-secondary: #d1d5db;
+$text-muted: #9ca3af;
+
+$focus-color: #3b82f6;
+$focus-color-secondary: rgba(59, 130, 246, 0.2);
+
+$border-radius-sm: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+$border-glass-light: 1px solid rgba(255, 255, 255, 0.1);
+$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
+$border-glass-strong: 1px solid rgba(255, 255, 255, 0.2);
+
+$card-shadow-base: 0 8px 32px rgba(0, 0, 0, 0.3);
+$card-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.4);
+$card-shadow-active: 0 4px 20px rgba(0, 0, 0, 0.25);
+
+/* Enhanced Dashboard Container - Transparent for Background Inheritance */
 .dashboard-container {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+  /* Transparent background to inherit dashboard background */
+  background: transparent;
+  min-height: calc(100vh - 120px);
+  position: relative;
 }
 
+/* Enhanced Header - Premium Glassmorphism */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  /* Premium glassmorphism background */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-secondary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle animated gradient overlay */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+  }
+
+  &:hover::before {
+    transform: translateX(100%);
+  }
 
   h1 {
     margin: 0;
-    font-size: $font-size-xl;
-    font-weight: 500;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 600;
+    color: $text-primary;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: -0.025em;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    /* Enhanced button styling */
+    ::ng-deep button {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: $text-primary;
+      border-radius: $border-radius-lg;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      transition: all $transition-smooth;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 1) 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+      }
+    }
   }
 }
 
-// Indicador de carga
+/* Enhanced Loading Container - Premium Glassmorphism */
 .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 0;
-  
+  padding: 4rem 2rem;
+  /* Premium glassmorphism background */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(10px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+
+  /* Animated background effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    animation: pulse-loading 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes pulse-loading {
+    0%, 100% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+  }
+
   p {
-    margin-top: 1rem;
-    color: $color-text-secondary;
+    margin-top: 1.5rem;
+    color: $text-secondary;
     font-size: $font-size-md;
+    font-weight: 500;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Enhanced spinner styling */
+  ::ng-deep mat-spinner {
+    position: relative;
+    z-index: 1;
+
+    circle {
+      stroke: $focus-color;
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+    }
   }
 }
 
-// Tarjetas de estadísticas
+/* Enhanced Stats Cards Grid - Flexible Responsive Design */
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(280px, 25vw, 320px), 1fr));
+  gap: clamp(1rem, 2.5vw, 1.5rem);
   margin-bottom: 2rem;
 }
 
-// Tarjeta de contenido
-.content-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  
-  .tab-content {
-    padding: 1.5rem;
+/* Apply premium glassmorphism to stat cards - consistent with admin dashboard */
+::ng-deep app-stat-card {
+  .stat-card {
+    /* Premium glassmorphism base */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-secondary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-lg;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    transition: all $transition-smooth;
+    position: relative;
+    overflow: hidden;
+
+    /* Animated hover effect */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+      pointer-events: none;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        $card-shadow-hover,
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+
+      &::before {
+        transform: translateX(100%);
+      }
+    }
+
+    &:active {
+      transform: translateY(-1px);
+      box-shadow: $card-shadow-active;
+    }
+
+    /* Enhanced content styling */
+    mat-card-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-icon {
+      background: rgba(255, 255, 255, 0.1) !important;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-title {
+      color: $text-primary !important;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      color: $text-primary !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-subtitle {
+      color: $text-secondary !important;
+    }
+
+    .stat-trend {
+      color: $text-secondary !important;
+
+      &.positive {
+        color: #10b981 !important;
+      }
+
+      &.negative {
+        color: #ef4444 !important;
+      }
+    }
   }
 }
 
-// Sección de gráficos
+/* Enhanced Content Card - Premium Glassmorphism with Tabs */
+.content-card {
+  /* Premium glassmorphism base */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(12px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+
+  /* Subtle animated background */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+    animation: subtle-pulse 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes subtle-pulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .tab-content {
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Enhanced tab styling */
+  ::ng-deep .mat-mdc-tab-group {
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      border-radius: $border-radius-xl $border-radius-xl 0 0;
+    }
+
+    .mat-mdc-tab {
+      color: $text-secondary;
+      font-weight: 500;
+      transition: all $transition-smooth;
+
+      &.mdc-tab--active {
+        color: $text-primary;
+      }
+
+      &:hover {
+        color: $text-primary;
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      background: transparent;
+    }
+  }
+}
+
+/* Enhanced Charts Section - Flexible Grid with Glassmorphism */
 .charts-section {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
-  
+  grid-template-columns: repeat(auto-fit, minmax(clamp(400px, 45vw, 500px), 1fr));
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: 2rem;
+
   .chart-container {
     height: 100%;
+    position: relative;
+
+    /* Premium glassmorphism for chart components */
+    ::ng-deep app-stats-chart {
+      .chart-card {
+        /* Enhanced glassmorphism base */
+        background: linear-gradient(135deg,
+          $glass-background-primary 0%,
+          $glass-background-tertiary 100%);
+        background-image:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+          radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+        border: $border-glass-medium;
+        backdrop-filter: blur(12px);
+        border-radius: $border-radius-xl;
+        box-shadow:
+          $card-shadow-base,
+          inset 0 1px 0 rgba(255, 255, 255, 0.15),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        transition: all $transition-smooth;
+        position: relative;
+        overflow: hidden;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: $card-shadow-hover;
+        }
+      }
+    }
   }
 }
 
-// Sección de actividad
+/* Enhanced Activity Section */
 .activity-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+
+  /* Premium glassmorphism for activity feed */
+  ::ng-deep app-activity-feed {
+    .activity-card {
+      background: linear-gradient(135deg,
+        $glass-background-primary 0%,
+        $glass-background-secondary 100%);
+      border: $border-glass-medium;
+      backdrop-filter: blur(10px);
+      border-radius: $border-radius-xl;
+      box-shadow: $card-shadow-base;
+    }
+  }
 }
 
-// Estadísticas detalladas
+/* Enhanced Stats Grid - Premium Glassmorphism */
 .stats-grid {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+
   .stats-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(300px, 45vw, 400px), 1fr));
+    gap: clamp(1rem, 2.5vw, 1.5rem);
   }
-  
+
   .stats-col {
     height: 100%;
   }
-  
+
   .stats-detail-card {
     height: 100%;
-    
-    mat-card-header {
-      padding: 1rem 1rem 0.5rem;
-      
+    /* Premium glassmorphism for detail cards */
+    background: linear-gradient(135deg,
+      $glass-background-primary 0%,
+      $glass-background-tertiary 100%);
+    background-image:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+      radial-gradient(circle at 85% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+    border: $border-glass-medium;
+    backdrop-filter: blur(10px);
+    border-radius: $border-radius-xl;
+    box-shadow:
+      $card-shadow-base,
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    transition: all $transition-smooth;
+    position: relative;
+    overflow: hidden;
+
+    /* Subtle hover effect */
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: $card-shadow-hover;
+    }
+
+    /* Enhanced Material card styling */
+    ::ng-deep mat-card-header {
+      padding: 1.5rem 1.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
       mat-card-title {
         font-size: $font-size-md;
-        font-weight: 500;
+        font-weight: 600;
         margin: 0;
+        color: $text-primary;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       }
     }
-    
-    mat-card-content {
-      padding: 0 1rem 1rem;
+
+    ::ng-deep mat-card-content {
+      padding: 1.5rem;
+      position: relative;
+      z-index: 1;
     }
-    
+
     .stats-detail-section {
-      margin-bottom: 1rem;
-      
+      margin-bottom: 1.5rem;
+
       h3 {
         font-size: $font-size-md;
-        font-weight: 500;
-        margin: 0.75rem 0;
-        color: $color-text-primary;
+        font-weight: 600;
+        margin: 0 0 1rem;
+        color: $text-primary;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
-      
+
       .stats-detail-item {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
-        
-        .detail-label {
-          color: $color-text-secondary;
-          font-size: $font-size-sm;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all $transition-normal;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: $border-radius-sm;
+          padding: 0.5rem 0.75rem;
+          margin: 0 -0.75rem 0.75rem;
         }
-        
-        .detail-value {
-          font-weight: 500;
+
+        .detail-label {
+          color: $text-secondary;
           font-size: $font-size-sm;
+          font-weight: 500;
+        }
+
+        .detail-value {
+          font-weight: 600;
+          font-size: $font-size-sm;
+          color: $text-primary;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
       }
     }
   }
 }
 
-// Próximamente
+/* Enhanced Coming Soon Section - Premium Glassmorphism */
 .coming-soon {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
-  
-  mat-icon {
-    font-size: 3rem;
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: 1rem;
-    color: $color-text-tertiary;
+  padding: 4rem 2rem;
+  /* Premium glassmorphism background */
+  background: linear-gradient(135deg,
+    $glass-background-primary 0%,
+    $glass-background-tertiary 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  border: $border-glass-medium;
+  backdrop-filter: blur(10px);
+  border-radius: $border-radius-xl;
+  box-shadow:
+    $card-shadow-base,
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+
+  /* Animated background effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    animation: gentle-pulse 4s ease-in-out infinite;
+    pointer-events: none;
   }
-  
+
+  @keyframes gentle-pulse {
+    0%, 100% { transform: scale(0.9); opacity: 0.3; }
+    50% { transform: scale(1.1); opacity: 0.6; }
+  }
+
+  mat-icon {
+    font-size: 3.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 1.5rem;
+    color: $text-muted;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+
   h3 {
     font-size: $font-size-lg;
-    font-weight: 500;
-    margin: 0 0 0.5rem;
-    color: $color-text-primary;
+    font-weight: 600;
+    margin: 0 0 0.75rem;
+    color: $text-primary;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
   }
-  
+
   p {
     margin: 0;
     text-align: center;
-    color: $color-text-secondary;
+    color: $text-secondary;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+    max-width: 400px;
+    line-height: 1.6;
   }
 }
 
-// Media queries para responsive
-@media (max-width: 992px) {
+/* Enhanced Responsive Design - Mobile Optimizations with Glassmorphism */
+@media (max-width: 1200px) {
   .charts-section {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
-  
-  .stats-grid {
-    .stats-row {
-      grid-template-columns: 1fr;
+
+  .stats-grid .stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+
+  .header {
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+
+    h1 {
+      font-size: clamp(1.25rem, 3.5vw, 1.75rem);
     }
+  }
+
+  .charts-section {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .stats-grid .stats-row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  /* Optimize glassmorphism for tablets */
+  ::ng-deep app-stat-card .stat-card,
+  .content-card,
+  .stats-detail-card,
+  .coming-soon,
+  .loading-container {
+    backdrop-filter: blur(8px);
   }
 }
 
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: 1rem;
+    padding: 0.75rem;
+    min-height: calc(100vh - 100px);
   }
-  
+
   .header {
     flex-direction: column;
     align-items: flex-start;
-    
+    padding: 1rem 1.25rem;
+    gap: 1rem;
+
     h1 {
-      margin-bottom: 1rem;
+      margin-bottom: 0;
+      font-size: clamp(1.125rem, 3vw, 1.5rem);
+    }
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-start;
+
+      ::ng-deep button {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+      }
     }
   }
-  
+
   .stats-cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .content-card .tab-content {
+    padding: 1.25rem;
+  }
+
+  .charts-section {
+    gap: 1rem;
+  }
+
+  .stats-detail-card {
+    ::ng-deep mat-card-header {
+      padding: 1.25rem 1.25rem 0.5rem;
+    }
+
+    ::ng-deep mat-card-content {
+      padding: 1.25rem;
+    }
+  }
+
+  .coming-soon {
+    padding: 3rem 1.5rem;
+
+    mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+    }
+
+    h3 {
+      font-size: $font-size-md;
+    }
+  }
+
+  /* Mobile optimizations for glassmorphism */
+  ::ng-deep app-stat-card .stat-card,
+  ::ng-deep app-stats-chart .chart-card,
+  .content-card,
+  .stats-detail-card,
+  .coming-soon,
+  .loading-container {
+    /* Reduce blur for better mobile performance */
+    backdrop-filter: blur(6px);
+
+    /* Simplify hover effects on mobile */
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .header {
+    /* Reduce header blur on mobile */
+    backdrop-filter: blur(8px);
   }
 }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
-  .loading-container {
-    p {
-      color: $color-text-secondary-dark;
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+
+  .header {
+    padding: 0.75rem 1rem;
+    border-radius: $border-radius-lg;
+
+    h1 {
+      font-size: 1.25rem;
+    }
+
+    .header-actions ::ng-deep button {
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
     }
   }
-  
-  .content-card {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  .content-card .tab-content {
+    padding: 1rem;
   }
-  
+
   .stats-detail-card {
-    background-color: $color-surface-dark;
-    
+    ::ng-deep mat-card-header {
+      padding: 1rem 1rem 0.5rem;
+    }
+
+    ::ng-deep mat-card-content {
+      padding: 1rem;
+    }
+
     .stats-detail-section {
-      h3 {
-        color: $color-text-primary-dark;
-      }
-      
       .stats-detail-item {
-        .detail-label {
-          color: $color-text-secondary-dark;
-        }
-        
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+
+        .detail-label,
         .detail-value {
-          color: $color-text-primary-dark;
+          font-size: 0.8125rem;
         }
       }
     }
   }
-  
+
   .coming-soon {
+    padding: 2rem 1rem;
+
     mat-icon {
-      color: $color-text-tertiary-dark;
+      font-size: 2.5rem;
+      width: 2.5rem;
+      height: 2.5rem;
     }
-    
-    h3 {
-      color: $color-text-primary-dark;
-    }
-    
-    p {
-      color: $color-text-secondary-dark;
-    }
+  }
+
+  /* Ultra-mobile glassmorphism optimizations */
+  ::ng-deep app-stat-card .stat-card,
+  ::ng-deep app-stats-chart .chart-card,
+  .content-card,
+  .stats-detail-card,
+  .coming-soon,
+  .loading-container,
+  .header {
+    backdrop-filter: blur(4px);
+    border-radius: $border-radius-lg;
   }
 }

@@ -1,44 +1,24 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { MatTabChangeEvent } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from  '@angular/material/snack-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { AdminReportsService, SystemStats } from '@core/services/admin/admin-reports.service';
 import { ExportService } from '@core/services/admin/export.service';
 
-
 @Component({
   selector: 'app-reportes-admin',
   templateUrl: './reportes-admin.component.html',
-  styleUrls: ['./reportes-admin.component.scss'],
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTabsModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatSelectModule,
-    MatFormFieldModule
-  ]
+  styleUrls: ['./reportes-admin.component.scss']
 })
 export class ReportesAdminComponent implements OnInit, OnDestroy {
   // Exponer el objeto Object global para usarlo en la plantilla
   Object = Object;
+
+  // Exponer el router para debug en template
+  router: Router;
 
   // Estado de carga
   isLoading = false;
@@ -49,55 +29,49 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
 
+  // Control de pestañas personalizadas
+  activeTab: 'examenes' | 'usuarios' | 'sistema' | 'constructor' = 'examenes';
+
+  // Modo de visualización: dashboard analítico vs reportes predefinidos
+  isDashboardMode = false;
+
   // Datos para reportes
   examenes = [
     {
       id: 1,
-      titulo: 'Examen de Derecho Penal',
-      tipo: 'multiple_choice',
-      fechaInicio: new Date(2023, 4, 10),
-      fechaFin: new Date(2023, 4, 20),
-      participantes: 120,
-      completados: 98,
-      aprobados: 85,
+      titulo: 'Examen de Conocimientos Generales',
+      tipo: 'general',
+      fechaInicio: new Date('2024-01-15'),
+      fechaFin: new Date('2024-02-15'),
+      participantes: 245,
+      completados: 198,
+      aprobados: 156,
       promedioCalificacion: 78.5,
-      tiempoPromedio: 45
+      tiempoPromedio: 52
     },
     {
       id: 2,
-      titulo: 'Examen de Derecho Civil',
-      tipo: 'desarrollo',
-      fechaInicio: new Date(2023, 4, 15),
-      fechaFin: new Date(2023, 4, 25),
-      participantes: 95,
-      completados: 82,
-      aprobados: 70,
-      promedioCalificacion: 72.3,
-      tiempoPromedio: 60
+      titulo: 'Evaluación Técnica Especializada',
+      tipo: 'tecnico',
+      fechaInicio: new Date('2024-02-01'),
+      fechaFin: new Date('2024-03-01'),
+      participantes: 89,
+      completados: 76,
+      aprobados: 62,
+      promedioCalificacion: 82.3,
+      tiempoPromedio: 48
     },
     {
       id: 3,
-      titulo: 'Examen de Procedimientos',
-      tipo: 'mixto',
-      fechaInicio: new Date(2023, 5, 1),
-      fechaFin: new Date(2023, 5, 10),
-      participantes: 150,
-      completados: 130,
-      aprobados: 110,
-      promedioCalificacion: 81.7,
+      titulo: 'Prueba de Competencias Básicas',
+      tipo: 'basico',
+      fechaInicio: new Date('2024-01-20'),
+      fechaFin: new Date('2024-02-20'),
+      participantes: 156,
+      completados: 134,
+      aprobados: 98,
+      promedioCalificacion: 73.2,
       tiempoPromedio: 55
-    },
-    {
-      id: 4,
-      titulo: 'Examen de Derecho Constitucional',
-      tipo: 'multiple_choice',
-      fechaInicio: new Date(2023, 5, 5),
-      fechaFin: new Date(2023, 5, 15),
-      participantes: 110,
-      completados: 95,
-      aprobados: 88,
-      promedioCalificacion: 85.2,
-      tiempoPromedio: 40
     }
   ];
 
@@ -163,14 +137,25 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
     inactivos: 265
   };
 
-  // Datos de actividad
-  actividad = [
-    { tipo: 'login', cantidad: 2450, porcentaje: 45 },
-    { tipo: 'examen_iniciado', cantidad: 1200, porcentaje: 22 },
-    { tipo: 'examen_finalizado', cantidad: 980, porcentaje: 18 },
-    { tipo: 'perfil_actualizado', cantidad: 520, porcentaje: 10 },
-    { tipo: 'postulacion', cantidad: 280, porcentaje: 5 }
+  // Datos de roles para gráficos
+  roleStats = [
+    { name: 'Participantes', count: 1188, percentage: 95.4, color: '#4CAF50' },
+    { name: 'Evaluadores', count: 45, percentage: 3.6, color: '#2196F3' },
+    { name: 'Administradores', count: 12, percentage: 1.0, color: '#FF9800' }
   ];
+
+  // Datos de actividad reciente
+  actividad = [
+    { tipo: 'login', cantidad: 1245, porcentaje: 35 },
+    { tipo: 'examen_iniciado', cantidad: 892, porcentaje: 25 },
+    { tipo: 'examen_finalizado', cantidad: 756, porcentaje: 21 },
+    { tipo: 'perfil_actualizado', cantidad: 423, porcentaje: 12 },
+    { tipo: 'postulacion', cantidad: 234, porcentaje: 7 }
+  ];
+
+
+
+
 
   selectedExamen: unknown = null;
 
@@ -179,12 +164,41 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
 
   constructor(
     private reportsService: AdminReportsService,
-    private snackBar: MatSnackBar,
-    private exportService: ExportService
-  ) {}
+    private exportService: ExportService,
+    router: Router,
+    private route: ActivatedRoute
+  ) {
+    this.router = router;
+  }
 
   ngOnInit(): void {
+    this.checkRouteForDashboard();
     this.loadSystemStats();
+
+    // Suscribirse a cambios de ruta
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.checkRouteForDashboard();
+      }
+    });
+  }
+
+  /**
+   * Verifica si se accedió desde la ruta dashboard para mostrar la interfaz correcta
+   */
+  private checkRouteForDashboard(): void {
+    const url = this.router.url;
+
+    // Verificar si la URL termina con '/dashboard' o contiene '/dashboard'
+    this.isDashboardMode = url.endsWith('/dashboard') || url.includes('/reportes/dashboard');
+
+    if (this.isDashboardMode) {
+      // Si es dashboard analítico, mostrar la pestaña de exámenes por defecto
+      this.activeTab = 'examenes';
+    } else {
+      // Si son reportes predefinidos, mostrar la pestaña de constructor
+      this.activeTab = 'constructor';
+    }
   }
 
   ngOnDestroy(): void {
@@ -207,10 +221,33 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           console.error('Error cargando estadísticas del sistema:', error);
-          this.snackBar.open('Error al cargar estadísticas', 'Cerrar', { duration: 3000 });
+          this.showNotification('Error al cargar estadísticas');
           this.isLoading = false;
         }
       });
+  }
+
+  /**
+   * Muestra una notificación simple
+   */
+  private showNotification(message: string): void {
+    // Implementación simple de notificación sin Material UI
+    console.log('Notification:', message);
+    // Aquí podrías implementar un sistema de notificaciones personalizado
+  }
+
+  /**
+   * Establece la pestaña activa
+   */
+  setActiveTab(tab: 'examenes' | 'usuarios' | 'sistema' | 'constructor'): void {
+    this.activeTab = tab;
+  }
+
+  /**
+   * Navega al constructor de reportes principal (glassmorphism premium)
+   */
+  navigateToReportBuilder(): void {
+    this.router.navigate(['/admin/reportes/constructor']);
   }
 
   getTotalParticipantes(): number {
@@ -223,13 +260,10 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
 
   getPromedioCalificacion(): string {
     const promedio = this.examenes.reduce((sum, examen) => sum + examen.promedioCalificacion, 0) / this.examenes.length;
-    return promedio.toFixed(1);
+    return promedio.toFixed(1) + '%';
   }
 
-  onTabChange(event: MatTabChangeEvent): void {
-    // Aquí se podrían cargar datos específicos según la pestaña seleccionada
-    console.log('Tab changed to:', event.index);
-  }
+  // Método eliminado - reemplazado por setActiveTab
 
   exportarReporte(formato: 'excel' | 'csv' | 'pdf'): void {
     this.isLoading = true;
@@ -263,7 +297,7 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
     });
 
     this.isLoading = false;
-    this.snackBar.open(`Reporte exportado como ${fileName}.${formato}`, 'Cerrar', { duration: 3000 });
+    this.showNotification(`Reporte exportado como ${fileName}.${formato}`);
   }
 
   selectExamen(examen: unknown): void {
@@ -272,6 +306,9 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
 
   getTipoExamenText(tipo: string): string {
     switch (tipo) {
+      case 'general': return 'General';
+      case 'tecnico': return 'Técnico';
+      case 'basico': return 'Básico';
       case 'multiple_choice': return 'Opción múltiple';
       case 'desarrollo': return 'Desarrollo';
       case 'mixto': return 'Mixto';
@@ -359,5 +396,138 @@ export class ReportesAdminComponent implements OnInit, OnDestroy {
 
     const examen = this.selectedExamen as Record<string, unknown>;
     return examen['titulo'] as string || 'Examen seleccionado';
+  }
+
+  // ===== MÉTODOS PARA REPORTES PREDEFINIDOS =====
+
+  /**
+   * Genera un reporte rápido
+   * @param reportType Tipo de reporte a generar
+   */
+  generateQuickReport(reportType: string): void {
+    this.isLoading = true;
+
+    console.log(`Generando reporte rápido: ${reportType}`);
+
+    // Simular generación de reporte
+    setTimeout(() => {
+      this.isLoading = false;
+      this.showNotification(`Reporte "${reportType}" generado exitosamente`);
+
+      // Aquí iría la lógica real de generación y descarga
+      this.downloadReport(reportType);
+    }, 2000);
+  }
+
+  /**
+   * Obtiene el conteo para reportes rápidos
+   */
+  getQuickReportCount(type: string): number {
+    switch (type) {
+      case 'pendientes': return 45;
+      case 'activos': return 1205;
+      case 'vigentes': return 8;
+      default: return 0;
+    }
+  }
+
+  /**
+   * Usa una plantilla de reporte
+   */
+  useTemplate(templateId: string): void {
+    this.isLoading = true;
+
+    console.log(`Usando plantilla: ${templateId}`);
+
+    // Simular carga de plantilla
+    setTimeout(() => {
+      this.isLoading = false;
+      this.showNotification(`Plantilla "${templateId}" cargada exitosamente`);
+
+      // Navegar al constructor con la plantilla
+      this.router.navigate(['/admin/reportes/constructor'], {
+        queryParams: { template: templateId }
+      });
+    }, 1500);
+  }
+
+  // ===== MÉTODOS PARA DASHBOARD ANALÍTICO =====
+
+  /**
+   * Obtiene usuarios activos
+   */
+  getUsuariosActivos(): number {
+    return this.usuarios.activos;
+  }
+
+  /**
+   * Obtiene usuarios pendientes
+   */
+  getUsuariosPendientes(): number {
+    // Simulamos usuarios pendientes como un porcentaje de inactivos
+    return Math.round(this.usuarios.inactivos * 0.3);
+  }
+
+  /**
+   * Obtiene tasa de activación
+   */
+  getTasaActivacion(): number {
+    const activos = this.usuarios.activos;
+    const total = this.usuarios.total;
+    return Math.round((activos / total) * 100);
+  }
+
+  /**
+   * Obtiene el icono para un tipo de actividad
+   */
+  getActivityIcon(tipo: string): string {
+    switch (tipo) {
+      case 'login': return 'fa-sign-in-alt';
+      case 'examen_iniciado': return 'fa-play';
+      case 'examen_finalizado': return 'fa-check';
+      case 'perfil_actualizado': return 'fa-user-edit';
+      case 'postulacion': return 'fa-file-upload';
+      default: return 'fa-circle';
+    }
+  }
+
+  /**
+   * Obtiene el texto para un tipo de actividad
+   */
+  getActivityText(tipo: string): string {
+    switch (tipo) {
+      case 'login': return 'Inicios de Sesión';
+      case 'examen_iniciado': return 'Exámenes Iniciados';
+      case 'examen_finalizado': return 'Exámenes Finalizados';
+      case 'perfil_actualizado': return 'Perfiles Actualizados';
+      case 'postulacion': return 'Nuevas Postulaciones';
+      default: return tipo;
+    }
+  }
+
+  /**
+   * Crea un reporte rápido desde el constructor
+   */
+  createQuickReport(): void {
+    this.showNotification('Función de reporte rápido en desarrollo');
+  }
+
+
+
+
+
+  /**
+   * Descarga un reporte
+   * @param reportType Tipo de reporte
+   */
+  private downloadReport(reportType: string): void {
+    // Aquí iría la lógica real de descarga
+    console.log(`Descargando reporte: ${reportType}`);
+
+    // Simular descarga
+    const link = document.createElement('a');
+    link.href = '#';
+    link.download = `${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
   }
 }

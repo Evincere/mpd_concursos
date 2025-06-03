@@ -1,25 +1,28 @@
 <div class="app-performance-container">
   <div class="section-header">
-    <h2>Rendimiento de la Aplicación</h2>
+    <h2 class="section-title">Rendimiento de la Aplicación</h2>
     <p class="section-description">
       Métricas de rendimiento de la aplicación, incluyendo uso de recursos, tiempos de respuesta y errores.
     </p>
   </div>
 
-  <!-- Estado vacío -->
+  <!-- Estado vacío glassmorphism -->
   <div *ngIf="!appPerformanceMetrics" class="empty-state">
-    <mat-icon>speed</mat-icon>
-    <p>No hay datos disponibles para mostrar</p>
+    <div class="empty-icon">⚡</div>
+    <p class="empty-text">No hay datos disponibles para mostrar</p>
   </div>
 
   <!-- Métricas de rendimiento -->
   <div *ngIf="appPerformanceMetrics" class="performance-metrics">
-    <!-- Información del sistema -->
-    <mat-card class="metrics-card">
-      <mat-card-header>
-        <mat-card-title>Información del Sistema</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
+    <!-- Información del sistema glassmorphism -->
+    <div class="metrics-card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="card-icon">🖥️</span>
+          Información del Sistema
+        </h3>
+      </div>
+      <div class="card-content">
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">Tiempo de actividad</div>
@@ -51,15 +54,18 @@
             <div class="info-value">{{formatMemorySize(appPerformanceMetrics.memoryUsage.free || 0)}}</div>
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
 
-    <!-- Métricas de API -->
-    <mat-card class="metrics-card">
-      <mat-card-header>
-        <mat-card-title>Métricas de API</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
+    <!-- Métricas de API glassmorphism -->
+    <div class="metrics-card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="card-icon">🌐</span>
+          Métricas de API
+        </h3>
+      </div>
+      <div class="card-content">
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">Total de solicitudes</div>
@@ -91,15 +97,18 @@
             <div class="info-value">{{appPerformanceMetrics.apiMetrics.requestsPerSecond || 0}}</div>
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
 
-    <!-- Métricas de sesiones -->
-    <mat-card class="metrics-card">
-      <mat-card-header>
-        <mat-card-title>Métricas de Sesiones</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
+    <!-- Métricas de sesiones glassmorphism -->
+    <div class="metrics-card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="card-icon">👥</span>
+          Métricas de Sesiones
+        </h3>
+      </div>
+      <div class="card-content">
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">Sesiones activas</div>
@@ -118,7 +127,7 @@
         </div>
 
         <div class="users-by-role" *ngIf="appPerformanceMetrics?.sessionMetrics?.usersByRole?.length">
-          <h3>Usuarios por rol</h3>
+          <h4 class="role-title">Usuarios por rol</h4>
           <div class="role-list">
             <div class="role-item" *ngFor="let role of appPerformanceMetrics?.sessionMetrics?.usersByRole">
               <div class="role-name">{{role.role === 'ROLE_ADMIN' ? 'Administrador' : 'Usuario'}}</div>
@@ -126,112 +135,93 @@
             </div>
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-  <!-- Rendimiento de endpoints -->
-  <div *ngIf="appPerformanceMetrics?.apiMetrics?.endpoints" class="endpoints-section">
-    <h3>Rendimiento de Endpoints</h3>
-
-    <div class="table-container mat-elevation-z2">
-      <table mat-table [dataSource]="appPerformanceMetrics?.apiMetrics?.endpoints || []" matSort class="endpoints-table">
-        <!-- Columna de Ruta -->
-        <ng-container matColumnDef="path">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Ruta</th>
-          <td mat-cell *matCellDef="let endpoint">{{endpoint.path || 'No disponible'}}</td>
-        </ng-container>
-
-        <!-- Columna de Método -->
-        <ng-container matColumnDef="method">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Método</th>
-          <td mat-cell *matCellDef="let endpoint">
-            <span class="method-badge" [ngClass]="{'method-get': endpoint.method === 'GET', 'method-post': endpoint.method === 'POST', 'method-put': endpoint.method === 'PUT', 'method-delete': endpoint.method === 'DELETE'}">
-              {{endpoint.method || 'N/A'}}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Columna de Total de Solicitudes -->
-        <ng-container matColumnDef="totalRequests">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Total</th>
-          <td mat-cell *matCellDef="let endpoint">{{endpoint.totalRequests || 0}}</td>
-        </ng-container>
-
-        <!-- Columna de Tiempo de Respuesta -->
-        <ng-container matColumnDef="averageResponseTime">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tiempo Resp.</th>
-          <td mat-cell *matCellDef="let endpoint">{{endpoint.averageResponseTime || 0}} ms</td>
-        </ng-container>
-
-        <!-- Columna de Tasa de Errores -->
-        <ng-container matColumnDef="errorRate">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tasa Error</th>
-          <td mat-cell *matCellDef="let endpoint">{{endpoint.errorRate || 0}}%</td>
-        </ng-container>
-
-        <!-- Columna de Solicitudes por Minuto -->
-        <ng-container matColumnDef="requestsPerMinute">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Req/min</th>
-          <td mat-cell *matCellDef="let endpoint">{{endpoint.requestsPerMinute || 0}}</td>
-        </ng-container>
-
-        <!-- Columna de Estado -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
-          <td mat-cell *matCellDef="let endpoint">
-            <div class="status-indicator" [ngClass]="getEndpointStatusClass(endpoint.status || '')" matTooltip="{{getEndpointStatusLabel(endpoint.status || '')}}">
-              <mat-icon>{{getEndpointStatusIcon(endpoint.status || '')}}</mat-icon>
-              <span>{{getEndpointStatusLabel(endpoint.status || '')}}</span>
-            </div>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="endpointColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: endpointColumns;"></tr>
-      </table>
+      </div>
     </div>
   </div>
 
-  <!-- Errores recientes -->
+  <!-- Rendimiento de endpoints glassmorphism -->
+  <div *ngIf="appPerformanceMetrics?.apiMetrics?.endpoints" class="endpoints-section">
+    <h3 class="section-title">
+      <span class="section-icon">🚀</span>
+      Rendimiento de Endpoints
+    </h3>
+
+    <div class="table-container">
+      <div class="table-wrapper">
+        <table class="endpoints-table">
+          <thead>
+            <tr class="table-header">
+              <th class="table-cell header-cell">Ruta</th>
+              <th class="table-cell header-cell">Método</th>
+              <th class="table-cell header-cell">Total</th>
+              <th class="table-cell header-cell">Tiempo Resp.</th>
+              <th class="table-cell header-cell">Tasa Error</th>
+              <th class="table-cell header-cell">Req/min</th>
+              <th class="table-cell header-cell">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" *ngFor="let endpoint of appPerformanceMetrics?.apiMetrics?.endpoints">
+              <td class="table-cell">{{endpoint.path || 'No disponible'}}</td>
+              <td class="table-cell">
+                <span class="method-badge" [ngClass]="{
+                  'method-get': endpoint.method === 'GET',
+                  'method-post': endpoint.method === 'POST',
+                  'method-put': endpoint.method === 'PUT',
+                  'method-delete': endpoint.method === 'DELETE'
+                }">
+                  {{endpoint.method || 'N/A'}}
+                </span>
+              </td>
+              <td class="table-cell">{{endpoint.totalRequests || 0}}</td>
+              <td class="table-cell">{{endpoint.averageResponseTime || 0}} ms</td>
+              <td class="table-cell">{{endpoint.errorRate || 0}}%</td>
+              <td class="table-cell">{{endpoint.requestsPerMinute || 0}}</td>
+              <td class="table-cell">
+                <div class="status-indicator" [ngClass]="getEndpointStatusClass(endpoint.status || '')">
+                  <span class="status-icon">{{getEndpointStatusIcon(endpoint.status || '')}}</span>
+                  <span class="status-text">{{getEndpointStatusLabel(endpoint.status || '')}}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Errores recientes glassmorphism -->
   <div *ngIf="appPerformanceMetrics?.errorMetrics?.recentErrors?.length" class="errors-section">
-    <h3>Errores Recientes</h3>
+    <h3 class="section-title">
+      <span class="section-icon">🚨</span>
+      Errores Recientes
+    </h3>
 
-    <div class="table-container mat-elevation-z2">
-      <table mat-table [dataSource]="appPerformanceMetrics?.errorMetrics?.recentErrors || []" matSort class="errors-table">
-        <!-- Columna de Timestamp -->
-        <ng-container matColumnDef="timestamp">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
-          <td mat-cell *matCellDef="let error">{{formatDate(error.timestamp) || 'No disponible'}}</td>
-        </ng-container>
-
-        <!-- Columna de Tipo -->
-        <ng-container matColumnDef="type">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th>
-          <td mat-cell *matCellDef="let error">{{error.type || 'No disponible'}}</td>
-        </ng-container>
-
-        <!-- Columna de Mensaje -->
-        <ng-container matColumnDef="message">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Mensaje</th>
-          <td mat-cell *matCellDef="let error">{{error.message || 'No disponible'}}</td>
-        </ng-container>
-
-        <!-- Columna de Endpoint -->
-        <ng-container matColumnDef="endpoint">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Endpoint</th>
-          <td mat-cell *matCellDef="let error">{{error.endpoint || 'No disponible'}}</td>
-        </ng-container>
-
-        <!-- Columna de Usuario -->
-        <ng-container matColumnDef="userId">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Usuario</th>
-          <td mat-cell *matCellDef="let error">{{error.username || error.userId || 'Anónimo'}}</td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="errorColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: errorColumns;"></tr>
-      </table>
+    <div class="table-container">
+      <div class="table-wrapper">
+        <table class="errors-table">
+          <thead>
+            <tr class="table-header">
+              <th class="table-cell header-cell">Fecha</th>
+              <th class="table-cell header-cell">Tipo</th>
+              <th class="table-cell header-cell">Mensaje</th>
+              <th class="table-cell header-cell">Endpoint</th>
+              <th class="table-cell header-cell">Usuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="table-row" *ngFor="let error of appPerformanceMetrics?.errorMetrics?.recentErrors">
+              <td class="table-cell">{{formatDate(error.timestamp) || 'No disponible'}}</td>
+              <td class="table-cell">
+                <span class="error-type-badge">{{error.type || 'No disponible'}}</span>
+              </td>
+              <td class="table-cell">{{error.message || 'No disponible'}}</td>
+              <td class="table-cell">{{error.endpoint || 'No disponible'}}</td>
+              <td class="table-cell">{{error.username || error.userId || 'Anónimo'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

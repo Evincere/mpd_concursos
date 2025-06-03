@@ -3,188 +3,350 @@
     <h1>Gestión de Perfiles de Usuario</h1>
   </div>
 
-  <mat-tab-group [(selectedIndex)]="activeTab" animationDuration="300ms">
-    <!-- Pestaña de Listado de Perfiles -->
-    <mat-tab label="Perfiles de Usuario">
-      <div class="tab-content">
-        <mat-card class="filter-card">
-          <mat-card-content>
-            <form [formGroup]="filterForm" class="filter-form">
-              <div class="filter-row">
-                <mat-form-field appearance="outline">
-                  <mat-label>Buscar</mat-label>
-                  <input matInput formControlName="search" placeholder="Nombre, email, DNI...">
-                  <mat-icon matSuffix>search</mat-icon>
-                </mat-form-field>
+  <!-- Sistema de pestañas personalizado -->
+  <div class="custom-tabs">
+    <div class="tab-header">
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 0"
+        (click)="activeTab = 0"
+        type="button">
+        <i class="fas fa-users"></i>
+        Perfiles de Usuario
+      </button>
+      <button
+        class="tab-button"
+        [class.active]="activeTab === 1"
+        (click)="activeTab = 1"
+        type="button">
+        <i class="fas fa-chart-bar"></i>
+        Estadísticas de Perfiles
+      </button>
+    </div>
 
-                <mat-form-field appearance="outline">
-                  <mat-label>Estado</mat-label>
-                  <mat-select formControlName="status">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option value="ACTIVE">Activos</mat-option>
-                    <mat-option value="INACTIVE">Inactivos</mat-option>
-                    <mat-option value="BLOCKED">Bloqueados</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Documentos</mat-label>
-                  <mat-select formControlName="hasDocuments">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option value="true">Con documentos</mat-option>
-                    <mat-option value="false">Sin documentos</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Información Profesional</mat-label>
-                  <mat-select formControlName="hasProfessionalInfo">
-                    <mat-option value="">Todos</mat-option>
-                    <mat-option value="true">Con información</mat-option>
-                    <mat-option value="false">Sin información</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <div class="filter-actions">
-                  <button mat-button color="primary" (click)="resetFilters()">
-                    <mat-icon>clear</mat-icon>
-                    Limpiar Filtros
-                  </button>
+    <!-- Contenido de pestaña: Listado de Perfiles -->
+    <div class="tab-content" *ngIf="activeTab === 0">
+      <!-- Tarjeta de filtros glassmorphism -->
+      <div class="filter-card">
+        <div class="card-header">
+          <h3>
+            <i class="fas fa-filter"></i>
+            Filtros de Búsqueda
+          </h3>
+        </div>
+        <div class="card-content">
+          <form [formGroup]="filterForm" class="filter-form">
+            <div class="filter-grid">
+              <!-- Campo de búsqueda -->
+              <div class="form-group">
+                <label for="search">Buscar</label>
+                <div class="input-container">
+                  <input
+                    id="search"
+                    type="text"
+                    formControlName="search"
+                    placeholder="Nombre, email, DNI..."
+                    class="glass-input">
+                  <i class="fas fa-search input-icon"></i>
                 </div>
               </div>
-            </form>
-          </mat-card-content>
-        </mat-card>
 
-        <div class="table-container mat-elevation-z2">
-          <table mat-table [dataSource]="dataSource" matSort (matSortChange)="onSort($event)">
-            <!-- Avatar Column -->
-            <ng-container matColumnDef="avatar">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let profile">
-                <div class="avatar-container">
-                  <div *ngIf="profile.avatar" class="avatar" [style.background-image]="'url(' + profile.avatar + ')'"></div>
-                  <div *ngIf="!profile.avatar" class="avatar-placeholder">
-                    {{getInitials(profile)}}
-                  </div>
+              <!-- Filtro de estado -->
+              <div class="form-group">
+                <label for="status">Estado</label>
+                <div class="select-container">
+                  <select id="status" formControlName="status" class="glass-select">
+                    <option value="">Todos</option>
+                    <option value="ACTIVE">Activos</option>
+                    <option value="INACTIVE">Inactivos</option>
+                    <option value="BLOCKED">Bloqueados</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-icon"></i>
                 </div>
-              </td>
-            </ng-container>
+              </div>
 
-            <!-- Name Column -->
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
-              <td mat-cell *matCellDef="let profile">
-                <div class="name-cell">
-                  <div class="full-name">{{getFullName(profile)}}</div>
-                  <div class="username">{{'@' + profile.username}}</div>
+              <!-- Filtro de documentos -->
+              <div class="form-group">
+                <label for="hasDocuments">Documentos</label>
+                <div class="select-container">
+                  <select id="hasDocuments" formControlName="hasDocuments" class="glass-select">
+                    <option value="">Todos</option>
+                    <option value="true">Con documentos</option>
+                    <option value="false">Sin documentos</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-icon"></i>
                 </div>
-              </td>
-            </ng-container>
+              </div>
 
-            <!-- Email Column -->
-            <ng-container matColumnDef="email">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-              <td mat-cell *matCellDef="let profile">{{profile.email}}</td>
-            </ng-container>
-
-            <!-- DNI Column -->
-            <ng-container matColumnDef="dni">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>DNI</th>
-              <td mat-cell *matCellDef="let profile">{{profile.dni || 'No especificado'}}</td>
-            </ng-container>
-
-            <!-- Professional Info Column -->
-            <ng-container matColumnDef="professionalInfo">
-              <th mat-header-cell *matHeaderCellDef>Título</th>
-              <td mat-cell *matCellDef="let profile">
-                <div class="professional-info-cell">
-                  <mat-icon *ngIf="hasProfessionalInfo(profile)" class="info-icon">school</mat-icon>
-                  <span>{{getProfessionalTitle(profile)}}</span>
+              <!-- Filtro de información profesional -->
+              <div class="form-group">
+                <label for="hasProfessionalInfo">Información Profesional</label>
+                <div class="select-container">
+                  <select id="hasProfessionalInfo" formControlName="hasProfessionalInfo" class="glass-select">
+                    <option value="">Todos</option>
+                    <option value="true">Con información</option>
+                    <option value="false">Sin información</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-icon"></i>
                 </div>
-              </td>
-            </ng-container>
+              </div>
 
-            <!-- Documents Column -->
-            <ng-container matColumnDef="documents">
-              <th mat-header-cell *matHeaderCellDef>Documentos</th>
-              <td mat-cell *matCellDef="let profile">
-                <div class="documents-cell">
-                  <button mat-stroked-button
-                          [matBadge]="getDocumentCount(profile)"
-                          matBadgePosition="after"
-                          matBadgeColor="primary"
-                          (click)="openProfileDetailDialog(profile)">
-                    Ver documentos
-                  </button>
-                </div>
-              </td>
-            </ng-container>
-
-            <!-- Status Column -->
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
-              <td mat-cell *matCellDef="let profile">
-                <div class="status-badge" [ngClass]="getStatusClass(profile.status)">
-                  {{getStatusText(profile.status)}}
-                </div>
-              </td>
-            </ng-container>
-
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let profile">
-                <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Acciones">
-                  <mat-icon>more_vert</mat-icon>
+              <!-- Acciones de filtro -->
+              <div class="form-group filter-actions">
+                <button
+                  type="button"
+                  class="glass-button secondary"
+                  (click)="resetFilters()">
+                  <i class="fas fa-times"></i>
+                  Limpiar Filtros
                 </button>
-                <mat-menu #menu="matMenu">
-                  <button mat-menu-item (click)="openProfileDetailDialog(profile)">
-                    <mat-icon>visibility</mat-icon>
-                    <span>Ver detalles</span>
-                  </button>
-                  <button mat-menu-item (click)="openProfileEditDialog(profile)">
-                    <mat-icon>edit</mat-icon>
-                    <span>Editar perfil</span>
-                  </button>
-                </mat-menu>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="profile-row"></tr>
-          </table>
-
-          <!-- Loading Overlay -->
-          <div *ngIf="isLoading" class="loading-overlay">
-            <mat-spinner diameter="40"></mat-spinner>
-          </div>
-
-          <!-- Empty State -->
-          <div *ngIf="!isLoading && dataSource.length === 0" class="empty-state">
-            <mat-icon>search_off</mat-icon>
-            <p>No se encontraron perfiles con los filtros aplicados</p>
-            <button mat-stroked-button color="primary" (click)="resetFilters()">Limpiar Filtros</button>
-          </div>
-
-          <!-- Paginator -->
-          <mat-paginator
-            [length]="totalItems"
-            [pageSize]="pageSize"
-            [pageSizeOptions]="pageSizeOptions"
-            [pageIndex]="pageIndex"
-            (page)="onPageChange($event)"
-            showFirstLastButtons>
-          </mat-paginator>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
-    </mat-tab>
 
-    <!-- Pestaña de Estadísticas -->
-    <mat-tab label="Estadísticas de Perfiles">
-      <div class="tab-content">
-        <app-profile-stats [stats]="stats"></app-profile-stats>
+      <!-- Tabla glassmorphism personalizada -->
+      <div class="table-container">
+        <div class="table-header">
+          <h3>
+            <i class="fas fa-table"></i>
+            Lista de Perfiles
+          </h3>
+          <div class="table-actions">
+            <span class="results-count">{{totalItems}} perfiles encontrados</span>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="glass-table">
+            <thead>
+              <tr>
+                <th class="col-avatar"></th>
+                <th class="col-name sortable" (click)="onSort('name')">
+                  <span>Nombre</span>
+                  <i class="fas fa-sort sort-icon"></i>
+                </th>
+                <th class="col-email sortable" (click)="onSort('email')">
+                  <span>Email</span>
+                  <i class="fas fa-sort sort-icon"></i>
+                </th>
+                <th class="col-dni sortable" (click)="onSort('dni')">
+                  <span>DNI</span>
+                  <i class="fas fa-sort sort-icon"></i>
+                </th>
+                <th class="col-professional">Título</th>
+                <th class="col-documents">Documentos</th>
+                <th class="col-status sortable" (click)="onSort('status')">
+                  <span>Estado</span>
+                  <i class="fas fa-sort sort-icon"></i>
+                </th>
+                <th class="col-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let profile of dataSource; trackBy: trackByProfileId" class="profile-row">
+                <!-- Avatar -->
+                <td class="col-avatar">
+                  <div class="avatar-container">
+                    <div *ngIf="profile.avatar"
+                         class="avatar"
+                         [style.background-image]="'url(' + profile.avatar + ')'">
+                    </div>
+                    <div *ngIf="!profile.avatar" class="avatar-placeholder">
+                      {{getInitials(profile)}}
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Nombre -->
+                <td class="col-name">
+                  <div class="name-cell">
+                    <div class="full-name">{{getFullName(profile)}}</div>
+                    <div class="username">{{'@' + profile.username}}</div>
+                  </div>
+                </td>
+
+                <!-- Email -->
+                <td class="col-email">
+                  <span class="email-text">{{profile.email}}</span>
+                </td>
+
+                <!-- DNI -->
+                <td class="col-dni">
+                  <span class="dni-text">{{profile.dni || 'No especificado'}}</span>
+                </td>
+
+                <!-- Información Profesional -->
+                <td class="col-professional">
+                  <div class="professional-info-cell">
+                    <i *ngIf="hasProfessionalInfo(profile)" class="fas fa-graduation-cap info-icon"></i>
+                    <span>{{getProfessionalTitle(profile)}}</span>
+                  </div>
+                </td>
+
+                <!-- Documentos -->
+                <td class="col-documents">
+                  <div class="documents-cell">
+                    <button
+                      type="button"
+                      class="glass-button info small"
+                      (click)="openProfileDetailDialog(profile)">
+                      <i class="fas fa-file-alt"></i>
+                      Ver documentos
+                      <span class="badge" *ngIf="getDocumentCount(profile) > 0">
+                        {{getDocumentCount(profile)}}
+                      </span>
+                    </button>
+                  </div>
+                </td>
+
+                <!-- Estado -->
+                <td class="col-status">
+                  <div class="status-badge" [ngClass]="getStatusClass(profile.status)">
+                    <i class="status-icon" [ngClass]="getStatusIconClass(profile.status)"></i>
+                    {{getStatusText(profile.status)}}
+                  </div>
+                </td>
+
+                <!-- Acciones -->
+                <td class="col-actions">
+                  <div class="actions-container">
+                    <!-- Botón Ver detalles -->
+                    <button
+                      type="button"
+                      class="action-button view-button"
+                      (click)="openProfileDetailDialog(profile)"
+                      [attr.aria-label]="'Ver detalles de ' + getFullName(profile)"
+                      title="Ver detalles">
+                      <i class="fas fa-eye"></i>
+                    </button>
+
+                    <!-- Botón Editar perfil -->
+                    <button
+                      type="button"
+                      class="action-button edit-button"
+                      (click)="openProfileEditDialog(profile)"
+                      [attr.aria-label]="'Editar perfil de ' + getFullName(profile)"
+                      title="Editar perfil">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Loading Overlay glassmorphism -->
+          <div *ngIf="isLoading" class="loading-overlay">
+            <div class="loading-content">
+              <div class="spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+              </div>
+              <p>Cargando perfiles...</p>
+            </div>
+          </div>
+
+          <!-- Empty State glassmorphism -->
+          <div *ngIf="!isLoading && dataSource.length === 0" class="empty-state">
+            <div class="empty-content">
+              <i class="fas fa-search empty-icon"></i>
+              <h4>No se encontraron perfiles</h4>
+              <p>No hay perfiles que coincidan con los filtros aplicados</p>
+              <button
+                type="button"
+                class="glass-button primary"
+                (click)="resetFilters()">
+                <i class="fas fa-refresh"></i>
+                Limpiar Filtros
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paginación personalizada glassmorphism -->
+        <div class="pagination-container" *ngIf="!isLoading && dataSource.length > 0">
+          <div class="pagination-info">
+            <span>Mostrando {{getStartIndex()}} - {{getEndIndex()}} de {{totalItems}} perfiles</span>
+          </div>
+
+          <div class="pagination-controls">
+            <!-- Botón primera página -->
+            <button
+              type="button"
+              class="pagination-button"
+              [disabled]="pageIndex === 0"
+              (click)="goToFirstPage()"
+              [attr.aria-label]="'Ir a la primera página'">
+              <i class="fas fa-angle-double-left"></i>
+            </button>
+
+            <!-- Botón página anterior -->
+            <button
+              type="button"
+              class="pagination-button"
+              [disabled]="pageIndex === 0"
+              (click)="goToPreviousPage()"
+              [attr.aria-label]="'Página anterior'">
+              <i class="fas fa-angle-left"></i>
+            </button>
+
+            <!-- Números de página -->
+            <div class="page-numbers">
+              <button
+                type="button"
+                *ngFor="let page of getVisiblePages()"
+                class="page-number"
+                [class.active]="page === pageIndex + 1"
+                [class.ellipsis]="page === '...'"
+                [disabled]="page === '...'"
+                (click)="goToPageNumber(page)"
+                [attr.aria-label]="'Ir a la página ' + page">
+                {{page}}
+              </button>
+            </div>
+
+            <!-- Botón página siguiente -->
+            <button
+              type="button"
+              class="pagination-button"
+              [disabled]="pageIndex >= getTotalPages() - 1"
+              (click)="goToNextPage()"
+              [attr.aria-label]="'Página siguiente'">
+              <i class="fas fa-angle-right"></i>
+            </button>
+
+            <!-- Botón última página -->
+            <button
+              type="button"
+              class="pagination-button"
+              [disabled]="pageIndex >= getTotalPages() - 1"
+              (click)="goToLastPage()"
+              [attr.aria-label]="'Ir a la última página'">
+              <i class="fas fa-angle-double-right"></i>
+            </button>
+          </div>
+
+          <!-- Selector de tamaño de página -->
+          <div class="page-size-selector">
+            <label for="pageSize">Elementos por página:</label>
+            <select
+              id="pageSize"
+              class="glass-select small"
+              [value]="pageSize"
+              (change)="onPageSizeChange($event)">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{size}}</option>
+            </select>
+          </div>
+        </div>
       </div>
-    </mat-tab>
-  </mat-tab-group>
+    </div>
+
+    <!-- Contenido de pestaña: Estadísticas -->
+    <div class="tab-content" *ngIf="activeTab === 1">
+      <app-profile-stats [stats]="stats"></app-profile-stats>
+    </div>
+  </div>
 </div>

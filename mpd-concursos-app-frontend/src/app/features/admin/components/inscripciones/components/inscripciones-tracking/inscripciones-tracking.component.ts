@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,6 +28,7 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { AdminInscriptionsService, AdminInscription } from '../../../../../../core/services/admin/admin-inscriptions.service';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { InscripcionDetalleAdminComponent } from '../inscripcion-detalle/inscripcion-detalle-admin.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 
 interface InscriptionAlert {
   id: string;
@@ -68,7 +69,8 @@ interface InscriptionAlert {
     MatTabsModule,
     MatBadgeModule,
     MatProgressBarModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    CustomButtonComponent
   ]
 })
 export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
@@ -103,6 +105,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
   refreshInterval = 60; // segundos
   timeLeft = this.refreshInterval;
   autoRefresh = true;
+  isDropdownOpen = false;
 
   private destroy$ = new Subject<void>();
   private refreshTimer$ = new Subject<void>();
@@ -111,7 +114,8 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private inscripcionesService: AdminInscriptionsService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {
     this.filterForm = this.fb.group({
       status: ['PENDING'],
@@ -393,5 +397,35 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
 
   manualRefresh(): void {
     this.loadData();
+  }
+
+  navigateToDashboard(): void {
+    this.router.navigate(['/admin/inscripciones/dashboard']);
+  }
+
+  // Métodos para el dropdown personalizado
+  toggleDropdown(): void {
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
+
+  selectStatus(value: string, label: string): void {
+    this.filterForm.patchValue({ status: value });
+    this.isDropdownOpen = false;
+  }
+
+  getSelectedStatusLabel(): string {
+    const selectedValue = this.filterForm.get('status')?.value;
+    const selectedOption = this.statusOptions.find(option => option.value === selectedValue);
+    return selectedOption ? selectedOption.label : 'Seleccionar...';
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const dropdown = target.closest('.custom-select-wrapper');
+
+    if (!dropdown) {
+      this.isDropdownOpen = false;
+    }
   }
 }

@@ -44,146 +44,232 @@ import { CommonModule } from '@angular/common';
       align-items: center;
       justify-content: center;
       position: relative;
-      padding: 0.5rem 1.25rem;
-      border-radius: 4px;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
       font-size: 0.875rem;
       font-weight: 500;
       letter-spacing: 0.02em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: all 0.2s ease-in-out;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       border: none;
       outline: none;
-      min-height: 36px;
+      min-height: 44px;
       gap: 0.5rem;
+
+      /* Base glassmorphism styling */
+      background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.8) 0%,
+        rgba(75, 85, 99, 0.9) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      color: #f9fafb;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.2),
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
     }
 
     /* Variantes */
     .custom-button.flat {
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      /* Default glassmorphism styling already applied */
     }
 
     .custom-button.stroked {
-      background-color: transparent;
-      border: 1px solid currentColor;
+      background: rgba(55, 65, 81, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #f9fafb;
+    }
+
+    .custom-button.stroked:hover:not(:disabled) {
+      background: rgba(55, 65, 81, 0.6);
+      border-color: rgba(255, 255, 255, 0.5);
     }
 
     .custom-button.icon {
-      padding: 0.5rem;
-      min-width: 36px;
-      border-radius: 50%;
+      padding: 0.75rem;
+      min-width: 44px;
+      border-radius: 8px;
     }
 
     .custom-button.text {
-      background-color: transparent;
+      background: transparent;
+      border: none;
       box-shadow: none;
       padding: 0.5rem 0.75rem;
+      backdrop-filter: none;
     }
 
     .custom-button.text:hover:not(:disabled) {
-      background-color: rgba(0, 0, 0, 0.05);
+      background: rgba(255, 255, 255, 0.1);
       box-shadow: none;
     }
 
-    /* Colores */
+    /* Colores con glassmorphism */
     .custom-button.primary {
-      background-color: var(--color-primary, #3f51b5);
-      color: white;
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.8) 0%,
+        rgba(37, 99, 235, 0.9) 100%);
+      border-color: rgba(59, 130, 246, 0.4);
+      color: #ffffff;
     }
 
     .custom-button.primary:hover:not(:disabled) {
-      background-color: var(--color-primary-dark, #303f9f);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.9) 0%,
+        rgba(37, 99, 235, 1) 100%);
+      border-color: rgba(59, 130, 246, 0.6);
+      box-shadow:
+        0 6px 16px rgba(59, 130, 246, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .custom-button.primary.stroked {
-      color: var(--color-primary, #3f51b5);
-      border-color: var(--color-primary, #3f51b5);
-      background-color: transparent;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      color: #3b82f6;
     }
 
     .custom-button.primary.stroked:hover:not(:disabled) {
-      background-color: rgba(63, 81, 181, 0.05);
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.7);
+      color: #ffffff;
     }
 
     .custom-button.accent {
-      background-color: var(--color-accent, #ff4081);
-      color: white;
+      background: linear-gradient(135deg,
+        rgba(236, 72, 153, 0.8) 0%,
+        rgba(219, 39, 119, 0.9) 100%);
+      border-color: rgba(236, 72, 153, 0.4);
+      color: #ffffff;
     }
 
     .custom-button.accent:hover:not(:disabled) {
-      background-color: var(--color-accent-dark, #f50057);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg,
+        rgba(236, 72, 153, 0.9) 0%,
+        rgba(219, 39, 119, 1) 100%);
+      border-color: rgba(236, 72, 153, 0.6);
+      box-shadow:
+        0 6px 16px rgba(236, 72, 153, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .custom-button.accent.stroked {
-      color: var(--color-accent, #ff4081);
-      border-color: var(--color-accent, #ff4081);
-      background-color: transparent;
+      background: rgba(236, 72, 153, 0.1);
+      border: 1px solid rgba(236, 72, 153, 0.5);
+      color: #ec4899;
     }
 
     .custom-button.accent.stroked:hover:not(:disabled) {
-      background-color: rgba(255, 64, 129, 0.05);
+      background: rgba(236, 72, 153, 0.2);
+      border-color: rgba(236, 72, 153, 0.7);
+      color: #ffffff;
     }
 
     .custom-button.warn {
-      background-color: var(--color-warn, #f44336);
-      color: white;
+      background: linear-gradient(135deg,
+        rgba(245, 158, 11, 0.8) 0%,
+        rgba(217, 119, 6, 0.9) 100%);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #ffffff;
     }
 
     .custom-button.warn:hover:not(:disabled) {
-      background-color: var(--color-warn-dark, #d32f2f);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg,
+        rgba(245, 158, 11, 0.9) 0%,
+        rgba(217, 119, 6, 1) 100%);
+      border-color: rgba(245, 158, 11, 0.6);
+      box-shadow:
+        0 6px 16px rgba(245, 158, 11, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .custom-button.warn.stroked {
-      color: var(--color-warn, #f44336);
-      border-color: var(--color-warn, #f44336);
-      background-color: transparent;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: #f59e0b;
     }
 
     .custom-button.warn.stroked:hover:not(:disabled) {
-      background-color: rgba(244, 67, 54, 0.05);
+      background: rgba(245, 158, 11, 0.2);
+      border-color: rgba(245, 158, 11, 0.7);
+      color: #ffffff;
     }
 
     .custom-button.success {
-      background-color: var(--color-success, #4caf50);
-      color: white;
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.8) 0%,
+        rgba(56, 142, 60, 0.9) 100%);
+      border-color: rgba(76, 175, 80, 0.4);
+      color: #ffffff;
     }
 
     .custom-button.success:hover:not(:disabled) {
-      background-color: var(--color-success-dark, #388e3c);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg,
+        rgba(76, 175, 80, 0.9) 0%,
+        rgba(56, 142, 60, 1) 100%);
+      border-color: rgba(76, 175, 80, 0.6);
+      box-shadow:
+        0 6px 16px rgba(76, 175, 80, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .custom-button.success.stroked {
-      color: var(--color-success, #4caf50);
-      border-color: var(--color-success, #4caf50);
-      background-color: transparent;
+      background: rgba(76, 175, 80, 0.1);
+      border: 1px solid rgba(76, 175, 80, 0.5);
+      color: #4caf50;
     }
 
     .custom-button.success.stroked:hover:not(:disabled) {
-      background-color: rgba(76, 175, 80, 0.05);
+      background: rgba(76, 175, 80, 0.2);
+      border-color: rgba(76, 175, 80, 0.7);
+      color: #ffffff;
     }
 
     .custom-button.danger {
-      background-color: var(--color-danger, #f44336);
-      color: white;
+      background: linear-gradient(135deg,
+        rgba(244, 67, 54, 0.8) 0%,
+        rgba(211, 47, 47, 0.9) 100%);
+      border-color: rgba(244, 67, 54, 0.4);
+      color: #ffffff;
     }
 
     .custom-button.danger:hover:not(:disabled) {
-      background-color: var(--color-danger-dark, #d32f2f);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg,
+        rgba(244, 67, 54, 0.9) 0%,
+        rgba(211, 47, 47, 1) 100%);
+      border-color: rgba(244, 67, 54, 0.6);
+      box-shadow:
+        0 6px 16px rgba(244, 67, 54, 0.3),
+        0 3px 6px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .custom-button.danger.stroked {
-      color: var(--color-danger, #f44336);
-      border-color: var(--color-danger, #f44336);
-      background-color: transparent;
+      background: rgba(244, 67, 54, 0.1);
+      border: 1px solid rgba(244, 67, 54, 0.5);
+      color: #f44336;
     }
 
     .custom-button.danger.stroked:hover:not(:disabled) {
-      background-color: rgba(244, 67, 54, 0.05);
+      background: rgba(244, 67, 54, 0.2);
+      border-color: rgba(244, 67, 54, 0.7);
+      color: #ffffff;
     }
 
     /* Estados */
@@ -255,7 +341,8 @@ import { CommonModule } from '@angular/common';
       font-size: 1rem;
     }
 
-    /* Tema oscuro */
+    /* Tema oscuro - Comentado para permitir que los estilos glassmorphism tomen precedencia */
+    /*
     @media (prefers-color-scheme: dark) {
       .custom-button.primary {
         background-color: var(--color-primary-dark, #7986cb);
@@ -322,6 +409,7 @@ import { CommonModule } from '@angular/common';
         border-color: var(--color-danger-dark, #ef5350);
       }
     }
+    */
   `]
 })
 export class CustomButtonComponent {

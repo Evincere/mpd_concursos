@@ -32,13 +32,11 @@ export interface SelectOption {
            [attr.aria-describedby]="getAriaDescribedBy()"
            [attr.id]="getSelectId()"
            [attr.aria-controls]="getDropdownId()">
-        <div class="select-value">
+        <span class="select-value" [class.placeholder]="!selectedLabel">
           {{ selectedLabel || placeholder }}
-        </div>
+        </span>
 
-        <div class="select-arrow">
-          <i class="fas" [class.fa-chevron-down]="!isOpen" [class.fa-chevron-up]="isOpen" aria-hidden="true"></i>
-        </div>
+        <i class="fas fa-chevron-down select-arrow" [class.open]="isOpen" aria-hidden="true"></i>
       </div>
 
       <div class="select-dropdown" *ngIf="isOpen" #dropdown role="listbox" [attr.id]="getDropdownId()" [attr.aria-label]="(label || 'Seleccionar') + ' opciones'">
@@ -74,24 +72,28 @@ export interface SelectOption {
     </div>
   `,
   styles: [`
+    /* ===== GLASSMORPHISM DESIGN SYSTEM FOR CUSTOM SELECT ===== */
     .custom-select {
       display: flex;
       flex-direction: column;
       margin-bottom: 1rem;
       width: 100%;
       position: relative;
+      font-family: inherit;
     }
 
     .select-label {
       font-size: 0.875rem;
       font-weight: 500;
       margin-bottom: 0.5rem;
-      color: var(--color-text-primary, #333);
+      color: #d1d5db;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .select-label.required::after {
       content: "*";
-      color: var(--color-error, #f44336);
+      color: #ef4444;
       margin-left: 0.25rem;
     }
 
@@ -100,18 +102,55 @@ export interface SelectOption {
       align-items: center;
       justify-content: space-between;
       padding: 0.75rem 1rem;
-      font-size: 1rem;
+      font-size: 0.875rem;
       line-height: 1.5;
-      color: var(--color-text-primary, #333);
-      background-color: var(--color-surface, #fff);
-      border: 1px solid var(--color-border, #ddd);
-      border-radius: 4px;
+      color: #f9fafb;
+
+      /* Premium glassmorphism background */
+      background: linear-gradient(135deg,
+        rgba(75, 85, 99, 0.4) 0%,
+        rgba(55, 65, 81, 0.6) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
       cursor: pointer;
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .select-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.05),
+        transparent);
+      transition: left 0.6s ease;
     }
 
     .select-container:hover:not(.disabled) {
-      border-color: var(--color-primary, #3f51b5);
+      border-color: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg,
+        rgba(75, 85, 99, 0.5) 0%,
+        rgba(55, 65, 81, 0.7) 100%);
+      transform: translateY(-1px);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .select-container:hover:not(.disabled)::before {
+      left: 100%;
     }
 
     .select-value {
@@ -119,12 +158,25 @@ export interface SelectOption {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: #f9fafb;
+      font-weight: 400;
+    }
+
+    .select-value.placeholder {
+      color: #9ca3af;
+      font-style: italic;
     }
 
     .select-arrow {
       margin-left: 0.5rem;
-      color: var(--color-text-secondary, #666);
-      transition: transform 0.2s ease-in-out;
+      color: #d1d5db;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.875rem;
+    }
+
+    .select-arrow.open {
+      transform: rotate(180deg);
+      color: #3b82f6;
     }
 
     .select-dropdown {
@@ -134,119 +186,216 @@ export interface SelectOption {
       right: 0;
       z-index: 1000;
       margin-top: 0.25rem;
-      background-color: var(--color-surface, #fff);
-      border: 1px solid var(--color-border, #ddd);
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      /* Enhanced glassmorphism for dropdown */
+      background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.95) 0%,
+        rgba(75, 85, 99, 0.9) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 6px;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.25),
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
       max-height: 200px;
       overflow-y: auto;
+
+      /* Custom scrollbar */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(59, 130, 246, 0.6) rgba(55, 65, 81, 0.3);
+    }
+
+    .select-dropdown::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .select-dropdown::-webkit-scrollbar-track {
+      background: rgba(55, 65, 81, 0.3);
+      border-radius: 3px;
+    }
+
+    .select-dropdown::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.6) 0%,
+        rgba(59, 130, 246, 0.8) 100%);
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .select-dropdown::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.8) 0%,
+        #3b82f6 100%);
     }
 
     .select-option {
       padding: 0.75rem 1rem;
       cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      color: #f9fafb;
+      font-size: 0.875rem;
+      border-radius: 4px;
+      margin: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .select-option::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(59, 130, 246, 0.1),
+        transparent);
+      transition: left 0.4s ease;
     }
 
     .select-option:hover:not(.disabled) {
-      background-color: var(--color-background-hover, #f5f5f5);
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.15) 0%,
+        rgba(59, 130, 246, 0.1) 100%);
+      color: #f9fafb;
+      transform: translateX(2px);
+      border-left: 2px solid #3b82f6;
+    }
+
+    .select-option:hover:not(.disabled)::before {
+      left: 100%;
     }
 
     .select-option.selected {
-      background-color: var(--color-primary-light, #e8eaf6);
-      color: var(--color-primary, #3f51b5);
-      font-weight: 500;
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.25) 0%,
+        rgba(59, 130, 246, 0.15) 100%);
+      color: #f9fafb;
+      font-weight: 600;
+      border-left: 3px solid #3b82f6;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .select-option.disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      color: #6b7280;
     }
 
     .select-no-options {
       padding: 0.75rem 1rem;
-      color: var(--color-text-secondary, #666);
+      color: #9ca3af;
       font-style: italic;
       text-align: center;
+      font-size: 0.875rem;
     }
 
     .error-message {
       font-size: 0.75rem;
-      color: var(--color-error, #f44336);
+      color: #ef4444;
       margin-top: 0.25rem;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .hint-text {
       font-size: 0.75rem;
-      color: var(--color-text-secondary, #666);
+      color: #9ca3af;
       margin-top: 0.25rem;
     }
 
     .has-error .select-container {
-      border-color: var(--color-error, #f44336);
+      border-color: #ef4444;
+      box-shadow:
+        0 2px 8px rgba(239, 68, 68, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .has-error .select-label {
+      color: #ef4444;
     }
 
     .focused .select-container {
-      border-color: var(--color-primary, #3f51b5);
-      box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+      border-color: #3b82f6;
+      box-shadow:
+        0 0 0 2px rgba(59, 130, 246, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .focused .select-arrow {
+      color: #3b82f6;
     }
 
     .disabled .select-container {
-      background-color: var(--color-background-disabled, #f5f5f5);
+      background: linear-gradient(135deg,
+        rgba(75, 85, 99, 0.2) 0%,
+        rgba(55, 65, 81, 0.3) 100%);
       cursor: not-allowed;
-      opacity: 0.7;
+      opacity: 0.6;
+      border-color: rgba(255, 255, 255, 0.05);
     }
 
-    /* Estilos para tema oscuro */
-    @media (prefers-color-scheme: dark) {
-      .select-label {
-        color: var(--color-text-primary-dark, #e0e0e0);
-      }
+    .disabled .select-label {
+      color: #6b7280;
+    }
 
+    .disabled .select-value {
+      color: #6b7280;
+    }
+
+    .disabled .select-arrow {
+      color: #6b7280;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
       .select-container {
-        color: var(--color-text-primary-dark, #e0e0e0);
-        background-color: var(--color-surface-dark, #333);
-        border-color: var(--color-border-dark, #555);
-      }
-
-      .select-container:hover:not(.disabled) {
-        border-color: var(--color-primary-dark, #7986cb);
-      }
-
-      .select-arrow {
-        color: var(--color-text-secondary-dark, #aaa);
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8125rem;
       }
 
       .select-dropdown {
-        background-color: var(--color-surface-dark, #333);
-        border-color: var(--color-border-dark, #555);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        max-height: 150px;
       }
 
-      .select-option:hover:not(.disabled) {
-        background-color: var(--color-background-hover-dark, #444);
+      .select-option {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8125rem;
+      }
+    }
+
+    /* Accessibility improvements */
+    @media (prefers-reduced-motion: reduce) {
+      .select-container,
+      .select-option,
+      .select-arrow {
+        transition: none;
+      }
+
+      .select-container::before,
+      .select-option::before {
+        display: none;
+      }
+    }
+
+    /* High contrast mode */
+    @media (prefers-contrast: high) {
+      .select-container {
+        border-width: 2px;
+        border-color: rgba(255, 255, 255, 0.4);
       }
 
       .select-option.selected {
-        background-color: var(--color-primary-dark-light, #3f51b5);
-        color: var(--color-primary-dark, #7986cb);
+        border-left-width: 4px;
+        font-weight: 700;
       }
 
-      .select-no-options {
-        color: var(--color-text-secondary-dark, #aaa);
-      }
-
-      .hint-text {
-        color: var(--color-text-secondary-dark, #aaa);
-      }
-
-      .focused .select-container {
-        border-color: var(--color-primary-dark, #7986cb);
-        box-shadow: 0 0 0 2px rgba(121, 134, 203, 0.2);
-      }
-
-      .disabled .select-container {
-        background-color: var(--color-background-disabled-dark, #444);
+      .error-message {
+        font-weight: 600;
       }
     }
   `]
@@ -268,6 +417,7 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
   isFocused = false;
   isDisabled = false;
   showError = false;
+
 
   get selectedLabel(): string {
     const selected = this.options.find(option => option.value === this.value);
@@ -349,6 +499,7 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
   onClickOutside(event: MouseEvent): void {
     if (this.elementRef && !this.elementRef.nativeElement.contains(event.target)) {
       this.isOpen = false;
+      this.isFocused = false;
     }
   }
 

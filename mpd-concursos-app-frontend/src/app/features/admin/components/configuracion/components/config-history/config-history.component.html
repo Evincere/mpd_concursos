@@ -1,142 +1,207 @@
 <div class="history-container">
-  <div class="header">
-    <h3>Historial de Cambios de Configuración</h3>
-    <p class="description">
+  <!-- Header glassmorphism -->
+  <div class="history-header">
+    <h3 class="history-title">Historial de Cambios de Configuración</h3>
+    <p class="history-description">
       Consulte el historial de cambios realizados en la configuración del sistema.
     </p>
   </div>
-  
-  <mat-card class="filter-card">
-    <mat-card-content>
-      <form [formGroup]="filterForm" class="filter-form">
-        <div class="filter-row" formGroupName="dateRange">
-          <mat-form-field appearance="outline" class="date-filter">
-            <mat-label>Fecha desde</mat-label>
-            <input matInput [matDatepicker]="startPicker" formControlName="start">
-            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-            <mat-datepicker #startPicker></mat-datepicker>
-          </mat-form-field>
-          
-          <mat-form-field appearance="outline" class="date-filter">
-            <mat-label>Fecha hasta</mat-label>
-            <input matInput [matDatepicker]="endPicker" formControlName="end">
-            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-            <mat-datepicker #endPicker></mat-datepicker>
-          </mat-form-field>
-          
-          <mat-form-field appearance="outline" class="category-filter">
-            <mat-label>Categoría</mat-label>
-            <mat-select formControlName="category">
-              <mat-option value="">Todas</mat-option>
-              <mat-option *ngFor="let category of configCategories" [value]="category.value">
-                {{category.label}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-          
-          <mat-form-field appearance="outline" class="user-filter">
-            <mat-label>Usuario</mat-label>
-            <input matInput formControlName="user" placeholder="Buscar por usuario...">
-            <mat-icon matSuffix>person</mat-icon>
-          </mat-form-field>
+
+  <!-- Filtros glassmorphism -->
+  <div class="filter-card">
+    <div class="filter-header">
+      <h4 class="filter-title">🔍 Filtros de Búsqueda</h4>
+    </div>
+
+    <form [formGroup]="filterForm" class="filter-form">
+      <div class="filter-grid" formGroupName="dateRange">
+        <div class="form-field">
+          <label class="field-label">Fecha desde</label>
+          <input
+            type="date"
+            class="form-input"
+            formControlName="start">
         </div>
-        
-        <div class="filter-actions">
-          <button mat-button color="primary" (click)="resetFilters()">
-            <mat-icon>clear</mat-icon>
-            Limpiar
-          </button>
-          
-          <button mat-raised-button color="primary" (click)="applyFilter()">
-            <mat-icon>filter_list</mat-icon>
-            Filtrar
-          </button>
+
+        <div class="form-field">
+          <label class="field-label">Fecha hasta</label>
+          <input
+            type="date"
+            class="form-input"
+            formControlName="end">
         </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-  
-  <div class="table-container mat-elevation-z2">
-    <table mat-table [dataSource]="configHistory" matSort>
-      <!-- Fecha Column -->
-      <ng-container matColumnDef="timestamp">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
-        <td mat-cell *matCellDef="let item">
-          {{formatDate(item.timestamp)}}
-        </td>
-      </ng-container>
-      
-      <!-- Usuario Column -->
-      <ng-container matColumnDef="user">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Usuario</th>
-        <td mat-cell *matCellDef="let item">
-          {{item.user.fullName}}
-        </td>
-      </ng-container>
-      
-      <!-- Categoría Column -->
-      <ng-container matColumnDef="category">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Categoría</th>
-        <td mat-cell *matCellDef="let item">
-          {{getCategoryName(item.category)}}
-        </td>
-      </ng-container>
-      
-      <!-- Cambios Column -->
-      <ng-container matColumnDef="changes">
-        <th mat-header-cell *matHeaderCellDef>Cambios</th>
-        <td mat-cell *matCellDef="let item">
-          <div class="changes-cell">
-            <span class="changes-summary">{{formatChanges(item.changes)}}</span>
-            <button mat-icon-button color="primary" (click)="showDetails(item)" matTooltip="Ver detalles">
-              <mat-icon>visibility</mat-icon>
-            </button>
-          </div>
-        </td>
-      </ng-container>
-      
-      <!-- Motivo Column -->
-      <ng-container matColumnDef="reason">
-        <th mat-header-cell *matHeaderCellDef>Motivo</th>
-        <td mat-cell *matCellDef="let item">
-          {{item.reason || 'No especificado'}}
-        </td>
-      </ng-container>
-      
-      <!-- Acciones Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Acciones</th>
-        <td mat-cell *matCellDef="let item">
-          <button mat-icon-button color="warn" (click)="revertChange(item)" matTooltip="Revertir cambio">
-            <mat-icon>restore</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-      
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
-    
-    <!-- Loading Overlay -->
+
+        <div class="form-field">
+          <label class="field-label">Categoría</label>
+          <select class="form-select" formControlName="category">
+            <option value="">Todas</option>
+            <option *ngFor="let category of configCategories" [value]="category.value">
+              {{category.label}}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Usuario</label>
+          <input
+            type="text"
+            class="form-input"
+            formControlName="user"
+            placeholder="Buscar por usuario...">
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button type="button" class="btn-secondary" (click)="resetFilters()">
+          <span class="btn-icon">🗑️</span>
+          Limpiar
+        </button>
+
+        <button type="button" class="btn-primary" (click)="applyFilter()">
+          <span class="btn-icon">🔍</span>
+          Filtrar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabla glassmorphism -->
+  <div class="table-container">
+    <!-- Loading state -->
     <div *ngIf="isLoading" class="loading-overlay">
-      <mat-spinner diameter="40"></mat-spinner>
+      <div class="loading-spinner"></div>
+      <span class="loading-text">Cargando historial...</span>
     </div>
-    
-    <!-- Empty State -->
+
+    <!-- Empty state -->
     <div *ngIf="!isLoading && configHistory.length === 0" class="empty-state">
-      <mat-icon>history</mat-icon>
-      <p>No se encontraron cambios de configuración con los filtros aplicados</p>
-      <button mat-stroked-button color="primary" (click)="resetFilters()">Limpiar Filtros</button>
+      <div class="empty-icon">📜</div>
+      <h4 class="empty-title">No hay cambios registrados</h4>
+      <p class="empty-description">No se encontraron cambios de configuración con los filtros aplicados</p>
+      <button type="button" class="btn-primary" (click)="resetFilters()">
+        <span class="btn-icon">🔄</span>
+        Limpiar Filtros
+      </button>
     </div>
-    
-    <!-- Paginator -->
-    <mat-paginator 
-      [length]="totalItems"
-      [pageSize]="pageSize"
-      [pageSizeOptions]="pageSizeOptions"
-      [pageIndex]="pageIndex"
-      (page)="onPageChange($event)"
-      showFirstLastButtons>
-    </mat-paginator>
+
+    <!-- Tabla de datos -->
+    <div *ngIf="!isLoading && configHistory.length > 0" class="history-table">
+      <div class="table-header">
+        <div class="header-cell">Fecha</div>
+        <div class="header-cell">Usuario</div>
+        <div class="header-cell">Categoría</div>
+        <div class="header-cell">Cambios</div>
+        <div class="header-cell">Motivo</div>
+        <div class="header-cell">Acciones</div>
+      </div>
+
+      <div class="table-body">
+        <div *ngFor="let item of configHistory" class="table-row">
+          <div class="table-cell">
+            <div class="cell-content">
+              <span class="cell-label">Fecha:</span>
+              <span class="cell-value">{{formatDate(item.timestamp)}}</span>
+            </div>
+          </div>
+
+          <div class="table-cell">
+            <div class="cell-content">
+              <span class="cell-label">Usuario:</span>
+              <span class="cell-value user-name">{{item.user.fullName}}</span>
+            </div>
+          </div>
+
+          <div class="table-cell">
+            <div class="cell-content">
+              <span class="cell-label">Categoría:</span>
+              <span class="cell-value category-badge">{{getCategoryName(item.category)}}</span>
+            </div>
+          </div>
+
+          <div class="table-cell">
+            <div class="cell-content">
+              <span class="cell-label">Cambios:</span>
+              <div class="changes-content">
+                <span class="changes-summary">{{formatChanges(item.changes)}}</span>
+                <button type="button" class="btn-details" (click)="showDetails(item)" title="Ver detalles">
+                  👁️
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-cell">
+            <div class="cell-content">
+              <span class="cell-label">Motivo:</span>
+              <span class="cell-value reason-text">{{item.reason || 'No especificado'}}</span>
+            </div>
+          </div>
+
+          <div class="table-cell">
+            <div class="cell-content">
+              <span class="cell-label">Acciones:</span>
+              <button type="button" class="btn-revert" (click)="revertChange(item)" title="Revertir cambio">
+                🔄
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginación glassmorphism -->
+    <div *ngIf="!isLoading && configHistory.length > 0" class="pagination-container">
+      <div class="pagination-info">
+        Mostrando {{(pageIndex * pageSize) + 1}} - {{Math.min((pageIndex + 1) * pageSize, totalItems)}} de {{totalItems}} elementos
+      </div>
+
+      <div class="pagination-controls">
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="pageIndex === 0"
+          (click)="onPageChange({pageIndex: 0, pageSize: pageSize})">
+          ⏮️
+        </button>
+
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="pageIndex === 0"
+          (click)="onPageChange({pageIndex: pageIndex - 1, pageSize: pageSize})">
+          ◀️
+        </button>
+
+        <span class="pagination-current">
+          Página {{pageIndex + 1}} de {{Math.ceil(totalItems / pageSize)}}
+        </span>
+
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="(pageIndex + 1) * pageSize >= totalItems"
+          (click)="onPageChange({pageIndex: pageIndex + 1, pageSize: pageSize})">
+          ▶️
+        </button>
+
+        <button
+          type="button"
+          class="pagination-btn"
+          [disabled]="(pageIndex + 1) * pageSize >= totalItems"
+          (click)="onPageChange({pageIndex: Math.ceil(totalItems / pageSize) - 1, pageSize: pageSize})">
+          ⏭️
+        </button>
+      </div>
+
+      <div class="page-size-selector">
+        <label class="page-size-label">Elementos por página:</label>
+        <select
+          class="page-size-select"
+          [value]="pageSize"
+          (change)="onPageChange({pageIndex: 0, pageSize: +$any($event.target).value})">
+          <option *ngFor="let size of pageSizeOptions" [value]="size">{{size}}</option>
+        </select>
+      </div>
+    </div>
   </div>
 </div>

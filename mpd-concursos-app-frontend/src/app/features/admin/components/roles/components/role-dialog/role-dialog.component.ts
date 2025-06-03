@@ -1,18 +1,19 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
 
-import { Role } from '@core/services/admin/roles-permissions.service';
+// Importar componentes custom en lugar de Material UI
+import { CustomFormModule } from '@shared/components/custom-form/custom-form.module';
+import { CustomTabsComponent } from '@shared/components/custom-form/custom-tabs/custom-tabs.component';
+import { CustomTabComponent } from '@shared/components/custom-form/custom-tabs/custom-tab.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
+import { CustomTextareaComponent } from '@shared/components/custom-form/custom-textarea/custom-textarea.component';
+
+// Importar UnifiedDialogService en lugar de MatDialog
+import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
+
+import { Role } from '@core/services/admin/admin-roles.service';
 import { PermissionsMatrixComponent } from '../permissions-matrix/permissions-matrix.component';
 
 interface DialogData {
@@ -30,16 +31,12 @@ interface DialogData {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatTabsModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
+    CustomFormModule,
+    CustomTabsComponent,
+    CustomTabComponent,
+    CustomButtonComponent,
+    CustomFormFieldComponent,
+    CustomTextareaComponent,
     PermissionsMatrixComponent
   ]
 })
@@ -51,8 +48,8 @@ export class RoleDialogComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<RoleDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
+    public dialogRef: UnifiedDialogRef<RoleDialogComponent>,
+    @Inject(DIALOG_DATA) public data: DialogData
   ) {
     this.isEditMode = !!data.role;
 
@@ -137,5 +134,23 @@ export class RoleDialogComponent implements OnInit {
    */
   isSystemRole(): boolean {
     return this.isEditMode && this.data.role?.isSystem || false;
+  }
+
+  /**
+   * Obtiene el mensaje de error para un campo específico
+   * @param fieldName Nombre del campo
+   * @returns Mensaje de error o cadena vacía
+   */
+  getFieldError(fieldName: string): string {
+    const field = this.roleForm.get(fieldName);
+    if (field && field.invalid && (field.dirty || field.touched)) {
+      if (field.hasError('required')) {
+        return `${fieldName === 'name' ? 'El nombre del rol' : 'La descripción'} es obligatorio`;
+      }
+      if (field.hasError('pattern')) {
+        return 'El nombre solo puede contener letras, números y guiones bajos';
+      }
+    }
+    return '';
   }
 }

@@ -1,0 +1,149 @@
+// Solución específica para el problema de dropdown cortado en filtros
+// Este archivo contiene las correcciones CSS necesarias para que los dropdowns
+// de los selects se muestren correctamente sin ser cortados por los contenedores
+
+/* ===== SOLUCIÓN PARA DROPDOWN CORTADO ===== */
+
+// Solución específica para el select problemático
+.filter-select-dropdown-fix {
+  // Solo aplicar overflow visible sin afectar el posicionamiento del select
+  overflow: visible !important;
+
+  // Contenedor principal del select - mantener estilos normales
+  ::ng-deep .custom-select,
+  ::ng-deep .custom-select-container {
+    overflow: visible !important;
+  }
+
+  // Dropdown del select - solo z-index muy alto
+  ::ng-deep .select-dropdown {
+    z-index: 9999999 !important; // Z-index extremadamente alto para estar por encima de la tabla
+    position: absolute !important;
+  }
+}
+
+// Aplicar a la card de filtros específicamente
+.filters-card {
+  // Forzar overflow visible en todos los niveles
+  overflow: visible !important;
+  
+  // Sobrescribir el CustomCard component
+  ::ng-deep app-custom-card,
+  ::ng-deep .custom-card {
+    overflow: visible !important;
+    
+    .card-content {
+      overflow: visible !important;
+    }
+  }
+  
+  // Sobrescribir el formulario de filtros
+  ::ng-deep .filter-form {
+    overflow: visible !important;
+    
+    .filter-row {
+      overflow: visible !important;
+    }
+  }
+  
+  // Solución específica para CustomSelectComponent
+  ::ng-deep app-custom-select {
+    // Contenedor principal del select
+    .custom-select,
+    .custom-select-container {
+      overflow: visible !important;
+      position: relative;
+      z-index: 10;
+    }
+    
+    // Dropdown del select
+    .select-dropdown {
+      position: absolute !important;
+      top: 100% !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 9999 !important;
+      margin-top: 0.25rem !important;
+      
+      // Asegurar que el dropdown sea visible
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    // Si el select usa un panel diferente
+    .select-panel,
+    .mat-select-panel,
+    .cdk-overlay-pane {
+      z-index: 9999 !important;
+      position: fixed !important;
+    }
+  }
+}
+
+/* ===== SOLUCIÓN GLOBAL ADICIONAL ===== */
+
+// Asegurar que cualquier contenedor con filtros permita overflow
+[class*="filter"],
+[class*="search"],
+.form-container,
+.form-wrapper {
+  overflow: visible !important;
+  
+  app-custom-select {
+    overflow: visible !important;
+    
+    * {
+      overflow: visible !important;
+    }
+  }
+}
+
+// Forzar z-index alto para todos los dropdowns de select
+app-custom-select {
+  .select-dropdown,
+  .select-panel,
+  .mat-select-panel,
+  .cdk-overlay-pane,
+  [role="listbox"],
+  [role="combobox"] {
+    z-index: 9999 !important;
+    position: absolute !important;
+  }
+}
+
+/* ===== SOLUCIÓN PARA CDK OVERLAY (si se usa Angular Material) ===== */
+
+.cdk-overlay-container {
+  z-index: 10000 !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 9999 !important;
+}
+
+/* ===== SOLUCIÓN PARA CONTENEDORES ESPECÍFICOS ===== */
+
+// Roles admin container
+.roles-admin-container {
+  overflow: visible !important;
+  
+  .filters-card {
+    overflow: visible !important;
+  }
+}
+
+// Cualquier card que contenga filtros
+app-custom-card:has(.filter-form),
+app-custom-card:has(.filter-row),
+app-custom-card:has(app-custom-select) {
+  overflow: visible !important;
+  
+  .custom-card {
+    overflow: visible !important;
+    
+    .card-content {
+      overflow: visible !important;
+    }
+  }
+}

@@ -38,6 +38,9 @@ export interface PageEvent {
       </div>
 
       <table *ngIf="data && data.length > 0" class="custom-table" [ngClass]="tableClass" [ngStyle]="tableStyle">
+        <colgroup>
+          <col *ngFor="let column of columnComponents; trackBy: trackByColumn">
+        </colgroup>
         <thead>
           <tr>
             <th *ngIf="selectable" class="selection-column">
@@ -227,23 +230,64 @@ export interface PageEvent {
       color: #B0B0B0;
     }
 
+    /* ===== PAGINACIÓN CON GLASSMORPHISM ===== */
     .pagination-container {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem;
-      background-color: #222222;
-      border-top: 1px solid #484848;
+      padding: 1rem 1.5rem;
+
+      /* Premium glassmorphism base */
+      background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.95) 0%,
+        rgba(75, 85, 99, 0.9) 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-top: none;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 0 0 8px 8px;
+      position: relative;
+      overflow: hidden;
+
+      /* Efecto de brillo sutil en hover */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent);
+        transition: left 1s ease;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      &:hover::before {
+        left: 100%;
+      }
     }
 
     .pagination-info {
       font-size: 0.875rem;
-      color: #B0B0B0;
+      color: #d1d5db;
+      font-weight: 500;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 2;
     }
 
     .pagination-controls {
       display: flex;
       align-items: center;
+      position: relative;
+      z-index: 2;
     }
 
     .pagination-pages {
@@ -252,9 +296,11 @@ export interface PageEvent {
     }
 
     .pagination-button {
-      background: none;
-      border: none;
-      color: #FFFFFF;
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.1) 0%,
+        rgba(59, 130, 246, 0.05) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: #f9fafb;
       cursor: pointer;
       width: 36px;
       height: 36px;
@@ -262,124 +308,239 @@ export interface PageEvent {
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(4px);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .pagination-button:hover:not(:disabled) {
-      background-color: rgba(25, 118, 210, 0.1);
-      color: #1976D2;
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.2) 0%,
+        rgba(59, 130, 246, 0.1) 100%);
+      color: #3b82f6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.4);
     }
 
     .pagination-button:disabled {
-      color: #666666;
+      background: linear-gradient(135deg,
+        rgba(107, 114, 128, 0.1) 0%,
+        rgba(107, 114, 128, 0.05) 100%);
+      border-color: rgba(107, 114, 128, 0.2);
+      color: #9ca3af;
       cursor: not-allowed;
+      opacity: 0.6;
     }
 
     .page-button {
-      background: none;
-      border: none;
-      color: #FFFFFF;
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.1) 0%,
+        rgba(59, 130, 246, 0.05) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: #f9fafb;
       cursor: pointer;
       min-width: 36px;
       height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
-      transition: all 0.2s ease;
+      border-radius: 6px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       font-weight: 500;
+      backdrop-filter: blur(4px);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      margin: 0 2px;
     }
 
     .page-button:hover:not(.active) {
-      background-color: rgba(25, 118, 210, 0.1);
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.2) 0%,
+        rgba(59, 130, 246, 0.1) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.4);
     }
 
     .page-button.active {
-      background-color: #1976D2;
+      background: linear-gradient(135deg,
+        #3b82f6 0%,
+        #2563eb 100%);
       color: white;
-      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.4);
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+      border-color: #3b82f6;
+      transform: translateY(-1px);
     }
 
     .pagination-size {
       display: flex;
       align-items: center;
       font-size: 0.875rem;
-      color: #B0B0B0;
+      color: #d1d5db;
+      font-weight: 500;
+      position: relative;
+      z-index: 2;
     }
 
     .pagination-size select {
       margin-left: 0.5rem;
-      background-color: #333333;
-      color: #FFFFFF;
-      border: 1px solid #484848;
-      padding: 0.35rem 0.75rem;
-      border-radius: 4px;
-      font-size: 0.9rem;
+      background: linear-gradient(135deg,
+        rgba(75, 85, 99, 0.9) 0%,
+        rgba(55, 65, 81, 0.9) 100%) !important;
+      color: #f9fafb !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      padding: 0.375rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f9fafb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 0.5rem center !important;
+      background-size: 1rem !important;
+      padding-right: 2.5rem !important;
     }
 
     .pagination-size select:hover {
-      border-color: rgba(25, 118, 210, 0.3);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      border-color: rgba(59, 130, 246, 0.3) !important;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+      background: linear-gradient(135deg,
+        rgba(75, 85, 99, 1) 0%,
+        rgba(55, 65, 81, 1) 100%) !important;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f9fafb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 0.5rem center !important;
+      background-size: 1rem !important;
     }
 
-    /* Estilos para la tabla */
+    .pagination-size select:focus {
+      outline: none !important;
+      border-color: rgba(59, 130, 246, 0.5) !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+      background: linear-gradient(135deg,
+        rgba(75, 85, 99, 0.9) 0%,
+        rgba(55, 65, 81, 0.9) 100%) !important;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f9fafb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 0.5rem center !important;
+      background-size: 1rem !important;
+    }
+
+    /* ===== GLASSMORPHISM DROPDOWN OPTIONS ===== */
+    .pagination-size select option {
+      background: rgba(55, 65, 81, 0.95);
+      color: #f9fafb;
+      padding: 0.5rem;
+      border: none;
+    }
+
+    .pagination-size select option:hover,
+    .pagination-size select option:focus {
+      background: rgba(75, 85, 99, 0.95);
+      color: #f9fafb;
+    }
+
+    .pagination-size select option:checked {
+      background: rgba(59, 130, 246, 0.8);
+      color: #f9fafb;
+    }
+
+    /* ===== GLASSMORPHISM DESIGN SYSTEM FOR CUSTOM TABLE ===== */
     .custom-table-container {
       position: relative;
       width: 100%;
       overflow: hidden;
       border-radius: 8px;
-      background-color: #333333;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(72, 72, 72, 0.2);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-      margin-bottom: 1.5rem;
+
+      /* Premium glassmorphism base */
+      background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.95) 0%,
+        rgba(75, 85, 99, 0.9) 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.2),
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-bottom: 0;
     }
 
     .custom-table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
+      background: transparent;
     }
 
     .custom-table th {
-      background-color: #222222;
-      color: #FFFFFF;
+      background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.9) 0%,
+        rgba(75, 85, 99, 0.8) 100%);
+      color: #f9fafb;
       font-weight: 600;
-      padding: 1.25rem 1rem;
+      padding: 1rem 1.25rem;
       text-align: left;
-      border-bottom: 2px solid rgba(25, 118, 210, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       position: sticky;
       top: 0;
       z-index: 10;
-      font-size: 0.95rem;
+      font-size: 0.8125rem;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+      &:first-child {
+        border-top-left-radius: 8px;
+      }
+
+      &:last-child {
+        border-top-right-radius: 8px;
+      }
     }
 
     .custom-table td {
-      padding: 1.25rem 1rem;
-      border-bottom: 1px solid rgba(72, 72, 72, 0.2);
-      color: #FFFFFF;
-      font-size: 0.95rem;
-      transition: all 0.2s ease;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #f9fafb;
+      font-size: 0.875rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: transparent;
     }
 
     .custom-table tbody tr {
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
     }
 
     .custom-table tbody tr:hover {
-      background-color: rgba(58, 58, 58, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
     .custom-table tbody tr.clickable {
       cursor: pointer;
+    }
+
+    .custom-table tbody tr:last-child td:first-child {
+      border-bottom-left-radius: 8px;
+    }
+
+    .custom-table tbody tr:last-child td:last-child {
+      border-bottom-right-radius: 8px;
     }
 
     /* Estilos para tema oscuro */
@@ -660,5 +821,10 @@ export class CustomTableComponent<T = unknown> implements AfterContentInit {
     }
 
     this.selectionChange.emit([...this.selectedItems]);
+  }
+
+  // TrackBy function para optimizar el renderizado de columnas
+  trackByColumn(index: number, column: any): any {
+    return column.key || index;
   }
 }

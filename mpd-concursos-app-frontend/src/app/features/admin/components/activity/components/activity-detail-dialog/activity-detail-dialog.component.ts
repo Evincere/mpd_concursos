@@ -1,13 +1,8 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -20,14 +15,7 @@ import { AdminActivityService, ActivityLog } from '@core/services/admin/admin-ac
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatDividerModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule
+    MatIconModule
   ]
 })
 export class ActivityDetailDialogComponent implements OnInit, OnDestroy {
@@ -145,5 +133,9 @@ export class ActivityDetailDialogComponent implements OnInit, OnDestroy {
       .catch(() => {
         this.snackBar.open('Error al copiar al portapapeles', 'Cerrar', { duration: 2000 });
       });
+  }
+
+  closeDialog(): void {
+    this.dialogRef.close();
   }
 }

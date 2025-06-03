@@ -187,6 +187,11 @@ export class CustomInscriptionDetailComponent implements OnInit, OnDestroy {
     window.open(document.downloadUrl, '_blank');
   }
 
+  // Cambiar pestaña activa
+  setActiveTab(index: number): void {
+    this.activeTab = index;
+  }
+
   // Cerrar el componente
   onClose(): void {
     this.closeEvent.emit();

@@ -1,5 +1,7 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 // Componentes personalizados
 import { CustomDialogComponent } from '@shared/components/custom-form/custom-dialog/custom-dialog.component';
@@ -25,7 +27,7 @@ import { User, UserStatus } from '../domain/models/user.model';
     CustomCardComponent
   ]
 })
-export class UsuarioDetalleComponent implements OnInit {
+export class UsuarioDetalleComponent implements OnInit, OnDestroy {
   @Input() userId!: string | number;
   @Output() close = new EventEmitter<void>();
   @Output() edit = new EventEmitter<User>();
@@ -34,13 +36,22 @@ export class UsuarioDetalleComponent implements OnInit {
   isLoading = true;
   error = '';
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private userService: UserService,
     private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
+    console.log('🚀 UsuarioDetalleComponent - ngOnInit, userId:', this.userId);
     this.loadUserDetails();
+  }
+
+  ngOnDestroy(): void {
+    console.log('🗑️ UsuarioDetalleComponent - ngOnDestroy');
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadUserDetails(): void {
@@ -54,7 +65,9 @@ export class UsuarioDetalleComponent implements OnInit {
     }
 
     // Usar el servicio de usuario para obtener los detalles
-    this.userService.getUserById(this.userId.toString()).subscribe({
+    this.userService.getUserById(this.userId.toString())
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (apiUser) => {
         // Mapear la respuesta de la API a nuestro modelo de usuario
         this.mapApiUserToUser(apiUser);
@@ -160,24 +173,26 @@ export class UsuarioDetalleComponent implements OnInit {
   }
 
   onClose(): void {
+    console.log('🔒 UsuarioDetalleComponent - onClose() llamado');
     this.close.emit();
   }
 
   onEdit(): void {
+    console.log('✏️ UsuarioDetalleComponent - onEdit() llamado, usuario:', this.usuario);
     if (this.usuario) {
       // Asegurarse de que el usuario tenga un ID válido antes de emitir el evento
       if (!this.usuario.id) {
-        console.error('Error: El usuario no tiene un ID válido');
+        console.error('❌ Error: El usuario no tiene un ID válido');
         this.notificationService.error('Error al editar el usuario: ID no válido');
         return;
       }
 
       // Clonar el objeto para evitar problemas de referencia
       const userToEdit = { ...this.usuario };
-      console.log('Enviando usuario para edición:', userToEdit);
+      console.log('✅ Enviando usuario para edición:', userToEdit);
       this.edit.emit(userToEdit);
     } else {
-      console.error('Error: No hay usuario para editar');
+      console.error('❌ Error: No hay usuario para editar');
       this.notificationService.error('Error al editar el usuario: No hay datos disponibles');
     }
   }
@@ -213,6 +228,56 @@ export class UsuarioDetalleComponent implements OnInit {
         return 'Expirado';
       default:
         return estado || 'No disponible';
+    }
+  }
+
+  /**
+   * Obtiene la clase CSS semántica para un rol específico
+   * @param role - El rol del usuario
+   * @returns La clase CSS correspondiente al rol
+   */
+  getRoleClass(role: string): string {
+    const roleType = role.replace('ROLE_', '').toLowerCase();
+    switch (roleType) {
+      case 'admin':
+        return 'role-admin';
+      case 'moderator':
+        return 'role-moderator';
+      case 'user':
+        return 'role-user';
+      case 'editor':
+        return 'role-editor';
+      case 'viewer':
+        return 'role-viewer';
+      case 'guest':
+        return 'role-guest';
+      default:
+        return 'role-default';
+    }
+  }
+
+  /**
+   * Obtiene el color semántico para un rol específico
+   * @param role - El rol del usuario
+   * @returns El color hexadecimal correspondiente al rol
+   */
+  getRoleColor(role: string): string {
+    const roleType = role.replace('ROLE_', '').toLowerCase();
+    switch (roleType) {
+      case 'admin':
+        return '#ef4444'; // Rojo para admin
+      case 'moderator':
+        return '#4CAF50'; // Verde para moderator
+      case 'user':
+        return '#3b82f6'; // Azul para user
+      case 'editor':
+        return '#f59e0b'; // Naranja para editor
+      case 'viewer':
+        return '#06b6d4'; // Cyan para viewer
+      case 'guest':
+        return '#9ca3af'; // Gris para guest
+      default:
+        return '#8b5cf6'; // Púrpura para default
     }
   }
 }

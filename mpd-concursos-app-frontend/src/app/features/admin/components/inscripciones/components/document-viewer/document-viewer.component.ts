@@ -1,21 +1,12 @@
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { InscriptionDocument, AdminInscriptionsService, DocumentStatusUpdateRequest } from '../../../../../../core/services/admin/admin-inscriptions.service';
-import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
 
 @Component({
   selector: 'app-document-viewer',
@@ -26,16 +17,8 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTooltipModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatDialogModule
+    CustomButtonComponent,
+    ContestStatusBadgeComponent
   ]
 })
 export class DocumentViewerComponent implements OnInit, OnDestroy {
@@ -58,9 +41,7 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private inscriptionsService: AdminInscriptionsService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private inscriptionsService: AdminInscriptionsService
   ) {
     this.commentForm = this.fb.group({
       observations: ['', [Validators.maxLength(500)]]
@@ -88,7 +69,7 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error descargando documento:', error);
-          this.snackBar.open('Error al cargar el documento', 'Cerrar', { duration: 3000 });
+          console.log('Error al cargar el documento');
           this.isLoading = false;
         }
       });
@@ -127,86 +108,66 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error descargando documento:', error);
-          this.snackBar.open('Error al descargar el documento', 'Cerrar', { duration: 3000 });
+          console.log('Error al descargar el documento');
           this.isLoading = false;
         }
       });
   }
 
   approveDocument(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Aprobar Documento',
-        message: `¿Está seguro que desea aprobar el documento "${this.document.fileName}"?\n\nEsta acción no se puede deshacer.`,
-        confirmText: 'Aprobar',
-        cancelText: 'Cancelar'
-      }
-    });
+    if (confirm(`¿Está seguro que desea aprobar el documento "${this.document.fileName}"?\n\nEsta acción no se puede deshacer.`)) {
+      this.isLoading = true;
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.isLoading = true;
+      const request: DocumentStatusUpdateRequest = {
+        status: 'APPROVED',
+        observations: this.commentForm.get('observations')?.value
+      };
 
-        const request: DocumentStatusUpdateRequest = {
-          status: 'APPROVED',
-          observations: this.commentForm.get('observations')?.value
-        };
-
-        this.inscriptionsService.updateDocumentStatus(this.inscriptionId, this.document.id, request)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (updatedDocument) => {
-              this.document = updatedDocument;
-              this.documentUpdated.emit(updatedDocument);
-              this.snackBar.open('Documento aprobado correctamente', 'Cerrar', { duration: 3000 });
-              this.isLoading = false;
-            },
-            error: (error) => {
-              console.error('Error aprobando documento:', error);
-              this.snackBar.open('Error al aprobar el documento', 'Cerrar', { duration: 3000 });
-              this.isLoading = false;
-            }
-          });
-      }
-    });
+      this.inscriptionsService.updateDocumentStatus(this.inscriptionId, this.document.id, request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (updatedDocument) => {
+            this.document = updatedDocument;
+            this.documentUpdated.emit(updatedDocument);
+            console.log('Documento aprobado correctamente');
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error aprobando documento:', error);
+            console.log('Error al aprobar el documento');
+            this.isLoading = false;
+          }
+        });
+    }
   }
 
   rejectDocument(): void {
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Rechazar Documento',
-        message: `¿Está seguro que desea rechazar el documento "${this.document.fileName}"?\n\nPor favor, ingrese el motivo del rechazo en las observaciones antes de confirmar.\n\nEsta acción no se puede deshacer.`,
-        confirmText: 'Rechazar',
-        cancelText: 'Cancelar'
-      }
-    });
+    const reason = prompt(`¿Está seguro que desea rechazar el documento "${this.document.fileName}"?\n\nPor favor, ingrese el motivo del rechazo:`);
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.textareaValue) {
-        this.isLoading = true;
+    if (reason && reason.trim()) {
+      this.isLoading = true;
 
-        const request: DocumentStatusUpdateRequest = {
-          status: 'REJECTED',
-          observations: result.textareaValue
-        };
+      const request: DocumentStatusUpdateRequest = {
+        status: 'REJECTED',
+        observations: reason.trim()
+      };
 
-        this.inscriptionsService.updateDocumentStatus(this.inscriptionId, this.document.id, request)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (updatedDocument) => {
-              this.document = updatedDocument;
-              this.documentUpdated.emit(updatedDocument);
-              this.snackBar.open('Documento rechazado correctamente', 'Cerrar', { duration: 3000 });
-              this.isLoading = false;
-            },
-            error: (error) => {
-              console.error('Error rechazando documento:', error);
-              this.snackBar.open('Error al rechazar el documento', 'Cerrar', { duration: 3000 });
-              this.isLoading = false;
-            }
-          });
-      }
-    });
+      this.inscriptionsService.updateDocumentStatus(this.inscriptionId, this.document.id, request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (updatedDocument) => {
+            this.document = updatedDocument;
+            this.documentUpdated.emit(updatedDocument);
+            console.log('Documento rechazado correctamente');
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error rechazando documento:', error);
+            console.log('Error al rechazar el documento');
+            this.isLoading = false;
+          }
+        });
+    }
   }
 
   // Controles de navegación del PDF

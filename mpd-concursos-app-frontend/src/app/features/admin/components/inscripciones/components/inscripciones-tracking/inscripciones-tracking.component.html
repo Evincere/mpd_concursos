@@ -2,10 +2,12 @@
   <div class="header">
     <h1>Seguimiento de Inscripciones</h1>
     <div class="header-actions">
-      <button class="btn btn-primary" [routerLink]="['/admin/inscripciones/dashboard']">
-        <i class="fas fa-tachometer-alt"></i>
-        Dashboard
-      </button>
+      <app-custom-button
+        [variant]="'primary'"
+        [icon]="'tachometer-alt'"
+        [label]="'Dashboard'"
+        (buttonClick)="navigateToDashboard()">
+      </app-custom-button>
     </div>
   </div>
 
@@ -78,20 +80,34 @@
           <span class="timer-text">Actualización en {{timeLeft}}s</span>
         </div>
         
-        <button class="btn btn-icon" (click)="manualRefresh()" title="Actualizar ahora">
-          <i class="fas fa-sync-alt"></i>
-        </button>
+        <app-custom-button
+          [variant]="'icon'"
+          [icon]="'sync-alt'"
+          [tooltip]="'Actualizar ahora'"
+          (buttonClick)="manualRefresh()">
+        </app-custom-button>
       </div>
       
       <div class="filter-form">
         <form [formGroup]="filterForm" class="filter-row">
           <div class="form-group">
             <label for="status">Estado</label>
-            <select id="status" class="form-select" formControlName="status">
-              <option *ngFor="let option of statusOptions" [value]="option.value">
-                {{option.label}}
-              </option>
-            </select>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" [class.open]="isDropdownOpen" (click)="toggleDropdown()">
+                <div class="selected-value">
+                  <span>{{ getSelectedStatusLabel() }}</span>
+                  <i class="fas fa-chevron-down" [class.rotated]="isDropdownOpen"></i>
+                </div>
+                <div class="dropdown-options" *ngIf="isDropdownOpen">
+                  <div class="option"
+                       *ngFor="let option of statusOptions"
+                       [class.selected]="filterForm.get('status')?.value === option.value"
+                       (click)="selectStatus(option.value, option.label)">
+                    {{option.label}}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div class="form-group">

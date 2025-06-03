@@ -37,6 +37,9 @@ export interface NotificationTemplate {
   content: string;
   type: NotificationType;
   acknowledgementLevel: AcknowledgementLevel;
+  createdAt?: Date;
+  updatedAt?: Date;
+  createdBy?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -53,26 +56,35 @@ export class MassNotificationsService {
     {
       id: '1',
       name: 'Anuncio de nuevo concurso',
-      subject: 'Nuevo concurso disponible',
-      content: 'Estimado/a usuario/a,\n\nNos complace informarle que se ha publicado un nuevo concurso en la plataforma. Le invitamos a revisar los detalles y considerar su participación.\n\nSaludos cordiales,\nEquipo MPD Concursos',
+      subject: 'Nuevo concurso disponible: {{concurso.nombre}}',
+      content: 'Estimado/a {{usuario.nombre}},\n\nNos complace informarle que se ha publicado un nuevo concurso "{{concurso.nombre}}" en la plataforma. Le invitamos a revisar los detalles y considerar su participación.\n\nFecha de inicio: {{concurso.fechaInicio}}\nFecha de fin: {{concurso.fechaFin}}\nInstitución: {{concurso.institucion}}\n\nPara más información, visite: {{sistema.url}}\n\nSaludos cordiales,\nEquipo MPD Concursos',
       type: NotificationType.CONTEST,
-      acknowledgementLevel: AcknowledgementLevel.SIMPLE
+      acknowledgementLevel: AcknowledgementLevel.SIMPLE,
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-15'),
+      createdBy: 'admin'
     },
     {
       id: '2',
       name: 'Recordatorio de fecha límite',
       subject: 'Recordatorio: Fecha límite de inscripción próxima',
-      content: 'Estimado/a usuario/a,\n\nLe recordamos que la fecha límite para inscribirse en el concurso [NOMBRE_CONCURSO] es el [FECHA_LIMITE]. Asegúrese de completar su inscripción antes de esta fecha.\n\nSaludos cordiales,\nEquipo MPD Concursos',
+      content: 'Estimado/a {{usuario.nombre}},\n\nLe recordamos que la fecha límite para inscribirse en el concurso "{{concurso.nombre}}" es el {{concurso.fechaFin}}. Asegúrese de completar su inscripción antes de esta fecha.\n\nCódigo del concurso: {{concurso.codigo}}\nInstitución: {{concurso.institucion}}\n\nPara inscribirse, visite: {{sistema.url}}\n\nSi tiene consultas, contáctenos en: {{sistema.soporte}}\n\nSaludos cordiales,\nEquipo MPD Concursos',
       type: NotificationType.CONTEST,
-      acknowledgementLevel: AcknowledgementLevel.SIMPLE
+      acknowledgementLevel: AcknowledgementLevel.SIMPLE,
+      createdAt: new Date('2024-01-20'),
+      updatedAt: new Date('2024-01-20'),
+      createdBy: 'admin'
     },
     {
       id: '3',
       name: 'Actualización del sistema',
-      subject: 'Actualización importante del sistema',
-      content: 'Estimado/a usuario/a,\n\nLe informamos que el sistema estará en mantenimiento el día [FECHA_MANTENIMIENTO] desde las [HORA_INICIO] hasta las [HORA_FIN]. Durante este período, la plataforma no estará disponible.\n\nDisculpe las molestias.\n\nSaludos cordiales,\nEquipo MPD Concursos',
+      subject: 'Actualización importante del sistema - {{sistema.fecha}}',
+      content: 'Estimado/a {{usuario.nombre}},\n\nLe informamos que el sistema estará en mantenimiento el día {{sistema.fecha}} desde las 02:00 hasta las 06:00. Durante este período, la plataforma no estará disponible.\n\nEste mantenimiento nos permitirá mejorar el rendimiento y la seguridad del sistema.\n\nDisculpe las molestias ocasionadas.\n\nPara consultas urgentes, contáctenos en: {{sistema.soporte}}\n\nSaludos cordiales,\nEquipo MPD Concursos',
       type: NotificationType.SYSTEM,
-      acknowledgementLevel: AcknowledgementLevel.NONE
+      acknowledgementLevel: AcknowledgementLevel.NONE,
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-25'),
+      createdBy: 'admin'
     }
   ];
 
@@ -144,12 +156,57 @@ export class MassNotificationsService {
   createTemplate(template: Omit<NotificationTemplate, 'id'>): Observable<NotificationTemplate> {
     // In a real app, this would be an API call
     return new Observable(observer => {
+      const now = new Date();
       const newTemplate: NotificationTemplate = {
         ...template,
-        id: Date.now().toString()
+        id: Date.now().toString(),
+        createdAt: now,
+        updatedAt: now,
+        createdBy: 'current-user' // En una app real, esto vendría del contexto de usuario
       };
       this.templates.push(newTemplate);
       observer.next(newTemplate);
+      observer.complete();
+    });
+  }
+
+  /**
+   * Update an existing template
+   * @param id Template ID
+   * @param template Updated template data
+   */
+  updateTemplate(id: string, template: Partial<NotificationTemplate>): Observable<NotificationTemplate> {
+    // In a real app, this would be an API call
+    return new Observable(observer => {
+      const index = this.templates.findIndex(t => t.id === id);
+      if (index !== -1) {
+        this.templates[index] = {
+          ...this.templates[index],
+          ...template,
+          updatedAt: new Date()
+        };
+        observer.next(this.templates[index]);
+      } else {
+        observer.error(new Error('Template not found'));
+      }
+      observer.complete();
+    });
+  }
+
+  /**
+   * Delete a template
+   * @param id Template ID
+   */
+  deleteTemplate(id: string): Observable<void> {
+    // In a real app, this would be an API call
+    return new Observable(observer => {
+      const index = this.templates.findIndex(t => t.id === id);
+      if (index !== -1) {
+        this.templates.splice(index, 1);
+        observer.next();
+      } else {
+        observer.error(new Error('Template not found'));
+      }
       observer.complete();
     });
   }

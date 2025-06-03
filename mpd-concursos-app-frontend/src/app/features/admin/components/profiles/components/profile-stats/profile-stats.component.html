@@ -1,82 +1,114 @@
 <div class="profile-stats-container">
-  <div *ngIf="!stats" class="loading-container">
-    <mat-icon>analytics_off</mat-icon>
-    <p>No hay estadísticas disponibles</p>
+  <!-- Estado sin estadísticas -->
+  <div *ngIf="!stats" class="no-stats-container">
+    <div class="no-stats-content">
+      <i class="fas fa-chart-bar no-stats-icon"></i>
+      <h4>No hay estadísticas disponibles</h4>
+      <p>Las estadísticas se mostrarán cuando haya datos de perfiles disponibles.</p>
+    </div>
   </div>
-  
+
+  <!-- Contenido de estadísticas -->
   <div *ngIf="stats" class="stats-content">
+    <!-- Resumen de estadísticas principales -->
     <div class="stats-summary">
-      <mat-card class="stats-card">
-        <mat-card-content>
+      <div class="stats-card total">
+        <div class="card-content">
           <div class="stats-icon">
-            <mat-icon>people</mat-icon>
+            <i class="fas fa-users"></i>
           </div>
           <div class="stats-data">
             <div class="stats-value">{{stats.totalProfiles}}</div>
             <div class="stats-label">Total de Perfiles</div>
           </div>
-        </mat-card-content>
-      </mat-card>
-      
-      <mat-card class="stats-card">
-        <mat-card-content>
+        </div>
+        <div class="card-accent total"></div>
+      </div>
+
+      <div class="stats-card complete">
+        <div class="card-content">
           <div class="stats-icon">
-            <mat-icon>check_circle</mat-icon>
+            <i class="fas fa-check-circle"></i>
           </div>
           <div class="stats-data">
             <div class="stats-value">{{stats.completeProfiles}}</div>
             <div class="stats-label">Perfiles Completos</div>
           </div>
-        </mat-card-content>
-      </mat-card>
-      
-      <mat-card class="stats-card">
-        <mat-card-content>
+        </div>
+        <div class="card-accent complete"></div>
+      </div>
+
+      <div class="stats-card incomplete">
+        <div class="card-content">
           <div class="stats-icon">
-            <mat-icon>pending</mat-icon>
+            <i class="fas fa-clock"></i>
           </div>
           <div class="stats-data">
             <div class="stats-value">{{stats.incompleteProfiles}}</div>
             <div class="stats-label">Perfiles Incompletos</div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+        <div class="card-accent incomplete"></div>
+      </div>
     </div>
-    
+
+    <!-- Sección de completitud -->
     <div class="completion-section">
-      <h4>Tasa de Completitud de Perfiles</h4>
-      
-      <div class="completion-bar">
-        <mat-progress-bar mode="determinate" [value]="completionPercentage"></mat-progress-bar>
-        <div class="completion-percentage">{{formatPercentage(completionPercentage)}}</div>
+      <div class="section-header">
+        <h4>
+          <i class="fas fa-chart-line"></i>
+          Tasa de Completitud de Perfiles
+        </h4>
       </div>
-      
-      <div class="completion-legend">
-        <div class="legend-item">
-          <div class="legend-color complete"></div>
-          <div class="legend-label">Completos</div>
-          <div class="legend-value">{{stats.completeProfiles}}</div>
-        </div>
-        
-        <div class="legend-item">
-          <div class="legend-color incomplete"></div>
-          <div class="legend-label">Incompletos</div>
-          <div class="legend-value">{{stats.incompleteProfiles}}</div>
+
+      <div class="completion-card">
+        <div class="completion-visual">
+          <div class="completion-circle">
+            <div class="circle-progress" [style.--progress]="completionPercentage + '%'">
+              <div class="circle-inner">
+                <span class="percentage-text">{{formatPercentage(completionPercentage)}}</span>
+                <span class="percentage-label">Completitud</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="completion-legend">
+            <div class="legend-item complete">
+              <div class="legend-indicator"></div>
+              <div class="legend-info">
+                <span class="legend-label">Completos</span>
+                <span class="legend-value">{{stats.completeProfiles}}</span>
+              </div>
+            </div>
+
+            <div class="legend-item incomplete">
+              <div class="legend-indicator"></div>
+              <div class="legend-info">
+                <span class="legend-label">Incompletos</span>
+                <span class="legend-value">{{stats.incompleteProfiles}}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    
+
+    <!-- Grid de estadísticas detalladas -->
     <div class="stats-grid">
-      <mat-card class="stats-detail-card">
-        <mat-card-header>
-          <mat-card-title>Distribución por Estado</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
+      <!-- Distribución por Estado -->
+      <div class="stats-detail-card">
+        <div class="card-header">
+          <h5>
+            <i class="fas fa-chart-pie"></i>
+            Distribución por Estado
+          </h5>
+        </div>
+        <div class="card-content">
           <div class="status-distribution">
             <div *ngFor="let status of statusDistribution" class="status-item">
               <div class="status-header">
                 <div class="status-icon" [ngClass]="getStatusClass(status.status)">
-                  <mat-icon>{{getStatusIcon(status.status)}}</mat-icon>
+                  <i [class]="getStatusIcon(status.status)"></i>
                 </div>
                 <div class="status-info">
                   <div class="status-name">{{getStatusText(status.status)}}</div>
@@ -84,22 +116,28 @@
                 </div>
                 <div class="status-percentage">{{formatPercentage(status.percentage)}}</div>
               </div>
-              <mat-progress-bar mode="determinate" [value]="status.percentage" [ngClass]="getStatusClass(status.status)"></mat-progress-bar>
+              <div class="progress-bar" [ngClass]="getStatusClass(status.status)">
+                <div class="progress-fill" [style.width.%]="status.percentage"></div>
+              </div>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
-      
-      <mat-card class="stats-detail-card">
-        <mat-card-header>
-          <mat-card-title>Documentos Subidos</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
+        </div>
+      </div>
+
+      <!-- Documentos Subidos -->
+      <div class="stats-detail-card">
+        <div class="card-header">
+          <h5>
+            <i class="fas fa-file-alt"></i>
+            Documentos Subidos
+          </h5>
+        </div>
+        <div class="card-content">
           <div class="document-distribution">
             <div *ngFor="let doc of documentTypes" class="document-item">
               <div class="document-header">
                 <div class="document-icon">
-                  <mat-icon>{{getDocumentIcon(doc.type)}}</mat-icon>
+                  <i [class]="getDocumentIcon(doc.type)"></i>
                 </div>
                 <div class="document-info">
                   <div class="document-name">{{getDocumentTypeText(doc.type)}}</div>
@@ -107,22 +145,28 @@
                 </div>
                 <div class="document-percentage">{{formatPercentage(doc.percentage)}}</div>
               </div>
-              <mat-progress-bar mode="determinate" [value]="doc.percentage"></mat-progress-bar>
+              <div class="progress-bar document">
+                <div class="progress-fill" [style.width.%]="doc.percentage"></div>
+              </div>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
-      
-      <mat-card class="stats-detail-card" *ngIf="professionalTitles.length > 0">
-        <mat-card-header>
-          <mat-card-title>Títulos Profesionales</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
+        </div>
+      </div>
+
+      <!-- Títulos Profesionales -->
+      <div class="stats-detail-card" *ngIf="professionalTitles.length > 0">
+        <div class="card-header">
+          <h5>
+            <i class="fas fa-graduation-cap"></i>
+            Títulos Profesionales
+          </h5>
+        </div>
+        <div class="card-content">
           <div class="title-distribution">
             <div *ngFor="let title of professionalTitles" class="title-item">
               <div class="title-header">
                 <div class="title-icon">
-                  <mat-icon>school</mat-icon>
+                  <i class="fas fa-user-graduate"></i>
                 </div>
                 <div class="title-info">
                   <div class="title-name">{{title.title}}</div>
@@ -130,11 +174,13 @@
                 </div>
                 <div class="title-percentage">{{formatPercentage(title.percentage)}}</div>
               </div>
-              <mat-progress-bar mode="determinate" [value]="title.percentage"></mat-progress-bar>
+              <div class="progress-bar professional">
+                <div class="progress-fill" [style.width.%]="title.percentage"></div>
+              </div>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </div>
     </div>
   </div>
 </div>

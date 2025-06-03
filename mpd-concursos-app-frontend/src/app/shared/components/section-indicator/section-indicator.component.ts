@@ -17,14 +17,7 @@ import { Subscription } from 'rxjs';
         <i class="fas" [class.fa-user-shield]="isAdminSection" [class.fa-user]="!isAdminSection"></i>
         <span class="section-name">{{ sectionName }}</span>
 
-        <!-- Botón para cambiar de sección -->
-        <a *ngIf="isAdminSection"
-           class="section-link"
-           routerLink="/dashboard">
-          <i class="fas fa-arrow-left"></i>
-          Volver al área de usuario
-        </a>
-
+        <!-- Botón para ir al panel de administración (solo en área de usuario) -->
         <a *ngIf="!isAdminSection && canAccessAdmin"
            class="section-link"
            routerLink="/admin/dashboard">

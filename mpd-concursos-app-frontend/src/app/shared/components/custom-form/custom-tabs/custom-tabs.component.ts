@@ -192,6 +192,11 @@ export class CustomTabsComponent implements AfterContentInit {
       disabled: tab.disabled
     }));
 
+    // Sincronizar activeTab con selectedIndex si es diferente
+    if (this.activeTab !== this.selectedIndex) {
+      this.selectedIndex = this.activeTab;
+    }
+
     // Mostrar la pestaña seleccionada inicialmente
     this.selectTab(this.selectedIndex);
   }

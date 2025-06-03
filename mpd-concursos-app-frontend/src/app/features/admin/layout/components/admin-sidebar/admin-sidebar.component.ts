@@ -345,12 +345,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
           route: '/admin/inscripciones/seguimiento'
         },
         {
-          id: 'inscripciones-reportes',
-          label: 'Reportes',
-          icon: 'chart-bar',
-          route: '/admin/inscripciones/reportes'
-        },
-        {
           id: 'inscripciones-ciclo-vida',
           label: 'Ciclo de Vida',
           icon: 'sync',
@@ -380,7 +374,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       id: 'comunicaciones',
       label: 'Comunicaciones',
       icon: 'comments',
-      route: '/admin/comunicaciones'
+      route: '/admin/comunicaciones/mensajes'
     },
     {
       id: 'reportes',
@@ -651,13 +645,6 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
             tags: ['seguimiento', 'tracking', 'monitoreo']
           },
           {
-            id: 'inscripciones-reportes',
-            label: 'Reportes',
-            icon: 'chart-bar',
-            route: '/admin/inscripciones/reportes',
-            tags: ['reportes', 'informes', 'estadísticas']
-          },
-          {
             id: 'inscripciones-ciclo-vida',
             label: 'Ciclo de Vida',
             icon: 'sync',
@@ -760,23 +747,37 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Módulo 6: Comunicaciones
       {
         id: 'comunicaciones',
-        label: 'Módulo de Comunicaciones',
+        label: 'Comunicaciones Masivas',
         icon: 'comments',
         expanded: false,
         items: [
           {
-            id: 'notificaciones',
-            label: 'Notificaciones',
-            icon: 'bell',
-            route: '/admin/comunicaciones/notificaciones',
-            tags: ['notificaciones', 'alertas', 'avisos']
+            id: 'enviar-mensajes',
+            label: 'Enviar Mensajes',
+            icon: 'paper-plane',
+            route: '/admin/comunicaciones/mensajes',
+            tags: ['enviar', 'mensajes', 'masivos', 'notificaciones']
           },
           {
-            id: 'mensajes',
-            label: 'Mensajes',
-            icon: 'envelope',
-            route: '/admin/comunicaciones',
-            tags: ['mensajes', 'correos', 'comunicados']
+            id: 'plantillas',
+            label: 'Plantillas',
+            icon: 'file-alt',
+            route: '/admin/comunicaciones/plantillas',
+            tags: ['plantillas', 'templates', 'modelos']
+          },
+          {
+            id: 'historial',
+            label: 'Historial',
+            icon: 'history',
+            route: '/admin/comunicaciones/historial',
+            tags: ['historial', 'enviados', 'registro']
+          },
+          {
+            id: 'estadisticas',
+            label: 'Estadísticas',
+            icon: 'chart-bar',
+            route: '/admin/comunicaciones/estadisticas',
+            tags: ['estadísticas', 'métricas', 'reportes']
           }
         ]
       },

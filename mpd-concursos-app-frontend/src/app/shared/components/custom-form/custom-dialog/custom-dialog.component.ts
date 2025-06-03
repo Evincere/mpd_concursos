@@ -56,31 +56,43 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
     </div>
   `,
   styles: [`
+    /* Estilos mínimos - Los estilos principales están en styles.scss */
+    :host {
+      display: contents;
+    }
+
     .dialog-backdrop {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       animation: fadeIn 0.2s ease-in-out;
+      /* Fondo base para asegurar visibilidad */
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
     }
 
     .dialog-container {
-      background-color: var(--color-surface, #fff);
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      width: 500px;
-      max-width: 90vw;
-      max-height: 90vh;
       display: flex;
       flex-direction: column;
       animation: slideIn 0.3s ease-in-out;
       overflow: hidden;
+      /* Usar variables CSS para permitir personalización glassmorphism */
+      background: var(--background-color, white);
+      border: 1px solid var(--card-border, #e0e0e0);
+      border-radius: var(--border-radius, 8px);
+      box-shadow: var(--card-shadow, 0 4px 20px rgba(0, 0, 0, 0.15));
+      backdrop-filter: var(--card-backdrop-filter, none);
+      -webkit-backdrop-filter: var(--card-backdrop-filter, none);
+      color: var(--text-color, #333);
+      min-width: 300px;
+      max-width: 90vw;
+      max-height: 90vh;
     }
 
     .dialog-container.small {
@@ -97,25 +109,26 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
     }
 
     .dialog-header {
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--color-border, #ddd);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--card-border, #e0e0e0);
+      background: var(--header-background, transparent);
     }
 
     .dialog-title {
       margin: 0;
-      font-size: 1.25rem;
-      font-weight: 500;
-      color: var(--color-text-primary, #333);
       display: flex;
       align-items: center;
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--text-color, #333);
     }
 
     .dialog-icon {
       margin-right: 0.75rem;
-      color: var(--color-primary, #3f51b5);
+      color: var(--primary-color, #1976d2);
     }
 
     .close-button {
@@ -123,29 +136,30 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
       border: none;
       padding: 0.5rem;
       cursor: pointer;
-      color: var(--color-text-secondary, #666);
-      transition: color 0.2s ease-in-out;
+      color: var(--text-secondary, #666);
+      transition: color 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .close-button:hover {
-      color: var(--color-text-primary, #333);
+      color: var(--text-color, #333);
     }
 
     .dialog-content {
-      padding: 1.5rem;
       overflow-y: auto;
       flex: 1;
+      padding: 1.5rem;
     }
 
     .dialog-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--color-border, #ddd);
       display: flex;
       justify-content: flex-end;
       align-items: center;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--card-border, #e0e0e0);
+      background: var(--footer-background, transparent);
     }
 
     .default-footer {
@@ -161,38 +175,6 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
     @keyframes slideIn {
       from { transform: translateY(-20px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
-    }
-
-    /* Estilos para tema oscuro */
-    @media (prefers-color-scheme: dark) {
-      .dialog-container {
-        background-color: var(--color-surface-dark, #333);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      }
-
-      .dialog-header {
-        border-bottom-color: var(--color-border-dark, #555);
-      }
-
-      .dialog-title {
-        color: var(--color-text-primary-dark, #e0e0e0);
-      }
-
-      .dialog-icon {
-        color: var(--color-primary-dark, #7986cb);
-      }
-
-      .close-button {
-        color: var(--color-text-secondary-dark, #aaa);
-      }
-
-      .close-button:hover {
-        color: var(--color-text-primary-dark, #e0e0e0);
-      }
-
-      .dialog-footer {
-        border-top-color: var(--color-border-dark, #555);
-      }
     }
   `]
 })
