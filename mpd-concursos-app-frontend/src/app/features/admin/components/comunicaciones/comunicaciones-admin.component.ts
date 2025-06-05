@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -63,6 +63,7 @@ interface RecipientDetail {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    RouterModule,
     CustomFormModule
   ]
 })
@@ -84,6 +85,7 @@ export class ComunicacionesAdminComponent implements OnInit, OnDestroy {
     { id: 'mensajes', label: 'Enviar Mensajes', icon: 'paper-plane' },
     { id: 'plantillas', label: 'Gestión de Plantillas', icon: 'file-alt' },
     { id: 'historial', label: 'Historial de Envíos', icon: 'history' },
+    { id: 'notificaciones', label: 'Notificaciones del Sistema', icon: 'bell' },
     { id: 'estadisticas', label: 'Estadísticas y Reportes', icon: 'chart-bar' }
   ];
 
@@ -293,8 +295,8 @@ export class ComunicacionesAdminComponent implements OnInit, OnDestroy {
       'mensajes': 0,
       'plantillas': 1,
       'historial': 2,
-      'estadisticas': 3,
-      'notificaciones': 0 // Fallback a mensajes
+      'notificaciones': 3,
+      'estadisticas': 4
     };
 
     return tabMapping[tabId] !== undefined ? tabMapping[tabId] : -1;
@@ -360,7 +362,9 @@ export class ComunicacionesAdminComponent implements OnInit, OnDestroy {
       // Cargar datos específicos según la pestaña
       if (index === 2) { // Historial de Envíos
         this.loadHistoryData();
-      } else if (index === 3) { // Estadísticas y Reportes
+      } else if (index === 3) { // Notificaciones del Sistema
+        this.loadNotificationsData();
+      } else if (index === 4) { // Estadísticas y Reportes
         this.loadStatisticsData();
       }
     }
@@ -563,15 +567,31 @@ export class ComunicacionesAdminComponent implements OnInit, OnDestroy {
   /**
    * Obtiene el icono para el tipo de notificación
    */
-  getNotificationTypeIcon(type: NotificationType): string {
-    const icons: Record<NotificationType, string> = {
+  getNotificationTypeIcon(type: NotificationType | string): string {
+    // Iconos para NotificationType (enum)
+    const notificationTypeIcons: Record<NotificationType, string> = {
       [NotificationType.INSCRIPTION]: 'user-plus',
       [NotificationType.SYSTEM]: 'cog',
       [NotificationType.CONTEST]: 'trophy',
       [NotificationType.DOCUMENT]: 'file-text',
       [NotificationType.EXAM]: 'graduation-cap'
     };
-    return icons[type] || 'bell';
+
+    // Iconos para tipos de string (para notificaciones del sistema)
+    const stringTypeIcons: Record<string, string> = {
+      'info': 'info-circle',
+      'warning': 'exclamation-triangle',
+      'error': 'exclamation-circle',
+      'success': 'check-circle'
+    };
+
+    // Si es un NotificationType, usar los iconos correspondientes
+    if (Object.values(NotificationType).includes(type as NotificationType)) {
+      return notificationTypeIcons[type as NotificationType] || 'bell';
+    }
+
+    // Si es un string, usar los iconos de string
+    return stringTypeIcons[type as string] || 'bell';
   }
 
   // ===== MÉTODOS DE GESTIÓN DE PLANTILLAS =====
@@ -1580,6 +1600,214 @@ export class ComunicacionesAdminComponent implements OnInit, OnDestroy {
       case 'down': return 'fa-arrow-down';
       case 'stable': return 'fa-minus';
       default: return 'fa-question';
+    }
+  }
+
+  // ===================================================================
+  // NOTIFICATIONS TAB FUNCTIONALITY
+  // ===================================================================
+
+  // Propiedades para la pestaña de notificaciones
+  systemNotifications: any[] = [];
+  isLoadingNotifications = false;
+  notificationFilters = {
+    search: '',
+    type: '',
+    status: '',
+    dateFrom: '',
+    dateTo: ''
+  };
+  filteredNotifications: any[] = [];
+  paginatedNotifications: any[] = [];
+  currentNotificationPage = 1;
+  notificationPageSize = 10;
+
+  /**
+   * Carga los datos de notificaciones del sistema
+   */
+  loadNotificationsData(): void {
+    this.isLoadingNotifications = true;
+
+    // Simular datos de notificaciones del sistema
+    setTimeout(() => {
+      this.systemNotifications = [
+        {
+          id: '1',
+          title: 'Nueva inscripción pendiente',
+          message: 'Juan Pérez ha completado su inscripción y está pendiente de revisión.',
+          type: 'info',
+          status: 'unread',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutos atrás
+          link: '/admin/inscripciones/pendientes',
+          user: 'Juan Pérez',
+          module: 'Inscripciones'
+        },
+        {
+          id: '2',
+          title: 'Documento rechazado',
+          message: 'El documento de María García ha sido rechazado por no cumplir los requisitos.',
+          type: 'warning',
+          status: 'read',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 horas atrás
+          link: '/admin/documentos',
+          user: 'María García',
+          module: 'Documentos'
+        },
+        {
+          id: '3',
+          title: 'Error en el sistema',
+          message: 'Se ha detectado un error en el módulo de reportes. Requiere atención inmediata.',
+          type: 'error',
+          status: 'unread',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 horas atrás
+          link: '/admin/sistema/monitoreo',
+          user: 'Sistema',
+          module: 'Sistema'
+        },
+        {
+          id: '4',
+          title: 'Concurso publicado exitosamente',
+          message: 'El concurso "Analista de Sistemas 2024" ha sido publicado correctamente.',
+          type: 'success',
+          status: 'read',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 horas atrás
+          link: '/admin/concursos',
+          user: 'Admin',
+          module: 'Concursos'
+        },
+        {
+          id: '5',
+          title: 'Backup completado',
+          message: 'La copia de seguridad programada se ha completado exitosamente.',
+          type: 'success',
+          status: 'read',
+          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 día atrás
+          link: '/admin/sistema/backups',
+          user: 'Sistema',
+          module: 'Sistema'
+        }
+      ];
+
+      this.filteredNotifications = [...this.systemNotifications];
+      this.applyNotificationFilters();
+      this.isLoadingNotifications = false;
+    }, 1000);
+  }
+
+  /**
+   * Aplica filtros a las notificaciones
+   */
+  applyNotificationFilters(): void {
+    let filtered = [...this.systemNotifications];
+
+    // Filtro de búsqueda
+    if (this.notificationFilters.search) {
+      const search = this.notificationFilters.search.toLowerCase();
+      filtered = filtered.filter(notification =>
+        notification.title.toLowerCase().includes(search) ||
+        notification.message.toLowerCase().includes(search) ||
+        notification.user.toLowerCase().includes(search) ||
+        notification.module.toLowerCase().includes(search)
+      );
+    }
+
+    // Filtro por tipo
+    if (this.notificationFilters.type) {
+      filtered = filtered.filter(notification => notification.type === this.notificationFilters.type);
+    }
+
+    // Filtro por estado
+    if (this.notificationFilters.status) {
+      filtered = filtered.filter(notification => notification.status === this.notificationFilters.status);
+    }
+
+    // Filtros de fecha
+    if (this.notificationFilters.dateFrom) {
+      const fromDate = new Date(this.notificationFilters.dateFrom);
+      filtered = filtered.filter(notification => notification.timestamp >= fromDate);
+    }
+
+    if (this.notificationFilters.dateTo) {
+      const toDate = new Date(this.notificationFilters.dateTo);
+      toDate.setHours(23, 59, 59, 999); // Incluir todo el día
+      filtered = filtered.filter(notification => notification.timestamp <= toDate);
+    }
+
+    this.filteredNotifications = filtered;
+    this.updateNotificationPagination();
+  }
+
+  /**
+   * Actualiza la paginación de notificaciones
+   */
+  updateNotificationPagination(): void {
+    const startIndex = (this.currentNotificationPage - 1) * this.notificationPageSize;
+    const endIndex = startIndex + this.notificationPageSize;
+    this.paginatedNotifications = this.filteredNotifications.slice(startIndex, endIndex);
+  }
+
+  /**
+   * Limpia los filtros de notificaciones
+   */
+  clearNotificationFilters(): void {
+    this.notificationFilters = {
+      search: '',
+      type: '',
+      status: '',
+      dateFrom: '',
+      dateTo: ''
+    };
+    this.applyNotificationFilters();
+  }
+
+  /**
+   * Marca una notificación como leída
+   */
+  markNotificationAsRead(notification: any): void {
+    notification.status = 'read';
+    this.notificationService.success('Notificación marcada como leída');
+  }
+
+  /**
+   * Marca todas las notificaciones como leídas
+   */
+  markAllNotificationsAsRead(): void {
+    this.systemNotifications.forEach(notification => {
+      notification.status = 'read';
+    });
+    this.notificationService.success('Todas las notificaciones marcadas como leídas');
+  }
+
+  /**
+   * Elimina una notificación
+   */
+  deleteNotification(notification: any): void {
+    if (confirm('¿Está seguro de eliminar esta notificación?')) {
+      const index = this.systemNotifications.findIndex(n => n.id === notification.id);
+      if (index !== -1) {
+        this.systemNotifications.splice(index, 1);
+        this.applyNotificationFilters();
+        this.notificationService.success('Notificación eliminada');
+      }
+    }
+  }
+
+
+
+  /**
+   * Obtiene el número total de páginas de notificaciones
+   */
+  getTotalNotificationPages(): number {
+    return Math.ceil(this.filteredNotifications.length / this.notificationPageSize);
+  }
+
+  /**
+   * Cambia la página de notificaciones
+   */
+  changeNotificationPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalNotificationPages()) {
+      this.currentNotificationPage = page;
+      this.updateNotificationPagination();
     }
   }
 

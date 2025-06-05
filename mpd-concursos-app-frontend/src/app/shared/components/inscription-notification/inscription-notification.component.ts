@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { InscripcionState, InscripcionStateUtils } from '@core/models/inscripcion/inscripcion-state.enum';
 
 
 @Component({
@@ -57,11 +57,36 @@ export class InscriptionNotificationComponent implements OnInit {
     switch (this.status) {
       case InscripcionState.PENDING:
       case InscripcionState.PENDIENTE:
+      case InscripcionState.CONFIRMADA:
         this.statusInfo = {
           icon: 'hourglass_top',
           color: 'warn',
           text: 'Pendiente de validación',
           description: 'Tu inscripción está siendo revisada por el equipo administrativo.'
+        };
+        break;
+      case InscripcionState.COMPLETED_WITH_DOCS:
+        this.statusInfo = {
+          icon: 'check_circle',
+          color: 'success',
+          text: 'Completada con documentos',
+          description: 'Tu inscripción está completa con toda la documentación requerida.'
+        };
+        break;
+      case InscripcionState.COMPLETED_PENDING_DOCS:
+        this.statusInfo = {
+          icon: 'file_upload',
+          color: 'warn',
+          text: 'Documentos pendientes',
+          description: 'Tu inscripción está completa pero faltan documentos. Tienes 3 días para completarlos.'
+        };
+        break;
+      case InscripcionState.FROZEN:
+        this.statusInfo = {
+          icon: 'ac_unit',
+          color: 'grey',
+          text: 'Inscripción congelada',
+          description: 'Tu inscripción ha sido congelada por vencimiento del plazo de documentación.'
         };
         break;
       case InscripcionState.APPROVED:
@@ -102,8 +127,8 @@ export class InscriptionNotificationComponent implements OnInit {
         this.statusInfo = {
           icon: 'info',
           color: 'primary',
-          text: 'Estado desconocido',
-          description: 'No se pudo determinar el estado de la inscripción.'
+          text: InscripcionStateUtils.getStateLabel(this.status),
+          description: 'Estado de inscripción: ' + InscripcionStateUtils.getStateLabel(this.status)
         };
     }
   }

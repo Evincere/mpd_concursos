@@ -1,196 +1,271 @@
+/* ===== SEARCH HEADER GLASSMORPHISM PREMIUM DARK ===== */
 @use '../../../../styles/responsive' as *;
 
 .search-header {
+    /* Glassmorphism premium dark base */
+    background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.9) 0%,
+        rgba(75, 85, 99, 0.85) 100%);
+    background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    /* Layout */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgb(49, 49, 49);
-    padding: 0 24px;
-    border-radius: 8px;
+    padding: 0 1.5rem;
     height: 56px;
     box-sizing: border-box;
 
+    /* Premium shadows */
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+
+    /* Smooth transitions */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Responsive design */
     @include md {
         flex-direction: column;
         height: auto;
-        padding: 16px;
-        gap: 12px;
+        padding: 1rem;
+        gap: 0.75rem;
     }
 
-    h2 {
+    /* Header title with premium styling */
+    .header-title {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.87);
-        height: 100%;
-
-        @include md {
-            height: auto;
-        }
 
         i {
-            color: #2196f3;
+            color: #60a5fa;
             font-size: 1.125rem;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f9fafb;
+            letter-spacing: -0.025em;
+            transition: color 0.3s ease;
+
+            @include md {
+                font-size: 0.875rem;
+            }
         }
     }
 
+    /* Header actions with glassmorphism integration */
     .header-actions {
         display: flex;
-        gap: 8px;
+        gap: 0.75rem;
         align-items: center;
+        height: 36px; /* Ensure consistent height for alignment */
 
         @include md {
             width: 100%;
             flex-direction: column;
-            gap: 12px;
+            gap: 0.75rem;
+            height: auto;
         }
 
         @include sm {
-            gap: 8px;
+            gap: 0.5rem;
         }
 
+        /* Search form with custom field integration */
         .search-form {
-            width: 320px;
+            width: 400px; /* Increased width for better text visibility */
+            height: 36px; /* Match container height */
+            display: flex;
+            align-items: center;
 
             @include md {
                 width: 100%;
+                height: auto;
             }
 
-            mat-form-field {
+            @include sm {
                 width: 100%;
+                min-width: 280px;
+            }
 
-                ::ng-deep {
-                    .mat-mdc-form-field-flex {
-                        background: rgb(74, 74, 74);
-                        border-radius: 4px;
-                        height: 36px;
-                        padding: 0 12px;
-                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                        border: 1px solid transparent;
-                        align-items: center;
+            /* Custom form field styling integration */
+            ::ng-deep app-custom-form-field {
+                /* Remove default margin for inline layout */
+                margin-bottom: 0;
 
-                        &:hover {
-                            background: rgb(84, 84, 84);
-                        }
+                .custom-form-field {
+                    margin-bottom: 0;
+                }
+
+                .input-container {
+                    /* Enhanced glassmorphism for search input */
+                    background: linear-gradient(135deg,
+                        rgba(31, 41, 55, 0.8) 0%,
+                        rgba(55, 65, 81, 0.7) 100%);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    backdrop-filter: blur(8px);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    height: 36px; /* Match button height */
+
+                    &:hover {
+                        background: linear-gradient(135deg,
+                            rgba(55, 65, 81, 0.8) 0%,
+                            rgba(75, 85, 99, 0.7) 100%);
+                        border-color: rgba(255, 255, 255, 0.15);
+                    }
+                }
+
+                .custom-form-field.focused .input-container {
+                    border-color: rgba(96, 165, 250, 0.5);
+                    box-shadow:
+                        0 0 0 3px rgba(96, 165, 250, 0.1),
+                        0 4px 12px rgba(0, 0, 0, 0.15);
+                }
+
+                .field-input {
+                    color: #f9fafb;
+                    background: transparent;
+                    border: none;
+                    padding: 0 3rem 0 0.75rem; /* Right padding for icons space */
+                    height: 34px; /* Account for border */
+                    line-height: 34px;
+                    font-size: 0.875rem;
+                    width: 100%;
+
+                    &::placeholder {
+                        color: #9ca3af;
                     }
 
-                    .mat-mdc-form-field-infix {
-                        padding: 8px 0;
-                        min-height: unset;
-                        display: flex;
-                        align-items: center;
+                    &:focus {
+                        outline: none;
+                        border: none;
+                        box-shadow: none;
+                    }
+                }
+
+                /* Icon positioning - search icon when no text */
+                .icon-right {
+                    position: absolute;
+                    right: 0.75rem;
+                    color: #9ca3af;
+                    transition: color 0.3s ease;
+                    z-index: 2;
+                    pointer-events: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 1.25rem;
+                    height: 1.25rem;
+                }
+
+                /* Clear button positioning - when there's text */
+                .clear-button {
+                    position: absolute;
+                    right: 0.75rem;
+                    color: #9ca3af;
+                    transition: all 0.3s ease;
+                    z-index: 3;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 1.25rem;
+                    height: 1.25rem;
+                    border-radius: 50%;
+
+                    &:hover {
+                        color: #f9fafb;
+                        background: rgba(255, 255, 255, 0.1);
+                        transform: scale(1.1);
                     }
 
-                    .mdc-text-field--outlined {
-                        --mdc-shape-small: 4px;
-                    }
-
-                    .mat-mdc-form-field-subscript-wrapper {
-                        display: none;
-                    }
-
-                    .mat-mdc-text-field-wrapper {
-                        padding: 0;
-                        height: 100%;
-                        background: transparent;
-                    }
-
-                    .mdc-line-ripple {
-                        display: none;
-                    }
-
-                    input.mat-mdc-input-element {
-                        margin: 0;
-                        padding: 0;
-                        height: 20px;
-                        line-height: 20px;
-                    }
-
-                    .mat-mdc-form-field-icon-suffix {
-                        display: flex;
-                        align-items: center;
-                        color: rgba(255, 255, 255, 0.6);
-                        padding: 0;
-                        margin: 0;
-
-                        i {
-                            font-size: 1rem;
-                            line-height: 20px;
-                            height: 20px;
-                            display: flex;
-                            align-items: center;
-                        }
-
-                        button.clear-button {
-                            width: 20px;
-                            height: 20px;
-                            line-height: 20px;
-                            padding: 0;
-                            margin: 0;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            color: rgba(255, 255, 255, 0.6);
-
-                            i {
-                                font-size: 0.875rem;
-                                width: 20px;
-                                height: 20px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                            }
-
-                            &:hover {
-                                color: rgba(255, 255, 255, 0.87);
-                            }
-                        }
+                    &:focus {
+                        outline: 2px solid rgba(96, 165, 250, 0.5);
+                        outline-offset: 2px;
                     }
                 }
             }
         }
 
-        button[mat-raised-button] {
-            background: rgb(74, 74, 74);
-            color: rgba(255, 255, 255, 0.6);
-            height: 36px;
-            padding: 0 12px;
-            font-size: 14px;
-            font-weight: 400;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            border: none;
-            box-shadow: none;
-            font-family: Roboto, sans-serif;
-            transition: all 0.2s ease;
-
-            i {
-                font-size: 16px;
-                color: rgba(255, 255, 255, 0.54);
-                margin-top: -2px;
-                transition: color 0.2s ease;
-            }
-
-            &:hover {
-                background: rgb(84, 84, 84);
-
-                i {
-                    color: rgba(255, 255, 255, 0.87);
-                }
-            }
-
-            &.active {
-                background: #2196f3;
-                color: white;
+        /* Custom button styling integration */
+        ::ng-deep app-custom-button {
+            .custom-button {
+                /* Enhanced glassmorphism for filter button */
+                background: linear-gradient(135deg,
+                    rgba(31, 41, 55, 0.8) 0%,
+                    rgba(55, 65, 81, 0.7) 100%);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(8px);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                height: 36px;
+                min-width: 100px;
 
                 &:hover {
-                    background: darken(#2196f3, 5%);
+                    background: linear-gradient(135deg,
+                        rgba(55, 65, 81, 0.8) 0%,
+                        rgba(75, 85, 99, 0.7) 100%);
+                    border-color: rgba(255, 255, 255, 0.15);
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                 }
+
+                &.primary {
+                    background: linear-gradient(135deg,
+                        rgba(59, 130, 246, 0.8) 0%,
+                        rgba(37, 99, 235, 0.7) 100%);
+                    border-color: rgba(96, 165, 250, 0.3);
+                    color: #f9fafb;
+
+                    &:hover {
+                        background: linear-gradient(135deg,
+                            rgba(37, 99, 235, 0.9) 0%,
+                            rgba(29, 78, 216, 0.8) 100%);
+                        border-color: rgba(96, 165, 250, 0.5);
+                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+                    }
+                }
+
+                .button-content {
+                    color: #f9fafb;
+                    font-weight: 500;
+                    font-size: 0.875rem;
+                }
+
+                .button-icon {
+                    color: #9ca3af;
+                    transition: color 0.3s ease;
+                }
+
+                &:hover .button-icon {
+                    color: #f9fafb;
+                }
+
+                &.primary .button-icon {
+                    color: #f9fafb;
+                }
+            }
+
+            &.active .custom-button {
+                background: linear-gradient(135deg,
+                    rgba(59, 130, 246, 0.9) 0%,
+                    rgba(37, 99, 235, 0.8) 100%);
+                border-color: rgba(96, 165, 250, 0.5);
+                box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
             }
         }
     }

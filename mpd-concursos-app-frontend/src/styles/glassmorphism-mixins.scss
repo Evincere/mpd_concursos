@@ -1,35 +1,75 @@
-/* ===== GLASSMORPHISM DESIGN SYSTEM - MIXINS ===== */
+/* ===== GLASSMORPHISM DESIGN SYSTEM - UNIFIED MIXINS ===== */
 /* Mixins consolidados para eliminar duplicaciones de código */
 /* Siguiendo las especificaciones del glassmorphism-design-system-guide.md */
 
 /* === MIXIN BASE GLASSMORPHISM === */
-@mixin glassmorphism-base {
-  background: var(--glass-background-primary);
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+@mixin glassmorphism-base($variant: 'primary') {
+  @if $variant == 'primary' {
+    background: var(--glass-background-primary);
+  } @else if $variant == 'secondary' {
+    background: var(--glass-background-secondary);
+  } @else if $variant == 'light' {
+    background: var(--glass-background-light);
+  } @else if $variant == 'dark' {
+    background: var(--glass-background-dark);
+  }
+
+  background-image: var(--glass-gradient-overlay);
   border: 1px solid var(--border-primary);
-  backdrop-filter: var(--card-backdrop-filter);
-  -webkit-backdrop-filter: var(--card-backdrop-filter);
+  backdrop-filter: var(--backdrop-filter-medium);
+  -webkit-backdrop-filter: var(--backdrop-filter-medium);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md), var(--shadow-inset);
   transition: var(--transition-normal);
 }
 
 /* === MIXIN GLASSMORPHISM HOVER === */
-@mixin glassmorphism-hover {
+@mixin glassmorphism-hover($transform: true) {
   &:hover {
     background: var(--glass-background-hover);
-    transform: var(--transform-hover);
+    @if $transform {
+      transform: var(--transform-hover);
+    }
     box-shadow: var(--shadow-lg);
     border-color: var(--border-hover);
+  }
+
+  &:active {
+    background: var(--glass-background-active);
+    @if $transform {
+      transform: var(--transform-active);
+    }
+    box-shadow: var(--shadow-md);
   }
 }
 
 /* === MIXIN GLASSMORPHISM CARD === */
-@mixin glassmorphism-card {
-  @include glassmorphism-base;
+@mixin glassmorphism-card($variant: 'primary', $padding: 'normal') {
+  @include glassmorphism-base($variant);
   @include glassmorphism-hover;
-  padding: var(--card-padding);
-  margin-bottom: var(--spacing-2xl);
+
+  @if $padding == 'small' {
+    padding: var(--card-padding-sm);
+  } @else if $padding == 'large' {
+    padding: var(--card-padding);
+  } @else {
+    padding: var(--card-padding);
+  }
+
+  margin-bottom: var(--spacing-lg);
+}
+
+/* === MIXIN GLASSMORPHISM CARD COMPACT === */
+@mixin glassmorphism-card-compact {
+  @include glassmorphism-base('light');
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+
+  &:hover {
+    background: var(--glass-background-hover);
+    border-color: var(--border-hover);
+  }
 }
 
 /* === MIXIN GLASSMORPHISM TABLE === */
@@ -100,12 +140,36 @@
 }
 
 /* === MIXIN GLASSMORPHISM BUTTON === */
-@mixin glassmorphism-button($variant: 'primary') {
-  padding: var(--button-padding);
+@mixin glassmorphism-button($variant: 'primary', $size: 'normal') {
+  // Base button styles
+  @if $size == 'small' {
+    padding: var(--button-padding-sm);
+    font-size: 0.875rem;
+  } @else if $size == 'large' {
+    padding: var(--button-padding-lg);
+    font-size: 1.125rem;
+  } @else {
+    padding: var(--button-padding);
+    font-size: 1rem;
+  }
+
   border-radius: var(--border-radius-md);
   font-weight: 600;
   transition: var(--transition-normal);
   border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+
+  // Disabled state
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
   
   @if $variant == 'primary' {
     background: rgba(59, 130, 246, 0.8);

@@ -3,10 +3,8 @@ package ar.gov.mpd.concursobackend.inscription.application.service;
 import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRequest;
@@ -14,7 +12,6 @@ import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificat
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -191,6 +188,65 @@ public class InscriptionNotificationService {
             }
         } catch (Exception e) {
             log.error("Failed to process notification for user with ID {}: {}", userId, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Sends a notification to a user when their inscription is frozen due to expired documentation deadline
+     *
+     * @param inscription The inscription that was frozen
+     * @param contest     The contest associated with the inscription
+     */
+    public void notifyUserAboutInscriptionFrozen(Inscription inscription, Contest contest) {
+        UUID userId = inscription.getUserId().getValue();
+        log.info("Sending notification to user {} about inscription being frozen due to expired deadline", userId);
+
+        try {
+            // Get the user by ID
+            Optional<User> userOpt = userService.getById(userId);
+            if (userOpt.isEmpty()) {
+                log.warn("User not found with ID: {} to notify about inscription freeze", userId);
+                return;
+            }
+
+            User user = userOpt.get();
+            log.info("Found user: {} {} for frozen inscription notification", user.getFirstName(), user.getLastName());
+
+            String subject = "Inscripción Congelada - Plazo de Documentación Vencido";
+
+            String content = String.format(
+                    "Su inscripción al concurso \"%s\" ha sido congelada debido al vencimiento del plazo para la presentación de documentación.\n\n" +
+                            "Detalles de la inscripción:\n" +
+                            "- Concurso: %s\n" +
+                            "- ID de Inscripción: %s\n" +
+                            "- Estado: CONGELADA\n" +
+                            "- Fecha de congelación: %s\n\n" +
+                            "IMPORTANTE: Su inscripción ha sido congelada porque no se completó la documentación requerida " +
+                            "dentro del plazo perentorio de 3 días hábiles posterior al cierre de inscripciones.\n\n" +
+                            "Esta acción es irreversible y su inscripción no podrá continuar en el proceso de selección.\n\n" +
+                            "Si considera que existe un error, puede contactar a la administración para revisar su caso.",
+                    contest.getTitle(),
+                    contest.getTitle(),
+                    inscription.getId().getValue(),
+                    inscription.getLastUpdated()
+            );
+
+            try {
+                NotificationRequest request = NotificationRequest.builder()
+                        .recipientUsername(user.getUsername().value())
+                        .subject(subject)
+                        .content(content)
+                        .type(NotificationType.INSCRIPTION)
+                        .acknowledgementLevel(AcknowledgementLevel.SIGNATURE_BASIC)
+                        .build();
+
+                sendNotificationUseCase.sendNotification(request);
+                log.info("Frozen inscription notification sent to user: {}", user.getUsername().value());
+            } catch (Exception e) {
+                log.error("Failed to send frozen inscription notification to user: {}", user.getUsername().value(), e);
+            }
+        } catch (Exception e) {
+            log.error("Failed to process frozen inscription notification for user with ID {}: {}", userId, e.getMessage(), e);
         }
     }
 }

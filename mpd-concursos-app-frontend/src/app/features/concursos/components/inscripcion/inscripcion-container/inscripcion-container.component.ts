@@ -1,11 +1,10 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 import { Contest } from '@shared/interfaces/concurso/concurso.interface';
-
-
-
-import { InscripcionProcessComponent } from '../containers/inscripcion-process/inscripcion-process.component';
+import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { NotificationService } from '@shared/services/notification.service';
 
 @Component({
   selector: 'app-inscripcion-container',
@@ -15,8 +14,9 @@ import { InscripcionProcessComponent } from '../containers/inscripcion-process/i
   ],
   template: `
     <div class="inscripcion-container">
-      <div class="loading-message" *ngIf="!dialogOpened">
-        <p>Cargando proceso de inscripción...</p>
+      <div class="loading-message" *ngIf="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Iniciando proceso de inscripción...</p>
       </div>
     </div>
   `,
@@ -43,45 +43,45 @@ export class InscripcionContainerComponent implements OnInit {
   @Input() contest!: Contest;
   @Output() inscriptionCompleted = new EventEmitter<void>();
 
-  dialogOpened = false;
+  loading = false;
 
-  
+  constructor(
+    private router: Router,
+    private inscriptionService: InscriptionService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
-    // Abrir el diálogo de inscripción después de un breve retraso
+    // Iniciar el proceso de inscripción después de un breve retraso
     setTimeout(() => {
-      this.openInscripcionDialog();
+      this.startInscriptionProcess();
     }, 300);
   }
 
-  openInscripcionDialog(): void {
-    this.dialogOpened = true;
+  startInscriptionProcess(): void {
+    this.loading = true;
 
-    const dialogRef = this.dialog.open(InscripcionProcessComponent, {
-      width: '90%',
-      height: '90%',
-      maxWidth: '1200px',
-      maxHeight: '800px',
-      panelClass: ['inscription-dialog'],
-      disableClose: true,
-      hasBackdrop: true,
-      data: {
-        contest: this.contest
-      }
-    });
+    // Crear nueva inscripción
+    this.inscriptionService.createInscription(this.contest.id)
+      .subscribe({
+        next: (response: { id: string }) => {
+          console.log('[InscripcionContainer] Inscripción inicial creada:', response);
 
-    dialogRef.afterClosed().subscribe(result => {
-      console.log('[InscripcionContainer] Diálogo de inscripción cerrado con resultado:', result);
+          // Navegar a la página de inscripción
+          this.router.navigate(['/dashboard/inscripcion'], {
+            queryParams: {
+              contestId: this.contest.id,
+              inscriptionId: response.id
+            }
+          });
 
-      if (result === true) {
-        // La inscripción se completó exitosamente
-        this.snackBar.open('Inscripción completada exitosamente', 'Cerrar', {
-          duration: 3000
-        });
-        this.inscriptionCompleted.emit();
-      }
-
-      this.dialogOpened = false;
-    });
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('[InscripcionContainer] Error al crear inscripción:', error);
+          this.notificationService.error('Error al iniciar el proceso de inscripción');
+          this.loading = false;
+        }
+      });
   }
 }

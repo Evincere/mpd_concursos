@@ -7,7 +7,6 @@ import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptio
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionNotificationService;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;

@@ -12,7 +12,7 @@ import { Subject, takeUntil, Observable } from 'rxjs';
 
 import { ExamenesService } from '@core/services/examenes/examenes.service';
 import { ExamenSecurityService } from '@core/services/examenes/security/examen-security.service';
-import { NotificationService } from '@core/services/notifications/notification.service';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { ExamenesStateService } from '@core/services/examenes/examenes-state.service';
 
 
@@ -40,12 +40,7 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   private injector: { get: <T>(service: any) => T };
   private router: { navigate: (commands: string[]) => void };
   private examenSecurity: { deactivateSecureMode: () => void; reset: () => void };
-  private notificationService: {
-    cleanup: () => void;
-    disableNotifications: () => void;
-    mostrarAdvertencia: (mensaje: string) => void;
-    mostrarError: (mensaje: string) => void;
-  };
+  private notificationService: UnifiedNotificationService;
   private examenesState: {
     getExamenes: () => Observable<Examen[]>;
     getLoading: () => Observable<boolean>;
@@ -54,7 +49,9 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     filterExamenes: (termino: string) => void;
   };
 
-  constructor() {
+  constructor(
+    private unifiedNotificationService: UnifiedNotificationService
+  ) {
     // En una implementación real, se inyectarían los servicios necesarios
     this.injector = {
       get: <T>(service: any): T => {
@@ -83,12 +80,7 @@ export class ExamenesComponent implements OnInit, OnDestroy {
       reset: () => console.log('Seguridad reiniciada')
     };
 
-    this.notificationService = {
-      cleanup: () => console.log('Notificaciones limpiadas'),
-      disableNotifications: () => console.log('Notificaciones deshabilitadas'),
-      mostrarAdvertencia: (mensaje: string) => console.log(`Advertencia: ${mensaje}`),
-      mostrarError: (mensaje: string) => console.log(`Error: ${mensaje}`)
-    };
+    this.notificationService = this.unifiedNotificationService;
 
     this.examenesState = {
       getExamenes: () => new Observable<Examen[]>(observer => {
@@ -116,10 +108,7 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     this.examenSecurity.reset();
 
     // Limpiamos todas las notificaciones y diálogos abiertos
-    this.notificationService.cleanup();
-
-    // Deshabilitamos explícitamente las notificaciones de seguridad
-    this.notificationService.disableNotifications();
+    this.notificationService.dismissAll();
 
     console.log('Estrategias de seguridad y notificaciones desactivadas en el listado de exámenes');
 
@@ -175,7 +164,7 @@ export class ExamenesComponent implements OnInit, OnDestroy {
       });
 
       if (yaRealizado) {
-        this.notificationService.mostrarAdvertencia('Este examen ya ha sido realizado anteriormente.');
+        this.notificationService.warning('Este examen ya ha sido realizado anteriormente.');
         this.loading = false;
         return;
       }
@@ -200,7 +189,7 @@ export class ExamenesComponent implements OnInit, OnDestroy {
       this.router.navigate(['/dashboard/examenes', examenId, 'rendir']);
     } catch (error) {
       console.error('Error al verificar o iniciar el examen:', error);
-      this.notificationService.mostrarError('Error al iniciar el examen. Intente nuevamente.');
+      this.notificationService.error('Error al iniciar el examen. Intente nuevamente.');
       this.loading = false;
     }
   }

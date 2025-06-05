@@ -1,9 +1,13 @@
 <div class="detalle-container" [class.closing]="closing">
   <div class="detalle-header">
     <h2>Detalle de la Postulación</h2>
-    <button mat-icon-button class="cerrar-btn" (click)="onCerrar()">
-      <mat-icon>close</mat-icon>
-    </button>
+    <app-custom-button
+      [variant]="'icon'"
+      [icon]="'times'"
+      [tooltip]="'Cerrar detalle'"
+      [ariaLabel]="'Cerrar detalle de postulación'"
+      (buttonClick)="onCerrar()">
+    </app-custom-button>
   </div>
 
   <div class="detalle-content">
@@ -54,15 +58,23 @@
       <h3>Documentos Adjuntos</h3>
       <div class="documentos">
         <div class="documento" *ngFor="let doc of postulacion.attachedDocuments">
-          <mat-icon class="icono">description</mat-icon>
+          <i class="fas fa-file-alt icono" aria-hidden="true"></i>
           <span class="nombre">{{ doc.name }}</span>
           <div class="acciones">
-            <button mat-icon-button (click)="descargarDocumento(doc)" matTooltip="Descargar">
-              <mat-icon>download</mat-icon>
-            </button>
-            <button mat-icon-button (click)="eliminarDocumento(doc)" matTooltip="Eliminar" color="warn">
-              <mat-icon>delete</mat-icon>
-            </button>
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'download'"
+              [tooltip]="'Descargar documento'"
+              [ariaLabel]="'Descargar ' + doc.name"
+              (buttonClick)="descargarDocumento(doc)">
+            </app-custom-button>
+            <app-custom-button
+              [variant]="'icon'"
+              [icon]="'trash'"
+              [tooltip]="'Eliminar documento'"
+              [ariaLabel]="'Eliminar ' + doc.name"
+              (buttonClick)="eliminarDocumento(doc)">
+            </app-custom-button>
           </div>
         </div>
       </div>

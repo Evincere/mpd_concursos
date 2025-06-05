@@ -1,54 +1,121 @@
 <div class="filtros-panel">
-  <header>
-    <h2>Filtros</h2>
-    <button mat-icon-button (click)="cerrar.emit()">
-      <mat-icon>close</mat-icon>
-    </button>
+  <!-- Panel Header -->
+  <header class="panel-header">
+    <div class="header-title">
+      <i class="fas fa-filter" aria-hidden="true"></i>
+      <h2>Filtros de Búsqueda</h2>
+    </div>
+    <app-custom-button
+      [variant]="'icon'"
+      [icon]="'times'"
+      [tooltip]="'Cerrar panel'"
+      (buttonClick)="cerrarPanel()"
+      class="close-button">
+    </app-custom-button>
   </header>
 
-  <form [formGroup]="filtrosForm">
-    <!-- Estado -->
-    <div class="filtro-grupo">
-      <h3>Estado</h3>
-      <mat-button-toggle-group formControlName="estado">
-        <mat-button-toggle *ngFor="let option of estadoOptions" [value]="option.value">
-          <mat-icon>{{ option.icon }}</mat-icon>
-          {{ option.label }}
-        </mat-button-toggle>
-      </mat-button-toggle-group>
-    </div>
+  <!-- Panel Content -->
+  <div class="panel-content">
+    <form [formGroup]="filtrosForm" class="filtros-form">
 
-    <!-- Periodo -->
-    <div class="filtro-grupo">
-      <h3>Periodo</h3>
-      <mat-button-toggle-group formControlName="periodo">
-        <mat-button-toggle *ngFor="let option of periodoOptions" [value]="option.value">
-          <mat-icon>{{ option.icon }}</mat-icon>
-          {{ option.label }}
-        </mat-button-toggle>
-      </mat-button-toggle-group>
-    </div>
+      <!-- Estado Filter Group -->
+      <div class="filter-group">
+        <div class="filter-header">
+          <i class="fas fa-circle-check filter-icon" aria-hidden="true"></i>
+          <h3 class="filter-title">Estado del Concurso</h3>
+        </div>
+        <div class="filter-options">
+          <div class="button-grid">
+            <app-custom-button
+              *ngFor="let option of estadoOptions"
+              [variant]="'stroked'"
+              [color]="filtrosForm.get('estado')?.value === option.value ? 'primary' : 'accent'"
+              [icon]="option.icon"
+              [label]="option.label"
+              [class.active]="filtrosForm.get('estado')?.value === option.value"
+              (buttonClick)="onToggleChange('estado', option.value)"
+              class="filter-button">
+            </app-custom-button>
+          </div>
+        </div>
+      </div>
 
-    <!-- Dependencia -->
-    <div class="filtro-grupo">
-      <h3>Dependencia</h3>
-      <mat-select formControlName="dependencia" placeholder="Seleccione dependencia">
-        <mat-option *ngFor="let option of dependenciaOptions" [value]="option.value">
-          <mat-icon>{{ option.icon }}</mat-icon>
-          {{ option.label }}
-        </mat-option>
-      </mat-select>
-    </div>
+      <!-- Periodo Filter Group -->
+      <div class="filter-group">
+        <div class="filter-header">
+          <i class="fas fa-calendar-alt filter-icon" aria-hidden="true"></i>
+          <h3 class="filter-title">Período de Publicación</h3>
+        </div>
+        <div class="filter-options">
+          <div class="button-grid">
+            <app-custom-button
+              *ngFor="let option of periodoOptions"
+              [variant]="'stroked'"
+              [color]="filtrosForm.get('periodo')?.value === option.value ? 'primary' : 'accent'"
+              [icon]="option.icon"
+              [label]="option.label"
+              [class.active]="filtrosForm.get('periodo')?.value === option.value"
+              (buttonClick)="onToggleChange('periodo', option.value)"
+              class="filter-button">
+            </app-custom-button>
+          </div>
+        </div>
+      </div>
 
-    <!-- Cargo -->
-    <div class="filtro-grupo">
-      <h3>Cargo</h3>
-      <mat-select formControlName="cargo" placeholder="Seleccione cargo">
-        <mat-option *ngFor="let option of cargoOptions" [value]="option.value">
-          <mat-icon>{{ option.icon }}</mat-icon>
-          {{ option.label }}
-        </mat-option>
-      </mat-select>
+      <!-- Dependencia Filter Group -->
+      <div class="filter-group">
+        <div class="filter-header">
+          <i class="fas fa-building filter-icon" aria-hidden="true"></i>
+          <h3 class="filter-title">Dependencia</h3>
+        </div>
+        <div class="filter-options">
+          <app-custom-select
+            [placeholder]="'Seleccione dependencia'"
+            [options]="dependenciaOptions"
+            [control]="getDependenciaControl()"
+            class="filter-select">
+          </app-custom-select>
+        </div>
+      </div>
+
+      <!-- Cargo Filter Group -->
+      <div class="filter-group">
+        <div class="filter-header">
+          <i class="fas fa-briefcase filter-icon" aria-hidden="true"></i>
+          <h3 class="filter-title">Tipo de Cargo</h3>
+        </div>
+        <div class="filter-options">
+          <app-custom-select
+            [placeholder]="'Seleccione tipo de cargo'"
+            [options]="cargoOptions"
+            [control]="getCargoControl()"
+            class="filter-select">
+          </app-custom-select>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Panel Footer -->
+  <footer class="panel-footer">
+    <div class="footer-actions">
+      <app-custom-button
+        [variant]="'stroked'"
+        [color]="'accent'"
+        [icon]="'undo'"
+        [label]="'Limpiar Filtros'"
+        (buttonClick)="limpiarFiltros()"
+        class="clear-button">
+      </app-custom-button>
+      <app-custom-button
+        [variant]="'primary'"
+        [color]="'primary'"
+        [icon]="'check'"
+        [label]="'Aplicar'"
+        (buttonClick)="aplicarFiltros()"
+        class="apply-button">
+      </app-custom-button>
     </div>
-  </form>
+  </footer>
 </div>

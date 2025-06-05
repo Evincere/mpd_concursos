@@ -1,18 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+
+// Custom Components
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
+import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
+import { CustomTableComponent, TableColumn } from '@shared/components/custom-table/custom-table.component';
+
+// Services
+import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 
 import { DocumentoUsuario, TipoDocumento } from '../../../../core/models/documento.model';
 import { DocumentoUploadComponent } from '../documento-upload/documento-upload.component';
 import { DocumentoViewerComponent } from '../documento-viewer/documento-viewer.component';
-import { ReturnToInscriptionBannerComponent } from './return-to-inscription-banner/return-to-inscription-banner.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -22,31 +23,26 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
-    MatTooltipModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    ReturnToInscriptionBannerComponent
+    CustomButtonComponent,
+    CustomCardComponent,
+    CustomSpinnerComponent,
+    CustomTableComponent
   ],
   template: `
     <div class="documentacion-container">
-      <!-- Banner para volver a la inscripción -->
-      <app-return-to-inscription-banner></app-return-to-inscription-banner>
-
-      <div class="documentacion-header">
-        <h3>
-          <i class="fas fa-file-alt"></i>
-          Documentación
-        </h3>
-        <button mat-raised-button color="primary" (click)="abrirDialogoCargaDocumento()">
-          <i class="fas fa-plus"></i>
-          Agregar documento
-        </button>
-      </div>
+      <app-custom-card>
+        <div class="documentacion-header">
+          <div class="header-title">
+            <i class="fas fa-file-alt" aria-hidden="true"></i>
+            <h3>Documentación</h3>
+          </div>
+          <app-custom-button
+            color="primary"
+            icon="fa-plus"
+            label="Agregar documento"
+            (buttonClick)="abrirDialogoCargaDocumento()">
+          </app-custom-button>
+        </div>
 
       <!-- Mensaje de advertencia sobre formato de archivos -->
       <div class="documentacion-warning">
@@ -60,27 +56,31 @@ import { Subscription } from 'rxjs';
         </div>
       </div>
 
-      <!-- Indicador de progreso -->
-      <div class="documentacion-progress">
-        <div class="progress-header">
-          <span>Estado de tu documentación</span>
-          <span class="progress-percentage">{{progresoDocumentacion}}%</span>
+        <!-- Indicador de progreso -->
+        <div class="documentacion-progress">
+          <div class="progress-header">
+            <span>Estado de tu documentación</span>
+            <span class="progress-percentage">{{progresoDocumentacion}}%</span>
+          </div>
+          <div class="custom-progress-bar">
+            <div class="progress-fill"
+                 [style.width.%]="progresoDocumentacion"
+                 [class.warning]="progresoDocumentacion < 50"
+                 [class.accent]="progresoDocumentacion >= 50 && progresoDocumentacion < 100"
+                 [class.success]="progresoDocumentacion === 100">
+            </div>
+          </div>
+          <div class="progress-info">
+            <span *ngIf="progresoDocumentacion < 100">
+              <i class="fas fa-info-circle" aria-hidden="true"></i>
+              Te faltan {{documentosFaltantes}} documentos para completar tu perfil
+            </span>
+            <span *ngIf="progresoDocumentacion === 100">
+              <i class="fas fa-check-circle" aria-hidden="true"></i>
+              ¡Has completado toda la documentación requerida!
+            </span>
+          </div>
         </div>
-        <mat-progress-bar
-          [value]="progresoDocumentacion"
-          [color]="progresoDocumentacion < 50 ? 'warn' : progresoDocumentacion < 100 ? 'accent' : 'primary'">
-        </mat-progress-bar>
-        <div class="progress-info">
-          <span *ngIf="progresoDocumentacion < 100">
-            <i class="fas fa-info-circle"></i>
-            Te faltan {{documentosFaltantes}} documentos para completar tu perfil
-          </span>
-          <span *ngIf="progresoDocumentacion === 100">
-            <i class="fas fa-check-circle"></i>
-            ¡Has completado toda la documentación requerida!
-          </span>
-        </div>
-      </div>
 
       <!-- Sección de documentos requeridos -->
       <div class="documentos-requeridos">
@@ -118,105 +118,73 @@ import { Subscription } from 'rxjs';
             </div>
             <div class="documento-actions">
               <ng-container *ngIf="isDocumentoSubido(tipo.id); else botonCargar">
-                <button mat-icon-button color="primary" matTooltip="Ver documento"
-                        (click)="verDocumento(getDocumentoByTipo(tipo.id))">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button mat-icon-button color="accent" matTooltip="Reemplazar documento"
-                        (click)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
-                <button mat-icon-button color="warn" matTooltip="Eliminar documento"
-                        (click)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
-                  <i class="fas fa-trash"></i>
-                </button>
+                <app-custom-button
+                  variant="icon"
+                  color="primary"
+                  icon="fa-eye"
+                  [tooltip]="'Ver documento'"
+                  (buttonClick)="verDocumento(getDocumentoByTipo(tipo.id))">
+                </app-custom-button>
+                <app-custom-button
+                  variant="icon"
+                  color="accent"
+                  icon="fa-sync-alt"
+                  [tooltip]="'Reemplazar documento'"
+                  (buttonClick)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
+                </app-custom-button>
+                <app-custom-button
+                  variant="icon"
+                  color="warn"
+                  icon="fa-trash"
+                  [tooltip]="'Eliminar documento'"
+                  (buttonClick)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
+                </app-custom-button>
               </ng-container>
               <ng-template #botonCargar>
-                <button mat-stroked-button color="primary" (click)="cargarDocumentoTipo(tipo.id)">
-                  <i class="fas fa-upload"></i>
-                  Cargar
-                </button>
+                <app-custom-button
+                  variant="stroked"
+                  color="primary"
+                  icon="fa-upload"
+                  label="Cargar"
+                  (buttonClick)="cargarDocumentoTipo(tipo.id)">
+                </app-custom-button>
               </ng-template>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Tabla de documentos cargados -->
-      <div class="documentos-tabla" *ngIf="documentosUsuario.length > 0">
-        <h4>Todos los documentos</h4>
-        <table mat-table [dataSource]="documentosUsuario" class="mat-elevation-z2">
-          <!-- Tipo Column -->
-          <ng-container matColumnDef="tipo">
-            <th mat-header-cell *matHeaderCellDef>Tipo de documento</th>
-            <td mat-cell *matCellDef="let documento">
-              {{getTipoDocumentoNombre(documento.tipoDocumentoId)}}
-            </td>
-          </ng-container>
+        <!-- Tabla de documentos cargados -->
+        <div class="documentos-tabla" *ngIf="documentosUsuario.length > 0">
+          <h4>Todos los documentos</h4>
+          <app-custom-table
+            [data]="documentosUsuario"
+            [columns]="tableColumns"
+            [loading]="isLoading"
+            [showActions]="true"
+            (actionClick)="onTableAction($event)">
+          </app-custom-table>
+        </div>
 
-          <!-- Nombre Column -->
-          <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef>Nombre del archivo</th>
-            <td mat-cell *matCellDef="let documento">{{documento.nombreArchivo}}</td>
-          </ng-container>
+        <!-- Estado vacío -->
+        <div class="empty-state" *ngIf="documentosUsuario.length === 0 && !isLoading">
+          <i class="fas fa-folder-open" aria-hidden="true"></i>
+          <h4>No has cargado ningún documento aún</h4>
+          <p>Comienza cargando los documentos requeridos para completar tu perfil</p>
+          <app-custom-button
+            color="primary"
+            icon="fa-upload"
+            label="Cargar documento"
+            (buttonClick)="abrirDialogoCargaDocumento()">
+          </app-custom-button>
+        </div>
 
-          <!-- Fecha Column -->
-          <ng-container matColumnDef="fecha">
-            <th mat-header-cell *matHeaderCellDef>Fecha de carga</th>
-            <td mat-cell *matCellDef="let documento">{{documento.fechaCarga | date:'dd/MM/yyyy'}}</td>
-          </ng-container>
-
-          <!-- Estado Column -->
-          <ng-container matColumnDef="estado">
-            <th mat-header-cell *matHeaderCellDef>Estado</th>
-            <td mat-cell *matCellDef="let documento">
-              <span class="estado-badge-tabla" [ngClass]="documento.estado">
-                <i class="fas" [ngClass]="getIconForStatus(documento.estado)"></i>
-                {{getEstadoTexto(documento.estado)}}
-              </span>
-            </td>
-          </ng-container>
-
-          <!-- Acciones Column -->
-          <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let documento">
-              <button mat-icon-button color="primary" matTooltip="Ver documento"
-                      (click)="verDocumento(documento)">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button mat-icon-button color="accent" matTooltip="Reemplazar documento"
-                      (click)="reemplazarDocumento(documento)">
-                <i class="fas fa-sync-alt"></i>
-              </button>
-              <button mat-icon-button color="warn" matTooltip="Eliminar documento"
-                      (click)="eliminarDocumento(documento)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="columnas"></tr>
-          <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
-        </table>
-      </div>
-
-      <!-- Estado vacío -->
-      <div class="empty-state" *ngIf="documentosUsuario.length === 0 && !isLoading">
-        <i class="fas fa-folder-open"></i>
-        <h4>No has cargado ningún documento aún</h4>
-        <p>Comienza cargando los documentos requeridos para completar tu perfil</p>
-        <button mat-raised-button color="primary" (click)="abrirDialogoCargaDocumento()">
-          <i class="fas fa-upload"></i>
-          Cargar documento
-        </button>
-      </div>
-
-      <!-- Loading state -->
-      <div class="loading-state" *ngIf="isLoading">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Cargando documentos...</p>
-      </div>
+        <!-- Loading state -->
+        <div class="loading-state" *ngIf="isLoading">
+          <app-custom-spinner [size]="'large'"></app-custom-spinner>
+          <p>Cargando documentos...</p>
+        </div>
+      </app-custom-card>
     </div>
   `,
   styles: [`
@@ -229,17 +197,23 @@ import { Subscription } from 'rxjs';
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1.5rem;
+      padding: 1.5rem;
 
-      h3 {
+      .header-title {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 500;
+        gap: 0.75rem;
 
         i {
-          color: var(--primary-color);
+          color: #4CAF50;
+          font-size: 1.5rem;
+        }
+
+        h3 {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #f9fafb;
         }
       }
     }
@@ -287,30 +261,59 @@ import { Subscription } from 'rxjs';
     }
 
     .documentacion-progress {
-      background-color: rgba(var(--surface-color-rgb), 0.5);
-      border-radius: 8px;
+      background: rgba(55, 65, 81, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(249, 250, 251, 0.1);
+      border-radius: 12px;
       padding: 1.5rem;
       margin-bottom: 2rem;
-      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 
       .progress-header {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.5rem;
+        margin-bottom: 1rem;
 
         span {
-          color: var(--text-color);
+          color: #f9fafb;
           font-weight: 500;
         }
 
         .progress-percentage {
-          color: var(--primary-color);
+          color: #4CAF50;
+          font-weight: 600;
+        }
+      }
+
+      .custom-progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(75, 85, 99, 0.3);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+
+        .progress-fill {
+          height: 100%;
+          border-radius: 4px;
+          transition: width 0.3s ease, background-color 0.3s ease;
+
+          &.warning {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+          }
+
+          &.accent {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+          }
+
+          &.success {
+            background: linear-gradient(90deg, #4CAF50, #66bb6a);
+          }
         }
       }
 
       .progress-info {
-        margin-top: 0.75rem;
-        color: var(--text-secondary);
+        color: #d1d5db;
         font-size: 0.9rem;
 
         i {
@@ -614,12 +617,21 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   ];
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
-  columnas: string[] = ['tipo', 'nombre', 'fecha', 'estado', 'acciones'];
+
+  // Table configuration for custom table component
+  tableColumns: TableColumn[] = [
+    { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
+    { key: 'nombreArchivo', label: 'Nombre del archivo', sortable: true },
+    { key: 'fechaCarga', label: 'Fecha de carga', sortable: true, type: 'date' },
+    { key: 'estado', label: 'Estado', sortable: false, type: 'badge' },
+    { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
+  ];
+
   private subscription: Subscription | undefined;
 
   constructor(
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
+    private dialog: CustomDialogService,
+    private notification: CustomNotificationService,
     private documentosService: DocumentosService
   ) {}
 
@@ -655,7 +667,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       error: (error: unknown) => {
         console.error('[DocumentacionTab] Error al cargar tipos de documento:', error);
         this.isLoading = false;
-        this.mostrarError('Error al cargar los tipos de documento');
+        this.notification.error('Error al cargar los tipos de documento');
       }
     });
   }
@@ -694,7 +706,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           console.error('[DocumentacionTab] Error al cargar documentos del usuario:', error);
-          this.mostrarError('Error al cargar tus documentos');
+          this.notification.error('Error al cargar tus documentos');
         }
       });
   }
@@ -797,14 +809,18 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
 
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
-      width: '600px',
+      title: 'Cargar nuevo documento',
+      icon: 'fa-upload',
+      size: 'medium',
+      showCloseButton: true,
+      showFooter: false,
       data: { tipoDocumentoId }
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
         // Mostrar mensaje de éxito
-        this.mostrarExito('Documento cargado exitosamente');
+        this.notification.success('Documento cargado exitosamente');
 
         // Recargar documentos después de una carga exitosa
         this.cargarDocumentosUsuario();
@@ -828,34 +844,48 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   verDocumento(documento: DocumentoUsuario | undefined): void {
     if (!documento || !documento.id) {
-      this.mostrarError('No se pudo encontrar el documento');
+      this.notification.error('No se pudo encontrar el documento');
       return;
     }
 
+    console.log('[DocumentacionTab] Abriendo visor para documento:', documento);
+
     this.dialog.open(DocumentoViewerComponent, {
-      width: '800px',
-      height: '80vh',
+      width: '95vw',
+      height: '95vh',
+      maxWidth: '1600px',
+      maxHeight: '1000px',
+      showCloseButton: false,
+      showFooter: false,
+      title: '',
       data: { documentoId: documento.id }
     });
   }
 
   reemplazarDocumento(documento: DocumentoUsuario | undefined): void {
     if (!documento || !documento.id) {
-      this.mostrarError('No se pudo encontrar el documento');
+      this.notification.error('No se pudo encontrar el documento');
       return;
     }
 
+    console.log('[DocumentacionTab] Abriendo diálogo de reemplazo para documento:', documento);
+
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
-      width: '600px',
+      title: 'Reemplazar documento',
+      icon: 'fa-upload',
+      size: 'medium',
+      showCloseButton: true,
+      showFooter: false,
       data: { tipoDocumentoId: documento.tipoDocumentoId }
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
+        console.log('[DocumentacionTab] Documento subido, eliminando anterior...');
         // Eliminar el documento anterior y recargar
         this.documentosService.deleteDocumento(documento.id!).subscribe({
           next: () => {
-            this.mostrarExito('Documento reemplazado correctamente');
+            this.notification.success('Documento reemplazado correctamente');
             this.cargarDocumentosUsuario();
 
             // Notificar al servicio que se ha actualizado un documento
@@ -878,14 +908,14 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   eliminarDocumento(documento: DocumentoUsuario | undefined): void {
     if (!documento || !documento.id) {
-      this.mostrarError('No se pudo encontrar el documento');
+      this.notification.error('No se pudo encontrar el documento');
       return;
     }
 
     if (confirm('¿Estás seguro de que deseas eliminar este documento?')) {
       this.documentosService.deleteDocumento(documento.id).subscribe({
         next: () => {
-          this.mostrarExito('Documento eliminado correctamente');
+          this.notification.success('Documento eliminado correctamente');
           this.cargarDocumentosUsuario();
 
           // Notificar al servicio que se ha actualizado un documento
@@ -898,7 +928,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           console.error('Error al eliminar documento:', error);
-          this.mostrarError('Error al eliminar el documento');
+          this.notification.error('Error al eliminar el documento');
         }
       });
     }
@@ -1120,17 +1150,22 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
   }
 
-  mostrarExito(mensaje: string): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['success-snackbar']
-    });
+  onTableAction(event: {action: string, row: any}): void {
+    const { action, row } = event;
+
+    switch (action) {
+      case 'view':
+        this.verDocumento(row);
+        break;
+      case 'replace':
+        this.reemplazarDocumento(row);
+        break;
+      case 'delete':
+        this.eliminarDocumento(row);
+        break;
+      default:
+        console.warn('Acción no reconocida:', action);
+    }
   }
 
-  mostrarError(mensaje: string): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
-  }
 }

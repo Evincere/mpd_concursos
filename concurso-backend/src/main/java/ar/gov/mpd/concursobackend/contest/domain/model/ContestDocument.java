@@ -23,6 +23,7 @@ public class ContestDocument {
     private String name;
     private String description;
     private String fileUrl;
+    private String fileName;
     private String fileType;
     private Long fileSize;
     private boolean required;

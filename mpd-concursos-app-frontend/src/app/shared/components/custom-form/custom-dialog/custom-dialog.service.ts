@@ -5,11 +5,17 @@ import { DIALOG_DATA } from './dialog-ref';
 
 // Export CUSTOM_DIALOG_DATA for backward compatibility
 export { DIALOG_DATA as CUSTOM_DIALOG_DATA } from './dialog-ref';
+// Export CustomDialogRef for external use
+export { CustomDialogRef } from './custom-dialog-ref';
 
 export interface DialogConfig {
   title?: string;
   icon?: string;
   size?: 'small' | 'medium' | 'large' | 'fullscreen';
+  width?: string;
+  height?: string;
+  maxWidth?: string;
+  maxHeight?: string;
   showCloseButton?: boolean;
   showFooter?: boolean;
   showCancelButton?: boolean;
@@ -97,6 +103,12 @@ export class CustomDialogService {
 
     // Configurar eventos
     try {
+      // Escuchar cuando el CustomDialogRef se cierra desde el componente de contenido
+      this.dialogRef.afterClosed().subscribe((result) => {
+        console.log('[CustomDialogService] CustomDialogRef cerrado con resultado:', result);
+        this.close();
+      });
+
       dialogInstance.dialogClose.subscribe(() => {
         console.log('Evento dialogClose recibido');
         this.close();

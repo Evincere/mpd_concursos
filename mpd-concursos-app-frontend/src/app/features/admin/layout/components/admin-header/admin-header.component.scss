@@ -83,66 +83,7 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
   }
 
-  .header-title-container {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
 
-    .title-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-      border-radius: $border-radius-lg;
-      /* Glassmorphism icon background */
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(4px);
-      box-shadow:
-        0 3px 10px rgba(59, 130, 246, 0.4),
-        0 1px 4px rgba(59, 130, 246, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      transition: all $transition-normal;
-
-      i {
-        color: $text-primary;
-        font-size: 0.875rem;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      }
-
-      &:hover {
-        transform: translateY(-1px) scale(1.05);
-        box-shadow:
-          0 4px 14px rgba(59, 130, 246, 0.5),
-          0 2px 6px rgba(59, 130, 246, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.4);
-      }
-    }
-
-    .header-title {
-      margin: 0;
-      font-size: 1.125rem;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: $text-primary;
-      letter-spacing: 0.025em;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      background: linear-gradient(135deg, $text-primary 0%, rgba(249, 250, 251, 0.8) 100%);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-size: 200% 200%;
-      animation: shimmer 3s ease-in-out infinite;
-    }
-
-    @keyframes shimmer {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-  }
 
   .toggle-view-button-container {
     position: relative;
@@ -353,10 +294,10 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      /* Enhanced glassmorphism avatar */
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 1) 100%);
+      /* Subtle glassmorphism avatar - consistent with logo */
+      background: linear-gradient(135deg, rgba(75, 85, 99, 0.7) 0%, rgba(55, 65, 81, 0.8) 100%);
       color: $text-primary;
-      border: 2px solid rgba(255, 255, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -365,9 +306,9 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       margin-right: 0.75rem;
       transition: all $transition-normal;
       box-shadow:
-        0 3px 10px rgba(59, 130, 246, 0.4),
-        0 1px 4px rgba(59, 130, 246, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        0 2px 6px rgba(0, 0, 0, 0.2),
+        0 1px 3px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .user-info {
@@ -410,20 +351,24 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .user-avatar {
-        transform: scale(1.05);
+        transform: scale(1.02);
+        background: linear-gradient(135deg, rgba(75, 85, 99, 0.8) 0%, rgba(55, 65, 81, 0.9) 100%);
+        border-color: rgba(255, 255, 255, 0.2);
         box-shadow:
-          0 4px 14px rgba(59, 130, 246, 0.5),
-          0 2px 6px rgba(59, 130, 246, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          0 3px 8px rgba(0, 0, 0, 0.25),
+          0 1px 4px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
       }
     }
   }
 }
 
-// Estilos para el menú de notificaciones - Glassmorphism integration
+// Enhanced responsive menu styles - No horizontal overflow
 ::ng-deep .notifications-menu {
-  max-width: 320px !important;
-  width: 320px;
+  /* Dynamic width - prevent horizontal overflow */
+  max-width: min(320px, calc(100vw - 32px)) !important;
+  min-width: 260px !important;
+  width: auto !important;
 
   .menu-content {
     padding: 0 !important;
@@ -434,6 +379,30 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: transparent !important; // Seamless integration
     box-shadow: none !important; // Let notifications component handle shadows
     border: none !important;
+
+    /* Responsive container adjustments */
+    max-width: calc(100vw - 16px) !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Mobile-specific menu adjustments */
+@media (max-width: 480px) {
+  ::ng-deep .notifications-menu {
+    max-width: calc(100vw - 16px) !important;
+    min-width: 240px !important;
+
+    .custom-menu-container {
+      max-width: calc(100vw - 8px) !important;
+    }
+  }
+}
+
+/* Tablet-specific menu adjustments */
+@media (min-width: 481px) and (max-width: 768px) {
+  ::ng-deep .notifications-menu {
+    max-width: calc(100vw - 24px) !important;
+    min-width: 280px !important;
   }
 }
 
@@ -446,29 +415,6 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   .header-left {
     gap: 0.5rem;
-
-    .header-title-container {
-      gap: 0.5rem !important;
-
-      .title-icon {
-        width: 32px !important;
-        height: 32px !important;
-
-        i {
-          font-size: 0.75rem !important;
-        }
-      }
-
-      .header-title {
-        font-size: 0.875rem !important;
-        max-width: 120px;
-        /* Disable shimmer animation on mobile for performance */
-        animation: none !important;
-        background: none !important;
-        -webkit-text-fill-color: $text-primary !important;
-        color: $text-primary !important;
-      }
-    }
 
     .sidebar-toggle {
       width: 36px !important;

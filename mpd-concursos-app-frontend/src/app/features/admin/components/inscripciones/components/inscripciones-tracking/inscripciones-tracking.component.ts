@@ -16,7 +16,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatBadgeModule } from '@angular/material/badge';
@@ -64,7 +64,6 @@ interface InscriptionAlert {
     MatChipsModule,
     MatTooltipModule,
     MatDialogModule,
-    MatSnackBarModule,
     MatProgressSpinnerModule,
     MatTabsModule,
     MatBadgeModule,
@@ -114,7 +113,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private inscripcionesService: AdminInscriptionsService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar,
+    private notificationService: UnifiedNotificationService,
     private router: Router
   ) {
     this.filterForm = this.fb.group({
@@ -361,7 +360,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
   markAlertAsRead(alert: InscriptionAlert): void {
     alert.isRead = true;
     this.calculateStats();
-    this.snackBar.open('Alerta marcada como leída', 'Cerrar', { duration: 3000 });
+    this.notificationService.success('Alerta marcada como leída');
   }
 
   toggleAutoRefresh(): void {

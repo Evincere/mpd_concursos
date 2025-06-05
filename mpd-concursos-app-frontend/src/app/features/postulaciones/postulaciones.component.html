@@ -1,13 +1,20 @@
 <div class="postulaciones-container" [class.panel-active]="mostrarFiltros">
-  <app-search-header title="Mis Postulaciones" icon="file-alt" placeholder="Ingrese término de búsqueda"
-    (search)="onSearch($event)" (filter)="onFilter()">
+  <!-- Header de búsqueda -->
+  <app-search-header 
+    title="Mis Postulaciones" 
+    icon="file-alt" 
+    placeholder="Buscar por título, cargo o dependencia..."
+    (search)="onSearch($event)" 
+    (filter)="onFilter()">
   </app-search-header>
 
-  <app-postulaciones-tabs>
-    <div tabContent="list" class="content" [class.blurred]="mostrarFiltros">
+  <!-- Contenido principal -->
+  <div class="content" [class.blurred]="mostrarFiltros">
+    <!-- Loader -->
     <app-loader *ngIf="loading" [overlay]="true" message="Cargando postulaciones...">
     </app-loader>
 
+    <!-- Error de conexión -->
     <div class="error-message glassmorphism" *ngIf="error === 'connection'">
       <div class="error-icon">
         <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
@@ -16,85 +23,56 @@
         <h4>Error al cargar las postulaciones</h4>
         <p>No se pudo establecer conexión con el servidor. Por favor, verifica tu conexión a internet y vuelve a intentarlo.</p>
         <div class="error-actions">
-          <button mat-stroked-button (click)="retryLoad()" (keydown.enter)="retryLoad()" (keydown.space)="retryLoad()" aria-label="Reintentar cargar postulaciones">
-            <i class="fas fa-redo" aria-hidden="true"></i>
-            Reintentar
-          </button>
+          <app-custom-button
+            [label]="'Reintentar'"
+            [variant]="'primary'"
+            [icon]="'redo'"
+            [ariaLabel]="'Reintentar cargar postulaciones'"
+            (buttonClick)="retryLoad()">
+          </app-custom-button>
         </div>
       </div>
     </div>
 
+    <!-- Contenido cuando no hay errores de conexión -->
     <ng-container *ngIf="!loading && error !== 'connection'">
       <!-- Lista de postulaciones -->
-      <div class="postulaciones-list" *ngIf="dataSource.data.length > 0" [ngClass]="{'blurred': postulacionSeleccionada}">
-        <div class="postulacion-item" *ngFor="let postulacion of dataSource.data" (click)="verDetalle(postulacion)" (keydown.enter)="verDetalle(postulacion)" tabindex="0" role="button" [attr.aria-label]="'Ver detalle de postulación: ' + (postulacion.concurso?.titulo || 'Sin título')">
-          <!-- Acciones para dispositivos móviles (se muestran solo en pantallas pequeñas) -->
-          <div class="actions mobile-only">
-            <!-- Botón para ver detalle (solo para móviles) -->
-            <button mat-icon-button
-                    matTooltip="Ver detalle"
-                    (click)="$event.stopPropagation(); verDetalle(postulacion)"
-                    (keydown.enter)="$event.stopPropagation(); verDetalle(postulacion)"
-                    (keydown.space)="$event.stopPropagation(); verDetalle(postulacion)"
-                    aria-label="Ver detalle de postulación">
-              <mat-icon aria-hidden="true">visibility</mat-icon>
-            </button>
-          </div>
+      <div class="postulaciones-list" *ngIf="paginatedPostulaciones.length > 0" [ngClass]="{'blurred': postulacionSeleccionada}">
+        <div class="postulacion-item"
+             *ngFor="let postulacion of paginatedPostulaciones">
 
           <div class="postulacion-info">
             <!-- Encabezado con título y estado -->
             <div class="header-container">
               <div class="titulo-container">
                 <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
+                <span class="categoria" *ngIf="postulacion.concurso?.category">
+                  {{ postulacion.concurso?.category }}
+                </span>
               </div>
               <div class="header-actions">
                 <app-contest-status-badge
                   [status]="mapPostulationToContestStatus(postulacion.estado)"
                   [showIcon]="true">
                 </app-contest-status-badge>
-                <div class="actions">
-                  <!-- Botón para cancelar postulación -->
-                  <button mat-icon-button
-                          color="warn"
-                          matTooltip="Cancelar postulación"
-                          [disabled]="!puedesCancelarPostulacion(postulacion)"
-                          (click)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
-                          (keydown.enter)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
-                          (keydown.space)="$event.stopPropagation(); cancelarPostulacion(postulacion)"
-                          aria-label="Cancelar esta postulación"
-                          *ngIf="postulacion.estado !== 'CANCELLED'">
-                    <mat-icon aria-hidden="true">cancel</mat-icon>
-                  </button>
 
-                  <!-- Botón para continuar inscripción (solo para inscripciones en proceso) -->
-                  <button mat-stroked-button
-                          color="primary"
-                          class="continue-button"
-                          matTooltip="Continuar inscripción"
-                          [disabled]="!puedesContinuarInscripcion(postulacion)"
-                          (click)="$event.stopPropagation(); continuarInscripcion(postulacion)"
-                          (keydown.enter)="$event.stopPropagation(); continuarInscripcion(postulacion)"
-                          (keydown.space)="$event.stopPropagation(); continuarInscripcion(postulacion)"
-                          aria-label="Retomar proceso de inscripción"
-                          *ngIf="postulacion.estado === 'PENDING' && esInscripcionEnProceso(postulacion)">
-                    <mat-icon aria-hidden="true">play_arrow</mat-icon>
-                    <span>Retomar</span>
-                  </button>
+                <!-- Botón específico para ver detalles -->
+                <app-custom-button
+                  [variant]="'icon'"
+                  [icon]="'eye'"
+                  [tooltip]="'Ver detalle'"
+                  [ariaLabel]="'Ver detalle de postulación: ' + (postulacion.concurso?.titulo || 'Sin título')"
+                  (buttonClick)="verDetalle(postulacion)">
+                </app-custom-button>
 
-                  <!-- Botón para ver detalle -->
-                  <button mat-icon-button
-                          matTooltip="Ver detalle"
-                          (click)="$event.stopPropagation(); verDetalle(postulacion)"
-                          (keydown.enter)="$event.stopPropagation(); verDetalle(postulacion)"
-                          (keydown.space)="$event.stopPropagation(); verDetalle(postulacion)"
-                          aria-label="Ver detalle de postulación">
-                    <mat-icon aria-hidden="true">visibility</mat-icon>
-                  </button>
-                </div>
+                <app-action-menu
+                  [actions]="getActionsForPostulacion(postulacion)"
+                  [primaryActionId]="getPrimaryActionId(postulacion)"
+                  [showLabels]="false"
+                  [compact]="true"
+                  (actionClick)="onActionClick($event, postulacion)">
+                </app-action-menu>
               </div>
-              <span class="categoria" *ngIf="postulacion.concurso?.category">
-                {{ postulacion.concurso?.category }}
-              </span>
             </div>
 
             <!-- Información principal -->
@@ -152,16 +130,19 @@
       </div>
 
       <!-- Estados vacíos -->
-      <div class="empty-state" *ngIf="dataSource.data.length === 0">
+      <div class="empty-state" *ngIf="postulacionesFiltradas.length === 0">
         <!-- Sin postulaciones (nuevo usuario) -->
         <div class="empty-state-content glassmorphism welcome" *ngIf="!hayFiltrosAplicados() && !todasCanceladas">
           <i class="fas fa-user-plus fa-4x" aria-hidden="true"></i>
           <h3>¡Bienvenido al Sistema de Concursos!</h3>
           <p>Aún no tienes postulaciones registradas. Comienza explorando los concursos disponibles y postúlate para iniciar tu carrera en el Ministerio Público de la Defensa.</p>
-          <button mat-raised-button color="primary" (click)="navegarAConcursos()" (keydown.enter)="navegarAConcursos()" (keydown.space)="navegarAConcursos()" aria-label="Explorar concursos disponibles">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            Explorar concursos disponibles
-          </button>
+          <app-custom-button
+            [label]="'Explorar concursos disponibles'"
+            [variant]="'primary'"
+            [icon]="'search'"
+            [ariaLabel]="'Explorar concursos disponibles'"
+            (buttonClick)="navegarAConcursos()">
+          </app-custom-button>
         </div>
 
         <!-- Todas las postulaciones canceladas -->
@@ -169,10 +150,13 @@
           <i class="fas fa-folder-open fa-4x" aria-hidden="true"></i>
           <h3>No hay postulaciones activas</h3>
           <p>Todas tus postulaciones han sido canceladas. Si deseas participar en nuevos concursos, explora las convocatorias disponibles.</p>
-          <button mat-raised-button color="primary" (click)="navegarAConcursos()" (keydown.enter)="navegarAConcursos()" (keydown.space)="navegarAConcursos()" aria-label="Ver nuevos concursos disponibles">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            Ver nuevos concursos
-          </button>
+          <app-custom-button
+            [label]="'Ver nuevos concursos'"
+            [variant]="'primary'"
+            [icon]="'search'"
+            [ariaLabel]="'Ver nuevos concursos disponibles'"
+            (buttonClick)="navegarAConcursos()">
+          </app-custom-button>
         </div>
 
         <!-- Sin resultados de búsqueda -->
@@ -181,30 +165,98 @@
           <h3>No se encontraron coincidencias</h3>
           <p>No hay postulaciones que coincidan con los criterios de búsqueda actuales. Prueba ajustando los filtros o realizando una nueva búsqueda.</p>
           <div class="actions">
-            <button mat-stroked-button (click)="limpiarFiltros()" (keydown.enter)="limpiarFiltros()" (keydown.space)="limpiarFiltros()" aria-label="Limpiar todos los filtros aplicados">
-              <i class="fas fa-times" aria-hidden="true"></i>
-              Limpiar filtros
-            </button>
-            <button mat-raised-button color="primary" (click)="retryLoad()" (keydown.enter)="retryLoad()" (keydown.space)="retryLoad()" aria-label="Actualizar lista de postulaciones">
-              <i class="fas fa-sync" aria-hidden="true"></i>
-              Actualizar lista
-            </button>
+            <app-custom-button
+              [label]="'Limpiar filtros'"
+              [variant]="'stroked'"
+              [icon]="'times'"
+              [ariaLabel]="'Limpiar todos los filtros aplicados'"
+              (buttonClick)="limpiarFiltros()">
+            </app-custom-button>
+            <app-custom-button
+              [label]="'Actualizar lista'"
+              [variant]="'primary'"
+              [icon]="'sync'"
+              [ariaLabel]="'Actualizar lista de postulaciones'"
+              (buttonClick)="retryLoad()">
+            </app-custom-button>
           </div>
         </div>
       </div>
     </ng-container>
+  </div>
+
+  <!-- Backdrop para Panel de Detalles -->
+  <div class="backdrop"
+       *ngIf="postulacionSeleccionada"
+       (click)="cerrarDetalle()"
+       (keydown.enter)="cerrarDetalle()"
+       (keydown.space)="cerrarDetalle()"
+       tabindex="0"
+       role="button"
+       aria-label="Cerrar panel de detalles">
+  </div>
+
+  <!-- Backdrop para Panel de Filtros -->
+  <div class="backdrop"
+       *ngIf="mostrarFiltros"
+       (click)="onCerrarFiltros()"
+       (keydown.enter)="onCerrarFiltros()"
+       (keydown.space)="onCerrarFiltros()"
+       tabindex="0"
+       role="button"
+       aria-label="Cerrar panel de filtros">
+  </div>
+</div>
+
+<!-- Panel de Detalle (fuera del contenedor principal para evitar el blur) -->
+<app-postulacion-detalle
+  *ngIf="postulacionSeleccionada"
+  [postulacion]="postulacionSeleccionada"
+  (cerrarDetalle)="cerrarDetalle()">
+</app-postulacion-detalle>
+
+<!-- Panel de Filtros (fuera del contenedor principal para evitar el blur) -->
+<app-filtros-postulaciones
+  *ngIf="mostrarFiltros"
+  (filtrosChange)="onFiltrosChange($event)"
+  (cerrar)="onCerrarFiltros()">
+</app-filtros-postulaciones>
+
+<!-- Diálogo de confirmación custom glassmorphism -->
+<div class="dialog-overlay" *ngIf="mostrarDialogoCancelacion" (click)="onCancelarDialogo()">
+  <div class="dialog-container glassmorphism" (click)="$event.stopPropagation()">
+    <div class="dialog-header">
+      <h3>Cancelar Postulación</h3>
+      <button class="btn btn-icon" (click)="onCancelarDialogo()" aria-label="Cerrar diálogo">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
     </div>
 
-    <!-- Panel de Detalle -->
-    <app-postulacion-detalle *ngIf="postulacionSeleccionada" [postulacion]="postulacionSeleccionada"
-      (cerrarDetalle)="cerrarDetalle()">
-    </app-postulacion-detalle>
+    <div class="dialog-content">
+      <p>¿Está seguro que desea cancelar su postulación para el concurso
+        <strong>"{{ postulacionACancelar?.concurso?.titulo }}"</strong>?
+      </p>
+      <p class="warning-text">Esta acción no se puede deshacer.</p>
+    </div>
 
-    <!-- Panel de Filtros -->
-    <app-filtros-postulaciones *ngIf="mostrarFiltros" (filtrosChange)="aplicarFiltros($event)" (cerrar)="toggleFiltros()">
-    </app-filtros-postulaciones>
-
-    <!-- Backdrop -->
-    <div class="backdrop" *ngIf="mostrarFiltros" (click)="toggleFiltros()" (keydown.enter)="toggleFiltros()" (keydown.space)="toggleFiltros()" tabindex="0" role="button" aria-label="Cerrar panel de filtros" @fadeInOut></div>
-  </app-postulaciones-tabs>
+    <div class="dialog-actions">
+      <app-custom-button
+        [label]="'No, mantener'"
+        [variant]="'stroked'"
+        [icon]="'times'"
+        [ariaLabel]="'Cancelar operación'"
+        [disabled]="cancelandoPostulacion"
+        (buttonClick)="onCancelarDialogo()">
+      </app-custom-button>
+      <app-custom-button
+        [label]="cancelandoPostulacion ? 'Cancelando...' : 'Sí, cancelar'"
+        [variant]="'warn'"
+        [icon]="cancelandoPostulacion ? 'spinner' : 'check'"
+        [ariaLabel]="'Confirmar cancelación'"
+        [loading]="cancelandoPostulacion"
+        [disabled]="cancelandoPostulacion"
+        (buttonClick)="onConfirmarCancelacion()">
+      </app-custom-button>
+    </div>
+  </div>
 </div>

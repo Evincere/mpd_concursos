@@ -1,30 +1,27 @@
 <header class="search-header">
-    <h2>
-        <i class="fas fa-{{icon}}"></i>
-        {{title}}
-    </h2>
+    <div class="header-title">
+        <i class="fas fa-{{icon}}" aria-hidden="true"></i>
+        <h2>{{title}}</h2>
+    </div>
     <div class="header-actions">
         <form [formGroup]="searchForm" class="search-form">
-            <mat-form-field appearance="outline">
-                <input matInput formControlName="termino" [placeholder]="placeholder">
-                <button
-                    *ngIf="searchForm.get('termino')?.value"
-                    matSuffix
-                    mat-icon-button
-                    type="button"
-                    (click)="limpiarBusqueda()"
-                    class="clear-button"
-                    aria-label="Limpiar búsqueda">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                </button>
-                <i matSuffix class="fas fa-search" *ngIf="!searchForm.get('termino')?.value" aria-hidden="true"></i>
-            </mat-form-field>
+            <app-custom-form-field
+                [placeholder]="placeholder"
+                [showClearButton]="true"
+                [iconRight]="searchForm.get('termino')?.value ? '' : 'search'"
+                [control]="getTerminoControl()"
+                class="search-input">
+            </app-custom-form-field>
         </form>
-        <button mat-raised-button
-                (click)="filterClick.emit()"
-                [class.active]="filtrosActivos">
-            <i class="fas" [class.fa-filter]="!filtrosActivos" [class.fa-filter-circle-xmark]="filtrosActivos" aria-hidden="true"></i>
-            {{ filtrosActivos ? 'Filtros Activos' : 'Filtrar' }}
-        </button>
+        <app-custom-button
+            [variant]="'flat'"
+            [color]="filtrosActivos ? 'primary' : 'accent'"
+            [icon]="filtrosActivos ? 'filter-circle-xmark' : 'filter'"
+            [label]="filtrosActivos ? 'Filtros Activos' : 'Filtros'"
+            [tooltip]="'Abrir panel de filtros'"
+            [class.active]="filtrosActivos"
+            (buttonClick)="filterClick.emit()"
+            class="filter-button">
+        </app-custom-button>
     </div>
 </header>

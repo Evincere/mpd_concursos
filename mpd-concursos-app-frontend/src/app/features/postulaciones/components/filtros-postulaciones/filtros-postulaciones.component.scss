@@ -1,197 +1,246 @@
+/* ===== FILTROS POSTULACIONES - GLASSMORPHISM SYSTEM ===== */
+/* Usa variables del sistema glassmorphism global */
+
 :host {
   display: block;
-  height: 100vh;
+  height: 100%;
   width: 100%;
   max-width: 400px;
+  font-family: inherit;
 }
 
-:host ::ng-deep {
-  .filtros-panel {
-    height: 100%;
-    width: 100%;
-    background: rgba(var(--surface-color-rgb), 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 0;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
+.filtros-panel {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+
+  /* Premium glassmorphism background usando variables globales */
+  background: var(--user-glass-gradient-primary);
+  border: 1px solid var(--user-border-glass);
+  backdrop-filter: var(--user-backdrop-blur);
+  -webkit-backdrop-filter: var(--user-backdrop-blur);
+  box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
+
+  /* Glassmorphism gradient overlay */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--user-glass-gradient-overlay);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .panel-header {
+    padding: var(--user-spacing-lg);
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    border-bottom: 1px solid var(--user-border-glass);
 
-    .panel-header {
-      padding: 1rem;
-      background: rgba(var(--surface-color-rgb), 0.8);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* Enhanced glassmorphism for header */
+    background: var(--user-glass-secondary);
+    backdrop-filter: var(--user-backdrop-blur-light);
+    -webkit-backdrop-filter: var(--user-backdrop-blur-light);
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--user-text-primary);
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: var(--user-spacing-sm);
 
-      h2 {
-        margin: 0;
-        font-size: 1.25rem;
-        color: var(--text-color);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+      /* Premium text gradient */
+      background: linear-gradient(135deg, var(--user-text-primary) 0%, var(--user-text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
 
-        i {
-          color: var(--primary-color);
-        }
-      }
+  .filtros-form {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--user-spacing-lg);
+    position: relative;
+    z-index: 2;
 
-      button {
-        color: var(--text-secondary);
-        transition: all 0.3s ease;
+    /* Custom scrollbar glassmorphism */
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
 
-        &:hover {
-          color: var(--text-color);
-          transform: rotate(90deg);
-        }
+    &::-webkit-scrollbar-track {
+      background: var(--user-glass-tertiary);
+      border-radius: var(--user-border-radius-sm);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.6) 0%,
+        rgba(59, 130, 246, 0.8) 100%);
+      border-radius: var(--user-border-radius-sm);
+      border: 1px solid var(--user-border-glass);
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(59, 130, 246, 0.8) 0%,
+          var(--user-text-accent) 100%);
       }
     }
 
-    .filtros-form {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1rem;
+    .filtro-seccion {
+      margin-bottom: var(--user-spacing-lg);
+      position: relative;
+      overflow: hidden;
 
-      &::-webkit-scrollbar {
-        width: 6px;
+      /* Premium glassmorphism card */
+      background: var(--user-glass-secondary);
+      border: 1px solid var(--user-border-glass);
+      border-radius: var(--user-border-radius-lg);
+      backdrop-filter: var(--user-backdrop-blur-light);
+      -webkit-backdrop-filter: var(--user-backdrop-blur-light);
+      box-shadow: var(--user-shadow-sm), var(--user-shadow-inset);
+      padding: var(--user-spacing-lg);
+      transition: var(--user-transition-normal);
+
+      /* Glassmorphism hover effect */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.05),
+          transparent);
+        transition: left 0.6s ease;
       }
 
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
+      &:hover {
+        background: var(--user-glass-hover);
+        border-color: var(--user-border-glass-strong);
+        transform: var(--user-transform-hover);
+        box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
 
-      &::-webkit-scrollbar-thumb {
-        background: rgba(var(--primary-color-rgb), 0.2);
-        border-radius: 3px;
-
-        &:hover {
-          background: rgba(var(--primary-color-rgb), 0.3);
+        &::before {
+          left: 100%;
         }
       }
 
-      .filtro-seccion {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 1.25rem;
-        margin-bottom: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+      h3 {
+        margin: 0 0 var(--user-spacing-md) 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--user-text-primary);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: var(--user-spacing-sm);
+        position: relative;
+        z-index: 1;
 
-        &:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        h3 {
-          margin: 0 0 1rem 0;
-          font-size: 1rem;
-          color: var(--text-color);
-          font-weight: 500;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-
-          i {
-            color: var(--primary-color);
-          }
-        }
-
-        .mat-button-toggle-group {
-          border: none;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0;
-          background: transparent;
-          border-radius: 6px;
-          overflow: hidden;
-
-          .mat-button-toggle {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0;
-            margin: 0;
-            border-right: none;
-
-            &:last-child {
-              border-right: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            &:hover {
-              background: rgba(255, 255, 255, 0.1);
-            }
-
-            &.mat-button-toggle-checked {
-              background: rgba(var(--primary-color-rgb), 0.2);
-              border-color: rgba(var(--primary-color-rgb), 0.3);
-
-              .mat-button-toggle-label-content {
-                color: var(--primary-color);
-              }
-            }
-
-            .mat-button-toggle-label-content {
-              line-height: 36px;
-              padding: 0 1rem;
-              color: var(--text-color);
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-
-              mat-icon, i {
-                font-size: 18px;
-                width: 18px;
-                height: 18px;
-                line-height: 18px;
-              }
-            }
-          }
-        }
-
-        .mat-form-field {
-          width: 100%;
-        }
+        /* Premium text gradient */
+        background: linear-gradient(135deg, var(--user-text-primary) 0%, var(--user-text-secondary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
+    }
+
+    /* Botones de acción */
+    .filtros-actions {
+      margin-top: var(--user-spacing-lg);
+      padding-top: var(--user-spacing-lg);
+      border-top: 1px solid var(--user-border-glass);
+      display: flex;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
     }
   }
 }
 
+/* Responsive design */
 @media (max-width: 768px) {
   :host {
     max-width: none;
   }
-}
 
-// Estilos para el panel de selección de Material
-::ng-deep {
-  .mat-mdc-select-panel {
-    background: var(--surface-color) !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(var(--primary-color-rgb), 0.3);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
-    
-    .mat-mdc-option {
-      color: var(--text-secondary);
-      min-height: 45px;
-      
-      &:hover:not(.mdc-list-item--disabled) {
-        background: rgba(var(--primary-color-rgb), 0.1);
-      }
-      
-      &.mat-mdc-option-active {
-        background: rgba(var(--primary-color-rgb), 0.15);
-      }
-      
-      &.mat-selected:not(.mat-mdc-option-disabled) {
-        background: var(--primary-color);
-        color: white;
-      }
+  .filtros-panel {
+    .panel-header {
+      padding: var(--user-spacing-md);
 
-      .mdc-list-item__primary-text {
-        font-size: 0.875rem;
+      h2 {
+        font-size: 1.125rem;
       }
     }
+
+    .filtros-form {
+      padding: var(--user-spacing-md);
+
+      .filtro-seccion {
+        padding: var(--user-spacing-md);
+        margin-bottom: var(--user-spacing-md);
+
+        h3 {
+          font-size: 0.9375rem;
+          margin-bottom: var(--user-spacing-md);
+        }
+      }
+
+      .filtros-actions {
+        margin-top: var(--user-spacing-md);
+        padding-top: var(--user-spacing-md);
+      }
+    }
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .filtros-panel,
+  .filtro-seccion {
+    transition: none;
+  }
+
+  .filtro-seccion::before {
+    display: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .filtros-panel {
+    border-width: 2px;
+    border-color: var(--user-border-glass-strong);
+  }
+
+  .filtro-seccion {
+    border-width: 2px;
+    border-color: var(--user-border-glass);
+  }
+
+  .panel-header h2 {
+    -webkit-text-fill-color: var(--user-text-primary);
+    color: var(--user-text-primary);
+  }
+
+  .filtro-seccion h3 {
+    -webkit-text-fill-color: var(--user-text-primary);
+    color: var(--user-text-primary);
   }
 }

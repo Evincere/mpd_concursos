@@ -60,4 +60,10 @@ public class InscriptionEntity {
 
     @Column(name = "data_confirmation_date")
     private LocalDateTime dataConfirmationDate;
+
+    @Column(name = "documentation_deadline")
+    private LocalDateTime documentationDeadline;
+
+    @Column(name = "frozen_date")
+    private LocalDateTime frozenDate;
 }

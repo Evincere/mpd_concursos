@@ -1,15 +1,17 @@
-import { Injectable } from '@angular/core';
-import { HttpHeaders, HttpEventType } from  '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
 import { Observable, throwError, Subject, forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DocumentoUsuario, TipoDocumento, DocumentoResponse } from '../../models/documento.model';
-import { map, catchError } from  'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentosService {
-  private apiUrl = `${environment.apiUrl}/documentos`;
+  // ✅ CORRECCIÓN CRÍTICA: Inyección real de HttpClient
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/documentos`;
 
   // Subject para notificar cuando se sube un nuevo documento
   private documentoActualizadoSource = new Subject<void>();
@@ -19,46 +21,13 @@ export class DocumentosService {
   private documentosCache: DocumentoUsuario[] = [];
   private tiposDocumentoCache: TipoDocumento[] = [];
   private ultimaActualizacion = 0;
-  private readonly CACHE_TIMEOUT = 30000; // 30 segundos
-  private http: {
-    get: (url: string, options?: Record<string, unknown>) => Observable<unknown>;
-    post: (url: string, body: unknown, options?: Record<string, unknown>) => Observable<unknown>;
-    put: (url: string, body: unknown, options?: Record<string, unknown>) => Observable<unknown>;
-    delete: (url: string, options?: Record<string, unknown>) => Observable<unknown>;
-  };
+  private ultimaActualizacionTipos = 0;
+  private readonly CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
 
   constructor() {
-    // En una implementación real, se inyectaría HttpClient
-    this.http = {
-      get: (url: string, options?: Record<string, unknown>) => {
-        console.log(`GET simulado a ${url}`, options);
-        return new Observable(observer => {
-          observer.next([]);
-          observer.complete();
-        });
-      },
-      post: (url: string, body: unknown, options?: Record<string, unknown>) => {
-        console.log(`POST simulado a ${url}`, body, options);
-        return new Observable(observer => {
-          observer.next({});
-          observer.complete();
-        });
-      },
-      put: (url: string, body: unknown, options?: Record<string, unknown>) => {
-        console.log(`PUT simulado a ${url}`, body, options);
-        return new Observable(observer => {
-          observer.next({});
-          observer.complete();
-        });
-      },
-      delete: (url: string, options?: Record<string, unknown>) => {
-        console.log(`DELETE simulado a ${url}`, options);
-        return new Observable(observer => {
-          observer.next({});
-          observer.complete();
-        });
-      }
-    };
+    console.log('[DocumentosService] ✅ SERVICIO REAL INICIALIZADO');
+    console.log('[DocumentosService] API URL:', this.apiUrl);
+    console.log('[DocumentosService] HttpClient inyectado correctamente');
   }
 
   /**
@@ -78,7 +47,7 @@ export class DocumentosService {
    * @param forzarRecarga Si es true, ignora la caché y fuerza una recarga desde el servidor
    */
   getDocumentosUsuario(forzarRecarga = false): Observable<DocumentoUsuario[]> {
-    console.log('[DocumentosService] Obteniendo documentos del usuario, forzarRecarga:', forzarRecarga);
+    console.log('[DocumentosService] ✅ Obteniendo documentos del usuario del backend real, forzarRecarga:', forzarRecarga);
 
     // Si tenemos documentos en caché y no ha pasado el tiempo de expiración, usarlos
     const ahora = Date.now();
@@ -91,14 +60,21 @@ export class DocumentosService {
     }
 
     // Si no hay caché o ha expirado, obtener del servidor
-    console.log('[DocumentosService] Obteniendo documentos del servidor');
-    return this.http.get(`${this.apiUrl}/usuario`).pipe(
-      map((documentos: unknown) => {
-        console.log('[DocumentosService] Documentos obtenidos del servidor:', documentos);
-        const documentosArray = documentos as DocumentoUsuario[];
-        this.documentosCache = documentosArray;
+    console.log('[DocumentosService] ✅ Consultando documentos del usuario al backend real');
+    return this.http.get<DocumentoUsuario[]>(`${this.apiUrl}/usuario`).pipe(
+      map((documentos: DocumentoUsuario[]) => {
+        console.log('[DocumentosService] ✅ Documentos obtenidos del backend:', documentos);
+        this.documentosCache = documentos;
         this.ultimaActualizacion = Date.now();
-        return documentosArray;
+        return documentos;
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al obtener documentos del usuario:', error);
+        // Retornar array vacío en caso de error para no romper la UI
+        return new Observable<DocumentoUsuario[]>(observer => {
+          observer.next([]);
+          observer.complete();
+        });
       })
     );
   }
@@ -108,11 +84,11 @@ export class DocumentosService {
    * @param forzarRecarga Si es true, ignora la caché y fuerza una recarga desde el servidor
    */
   getTiposDocumento(forzarRecarga = false): Observable<TipoDocumento[]> {
-    console.log('[DocumentosService] Obteniendo tipos de documento, forzarRecarga:', forzarRecarga);
+    console.log('[DocumentosService] ✅ Obteniendo tipos de documento del backend real, forzarRecarga:', forzarRecarga);
 
     // Si tenemos tipos en caché y no ha pasado el tiempo de expiración, usarlos
     const ahora = Date.now();
-    if (!forzarRecarga && this.tiposDocumentoCache.length > 0 && (ahora - this.ultimaActualizacion < this.CACHE_TIMEOUT)) {
+    if (!forzarRecarga && this.tiposDocumentoCache.length > 0 && (ahora - this.ultimaActualizacionTipos < this.CACHE_TIMEOUT)) {
       console.log('[DocumentosService] Usando tipos de documento en caché');
       return new Observable<TipoDocumento[]>(observer => {
         observer.next(this.tiposDocumentoCache);
@@ -121,13 +97,17 @@ export class DocumentosService {
     }
 
     // Si no hay caché o ha expirado, obtener del servidor
-    console.log('[DocumentosService] Obteniendo tipos de documento del servidor');
-    return this.http.get(`${this.apiUrl}/tipos`).pipe(
-      map((tipos: unknown) => {
-        console.log('[DocumentosService] Tipos de documento obtenidos del servidor:', tipos);
-        const tiposArray = tipos as TipoDocumento[];
-        this.tiposDocumentoCache = tiposArray;
-        return tiposArray;
+    console.log('[DocumentosService] ✅ Consultando tipos de documento al backend real');
+    return this.http.get<TipoDocumento[]>(`${this.apiUrl}/tipos`).pipe(
+      map((tipos: TipoDocumento[]) => {
+        console.log('[DocumentosService] ✅ Tipos de documento obtenidos del backend:', tipos);
+        this.tiposDocumentoCache = tipos;
+        this.ultimaActualizacionTipos = Date.now();
+        return tipos;
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al obtener tipos de documento:', error);
+        return throwError(() => new Error('No se pudieron cargar los tipos de documento'));
       })
     );
   }
@@ -137,15 +117,25 @@ export class DocumentosService {
    * @param formData Datos del formulario con el archivo y metadatos
    */
   uploadDocumento(formData: FormData): Observable<DocumentoResponse> {
-    console.log('[DocumentosService] Subiendo documento');
+    console.log('[DocumentosService] ✅ Subiendo documento al backend real');
+
+    // Validar que el FormData contiene los datos necesarios
+    if (!formData.has('file')) {
+      console.error('[DocumentosService] ❌ FormData no contiene archivo');
+      return throwError(() => new Error('No se ha proporcionado un archivo para subir'));
+    }
+
     // No configuramos el Content-Type porque el navegador lo establecerá automáticamente
     // con el boundary correcto para multipart/form-data
-    return this.http.post(`${this.apiUrl}/upload`, formData).pipe(
-      map((response: unknown) => {
-        console.log('[DocumentosService] Documento subido correctamente:', response);
+    return this.http.post<DocumentoResponse>(`${this.apiUrl}/upload`, formData).pipe(
+      tap(response => {
+        console.log('[DocumentosService] ✅ Documento subido correctamente al backend:', response);
         // Notificar la actualización
         this.notificarDocumentoActualizado();
-        return response as DocumentoResponse;
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al subir documento:', error);
+        return throwError(() => new Error('Error al subir el documento: ' + (error.message || 'Error desconocido')));
       })
     );
   }
@@ -156,18 +146,26 @@ export class DocumentosService {
    * @returns Observable con eventos de progreso y respuesta
    */
   uploadDocumentoConProgreso(formData: FormData): Observable<Record<string, unknown>> {
-    console.log('[DocumentosService] Subiendo documento con progreso');
+    console.log('[DocumentosService] ✅ Subiendo documento con progreso al backend real');
+
+    // Validar que el FormData contiene los datos necesarios
+    if (!formData.has('file')) {
+      console.error('[DocumentosService] ❌ FormData no contiene archivo');
+      return throwError(() => new Error('No se ha proporcionado un archivo para subir'));
+    }
+
     return this.http.post(`${this.apiUrl}/upload`, formData, {
       reportProgress: true,
       observe: 'events'
     }).pipe(
       map(event => {
-        const eventObj = event as Record<string, unknown>;
+        const eventObj = event as unknown as Record<string, unknown>;
         if (eventObj['type'] === HttpEventType.UploadProgress && 'total' in eventObj && eventObj['total']) {
           const progreso = Math.round(100 * (eventObj['loaded'] as number) / (eventObj['total'] as number));
+          console.log(`[DocumentosService] Progreso de subida: ${progreso}%`);
           return { type: 'progreso', progreso };
         } else if (eventObj['type'] === HttpEventType.Response) {
-          console.log('[DocumentosService] Documento subido correctamente con progreso:', eventObj['body']);
+          console.log('[DocumentosService] ✅ Documento subido correctamente con progreso:', eventObj['body']);
           // Notificar la actualización
           this.notificarDocumentoActualizado();
           return { type: 'completado', response: eventObj['body'] };
@@ -175,7 +173,7 @@ export class DocumentosService {
         return { type: 'otro' };
       }),
       catchError(error => {
-        console.error('[DocumentosService] Error al subir documento:', error);
+        console.error('[DocumentosService] ❌ Error al subir documento con progreso:', error);
         return throwError(() => new Error('Error al subir el documento: ' + (error.message || 'Error desconocido')));
       })
     );
@@ -210,6 +208,8 @@ export class DocumentosService {
    * @returns Observable con los IDs de las tareas en cola
    */
   enqueueMultipleDocumentos(files: File[], tipoDocumentoIds: string[], comentarios?: string[]): Observable<string[]> {
+    console.log('[DocumentosService] ✅ Encolando múltiples documentos al backend real');
+
     const formData = new FormData();
 
     // Añadir archivos
@@ -229,7 +229,15 @@ export class DocumentosService {
       });
     }
 
-    return this.http.post(`${this.apiUrl}/queue/enqueue-multiple`, formData) as Observable<string[]>;
+    return this.http.post<string[]>(`${this.apiUrl}/queue/enqueue-multiple`, formData).pipe(
+      tap(queueIds => {
+        console.log('[DocumentosService] ✅ Documentos encolados correctamente:', queueIds);
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al encolar documentos:', error);
+        return throwError(() => new Error('Error al encolar documentos para procesamiento'));
+      })
+    );
   }
 
   /**
@@ -238,7 +246,16 @@ export class DocumentosService {
    * @returns Observable con los estados de las tareas
    */
   getMultipleDocumentosStatus(queueIds: string[]): Observable<Record<string, unknown>[]> {
-    return this.http.post(`${this.apiUrl}/queue/status-multiple`, queueIds) as Observable<Record<string, unknown>[]>;
+    console.log('[DocumentosService] ✅ Consultando estado de múltiples documentos al backend real');
+    return this.http.post<Record<string, unknown>[]>(`${this.apiUrl}/queue/status-multiple`, queueIds).pipe(
+      tap(statuses => {
+        console.log('[DocumentosService] ✅ Estados obtenidos:', statuses);
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al obtener estados de documentos:', error);
+        return throwError(() => new Error('Error al consultar el estado de los documentos'));
+      })
+    );
   }
 
   /**
@@ -247,7 +264,16 @@ export class DocumentosService {
    * @returns Observable con el estado de la tarea
    */
   getDocumentoStatus(queueId: string): Observable<Record<string, unknown>> {
-    return this.http.get(`${this.apiUrl}/queue/status/${queueId}`) as Observable<Record<string, unknown>>;
+    console.log('[DocumentosService] ✅ Consultando estado de documento al backend real:', queueId);
+    return this.http.get<Record<string, unknown>>(`${this.apiUrl}/queue/status/${queueId}`).pipe(
+      tap(status => {
+        console.log('[DocumentosService] ✅ Estado obtenido:', status);
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al obtener estado del documento:', error);
+        return throwError(() => new Error('Error al consultar el estado del documento'));
+      })
+    );
   }
 
   /**
@@ -255,17 +281,32 @@ export class DocumentosService {
    * @param documentoId ID del documento
    * @param reportProgress Si es true, reporta el progreso de la descarga
    */
-  getDocumentoFile(documentoId: string, reportProgress = false): Observable<Blob | Record<string, unknown>> {
-    const options: Record<string, unknown> = {
-      responseType: 'blob'
-    };
+  getDocumentoFile(documentoId: string, reportProgress = false): Observable<Blob | HttpEvent<Blob>> {
+    console.log('[DocumentosService] ✅ Obteniendo archivo de documento del backend real:', documentoId);
 
     if (reportProgress) {
-      options['reportProgress'] = true;
-      options['observe'] = 'events';
+      // Con progreso, retorna eventos HTTP con responseType blob
+      return this.http.get(`${this.apiUrl}/${documentoId}/file`, {
+        reportProgress: true,
+        observe: 'events',
+        responseType: 'blob'
+      }).pipe(
+        catchError(error => {
+          console.error('[DocumentosService] ❌ Error al obtener archivo de documento:', error);
+          return throwError(() => new Error('Error al obtener el archivo del documento'));
+        })
+      );
+    } else {
+      // Sin progreso, retorna directamente el blob
+      return this.http.get(`${this.apiUrl}/${documentoId}/file`, {
+        responseType: 'blob'
+      }).pipe(
+        catchError(error => {
+          console.error('[DocumentosService] ❌ Error al obtener archivo de documento:', error);
+          return throwError(() => new Error('Error al obtener el archivo del documento'));
+        })
+      );
     }
-
-    return this.http.get(`${this.apiUrl}/${documentoId}/file`, options) as Observable<Blob | Record<string, unknown>>;
   }
 
   /**
@@ -274,12 +315,17 @@ export class DocumentosService {
    * @returns Promise con la URL del documento
    */
   async getDocumentoUrl(documentoId: string): Promise<string> {
-    // En una implementación real, esto haría una llamada al backend
-    // Por ahora, simulamos una URL para desarrollo
-    console.log(`Obteniendo URL para documento ${documentoId}`);
+    console.log('[DocumentosService] ✅ Obteniendo URL de documento del backend real:', documentoId);
 
-    // Simular una URL de documento
-    return Promise.resolve(`${this.apiUrl}/${documentoId}/view`);
+    try {
+      // ✅ CORRECCIÓN CRÍTICA: URL real del backend
+      const url = `${this.apiUrl}/${documentoId}/view`;
+      console.log('[DocumentosService] ✅ URL de documento generada:', url);
+      return url;
+    } catch (error) {
+      console.error('[DocumentosService] ❌ Error al generar URL de documento:', error);
+      throw new Error('Error al obtener la URL del documento');
+    }
   }
 
   /**
@@ -287,10 +333,19 @@ export class DocumentosService {
    * @param file Archivo a validar
    */
   validateDocument(file: File): Observable<Record<string, unknown>> {
+    console.log('[DocumentosService] ✅ Validando documento en backend real');
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post(`${this.apiUrl}/validate`, formData) as Observable<Record<string, unknown>>;
+    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/validate`, formData).pipe(
+      tap(result => {
+        console.log('[DocumentosService] ✅ Documento validado:', result);
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al validar documento:', error);
+        return throwError(() => new Error('Error al validar el documento'));
+      })
+    );
   }
 
   /**
@@ -298,7 +353,17 @@ export class DocumentosService {
    * @param documentoId ID del documento a eliminar
    */
   deleteDocumento(documentoId: string): Observable<Record<string, unknown>> {
-    return this.http.delete(`${this.apiUrl}/${documentoId}`) as Observable<Record<string, unknown>>;
+    console.log('[DocumentosService] ✅ Eliminando documento del backend real:', documentoId);
+    return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/${documentoId}`).pipe(
+      tap(result => {
+        console.log('[DocumentosService] ✅ Documento eliminado correctamente');
+        this.notificarDocumentoActualizado();
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al eliminar documento:', error);
+        return throwError(() => new Error('Error al eliminar el documento'));
+      })
+    );
   }
 
   /**
@@ -307,10 +372,20 @@ export class DocumentosService {
    * @param formData Nuevos datos del documento
    */
   updateDocumento(documentoId: string, formData: FormData): Observable<DocumentoResponse> {
+    console.log('[DocumentosService] ✅ Actualizando documento en backend real:', documentoId);
     const headers = new HttpHeaders({
       'Accept': 'application/json'
     });
-    return this.http.put(`${this.apiUrl}/${documentoId}`, formData, { headers }) as Observable<DocumentoResponse>;
+    return this.http.put<DocumentoResponse>(`${this.apiUrl}/${documentoId}`, formData, { headers }).pipe(
+      tap(result => {
+        console.log('[DocumentosService] ✅ Documento actualizado correctamente:', result);
+        this.notificarDocumentoActualizado();
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al actualizar documento:', error);
+        return throwError(() => new Error('Error al actualizar el documento'));
+      })
+    );
   }
 
   /**
@@ -358,7 +433,7 @@ export class DocumentosService {
       observe: 'events'
     }).pipe(
       map(event => {
-        const eventObj = event as Record<string, unknown>;
+        const eventObj = event as unknown as Record<string, unknown>;
         if (eventObj['type'] === HttpEventType.UploadProgress && 'total' in eventObj && eventObj['total']) {
           const progreso = Math.round(100 * (eventObj['loaded'] as number) / (eventObj['total'] as number));
           return { type: 'progreso', progreso };
@@ -394,7 +469,7 @@ export class DocumentosService {
           observe: 'events'
         }).pipe(
           map(event => {
-            const eventObj = event as Record<string, unknown>;
+            const eventObj = event as unknown as Record<string, unknown>;
             if (eventObj['type'] === HttpEventType.UploadProgress && 'total' in eventObj && eventObj['total']) {
               const progreso = Math.round(100 * (eventObj['loaded'] as number) / (eventObj['total'] as number));
               return { type: 'progreso', progreso };

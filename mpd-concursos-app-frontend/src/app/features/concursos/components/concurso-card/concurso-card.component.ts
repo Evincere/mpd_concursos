@@ -1,31 +1,26 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatRippleModule } from '@angular/material/core';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { AnimateDirective } from '@shared/directives/animate.directive';
 import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
 import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 
 @Component({
   selector: 'app-concurso-card',
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatRippleModule,
     AnimateDirective,
     InscripcionButtonComponent,
-    ContestStatusBadgeComponent
+    ContestStatusBadgeComponent,
+    CustomButtonComponent
   ],
   template: `
     <div class="concurso-card"
          [appAnimate]="'fadeIn'"
          [animationDuration]="300"
          [animationDelay]="index * 100"
-         matRipple
          (click)="verDetalle.emit(concurso)"
          (keydown.enter)="verDetalle.emit(concurso)"
          (keydown.space)="verDetalle.emit(concurso); $event.preventDefault()"
@@ -51,13 +46,15 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
       </div>
 
       <div class="card-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="0" role="group" aria-label="Acciones del concurso">
-        <button mat-stroked-button
-                class="details-button"
-                (click)="onVerDetalle($event)"
-                aria-label="Ver detalles del concurso">
-          <mat-icon class="details-icon" aria-hidden="true">visibility</mat-icon>
-          <span>Ver Detalles</span>
-        </button>
+        <app-custom-button
+          [variant]="'stroked'"
+          [color]="'primary'"
+          [icon]="'eye'"
+          [label]="'Ver Detalles'"
+          [tooltip]="'Ver detalles del concurso'"
+          (buttonClick)="onVerDetalle($event)"
+          class="details-button">
+        </app-custom-button>
 
         <app-inscripcion-button
           *ngIf="concurso.status === 'ACTIVE'"
@@ -68,70 +65,99 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
     </div>
   `,
   styles: [`
+    /* ===== CONCURSO CARD GLASSMORPHISM PREMIUM DARK ===== */
     .concurso-card {
-      background: #374151;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      /* Glassmorphism premium dark base */
+      background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.9) 0%,
+        rgba(75, 85, 99, 0.85) 100%);
+      background-image:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+        radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 8px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+
+      /* Layout and interaction */
       display: flex;
       flex-direction: column;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       overflow: hidden;
       height: 100%;
       position: relative;
+
+      /* Premium shadows */
       box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.3),
         0 4px 16px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 
-      // Glassmorphism gradient overlay
+      /* Smooth transitions */
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      /* Glassmorphism shine effect */
       &::before {
         content: '';
         position: absolute;
         top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-        pointer-events: none;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent);
+        transition: left 0.6s ease;
         z-index: 1;
+        pointer-events: none;
       }
 
-      // Content positioning
+      /* Content positioning */
       > * {
         position: relative;
         z-index: 2;
       }
 
+      /* Premium hover effects */
       &:hover {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        background: linear-gradient(135deg,
+          rgba(75, 85, 99, 0.95) 0%,
+          rgba(55, 65, 81, 0.9) 100%);
         box-shadow:
           0 12px 40px rgba(0, 0, 0, 0.4),
           0 6px 20px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+        border-color: rgba(59, 130, 246, 0.3);
 
-        .card-content h3 {
-          color: #3b82f6;
+        &::before {
+          left: 100%;
         }
 
-        .details-button {
-          background: rgba(59, 130, 246, 0.1);
-          border-color: rgba(59, 130, 246, 0.3);
+        .card-content h3 {
+          color: #60a5fa;
+          text-shadow: 0 0 8px rgba(96, 165, 250, 0.3);
         }
       }
 
       &:active {
-        transform: translateY(0);
+        transform: translateY(-1px);
       }
 
+      /* Card header with glassmorphism */
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 1.25rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.05) 0%,
+          rgba(255, 255, 255, 0.02) 100%);
+        backdrop-filter: blur(8px);
 
         .fecha {
           font-size: 0.875rem;
@@ -140,28 +166,36 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
           align-items: center;
           gap: 0.5rem;
           font-weight: 500;
+          transition: color 0.3s ease;
 
           i {
-            color: #3b82f6;
-            opacity: 0.8;
+            color: #60a5fa;
+            opacity: 0.9;
+            font-size: 1rem;
+            transition: all 0.3s ease;
           }
         }
       }
 
+      /* Card content with premium typography */
       .card-content {
         padding: 1.25rem;
         flex: 1;
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.02) 0%,
+          rgba(255, 255, 255, 0.01) 100%);
 
         h3 {
           margin: 0;
           font-size: 1.25rem;
           font-weight: 600;
           color: #f9fafb;
-          transition: color 0.3s ease;
+          transition: all 0.3s ease;
           line-height: 1.4;
+          letter-spacing: -0.025em;
         }
 
         .cargo {
@@ -169,6 +203,7 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
           font-size: 1rem;
           color: #d1d5db;
           font-weight: 500;
+          transition: color 0.3s ease;
         }
 
         .dependencia {
@@ -176,39 +211,38 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
           font-size: 0.875rem;
           color: #9ca3af;
           font-weight: 400;
+          transition: color 0.3s ease;
         }
       }
 
+      /* Card actions with glassmorphism */
       .card-actions {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding: 1.25rem;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+        background: linear-gradient(135deg,
+          rgba(255, 255, 255, 0.05) 0%,
+          rgba(255, 255, 255, 0.02) 100%);
+        backdrop-filter: blur(8px);
         gap: 0.75rem;
 
-        .details-button {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          transition: all 0.3s ease;
-          border-color: rgba(255, 255, 255, 0.2);
-          color: #f9fafb;
-          font-weight: 500;
+        /* Custom button styling integration */
+        ::ng-deep app-custom-button {
+          .custom-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-          &:hover {
-            transform: translateY(-1px);
-          }
-
-          .details-icon {
-            font-size: 1.1rem;
-            height: 1.1rem;
-            width: 1.1rem;
+            &:hover {
+              transform: translateY(-1px);
+              box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+            }
           }
         }
       }
     }
 
+    /* ===== RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) {
       .concurso-card {
         .card-header {
@@ -221,6 +255,10 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
         .card-content {
           padding: 1rem;
           gap: 0.5rem;
+
+          h3 {
+            font-size: 1.125rem;
+          }
         }
 
         .card-actions {
@@ -228,33 +266,46 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
           gap: 0.75rem;
           padding: 1rem;
 
-          button {
+          ::ng-deep app-custom-button {
             width: 100%;
-            justify-content: center;
+
+            .custom-button {
+              width: 100%;
+              justify-content: center;
+            }
           }
         }
       }
     }
 
-    // Accessibility and reduced motion support
+    /* ===== ACCESSIBILITY SUPPORT ===== */
     @media (prefers-reduced-motion: reduce) {
       .concurso-card {
         transition: none;
+
+        &::before {
+          transition: none;
+        }
 
         &:hover {
           transform: none;
         }
 
-        .details-button:hover {
+        .card-actions ::ng-deep app-custom-button .custom-button:hover {
           transform: none;
         }
       }
     }
 
-    // Focus states for accessibility
+    /* Focus states for accessibility - WCAG AA compliance */
     .concurso-card:focus-visible {
-      outline: 2px solid #3b82f6;
+      outline: 2px solid #60a5fa;
       outline-offset: 2px;
+      box-shadow:
+        0 0 0 4px rgba(96, 165, 250, 0.2),
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
   `]
 })

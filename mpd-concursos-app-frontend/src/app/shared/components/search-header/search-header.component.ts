@@ -1,12 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 
 @Component({
   selector: 'app-search-header',
@@ -14,11 +11,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTooltipModule
+    CustomFormFieldComponent,
+    CustomButtonComponent
   ],
   templateUrl: './search-header.component.html',
   styleUrl: './search-header.component.scss',
@@ -45,12 +39,16 @@ export class SearchHeaderComponent {
         distinctUntilChanged()
       )
       .subscribe(value => {
-        this.searchChange.emit(value);
+        this.searchChange.emit(value || '');
       });
   }
 
   limpiarBusqueda(): void {
     this.searchForm.get('termino')?.reset();
-    // this.filter.emit();
+    this.searchChange.emit('');
+  }
+
+  getTerminoControl(): FormControl {
+    return this.searchForm.get('termino') as FormControl;
   }
 }

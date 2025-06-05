@@ -248,8 +248,8 @@ Este documento detalla el plan de implementación de las mejoras identificadas p
 | Sprint 14 | 3/5 | 14/20 | 70% |
 | Sprint 15 | 2/5 | 8/20 | 40% |
 | Sprint 16 | 0/5 | 0/20 | 0% |
-| Sprint 17 | 0/5 | 0/20 | 0% |
-| **Total** | **57/72** | **230/288** | **79.86%** |
+| Sprint 17 | 2/2 | 8/8 | 100% |
+| **Total** | **59/74** | **238/296** | **80.41%** |
 
 ## Notas Adicionales
 
@@ -1378,3 +1378,61 @@ Las siguientes tareas se han identificado como mejoras potenciales para implemen
   - Implementación de pruebas de integración para el servicio de usuarios y el repositorio.
   - Implementación de pruebas de integración para el componente de error de formulario.
   - Cumplimiento estricto de las reglas de linting en todas las pruebas.
+
+---
+
+## Sprint 17: Implementación de Sistema Glassmorphism Premium Dark
+
+**Objetivo:** Implementar un sistema de diseño glassmorphism premium dark unificado para usuarios comunes, eliminando Material UI y mejorando la experiencia visual.
+
+### Historia de Usuario 69: Como usuario común, quiero una interfaz con diseño glassmorphism premium dark que sea visualmente atractiva y moderna
+
+- [x] **Tarea 69.1:** Diseñar sistema glassmorphism premium dark
+  - [x] Subtarea 69.1.1: Crear paleta de colores glassmorphism dark
+  - [x] Subtarea 69.1.2: Definir efectos de blur y transparencias
+  - [x] Subtarea 69.1.3: Establecer variables CSS para el sistema
+  - [x] Subtarea 69.1.4: Crear guía de diseño glassmorphism
+
+- [x] **Tarea 69.2:** Implementar variables y mixins CSS glassmorphism
+  - [x] Subtarea 69.2.1: Crear archivo de variables glassmorphism
+  - [x] Subtarea 69.2.2: Desarrollar mixins reutilizables
+  - [x] Subtarea 69.2.3: Implementar sistema de scoping CSS
+  - [x] Subtarea 69.2.4: Configurar sistema de temas
+
+- [x] **Tarea 69.3:** Refactorizar componentes principales con glassmorphism
+  - [x] Subtarea 69.3.1: Aplicar glassmorphism al layout principal
+  - [x] Subtarea 69.3.2: Refactorizar sidebar con efectos glassmorphism
+  - [x] Subtarea 69.3.3: Actualizar navbar con diseño glassmorphism
+  - [x] Subtarea 69.3.4: Implementar glassmorphism en componentes de navegación
+
+- [x] **Tarea 69.4:** Eliminar dependencias Material UI de usuario común
+  - [x] Subtarea 69.4.1: Auditar componentes Material UI en uso
+  - [x] Subtarea 69.4.2: Crear componentes custom glassmorphism
+  - [x] Subtarea 69.4.3: Reemplazar componentes Material UI
+  - [x] Subtarea 69.4.4: Verificar funcionalidad post-eliminación
+
+### Historia de Usuario 70: Como usuario común, quiero que la vista "Mis Postulaciones" funcione correctamente sin errores
+
+- [x] **Tarea 70.1:** Corregir PostulacionesService para manejo correcto de respuestas
+  - [x] Subtarea 70.1.1: Reemplazar mocks con inyección real de HttpClient y AuthService
+  - [x] Subtarea 70.1.2: Eliminar userId hardcodeado "user-123"
+  - [x] Subtarea 70.1.3: Implementar obtención correcta del userId del JWT
+  - [x] Subtarea 70.1.4: Corregir manejo de respuestas vacías del servidor
+
+- [x] **Tarea 70.2:** Implementar manejo robusto de errores TypeScript
+  - [x] Subtarea 70.2.1: Corregir errores de tipado en parámetros de funciones map
+  - [x] Subtarea 70.2.2: Implementar interfaz ServerResponse para tipado específico
+  - [x] Subtarea 70.2.3: Agregar validaciones para propiedades undefined
+  - [x] Subtarea 70.2.4: Mejorar manejo de errores en forkJoin
+
+- [x] **Tarea 70.3:** Optimizar vista de estado vacío glassmorphism
+  - [x] Subtarea 70.3.1: Reemplazar botones HTML con CustomButtonComponent
+  - [x] Subtarea 70.3.2: Eliminar estilos CSS redundantes para botones
+  - [x] Subtarea 70.3.3: Verificar aplicación correcta de efectos glassmorphism
+  - [x] Subtarea 70.3.4: Asegurar consistencia visual con el sistema de diseño
+
+- [x] **Tarea 70.4:** Verificar funcionalidad completa del flujo de postulaciones
+  - [x] Subtarea 70.4.1: Compilar aplicación sin errores TypeScript
+  - [x] Subtarea 70.4.2: Verificar peticiones HTTP correctas al backend
+  - [x] Subtarea 70.4.3: Confirmar manejo de respuestas vacías sin crashes
+  - [x] Subtarea 70.4.4: Validar visualización del estado vacío glassmorphism

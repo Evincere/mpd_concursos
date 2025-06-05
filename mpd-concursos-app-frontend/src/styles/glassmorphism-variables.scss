@@ -1,0 +1,261 @@
+/* ===== GLASSMORPHISM DESIGN SYSTEM - UNIFIED VARIABLES ===== */
+/* Sistema unificado de variables para eliminar duplicaciones */
+/* Siguiendo las especificaciones del glassmorphism-design-system-guide.md */
+
+/* === CORE GLASSMORPHISM BACKGROUNDS === */
+:root {
+  /* Primary glassmorphism backgrounds */
+  --glass-background-primary: rgba(55, 65, 81, 0.8);
+  --glass-background-secondary: rgba(75, 85, 99, 0.85);
+  --glass-background-tertiary: rgba(31, 41, 55, 0.9);
+  --glass-background-light: rgba(55, 65, 81, 0.6);
+  --glass-background-dark: rgba(31, 41, 55, 0.95);
+  
+  /* Interactive states */
+  --glass-background-hover: rgba(75, 85, 99, 0.9);
+  --glass-background-active: rgba(55, 65, 81, 0.95);
+  --glass-background-focus: rgba(59, 130, 246, 0.1);
+  
+  /* Overlay backgrounds */
+  --glass-overlay-light: rgba(255, 255, 255, 0.05);
+  --glass-overlay-medium: rgba(255, 255, 255, 0.1);
+  --glass-overlay-strong: rgba(255, 255, 255, 0.15);
+}
+
+/* === GLASSMORPHISM GRADIENTS === */
+:root {
+  /* Primary gradients */
+  --glass-gradient-primary: linear-gradient(135deg, 
+    var(--glass-background-primary) 0%, 
+    var(--glass-background-secondary) 100%);
+  --glass-gradient-overlay: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0.06) 100%);
+  --glass-gradient-radial: radial-gradient(circle at 70% 30%, 
+    rgba(59, 130, 246, 0.1) 0%, 
+    transparent 50%);
+  
+  /* Header gradients */
+  --glass-gradient-header: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.15) 0%, 
+    transparent 100%);
+  --glass-gradient-card: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%);
+}
+
+/* === BORDERS === */
+:root {
+  /* Primary borders */
+  --border-primary: rgba(249, 250, 251, 0.1);
+  --border-secondary: rgba(249, 250, 251, 0.05);
+  --border-tertiary: rgba(249, 250, 251, 0.15);
+  
+  /* Interactive borders */
+  --border-hover: rgba(249, 250, 251, 0.2);
+  --border-focus: rgba(59, 130, 246, 0.3);
+  --border-active: rgba(249, 250, 251, 0.25);
+  
+  /* Semantic borders */
+  --border-success: rgba(76, 175, 80, 0.3);
+  --border-warning: rgba(245, 158, 11, 0.3);
+  --border-danger: rgba(239, 68, 68, 0.3);
+  --border-info: rgba(6, 182, 212, 0.3);
+}
+
+/* === SHADOWS === */
+:root {
+  /* Glassmorphism shadows */
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.16);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.2);
+  
+  /* Inset shadows for depth */
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-inset-strong: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  
+  /* Focus shadows */
+  --shadow-focus: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  --shadow-focus-strong: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* === BACKDROP FILTERS === */
+:root {
+  /* Primary backdrop filters */
+  --backdrop-filter-light: blur(8px);
+  --backdrop-filter-medium: blur(12px);
+  --backdrop-filter-strong: blur(16px);
+  --backdrop-filter-extra: blur(20px);
+  
+  /* Combined filters */
+  --backdrop-filter-saturate: blur(12px) saturate(1.2);
+  --backdrop-filter-brightness: blur(12px) brightness(1.1);
+}
+
+/* === TYPOGRAPHY === */
+:root {
+  /* Text colors */
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-disabled: #4b5563;
+  
+  /* Text on colored backgrounds */
+  --text-on-primary: #ffffff;
+  --text-on-secondary: #f9fafb;
+  --text-on-success: #ffffff;
+  --text-on-warning: #1f2937;
+  --text-on-danger: #ffffff;
+  --text-on-info: #ffffff;
+}
+
+/* === SEMANTIC COLORS === */
+:root {
+  /* Primary theme colors */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-active: #1d4ed8;
+  
+  /* Contest theme */
+  --color-contest: #4CAF50;
+  --color-contest-hover: #45a049;
+  --color-contest-active: #3d8b40;
+  
+  /* Semantic colors */
+  --color-success: #4CAF50;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #06b6d4;
+  
+  /* Semantic hover states */
+  --color-success-hover: #45a049;
+  --color-warning-hover: #d97706;
+  --color-danger-hover: #dc2626;
+  --color-info-hover: #0891b2;
+}
+
+/* === BORDER RADIUS === */
+:root {
+  --border-radius-xs: 2px;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-2xl: 20px;
+  --border-radius-full: 9999px;
+}
+
+/* === SPACING === */
+:root {
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  --spacing-3xl: 4rem;      /* 64px */
+  --spacing-4xl: 6rem;      /* 96px */
+}
+
+/* === TRANSITIONS === */
+:root {
+  /* Timing functions */
+  --timing-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --timing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --timing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --timing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Durations */
+  --duration-fast: 0.15s;
+  --duration-normal: 0.3s;
+  --duration-slow: 0.5s;
+  --duration-slower: 0.75s;
+  
+  /* Combined transitions */
+  --transition-fast: all var(--duration-fast) var(--timing-ease);
+  --transition-normal: all var(--duration-normal) var(--timing-ease);
+  --transition-slow: all var(--duration-slow) var(--timing-ease);
+  
+  /* Specific transitions */
+  --transition-transform: transform var(--duration-normal) var(--timing-ease);
+  --transition-opacity: opacity var(--duration-normal) var(--timing-ease);
+  --transition-colors: color var(--duration-normal) var(--timing-ease), 
+                       background-color var(--duration-normal) var(--timing-ease), 
+                       border-color var(--duration-normal) var(--timing-ease);
+}
+
+/* === TRANSFORMS === */
+:root {
+  --transform-hover: translateY(-1px);
+  --transform-active: translateY(0);
+  --transform-scale-hover: scale(1.02);
+  --transform-scale-active: scale(0.98);
+}
+
+/* === COMPONENT SPECIFIC === */
+:root {
+  /* Card variables */
+  --card-padding: var(--spacing-xl);
+  --card-padding-sm: var(--spacing-lg);
+  --card-gap: var(--spacing-lg);
+  
+  /* Button variables */
+  --button-padding: var(--spacing-sm) var(--spacing-lg);
+  --button-padding-sm: var(--spacing-xs) var(--spacing-md);
+  --button-padding-lg: var(--spacing-md) var(--spacing-xl);
+  
+  /* Input variables */
+  --input-padding: var(--spacing-sm) var(--spacing-md);
+  --input-background: rgba(75, 85, 99, 0.3);
+  --input-background-focus: rgba(75, 85, 99, 0.5);
+  
+  /* Table variables */
+  --table-row-height: 3rem;
+  --table-header-height: 2.5rem;
+  --table-cell-padding: var(--spacing-sm) var(--spacing-md);
+  
+  /* Layout variables */
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 60px;
+  --header-height: 90px;
+  --mobile-nav-height: 60px;
+  --content-max-width: 1200px;
+}
+
+/* === Z-INDEX SCALE === */
+:root {
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+}
+
+/* === LEGACY COMPATIBILITY === */
+:root {
+  /* Backward compatibility with existing variables */
+  --background-color: var(--glass-background-primary);
+  --card-border: var(--border-primary);
+  --card-shadow: var(--shadow-md);
+  --card-backdrop-filter: var(--backdrop-filter-medium);
+  --text-color: var(--text-primary);
+  --primary-color: var(--color-primary);
+  --focus-color: var(--color-primary);
+
+  /* Additional legacy variables */
+  --color-background: var(--glass-background-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-surface: var(--glass-background-secondary);
+  --color-surface-light: var(--glass-background-light);
+  --color-error: var(--color-danger);
+
+  /* RGB versions for rgba() usage */
+  --color-primary-rgb: 59, 130, 246;
+  --color-text-secondary-rgb: 209, 213, 219;
+}

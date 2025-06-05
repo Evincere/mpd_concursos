@@ -1,10 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatDividerModule } from '@angular/material/divider';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 interface AdminNotification {
   id: string;
@@ -23,27 +21,29 @@ interface AdminNotification {
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule,
-    MatIconModule,
-    MatButtonModule,
-    MatBadgeModule,
-    MatDividerModule
+    RouterModule
   ]
 })
-export class AdminNotificationsComponent implements OnInit {
+export class AdminNotificationsComponent implements OnInit, OnDestroy {
+  @Output() closePanel = new EventEmitter<void>();
+
   notifications: AdminNotification[] = [];
+  isLoading = false;
+
+  private destroy$ = new Subject<void>();
 
   // Evento para cerrar el panel de notificaciones
   closeNotifications(): void {
-    // Emitir evento o llamar a un servicio para cerrar el panel
-    // En una implementación real, esto podría emitir un evento al componente padre
-    console.log('Cerrando panel de notificaciones');
-    // Aquí se podría emitir un evento si fuera necesario
+    this.closePanel.emit();
   }
 
   ngOnInit(): void {
-    // Cargar notificaciones de ejemplo (en una implementación real, esto vendría de un servicio)
     this.loadMockNotifications();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   markAsRead(notification: AdminNotification): void {
@@ -58,11 +58,11 @@ export class AdminNotificationsComponent implements OnInit {
 
   getNotificationIcon(type: string): string {
     switch (type) {
-      case 'info': return 'info';
-      case 'warning': return 'warning';
-      case 'error': return 'error';
-      case 'success': return 'check_circle';
-      default: return 'notifications';
+      case 'info': return 'ℹ️';
+      case 'warning': return '⚠️';
+      case 'error': return '❌';
+      case 'success': return '✅';
+      default: return '🔔';
     }
   }
 

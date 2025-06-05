@@ -1,12 +1,12 @@
 :host {
   position: fixed;
-  top: 0;
+  top: var(--user-header-height, 90px); /* Comenzar desde el borde inferior del navbar */
   right: 0;
   width: 40%;
-  height: 100vh;
+  height: calc(100vh - var(--user-header-height, 90px)); /* Altura ajustada para respetar el navbar */
   background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
-  z-index: 1000;
+  z-index: 500; /* Z-index menor que el navbar para no taparlo */
   color: #f9fafb;
   display: flex;
   backdrop-filter: blur(20px);
@@ -28,11 +28,11 @@
 }
 
 .detalle-container {
-  padding: 2rem;
+  padding: 1rem; /* Reducido de 2rem a 1rem */
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem; /* Reducido de 2rem a 1rem */
   opacity: 1;
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
@@ -68,10 +68,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem 1.5rem; /* Reducido de 2rem a 1rem vertical, 1.5rem horizontal */
   background: #374151;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin: -2rem -2rem 0;
+  margin: -1rem -1rem 0; /* Ajustado para el nuevo padding del contenedor */
   position: relative;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.3),
@@ -98,28 +98,24 @@
 
   h2 {
     margin: 0;
-    font-size: 1.75rem;
+    font-size: 1.5rem; /* Reducido de 1.75rem a 1.5rem */
     font-weight: 700;
     color: #f9fafb;
   }
 
-  .cerrar-btn {
-    color: #f9fafb;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(8px);
+  /* Custom icon button integration */
+  ::ng-deep app-custom-icon-button {
+    .custom-icon-button {
+      color: #f9fafb;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    &:active {
-      transform: translateY(0);
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
     }
   }
 }
@@ -128,125 +124,97 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 0; /* Permite que flex shrink funcione correctamente */
 
-  ::ng-deep .mat-tab-group {
+  /* Custom tabs integration */
+  ::ng-deep app-custom-tabs {
     flex: 1;
-    background: #374151;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.3),
-      0 4px 16px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Permite que flex shrink funcione correctamente */
 
-    // Glassmorphism gradient overlay
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-      pointer-events: none;
+    .custom-tabs-container {
+      background: #374151;
       border-radius: 8px;
-      z-index: 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
-    .mat-tab-header {
-      background: transparent;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      position: relative;
-      z-index: 1;
+    .tabs-content {
+      flex: 1;
+      min-height: 0; /* Permite que flex shrink funcione correctamente */
+      overflow: hidden; /* Mantener hidden en el contenedor padre */
+    }
 
-      .mat-tab-header-pagination {
-        display: none !important;
+    .tab-panel {
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      /* Mejorar scrollbar glassmorphism */
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.1);
+
+      &::-webkit-scrollbar {
+        width: 8px;
       }
 
-      .mat-tab-label-container {
-        .mat-tab-list {
-          .mat-tab-labels {
-            justify-content: space-around;
+      &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        margin: 4px;
+      }
 
-            .mat-tab-label {
-              color: #d1d5db;
-              opacity: 0.8;
-              font-weight: 500;
-              padding: 1rem 1.5rem;
-              min-width: auto;
-              flex: 1;
-              transition: all 0.3s ease;
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
 
-              &.mat-tab-label-active {
-                opacity: 1;
-                color: #3b82f6;
-                font-weight: 600;
-              }
+        &:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
 
-              &:hover {
-                color: #3b82f6;
-                opacity: 1;
-              }
-            }
-
-            .mat-ink-bar {
-              background-color: #3b82f6;
-              height: 3px;
-              border-radius: 2px;
-            }
-          }
+        &:active {
+          background: rgba(255, 255, 255, 0.6);
         }
       }
+
+      &::-webkit-scrollbar-corner {
+        background: transparent;
+      }
     }
 
-    .mat-tab-body-wrapper {
-      flex: 1;
-      position: relative;
-      z-index: 1;
+    .tab-indicator {
+      --tabs-count: 3; /* Set the number of tabs for proper indicator width */
     }
   }
 }
 
 .tab-content {
-  padding: 2rem;
-  height: 100%;
-  overflow-y: auto;
-
-  // Custom scrollbar
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.4);
-    }
-  }
+  padding: 1rem 1.5rem; /* Reducido de 2rem a 1rem vertical, 1.5rem horizontal */
+  /* Eliminar height: 100% y overflow-y: auto ya que ahora el scroll está en .tab-panel */
+  /* El contenido debe fluir naturalmente y el scroll se maneja en el contenedor padre */
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem; /* Reducido de 1.5rem a 1rem */
+  margin-bottom: 1.5rem; /* Reducido de 2rem a 1.5rem */
 }
 
 .info-item {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem; /* Reducido de 1.5rem a 1rem */
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
@@ -259,8 +227,8 @@
 
   .label {
     color: #d1d5db;
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
+    font-size: 0.8125rem; /* Reducido de 0.875rem a 0.8125rem */
+    margin-bottom: 0.5rem; /* Reducido de 0.75rem a 0.5rem */
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -268,15 +236,15 @@
 
   .value {
     color: #f9fafb;
-    font-size: 1.125rem;
+    font-size: 1rem; /* Reducido de 1.125rem a 1rem */
     font-weight: 600;
-    line-height: 1.4;
+    line-height: 1.3; /* Reducido de 1.4 a 1.3 */
   }
 }
 
 .funciones-section {
-  margin-top: 2rem;
-  padding: 2rem;
+  margin-top: 1.5rem; /* Reducido de 2rem a 1.5rem */
+  padding: 1.5rem; /* Reducido de 2rem a 1.5rem */
   background: #374151;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -306,30 +274,30 @@
 
   h3 {
     color: #3b82f6;
-    font-size: 1.25rem;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.75rem;
+    font-size: 1.125rem; /* Reducido de 1.25rem a 1.125rem */
+    margin-bottom: 1rem; /* Reducido de 1.25rem a 1rem */
+    padding-bottom: 0.5rem; /* Reducido de 0.75rem a 0.5rem */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-weight: 700;
   }
 
   .funciones-content {
     color: #f9fafb;
-    line-height: 1.6;
-    font-size: 1rem;
+    line-height: 1.5; /* Reducido de 1.6 a 1.5 */
+    font-size: 0.9375rem; /* Reducido de 1rem a 0.9375rem */
   }
 }
 
 .documentos-grid {
   display: grid;
-  gap: 2rem;
+  gap: 1.5rem; /* Reducido de 2rem a 1.5rem */
 }
 
 .documento-item {
   display: flex;
   align-items: flex-start;
-  gap: 1.5rem;
-  padding: 2rem;
+  gap: 1rem; /* Reducido de 1.5rem a 1rem */
+  padding: 1.5rem; /* Reducido de 2rem a 1.5rem */
   background: #374151;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -367,53 +335,27 @@
     transform: translateY(-1px);
   }
 
-  mat-icon {
+  i {
     color: #3b82f6;
-    font-size: 2.5rem;
-    width: 2.5rem;
-    height: 2.5rem;
+    font-size: 2rem; /* Reducido de 2.5rem a 2rem */
+    width: 2rem; /* Reducido de 2.5rem a 2rem */
+    height: 2rem; /* Reducido de 2.5rem a 2rem */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .documento-info {
     flex: 1;
 
     h4 {
-      margin: 0 0 1rem;
+      margin: 0 0 0.75rem; /* Reducido de 1rem a 0.75rem */
       color: #f9fafb;
-      font-size: 1.125rem;
+      font-size: 1rem; /* Reducido de 1.125rem a 1rem */
       font-weight: 600;
     }
 
-    a {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.75rem;
-      background: #3b82f6;
-      color: #f9fafb;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-
-      &:hover {
-        background: #2563eb;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-
-      mat-icon {
-        font-size: 1.25rem;
-        width: 1.25rem;
-        height: 1.25rem;
-        color: #f9fafb;
-      }
-    }
+    /* Los botones de descarga ahora usan app-custom-button */
   }
 }
 
@@ -426,8 +368,8 @@
 .fecha-item {
   display: flex;
   align-items: flex-start;
-  gap: 1.5rem;
-  padding: 2rem;
+  gap: 1rem; /* Reducido de 1.5rem a 1rem */
+  padding: 1.5rem; /* Reducido de 2rem a 1.5rem */
   background: #374151;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -479,18 +421,21 @@
   .fecha-icon {
     background: #3b82f6;
     border-radius: 50%;
-    padding: 1rem;
+    padding: 0.75rem; /* Reducido de 1rem a 0.75rem */
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     border: 2px solid rgba(59, 130, 246, 0.3);
 
-    mat-icon {
+    i {
       color: #f9fafb;
-      font-size: 1.5rem;
-      width: 1.5rem;
-      height: 1.5rem;
+      font-size: 1.25rem; /* Reducido de 1.5rem a 1.25rem */
+      width: 1.25rem; /* Reducido de 1.5rem a 1.25rem */
+      height: 1.25rem; /* Reducido de 1.5rem a 1.25rem */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 
@@ -498,16 +443,16 @@
     flex: 1;
 
     h4 {
-      margin: 0 0 0.75rem;
+      margin: 0 0 0.5rem; /* Reducido de 0.75rem a 0.5rem */
       color: #f9fafb;
-      font-size: 1.125rem;
+      font-size: 1rem; /* Reducido de 1.125rem a 1rem */
       font-weight: 600;
     }
 
     p {
       margin: 0;
       color: #d1d5db;
-      font-size: 1rem;
+      font-size: 0.875rem; /* Reducido de 1rem a 0.875rem */
       font-weight: 500;
     }
   }
@@ -516,106 +461,78 @@
 .actions-container {
   display: flex;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1rem; /* Reducido de 1.5rem a 1rem */
   margin-top: auto;
-  padding-top: 2rem;
+  padding-top: 1rem; /* Reducido de 2rem a 1rem */
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 
-  button {
-    min-width: 140px;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(8px);
-    font-size: 1rem;
-
-    mat-icon {
-      margin-right: 0.5rem;
-    }
-
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-  }
-
-  .volver-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #f9fafb;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-  }
+  /* El botón de volver ahora usa app-custom-button */
 }
+
+
 
 // Responsive Design
 @media (max-width: 768px) {
   :host {
     width: 100%;
     right: 0;
+    top: 85px; /* Altura del navbar en móvil */
+    height: calc(100vh - 85px);
   }
 
   .detalle-container {
-    padding: 1.5rem;
-    gap: 1.5rem;
+    padding: 0.75rem; /* Más compacto en móvil */
+    gap: 0.75rem; /* Más compacto en móvil */
   }
 
   .detalle-header {
-    padding: 1.5rem;
-    margin: -1.5rem -1.5rem 0;
+    padding: 0.75rem 1rem; /* Más compacto en móvil */
+    margin: -0.75rem -0.75rem 0;
 
     h2 {
-      font-size: 1.5rem;
+      font-size: 1.25rem; /* Más pequeño en móvil */
     }
   }
 
   .tab-content {
-    padding: 1.5rem;
+    padding: 0.75rem 1rem; /* Más compacto en móvil */
   }
 
   .info-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.75rem; /* Más compacto en móvil */
   }
 
   .info-item {
-    padding: 1.25rem;
+    padding: 0.875rem; /* Más compacto en móvil */
   }
 
   .funciones-section {
-    padding: 1.5rem;
+    padding: 1rem; /* Más compacto en móvil */
   }
 
   .documento-item {
-    padding: 1.5rem;
-    gap: 1rem;
+    padding: 1rem; /* Más compacto en móvil */
+    gap: 0.75rem; /* Más compacto en móvil */
 
-    mat-icon {
-      font-size: 2rem;
-      width: 2rem;
-      height: 2rem;
+    i {
+      font-size: 1.75rem; /* Más pequeño en móvil */
+      width: 1.75rem;
+      height: 1.75rem;
     }
   }
 
   .fecha-item {
-    padding: 1.5rem;
-    gap: 1rem;
+    padding: 1rem; /* Más compacto en móvil */
+    gap: 0.75rem; /* Más compacto en móvil */
 
     .fecha-icon {
-      padding: 0.75rem;
+      padding: 0.625rem; /* Más compacto en móvil */
 
-      mat-icon {
-        font-size: 1.25rem;
-        width: 1.25rem;
-        height: 1.25rem;
+      i {
+        font-size: 1.125rem; /* Más pequeño en móvil */
+        width: 1.125rem;
+        height: 1.125rem;
       }
     }
 
@@ -632,6 +549,13 @@
       width: 100%;
       min-width: auto;
     }
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    top: 80px; /* Altura del navbar en móvil pequeño */
+    height: calc(100vh - 80px);
   }
 }
 

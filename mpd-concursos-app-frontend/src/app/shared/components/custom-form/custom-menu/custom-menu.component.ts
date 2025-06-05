@@ -7,12 +7,13 @@ import { CustomMenuItemComponent } from './custom-menu-item.component';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div 
+    <div
       #menuContainer
-      class="custom-menu-container" 
+      class="custom-menu-container"
       [class.open]="isOpen"
       [style.top.px]="positionY"
       [style.left.px]="positionX"
+      [style.width.px]="maxWidth"
       [style.min-width.px]="minWidth"
       [style.max-width.px]="maxWidth"
       [attr.aria-hidden]="!isOpen"
@@ -28,30 +29,30 @@ import { CustomMenuItemComponent } from './custom-menu-item.component';
     /* Consistent with admin dashboard and contest theme #4CAF50 */
 
     .custom-menu-container {
-      position: fixed; /* Changed from absolute to fixed for better positioning */
-      z-index: 9999; /* Increased z-index to ensure it's above everything */
+      position: fixed;
+      z-index: 9999;
       display: none;
       transform-origin: top left;
-      animation: menuFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: menuFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-      /* Enhanced glassmorphism for better visibility */
+      /* Less transparent glassmorphism for better readability */
       background: linear-gradient(135deg,
-        rgba(30, 41, 59, 0.95) 0%,
-        rgba(51, 65, 85, 0.98) 100%);
+        rgba(31, 41, 55, 0.98) 0%,
+        rgba(55, 65, 81, 0.99) 100%);
       background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(76, 175, 80, 0.15) 30%, rgba(255, 255, 255, 0.18) 70%, rgba(76, 175, 80, 0.12) 100%);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 12px;
-      padding: 0.75rem;
+        linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 8px;
+      padding: 0.5rem;
       box-shadow:
-        0 20px 40px rgba(0, 0, 0, 0.4),
-        0 8px 16px rgba(0, 0, 0, 0.2),
-        inset 0 2px 0 rgba(255, 255, 255, 0.25),
-        inset 0 -2px 0 rgba(0, 0, 0, 0.15);
-      overflow: visible; /* Allow child shadows to show */
-      min-width: 180px; /* Ensure minimum width for readability */
+        0 12px 24px rgba(0, 0, 0, 0.3),
+        0 6px 12px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      overflow: visible;
+      min-width: 180px;
     }
 
     .custom-menu-container.open {
@@ -78,37 +79,73 @@ import { CustomMenuItemComponent } from './custom-menu-item.component';
       }
     }
 
-    /* ===== ENHANCED GLASSMORPHISM SCROLLBAR ===== */
+    /* ===== SUBTLE GLASSMORPHISM SCROLLBAR ===== */
 
     .menu-content::-webkit-scrollbar {
-      width: 6px;
+      width: 4px;
     }
 
     .menu-content::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 2px;
     }
 
     .menu-content::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.6) 0%, rgba(76, 175, 80, 0.8) 100%);
-      border-radius: 3px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg, rgba(156, 163, 175, 0.4) 0%, rgba(156, 163, 175, 0.6) 100%);
+      border-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .menu-content::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.8) 0%, rgba(76, 175, 80, 1) 100%);
+      background: linear-gradient(135deg, rgba(156, 163, 175, 0.6) 0%, rgba(156, 163, 175, 0.8) 100%);
     }
 
-    /* ===== RESPONSIVE DESIGN ===== */
+    /* ===== ENHANCED RESPONSIVE DESIGN ===== */
 
-    @media (max-width: 768px) {
+    /* Prevent horizontal overflow on all screen sizes */
+    .custom-menu-container {
+      max-width: calc(100vw - 32px); /* Always respect viewport width */
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 480px) {
       .custom-menu-container {
-        padding: 0.375rem;
-        border-radius: 6px;
+        padding: 0.5rem;
+        border-radius: 8px;
+        /* Mobile-specific adjustments */
+        max-width: calc(100vw - 16px);
+        min-width: 260px;
       }
 
       .menu-content {
-        max-height: 300px;
+        max-height: 280px;
+        padding: 0.25rem;
+      }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+      .custom-menu-container {
+        padding: 0.5rem;
+        border-radius: 8px;
+        /* Tablet-specific adjustments */
+        max-width: calc(100vw - 24px);
+        min-width: 300px;
+      }
+
+      .menu-content {
+        max-height: 350px;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .custom-menu-container {
+        /* Desktop - standard behavior but with overflow protection */
+        max-width: calc(100vw - 32px);
+        min-width: 320px;
+      }
+
+      .menu-content {
+        max-height: 400px;
       }
     }
 
@@ -208,51 +245,107 @@ export class CustomMenuComponent implements AfterContentInit {
     if (!this.triggerElement) return;
 
     const triggerRect = this.triggerElement.getBoundingClientRect();
-    const menuWidth = Math.max(this.minWidth, 180); // Ensure minimum width
-    const menuHeight = 200; // Estimated menu height
-
-    // Calcular posición X
-    if (this.xPosition === 'before') {
-      this.positionX = triggerRect.right - menuWidth;
-    } else {
-      this.positionX = triggerRect.left;
-    }
-
-    // Calcular posición Y
-    if (this.yPosition === 'above') {
-      this.positionY = triggerRect.top - menuHeight - 8;
-    } else {
-      this.positionY = triggerRect.bottom + 8;
-    }
-
-    // Ajustar si se sale de la pantalla
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
 
-    // Ajustar posición X
-    if (this.positionX + menuWidth > viewportWidth) {
-      this.positionX = triggerRect.right - menuWidth;
-    }
-    if (this.positionX < 0) {
-      this.positionX = 8;
+    // Responsive width calculation - prevent horizontal overflow
+    const viewportPadding = 16; // Minimum padding from viewport edges
+    const maxAvailableWidth = viewportWidth - (viewportPadding * 2);
+
+    // Dynamic width based on viewport and trigger position
+    let calculatedWidth: number;
+
+    if (viewportWidth <= 480) {
+      // Mobile: Use most of the screen width
+      calculatedWidth = Math.min(maxAvailableWidth, 280);
+    } else if (viewportWidth <= 768) {
+      // Tablet: Moderate width
+      calculatedWidth = Math.min(maxAvailableWidth, 320);
+    } else {
+      // Desktop: Standard width but respect viewport limits
+      calculatedWidth = Math.min(maxAvailableWidth, Math.max(this.minWidth, 320));
     }
 
-    // Ajustar posición Y
-    if (this.positionY + menuHeight > viewportHeight) {
-      this.positionY = triggerRect.top - menuHeight - 8;
-    }
-    if (this.positionY < 0) {
-      this.positionY = triggerRect.bottom + 8;
+    // Update component width dynamically
+    this.maxWidth = calculatedWidth;
+
+    const menuHeight = 400; // Estimated menu height
+
+    // Smart X positioning - prevent horizontal overflow
+    let calculatedX: number;
+
+    if (this.xPosition === 'before') {
+      // Try to position before (to the left)
+      calculatedX = triggerRect.right - calculatedWidth;
+
+      // If it goes off the left edge, position after instead
+      if (calculatedX < viewportPadding) {
+        calculatedX = triggerRect.left;
+
+        // If positioning after also causes overflow, center on trigger
+        if (calculatedX + calculatedWidth > viewportWidth - viewportPadding) {
+          calculatedX = triggerRect.left + (triggerRect.width / 2) - (calculatedWidth / 2);
+        }
+      }
+    } else {
+      // Try to position after (to the right)
+      calculatedX = triggerRect.left;
+
+      // If it goes off the right edge, position before instead
+      if (calculatedX + calculatedWidth > viewportWidth - viewportPadding) {
+        calculatedX = triggerRect.right - calculatedWidth;
+
+        // If positioning before also causes overflow, center on trigger
+        if (calculatedX < viewportPadding) {
+          calculatedX = triggerRect.left + (triggerRect.width / 2) - (calculatedWidth / 2);
+        }
+      }
     }
 
-    console.log('Menu position calculated:', {
+    // Final X position bounds check
+    calculatedX = Math.max(viewportPadding, Math.min(calculatedX, viewportWidth - calculatedWidth - viewportPadding));
+
+    // Y positioning with overflow prevention
+    let calculatedY: number;
+
+    if (this.yPosition === 'above') {
+      calculatedY = triggerRect.top - menuHeight - 8;
+
+      // If it goes above viewport, position below instead
+      if (calculatedY < viewportPadding) {
+        calculatedY = triggerRect.bottom + 8;
+      }
+    } else {
+      calculatedY = triggerRect.bottom + 8;
+
+      // If it goes below viewport, position above instead
+      if (calculatedY + menuHeight > viewportHeight - viewportPadding) {
+        calculatedY = triggerRect.top - menuHeight - 8;
+
+        // If positioning above also causes overflow, position at top of viewport
+        if (calculatedY < viewportPadding) {
+          calculatedY = viewportPadding;
+        }
+      }
+    }
+
+    // Final Y position bounds check
+    calculatedY = Math.max(viewportPadding, Math.min(calculatedY, viewportHeight - menuHeight - viewportPadding));
+
+    // Set final positions
+    this.positionX = calculatedX;
+    this.positionY = calculatedY;
+
+    console.log('Smart menu position calculated:', {
       triggerRect,
+      viewportWidth,
+      viewportHeight,
+      calculatedWidth,
       positionX: this.positionX,
       positionY: this.positionY,
-      viewportWidth,
-      viewportHeight
+      maxWidth: this.maxWidth
     });
   }
   
@@ -270,6 +363,16 @@ export class CustomMenuComponent implements AfterContentInit {
   onEscapeKey(): void {
     if (this.isOpen) {
       this.close();
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (this.isOpen) {
+      // Recalculate position on window resize to prevent overflow
+      setTimeout(() => {
+        this.calculatePosition();
+      }, 100);
     }
   }
 }

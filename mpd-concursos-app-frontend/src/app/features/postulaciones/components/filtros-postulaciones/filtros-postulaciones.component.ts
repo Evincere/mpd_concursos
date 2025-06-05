@@ -1,20 +1,12 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatSelectModule } from '@angular/material/select';
-import { MatIconModule } from '@angular/material/icon';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl } from '@angular/forms';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaciones.interface';
-
-interface FilterOption {
-  value: string;
-  label: string;
-  icon?: string;
-}
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomSelectComponent, SelectOption } from '@shared/components/custom-form/custom-select/custom-select.component';
 
 @Component({
   selector: 'app-filtros-postulaciones',
@@ -24,10 +16,8 @@ interface FilterOption {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatSelectModule,
-    MatIconModule
+    CustomButtonComponent,
+    CustomSelectComponent
   ],
   animations: [
     trigger('slidePanel', [
@@ -53,33 +43,34 @@ export class FiltrosPostulacionesComponent implements OnInit, OnDestroy {
   filtrosForm: FormGroup;
   private destroy$ = new Subject<void>();
 
-  estadoOptions: FilterOption[] = [
-    { value: 'todos', label: 'Todos', icon: 'list' },
-    { value: 'pendiente', label: 'Pendiente', icon: 'hourglass_empty' },
-    { value: 'aprobado', label: 'Aprobado', icon: 'check_circle' },
-    { value: 'rechazado', label: 'Rechazado', icon: 'cancel' }
+  estadoOptions: SelectOption[] = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'en_proceso', label: 'En Proceso' },
+    { value: 'pendiente', label: 'Pendiente' },
+    { value: 'aprobado', label: 'Aprobado' },
+    { value: 'rechazado', label: 'Rechazado' }
   ];
 
-  periodoOptions: FilterOption[] = [
-    { value: 'todos', label: 'Todos', icon: 'date_range' },
-    { value: 'hoy', label: 'Hoy', icon: 'today' },
-    { value: 'semana', label: 'Última semana', icon: 'date_range' },
-    { value: 'mes', label: 'Último mes', icon: 'calendar_today' }
+  periodoOptions: SelectOption[] = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'hoy', label: 'Hoy' },
+    { value: 'semana', label: 'Última semana' },
+    { value: 'mes', label: 'Último mes' }
   ];
 
-  dependenciaOptions: FilterOption[] = [
-    { value: 'todas', label: 'Todas', icon: 'account_balance' },
-    { value: 'fiscal', label: 'Fiscalía', icon: 'gavel' },
-    { value: 'defensa', label: 'Defensoría', icon: 'security' },
-    { value: 'admin', label: 'Administración', icon: 'business' }
+  dependenciaOptions: SelectOption[] = [
+    { value: 'todas', label: 'Todas' },
+    { value: 'fiscal', label: 'Fiscalía' },
+    { value: 'defensa', label: 'Defensoría' },
+    { value: 'admin', label: 'Administración' }
   ];
 
-  cargoOptions: FilterOption[] = [
-    { value: 'todos', label: 'Todos', icon: 'work' },
-    { value: 'fiscal', label: 'Fiscal', icon: 'assignment_ind' },
-    { value: 'defensor', label: 'Defensor Público', icon: 'person' },
-    { value: 'asistente', label: 'Asistente', icon: 'support_agent' },
-    { value: 'administrativo', label: 'Administrativo', icon: 'badge' }
+  cargoOptions: SelectOption[] = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'fiscal', label: 'Fiscal' },
+    { value: 'defensor', label: 'Defensor Público' },
+    { value: 'asistente', label: 'Asistente' },
+    { value: 'administrativo', label: 'Administrativo' }
   ];
 
   constructor(private fb: FormBuilder) {
@@ -89,6 +80,23 @@ export class FiltrosPostulacionesComponent implements OnInit, OnDestroy {
       dependencia: [null],
       cargo: [null]
     });
+  }
+
+  // Métodos para obtener FormControl de manera type-safe
+  get estadoControl(): FormControl {
+    return this.filtrosForm.get('estado') as FormControl;
+  }
+
+  get periodoControl(): FormControl {
+    return this.filtrosForm.get('periodo') as FormControl;
+  }
+
+  get dependenciaControl(): FormControl {
+    return this.filtrosForm.get('dependencia') as FormControl;
+  }
+
+  get cargoControl(): FormControl {
+    return this.filtrosForm.get('cargo') as FormControl;
   }
 
   ngOnInit() {

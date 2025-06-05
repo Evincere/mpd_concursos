@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatRippleModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import {
   Notification,
   NotificationStatus,
@@ -45,7 +45,7 @@ export class NotificationItemComponent {
 
     constructor(
         private notificationsService: NotificationsService,
-        private snackBar: MatSnackBar
+        private unifiedNotificationService: UnifiedNotificationService
     ) {}
 
     get statusIcon(): string {
@@ -143,20 +143,16 @@ export class NotificationItemComponent {
     // Acknowledgment functionality would be implemented here when needed
 
     private showSuccessMessage(message: string): void {
-        this.snackBar.open(message, 'Cerrar', {
+        this.unifiedNotificationService.success(message, 'Éxito', {
             duration: 3000,
-            panelClass: ['success-snackbar'],
-            horizontalPosition: 'center',
-            verticalPosition: 'bottom'
+            position: 'bottom-center'
         });
     }
 
     private showErrorMessage(message: string): void {
-        this.snackBar.open(message, 'Cerrar', {
+        this.unifiedNotificationService.error(message, 'Error', {
             duration: 5000,
-            panelClass: ['error-snackbar'],
-            horizontalPosition: 'center',
-            verticalPosition: 'bottom'
+            position: 'bottom-center'
         });
     }
 

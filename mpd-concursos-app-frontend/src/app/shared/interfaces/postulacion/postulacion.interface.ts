@@ -1,5 +1,5 @@
 export interface Postulacion {
-    id?: number;
+    id?: string; // Cambiado de number a string para manejar UUIDs
     contestId: number;
     userId?: string;
     estado: PostulationStatus;
@@ -75,7 +75,10 @@ export enum PostulationStatus {
     PENDING = 'PENDING',
     ACCEPTED = 'ACCEPTED',
     REJECTED = 'REJECTED',
-    CANCELLED = 'CANCELLED'
+    CANCELLED = 'CANCELLED',
+    ACTIVE = 'ACTIVE',
+    IN_PROCESS = 'IN_PROCESS',
+    NO_INSCRIPTO = 'NO_INSCRIPTO'
 }
 
 export enum ContestType {
@@ -108,4 +111,17 @@ export interface PostulacionResponse {
     totalElements: number;
     totalPages: number;
     last: boolean;
+}
+
+export interface PostulacionError {
+    status: number;
+    message: string;
+    error?: string;
+    timestamp?: string;
+}
+
+export interface CancelInscriptionResponse {
+    success: boolean;
+    message: string;
+    data?: any;
 }

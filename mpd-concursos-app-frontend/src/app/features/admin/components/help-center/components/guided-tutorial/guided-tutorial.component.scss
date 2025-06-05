@@ -1,0 +1,632 @@
+/* ===================================================================
+   GUIDED TUTORIAL GLASSMORPHISM PREMIUM
+   =================================================================== */
+
+.guided-tutorial {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(1rem, 2.5vw, 2rem);
+}
+
+/* ===================================================================
+   TUTORIAL HEADER
+   =================================================================== */
+
+.tutorial-header {
+  background: rgba(55, 65, 81, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  .tutorial-info {
+    .tutorial-title {
+      color: #f9fafb;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      margin: 0 0 1.5rem 0;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .tutorial-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      
+      .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        
+        .meta-icon {
+          font-size: 1rem;
+        }
+        
+        .meta-text {
+          font-weight: 600;
+        }
+        
+        &.level {
+          &.level-basic {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+          }
+          
+          &.level-intermediate {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+          }
+          
+          &.level-advanced {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+          }
+        }
+        
+        &.time {
+          background: rgba(139, 92, 246, 0.2);
+          color: #a78bfa;
+          border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        
+        &.category {
+          background: rgba(75, 85, 99, 0.4);
+          color: #d1d5db;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+    
+    .tutorial-description {
+      color: #d1d5db;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+  }
+}
+
+/* ===================================================================
+   PROGRESS SECTION
+   =================================================================== */
+
+.tutorial-progress {
+  background: rgba(55, 65, 81, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  
+  .progress-header {
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      .progress-text {
+        color: #f9fafb;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+      
+      .progress-percentage {
+        color: #3b82f6;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  .progress-bar-container {
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(75, 85, 99, 0.6);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        border-radius: 20px;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+          animation: shimmer 2s infinite;
+        }
+      }
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ===================================================================
+   TUTORIAL CONTENT
+   =================================================================== */
+
+.tutorial-content {
+  background: rgba(55, 65, 81, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  min-height: 400px;
+  
+  .step-content {
+    .step-header {
+      .step-title {
+        color: #f9fafb;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        
+        .step-number {
+          background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+          color: white;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1rem;
+          font-weight: 700;
+          flex-shrink: 0;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+      }
+    }
+    
+    .step-description {
+      color: #e5e7eb;
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+  }
+}
+
+.step-media {
+  margin-bottom: 2rem;
+  
+  .step-image {
+    img {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+  
+  .step-video {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    
+    iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+.step-interactive {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  
+  .interactive-hint,
+  .interactive-action {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .hint-icon,
+    .action-icon {
+      font-size: 1.25rem;
+    }
+    
+    .hint-text,
+    .action-text {
+      color: #e5e7eb;
+      font-size: 0.875rem;
+      
+      code {
+        background: rgba(75, 85, 99, 0.6);
+        color: #fbbf24;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-family: 'Fira Code', 'Consolas', monospace;
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+/* ===================================================================
+   TUTORIAL NAVIGATION
+   =================================================================== */
+
+.tutorial-navigation {
+  background: rgba(55, 65, 81, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+
+  .nav-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    min-width: 120px;
+
+    &.prev {
+      background: rgba(75, 85, 99, 0.6);
+      color: #f9fafb;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &:hover:not(:disabled) {
+        background: rgba(75, 85, 99, 0.8);
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: translateY(-1px);
+      }
+    }
+
+    &.next {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .btn-icon {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .btn-label {
+      font-size: 0.875rem;
+    }
+  }
+
+  .step-indicators {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+
+    .step-indicator {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(75, 85, 99, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #9ca3af;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+
+      &:hover {
+        background: rgba(75, 85, 99, 0.8);
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: scale(1.05);
+      }
+
+      &.completed {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+        border-color: rgba(34, 197, 94, 0.3);
+
+        .indicator-number {
+          display: none;
+        }
+
+        &::after {
+          content: '✓';
+          font-size: 1rem;
+          font-weight: 700;
+        }
+      }
+
+      &.active {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border-color: rgba(59, 130, 246, 0.3);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .indicator-number {
+        line-height: 1;
+      }
+    }
+  }
+}
+
+/* ===================================================================
+   TUTORIAL ACTIONS
+   =================================================================== */
+
+.tutorial-actions {
+  display: flex;
+  justify-content: center;
+
+  .btn-exit {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: rgba(239, 68, 68, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-icon {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .btn-label {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* ===================================================================
+   LOADING STATE
+   =================================================================== */
+
+.tutorial-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(59, 130, 246, 0.3);
+      border-top: 3px solid #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      color: #d1d5db;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===================================================================
+   RESPONSIVE DESIGN
+   =================================================================== */
+
+@media (max-width: 768px) {
+  .guided-tutorial {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .tutorial-header {
+    padding: 1.5rem;
+
+    .tutorial-info {
+      .tutorial-title {
+        font-size: 1.5rem;
+      }
+
+      .tutorial-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+    }
+  }
+
+  .tutorial-progress {
+    padding: 1rem;
+  }
+
+  .tutorial-content {
+    padding: 1.5rem;
+    min-height: 300px;
+
+    .step-content .step-header .step-title {
+      font-size: 1.25rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      .step-number {
+        width: 35px;
+        height: 35px;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .tutorial-navigation {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .nav-button {
+      min-width: auto;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .step-indicators {
+      order: -1;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      .step-indicator {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .tutorial-actions {
+    .btn-exit {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .guided-tutorial {
+    padding: 0.75rem;
+  }
+
+  .tutorial-header {
+    padding: 1rem;
+
+    .tutorial-info .tutorial-title {
+      font-size: 1.25rem;
+    }
+  }
+
+  .tutorial-progress,
+  .tutorial-content,
+  .tutorial-navigation {
+    padding: 0.75rem;
+  }
+
+  .tutorial-content {
+    min-height: 250px;
+
+    .step-content .step-header .step-title {
+      font-size: 1.125rem;
+
+      .step-number {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .tutorial-navigation {
+    .step-indicators .step-indicator {
+      width: 30px;
+      height: 30px;
+      font-size: 0.75rem;
+    }
+  }
+
+  .step-interactive {
+    padding: 1rem;
+
+    .interactive-hint,
+    .interactive-action {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+}

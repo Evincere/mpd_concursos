@@ -372,4 +372,36 @@ export class InscriptionStateService {
     localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
     console.log('[InscriptionStateService] Flag de continuación directa limpiado');
   }
+
+  /**
+   * Limpia completamente todos los datos de inscripciones del localStorage
+   * Útil para casos de inconsistencias o reinicio de base de datos
+   */
+  clearAllInscriptionData(): void {
+    try {
+      // Limpiar inscripción en progreso (método antiguo)
+      localStorage.removeItem(this.STORAGE_KEY);
+
+      // Limpiar lista de inscripciones incompletas
+      localStorage.removeItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
+
+      // Limpiar flag de continuación directa
+      localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
+
+      // Limpiar todos los estados de formulario de inscripción
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.FORM_STATE_KEY)) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      console.log(`[InscriptionStateService] Limpieza completa realizada: ${keysToRemove.length + 3} elementos eliminados`);
+    } catch (error) {
+      console.error('[InscriptionStateService] Error durante la limpieza completa:', error);
+    }
+  }
 }

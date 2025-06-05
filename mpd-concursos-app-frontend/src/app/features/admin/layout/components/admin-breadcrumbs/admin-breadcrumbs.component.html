@@ -1,21 +1,8 @@
 <nav class="breadcrumbs-container" *ngIf="breadcrumbs.length > 0" [@fadeAnimation]>
   <ol class="breadcrumbs-list">
-    <!-- Inicio siempre presente -->
-    <li class="breadcrumb-item" [@slideInAnimation]="{value: '', params: {delay: '0ms'}}">
-      <a [routerLink]="['/admin/dashboard']" class="breadcrumb-link">
-        <i class="fas fa-home breadcrumb-icon"></i>
-        <span class="breadcrumb-text">Inicio</span>
-      </a>
-    </li>
-
-    <!-- Separador -->
-    <li class="breadcrumb-separator" [@slideInAnimation]="{value: '', params: {delay: '50ms'}}">
-      <i class="fas fa-chevron-right"></i>
-    </li>
-
-    <!-- Breadcrumbs dinámicos -->
+    <!-- Breadcrumbs dinámicos simplificados -->
     <ng-container *ngFor="let breadcrumb of breadcrumbs; let last = last; let i = index">
-      <li class="breadcrumb-item" [class.active]="last" [@slideInAnimation]="{value: '', params: {delay: (i * 50 + 100) + 'ms'}}">
+      <li class="breadcrumb-item" [class.active]="last" [@slideInAnimation]="{value: '', params: {delay: (i * 50) + 'ms'}}">
         <a
           [routerLink]="breadcrumb.url"
           class="breadcrumb-link"
@@ -29,7 +16,7 @@
       </li>
 
       <!-- Separador (excepto para el último) -->
-      <li *ngIf="!last" class="breadcrumb-separator" [@slideInAnimation]="{value: '', params: {delay: (i * 50 + 150) + 'ms'}}">
+      <li *ngIf="!last" class="breadcrumb-separator" [@slideInAnimation]="{value: '', params: {delay: (i * 50 + 25) + 'ms'}}">
         <i class="fas fa-chevron-right"></i>
       </li>
     </ng-container>

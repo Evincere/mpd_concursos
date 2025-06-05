@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.reposi
 
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
+import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.InscriptionEntity;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper.InscriptionEntityMapper;
@@ -17,9 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.data.jpa.domain.Specification;
 
 @Repository
@@ -148,6 +151,15 @@ public class JpaInscriptionRepository implements InscriptionRepository {
         return repository.findAll(jpaSpec, pageRequest)
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public List<Inscription> findByStateAndDocumentationDeadlineBefore(InscriptionState state, LocalDateTime deadline) {
+        InscriptionStatus status = mapper.map(state);
+        return repository.findByStatusAndDocumentationDeadlineBefore(status, deadline)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }
 
 interface SpringJpaInscriptionRepository extends JpaRepository<InscriptionEntity, byte[]>, JpaSpecificationExecutor<InscriptionEntity> {
@@ -168,4 +180,6 @@ interface SpringJpaInscriptionRepository extends JpaRepository<InscriptionEntity
            "JOIN user_entity u ON i.user_id = u.id " +
            "GROUP BY u.municipality", nativeQuery = true)
     List<Object[]> countByDepartment();
+
+    List<InscriptionEntity> findByStatusAndDocumentationDeadlineBefore(InscriptionStatus status, LocalDateTime deadline);
 }

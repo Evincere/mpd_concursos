@@ -3,12 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 
 import { trigger, transition, style, animate } from '@angular/animations';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar } from '@angular/material/snack-bar';
-
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -25,6 +19,8 @@ import { ConcursosService } from '@core/services/concursos/concursos.service';
 import { FiltersService } from '@core/services/filters/filters.service';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
+import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 
 
 @Component({
@@ -35,16 +31,13 @@ import { InscriptionStateService } from '@core/services/inscripcion/inscription-
   imports: [
     CommonModule,
     RouterModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatProgressSpinnerModule,
     InscripcionButtonComponent,
     SearchHeaderComponent,
     FiltrosPanelComponent,
     ConcursoDetalleComponent,
     LoaderComponent,
-    ConcursoCardComponent
+    ConcursoCardComponent,
+    CustomButtonComponent
   ],
   animations: [
     trigger('fadeInOut', [
@@ -92,7 +85,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     private inscriptionStateService: InscriptionStateService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private notification: CustomNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -188,9 +181,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         console.error('[ConcursosComponent] Error al cargar los concursos:', error);
         this.error = error;
         this.loading = false;
-        this.snackBar.open('Error al cargar los concursos', 'Cerrar', {
-          duration: 3000
-        });
+        this.notification.error('Error al cargar los concursos. Por favor, inténtelo nuevamente.');
       }
     });
   }
@@ -321,15 +312,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
       this.cargarConcursos();
     }, 1000);
 
-    // Mostrar mensaje de éxito
-    this.snackBar.open(
-      `Te has inscrito exitosamente al concurso "${concurso.title}"`,
-      'Cerrar',
-      {
-        duration: 3000,
-        panelClass: ['success-snackbar']
-      }
-    );
+    this.notification.success(`Te has inscrito exitosamente al concurso "${concurso.title}"`);
 
     // Si el concurso está seleccionado, actualizar su vista de detalle
     if (this.concursoSeleccionado?.id === concurso.id) {

@@ -3,7 +3,6 @@ package ar.gov.mpd.concursobackend.inscription.domain.model;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
-import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.*;
 import lombok.Builder;
@@ -15,8 +14,6 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
 import org.springframework.lang.NonNull;
 
 @Getter
@@ -36,6 +33,8 @@ public class Inscription {
     @Builder.Default
     private InscriptionStep currentStep = InscriptionStep.INITIAL;
     private InscriptionPreferences preferences;
+    private LocalDateTime documentationDeadline;
+    private LocalDateTime frozenDate;
 
     // Relaciones
     private User user;
@@ -92,6 +91,74 @@ public class Inscription {
      */
     public boolean isCompleted() {
         return this.currentStep == InscriptionStep.COMPLETED;
+    }
+
+    /**
+     * Verifica si todos los documentos requeridos están presentes
+     *
+     * @return true si todos los documentos están presentes, false en caso contrario
+     */
+    public boolean hasAllRequiredDocuments() {
+        // TODO: Implementar lógica para verificar documentos requeridos
+        // Por ahora retornamos true si hay al menos un documento
+        return this.documents != null && !this.documents.isEmpty();
+    }
+
+    /**
+     * Completa la inscripción con el estado apropiado según la documentación
+     */
+    public void completeInscription() {
+        this.currentStep = InscriptionStep.COMPLETED;
+        this.lastUpdated = LocalDateTime.now();
+
+        if (hasAllRequiredDocuments()) {
+            this.state = InscriptionState.COMPLETED_WITH_DOCS;
+        } else {
+            this.state = InscriptionState.COMPLETED_PENDING_DOCS;
+            // Establecer plazo perentorio de 3 días hábiles
+            this.documentationDeadline = calculateDocumentationDeadline();
+        }
+    }
+
+    /**
+     * Calcula el plazo perentorio para la documentación (3 días hábiles)
+     *
+     * @return Fecha límite para la documentación
+     */
+    private LocalDateTime calculateDocumentationDeadline() {
+        // TODO: Implementar cálculo de días hábiles
+        // Por ahora agregamos 3 días calendario
+        return LocalDateTime.now().plusDays(3);
+    }
+
+    /**
+     * Congela la inscripción después del plazo perentorio
+     */
+    public void freezeInscription() {
+        if (this.state == InscriptionState.COMPLETED_PENDING_DOCS) {
+            this.state = InscriptionState.FROZEN;
+            this.frozenDate = LocalDateTime.now();
+            this.lastUpdated = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * Verifica si la inscripción está congelada
+     *
+     * @return true si está congelada, false en caso contrario
+     */
+    public boolean isFrozen() {
+        return this.state == InscriptionState.FROZEN;
+    }
+
+    /**
+     * Verifica si el plazo de documentación ha vencido
+     *
+     * @return true si el plazo ha vencido, false en caso contrario
+     */
+    public boolean isDocumentationDeadlineExpired() {
+        return this.documentationDeadline != null &&
+               LocalDateTime.now().isAfter(this.documentationDeadline);
     }
 
     /**

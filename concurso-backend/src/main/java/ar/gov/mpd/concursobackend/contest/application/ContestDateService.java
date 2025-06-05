@@ -1,8 +1,5 @@
 package ar.gov.mpd.concursobackend.contest.application;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
-import ar.gov.mpd.concursobackend.contest.domain.ContestDate;
-import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestDateEntity;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.repository.ContestDateJpaRepository;

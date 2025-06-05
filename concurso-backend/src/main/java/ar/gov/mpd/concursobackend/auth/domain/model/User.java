@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.UUID;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserBirthDate;

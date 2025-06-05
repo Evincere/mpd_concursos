@@ -1,11 +1,11 @@
 import { Component, OnInit, Inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { Router } from '@angular/router';
+import { CustomDialogRef } from '@shared/components/custom-form/custom-dialog/custom-dialog-ref';
+import { DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/dialog-ref';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
+import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { ReactiveFormsModule, FormsModule, NgForm } from '@angular/forms';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { DocumentoValidationService, DocumentoValidationError } from  '@core/services/documentos/documento-validation.service';
@@ -41,41 +41,57 @@ interface DocumentoEnSeleccion {
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-    MatTooltipModule,
+    CustomButtonComponent,
+    CustomSpinnerComponent,
     ReactiveFormsModule,
     FormsModule,
     CustomSelectComponent
   ],
   template: `
     <div class="multiple-upload-dialog">
-      <h2 mat-dialog-title>Carga Múltiple de Documentos</h2>
+      <div class="dialog-header">
+        <h2 class="dialog-title">Carga Múltiple de Documentos</h2>
+        <app-custom-button
+          type="button"
+          variant="text"
+          size="small"
+          (click)="cerrar()"
+          class="close-button">
+          <i class="fas fa-times"></i>
+        </app-custom-button>
+      </div>
 
-      <mat-dialog-content>
+      <div class="dialog-content">
         <p class="dialog-description">
           Selecciona un documento, asígnale un tipo y continúa agregando más documentos según necesites.
         </p>
 
         <!-- Mensaje informativo cuando todos los documentos requeridos están completos -->
         <div class="info-message" *ngIf="todosDocumentosRequeridosCompletos">
-          <mat-icon class="info-icon">check_circle</mat-icon>
+          <i class="fas fa-check-circle info-icon"></i>
           <div class="info-text">
             <h3>¡Documentación requerida completa!</h3>
-            <p>Has subido todos los documentos requeridos. Si deseas adjuntar documentación adicional, puedes hacerlo aquí o en la sección de Curriculum en Mi Perfil.</p>
+            <p>Has subido todos los documentos requeridos para este concurso. Si deseas subir documentación adicional, puedes hacerlo a través de la pestaña de documentación en la vista de Mi Perfil.</p>
+            <div class="profile-link">
+              <app-custom-button
+                variant="stroked"
+                color="primary"
+                icon="fa-user"
+                label="Ir a Mi Perfil"
+                (buttonClick)="navegarAPerfil()">
+              </app-custom-button>
+            </div>
           </div>
         </div>
 
         <!-- Mensaje cuando no hay opciones disponibles -->
         <div class="no-options-message" *ngIf="tiposDocumentoOptions.length === 0 && !uploading">
-          <mat-icon>info</mat-icon>
+          <i class="fas fa-info-circle"></i>
           <p>No hay tipos de documentos disponibles para subir. Todos los documentos requeridos ya han sido subidos.</p>
         </div>
 
         <!-- Selector de documento actual -->
-        <div class="documento-actual-container" *ngIf="mostrarSelectorDocumento && tiposDocumentoOptions.length > 0">
+        <div class="documento-actual-container" *ngIf="mostrarSelectorDocumento && tiposDocumentoOptions.length > 0 && !todosDocumentosRequeridosCompletos">
           <h3>Seleccionar documento</h3>
 
           <!-- Área de selección de archivo -->
@@ -87,31 +103,38 @@ interface DocumentoEnSeleccion {
                (drop)="onDropSingle($event)">
 
             <div class="upload-icon">
-              <mat-icon>{{documentoActual.file ? getFileIcon(documentoActual.file) : 'cloud_upload'}}</mat-icon>
+              <i class="fas" [class]="'fa-' + (documentoActual.file ? getFileIcon(documentoActual.file) : 'cloud-upload-alt')"></i>
             </div>
 
             <div class="upload-text">
               <ng-container *ngIf="!documentoActual.file">
                 <p>Arrastra y suelta tu archivo aquí o</p>
-                <button type="button" mat-raised-button color="primary" (click)="fileInput.click()">
+                <app-custom-button
+                  type="button"
+                  variant="primary"
+                  (click)="fileInput.click()">
                   Seleccionar archivo
-                </button>
-                <p class="upload-hint">Formatos permitidos: PDF, JPG, PNG (Máx. 10MB)</p>
+                </app-custom-button>
+                <p class="upload-hint">Formatos permitidos: PDF (Máx. 10MB)</p>
               </ng-container>
 
               <ng-container *ngIf="documentoActual.file">
                 <p class="file-name">{{documentoActual.file.name}}</p>
                 <p class="file-size">{{formatFileSize(documentoActual.file.size)}}</p>
-                <button type="button" mat-button color="warn" (click)="removeCurrentFile()">
-                  <mat-icon>delete</mat-icon> Eliminar
-                </button>
+                <app-custom-button
+                  type="button"
+                  variant="warn"
+                  size="small"
+                  (click)="removeCurrentFile()">
+                  <i class="fas fa-trash"></i> Eliminar
+                </app-custom-button>
               </ng-container>
             </div>
 
             <input type="file"
                    #fileInput
                    style="display: none"
-                   accept=".pdf,.jpg,.jpeg,.png"
+                   accept=".pdf"
                    (change)="onSingleFileSelected($event)">
           </div>
 
@@ -144,11 +167,13 @@ interface DocumentoEnSeleccion {
             </form>
 
             <div class="documento-actions">
-              <button mat-raised-button color="primary"
-                      [disabled]="!canAddCurrentDocument()"
-                      (click)="addCurrentDocument()">
-                <mat-icon>add</mat-icon> Agregar documento
-              </button>
+              <app-custom-button
+                type="button"
+                variant="primary"
+                [disabled]="!canAddCurrentDocument()"
+                (click)="addCurrentDocument()">
+                <i class="fas fa-plus"></i> Agregar documento
+              </app-custom-button>
             </div>
           </div>
         </div>
@@ -160,41 +185,49 @@ interface DocumentoEnSeleccion {
           <!-- Progreso global -->
           <div class="global-progress" *ngIf="uploading">
             <p>Progreso global: {{progresoGlobal}}%</p>
-            <mat-progress-bar [value]="progresoGlobal"></mat-progress-bar>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="progresoGlobal"></div>
+            </div>
           </div>
 
           <div class="file-list">
             <div class="file-item" *ngFor="let doc of documentosParaSubir; let i = index">
               <div class="file-item-header">
                 <div class="file-icon">
-                  <mat-icon>{{getFileIcon(doc.file)}}</mat-icon>
+                  <i class="fas" [class]="'fa-' + getFileIcon(doc.file)"></i>
                 </div>
                 <div class="file-info">
                   <p class="file-name">{{doc.file.name}}</p>
                   <p class="file-size">{{formatFileSize(doc.file.size)}}</p>
                   <p class="file-type">{{doc.tipoDocumentoNombre}}</p>
                 </div>
-                <button mat-icon-button color="warn" (click)="removeFile(i)"
-                        [disabled]="uploading"
-                        matTooltip="Eliminar archivo">
-                  <mat-icon>delete</mat-icon>
-                </button>
+                <app-custom-button
+                  type="button"
+                  variant="warn"
+                  size="small"
+                  [disabled]="uploading"
+                  (click)="removeFile(i)"
+                  title="Eliminar archivo">
+                  <i class="fas fa-trash"></i>
+                </app-custom-button>
               </div>
 
               <!-- Barra de progreso individual -->
               <div class="file-progress" *ngIf="doc.estado !== 'pendiente'">
                 <div class="progress-status">
                   <span [ngClass]="getEstadoClass(doc.estado)">
-                    <mat-icon>{{getEstadoIcon(doc.estado)}}</mat-icon>
+                    <i class="fas" [class]="'fa-' + getEstadoIcon(doc.estado)"></i>
                     {{getEstadoTexto(doc.estado)}}
                   </span>
                   <span class="progress-percentage" *ngIf="doc.estado === 'subiendo'">
                     {{doc.progreso}}%
                   </span>
                 </div>
-                <mat-progress-bar [value]="doc.progreso"
-                                  [color]="doc.estado === 'error' ? 'warn' : 'primary'">
-                </mat-progress-bar>
+                <div class="progress-bar">
+                  <div class="progress-fill"
+                       [style.width.%]="doc.progreso"
+                       [class.error]="doc.estado === 'error'"></div>
+                </div>
                 <p class="error-message" *ngIf="doc.mensajeError">{{doc.mensajeError}}</p>
               </div>
 
@@ -203,43 +236,84 @@ interface DocumentoEnSeleccion {
                 <p class="warning-title">Advertencias:</p>
                 <ul>
                   <li *ngFor="let warning of doc.validationWarnings">
-                    <mat-icon>warning</mat-icon> {{warning.message}}
+                    <i class="fas fa-exclamation-triangle"></i> {{warning.message}}
                   </li>
                 </ul>
               </div>
             </div>
           </div>
         </div>
-      </mat-dialog-content>
+      </div>
 
-      <mat-dialog-actions align="end">
-        <button mat-button [mat-dialog-close]="false" [disabled]="uploading">Cancelar</button>
-        <button mat-raised-button color="primary"
-                (click)="uploadDocuments()"
-                [disabled]="!canUpload() || uploading">
-          <mat-icon>cloud_upload</mat-icon>
+      <div class="dialog-actions">
+        <app-custom-button
+          type="button"
+          variant="text"
+          [disabled]="uploading"
+          (click)="cerrar()">
+          Cancelar
+        </app-custom-button>
+        <app-custom-button
+          type="button"
+          variant="primary"
+          [disabled]="!canUpload() || uploading"
+          (click)="uploadDocuments()">
+          <i class="fas fa-cloud-upload-alt"></i>
           Subir {{documentosParaSubir.length}} documentos
-        </button>
-      </mat-dialog-actions>
+        </app-custom-button>
+      </div>
     </div>
   `,
   styles: [`
     .multiple-upload-dialog {
       max-width: 800px;
+      background: rgba(55, 65, 81, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f9fafb;
+      overflow: hidden;
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 24px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 24px;
+    }
+
+    .dialog-title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #f9fafb;
+    }
+
+    .close-button {
+      padding: 8px;
+      min-width: auto;
+    }
+
+    .dialog-content {
+      padding: 0 24px;
+      max-height: 70vh;
+      overflow-y: auto;
     }
 
     .dialog-description {
       margin-bottom: 1rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: #d1d5db;
     }
 
     .info-message {
       display: flex;
       align-items: flex-start;
-      background-color: rgba(76, 175, 80, 0.1);
+      background: rgba(76, 175, 80, 0.1);
       border-left: 4px solid #4caf50;
       padding: 16px;
-      border-radius: 4px;
+      border-radius: 8px;
       margin-bottom: 20px;
     }
 
@@ -247,8 +321,6 @@ interface DocumentoEnSeleccion {
       color: #4caf50;
       margin-right: 12px;
       font-size: 24px;
-      height: 24px;
-      width: 24px;
     }
 
     .info-text h3 {
@@ -259,16 +331,21 @@ interface DocumentoEnSeleccion {
     }
 
     .info-text p {
-      margin: 0;
-      color: rgba(255, 255, 255, 0.8);
+      margin: 0 0 12px 0;
+      color: #d1d5db;
       font-size: 14px;
       line-height: 1.4;
+    }
+
+    .profile-link {
+      margin-top: 12px;
     }
 
     .documento-actual-container {
       margin-bottom: 2rem;
       padding: 1.5rem;
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -277,7 +354,7 @@ interface DocumentoEnSeleccion {
       margin-top: 0;
       margin-bottom: 1rem;
       font-size: 1.2rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: #f9fafb;
     }
 
     .documento-config {
@@ -300,6 +377,27 @@ interface DocumentoEnSeleccion {
       font-weight: 500;
     }
 
+    .no-options-message {
+      display: flex;
+      align-items: center;
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .no-options-message i {
+      color: #3b82f6;
+      margin-right: 12px;
+      font-size: 20px;
+    }
+
+    .no-options-message p {
+      margin: 0;
+      color: #d1d5db;
+    }
+
     .file-upload-container {
       display: flex;
       flex-direction: column;
@@ -316,11 +414,11 @@ interface DocumentoEnSeleccion {
     }
 
     .file-upload-container.drag-over {
-      border-color: #3f51b5;
-      background: rgba(63, 81, 181, 0.1);
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
     }
 
-    .file-upload-container.has-files {
+    .file-upload-container.has-file {
       border-color: #4caf50;
       background: rgba(76, 175, 80, 0.1);
     }
@@ -329,17 +427,28 @@ interface DocumentoEnSeleccion {
       margin-bottom: 1rem;
     }
 
-    .upload-icon mat-icon {
+    .upload-icon i {
       font-size: 3rem;
-      height: 3rem;
-      width: 3rem;
       color: rgba(255, 255, 255, 0.5);
     }
 
     .upload-hint {
       margin-top: 1rem;
       font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.5);
+      color: #d1d5db;
+    }
+
+    .file-name {
+      margin: 0;
+      font-weight: 500;
+      color: #f9fafb;
+      word-break: break-all;
+    }
+
+    .file-size {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #d1d5db;
     }
 
     .selected-files-container {
@@ -349,19 +458,40 @@ interface DocumentoEnSeleccion {
     .selected-files-container h3 {
       margin-bottom: 1rem;
       font-size: 1.2rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: #f9fafb;
     }
 
     .global-progress {
       margin-bottom: 1.5rem;
-      padding: 0.5rem;
+      padding: 1rem;
       background: rgba(0, 0, 0, 0.2);
-      border-radius: 4px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .global-progress p {
       margin-bottom: 0.5rem;
       font-size: 0.9rem;
+      color: #d1d5db;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-fill.error {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
     }
 
     .file-list {
@@ -375,9 +505,16 @@ interface DocumentoEnSeleccion {
 
     .file-item {
       background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
       border-radius: 8px;
       padding: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       transition: all 0.3s ease;
+    }
+
+    .file-item:hover {
+      background: rgba(0, 0, 0, 0.3);
+      transform: translateY(-1px);
     }
 
     .file-item-header {
@@ -390,28 +527,13 @@ interface DocumentoEnSeleccion {
       margin-right: 1rem;
     }
 
-    .file-icon mat-icon {
+    .file-icon i {
       font-size: 2rem;
-      height: 2rem;
-      width: 2rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: #d1d5db;
     }
 
     .file-info {
       flex: 1;
-    }
-
-    .file-name {
-      margin: 0;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.9);
-      word-break: break-all;
-    }
-
-    .file-size {
-      margin: 0;
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.6);
     }
 
     .file-config {
@@ -431,7 +553,7 @@ interface DocumentoEnSeleccion {
     .custom-label {
       display: block;
       margin-bottom: 10px;
-      color: rgba(255, 255, 255, 0.87);
+      color: #f9fafb;
       font-size: 14px;
       font-weight: 500;
     }
@@ -439,10 +561,11 @@ interface DocumentoEnSeleccion {
     .custom-input {
       width: 100%;
       padding: 14px 16px;
-      background-color: #2d2d2d;
+      background: rgba(75, 85, 99, 0.8);
+      backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      color: white;
+      border-radius: 8px;
+      color: #f9fafb;
       font-size: 16px;
       transition: all 0.3s ease;
       height: 52px;
@@ -451,17 +574,17 @@ interface DocumentoEnSeleccion {
 
     .custom-input:focus {
       outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
     .custom-input::placeholder {
-      color: rgba(255, 255, 255, 0.4);
+      color: #d1d5db;
     }
 
     .custom-input:disabled {
       opacity: 0.6;
-      background-color: rgba(45, 45, 45, 0.7);
+      background: rgba(75, 85, 99, 0.4);
       cursor: not-allowed;
     }
 
@@ -481,47 +604,54 @@ interface DocumentoEnSeleccion {
       align-items: center;
     }
 
-    .progress-status mat-icon {
+    .progress-status i {
       font-size: 16px;
-      height: 16px;
-      width: 16px;
       margin-right: 4px;
     }
 
     .estado-validando {
-      color: #ff9800;
+      color: #f59e0b;
     }
 
     .estado-subiendo {
-      color: #2196f3;
+      color: #3b82f6;
     }
 
     .estado-completado {
-      color: #4caf50;
+      color: #10b981;
     }
 
     .estado-error {
-      color: #f44336;
+      color: #ef4444;
     }
 
     .error-message {
       margin-top: 0.5rem;
       font-size: 0.85rem;
-      color: #f44336;
+      color: #ef4444;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.1);
     }
 
     .validation-warnings {
       margin-top: 0.5rem;
       padding: 0.5rem;
-      background: rgba(255, 152, 0, 0.1);
-      border-radius: 4px;
-      border-left: 3px solid #ff9800;
+      background: rgba(245, 158, 11, 0.1);
+      border-radius: 8px;
+      border-left: 3px solid #f59e0b;
     }
 
     .warning-title {
       margin: 0 0 0.5rem;
       font-weight: 500;
-      color: #ff9800;
+      color: #f59e0b;
       font-size: 0.9rem;
     }
 
@@ -534,45 +664,14 @@ interface DocumentoEnSeleccion {
       display: flex;
       align-items: center;
       font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: #d1d5db;
       margin-bottom: 0.25rem;
     }
 
-    .validation-warnings mat-icon {
+    .validation-warnings i {
       font-size: 16px;
-      height: 16px;
-      width: 16px;
       margin-right: 4px;
-      color: #ff9800;
-    }
-
-    .no-options-message {
-      display: flex;
-      align-items: center;
-      background-color: rgba(33, 150, 243, 0.1);
-      border-left: 4px solid #2196f3;
-      padding: 16px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-    }
-
-    .no-options-message mat-icon {
-      color: #2196f3;
-      margin-right: 12px;
-      font-size: 24px;
-      height: 24px;
-      width: 24px;
-    }
-
-    .no-options-message p {
-      margin: 0;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    mat-dialog-content {
-      max-height: 70vh;
+      color: #f59e0b;
     }
   `]
 })
@@ -602,11 +701,12 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   mostrarSelectorDocumento = true; // Controla si se muestra el selector de documentos
 
   constructor(
-    private dialogRef: MatDialogRef<DocumentoMultipleUploadDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
+    private dialogRef: CustomDialogRef<any>,
+    @Inject(DIALOG_DATA) public data: any,
     private documentosService: DocumentosService,
     private documentoValidationService: DocumentoValidationService,
-    private snackBar: MatSnackBar
+    private notificationService: CustomNotificationService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -1173,7 +1273,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
 
     if (documentosCompletados === totalDocumentos) {
       this.mostrarExito(`Se han subido ${documentosCompletados} documentos correctamente`);
-      this.dialogRef.close(true);
+      this.dialogRef.close(true as any);
     } else if (documentosCompletados > 0) {
       this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos`);
     } else {
@@ -1195,11 +1295,11 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
 
   getFileIcon(file: File): string {
     if (file.type.startsWith('image/')) {
-      return 'image';
+      return 'file-image';
     } else if (file.type === 'application/pdf') {
-      return 'picture_as_pdf';
+      return 'file-pdf';
     } else {
-      return 'insert_drive_file';
+      return 'file-alt';
     }
   }
 
@@ -1209,12 +1309,16 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
 
   getEstadoIcon(estado: string): string {
     switch (estado) {
-      case 'validando': return 'pending';
-      case 'subiendo': return 'cloud_upload';
-      case 'completado': return 'check_circle';
-      case 'error': return 'error';
-      default: return 'help';
+      case 'validando': return 'clock';
+      case 'subiendo': return 'cloud-upload-alt';
+      case 'completado': return 'check-circle';
+      case 'error': return 'exclamation-circle';
+      default: return 'question-circle';
     }
+  }
+
+  cerrar(): void {
+    this.dialogRef.close(false as any);
   }
 
   getEstadoTexto(estado: string): string {
@@ -1236,24 +1340,15 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   }
 
   mostrarError(mensaje: string): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(mensaje, 'Error');
   }
 
   mostrarExito(mensaje: string): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['success-snackbar']
-    });
+    this.notificationService.success(mensaje, 'Éxito');
   }
 
   mostrarAdvertencia(mensaje: string): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['warning-snackbar']
-    });
+    this.notificationService.warning(mensaje, 'Advertencia');
   }
 
   // Este método se añade por compatibilidad, pero ahora procesamos los archivos uno por uno
@@ -1262,5 +1357,10 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
     if (files.length > 0) {
       this.processSingleFile(files[0]);
     }
+  }
+
+  navegarAPerfil(): void {
+    this.cerrar();
+    this.router.navigate(['/dashboard/perfil'], { fragment: 'documentacion' });
   }
 }

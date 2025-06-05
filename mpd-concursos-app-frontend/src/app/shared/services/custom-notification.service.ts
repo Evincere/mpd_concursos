@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
-import { CustomNotificationService as OriginalNotificationService } from '../components/custom-notification/custom-notification.service';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 /**
- * Servicio de notificaciones personalizado que actúa como un wrapper para el servicio original
- * Esto permite mantener la compatibilidad con el código existente
+ * Servicio de notificaciones personalizado migrado al sistema unificado
+ * Mantiene la compatibilidad con el código existente
  */
 @Injectable({
   providedIn: 'root'
 })
 export class CustomNotificationService {
-  constructor(private notificationService: OriginalNotificationService) {}
+  constructor(private unifiedNotificationService: UnifiedNotificationService) {}
 
   /**
    * Muestra un mensaje de éxito
@@ -17,7 +17,7 @@ export class CustomNotificationService {
    * @param title Título opcional
    */
   showSuccess(message: string, title = 'Éxito'): void {
-    this.notificationService.success(message, title);
+    this.unifiedNotificationService.success(message, title);
   }
 
   /**
@@ -26,7 +26,7 @@ export class CustomNotificationService {
    * @param title Título opcional
    */
   showError(message: string, title = 'Error'): void {
-    this.notificationService.error(message, title);
+    this.unifiedNotificationService.error(message, title);
   }
 
   /**
@@ -35,7 +35,7 @@ export class CustomNotificationService {
    * @param title Título opcional
    */
   showWarning(message: string, title = 'Advertencia'): void {
-    this.notificationService.warning(message, title);
+    this.unifiedNotificationService.warning(message, title);
   }
 
   /**
@@ -44,23 +44,40 @@ export class CustomNotificationService {
    * @param title Título opcional
    */
   showInfo(message: string, title = 'Información'): void {
-    this.notificationService.info(message, title);
+    this.unifiedNotificationService.info(message, title);
   }
 
   /**
    * Muestra un mensaje de error con opción de reintento
    * @param message Mensaje a mostrar
    * @param retryCallback Función a ejecutar cuando se hace clic en el botón de reintento
-   * @param duration Duración de la notificación en milisegundos
+   * @param title Título de la notificación
    */
-  showErrorWithRetry(message: string, retryCallback: () => void, duration = 10000): void {
-    this.notificationService.errorWithRetry(message, retryCallback, duration);
+  showErrorWithRetry(message: string, retryCallback: () => void, title = 'Error'): void {
+    this.unifiedNotificationService.errorWithRetry(message, retryCallback, title);
   }
 
   /**
    * Cierra todas las notificaciones activas
    */
   dismissAll(): void {
-    this.notificationService.dismissAll();
+    this.unifiedNotificationService.dismissAll();
+  }
+
+  // Métodos de compatibilidad con la API anterior
+  success(message: string, title?: string): void {
+    this.showSuccess(message, title);
+  }
+
+  error(message: string, title?: string): void {
+    this.showError(message, title);
+  }
+
+  warning(message: string, title?: string): void {
+    this.showWarning(message, title);
+  }
+
+  info(message: string, title?: string): void {
+    this.showInfo(message, title);
   }
 }

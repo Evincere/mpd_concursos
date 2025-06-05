@@ -1,13 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from  '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from  '@angular/forms';
 
 import { AdminHelpService, HelpFeedback } from '@core/services/admin/admin-help.service';
 
@@ -17,152 +10,40 @@ import { AdminHelpService, HelpFeedback } from '@core/services/admin/admin-help.
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCheckboxModule,
-    MatSnackBarModule
+    ReactiveFormsModule
   ],
-  template: `
-    <div class="help-feedback">
-      <h3>¿Le resultó útil esta información?</h3>
-
-      <div class="feedback-buttons">
-        <button
-          mat-stroked-button
-          [color]="feedbackForm.get('helpful')?.value ? 'primary' : ''"
-          (click)="setHelpful(true)"
-          [class.selected]="feedbackForm.get('helpful')?.value === true">
-          <mat-icon>thumb_up</mat-icon>
-          Sí
-        </button>
-
-        <button
-          mat-stroked-button
-          [color]="feedbackForm.get('helpful')?.value === false ? 'warn' : ''"
-          (click)="setHelpful(false)"
-          [class.selected]="feedbackForm.get('helpful')?.value === false">
-          <mat-icon>thumb_down</mat-icon>
-          No
-        </button>
-      </div>
-
-      <form [formGroup]="feedbackForm" (ngSubmit)="submitFeedback()" *ngIf="feedbackForm.get('helpful')?.value !== null">
-        <mat-form-field appearance="outline" class="comment-field">
-          <mat-label>Comentarios adicionales (opcional)</mat-label>
-          <textarea
-            matInput
-            formControlName="comment"
-            placeholder="Díganos cómo podemos mejorar esta documentación..."
-            rows="3">
-          </textarea>
-        </mat-form-field>
-
-        <div class="form-actions">
-          <button
-            mat-raised-button
-            color="primary"
-            type="submit"
-            [disabled]="isSending">
-            <mat-icon>send</mat-icon>
-            Enviar comentarios
-          </button>
-        </div>
-      </form>
-
-      <div class="feedback-sent" *ngIf="feedbackSent">
-        <mat-icon>check_circle</mat-icon>
-        <p>¡Gracias por sus comentarios!</p>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .help-feedback {
-      margin-top: 2rem;
-      padding: 1.5rem;
-      border-radius: var(--border-radius);
-      background-color: var(--color-surface-light);
-
-      h3 {
-        font-size: var(--font-size-md);
-        font-weight: 500;
-        margin: 0 0 1rem;
-        color: var(--color-text-primary);
-      }
-    }
-
-    .feedback-buttons {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-
-      button {
-        display: flex;
-        align-items: center;
-
-        mat-icon {
-          margin-right: 0.5rem;
-        }
-
-        &.selected {
-          font-weight: 500;
-        }
-      }
-    }
-
-    .comment-field {
-      width: 100%;
-    }
-
-    .form-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 1rem;
-
-      button {
-        mat-icon {
-          margin-right: 0.5rem;
-        }
-      }
-    }
-
-    .feedback-sent {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1.5rem;
-
-      mat-icon {
-        font-size: 48px;
-        color: var(--color-success);
-        margin-bottom: 1rem;
-      }
-
-      p {
-        font-weight: 500;
-        color: var(--color-text-primary);
-      }
-    }
-  `]
+  templateUrl: './help-feedback.component.html',
+  styleUrls: ['./help-feedback.component.scss']
 })
 export class HelpFeedbackComponent implements OnInit {
   @Input() articleId!: string;
+  @Input() showStats = false;
 
   feedbackForm: FormGroup;
   isSending = false;
   feedbackSent = false;
+  hasError = false;
+  errorMessage = '';
+
+  // Rating system
+  currentRating = 0;
+  hoverRating = 0;
+
+  // Optional feedback stats
+  feedbackStats: {
+    totalFeedbacks: number;
+    helpfulPercentage: number;
+    averageRating: number;
+  } | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private adminHelpService: AdminHelpService,
-    private snackBar: MatSnackBar
+    private adminHelpService: AdminHelpService
   ) {
     this.feedbackForm = this.fb.group({
-      helpful: [null],
-      comment: ['']
+      helpful: [null, Validators.required],
+      comment: [''],
+      rating: [0, [Validators.min(1), Validators.max(5)]]
     });
   }
 
@@ -170,6 +51,11 @@ export class HelpFeedbackComponent implements OnInit {
     // Verificar si se ha proporcionado un ID de artículo
     if (this.articleId) {
       console.log('Componente de feedback inicializado para el artículo:', this.articleId);
+
+      // Cargar estadísticas si están habilitadas
+      if (this.showStats) {
+        this.loadFeedbackStats();
+      }
     } else {
       console.warn('No se ha proporcionado un ID de artículo para el feedback');
     }
@@ -181,43 +67,144 @@ export class HelpFeedbackComponent implements OnInit {
    */
   setHelpful(helpful: boolean): void {
     this.feedbackForm.get('helpful')?.setValue(helpful);
+    // Resetear rating cuando cambia la utilidad
+    this.currentRating = 0;
+    this.feedbackForm.get('rating')?.setValue(0);
+  }
+
+  /**
+   * Establece la calificación con estrellas
+   * @param rating Calificación de 1 a 5
+   */
+  setRating(rating: number): void {
+    this.currentRating = rating;
+    this.feedbackForm.get('rating')?.setValue(rating);
+  }
+
+  /**
+   * Establece la calificación hover
+   * @param rating Calificación hover
+   */
+  setHoverRating(rating: number): void {
+    this.hoverRating = rating;
+  }
+
+  /**
+   * Obtiene el texto descriptivo de la calificación
+   * @param rating Calificación
+   * @returns Texto descriptivo
+   */
+  getRatingText(rating: number): string {
+    switch (rating) {
+      case 1:
+        return 'Muy malo';
+      case 2:
+        return 'Malo';
+      case 3:
+        return 'Regular';
+      case 4:
+        return 'Bueno';
+      case 5:
+        return 'Excelente';
+      default:
+        return 'Sin calificar';
+    }
   }
 
   /**
    * Envía el feedback
    */
   submitFeedback(): void {
-    if (this.feedbackForm.invalid) {
-      return;
-    }
+    if (this.feedbackForm.valid && !this.isSending) {
+      this.isSending = true;
+      this.hasError = false;
 
-    this.isSending = true;
+      const feedback: HelpFeedback = {
+        articleId: this.articleId,
+        userId: 'current-user', // En una implementación real, esto sería el ID del usuario actual
+        rating: this.currentRating || (this.feedbackForm.get('helpful')?.value ? 5 : 1),
+        comment: this.feedbackForm.get('comment')?.value,
+        helpful: this.feedbackForm.get('helpful')?.value,
+        timestamp: new Date().toISOString()
+      };
 
-    const feedback: HelpFeedback = {
-      articleId: this.articleId,
-      userId: 'current-user', // En una implementación real, esto sería el ID del usuario actual
-      rating: this.feedbackForm.get('helpful')?.value ? 5 : 1,
-      comment: this.feedbackForm.get('comment')?.value,
-      helpful: this.feedbackForm.get('helpful')?.value,
-      timestamp: new Date().toISOString()
-    };
-
-    this.adminHelpService.sendFeedback(feedback)
-      .subscribe({
-        next: (success) => {
-          this.isSending = false;
-
-          if (success) {
-            this.feedbackSent = true;
-          } else {
-            this.snackBar.open('Error al enviar los comentarios', 'Cerrar', { duration: 3000 });
-          }
-        },
-        error: (error) => {
-          console.error('Error enviando feedback:', error);
-          this.snackBar.open('Error al enviar los comentarios', 'Cerrar', { duration: 3000 });
-          this.isSending = false;
+      // Simular envío del feedback
+      setTimeout(() => {
+        // Simular posible error (10% de probabilidad)
+        if (Math.random() < 0.1) {
+          this.handleSubmissionError('Error de conexión. Por favor, inténtelo nuevamente.');
+          return;
         }
-      });
+
+        console.log('Feedback enviado:', feedback);
+        this.isSending = false;
+        this.feedbackSent = true;
+
+        // Actualizar estadísticas si están habilitadas
+        if (this.showStats) {
+          this.updateFeedbackStats(feedback);
+        }
+      }, 1500);
+    }
+  }
+
+  /**
+   * Maneja errores en el envío
+   * @param message Mensaje de error
+   */
+  private handleSubmissionError(message: string): void {
+    this.isSending = false;
+    this.hasError = true;
+    this.errorMessage = message;
+  }
+
+  /**
+   * Reinicia el formulario de feedback
+   */
+  resetFeedback(): void {
+    this.feedbackForm.reset();
+    this.feedbackForm.get('helpful')?.setValue(null);
+    this.feedbackForm.get('comment')?.setValue('');
+    this.feedbackForm.get('rating')?.setValue(0);
+    this.currentRating = 0;
+    this.hoverRating = 0;
+    this.feedbackSent = false;
+    this.hasError = false;
+    this.errorMessage = '';
+  }
+
+  /**
+   * Carga las estadísticas de feedback
+   */
+  private loadFeedbackStats(): void {
+    // Simular carga de estadísticas
+    setTimeout(() => {
+      this.feedbackStats = {
+        totalFeedbacks: 127,
+        helpfulPercentage: 89,
+        averageRating: 4.2
+      };
+    }, 500);
+  }
+
+  /**
+   * Actualiza las estadísticas con el nuevo feedback
+   * @param feedback Nuevo feedback
+   */
+  private updateFeedbackStats(feedback: HelpFeedback): void {
+    if (this.feedbackStats) {
+      this.feedbackStats.totalFeedbacks++;
+
+      // Recalcular porcentaje útil (simulado)
+      const helpfulCount = Math.round(this.feedbackStats.totalFeedbacks * this.feedbackStats.helpfulPercentage / 100);
+      const newHelpfulCount = feedback.helpful ? helpfulCount + 1 : helpfulCount;
+      this.feedbackStats.helpfulPercentage = Math.round((newHelpfulCount / this.feedbackStats.totalFeedbacks) * 100);
+
+      // Recalcular promedio de rating (simulado)
+      if (feedback.rating && feedback.rating > 0) {
+        const totalRating = this.feedbackStats.averageRating * (this.feedbackStats.totalFeedbacks - 1);
+        this.feedbackStats.averageRating = Number(((totalRating + feedback.rating) / this.feedbackStats.totalFeedbacks).toFixed(1));
+      }
+    }
   }
 }

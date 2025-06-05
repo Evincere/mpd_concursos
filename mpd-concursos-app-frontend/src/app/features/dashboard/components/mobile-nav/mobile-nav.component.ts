@@ -1,8 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MatIconModule } from '@angular/material/icon';
-import { MatRippleModule } from '@angular/material/core';
 import { AuthService } from '@core/services/auth/auth.service';
 
 
@@ -11,37 +9,35 @@ import { AuthService } from '@core/services/auth/auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule,
-    MatIconModule,
-    MatRippleModule
+    RouterModule
   ],
   template: `
     <div class="mobile-nav">
-      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" matRipple>
-        <mat-icon>home</mat-icon>
+      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <i class="fas fa-home" aria-hidden="true"></i>
         <span>Inicio</span>
       </a>
-      <a routerLink="/dashboard/concursos" routerLinkActive="active" matRipple>
-        <mat-icon>gavel</mat-icon>
+      <a routerLink="/dashboard/concursos" routerLinkActive="active">
+        <i class="fas fa-gavel" aria-hidden="true"></i>
         <span>Concursos</span>
       </a>
-      <a routerLink="/dashboard/postulaciones" routerLinkActive="active" matRipple>
-        <mat-icon>description</mat-icon>
+      <a routerLink="/dashboard/postulaciones" routerLinkActive="active">
+        <i class="fas fa-file-alt" aria-hidden="true"></i>
         <span>Postulaciones</span>
       </a>
-      <a routerLink="/dashboard/perfil" routerLinkActive="active" matRipple>
-        <mat-icon>person</mat-icon>
+      <a routerLink="/dashboard/perfil" routerLinkActive="active">
+        <i class="fas fa-user" aria-hidden="true"></i>
         <span>Perfil</span>
       </a>
-      <a (click)="logout()" (keydown.enter)="logout()" (keydown.space)="logout()" tabindex="0" role="button" matRipple>
-        <mat-icon>exit_to_app</mat-icon>
+      <a (click)="logout()" (keydown.enter)="logout()" (keydown.space)="logout()" tabindex="0" role="button">
+        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
         <span>Salir</span>
       </a>
     </div>
   `,
   styles: [`
-    @use 'variables' as *;
-    @use 'responsive' as *;
+    /* ===== MOBILE NAV GLASSMORPHISM - USUARIO COMÚN ===== */
+    /* Mobile navigation con glassmorphism premium dark */
 
     .mobile-nav {
       display: none;
@@ -49,16 +45,20 @@ import { AuthService } from '@core/services/auth/auth.service';
       bottom: 0;
       left: 0;
       right: 0;
-      height: 60px;
-      background: $color-background;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-      z-index: 1000;
+      height: var(--user-mobile-nav-height);
+      /* Glassmorphism premium dark */
+      background: var(--user-glass-gradient-primary);
+      background-image: var(--user-glass-gradient-overlay);
+      border-top: 1px solid var(--user-border-glass);
+      backdrop-filter: var(--user-backdrop-blur);
+      -webkit-backdrop-filter: var(--user-backdrop-blur);
+      box-shadow: var(--user-shadow-md);
+      z-index: var(--user-z-mobile-nav);
       justify-content: space-around;
       align-items: center;
-      padding: 0 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0 var(--user-spacing-sm);
 
-      @include md {
+      @media (max-width: 768px) {
         display: flex;
       }
 
@@ -67,14 +67,15 @@ import { AuthService } from '@core/services/auth/auth.service';
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: $color-text-secondary;
+        color: var(--user-text-secondary);
         text-decoration: none;
         flex: 1;
         height: 100%;
-        transition: all 0.3s ease;
+        transition: var(--user-transition-normal);
         position: relative;
-        padding: 8px 0;
+        padding: var(--user-spacing-sm) 0;
         cursor: pointer;
+        border-radius: var(--user-border-radius-md);
 
         &::after {
           content: '';
@@ -84,23 +85,29 @@ import { AuthService } from '@core/services/auth/auth.service';
           transform: translateX(-50%);
           width: 0;
           height: 3px;
-          background: $color-primary;
-          transition: width 0.3s ease;
+          background: var(--user-text-accent);
+          transition: width var(--user-transition-normal);
+          border-radius: 2px 2px 0 0;
         }
 
         &.active {
-          color: $color-primary;
+          color: var(--user-text-primary);
+          background: var(--user-glass-light);
 
           &::after {
             width: 40%;
           }
         }
 
-        mat-icon {
-          font-size: 24px;
-          height: 24px;
-          width: 24px;
+        &:hover {
+          color: var(--user-text-primary);
+          background: var(--user-glass-light);
+        }
+
+        i {
+          font-size: 20px;
           margin-bottom: 4px;
+          transition: var(--user-transition-normal);
         }
 
         span {

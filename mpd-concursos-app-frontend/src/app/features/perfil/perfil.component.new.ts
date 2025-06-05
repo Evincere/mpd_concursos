@@ -203,6 +203,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.perfilState.setLoading(true);
     const formValues = this.perfilForm.getRawValue();
 
+    // Limpiar el CUIT removiendo guiones antes de enviarlo al backend
+    if (formValues.cuit) {
+      const originalCuit = formValues.cuit;
+      formValues.cuit = formValues.cuit.replace(/\D/g, '');
+      console.log('🔧 CUIT original:', originalCuit, '-> CUIT limpio:', formValues.cuit);
+    }
+
     this.profileService.updateUserProfile(formValues)
       .pipe(finalize(() => this.perfilState.setLoading(false)))
       .subscribe({

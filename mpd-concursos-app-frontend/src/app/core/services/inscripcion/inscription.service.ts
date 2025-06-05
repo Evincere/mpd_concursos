@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject, of, EMPTY } from 'rxjs';
-import { catchError, tap, map, take, finalize } from 'rxjs/operators';
+import { catchError, tap, map, take, finalize, share } from 'rxjs/operators';
 import { environment } from '@env/environment';
 import { AuthService } from '@core/services/auth/auth.service';
 import { TokenService } from '../auth/token.service';
@@ -149,7 +149,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
           return throwError(() => new Error('Ya existe una inscripción para este concurso. Por favor, intente nuevamente en unos momentos.'));
         }
 
-        return this.handleError(error);
+        return this.handleSimpleError(error);
       })
     );
   }
@@ -167,7 +167,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
     ).pipe(
       map(response => response.step),
       tap(step => console.log('[InscriptionService] Paso actual:', step)),
-      catchError(this.handleError.bind(this))
+      catchError(this.handleSimpleError.bind(this))
     );
   }
 
@@ -247,11 +247,11 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
               console.error('[InscriptionService] Error con endpoint alternativo:', secondError);
               // Si también falla, devolver un array vacío para evitar errores en la UI
               this.inscriptions$.next([]);
-              return this.handleError(secondError);
+              return this.handleSimpleError(secondError);
             })
           );
         }
-        return this.handleError(error);
+        return this.handleSimpleError(error);
       })
     );
   }
@@ -290,6 +290,13 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
       return of(localInscription.state);
     }
 
+    // OPTIMIZACIÓN: Verificar si ya hay una petición en curso para este concurso
+    const cacheKey = `status_${numericContestId}`;
+    if (this.pendingRequests.has(cacheKey)) {
+      console.log('[InscriptionService] Petición ya en curso para concurso:', numericContestId);
+      return this.pendingRequests.get(cacheKey)!;
+    }
+
     // Obtener el ID del usuario actual
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
@@ -299,19 +306,25 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
 
     // Usar el endpoint de usuario/concurso que funciona correctamente
     console.log(`[InscriptionService] Verificando estado con endpoint: ${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`);
-    return this.http.get<IInscriptionResponse>(
+
+    const request$ = this.http.get<IInscriptionResponse>(
       `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`
     ).pipe(
       map(response => {
         console.log('[InscriptionService] Respuesta de estado (endpoint user/contest):', response);
+
+        // OPTIMIZACIÓN: Actualizar cache local con la respuesta
+        this.updateLocalInscriptionCache(response);
+
         return this.mapStatusToState(response.status);
       }),
       tap(state => console.log('[InscriptionService] Estado de inscripción mapeado:', state)),
       catchError(error => {
-        console.error('[InscriptionService] Error al verificar estado con endpoint user/contest:', error);
-
-        // Si falla, intentar con el endpoint status
+        // Los errores 404 son esperados cuando el usuario no está inscrito
         if (error.status === 404) {
+          console.log(`[InscriptionService] Usuario no inscrito en concurso ${numericContestId} (404 esperado)`);
+
+          // Intentar con el endpoint status como fallback
           console.log(`[InscriptionService] Intentando con endpoint status: ${this.baseUrl}${this.inscriptionsEndpoint}/status/${numericContestId}`);
           return this.http.get<boolean>(
             `${this.baseUrl}${this.inscriptionsEndpoint}/status/${numericContestId}`
@@ -322,10 +335,11 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
               return isInscribed ? InscripcionState.PENDING : InscripcionState.NO_INSCRIPTO;
             }),
             catchError(secondError => {
-              console.error('[InscriptionService] Error al verificar estado con endpoint status:', secondError);
-
-              // Si también falla, intentar con el endpoint antiguo
+              // También es normal que este endpoint devuelva 404
               if (secondError.status === 404) {
+                console.log(`[InscriptionService] Usuario no inscrito en concurso ${numericContestId} (confirmado por endpoint status)`);
+
+                // Intentar con el endpoint antiguo como último recurso
                 console.log('[InscriptionService] Intentando con endpoint antiguo: /inscripciones/estado/{contestId}');
                 return this.http.get<IInscriptionStatusResponse>(
                   `${this.baseUrl}${this.oldInscriptionsEndpoint}/estado/${numericContestId}`
@@ -335,14 +349,21 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
                     return response?.status || InscripcionState.NO_INSCRIPTO;
                   }),
                   catchError(thirdError => {
-                    console.error('[InscriptionService] Error al verificar estado con todos los endpoints:', thirdError);
-                    console.log('[InscriptionService] No se encontró inscripción para el concurso');
+                    // Solo loguear como error si no es 404
+                    if (thirdError.status !== 404) {
+                      console.error('[InscriptionService] Error inesperado al verificar estado:', thirdError);
+                    } else {
+                      console.log(`[InscriptionService] Usuario no inscrito en concurso ${numericContestId} (confirmado por todos los endpoints)`);
+                    }
                     return of(InscripcionState.NO_INSCRIPTO);
                   })
                 );
               }
 
-              console.log('[InscriptionService] No se encontró inscripción para el concurso');
+              // Solo loguear como error si no es 404
+              if (secondError.status !== 404) {
+                console.error('[InscriptionService] Error inesperado al verificar estado con endpoint status:', secondError);
+              }
               return of(InscripcionState.NO_INSCRIPTO);
             })
           );
@@ -356,10 +377,23 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
           return of(localInscription?.state || InscripcionState.NO_INSCRIPTO);
         }
 
-        console.log('[InscriptionService] No se encontró inscripción para el concurso');
+        // Solo loguear como error si no es 404
+        if (error.status !== 404) {
+          console.error('[InscriptionService] Error inesperado al verificar estado:', error);
+        }
         return of(InscripcionState.NO_INSCRIPTO);
-      })
+      }),
+      finalize(() => {
+        // Limpiar la petición pendiente
+        this.pendingRequests.delete(cacheKey);
+      }),
+      share() // Compartir la petición entre múltiples suscriptores
     );
+
+    // Guardar la petición pendiente
+    this.pendingRequests.set(cacheKey, request$);
+
+    return request$;
   }
 
   /**
@@ -478,7 +512,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
               }, 500);
 
               // Propagar el error para que el componente pueda manejarlo
-              return this.handleError(deleteError);
+              return this.handleSimpleError(deleteError);
             })
           );
         }
@@ -495,7 +529,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
         }, 500);
 
         // Propagar el error para que el componente pueda manejarlo
-        return this.handleError(error);
+        return this.handleSimpleError(error);
       })
     );
   }
@@ -655,6 +689,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
       catchError(error => {
         console.error('[InscriptionService] Error al actualizar estado:', error);
 
+        // Ahora siempre recibimos HttpErrorResponse para inscripciones gracias al ErrorInterceptor optimizado
         // Si es un error 403 o 404 y estamos intentando cambiar a PENDING, intentar con el otro endpoint
         if ((error.status === 403 || error.status === 404) && backendState === 'PENDING' && this.updateStatusRetryCount[inscriptionId] === 1) {
           console.log(`[InscriptionService] Error ${error.status}, trying alternative endpoint for PENDING`);
@@ -753,7 +788,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
           } as IInscriptionResponse);
         }
 
-        return this.handleError(error);
+        return this.handleSimpleError(error);
       })
     );
   }
@@ -858,6 +893,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
       catchError(error => {
         console.error('[InscriptionService] Error al actualizar paso:', error);
 
+        // Ahora siempre recibimos HttpErrorResponse para inscripciones
         // Si es un error 404, 400 o 500, podemos intentar una solución alternativa
         if (error.status === 404 || error.status === 400 || error.status === 500) {
           // Si el primer intento falló, intentar con ruta alternativa
@@ -912,7 +948,7 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
           } as IInscriptionResponse);
         }
 
-        return this.handleError(error);
+        return this.handleSimpleError(error);
       })
     );
   }
@@ -936,6 +972,36 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
     console.log('[InscriptionService] Paso local actualizado para inscripción:', inscriptionId);
   }
 
+  /**
+   * OPTIMIZACIÓN: Actualiza el cache local con una respuesta del backend
+   */
+  private updateLocalInscriptionCache(response: IInscriptionResponse): void {
+    const currentInscriptions = this.inscriptions$.getValue();
+    const existingIndex = currentInscriptions.findIndex(ins => ins.id === response.id);
+
+    const mappedInscription: IInscription = {
+      id: response.id,
+      contestId: response.contestId,
+      userId: response.userId,
+      state: this.mapStatusToState(response.status),
+      currentStep: response.currentStep ? response.currentStep as InscriptionStep : InscriptionStep.INITIAL,
+      createdAt: new Date(response.createdAt),
+      updatedAt: new Date(response.updatedAt || response.createdAt)
+    };
+
+    if (existingIndex >= 0) {
+      // Actualizar inscripción existente
+      const updatedInscriptions = [...currentInscriptions];
+      updatedInscriptions[existingIndex] = mappedInscription;
+      this.inscriptions$.next(updatedInscriptions);
+    } else {
+      // Agregar nueva inscripción
+      this.inscriptions$.next([...currentInscriptions, mappedInscription]);
+    }
+
+    console.log('[InscriptionService] Cache local actualizado con respuesta del backend:', mappedInscription);
+  }
+
   // Getters públicos
   get inscriptions(): Observable<IInscription[]> {
     if (this.inscriptions$.value.length === 0) {
@@ -949,6 +1015,9 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
   private lastRefreshTimestamp = 0;
   private readonly MIN_REFRESH_INTERVAL = 5000; // 5 segundos mínimo entre actualizaciones
   private refreshInProgress = false;
+
+  // OPTIMIZACIÓN: Cache de peticiones pendientes para evitar duplicados
+  private pendingRequests = new Map<string, Observable<InscripcionState>>();
 
   refreshInscriptions(): Observable<Page<IInscriptionResponse>> {
     // Evitar múltiples llamadas simultáneas
@@ -991,15 +1060,20 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
     return true;
   }
 
-  private handleError(error: HttpErrorResponse): Observable<never> {
+  /**
+   * Manejo simplificado de errores para inscripciones (siempre recibe HttpErrorResponse)
+   * @param error HttpErrorResponse
+   * @returns Observable que lanza un error con mensaje apropiado
+   */
+  private handleSimpleError(error: HttpErrorResponse): Observable<never> {
     console.error('[InscriptionService] Error detallado:', {
       status: error.status,
       statusText: error.statusText,
       message: error.message,
-      error: error.error
+      url: error.url
     });
 
-    let errorMessage = 'Ha ocurrido un error inesperado';
+    let errorMessage = 'Ha ocurrido un error inesperado en inscripciones';
 
     switch (error.status) {
       case 401:
@@ -1008,57 +1082,33 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
         this.router.navigate(['/auth/login']);
         break;
       case 403:
-        errorMessage = 'No tiene permisos para realizar esta acción.';
+        errorMessage = 'No tiene permisos para realizar esta acción en inscripciones.';
         break;
       case 404:
-        // Para errores 404, podemos ser más específicos sobre qué recurso no se encontró
-        if (error.url?.includes('/status')) {
-          errorMessage = 'No se pudo actualizar el estado de la inscripción. El endpoint no existe.';
-          console.log('[InscriptionService] Endpoint de estado no encontrado. Esto es normal si el backend no ha implementado este endpoint.');
-          // En este caso, no queremos mostrar un error al usuario ya que manejamos esto localmente
-        } else if (error.url?.includes('/step')) {
-          errorMessage = 'No se pudo actualizar el paso de la inscripción. El endpoint no existe.';
-          console.log('[InscriptionService] Endpoint de paso no encontrado. Esto es normal si el backend no ha implementado este endpoint.');
-          // En este caso, no queremos mostrar un error al usuario ya que manejamos esto localmente
-        } else {
-          errorMessage = 'El recurso solicitado no existe.';
-        }
+        errorMessage = 'El recurso de inscripción solicitado no existe.';
         break;
       case 409:
         errorMessage = 'Ya existe una inscripción para este concurso.';
-        // Intentar obtener la inscripción existente para actualizar el estado local
         this.refreshInscriptions();
         break;
       case 422:
-        errorMessage = 'Los datos proporcionados no son válidos.';
+        errorMessage = 'Los datos de inscripción proporcionados no son válidos.';
         break;
       case 500:
-        // Para errores 500, podemos ser más específicos si es un error de estado inválido
-        if (error.error && error.error.message && error.error.message.includes('Estado de inscripción inválido')) {
-          errorMessage = 'El estado de inscripción proporcionado no es válido para el backend.';
-          console.log('[InscriptionService] Error de estado inválido. Esto puede ocurrir si el frontend y el backend tienen diferentes estados definidos.');
-          // Intentar actualizar el estado local en caso de error del servidor
-          this.refreshInscriptions();
-        } else {
-          errorMessage = 'Error del servidor. Por favor, intente nuevamente más tarde.';
-          // Intentar actualizar el estado local en caso de error del servidor
-          this.refreshInscriptions();
-        }
+        errorMessage = 'Error del servidor en inscripciones. Por favor, intente nuevamente más tarde.';
+        this.refreshInscriptions();
         break;
     }
 
-    // Si hay un mensaje de error en la respuesta, lo usamos
+    // Si hay un mensaje específico en la respuesta, usarlo
     if (error.error && error.error.message) {
-      // Pero si es un error de estado inválido, usamos un mensaje más amigable
-      if (error.error.message.includes('Estado de inscripción inválido')) {
-        errorMessage = 'El estado de inscripción proporcionado no es válido para el backend.';
-      } else {
-        errorMessage = error.error.message;
-      }
+      errorMessage = error.error.message;
     }
 
     return throwError(() => new Error(errorMessage));
   }
+
+
 
   /**
    * Maps backend states to frontend states

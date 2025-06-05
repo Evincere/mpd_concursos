@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from  '@angular/forms';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -28,7 +28,6 @@ interface ImportantDate {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatSnackBarModule,
     MatDialogModule,
     ConfirmDialogComponent
   ],
@@ -1032,7 +1031,7 @@ export class FechasImportantesComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar,
+    private notificationService: UnifiedNotificationService,
     private dialog: MatDialog
   ) {
     this.filterForm = this.fb.group({
@@ -1270,13 +1269,9 @@ export class FechasImportantesComponent implements OnInit, OnDestroy {
   toggleReminder(date: ImportantDate, enabled: boolean): void {
     date.reminderEnabled = enabled;
 
-    this.snackBar.open(
+    this.notificationService.success(
       `Recordatorio ${enabled ? 'activado' : 'desactivado'} para "${date.title}"`,
-      'Cerrar',
-      {
-        duration: 3000,
-        panelClass: ['custom-snackbar']
-      }
+      'Recordatorio Actualizado'
     );
   }
 

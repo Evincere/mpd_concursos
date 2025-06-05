@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { ConfirmDialogService } from '../../../../../../shared/services/confirm-dialog.service';
-import { ToastService } from '../../../../../../shared/services/toast.service';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -85,7 +85,7 @@ export class InscripcionesLifecycleComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private inscripcionesService: AdminInscriptionsService,
     private confirmDialog: ConfirmDialogService,
-    private toast: ToastService,
+    private notificationService: UnifiedNotificationService,
     private concursosService: ConcursosService
   ) {
     this.filterForm = this.fb.group({
@@ -177,7 +177,7 @@ export class InscripcionesLifecycleComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando inscripciones:', error);
-          this.toast.error('Error al cargar las inscripciones');
+          this.notificationService.error('Error al cargar las inscripciones');
           this.isLoading = false;
         }
       });
@@ -271,14 +271,14 @@ export class InscripcionesLifecycleComponent implements OnInit, OnDestroy {
         this.inscripcionesService.updateInscriptionStatus(this.selectedInscription!.id, { status: this.newState! })
           .subscribe({
             next: (updatedInscription: AdminInscription) => {
-              this.toast.success('Estado actualizado correctamente');
+              this.notificationService.success('Estado actualizado correctamente');
               this.selectedInscription = updatedInscription;
               this.newState = null;
               this.updateAvailableStates();
               this.loadInscriptions(); // Recargar la lista
             },
             error: (error) => {
-              this.toast.error('Error al actualizar el estado');
+              this.notificationService.error('Error al actualizar el estado');
               console.error('Error updating inscription state:', error);
             },
             complete: () => {

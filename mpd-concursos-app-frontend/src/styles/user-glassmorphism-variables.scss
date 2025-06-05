@@ -1,0 +1,144 @@
+/* ===== GLASSMORPHISM DESIGN SYSTEM - USUARIO COMÚN ===== */
+/* Variables específicas para el usuario común con scoping CSS */
+/* NO AFECTA al usuario administrador */
+
+/* === SCOPING CSS ESPECÍFICO === */
+/* Todas las variables están scoped a .dashboard-layout para evitar conflictos con admin */
+
+.dashboard-layout {
+  /* === COLORES GLASSMORPHISM PREMIUM DARK === */
+  
+  /* Backgrounds glassmorphism unificados */
+  --user-glass-primary: rgba(55, 65, 81, 0.9);
+  --user-glass-secondary: rgba(75, 85, 99, 0.85);
+  --user-glass-tertiary: rgba(31, 41, 55, 0.9);
+  --user-glass-hover: rgba(75, 85, 99, 0.95);
+  --user-glass-active: rgba(55, 65, 81, 0.95);
+  --user-glass-light: rgba(55, 65, 81, 0.7);
+  
+  /* Gradientes glassmorphism */
+  --user-glass-gradient-primary: linear-gradient(135deg, 
+    var(--user-glass-primary) 0%, 
+    var(--user-glass-secondary) 100%);
+  --user-glass-gradient-overlay: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0.06) 100%);
+  --user-glass-gradient-radial: radial-gradient(circle at 70% 30%, 
+    rgba(59, 130, 246, 0.1) 0%, 
+    transparent 50%);
+  
+  /* === TIPOGRAFÍA === */
+  --user-text-primary: #f9fafb;
+  --user-text-secondary: #d1d5db;
+  --user-text-muted: #9ca3af;
+  --user-text-accent: #60a5fa; /* Improved contrast - lighter blue */
+
+  /* === TIPOGRAFÍA MEJORADA PARA ACCESIBILIDAD === */
+  --user-text-high-contrast: #ffffff; /* Maximum contrast for critical text */
+  --user-text-tab-active: #ffffff; /* High contrast for active tabs */
+  --user-text-tab-inactive: #d1d5db; /* Clear distinction for inactive tabs */
+  --user-text-input: #ffffff; /* High contrast for input text */
+  --user-text-input-placeholder: #9ca3af; /* Readable placeholder text */
+  
+  /* === BORDES Y EFECTOS === */
+  --user-border-glass: rgba(255, 255, 255, 0.15);
+  --user-border-glass-light: rgba(255, 255, 255, 0.1);
+  --user-border-glass-strong: rgba(255, 255, 255, 0.25);
+  --user-border-glass-focus: rgba(96, 165, 250, 0.4); /* Improved focus visibility */
+
+  /* === BORDES MEJORADOS PARA ACCESIBILIDAD === */
+  --user-border-tab-active: rgba(96, 165, 250, 0.6); /* High contrast active tab border */
+  --user-border-input-focus: rgba(96, 165, 250, 0.5); /* Clear focus indication */
+  
+  /* === EFECTOS BLUR === */
+  --user-backdrop-blur: blur(12px);
+  --user-backdrop-blur-light: blur(8px);
+  --user-backdrop-blur-strong: blur(16px);
+  
+  /* === BORDER RADIUS === */
+  --user-border-radius-sm: 4px;
+  --user-border-radius-md: 6px;
+  --user-border-radius-lg: 8px;
+  --user-border-radius-xl: 12px;
+  
+  /* === SOMBRAS GLASSMORPHISM === */
+  --user-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --user-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --user-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.4);
+  --user-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --user-shadow-inset-bottom: inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  
+  /* === TRANSICIONES === */
+  --user-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --user-transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --user-transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --user-transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* === TRANSFORMACIONES === */
+  --user-transform-hover: translateY(-2px);
+  --user-transform-active: translateY(0);
+  --user-transform-scale-hover: scale(1.02);
+  
+  /* === COLORES SEMÁNTICOS === */
+  --user-color-success: #4CAF50;
+  --user-color-warning: #f59e0b;
+  --user-color-danger: #ef4444;
+  --user-color-info: #06b6d4;
+  
+  /* === ESPACIADO === */
+  --user-spacing-xs: 0.25rem;
+  --user-spacing-sm: 0.5rem;
+  --user-spacing-md: 1rem;
+  --user-spacing-lg: 1.5rem;
+  --user-spacing-xl: 2rem;
+  --user-spacing-2xl: 3rem;
+  
+  /* === LAYOUT === */
+  --user-sidebar-width: 250px;
+  --user-sidebar-collapsed-width: 60px;
+  --user-header-height: 90px; /* Aumentado a 90px para asegurar visualización completa */
+  --user-mobile-nav-height: 60px;
+
+  /* === Z-INDEX === */
+  --user-z-sidebar: 100;
+  --user-z-header: 200;
+  --user-z-dropdown: 9999; /* Z-index muy alto para asegurar que aparezca por encima de todo */
+  --user-z-mobile-nav: 1000;
+  --user-z-modal: 2000;
+  --user-z-tooltip: 3000;
+}
+
+/* === RESPONSIVE BREAKPOINTS === */
+/* Mantener consistencia con el sistema existente */
+.dashboard-layout {
+  --user-breakpoint-sm: 640px;
+  --user-breakpoint-md: 768px;
+  --user-breakpoint-lg: 1024px;
+  --user-breakpoint-xl: 1280px;
+}
+
+/* === VARIABLES PARA COMPONENTES ESPECÍFICOS === */
+.dashboard-layout {
+  /* Cards */
+  --user-card-padding: var(--user-spacing-lg);
+  --user-card-margin: var(--user-spacing-md);
+  
+  /* Buttons */
+  --user-button-padding: 0.75rem 1.5rem;
+  --user-button-height: 2.5rem;
+  
+  /* Forms */
+  --user-input-height: 2.75rem;
+  --user-input-padding: 0.75rem 1rem;
+  --user-input-background: rgba(75, 85, 99, 0.4); /* Lighter background for better text visibility */
+  --user-input-background-focus: rgba(75, 85, 99, 0.6); /* Focused state background */
+
+  /* Typography sizes for accessibility */
+  --user-font-size-tab: 1rem; /* Increased from 0.875rem for better readability */
+  --user-font-size-tab-mobile: 0.9375rem; /* Increased from 0.75rem for mobile */
+  --user-font-size-input: 1rem; /* Standard readable size for inputs */
+  
+  /* Navigation */
+  --user-nav-item-height: 3rem;
+  --user-nav-item-padding: 0.75rem 1rem;
+}

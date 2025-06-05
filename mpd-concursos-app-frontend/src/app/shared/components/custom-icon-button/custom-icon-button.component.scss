@@ -1,0 +1,263 @@
+/* ===== CUSTOM ICON BUTTON GLASSMORPHISM PREMIUM DARK ===== */
+/* Refactorizado según user-glassmorphism-refactoring-plan.md */
+
+.custom-icon-button {
+  /* Base styles */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--user-transition-normal);
+  position: relative;
+  overflow: hidden;
+  
+  /* Size variants */
+  &.small {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    
+    i {
+      font-size: 0.875rem;
+    }
+  }
+  
+  &.medium {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--user-border-radius-md);
+    
+    i {
+      font-size: 1rem;
+    }
+  }
+  
+  &.large {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--user-border-radius-lg);
+    
+    i {
+      font-size: 1.125rem;
+    }
+  }
+
+  /* Default medium size if no class applied */
+  width: 40px;
+  height: 40px;
+  border-radius: var(--user-border-radius-md);
+
+  i {
+    font-size: 1rem;
+    transition: var(--user-transition-normal);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Focus state for accessibility */
+  &:focus-visible {
+    outline: 2px solid var(--user-focus-ring);
+    outline-offset: 2px;
+    z-index: 2;
+  }
+
+  /* Disabled state */
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  /* Glassmorphism shine effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent);
+    transition: left 0.5s ease;
+    z-index: 0;
+  }
+
+  &:hover:not(:disabled)::before {
+    left: 100%;
+  }
+}
+
+/* ===== VARIANT STYLES ===== */
+
+/* Primary variant */
+.custom-icon-button.primary {
+  background: var(--user-text-accent);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--user-text-primary);
+  box-shadow: var(--user-shadow-sm);
+
+  &:hover:not(:disabled) {
+    background: #2563eb;
+    border-color: rgba(37, 99, 235, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--user-shadow-sm);
+  }
+}
+
+/* Secondary variant */
+.custom-icon-button.secondary {
+  background: var(--user-glass-gradient-secondary);
+  background-image: var(--user-glass-gradient-overlay);
+  border: 1px solid var(--user-border-glass);
+  color: var(--user-text-primary);
+  backdrop-filter: var(--user-backdrop-blur);
+  -webkit-backdrop-filter: var(--user-backdrop-blur);
+  box-shadow: var(--user-shadow-sm), var(--user-shadow-inset);
+
+  &:hover:not(:disabled) {
+    background: rgba(75, 85, 99, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--user-shadow-sm), var(--user-shadow-inset);
+  }
+}
+
+/* Danger variant */
+.custom-icon-button.danger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  backdrop-filter: var(--user-backdrop-blur);
+  -webkit-backdrop-filter: var(--user-backdrop-blur);
+
+  &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--user-shadow-sm);
+  }
+}
+
+/* Ghost variant (default) */
+.custom-icon-button.ghost {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--user-text-primary);
+  backdrop-filter: var(--user-backdrop-blur);
+  -webkit-backdrop-filter: var(--user-backdrop-blur);
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+    box-shadow: var(--user-shadow-sm);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .custom-icon-button {
+    &.large {
+      width: 44px;
+      height: 44px;
+      
+      i {
+        font-size: 1rem;
+      }
+    }
+    
+    &.medium {
+      width: 36px;
+      height: 36px;
+      
+      i {
+        font-size: 0.875rem;
+      }
+    }
+    
+    &.small {
+      width: 28px;
+      height: 28px;
+      
+      i {
+        font-size: 0.75rem;
+      }
+    }
+  }
+}
+
+/* ===== ACCESSIBILITY SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  .custom-icon-button {
+    transition: none;
+    
+    &::before {
+      transition: none;
+    }
+    
+    &:hover:not(:disabled) {
+      transform: none;
+    }
+    
+    &:active:not(:disabled) {
+      transform: none;
+    }
+  }
+}
+
+/* ===== HIGH CONTRAST SUPPORT ===== */
+@media (prefers-contrast: high) {
+  .custom-icon-button {
+    border-width: 2px;
+    
+    &:focus-visible {
+      outline-width: 3px;
+      outline-color: var(--user-text-primary);
+    }
+    
+    &.primary {
+      background: var(--user-text-accent);
+      border-color: var(--user-text-accent);
+    }
+    
+    &.danger {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+    
+    &.ghost,
+    &.secondary {
+      border-color: var(--user-text-primary);
+      color: var(--user-text-primary);
+    }
+  }
+}

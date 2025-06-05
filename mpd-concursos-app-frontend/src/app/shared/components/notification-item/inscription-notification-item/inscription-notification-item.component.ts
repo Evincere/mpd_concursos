@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 import {
   Notification,
@@ -18,7 +18,7 @@ import {
   getNotificationStatusColor,
   getAcknowledgementLevelColor
 } from '@core/models/notification.model';
-import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { InscripcionState, InscripcionStateUtils } from '@core/models/inscripcion/inscripcion-state.enum';
 import { Router } from '@angular/router';
 import { NotificationsService } from '@core/services/notifications/notifications.service';
 // Removed external component imports - implementing badge system directly
@@ -124,7 +124,7 @@ export class InscriptionNotificationItemComponent implements OnInit {
   constructor(
     private router: Router,
     private notificationsService: NotificationsService,
-    private snackBar: MatSnackBar
+    private unifiedNotificationService: UnifiedNotificationService
   ) {}
 
   ngOnInit(): void {
@@ -167,20 +167,16 @@ export class InscriptionNotificationItemComponent implements OnInit {
   // Acknowledgment functionality would be implemented here when needed
 
   private showSuccessMessage(message: string): void {
-    this.snackBar.open(message, 'Cerrar', {
+    this.unifiedNotificationService.success(message, 'Éxito', {
       duration: 3000,
-      panelClass: ['success-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
   private showErrorMessage(message: string): void {
-    this.snackBar.open(message, 'Cerrar', {
+    this.unifiedNotificationService.error(message, 'Error', {
       duration: 5000,
-      panelClass: ['error-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
@@ -335,7 +331,13 @@ export class InscriptionNotificationItemComponent implements OnInit {
     }
 
     const status = this.notification.metadata.inscriptionStatus;
-    return status === InscripcionState.ACTIVE || status === InscripcionState.IN_PROCESS;
+    // Verificar si el status es un valor válido del enum antes de usarlo
+    if (Object.values(InscripcionState).includes(status as InscripcionState)) {
+      return InscripcionStateUtils.canResume(status as InscripcionState);
+    }
+
+    // Fallback para compatibilidad con estados legacy
+    return status === 'ACTIVE' || status === 'IN_PROCESS';
   }
 
   viewInscription(): void {

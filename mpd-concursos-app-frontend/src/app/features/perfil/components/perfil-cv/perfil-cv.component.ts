@@ -2,7 +2,6 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 
 // Custom Components
-import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 
 // Models
@@ -13,70 +12,66 @@ import { UserProfile } from '@core/models/perfil.model';
   standalone: true,
   imports: [
     CommonModule,
-    CustomCardComponent,
     CustomButtonComponent
   ],
   template: `
     <div class="cv-container">
       <!-- Action Sidebar -->
       <aside class="cv-sidebar">
-        <app-custom-card>
-          <div class="sidebar-content">
-            <div class="action-group">
-              <h3>
-                <i class="fas fa-briefcase" aria-hidden="true"></i>
-                Experiencia Laboral
-              </h3>
-              <p>Agregue su experiencia profesional para mejorar su perfil</p>
-              <app-custom-button
-                color="primary"
-                icon="fa-plus"
-                label="Agregar Experiencia"
-                [disabled]="isLoading"
-                (buttonClick)="onAddExperience()">
-              </app-custom-button>
-            </div>
-
-            <div class="action-group">
-              <h3>
-                <i class="fas fa-graduation-cap" aria-hidden="true"></i>
-                Educación
-              </h3>
-              <p>Registre sus títulos y certificaciones académicas</p>
-              <app-custom-button
-                color="primary"
-                icon="fa-plus"
-                label="Agregar Educación"
-                [disabled]="isLoading"
-                (buttonClick)="onAddEducation()">
-              </app-custom-button>
-            </div>
-
-            <!-- Loading Indicator -->
-            <div *ngIf="isLoading" class="loading-indicator">
-              <div class="spinner"></div>
-              <span>Procesando...</span>
-            </div>
+        <div class="sidebar-content">
+          <div class="action-group">
+            <h3>
+              <i class="fas fa-briefcase" aria-hidden="true"></i>
+              Experiencia Laboral
+            </h3>
+            <p>Agregue su experiencia profesional para mejorar su perfil</p>
+            <app-custom-button
+              color="primary"
+              icon="fa-plus"
+              label="Agregar Experiencia"
+              [disabled]="isLoading"
+              (buttonClick)="onAddExperience()">
+            </app-custom-button>
           </div>
-        </app-custom-card>
+
+          <div class="action-group">
+            <h3>
+              <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+              Educación
+            </h3>
+            <p>Registre sus títulos y certificaciones académicas</p>
+            <app-custom-button
+              color="primary"
+              icon="fa-plus"
+              label="Agregar Educación"
+              [disabled]="isLoading"
+              (buttonClick)="onAddEducation()">
+            </app-custom-button>
+          </div>
+
+          <!-- Loading Indicator -->
+          <div *ngIf="isLoading" class="loading-indicator">
+            <div class="spinner"></div>
+            <span>Procesando...</span>
+          </div>
+        </div>
       </aside>
 
       <!-- Main Content -->
       <main class="cv-content">
         <!-- Experience Section -->
         <section class="cv-section">
-          <app-custom-card>
-            <div class="section-header" slot="header">
-              <h2>
-                <i class="fas fa-briefcase" aria-hidden="true"></i>
-                Experiencia Laboral
-              </h2>
-              <span class="item-count" *ngIf="experiencias && experiencias.length > 0">
-                {{ experiencias.length }} {{ experiencias.length === 1 ? 'experiencia' : 'experiencias' }}
-              </span>
-            </div>
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-briefcase" aria-hidden="true"></i>
+              Experiencia Laboral
+            </h2>
+            <span class="item-count" *ngIf="experiencias && experiencias.length > 0">
+              {{ experiencias.length }} {{ experiencias.length === 1 ? 'experiencia' : 'experiencias' }}
+            </span>
+          </div>
 
-            <div class="section-content">
+          <div class="section-content">
               <!-- Experience List -->
               <div *ngIf="experiencias && experiencias.length > 0" class="experience-list">
                 <div *ngFor="let exp of experiencias; let i = index" class="experience-item">
@@ -160,23 +155,21 @@ import { UserProfile } from '@core/models/perfil.model';
                 </app-custom-button>
               </div>
             </div>
-          </app-custom-card>
         </section>
 
         <!-- Education Section -->
         <section class="cv-section">
-          <app-custom-card>
-            <div class="section-header" slot="header">
-              <h2>
-                <i class="fas fa-graduation-cap" aria-hidden="true"></i>
-                Educación
-              </h2>
-              <span class="item-count" *ngIf="educacionList && educacionList.length > 0">
-                {{ educacionList.length }} {{ educacionList.length === 1 ? 'título' : 'títulos' }}
-              </span>
-            </div>
+          <div class="section-header">
+            <h2>
+              <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+              Educación
+            </h2>
+            <span class="item-count" *ngIf="educacionList && educacionList.length > 0">
+              {{ educacionList.length }} {{ educacionList.length === 1 ? 'título' : 'títulos' }}
+            </span>
+          </div>
 
-            <div class="section-content">
+          <div class="section-content">
               <!-- Education List -->
               <div *ngIf="educacionList && educacionList.length > 0" class="education-list">
                 <div *ngFor="let edu of educacionList; let i = index" class="education-item">
@@ -258,7 +251,6 @@ import { UserProfile } from '@core/models/perfil.model';
                 </app-custom-button>
               </div>
             </div>
-          </app-custom-card>
         </section>
       </main>
     </div>

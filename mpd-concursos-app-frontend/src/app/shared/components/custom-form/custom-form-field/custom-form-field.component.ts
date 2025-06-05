@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, Optional, Self } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, FormControl, NgControl, ReactiveFormsModule } from '@angular/forms';
+import { ControlValueAccessor, FormControl, NgControl, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 
 @Component({
   selector: 'app-custom-form-field',
@@ -160,54 +160,61 @@ import { ControlValueAccessor, FormControl, NgControl, ReactiveFormsModule } fro
 
     /* Dark theme styles - improved contrast for accessibility */
     .field-label {
-      color: #f9fafb;
+      color: #ffffff !important; /* Maximum contrast for labels */
       font-weight: 500;
+      font-size: 0.9375rem; /* Slightly larger for better readability */
     }
 
     .field-input {
-      color: #f9fafb;
-      background-color: #4b5563;
-      border-color: #6b7280;
+      color: #ffffff !important; /* High contrast text color */
+      background-color: rgba(75, 85, 99, 0.4) !important; /* Lighter background for better text visibility */
+      border-color: #6b7280 !important;
       font-weight: 400;
+      font-size: 1rem !important; /* Standard readable size */
     }
 
     .field-input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-      background-color: #4b5563;
+      border-color: #60a5fa !important; /* Improved focus color with better contrast */
+      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3) !important; /* Enhanced focus ring */
+      background-color: rgba(75, 85, 99, 0.6) !important; /* Darker background on focus for contrast */
     }
 
     .field-input:hover:not(:focus) {
       border-color: #9ca3af;
-      background-color: #4b5563;
+      background-color: rgba(75, 85, 99, 0.5); /* Slightly darker on hover */
     }
 
     .field-input:disabled {
-      background-color: #374151;
+      background-color: rgba(55, 65, 81, 0.6); /* Consistent with glassmorphism */
       color: #9ca3af;
       opacity: 0.7;
+      cursor: not-allowed;
     }
 
     .field-input::placeholder {
       color: #9ca3af;
       opacity: 1;
+      font-style: italic; /* Visual distinction for placeholder text */
     }
 
     .hint-text {
       color: #d1d5db;
+      font-size: 0.8125rem; /* Slightly larger for better readability */
     }
 
     .error-message {
       color: #fca5a5;
       font-weight: 500;
+      font-size: 0.8125rem; /* Consistent with hint text */
     }
 
     .clear-button {
       color: #9ca3af;
+      transition: color 0.2s ease;
     }
 
     .clear-button:hover {
-      color: #f9fafb;
+      color: #ffffff; /* High contrast on hover */
     }
 
     .icon-right {
@@ -215,11 +222,86 @@ import { ControlValueAccessor, FormControl, NgControl, ReactiveFormsModule } fro
     }
 
     .focused .field-label {
-      color: #3b82f6;
+      color: #60a5fa; /* Improved focus color */
+      font-weight: 600; /* Emphasize focused state */
     }
 
     .disabled .field-label {
       color: #9ca3af;
+      opacity: 0.7;
+    }
+
+    /* High contrast mode support for better accessibility */
+    @media (prefers-contrast: high) {
+      .field-label {
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .field-input {
+        color: #ffffff;
+        background-color: rgba(55, 65, 81, 0.8);
+        border-color: #ffffff;
+        border-width: 2px;
+      }
+
+      .field-input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+        background-color: rgba(55, 65, 81, 0.9);
+      }
+
+      .error-message {
+        color: #ff6b6b;
+        font-weight: 600;
+      }
+
+      .focused .field-label {
+        color: #60a5fa;
+        font-weight: 700;
+      }
+    }
+
+    /* Dashboard layout specific overrides for user glassmorphism variables */
+    :host-context(.dashboard-layout) {
+      .field-label {
+        color: var(--user-text-high-contrast, #ffffff) !important;
+        font-size: var(--user-font-size-input, 1rem) !important;
+      }
+
+      .field-input {
+        color: var(--user-text-input, #ffffff) !important;
+        background-color: var(--user-input-background, rgba(75, 85, 99, 0.4)) !important;
+        border-color: var(--user-border-glass, rgba(255, 255, 255, 0.15)) !important;
+        font-size: var(--user-font-size-input, 1rem) !important;
+
+        &::placeholder {
+          color: var(--user-text-input-placeholder, #9ca3af) !important;
+        }
+
+        &:focus {
+          background-color: var(--user-input-background-focus, rgba(75, 85, 99, 0.6)) !important;
+          border-color: var(--user-border-input-focus, rgba(96, 165, 250, 0.5)) !important;
+          box-shadow: 0 0 0 2px var(--user-border-input-focus, rgba(96, 165, 250, 0.5)) !important;
+        }
+
+        &:hover:not(:focus) {
+          background-color: rgba(75, 85, 99, 0.5) !important;
+          border-color: var(--user-border-glass-strong, rgba(255, 255, 255, 0.25)) !important;
+        }
+      }
+
+      .focused .field-label {
+        color: var(--user-text-accent, #60a5fa) !important;
+      }
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .field-input,
+      .clear-button {
+        transition: none;
+      }
     }
   `]
 })
@@ -234,7 +316,7 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
   @Input() hint = '';
   @Input() iconRight = '';
   @Input() showClearButton = false;
-  @Input() control: FormControl | null = null;
+  @Input() control: AbstractControl | null = null;
   @Input() min: number | null = null;
   @Input() max: number | null = null;
 
@@ -258,8 +340,22 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
 
   ngOnInit(): void {
     if (this.control) {
+      // Sincronizar valor inicial
+      this.value = this.control.value || '';
+
+      // Suscribirse a cambios de valor
+      this.control.valueChanges.subscribe(value => {
+        this.value = value || '';
+      });
+
+      // Suscribirse a cambios de estado
       this.control.statusChanges.subscribe(() => {
         this.showError = this.control?.invalid && (this.control?.touched || this.control?.dirty) || false;
+      });
+
+      // Suscribirse a cambios de estado disabled
+      this.control.statusChanges.subscribe(() => {
+        this.isDisabled = this.control?.disabled || false;
       });
     } else if (this.ngControl?.control) {
       this.ngControl.control.statusChanges.subscribe(() => {
@@ -287,6 +383,14 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
   onInputChange(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
     this.value = value;
+
+    // Si tenemos un control pasado como input, actualizarlo
+    if (this.control) {
+      this.control.setValue(value);
+      this.control.markAsTouched();
+    }
+
+    // También llamar al onChange para compatibilidad con ControlValueAccessor
     this.onChange(value);
   }
 
@@ -301,6 +405,14 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
 
   clearValue(): void {
     this.value = '';
+
+    // Si tenemos un control pasado como input, actualizarlo
+    if (this.control) {
+      this.control.setValue('');
+      this.control.markAsTouched();
+    }
+
+    // También llamar al onChange para compatibilidad con ControlValueAccessor
     this.onChange('');
   }
 

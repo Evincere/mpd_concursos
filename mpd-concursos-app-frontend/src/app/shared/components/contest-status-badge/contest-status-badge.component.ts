@@ -51,6 +51,14 @@ export class ContestStatusBadgeComponent {
       borderColor: 'rgba(245, 158, 11, 0.3)',
       icon: 'fas fa-edit'
     },
+    'PENDING': {
+      value: 'PENDING',
+      label: 'Pendiente',
+      color: '#fefce8',
+      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      borderColor: 'rgba(245, 158, 11, 0.3)',
+      icon: 'fas fa-clock'
+    },
     'IN_PROGRESS': {
       value: 'IN_PROGRESS',
       label: 'En Progreso',

@@ -1,3 +1,7 @@
+/* ===== SIDEBAR GLASSMORPHISM - USUARIO COMÚN ===== */
+/* Sidebar con glassmorphism premium dark unificado */
+/* Scoped específicamente para no afectar al administrador */
+
 @use 'variables' as *;
 @use 'responsive' as *;
 
@@ -5,23 +9,29 @@
     position: relative;
     height: 100%;
     display: flex;
-    z-index: 2; // Asegurando que esté por encima del contenido
-    background: transparent; // Fix visual gap - inherit dashboard background seamlessly
+    z-index: var(--user-z-sidebar);
+    background: transparent; // Inherit dashboard background seamlessly
 }
 
 .sidebar {
-    background: #374151;
-    padding: 1.5rem 1rem;
+    /* Glassmorphism premium dark navigation */
+    background: var(--user-glass-gradient-primary);
+    background-image:
+        var(--user-glass-gradient-overlay),
+        var(--user-glass-gradient-radial);
+    border-right: 1px solid var(--user-border-glass);
+    backdrop-filter: var(--user-backdrop-blur);
+    -webkit-backdrop-filter: var(--user-backdrop-blur);
+    box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
+
+    padding: var(--user-spacing-lg) var(--user-spacing-md);
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 250px;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-        0 10px 25px rgba(0, 0, 0, 0.3),
-        0 4px 10px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: var(--user-transition-smooth);
+    width: var(--user-sidebar-width);
+    color: var(--user-text-primary);
+    position: relative;
 
     @include md {
         width: 220px;
@@ -32,16 +42,16 @@
     }
 
     &.collapsed {
-        width: 60px;
-        padding: 1.5rem 0.5rem;
-        // Maintain glassmorphism effects even when collapsed
-        background: #374151;
-        backdrop-filter: blur(10px);
+        width: var(--user-sidebar-collapsed-width);
+        padding: var(--user-spacing-lg) var(--user-spacing-sm);
+        /* Maintain glassmorphism effects when collapsed */
+        background: var(--user-glass-secondary);
+        backdrop-filter: var(--user-backdrop-blur-strong);
 
         .nav-menu {
             .nav-item {
                 a {
-                    padding: 0.75rem;
+                    padding: var(--user-spacing-md);
                     justify-content: center;
 
                     i {
@@ -146,73 +156,74 @@
     }
 }
 
+/* Navigation menu glassmorphism */
 .nav-menu {
     .nav-item {
-        margin-bottom: 0.5rem;
+        margin-bottom: var(--user-spacing-sm);
 
         a {
             display: flex;
             align-items: center;
-            padding: 0.75rem 1rem;
-            color: #d1d5db;
+            padding: var(--user-nav-item-padding);
+            color: var(--user-text-secondary);
             text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: var(--user-border-radius-md);
+            transition: var(--user-transition-normal);
             font-size: 0.875rem;
             font-weight: 500;
             position: relative;
             border: 1px solid transparent;
+            background: transparent;
 
             i {
                 width: 20px;
                 text-align: center;
                 font-size: 1.2rem;
-                margin-right: 1rem;
-                color: #9ca3af;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                margin-right: var(--user-spacing-md);
+                color: var(--user-text-muted);
+                transition: var(--user-transition-normal);
                 transform: translateX(0);
             }
 
             span {
                 white-space: nowrap;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: var(--user-transition-normal);
                 opacity: 1;
                 transform: translateX(0);
                 visibility: visible;
-                color: #d1d5db;
+                color: var(--user-text-secondary);
             }
 
             &:hover {
-                background: rgba(75, 85, 99, 0.3);
-                color: #f9fafb;
-                transform: translateY(-1px);
-                border-color: rgba(255, 255, 255, 0.1);
+                background: var(--user-glass-light);
+                color: var(--user-text-primary);
+                transform: var(--user-transform-hover);
+                border-color: var(--user-border-glass-light);
 
                 i {
-                    color: #f9fafb;
-                    transform: translateX(2px);
+                    color: var(--user-text-primary);
+                    transform: translateX(4px);
                 }
 
                 span {
-                    color: #f9fafb;
+                    color: var(--user-text-primary);
                 }
             }
 
             &.active {
-                background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
-                color: #f9fafb;
+                background: var(--user-glass-secondary);
+                background-image: var(--user-glass-gradient-overlay);
+                color: var(--user-text-primary);
                 font-weight: 600;
-                border-color: rgba(255, 255, 255, 0.2);
-                box-shadow:
-                    0 4px 12px rgba(0, 0, 0, 0.2),
-                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                border-color: var(--user-border-glass-strong);
+                box-shadow: var(--user-shadow-sm), var(--user-shadow-inset);
 
                 i {
-                    color: #f9fafb;
+                    color: var(--user-text-primary);
                 }
 
                 span {
-                    color: #f9fafb;
+                    color: var(--user-text-primary);
                 }
 
                 &::before {
@@ -223,7 +234,7 @@
                     transform: translateY(-50%);
                     width: 3px;
                     height: 20px;
-                    background: #3b82f6;
+                    background: var(--user-text-accent);
                     border-radius: 0 2px 2px 0;
                 }
             }

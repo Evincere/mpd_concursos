@@ -1,8 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.application;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
@@ -29,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 

@@ -1,0 +1,151 @@
+<div class="guided-tutorial" *ngIf="tutorial">
+  <!-- Tutorial Header -->
+  <div class="tutorial-header">
+    <div class="tutorial-info">
+      <h2 class="tutorial-title">{{tutorial.title}}</h2>
+      
+      <div class="tutorial-meta">
+        <div class="meta-item level" [ngClass]="getLevelClass(tutorial.level)">
+          <span class="meta-icon">🎯</span>
+          <span class="meta-text">{{getLevelName(tutorial.level)}}</span>
+        </div>
+        
+        <div class="meta-item time">
+          <span class="meta-icon">⏱️</span>
+          <span class="meta-text">{{tutorial.estimatedTime}} min</span>
+        </div>
+        
+        <div class="meta-item category">
+          <span class="meta-icon">📁</span>
+          <span class="meta-text">{{tutorial.category}}</span>
+        </div>
+      </div>
+      
+      <div class="tutorial-description">
+        {{tutorial.description}}
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Section -->
+  <div class="tutorial-progress">
+    <div class="progress-header">
+      <div class="progress-info">
+        <span class="progress-text">Progreso: {{currentStep + 1}} de {{tutorial.steps.length}}</span>
+        <span class="progress-percentage">{{progressPercentage}}%</span>
+      </div>
+    </div>
+    
+    <div class="progress-bar-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="progressPercentage"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tutorial Content -->
+  <div class="tutorial-content">
+    <div class="step-content" *ngIf="currentStepData">
+      <div class="step-header">
+        <h3 class="step-title">
+          <span class="step-number">{{currentStep + 1}}</span>
+          {{currentStepData.title}}
+        </h3>
+      </div>
+      
+      <div class="step-description">
+        {{currentStepData.description}}
+      </div>
+
+      <!-- Step Media -->
+      <div class="step-media" *ngIf="currentStepData.imageUrl || currentStepData.videoUrl">
+        <!-- Image -->
+        <div *ngIf="currentStepData.imageUrl" class="step-image">
+          <img [src]="currentStepData.imageUrl" [alt]="currentStepData.title" loading="lazy">
+        </div>
+
+        <!-- Video -->
+        <div *ngIf="currentStepData.videoUrl" class="step-video">
+          <iframe
+            [src]="getSafeVideoUrl(currentStepData.videoUrl)"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            title="Tutorial video">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- Interactive Elements -->
+      <div *ngIf="currentStepData.selector" class="step-interactive">
+        <div class="interactive-hint">
+          <span class="hint-icon">💡</span>
+          <span class="hint-text">
+            Elemento destacado: <code>{{currentStepData.selector}}</code>
+          </span>
+        </div>
+        
+        <div *ngIf="currentStepData.action" class="interactive-action">
+          <span class="action-icon">👆</span>
+          <span class="action-text">Acción: {{getActionText(currentStepData.action)}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step Navigation -->
+  <div class="tutorial-navigation">
+    <!-- Previous Button -->
+    <button 
+      class="nav-button prev" 
+      (click)="previousStep()" 
+      [disabled]="currentStep === 0"
+      [attr.aria-label]="'Ir al paso anterior'">
+      <span class="btn-icon">←</span>
+      <span class="btn-label">Anterior</span>
+    </button>
+
+    <!-- Step Indicators -->
+    <div class="step-indicators" role="tablist" aria-label="Pasos del tutorial">
+      <button
+        *ngFor="let step of tutorial.steps; let i = index"
+        class="step-indicator"
+        [class.active]="i === currentStep"
+        [class.completed]="i < currentStep"
+        (click)="goToStep(i)"
+        [attr.aria-label]="'Ir al paso ' + (i + 1) + ': ' + step.title"
+        [attr.aria-selected]="i === currentStep"
+        role="tab">
+        <span class="indicator-number">{{i + 1}}</span>
+      </button>
+    </div>
+
+    <!-- Next Button -->
+    <button 
+      class="nav-button next" 
+      (click)="nextStep()" 
+      [disabled]="currentStep === tutorial.steps.length - 1"
+      [attr.aria-label]="currentStep === tutorial.steps.length - 1 ? 'Finalizar tutorial' : 'Ir al siguiente paso'">
+      <span class="btn-label">
+        {{currentStep === tutorial.steps.length - 1 ? 'Finalizar' : 'Siguiente'}}
+      </span>
+      <span class="btn-icon">{{currentStep === tutorial.steps.length - 1 ? '✓' : '→'}}</span>
+    </button>
+  </div>
+
+  <!-- Tutorial Actions -->
+  <div class="tutorial-actions">
+    <button class="btn-exit" (click)="endTutorial()" title="Salir del tutorial">
+      <span class="btn-icon">✕</span>
+      <span class="btn-label">Salir del tutorial</span>
+    </button>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="!tutorial" class="tutorial-loading">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <span class="loading-text">Cargando tutorial...</span>
+  </div>
+</div>

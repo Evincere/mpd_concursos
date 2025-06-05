@@ -10,6 +10,7 @@ import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.inte
 import { Subscription, fromEvent } from 'rxjs';
 import { DashboardService } from '@core/services/dashboard/dashboard.service';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { InscriptionRecoveryService } from '@core/services/inscripcion/inscription-recovery.service';
 
 
 @Component({
@@ -31,7 +32,8 @@ export class MainComponent implements OnInit, OnDestroy {
 
   constructor(
     private dashboardService: DashboardService,
-    private inscriptionService: InscriptionService
+    private inscriptionService: InscriptionService,
+    private inscriptionRecoveryService: InscriptionRecoveryService
   ) {}
 
 
@@ -41,6 +43,9 @@ export class MainComponent implements OnInit, OnDestroy {
 
 
   ngOnInit(): void {
+    // CORRECCIÓN CRÍTICA: Limpiar inscripciones inválidas del localStorage al inicializar
+    this.inscriptionRecoveryService.cleanupInvalidInscriptions();
+
     this.cargarDatos();
 
     // Suscribirse a cambios en las inscripciones con throttling

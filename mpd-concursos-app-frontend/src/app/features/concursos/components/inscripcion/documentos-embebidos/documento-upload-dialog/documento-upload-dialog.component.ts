@@ -1,15 +1,22 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from  '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+
+// Custom Components
+import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
+import { CustomSpinnerComponent } from '@shared/components/custom-spinner/custom-spinner.component';
+
+// Services
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
-import { DocumentoValidationService, DocumentoValidationError } from  '@core/services/documentos/documento-validation.service';
+import { DocumentoValidationService, DocumentoValidationError } from '@core/services/documentos/documento-validation.service';
+
+// RxJS
 import { finalize, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+
+// Utils
 import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/safe-access.utils';
 
 @Component({
@@ -17,17 +24,22 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    CustomButtonComponent,
+    CustomSpinnerComponent
   ],
   template: `
     <div class="upload-dialog">
-      <h2 mat-dialog-title>Cargar Documento</h2>
+      <!-- Header -->
+      <div class="dialog-header">
+        <div class="header-content">
+          <i class="fas fa-upload header-icon" aria-hidden="true"></i>
+          <h2>Cargar Documento</h2>
+        </div>
+      </div>
 
-      <mat-dialog-content>
+      <!-- Content -->
+      <div class="dialog-content">
         <p class="dialog-description">
           Estás cargando un documento de tipo: <strong>{{data.tipoDocumentoNombre}}</strong>
         </p>
@@ -41,15 +53,21 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
                (drop)="onDrop($event)">
 
             <div class="upload-icon">
-              <mat-icon>{{selectedFile ? 'description' : 'cloud_upload'}}</mat-icon>
+              <i class="fas"
+                 [class.fa-file-alt]="selectedFile"
+                 [class.fa-cloud-upload-alt]="!selectedFile"
+                 aria-hidden="true"></i>
             </div>
 
             <div class="upload-text">
               <ng-container *ngIf="!selectedFile">
                 <p>Arrastra y suelta tu archivo aquí o</p>
-                <button type="button" mat-raised-button color="primary" (click)="fileInput.click()">
-                  Seleccionar archivo
-                </button>
+                <app-custom-button
+                  variant="primary"
+                  icon="folder-open"
+                  label="Seleccionar archivo"
+                  (buttonClick)="fileInput.click()">
+                </app-custom-button>
                 <p class="upload-hint">Formatos permitidos: PDF, JPG, PNG (Máx. 10MB)</p>
               </ng-container>
 
@@ -59,17 +77,25 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
 
                 <!-- Mostrar advertencias de validación -->
                 <div class="validation-warnings" *ngIf="validationWarnings.length > 0">
-                  <p class="warning-title">Advertencias:</p>
+                  <p class="warning-title">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    Advertencias:
+                  </p>
                   <ul>
                     <li *ngFor="let warning of validationWarnings">
-                      <mat-icon>warning</mat-icon> {{warning.message}}
+                      <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                      {{warning.message}}
                     </li>
                   </ul>
                 </div>
 
-                <button type="button" mat-button color="warn" (click)="removeFile()">
-                  <mat-icon>delete</mat-icon> Eliminar
-                </button>
+                <app-custom-button
+                  variant="stroked"
+                  color="warn"
+                  icon="trash"
+                  label="Eliminar"
+                  (buttonClick)="removeFile()">
+                </app-custom-button>
               </ng-container>
             </div>
 
@@ -90,36 +116,93 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
         </form>
 
         <div class="upload-progress" *ngIf="uploading">
-          <p>Subiendo documento...</p>
-          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          <div class="progress-content">
+            <app-custom-spinner [size]="'medium'"></app-custom-spinner>
+            <p>Subiendo documento...</p>
+          </div>
         </div>
-      </mat-dialog-content>
+      </div>
 
-      <mat-dialog-actions align="end">
-        <button mat-button [mat-dialog-close]="false" [disabled]="uploading">Cancelar</button>
-        <button mat-raised-button
-                color="primary"
-                [disabled]="!selectedFile || uploading || uploadForm.invalid"
-                (click)="uploadDocument()">
-          <mat-icon>cloud_upload</mat-icon> Subir documento
-        </button>
-      </mat-dialog-actions>
+      <!-- Actions -->
+      <div class="dialog-actions">
+        <app-custom-button
+          variant="stroked"
+          label="Cancelar"
+          [disabled]="uploading"
+          (buttonClick)="cancelar()">
+        </app-custom-button>
+        <app-custom-button
+          variant="primary"
+          icon="cloud-upload-alt"
+          label="Subir documento"
+          [disabled]="!selectedFile || uploading || uploadForm.invalid"
+          [loading]="uploading"
+          (buttonClick)="uploadDocument()">
+        </app-custom-button>
+      </div>
     </div>
   `,
   styles: [`
     .upload-dialog {
-      color: rgba(255, 255, 255, 0.87);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      color: #f9fafb;
+      /* Glassmorphism premium dark design */
+      background: rgba(55, 65, 81, 0.95);
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(20px);
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
-    h2 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: #fff;
+    .dialog-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(75, 85, 99, 0.8);
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border-radius: 12px 12px 0 0;
+      backdrop-filter: blur(10px);
+
+      .header-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        .header-icon {
+          color: #3b82f6;
+          font-size: 1.5rem;
+        }
+
+        h2 {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #f9fafb;
+        }
+      }
+    }
+
+    .dialog-content {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
     }
 
     .dialog-description {
       margin-bottom: 1.5rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: #d1d5db;
+      font-size: 1rem;
+      line-height: 1.5;
+
+      strong {
+        color: #f9fafb;
+        font-weight: 600;
+      }
     }
 
     .upload-form {
@@ -134,138 +217,222 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
       align-items: center;
       justify-content: center;
       border: 2px dashed rgba(255, 255, 255, 0.3);
-      border-radius: 8px;
-      padding: 2rem;
-      transition: all 0.3s ease;
-      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 2.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(31, 41, 55, 0.6);
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      backdrop-filter: blur(8px);
       text-align: center;
+      min-height: 200px;
     }
 
     .file-upload-container.drag-over {
-      border-color: #3f51b5;
-      background: rgba(63, 81, 181, 0.1);
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+      transform: scale(1.02);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
     }
 
     .file-upload-container.has-file {
-      border-color: #4caf50;
-      background: rgba(76, 175, 80, 0.1);
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.2);
     }
 
     .upload-icon {
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+
+      i {
+        font-size: 3rem;
+        color: rgba(255, 255, 255, 0.5);
+        transition: color 0.3s ease;
+      }
     }
 
-    .upload-icon mat-icon {
-      font-size: 3rem;
-      height: 3rem;
-      width: 3rem;
-      color: rgba(255, 255, 255, 0.5);
+    .file-upload-container.has-file .upload-icon i {
+      color: #10b981;
     }
 
-    .file-upload-container.has-file .upload-icon mat-icon {
-      color: #4caf50;
+    .file-upload-container.drag-over .upload-icon i {
+      color: #3b82f6;
     }
 
     .upload-text {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0.5rem;
+      gap: 1rem;
+      width: 100%;
+
+      p {
+        margin: 0;
+        color: #d1d5db;
+        font-size: 1rem;
+      }
     }
 
     .upload-hint {
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.875rem;
+      color: #9ca3af;
       margin-top: 0.5rem;
     }
 
     .file-name {
-      font-weight: 500;
-      color: #fff;
+      font-weight: 600;
+      color: #f9fafb;
       margin: 0;
+      font-size: 1.1rem;
     }
 
     .file-size {
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.7);
-      margin: 0 0 0.5rem;
+      font-size: 0.875rem;
+      color: #9ca3af;
+      margin: 0 0 1rem;
     }
 
     .validation-warnings {
-      background-color: rgba(255, 193, 7, 0.1);
-      border: 1px solid rgba(255, 193, 7, 0.3);
-      border-radius: 4px;
-      padding: 0.5rem;
-      margin: 0.5rem 0;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
       width: 100%;
-    }
+      backdrop-filter: blur(8px);
 
-    .warning-title {
-      color: #ffc107;
-      font-weight: 500;
-      margin: 0 0 0.5rem;
-      font-size: 0.9rem;
-    }
+      .warning-title {
+        color: #f59e0b;
+        font-weight: 600;
+        margin: 0 0 0.75rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
 
-    .validation-warnings ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+        i {
+          font-size: 1rem;
+        }
+      }
 
-    .validation-warnings li {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.8);
-      margin-bottom: 0.3rem;
-    }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
 
-    .validation-warnings mat-icon {
-      color: #ffc107;
-      font-size: 16px;
-      height: 16px;
-      width: 16px;
+        li {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.875rem;
+          color: #fbbf24;
+          margin-bottom: 0.5rem;
+
+          i {
+            font-size: 0.875rem;
+            color: #f59e0b;
+          }
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
     }
 
     .form-field {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-    }
+      gap: 0.75rem;
 
-    .form-field label {
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.7);
-    }
+      label {
+        font-size: 0.9rem;
+        color: #d1d5db;
+        font-weight: 500;
+      }
 
-    .form-field textarea {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      padding: 0.75rem;
-      color: rgba(255, 255, 255, 0.87);
-      font-family: inherit;
-      resize: vertical;
-    }
+      textarea {
+        background: rgba(31, 41, 55, 0.8);
+        background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 0.75rem;
+        color: #f9fafb;
+        font-family: inherit;
+        font-size: 0.9rem;
+        resize: vertical;
+        min-height: 80px;
+        backdrop-filter: blur(8px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    .form-field textarea:focus {
-      outline: none;
-      border-color: #3f51b5;
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        &::placeholder {
+          color: #9ca3af;
+        }
+      }
     }
 
     .upload-progress {
       margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(31, 41, 55, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+
+      .progress-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        p {
+          margin: 0;
+          color: #d1d5db;
+          font-weight: 500;
+        }
+      }
     }
 
-    .upload-progress p {
-      margin-bottom: 0.5rem;
-      color: rgba(255, 255, 255, 0.7);
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(75, 85, 99, 0.8);
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border-radius: 0 0 12px 12px;
+      backdrop-filter: blur(10px);
     }
 
-    mat-dialog-actions {
-      padding-top: 1rem;
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .dialog-header,
+      .dialog-content,
+      .dialog-actions {
+        padding: 1rem;
+      }
+
+      .file-upload-container {
+        padding: 1.5rem;
+        min-height: 150px;
+      }
+
+      .upload-icon i {
+        font-size: 2.5rem;
+      }
+
+      .dialog-actions {
+        flex-direction: column;
+
+        app-custom-button {
+          width: 100%;
+        }
+      }
     }
   `]
 })
@@ -278,13 +445,14 @@ export class DocumentoUploadDialogComponent implements OnInit {
   validationWarnings: DocumentoValidationError[] = [];
 
   constructor(
-    private dialogRef: MatDialogRef<DocumentoUploadDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { tipoDocumentoId: string, tipoDocumentoNombre: string },
     private fb: FormBuilder,
     private documentosService: DocumentosService,
     private documentoValidationService: DocumentoValidationService,
-    private snackBar: MatSnackBar
+    private notificationService: UnifiedNotificationService,
+    public dialogRef: CustomDialogRef<DocumentoUploadDialogComponent>,
+    @Inject(CUSTOM_DIALOG_DATA) public data: { tipoDocumentoId: string, tipoDocumentoNombre: string }
   ) {
+    console.log('[DocumentoUploadDialog] Constructor - datos recibidos:', data);
     this.uploadForm = this.fb.group({
       comentarios: ['']
     });
@@ -389,13 +557,10 @@ export class DocumentoUploadDialogComponent implements OnInit {
                 this.validationWarnings = blurResult.errors;
 
                 // Mostrar advertencia
-                this.snackBar.open(
+                this.notificationService.warning(
                   'Advertencia: ' + blurResult.errors[0].message + '. Considera subir una imagen de mejor calidad.',
-                  'Entendido',
-                  {
-                    duration: 7000,
-                    panelClass: ['warning-snackbar']
-                  }
+                  'Calidad de Imagen',
+                  { duration: 7000 }
                 );
               }
 
@@ -413,21 +578,28 @@ export class DocumentoUploadDialogComponent implements OnInit {
    * Muestra un mensaje de error basado en el error de validación
    */
   private mostrarErrorValidacion(error: DocumentoValidationError): void {
-    this.snackBar.open(error.message, 'Cerrar', {
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
+    this.notificationService.error(error.message, 'Error de Validación');
   }
 
   removeFile(): void {
     this.selectedFile = null;
+    this.validationErrors = [];
+    this.validationWarnings = [];
+    console.log('[DocumentoUploadDialog] Archivo eliminado');
+  }
+
+  cancelar(): void {
+    console.log('[DocumentoUploadDialog] Cancelando diálogo');
+    this.dialogRef.close();
   }
 
   uploadDocument(): void {
     if (!this.selectedFile) {
+      console.warn('[DocumentoUploadDialog] No hay archivo seleccionado');
       return;
     }
 
+    console.log('[DocumentoUploadDialog] Iniciando subida de documento:', this.selectedFile.name);
     this.uploading = true;
 
     // Crear FormData para enviar el archivo
@@ -439,23 +611,25 @@ export class DocumentoUploadDialogComponent implements OnInit {
     this.documentosService.uploadDocumento(formData)
       .pipe(finalize(() => {
         this.uploading = false;
+        console.log('[DocumentoUploadDialog] Finalizando proceso de subida');
       }))
       .subscribe({
         next: (response) => {
           console.log('[DocumentoUploadDialog] Documento subido correctamente:', response);
-          this.snackBar.open('Documento subido correctamente', 'Cerrar', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
+          this.notificationService.success('Documento subido correctamente', 'Éxito');
           this.documentosService.notificarDocumentoActualizado();
-          this.dialogRef.close(true);
+
+          console.log('[DocumentoUploadDialog] Intentando cerrar diálogo...');
+          try {
+            this.dialogRef.close(true as any);
+            console.log('[DocumentoUploadDialog] Diálogo cerrado exitosamente');
+          } catch (error) {
+            console.error('[DocumentoUploadDialog] Error al cerrar diálogo:', error);
+          }
         },
         error: (error) => {
           console.error('[DocumentoUploadDialog] Error al subir documento:', error);
-          this.snackBar.open('Error al subir el documento. Por favor, intenta nuevamente.', 'Cerrar', {
-            duration: 5000,
-            panelClass: ['error-snackbar']
-          });
+          this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
         }
       });
   }

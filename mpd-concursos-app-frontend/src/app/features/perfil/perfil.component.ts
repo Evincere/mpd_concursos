@@ -11,6 +11,7 @@ import { ProfileService } from '@core/services/profile/profile.service';
 import { ExperienceService } from '@core/services/experience/experience.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { EducacionService } from '@core/services/educacion/educacion.service';
+import { AuthService } from '@core/services/auth/auth.service';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { PerfilStateService } from './services/perfil-state.service';
@@ -161,8 +162,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private documentosService: DocumentosService,
     private profileService: ProfileService,
-    private educacionService: EducacionService, 
+    private educacionService: EducacionService,
     private experienceService: ExperienceService,
+    private authService: AuthService,
     private dialog: CustomDialogService,
     private notification: CustomNotificationService,
     private perfilState: PerfilStateService,
@@ -204,17 +206,21 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   private initializeForms() {
     this.perfilForm = this.fb.group({
-      username: [{ value: '', disabled: true }],
-      email: [{ value: '', disabled: true }],
+      username: [''],
+      email: [''],
       dni: ['', [Validators.pattern('^[0-9]{8}$')]],
       cuit: ['', [Validators.pattern('^[0-9]{2}-[0-9]{8}-[0-9]{1}$')]],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
-      telefono: [{ value: '', disabled: true }],
-      direccion: [{ value: '', disabled: true }],
+      telefono: [''], // Cambiar a habilitado por defecto
+      direccion: [''], // Cambiar a habilitado por defecto
       experiencias: this.fb.array([]),
       habilidades: this.fb.array([])
     });
+
+    // Deshabilitar campos que no deben ser editables
+    this.perfilForm.get('username')?.disable();
+    this.perfilForm.get('email')?.disable();
 
     // Suscribirse a los cambios del CUIT para formatear automáticamente
     this.perfilForm.get('cuit')?.valueChanges.subscribe(value => {
@@ -250,10 +256,22 @@ export class PerfilComponent implements OnInit, OnDestroy {
   loadUserProfile(): void {
     this.isLoading = true;
     console.log('Iniciando carga del perfil de usuario');
+    console.log('Token disponible:', !!this.authService.getToken());
+    console.log('Usuario autenticado:', this.authService.isAuthenticated());
 
     this.profileService.getUserProfile().subscribe({
       next: (profile) => {
         console.log('Perfil recibido:', profile);
+        console.log('Campos del perfil:', {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email,
+          username: profile.username,
+          dni: profile.dni,
+          cuit: profile.cuit,
+          telefono: profile.telefono,
+          direccion: profile.direccion
+        });
 
         // Guardar la referencia al perfil del usuario
         this.userProfile = profile;
@@ -287,6 +305,18 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
         // Marcar como no cargando después de cargar los datos básicos
         this.isLoading = false;
+
+        // Asegurar que los campos estén en el estado correcto (deshabilitados si no está editando)
+        if (!this.isEditing) {
+          const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
+          editableFields.forEach(field => {
+            const control = this.perfilForm.get(field);
+            if (control) {
+              control.disable();
+            }
+          });
+        }
+
         this.cdr.detectChanges(); // Forzar detección de cambios
       },      error: (error: Error) => {
         console.error('Error loading user profile', error);
@@ -299,19 +329,45 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Cargar solo los datos básicos del perfil
   private cargarDatosBasicos(profile: UserProfile): void {
-    if (!profile) return;
+    if (!profile) {
+      console.error('Profile es null o undefined');
+      return;
+    }
 
-    // Actualizar valores básicos del formulario
+    console.log('Cargando datos básicos del perfil...');
+    console.log('Estado del formulario antes de patchValue:', this.perfilForm.value);
+    console.log('Estado de los controles antes de patchValue:', {
+      firstName: this.perfilForm.get('firstName')?.value,
+      lastName: this.perfilForm.get('lastName')?.value,
+      telefono: this.perfilForm.get('telefono')?.value,
+      direccion: this.perfilForm.get('direccion')?.value,
+      telefonoDisabled: this.perfilForm.get('telefono')?.disabled,
+      direccionDisabled: this.perfilForm.get('direccion')?.disabled
+    });
+
+    // Actualizar campos deshabilitados individualmente
+    this.perfilForm.get('username')?.setValue(profile.username || '', { emitEvent: false });
+    this.perfilForm.get('email')?.setValue(profile.email || '', { emitEvent: false });
+
+    // Actualizar valores básicos del formulario para campos habilitados
     this.perfilForm.patchValue({
       firstName: profile.firstName || '',
       lastName: profile.lastName || '',
-      email: profile.email || '',
-      username: profile.username || '',
       dni: profile.dni || '',
       cuit: profile.cuit || '',
       telefono: profile.telefono || '',
       direccion: profile.direccion || '',
     }, { emitEvent: false });
+
+    console.log('Estado del formulario después de patchValue:', this.perfilForm.value);
+    console.log('Estado de los controles después de patchValue:', {
+      firstName: this.perfilForm.get('firstName')?.value,
+      lastName: this.perfilForm.get('lastName')?.value,
+      telefono: this.perfilForm.get('telefono')?.value,
+      direccion: this.perfilForm.get('direccion')?.value,
+      username: this.perfilForm.get('username')?.value,
+      email: this.perfilForm.get('email')?.value
+    });
 
     // Notificar que los datos básicos están listos
     this.cdr.markForCheck();
@@ -334,12 +390,14 @@ export class PerfilComponent implements OnInit, OnDestroy {
   private updateFormWithProfile(profile: UserProfile): void {
     if (!profile) return;
 
-    // Actualizar valores básicos del formulario
+    // Actualizar campos deshabilitados individualmente
+    this.perfilForm.get('username')?.setValue(profile.username || '', { emitEvent: false });
+    this.perfilForm.get('email')?.setValue(profile.email || '', { emitEvent: false });
+
+    // Actualizar valores básicos del formulario para campos habilitados
     this.perfilForm.patchValue({
       firstName: profile.firstName || '',
       lastName: profile.lastName || '',
-      email: profile.email || '',
-      username: profile.username || '',
       dni: profile.dni || '',
       cuit: profile.cuit || '',
       telefono: profile.telefono || '',
@@ -420,9 +478,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      // Deshabilitar todos los campos
-      Object.keys(this.perfilForm.controls).forEach(key => {
-        this.perfilForm.get(key)?.disable();
+      // Deshabilitar solo los campos editables, mantener username y email siempre deshabilitados
+      const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
+      editableFields.forEach(field => {
+        const control = this.perfilForm.get(field);
+        if (control) {
+          control.disable();
+        }
       });
     }
   }
@@ -541,16 +603,22 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   guardarPerfil(): void {
+    console.log('🚀 INICIANDO GUARDADO DE PERFIL - VERSIÓN CON FIX CUIT Y NULL VALIDATION');
     if (this.perfilForm.valid) {
       this.isLoading = true;
 
       const formValues = this.perfilForm.value;
+      console.log('📋 Datos del formulario RAW:', formValues);
 
       const updatedProfile: Partial<UserProfile> = {
         firstName: formValues.firstName,
         lastName: formValues.lastName,
         dni: formValues.dni,
-        cuit: formValues.cuit,
+        cuit: formValues.cuit ? (() => {
+          const cleanCuit = formValues.cuit.replace(/\D/g, '');
+          console.log('🔧 CUIT original:', formValues.cuit, '-> CUIT limpio:', cleanCuit);
+          return cleanCuit;
+        })() : '', // Remover guiones del CUIT
         telefono: formValues.telefono,
         direccion: formValues.direccion,
         experiencias: (formValues.experiencias || []).map((exp: any) => ({
@@ -569,6 +637,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
         }))
       };
 
+      console.log('📤 Objeto final que se enviará al backend:', updatedProfile);
+      console.log('🔍 CUIT final que se enviará:', updatedProfile.cuit);
+
       this.profileService.updateUserProfile(updatedProfile)
         .pipe(finalize(() => this.isLoading = false))
         .subscribe({
@@ -580,6 +651,18 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
             // Actualizar el formulario con los datos del perfil
             this.cargarPerfilForm(profile);
+
+            // Volver al estado de no edición
+            this.isEditing = false;
+
+            // Deshabilitar los campos editables
+            const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
+            editableFields.forEach(field => {
+              const control = this.perfilForm.get(field);
+              if (control) {
+                control.disable();
+              }
+            });
 
             this.perfilForm.markAsPristine();
           },
@@ -596,8 +679,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
   resetForm(): void {
     this.loadUserProfile();
     this.isEditing = false;
-    Object.keys(this.perfilForm.controls).forEach(key => {
-      this.perfilForm.get(key)?.disable();
+    // Deshabilitar solo los campos editables, mantener username y email siempre deshabilitados
+    const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
+    editableFields.forEach(field => {
+      const control = this.perfilForm.get(field);
+      if (control) {
+        control.disable();
+      }
     });
   }
 
@@ -815,9 +903,19 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Método para cargar el perfil en el formulario
   cargarPerfilForm(profile: UserProfile): void {
-    // Actualizar campos básicos
-    const basicFields = ['username', 'email', 'dni', 'cuit', 'firstName', 'lastName', 'telefono', 'direccion'];
-    basicFields.forEach(key => {
+    // Actualizar campos deshabilitados individualmente
+    const disabledFields = ['username', 'email'];
+    disabledFields.forEach(key => {
+      const control = this.perfilForm.get(key);
+      if (control && profile[key as keyof UserProfile] !== undefined) {
+        control.setValue(profile[key as keyof UserProfile] || '', { emitEvent: false });
+        control.markAsPristine();
+      }
+    });
+
+    // Actualizar campos habilitados
+    const enabledFields = ['dni', 'cuit', 'firstName', 'lastName', 'telefono', 'direccion'];
+    enabledFields.forEach(key => {
       const control = this.perfilForm.get(key);
       if (control && profile[key as keyof UserProfile] !== undefined) {
         control.setValue(profile[key as keyof UserProfile] || '', { emitEvent: false });

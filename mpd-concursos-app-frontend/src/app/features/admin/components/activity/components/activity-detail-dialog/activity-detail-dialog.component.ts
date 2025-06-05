@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -26,7 +26,7 @@ export class ActivityDetailDialogComponent implements OnInit, OnDestroy {
 
   constructor(
     private activityService: AdminActivityService,
-    private snackBar: MatSnackBar,
+    private notificationService: UnifiedNotificationService,
     public dialogRef: MatDialogRef<ActivityDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { logId: string }
   ) { }
@@ -52,7 +52,7 @@ export class ActivityDetailDialogComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando registro de actividad:', error);
-          this.snackBar.open('Error al cargar los detalles del registro de actividad', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al cargar los detalles del registro de actividad');
           this.isLoading = false;
         }
       });
@@ -128,10 +128,10 @@ export class ActivityDetailDialogComponent implements OnInit, OnDestroy {
   copyToClipboard(text: string): void {
     navigator.clipboard.writeText(text)
       .then(() => {
-        this.snackBar.open('Copiado al portapapeles', 'Cerrar', { duration: 2000 });
+        this.notificationService.success('Copiado al portapapeles');
       })
       .catch(() => {
-        this.snackBar.open('Error al copiar al portapapeles', 'Cerrar', { duration: 2000 });
+        this.notificationService.error('Error al copiar al portapapeles');
       });
   }
 

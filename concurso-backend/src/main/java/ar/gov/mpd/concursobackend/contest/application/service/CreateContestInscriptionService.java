@@ -14,7 +14,6 @@ import ar.gov.mpd.concursobackend.contest.application.port.in.CreateContestInscr
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;
@@ -22,9 +21,6 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.SaveInscriptionPort;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
-import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRequest;
-import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
-import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

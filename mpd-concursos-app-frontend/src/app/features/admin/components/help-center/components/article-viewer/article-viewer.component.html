@@ -1,0 +1,103 @@
+<div class="article-viewer" *ngIf="article">
+  <!-- Article Header -->
+  <div class="article-header">
+    <div class="article-meta">
+      <div class="article-categories">
+        <span class="category-chip primary">{{article.category}}</span>
+        <span *ngIf="article.subcategory" class="category-chip secondary">{{article.subcategory}}</span>
+      </div>
+      <div class="article-level" [ngClass]="getLevelClass(article.level)">
+        {{getLevelName(article.level)}}
+      </div>
+    </div>
+    
+    <h1 class="article-title">{{article.title}}</h1>
+    
+    <div class="article-summary" *ngIf="article.summary">
+      {{article.summary}}
+    </div>
+  </div>
+
+  <!-- Article Content -->
+  <div class="article-content-container">
+    <div class="article-content">
+      <markdown [data]="article.content"></markdown>
+    </div>
+  </div>
+
+  <!-- Article Footer -->
+  <div class="article-footer">
+    <!-- Tags Section -->
+    <div class="article-tags" *ngIf="article.tags && article.tags.length > 0">
+      <span class="tags-label">🏷️ Etiquetas:</span>
+      <div class="tags-list">
+        <span class="tag" *ngFor="let tag of article.tags">{{tag}}</span>
+      </div>
+    </div>
+
+    <!-- Article Info -->
+    <div class="article-info">
+      <div class="article-date">
+        <span class="info-icon">📅</span>
+        <span class="info-text">Actualizado: {{formatDate(article.lastUpdated)}}</span>
+      </div>
+
+      <div *ngIf="article.author" class="article-author">
+        <span class="info-icon">👤</span>
+        <span class="info-text">Autor: {{article.author}}</span>
+      </div>
+
+      <div *ngIf="article.views" class="article-views">
+        <span class="info-icon">👁️</span>
+        <span class="info-text">Vistas: {{article.views}}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Articles -->
+  <div *ngIf="article.relatedArticles && article.relatedArticles.length > 0" class="related-articles">
+    <h3 class="related-title">📚 Artículos Relacionados</h3>
+    <div class="related-grid">
+      <a *ngFor="let relatedId of article.relatedArticles"
+         class="related-link"
+         [routerLink]="['/admin/ayuda/articulo', relatedId]">
+        <div class="related-icon">📄</div>
+        <div class="related-content">
+          <span class="related-text">{{getRelatedArticleTitle(relatedId)}}</span>
+          <span class="related-arrow">→</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Navigation Actions -->
+  <div class="article-actions">
+    <button class="btn-action secondary" (click)="goBack()">
+      <span class="btn-icon">←</span>
+      <span class="btn-label">Volver</span>
+    </button>
+    
+    <button class="btn-action primary" (click)="printArticle()">
+      <span class="btn-icon">🖨️</span>
+      <span class="btn-label">Imprimir</span>
+    </button>
+    
+    <button class="btn-action secondary" (click)="shareArticle()">
+      <span class="btn-icon">📤</span>
+      <span class="btn-label">Compartir</span>
+    </button>
+  </div>
+
+  <!-- Feedback Component -->
+  <div class="feedback-section">
+    <app-help-feedback [articleId]="article.id"></app-help-feedback>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="!article" class="article-loading">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <span class="loading-text">Cargando artículo...</span>
+  </div>
+</div>

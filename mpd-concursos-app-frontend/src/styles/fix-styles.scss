@@ -61,32 +61,40 @@ body, html {
 }
 
 // Correcciones para la barra lateral
+// COMENTADO: Estas reglas interfieren con el sistema glassmorphism de usuario
+// El sistema glassmorphism maneja estos estilos automáticamente
+/*
 .sidebar {
   background-color: var(--color-background-dark);
   border-right: 1px solid var(--card-border);
-  
+
   .nav-item {
     a {
       color: var(--color-text-secondary);
-      
+
       &.active {
         background-color: var(--color-primary-light);
         color: var(--color-primary);
       }
-      
+
       &:hover:not(.active) {
         background-color: rgba(255, 255, 255, 0.05);
       }
     }
   }
 }
+*/
 
 // Correcciones para la barra de navegación
+// COMENTADO: Estas reglas interfieren con el sistema glassmorphism de usuario
+// El sistema glassmorphism maneja estos estilos automáticamente
+/*
 .navbar {
   background-color: var(--color-background-dark);
   border-bottom: 1px solid var(--card-border);
   color: var(--color-text-primary);
 }
+*/
 
 // Correcciones para tarjetas
 .card, mat-card {
@@ -169,21 +177,65 @@ button, .mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-outlined-button {
 // Correcciones para formularios
 .mat-mdc-form-field {
   width: 100%;
-  
+
   .mat-mdc-form-field-flex {
     background-color: var(--color-surface-light) !important;
   }
-  
+
   .mat-mdc-text-field-wrapper {
     background-color: transparent !important;
   }
-  
+
   .mat-mdc-form-field-label {
     color: var(--color-text-secondary) !important;
   }
-  
+
   .mat-mdc-input-element {
     color: var(--color-text-primary) !important;
+  }
+}
+
+// Ensure custom form fields take precedence over Material UI styles
+app-custom-form-field {
+  .field-input {
+    // Override any Material UI interference
+    background-color: rgba(75, 85, 99, 0.4) !important;
+    color: #ffffff !important;
+    border: 1px solid #6b7280 !important;
+
+    &:focus {
+      background-color: rgba(75, 85, 99, 0.6) !important;
+      border-color: #60a5fa !important;
+      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3) !important;
+    }
+  }
+
+  .field-label {
+    color: #ffffff !important;
+  }
+}
+
+// Dashboard layout specific overrides for custom form fields
+.dashboard-layout app-custom-form-field {
+  .field-input {
+    background-color: var(--user-input-background, rgba(75, 85, 99, 0.4)) !important;
+    color: var(--user-text-input, #ffffff) !important;
+    border-color: var(--user-border-glass, rgba(255, 255, 255, 0.15)) !important;
+
+    &:focus {
+      background-color: var(--user-input-background-focus, rgba(75, 85, 99, 0.6)) !important;
+      border-color: var(--user-border-input-focus, rgba(96, 165, 250, 0.5)) !important;
+      box-shadow: 0 0 0 2px var(--user-border-input-focus, rgba(96, 165, 250, 0.5)) !important;
+    }
+
+    &::placeholder {
+      color: var(--user-text-input-placeholder, #9ca3af) !important;
+    }
+  }
+
+  .field-label {
+    color: var(--user-text-high-contrast, #ffffff) !important;
+    font-size: var(--user-font-size-input, 1rem) !important;
   }
 }
 
@@ -200,12 +252,67 @@ button, .mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-outlined-button {
 // Correcciones para menús
 .mat-mdc-menu-panel {
   background-color: var(--color-surface) !important;
-  
+
   .mat-mdc-menu-item {
     color: var(--color-text-primary) !important;
-    
+
     &:hover:not([disabled]) {
       background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+  }
+}
+
+/* ===== TABS ACCESSIBILITY OVERRIDES ===== */
+/* Force application of accessibility improvements for tabs */
+.dashboard-layout {
+  app-custom-tabs {
+    .tab-button {
+      font-size: var(--user-font-size-tab, 1rem) !important;
+      color: var(--user-text-tab-inactive, #d1d5db) !important;
+      min-height: 52px !important;
+
+      &.active {
+        color: var(--user-text-tab-active, #ffffff) !important;
+        background: rgba(96, 165, 250, 0.15) !important;
+        border-bottom: 2px solid var(--user-border-tab-active, rgba(96, 165, 250, 0.6)) !important;
+        font-weight: 600 !important;
+
+        i {
+          color: var(--user-text-tab-active, #ffffff) !important;
+        }
+
+        span {
+          color: var(--user-text-tab-active, #ffffff) !important;
+        }
+      }
+
+      &:hover:not(.disabled):not(.active) {
+        color: var(--user-text-primary, #f9fafb) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+
+        i {
+          color: var(--user-text-accent, #60a5fa) !important;
+        }
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--user-border-input-focus, rgba(96, 165, 250, 0.5)) !important;
+        outline-offset: -2px !important;
+      }
+    }
+
+    .tab-indicator {
+      background: linear-gradient(90deg, var(--user-text-accent, #60a5fa), #60a5fa) !important;
+      box-shadow: 0 -2px 12px rgba(96, 165, 250, 0.4) !important;
+      height: 4px !important;
+    }
+
+    /* Mobile responsive overrides */
+    @media (max-width: 768px) {
+      .tab-button {
+        font-size: var(--user-font-size-tab-mobile, 0.9375rem) !important;
+        min-height: 48px !important;
+      }
     }
   }
 }

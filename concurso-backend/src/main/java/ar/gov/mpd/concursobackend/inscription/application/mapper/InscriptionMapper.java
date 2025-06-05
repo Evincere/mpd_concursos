@@ -3,7 +3,6 @@ package ar.gov.mpd.concursobackend.inscription.application.mapper;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import org.springframework.stereotype.Component;

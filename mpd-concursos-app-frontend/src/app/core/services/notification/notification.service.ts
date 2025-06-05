@@ -1,21 +1,19 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private unifiedNotificationService: UnifiedNotificationService) {}
 
   /**
    * Muestra un mensaje de éxito
    */
   showSuccess(message: string, title = 'Éxito'): void {
-    this.snackBar.open(`${title}: ${message}`, 'Cerrar', {
+    this.unifiedNotificationService.success(message, title, {
       duration: 5000,
-      panelClass: ['success-snackbar'],
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+      position: 'top-end'
     });
   }
 
@@ -23,11 +21,9 @@ export class NotificationService {
    * Muestra un mensaje de error
    */
   showError(message: string, title = 'Error'): void {
-    this.snackBar.open(`${title}: ${message}`, 'Cerrar', {
+    this.unifiedNotificationService.error(message, title, {
       duration: 7000,
-      panelClass: ['error-snackbar'],
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+      position: 'top-end'
     });
   }
 
@@ -35,11 +31,9 @@ export class NotificationService {
    * Muestra un mensaje de advertencia
    */
   showWarning(message: string, title = 'Advertencia'): void {
-    this.snackBar.open(`${title}: ${message}`, 'Cerrar', {
+    this.unifiedNotificationService.warning(message, title, {
       duration: 6000,
-      panelClass: ['warning-snackbar'],
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+      position: 'top-end'
     });
   }
 
@@ -47,11 +41,9 @@ export class NotificationService {
    * Muestra un mensaje informativo
    */
   showInfo(message: string, title = 'Información'): void {
-    this.snackBar.open(`${title}: ${message}`, 'Cerrar', {
+    this.unifiedNotificationService.info(message, title, {
       duration: 5000,
-      panelClass: ['info-snackbar'],
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+      position: 'top-end'
     });
   }
 }

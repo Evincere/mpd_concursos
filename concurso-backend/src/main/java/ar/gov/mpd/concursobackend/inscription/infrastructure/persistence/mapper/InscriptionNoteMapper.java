@@ -3,7 +3,6 @@ package ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.InscriptionNoteEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**

@@ -4,7 +4,7 @@ import ar.gov.mpd.concursobackend.inscription.application.dto.UpdateInscriptionS
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStepUseCase;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionPreferences;
-import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
+
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +33,9 @@ public class UpdateInscriptionStepService implements UpdateInscriptionStepUseCas
         // Actualizar el paso actual
         inscription.updateStep(request.getStep());
 
-        // Si se completa la inscripción, actualizar el estado a ACTIVE
+        // Si se completa la inscripción, usar la nueva lógica de completado
         if (request.getStep() == InscriptionStep.COMPLETED) {
-            inscription.setState(InscriptionState.ACTIVE);
+            inscription.completeInscription();
         }
 
         // Crear y actualizar preferencias si se proporcionaron datos

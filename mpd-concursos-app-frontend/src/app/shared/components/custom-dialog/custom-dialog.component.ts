@@ -17,7 +17,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         [ngStyle]="getDialogStyle()"
         (click)="$event.stopPropagation()">
 
-        <div class="dialog-header" *ngIf="title">
+        <div class="dialog-header" *ngIf="title && title.trim()">
           <h2 class="dialog-title">{{ title }}</h2>
           <app-custom-button
             *ngIf="showCloseButton"
@@ -28,7 +28,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           </app-custom-button>
         </div>
 
-        <div class="dialog-content">
+        <div class="dialog-content" [ngClass]="{'no-padding': !title || !title.trim()}">
           <ng-content></ng-content>
           <ng-container *ngIf="contentTemplate" [ngTemplateOutlet]="contentTemplate"></ng-container>
           <div *ngIf="htmlContent" [innerHTML]="htmlContent"></div>
@@ -103,6 +103,12 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       min-width: 300px;
     }
 
+    /* Allow larger sizes when explicitly specified */
+    .dialog-container.large-size {
+      max-width: 98vw;
+      max-height: 98vh;
+    }
+
     .dialog-backdrop.visible .dialog-container {
       transform: scale(1);
     }
@@ -126,6 +132,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       padding: 24px;
       overflow-y: auto;
       flex: 1;
+    }
+
+    .dialog-content.no-padding {
+      padding: 0;
+      overflow: hidden;
     }
 
     .dialog-actions {
@@ -338,7 +349,39 @@ export class CustomDialogComponent implements AfterViewInit, OnDestroy {
    * Obtiene la clase CSS para la posición del diálogo
    */
   getPositionClass(): string {
-    return `position-${this.position}`;
+    let classes = `position-${this.position}`;
+
+    // Add large-size class if dimensions exceed default maximums
+    if (this.isLargeSize()) {
+      classes += ' large-size';
+    }
+
+    return classes;
+  }
+
+  /**
+   * Determina si el diálogo tiene dimensiones grandes
+   */
+  private isLargeSize(): boolean {
+    if (!this.width && !this.height) return false;
+
+    // Check if width exceeds 90vw
+    if (this.width) {
+      const widthMatch = this.width.match(/(\d+(?:\.\d+)?)vw/);
+      if (widthMatch && parseFloat(widthMatch[1]) > 90) {
+        return true;
+      }
+    }
+
+    // Check if height exceeds 90vh
+    if (this.height) {
+      const heightMatch = this.height.match(/(\d+(?:\.\d+)?)vh/);
+      if (heightMatch && parseFloat(heightMatch[1]) > 90) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

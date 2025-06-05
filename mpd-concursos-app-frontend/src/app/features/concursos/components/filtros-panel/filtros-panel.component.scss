@@ -1,169 +1,337 @@
+/* ===== FILTROS PANEL GLASSMORPHISM PREMIUM DARK ===== */
+/* Refactorizado según glassmorphism-design-system-guide.md */
+
 :host {
   display: block;
-  height: 100vh;
+  height: calc(100vh - var(--user-header-height, 90px)); /* Altura ajustada para respetar el navbar */
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
-:host ::ng-deep {
-  .filtros-panel {
-    height: 100%;
-    width: 100%;
-    background: rgba(var(--surface-color-rgb), 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 0;
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    flex-direction: column;
+.filtros-panel {
+  /* Glassmorphism premium dark base */
+  height: 100%;
+  width: 100%;
+  background: rgba(55, 65, 81, 0.8);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 
-    header {
-      padding: 1rem;
-      background: rgba(var(--surface-color-rgb), 0.8);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+
+  /* Premium shadows */
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  /* Panel header */
+  .panel-header {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.9) 0%,
+      rgba(55, 65, 81, 0.95) 100%);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    flex-shrink: 0;
+
+    /* Subtle shine effect */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent);
+    }
+
+    .header-title {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      gap: 0.75rem;
+
+      i {
+        color: #60a5fa;
+        font-size: 1.125rem;
+        opacity: 0.9;
+      }
 
       h2 {
         margin: 0;
-        font-size: 1.25rem;
-        color: var(--text-color);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        i {
-          color: var(--primary-color);
-        }
-      }
-
-      button {
-        color: var(--text-secondary);
-        transition: all 0.3s ease;
-
-        &:hover {
-          color: var(--text-color);
-          transform: rotate(90deg);
-        }
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #f9fafb;
+        letter-spacing: -0.025em;
       }
     }
 
-    form {
-      flex: 1;
-      overflow-y: auto;
+    /* Custom button integration */
+    ::ng-deep app-custom-button {
+      .custom-button {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.2);
+          border-color: rgba(239, 68, 68, 0.4);
+          transform: rotate(90deg) scale(1.1);
+        }
+
+        .button-icon {
+          color: #f87171;
+        }
+      }
+    }
+  }
+
+  /* Panel Content */
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.4);
+      }
+    }
+
+    .filtros-form {
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .filter-group {
+      background: rgba(55, 65, 81, 0.8);
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
       padding: 1rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
-      &::-webkit-scrollbar {
-        width: 6px;
+      &:hover {
+        background: rgba(75, 85, 99, 0.9);
+        transform: translateY(-2px);
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.3),
+          0 4px 12px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.2);
       }
 
-      &::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: rgba(var(--primary-color-rgb), 0.2);
-        border-radius: 3px;
-
-        &:hover {
-          background: rgba(var(--primary-color-rgb), 0.3);
-        }
-      }
-
-      .filtro-grupo {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 1.25rem;
+      .filter-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         margin-bottom: 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
 
-        &:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(255, 255, 255, 0.15);
+        .filter-icon {
+          color: #60a5fa;
+          font-size: 1rem;
+          opacity: 0.9;
         }
 
-        h3 {
-          margin: 0 0 1rem 0;
-          font-size: 1rem;
-          color: var(--text-color);
-          font-weight: 500;
-          display: flex;
-          align-items: center;
+        .filter-title {
+          margin: 0;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #f9fafb;
+          letter-spacing: -0.025em;
+        }
+      }
+
+      .filter-options {
+        .button-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
           gap: 0.5rem;
 
-          i {
-            color: var(--primary-color);
+          ::ng-deep app-custom-button {
+            .custom-button {
+              width: 100%;
+              height: 36px;
+              font-size: 0.75rem;
+              font-weight: 500;
+              background: rgba(31, 41, 55, 0.6);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              color: #d1d5db;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+              &:hover {
+                background: rgba(55, 65, 81, 0.7);
+                border-color: rgba(255, 255, 255, 0.15);
+                color: #f9fafb;
+                transform: translateY(-1px);
+              }
+
+              &.active {
+                background: rgba(59, 130, 246, 0.8);
+                border-color: rgba(59, 130, 246, 0.5);
+                color: #ffffff;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+                .button-icon {
+                  color: #ffffff;
+                }
+              }
+
+              .button-icon {
+                color: #9ca3af;
+                font-size: 0.875rem;
+                margin-right: 0.375rem;
+              }
+
+              .button-label {
+                font-size: 0.75rem;
+                line-height: 1;
+              }
+            }
           }
         }
 
-        .mat-button-toggle-group {
-          border: none;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0;
-          background: transparent;
-          border-radius: 6px;
-          overflow: hidden;
+        /* Custom select integration */
+        ::ng-deep app-custom-select {
           width: 100%;
 
-          .mat-button-toggle {
-            background: rgba(255, 255, 255, 0.05);
+          .select-container {
+            background: rgba(31, 41, 55, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0;
-            margin: 0;
-            border-right: none;
-            flex: 1;
-
-            &:last-child {
-              border-right: 1px solid rgba(255, 255, 255, 0.1);
-            }
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
             &:hover {
-              background: rgba(255, 255, 255, 0.1);
+              background: rgba(55, 65, 81, 0.7);
+              border-color: rgba(255, 255, 255, 0.15);
             }
 
-            &.mat-button-toggle-checked {
-              background: rgba(var(--primary-color-rgb), 0.2);
-              border-color: rgba(var(--primary-color-rgb), 0.3);
+            &.focused {
+              border-color: rgba(96, 165, 250, 0.5);
+              box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+            }
 
-              .mat-button-toggle-label-content {
-                color: var(--primary-color);
+            .select-value {
+              color: #f9fafb;
+            }
+
+            .select-placeholder {
+              color: #9ca3af;
+            }
+
+            .select-arrow {
+              color: #9ca3af;
+            }
+          }
+
+          .select-dropdown {
+            background: rgba(55, 65, 81, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+            .select-option {
+              color: #f9fafb;
+              transition: all 0.3s ease;
+
+              &:hover {
+                background: rgba(96, 165, 250, 0.1);
               }
-            }
 
-            .mat-button-toggle-label-content {
-              line-height: 36px;
-              padding: 0 1rem;
-              color: var(--text-color);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 0.5rem;
-
-              mat-icon {
-                font-size: 18px;
-                width: 18px;
-                height: 18px;
-                line-height: 18px;
+              &.selected {
+                background: rgba(96, 165, 250, 0.2);
+                color: #60a5fa;
               }
             }
           }
         }
+      }
+    }
+  }
 
-        mat-select {
-          width: 100%;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 6px;
-          padding: 0.5rem;
-          color: var(--text-color);
+  /* Panel Footer */
+  .panel-footer {
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg,
+      rgba(75, 85, 99, 0.9) 0%,
+      rgba(55, 65, 81, 0.95) 100%);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
 
-          &:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.15);
+    .footer-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+
+      ::ng-deep app-custom-button {
+        .custom-button {
+          height: 40px;
+          padding: 0 1.25rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+          &.stroked {
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #d1d5db;
+
+            &:hover {
+              background: rgba(55, 65, 81, 0.7);
+              border-color: rgba(255, 255, 255, 0.3);
+              color: #f9fafb;
+              transform: translateY(-1px);
+            }
+          }
+
+          &.filled {
+            background: rgba(59, 130, 246, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: #ffffff;
+
+            &:hover {
+              background: rgba(37, 99, 235, 0.9);
+              border-color: rgba(37, 99, 235, 0.7);
+              transform: translateY(-1px);
+              box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            }
+          }
+
+          .button-icon {
+            margin-right: 0.5rem;
+            font-size: 0.875rem;
           }
         }
       }
@@ -171,50 +339,82 @@
   }
 }
 
+/* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   :host {
     max-width: none;
+    height: calc(100vh - 85px); /* Altura ajustada para navbar móvil */
+  }
+
+  .filtros-panel {
+    .panel-header {
+      padding: 1rem 1.25rem;
+
+      .header-title h2 {
+        font-size: 1rem;
+      }
+    }
+
+    .panel-content {
+      .filtros-form {
+        padding: 0.75rem 1.25rem;
+        gap: 1.25rem;
+      }
+
+      .filter-group {
+        padding: 0.875rem;
+
+        .filter-header .filter-title {
+          font-size: 0.8125rem;
+        }
+
+        .filter-options .button-grid {
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          gap: 0.375rem;
+
+          ::ng-deep app-custom-button .custom-button {
+            height: 32px;
+            font-size: 0.6875rem;
+          }
+        }
+      }
+    }
+
+    .panel-footer {
+      padding: 1rem 1.25rem;
+
+      .footer-actions {
+        gap: 0.5rem;
+
+        ::ng-deep app-custom-button .custom-button {
+          height: 36px;
+          padding: 0 1rem;
+          font-size: 0.8125rem;
+        }
+      }
+    }
   }
 }
 
-// Estilos para el panel de selección de Material
-::ng-deep {
-  .mat-mdc-select-panel {
-    background: var(--surface-color) !important;
-    border-radius: 8px !important;
-    border: 1px solid rgba(var(--primary-color-rgb), 0.3);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
-    
-    .mat-mdc-option {
-      color: var(--text-secondary);
-      min-height: 45px;
-      
-      &:hover:not(.mdc-list-item--disabled) {
-        background: rgba(var(--primary-color-rgb), 0.1);
-      }
-      
-      &.mat-mdc-option-active {
-        background: rgba(var(--primary-color-rgb), 0.15);
-      }
-      
-      &.mat-selected:not(.mat-mdc-option-disabled) {
-        background: var(--primary-color);
-        color: white;
-      }
+@media (max-width: 480px) {
+  :host {
+    height: calc(100vh - 80px); /* Altura ajustada para navbar móvil pequeño */
+  }
+}
 
-      .mdc-list-item__primary-text {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
+/* ===== ACCESSIBILITY SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  .filtros-panel {
+    .filter-group {
+      transition: none;
 
-        mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-          line-height: 18px;
-        }
+      &:hover {
+        transform: none;
       }
+    }
+
+    ::ng-deep app-custom-button .custom-button:hover {
+      transform: none;
     }
   }
 }

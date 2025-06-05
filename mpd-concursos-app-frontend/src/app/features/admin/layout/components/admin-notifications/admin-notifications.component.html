@@ -6,18 +6,18 @@
      aria-label="Notificaciones">
   <!-- Header -->
   <div class="notifications-header">
-    <h3 class="header-title">Notificaciones</h3>
+    <h3 class="header-title">💬 Notificaciones</h3>
     <button
-      mat-button
-      color="primary"
       class="mark-all-button"
       (click)="markAllAsRead()"
+      [attr.aria-label]="'Marcar todas las notificaciones como leídas'"
     >
-      Marcar todas como leídas
+      <span class="btn-icon">✓</span>
+      <span class="btn-label">Marcar todas como leídas</span>
     </button>
   </div>
 
-  <mat-divider></mat-divider>
+  <div class="header-divider"></div>
 
   <!-- Lista de notificaciones -->
   <div class="notifications-list">
@@ -34,7 +34,7 @@
         [attr.aria-label]="'Notificación: ' + notification.title"
       >
         <div class="notification-icon" [ngClass]="notification.type">
-          <mat-icon>{{getNotificationIcon(notification.type)}}</mat-icon>
+          <span class="icon-emoji">{{getNotificationIcon(notification.type)}}</span>
         </div>
         <div class="notification-content">
           <div class="notification-header">
@@ -47,8 +47,10 @@
               *ngIf="notification.link"
               [routerLink]="notification.link"
               class="notification-link"
+              (click)="closeNotifications()"
             >
-              Ver detalles
+              <span class="link-icon">👁️</span>
+              <span class="link-text">Ver detalles</span>
             </a>
             <span
               class="notification-status"
@@ -63,18 +65,20 @@
 
     <ng-template #noNotifications>
       <div class="no-notifications">
-        <mat-icon>notifications_off</mat-icon>
-        <p>No tienes notificaciones</p>
+        <div class="empty-icon">🔕</div>
+        <h4 class="empty-title">Sin notificaciones</h4>
+        <p class="empty-message">No tienes notificaciones pendientes</p>
       </div>
     </ng-template>
   </div>
 
-  <mat-divider></mat-divider>
+  <div class="footer-divider"></div>
 
   <!-- Footer -->
   <div class="notifications-footer">
-    <a routerLink="/admin/notificaciones" class="view-all-link">
-      Ver todas las notificaciones
+    <a routerLink="/admin/comunicaciones/notificaciones" class="view-all-link" (click)="closeNotifications()">
+      <span class="footer-icon">📋</span>
+      <span class="footer-text">Ver todas las notificaciones</span>
     </a>
   </div>
 </div>

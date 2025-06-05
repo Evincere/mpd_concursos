@@ -1,0 +1,154 @@
+<div class="help-feedback">
+  <!-- Feedback Header -->
+  <div class="feedback-header">
+    <h3 class="feedback-title">💬 ¿Le resultó útil esta información?</h3>
+    <p class="feedback-subtitle">Su opinión nos ayuda a mejorar la documentación</p>
+  </div>
+
+  <!-- Rating Section -->
+  <div class="rating-section" *ngIf="!feedbackSent">
+    <div class="rating-buttons">
+      <button
+        class="rating-btn positive"
+        [class.selected]="feedbackForm.get('helpful')?.value === true"
+        (click)="setHelpful(true)"
+        [attr.aria-label]="'Marcar como útil'"
+        [attr.aria-pressed]="feedbackForm.get('helpful')?.value === true">
+        <span class="btn-icon">👍</span>
+        <span class="btn-label">Sí, útil</span>
+      </button>
+
+      <button
+        class="rating-btn negative"
+        [class.selected]="feedbackForm.get('helpful')?.value === false"
+        (click)="setHelpful(false)"
+        [attr.aria-label]="'Marcar como no útil'"
+        [attr.aria-pressed]="feedbackForm.get('helpful')?.value === false">
+        <span class="btn-icon">👎</span>
+        <span class="btn-label">No, no útil</span>
+      </button>
+    </div>
+
+    <!-- Star Rating -->
+    <div class="star-rating" *ngIf="feedbackForm.get('helpful')?.value !== null">
+      <span class="rating-label">Calificación:</span>
+      <div class="stars">
+        <button
+          *ngFor="let star of [1,2,3,4,5]; let i = index"
+          class="star"
+          [class.active]="i < currentRating"
+          [class.hover]="i < hoverRating"
+          (click)="setRating(i + 1)"
+          (mouseenter)="setHoverRating(i + 1)"
+          (mouseleave)="setHoverRating(0)"
+          [attr.aria-label]="'Calificar con ' + (i + 1) + ' estrella' + (i > 0 ? 's' : '')">
+          ⭐
+        </button>
+      </div>
+      <span class="rating-text">{{getRatingText(currentRating)}}</span>
+    </div>
+  </div>
+
+  <!-- Comment Form -->
+  <form 
+    [formGroup]="feedbackForm" 
+    (ngSubmit)="submitFeedback()" 
+    class="feedback-form"
+    *ngIf="feedbackForm.get('helpful')?.value !== null && !feedbackSent">
+    
+    <div class="form-group">
+      <label for="comment" class="form-label">
+        💭 Comentarios adicionales (opcional)
+      </label>
+      <textarea
+        id="comment"
+        class="form-textarea"
+        formControlName="comment"
+        placeholder="Díganos cómo podemos mejorar esta documentación..."
+        rows="4"
+        [attr.aria-describedby]="'comment-help'">
+      </textarea>
+      <small id="comment-help" class="form-help">
+        Comparta sus sugerencias para ayudarnos a mejorar
+      </small>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="resetFeedback()"
+        [disabled]="isSending">
+        <span class="btn-icon">↺</span>
+        <span class="btn-label">Reiniciar</span>
+      </button>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="isSending || feedbackForm.invalid">
+        <span class="btn-icon" *ngIf="!isSending">📤</span>
+        <span class="btn-icon loading" *ngIf="isSending">⏳</span>
+        <span class="btn-label">
+          {{isSending ? 'Enviando...' : 'Enviar comentarios'}}
+        </span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Success State -->
+  <div class="feedback-success" *ngIf="feedbackSent">
+    <div class="success-icon">✅</div>
+    <h4 class="success-title">¡Gracias por sus comentarios!</h4>
+    <p class="success-message">
+      Su feedback nos ayuda a mejorar continuamente la documentación.
+    </p>
+    
+    <div class="success-actions">
+      <button class="btn-secondary" (click)="resetFeedback()">
+        <span class="btn-icon">🔄</span>
+        <span class="btn-label">Enviar más comentarios</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="feedback-error" *ngIf="hasError">
+    <div class="error-icon">❌</div>
+    <h4 class="error-title">Error al enviar comentarios</h4>
+    <p class="error-message">{{errorMessage}}</p>
+    
+    <div class="error-actions">
+      <button class="btn-primary" (click)="submitFeedback()" [disabled]="isSending">
+        <span class="btn-icon">🔄</span>
+        <span class="btn-label">Intentar nuevamente</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Feedback Stats (Optional) -->
+  <div class="feedback-stats" *ngIf="showStats && feedbackStats">
+    <div class="stats-header">
+      <span class="stats-icon">📊</span>
+      <span class="stats-title">Estadísticas de feedback</span>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="stat-value">{{feedbackStats.totalFeedbacks}}</span>
+        <span class="stat-label">Total</span>
+      </div>
+      
+      <div class="stat-item">
+        <span class="stat-value">{{feedbackStats.helpfulPercentage}}%</span>
+        <span class="stat-label">Útil</span>
+      </div>
+      
+      <div class="stat-item">
+        <span class="stat-value">{{feedbackStats.averageRating}}</span>
+        <span class="stat-label">Promedio</span>
+      </div>
+    </div>
+  </div>
+</div>

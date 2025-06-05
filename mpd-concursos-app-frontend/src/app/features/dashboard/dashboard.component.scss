@@ -1,3 +1,7 @@
+/* ===== DASHBOARD LAYOUT - GLASSMORPHISM PREMIUM DARK ===== */
+/* Layout principal del usuario común con glassmorphism unificado */
+/* Scoped específicamente para no afectar al administrador */
+
 @use 'variables' as *;
 @use 'responsive' as *;
 
@@ -7,54 +11,62 @@
     height: 100vh;
     width: 100vw;
     overflow: hidden;
+    /* Glassmorphism premium dark background */
     background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    background-attachment: fixed;
+    color: var(--user-text-primary);
+    position: relative;
 
-
-
-    app-header {
-        height: 92px;
+    /* Navbar glassmorphism */
+    app-navbar {
+        height: var(--user-header-height);
         flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: var(--user-z-header);
 
         @include md {
-            height: 80px;
+            height: calc(var(--user-header-height) - 10px);
         }
 
         @include sm {
-            height: 70px;
+            height: calc(var(--user-header-height) - 20px);
         }
     }
 }
 
-.dashboard-container {
-    display: flex;
-    height: calc(100vh - 92px);
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    /* Dashboard container glassmorphism */
+    .dashboard-container {
+        display: flex;
+        height: calc(100vh - var(--user-header-height));
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        /* Transparent background to let the main background show through */
+        background: transparent;
 
-    // Subtle background pattern for consistency
-    &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image:
-            radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-        pointer-events: none;
-        z-index: 0;
-    }
+        /* Glassmorphism subtle pattern overlay */
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(76, 175, 80, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-    @include md {
-        height: calc(100vh - 80px);
-    }
+        @include md {
+            height: calc(100vh - var(--user-header-height) + 10px);
+        }
 
-    @include sm {
-        height: calc(100vh - 70px);
-    }
+        @include sm {
+            height: calc(100vh - var(--user-header-height) + 20px);
+        }
 
     @include md {
         &.sidebar-collapsed {

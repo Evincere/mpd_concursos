@@ -1,20 +1,20 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 
-import { BehaviorSubject, Subject } from 'rxjs';
+import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
+import { CustomDialogComponent } from '@shared/components/custom-dialog/custom-dialog.component';
+import { NotificationService } from '@shared/services/notification.service';
+import { ConfirmationService } from '@shared/services/confirmation.service';
+
+import { BehaviorSubject, Subject, EMPTY } from 'rxjs';
+import { finalize, takeUntil, take } from 'rxjs/operators';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 import { IInscriptionFormState, InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { Contest } from '@shared/interfaces/concurso/concurso.interface';
-import { animate, style, transition, trigger } from '@angular/animations';
-import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { InscripcionState, InscripcionStateUtils } from '@core/models/inscripcion/inscripcion-state.enum';
 import { ContinueInscriptionDialogComponent } from '../continue-inscription-dialog/continue-inscription-dialog.component';
 // Importación eliminada porque no se usa: import { IInscription } from '@shared/interfaces/inscripcion/inscription.interface';
 
@@ -23,187 +23,12 @@ import { ContinueInscriptionDialogComponent } from '../continue-inscription-dial
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatSnackBarModule
+    CustomButtonComponent,
+    CustomDialogComponent,
+    ContinueInscriptionDialogComponent
   ],
-  template: `
-    <ng-container *ngIf="inscripcionState$ | async as estado">
-      <button
-        mat-flat-button
-        color="accent"
-        class="inscripcion-button"
-        [class.loading]="loading"
-        [class.inscripto]="estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED"
-        [class.confirmada]="estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE || estado === InscripcionState.PENDING"
-        [class.retomar]="estado === InscripcionState.IN_PROCESS || estado === InscripcionState.ACTIVE"
-        [class.cancelled]="isCancelledFinal(estado)"
-        [class.rejected]="estado === InscripcionState.REJECTED"
-        [disabled]="loading || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED || estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE || estado === InscripcionState.PENDING || estado === InscripcionState.REJECTED || isCancelledFinal(estado)"
-        (click)="onInscribirse()">
-        <!-- Estado: No inscripto o cancelación de proceso -->
-        <ng-container *ngIf="!loading && (estado === InscripcionState.NO_INSCRIPTO || isCancelledProcess(estado))">
-          <mat-icon>how_to_reg</mat-icon>
-          <span>Inscribirse</span>
-        </ng-container>
-
-        <!-- Estado: Cancelación final -->
-        <ng-container *ngIf="!loading && isCancelledFinal(estado)">
-          <mat-icon>cancel</mat-icon>
-          <span>Cancelada</span>
-        </ng-container>
-
-        <!-- Estado: Rechazada -->
-        <ng-container *ngIf="!loading && estado === InscripcionState.REJECTED">
-          <mat-icon>block</mat-icon>
-          <span>Rechazada</span>
-        </ng-container>
-
-        <!-- Estado: Cargando -->
-        <ng-container *ngIf="loading">
-          <mat-spinner diameter="20"></mat-spinner>
-          <span>Procesando...</span>
-        </ng-container>
-
-        <!-- Estado: En proceso -->
-        <ng-container *ngIf="!loading && (estado === InscripcionState.IN_PROCESS || estado === InscripcionState.ACTIVE)">
-          <mat-icon>restart_alt</mat-icon>
-          <span>Retomar</span>
-        </ng-container>
-
-        <!-- Estado: Pendiente de validación -->
-        <ng-container *ngIf="!loading && (estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE || estado === InscripcionState.PENDING)">
-          <mat-icon>hourglass_top</mat-icon>
-          <span>Pendiente</span>
-        </ng-container>
-
-        <!-- Estado: Inscripto -->
-        <ng-container *ngIf="!loading && (estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED)">
-          <mat-icon>check_circle</mat-icon>
-          <span>Inscripto</span>
-        </ng-container>
-
-        <!-- Fallback para asegurar que siempre haya contenido -->
-        <ng-container *ngIf="!loading && !hasVisibleContent(estado)">
-          <mat-icon>how_to_reg</mat-icon>
-          <span>Inscribirse</span>
-        </ng-container>
-      </button>
-    </ng-container>
-  `,
-  styles: [`
-    .inscripcion-button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 0 16px;
-      height: 36px;
-      min-width: 120px;
-      /* Estilo base mejorado para todos los botones de inscripción - tonos verdes */
-      background: linear-gradient(135deg, #4CAF50, #2E7D32) !important;
-      color: white !important;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-
-      &:hover {
-        background: linear-gradient(135deg, #5cb860, #3b9a40) !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        transform: translateY(-1px);
-      }
-
-      &:active {
-        background: linear-gradient(135deg, #3b9a40, #2E7D32) !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        transform: translateY(1px);
-      }
-
-      &.loading {
-        opacity: 0.8;
-        cursor: not-allowed;
-        background: linear-gradient(135deg, #78c67a, #4CAF50) !important;
-      }
-
-      &.inscripto {
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(46, 125, 50, 0.15)) !important;
-        color: #4CAF50 !important;
-        pointer-events: none;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-        mat-icon {
-          color: #4CAF50;
-        }
-      }
-
-      &.confirmada {
-        background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(25, 118, 210, 0.15)) !important;
-        color: #2196F3 !important;
-        pointer-events: none;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-        mat-icon {
-          color: #2196F3;
-        }
-      }
-
-      &.retomar {
-        background: linear-gradient(135deg, #2196F3, #1976D2) !important;
-        color: white !important;
-        box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
-        pointer-events: auto !important;
-        opacity: 1 !important;
-
-        &:hover {
-          background: linear-gradient(135deg, #1976D2, #0D47A1) !important;
-          box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
-          transform: translateY(-1px);
-        }
-
-        &:active {
-          background: linear-gradient(135deg, #0D47A1, #1565C0) !important;
-          box-shadow: 0 1px 2px rgba(33, 150, 243, 0.2);
-          transform: translateY(1px);
-        }
-
-        mat-icon {
-          color: white;
-        }
-      }
-
-      /* Estilo para el botón cancelado (solo para cancelaciones finales) */
-      &.cancelled {
-        background: linear-gradient(135deg, rgba(244, 67, 54, 0.15), rgba(211, 47, 47, 0.15)) !important;
-        color: #F44336 !important;
-        pointer-events: none;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-        mat-icon {
-          color: #F44336;
-        }
-      }
-
-      mat-spinner {
-        margin-right: 8px;
-      }
-
-      mat-icon {
-        font-size: 18px;
-        height: 18px;
-        width: 18px;
-        margin-right: 4px;
-      }
-
-      span {
-        font-size: 14px;
-        line-height: 1;
-        white-space: nowrap;
-      }
-    }
-  `],
+  templateUrl: './inscripcion-button.component.html',
+  styleUrl: './inscripcion-button.component.scss',
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
@@ -229,9 +54,137 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
     private inscriptionService: InscriptionService,
     private inscriptionStateService: InscriptionStateService,
     private router: Router,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private notificationService: NotificationService,
+    private confirmationService: ConfirmationService
   ) {}
+
+  /**
+   * Obtiene la variante del botón según el estado de la inscripción
+   * @param estado Estado actual de la inscripción
+   * @returns Variante del botón
+   */
+  getButtonVariant(estado: InscripcionState): 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost' {
+    if (estado === InscripcionState.CONFIRMADA || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED) {
+      return 'success';
+    }
+
+    if (estado === InscripcionState.REJECTED) {
+      return 'danger';
+    }
+
+    if (estado === InscripcionState.CANCELLED) {
+      return 'ghost';
+    }
+
+    if (estado === InscripcionState.PENDING || estado === InscripcionState.PENDIENTE) {
+      return 'warning';
+    }
+
+    if (estado === InscripcionState.IN_PROCESS || estado === InscripcionState.ACTIVE) {
+      return 'secondary';
+    }
+
+    return 'primary';
+  }
+
+  /**
+   * Obtiene el label del botón según el estado de la inscripción
+   * @param estado Estado actual de la inscripción
+   * @returns Label del botón
+   */
+  getButtonLabel(estado: InscripcionState): string {
+    if (this.loading) {
+      return 'Inscribiendo...';
+    }
+
+    if (estado === InscripcionState.CONFIRMADA || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED) {
+      return 'Inscripto';
+    }
+
+    if (estado === InscripcionState.REJECTED) {
+      return 'Rechazada';
+    }
+
+    if (estado === InscripcionState.CANCELLED) {
+      return 'Cancelada';
+    }
+
+    if (estado === InscripcionState.PENDING || estado === InscripcionState.PENDIENTE) {
+      return 'Pendiente';
+    }
+
+    if (estado === InscripcionState.IN_PROCESS || estado === InscripcionState.ACTIVE) {
+      return 'Continuar';
+    }
+
+    return 'Inscribirse';
+  }
+
+  /**
+   * Obtiene el icono del botón según el estado de la inscripción
+   * @param estado Estado actual de la inscripción
+   * @returns Icono del botón
+   */
+  getButtonIcon(estado: InscripcionState): string {
+    if (this.loading) {
+      return 'spinner';
+    }
+
+    if (estado === InscripcionState.CONFIRMADA || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED) {
+      return 'check';
+    }
+
+    if (estado === InscripcionState.REJECTED) {
+      return 'times';
+    }
+
+    if (estado === InscripcionState.CANCELLED) {
+      return 'ban';
+    }
+
+    if (estado === InscripcionState.PENDING || estado === InscripcionState.PENDIENTE) {
+      return 'clock';
+    }
+
+    if (estado === InscripcionState.IN_PROCESS || estado === InscripcionState.ACTIVE) {
+      return 'play';
+    }
+
+    return 'user-plus';
+  }
+
+  /**
+   * Obtiene el tooltip del botón según el estado de la inscripción
+   * @param estado Estado actual de la inscripción
+   * @returns Tooltip del botón
+   */
+  getButtonTooltip(estado: InscripcionState): string {
+    if (this.loading) {
+      return 'Procesando inscripción...';
+    }
+
+    if (estado === InscripcionState.CONFIRMADA || estado === InscripcionState.INSCRIPTO || estado === InscripcionState.APPROVED) {
+      return 'Ya estás inscripto en este concurso';
+    }
+
+    if (estado === InscripcionState.REJECTED) {
+      return 'Tu inscripción fue rechazada';
+    }
+
+    if (estado === InscripcionState.CANCELLED) {
+      return 'Tu inscripción fue cancelada';
+    }
+
+    if (estado === InscripcionState.PENDING || estado === InscripcionState.PENDIENTE) {
+      return 'Tu inscripción está pendiente de validación';
+    }
+
+    if (estado === InscripcionState.IN_PROCESS || estado === InscripcionState.ACTIVE) {
+      return 'Continuar con el proceso de inscripción';
+    }
+
+    return 'Iniciar proceso de inscripción';
+  }
 
   /**
    * Obtiene el texto para el atributo aria-label según el estado de la inscripción
@@ -256,7 +209,7 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
     }
 
     if (estado === InscripcionState.IN_PROCESS || estado === InscripcionState.ACTIVE) {
-      return 'Retomar proceso de inscripción para este concurso';
+      return 'Continuar con el proceso de inscripción para este concurso';
     }
 
     if (estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE || estado === InscripcionState.PENDING) {
@@ -271,20 +224,15 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Primero verificar el estado actual de la inscripción en el backend
-    this.verificarEstadoInscripcion();
+    // OPTIMIZACIÓN: Primero verificar en cache local antes de hacer peticiones HTTP
+    this.verificarEstadoEnCache();
 
     // Suscribirse al estado de la inscripción para detectar cambios
     this.inscripcionState$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(estado => {
-      // Si el estado es final (PENDIENTE, INSCRIPTO o REJECTED), limpiar los estados locales
-      // Nota: CANCELLED no se considera un estado final para permitir reiniciar el proceso
-      if (estado === InscripcionState.PENDIENTE ||
-          estado === InscripcionState.INSCRIPTO ||
-          estado === InscripcionState.APPROVED ||
-          estado === InscripcionState.REJECTED) {
-
+      // Si el estado es final, limpiar los estados locales
+      if (this.isFinalState(estado)) {
         // Buscar inscripciones incompletas para este concurso y limpiarlas
         const incompleteInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
         const incompleteInscription = incompleteInscriptions.find((ins: IInscriptionFormState) =>
@@ -306,11 +254,62 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
         return; // No continuar con la verificación de inscripciones incompletas
       }
 
-      // Solo verificar inscripciones incompletas si el estado no es final
-      if (estado === InscripcionState.NO_INSCRIPTO || estado === InscripcionState.IN_PROCESS) {
+      // Solo verificar inscripciones incompletas si el estado permite reanudación
+      if (this.canResumeState(estado) || estado === InscripcionState.NO_INSCRIPTO) {
         this.verificarInscripcionesIncompletas();
       }
     });
+  }
+
+  /**
+   * OPTIMIZACIÓN: Verifica el estado en cache antes de hacer peticiones HTTP
+   */
+  private verificarEstadoEnCache(): void {
+    const contestId = typeof this.contest.id === 'string' ? parseInt(this.contest.id, 10) : this.contest.id;
+
+    // Primero verificar en las inscripciones ya cargadas
+    this.inscriptionService.inscriptions.pipe(take(1)).subscribe(inscripciones => {
+      const inscripcionExistente = inscripciones.find(ins => ins.contestId === contestId);
+
+      if (inscripcionExistente) {
+        console.log('[InscripcionButton] Estado encontrado en cache:', inscripcionExistente.state);
+        this.inscripcionState$.next(inscripcionExistente.state);
+        return;
+      }
+
+      // Si no está en cache, verificar con el backend pero con throttling
+      console.log('[InscripcionButton] No encontrado en cache, verificando con backend...');
+      this.verificarEstadoInscripcionOptimizado();
+    });
+  }
+
+  /**
+   * Versión optimizada que evita peticiones redundantes
+   */
+  private verificarEstadoInscripcionOptimizado(): void {
+    if (!this.contest) return;
+
+    // Usar el método optimizado del servicio que incluye cache y throttling
+    this.loading = true;
+    this.inscriptionService.getInscriptionStatus(this.contest.id)
+      .pipe(
+        finalize(() => this.loading = false),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (estado: InscripcionState) => {
+          this.inscripcionState$.next(estado);
+        },
+        error: (error: any) => {
+          // Los errores 404 son esperados cuando el usuario no está inscrito
+          if (error?.status === 404) {
+            this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
+          } else {
+            console.error('[InscripcionButton] Error al verificar estado:', error);
+            this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
+          }
+        }
+      });
   }
 
   /**
@@ -419,7 +418,7 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
             mensaje = 'Tu inscripción para este concurso fue cancelada';
           }
 
-          this.snackBar.open(mensaje, 'Cerrar', { duration: 5000 });
+          this.notificationService.warning(mensaje);
           return;
         }
 
@@ -440,16 +439,15 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
    * @returns void
    */
   private mostrarDialogoContinuarInscripcionConfirmado(inscription: IInscriptionFormState): void {
-    const dialogRef = this.dialog.open(ContinueInscriptionDialogComponent, {
-      width: '400px',
-      data: {
-        contestId: inscription.contestId,
-        contestTitle: inscription.contestTitle || this.contest.title || this.contest.position,
-        inscriptionId: inscription.inscriptionId
-      }
-    });
+    const contestTitle = inscription.contestTitle || this.contest.title || this.contest.position;
 
-    dialogRef.afterClosed().subscribe((result: boolean) => {
+    this.confirmationService.info(
+      'Continuar inscripción',
+      `Tienes una inscripción en proceso para el concurso "${contestTitle}".`,
+      '¿Deseas continuar donde lo dejaste?',
+      'Sí, continuar',
+      'No, empezar de nuevo'
+    ).subscribe((result: boolean) => {
       if (result) {
         // Si el usuario quiere continuar, redirigir a la página de inscripción
         this.abrirDialogoInscripcion(inscription.inscriptionId, true);
@@ -466,138 +464,27 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Determina si el estado es una cancelación de proceso (reciente)
-   * @param estado Estado de la inscripción
-   * @returns true si es una cancelación de proceso, false en caso contrario
+   * Legacy method compatibility - now uses unified logic
+   * @deprecated Use canResumeState instead
    */
   isCancelledProcess(estado: InscripcionState): boolean {
-    // Para evitar problemas con botones vacíos, siempre mostrar el botón de inscripción
-    // para estados NO_INSCRIPTO o CANCELLED
-    if (estado === InscripcionState.NO_INSCRIPTO) {
-      return false; // No es una cancelación de proceso, es simplemente NO_INSCRIPTO
-    }
-
-    // Si el estado es CANCELLED, verificar si es una cancelación reciente (menos de 1 hora)
-    if (estado === InscripcionState.CANCELLED) {
-      // Obtener la inscripción actual
-      let inscription: { contestId: number; state: InscripcionState; updatedAt?: string } | null = null;
-      let isCancelled = false;
-
-      try {
-        // Usar un enfoque más seguro para obtener las inscripciones
-        this.inscriptionService.inscriptions.subscribe(inscriptions => {
-          const contestId = typeof this.contest.id === 'string' ? parseInt(this.contest.id, 10) : this.contest.id;
-          const foundInscription = inscriptions.find(ins =>
-            ins.contestId === contestId &&
-            ins.state === InscripcionState.CANCELLED
-          );
-
-          if (foundInscription) {
-            inscription = {
-              contestId: foundInscription.contestId,
-              state: foundInscription.state,
-              updatedAt: foundInscription.updatedAt instanceof Date ?
-                foundInscription.updatedAt.toISOString() :
-                foundInscription.updatedAt as string
-            };
-          }
-        }).unsubscribe(); // Desuscribirse inmediatamente
-
-        if (inscription) {
-          // Si la inscripción fue actualizada hace menos de 1 hora, considerarla como una cancelación de proceso
-          const now = new Date();
-          const updatedAt = inscription && 'updatedAt' in inscription ? new Date((inscription as Record<string, string>)['updatedAt']) : now;
-          const timeDiff = now.getTime() - updatedAt.getTime();
-          const oneHourInMs = 60 * 60 * 1000;
-
-          isCancelled = timeDiff < oneHourInMs;
-        }
-      } catch (error) {
-        console.error('[InscripcionButton] Error al verificar si es cancelación de proceso:', error);
-        // En caso de error, asumir que es una cancelación de proceso para mostrar el botón
-        isCancelled = true;
-      }
-
-      return isCancelled;
-    }
-
-    return false;
+    return estado === InscripcionState.CANCELLED && this.canResumeState(estado);
   }
 
   /**
-   * Determina si el estado es una cancelación final (antigua)
-   * @param estado Estado de la inscripción
-   * @returns true si es una cancelación final, false en caso contrario
+   * Legacy method compatibility - now uses unified logic
+   * @deprecated Use isFinalState instead
    */
   isCancelledFinal(estado: InscripcionState): boolean {
-    // Si el estado es CANCELLED, verificar si es una cancelación antigua (más de 1 hora)
-    if (estado === InscripcionState.CANCELLED) {
-      // Obtener la inscripción actual
-      let inscription: { contestId: number; state: InscripcionState; updatedAt?: string } | null = null;
-      let isFinalCancellation = false;
-
-      try {
-        // Usar un enfoque más seguro para obtener las inscripciones
-        this.inscriptionService.inscriptions.subscribe(inscriptions => {
-          const contestId = typeof this.contest.id === 'string' ? parseInt(this.contest.id, 10) : this.contest.id;
-          const foundInscription = inscriptions.find(ins =>
-            ins.contestId === contestId &&
-            ins.state === InscripcionState.CANCELLED
-          );
-
-          if (foundInscription) {
-            inscription = {
-              contestId: foundInscription.contestId,
-              state: foundInscription.state,
-              updatedAt: foundInscription.updatedAt instanceof Date ?
-                foundInscription.updatedAt.toISOString() :
-                foundInscription.updatedAt as string
-            };
-          }
-        }).unsubscribe(); // Desuscribirse inmediatamente
-
-        if (inscription) {
-          // Si la inscripción fue actualizada hace más de 1 hora, considerarla como una cancelación final
-          const now = new Date();
-          const updatedAt = inscription && 'updatedAt' in inscription ? new Date((inscription as Record<string, string>)['updatedAt']) : now;
-          const timeDiff = now.getTime() - updatedAt.getTime();
-          const oneHourInMs = 60 * 60 * 1000;
-
-          isFinalCancellation = timeDiff >= oneHourInMs;
-        }
-      } catch (error) {
-        console.error('[InscripcionButton] Error al verificar si es cancelación final:', error);
-        // En caso de error, asumir que no es una cancelación final
-        isFinalCancellation = false;
-      }
-
-      return isFinalCancellation;
-    }
-
-    return false;
+    return estado === InscripcionState.CANCELLED && this.isFinalState(estado);
   }
 
   /**
-   * Verifica si hay algún contenido visible en el botón según el estado
-   * @param estado Estado de la inscripción
-   * @returns true si hay contenido visible, false en caso contrario
+   * Legacy method compatibility
+   * @deprecated Use shouldShowFallback instead
    */
   hasVisibleContent(estado: InscripcionState): boolean {
-    if (this.loading) {
-      return true; // El spinner de carga es visible
-    }
-
-    // Verificar si alguna de las condiciones de visibilidad se cumple
-    const isNoInscripto = estado === InscripcionState.NO_INSCRIPTO;
-    const isCancelledProcessState = this.isCancelledProcess(estado);
-    const isCancelledFinalState = this.isCancelledFinal(estado);
-    const isPending = estado === InscripcionState.PENDING || estado === InscripcionState.IN_PROCESS;
-    const isConfirmada = estado === InscripcionState.CONFIRMADA || estado === InscripcionState.PENDIENTE;
-    const isInscripto = estado === InscripcionState.INSCRIPTO;
-    const isRejected = estado === InscripcionState.REJECTED;
-
-    return isNoInscripto || isCancelledProcessState || isCancelledFinalState ||
-           isPending || isConfirmada || isInscripto || isRejected;
+    return !this.shouldShowFallback(estado);
   }
 
   private verificarEstadoInscripcion(): void {
@@ -610,16 +497,21 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
         next: (estado: InscripcionState) => {
           this.inscripcionState$.next(estado);
           if (estado === InscripcionState.CONFIRMADA) {
-            this.snackBar.open('Ya estás inscrito en este concurso', 'Cerrar', {
-              duration: 3000
-            });
+            this.notificationService.info('Ya estás inscrito en este concurso');
           }
         },
-        error: (error: Error) => {
-          console.error('Error al verificar estado de inscripción:', error);
-          this.snackBar.open('Error al verificar el estado de inscripción', 'Cerrar', {
-            duration: 3000
-          });
+        error: (error: any) => {
+          // Ahora siempre recibimos HttpErrorResponse para inscripciones gracias al ErrorInterceptor optimizado
+          // Los errores 404 son esperados cuando el usuario no está inscrito
+          if (error?.status === 404) {
+            // Para errores 404, simplemente establecer el estado como no inscrito
+            console.log(`[InscripcionButton] Usuario no inscrito en concurso ${this.contest.id} (404 esperado)`);
+            this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
+          } else {
+            // Para otros errores, el ErrorInterceptor ya mostró la notificación apropiada
+            console.error('Error al verificar estado de inscripción:', error);
+            this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
+          }
         }
       });
   }
@@ -630,6 +522,17 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Obtener el estado actual
+    const estadoActual = this.inscripcionState$.value;
+
+    // Si el estado es IN_PROCESS o ACTIVE, continuar con la inscripción existente
+    if (estadoActual === InscripcionState.IN_PROCESS || estadoActual === InscripcionState.ACTIVE) {
+      console.log('[InscripcionButton] Continuando con inscripción existente');
+      this.continuarInscripcionExistente();
+      return;
+    }
+
+    // Para otros estados, crear nueva inscripción
     this.loading = true;
     this.inscriptionService.createInscription(this.contest.id)
       .pipe(finalize(() => this.loading = false))
@@ -647,11 +550,7 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
           if (httpError.status === 409 ||
               (httpError.message && httpError.message.includes('Ya existe una inscripción'))) {
 
-            this.snackBar.open(
-              'Ya existe una inscripción para este concurso. Actualizando estado...',
-              'Cerrar',
-              { duration: 5000 }
-            );
+            this.notificationService.info('Ya tienes una inscripción para este concurso. Verificando estado...');
 
             // Forzar actualización del estado
             setTimeout(() => {
@@ -671,10 +570,34 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
                     if (inscripcionExistente) {
                       console.log('[InscripcionButton] Encontrada inscripción existente:', inscripcionExistente);
 
+                      // Actualizar el estado local
+                      this.inscripcionState$.next(inscripcionExistente.state);
+
                       // Si la inscripción está en proceso, permitir continuar
                       if (inscripcionExistente.state === InscripcionState.IN_PROCESS ||
                           inscripcionExistente.state === InscripcionState.ACTIVE) {
-                        this.abrirDialogoInscripcion(inscripcionExistente.id, true);
+
+                        // Mostrar mensaje más claro
+                        this.notificationService.info('Puedes continuar con tu inscripción en proceso.');
+                      } else {
+                        // Para otros estados, mostrar mensaje apropiado
+                        let mensaje = '';
+                        switch (inscripcionExistente.state) {
+                          case InscripcionState.PENDIENTE:
+                            mensaje = 'Tu inscripción está pendiente de validación.';
+                            break;
+                          case InscripcionState.INSCRIPTO:
+                          case InscripcionState.APPROVED:
+                            mensaje = 'Ya estás inscripto en este concurso.';
+                            break;
+                          case InscripcionState.REJECTED:
+                            mensaje = 'Tu inscripción fue rechazada.';
+                            break;
+                          default:
+                            mensaje = 'Ya tienes una inscripción para este concurso.';
+                            break;
+                        }
+                        this.notificationService.info(mensaje);
                       }
                     }
                   }).unsubscribe();
@@ -686,14 +609,10 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
                   console.log('[InscripcionButton] Actualización de inscripciones completada');
                 }
               });
-            }, 1000);
+            }, 500);
           } else if (httpError.status === 500) {
             // Para errores 500, mostrar un mensaje más genérico
-            this.snackBar.open(
-              'Error en el servidor. Por favor, inténtelo de nuevo más tarde.',
-              'Cerrar',
-              { duration: 5000 }
-            );
+            this.notificationService.error('Error en el servidor. Por favor, inténtelo de nuevo más tarde.');
 
             // Intentar actualizar el estado de todas formas
             setTimeout(() => {
@@ -701,12 +620,149 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
             }, 1000);
           } else {
             // Para otros errores, mostrar el mensaje específico
-            this.snackBar.open(
-              'Error al iniciar el proceso de inscripción: ' + (httpError.message || 'Error desconocido'),
-              'Cerrar',
-              { duration: 5000 }
-            );
+            this.notificationService.error('Error al iniciar el proceso de inscripción: ' + (httpError.message || 'Error desconocido'));
           }
+        }
+      });
+  }
+
+  /**
+   * Continúa con una inscripción existente en lugar de crear una nueva
+   */
+  private continuarInscripcionExistente(): void {
+    console.log('[InscripcionButton] Buscando inscripción existente para continuar');
+
+    this.loading = true;
+
+    // Timeout de seguridad para evitar loading infinito
+    const timeoutId = setTimeout(() => {
+      console.warn('[InscripcionButton] Timeout al buscar inscripción existente');
+      this.loading = false;
+      this.notificationService.error('Error al buscar la inscripción existente. Inténtelo de nuevo.');
+    }, 10000); // 10 segundos de timeout
+
+    const contestId = typeof this.contest.id === 'string' ? parseInt(this.contest.id, 10) : this.contest.id;
+
+    // Primero intentar con las inscripciones ya cargadas
+    this.inscriptionService.inscriptions.pipe(take(1)).subscribe({
+      next: (inscripciones) => {
+        console.log('[InscripcionButton] Verificando inscripciones ya cargadas:', inscripciones);
+
+        const inscripcionExistente = inscripciones.find(ins =>
+          ins.contestId === contestId &&
+          (ins.state === InscripcionState.IN_PROCESS || ins.state === InscripcionState.ACTIVE)
+        );
+
+        if (inscripcionExistente) {
+          console.log('[InscripcionButton] Encontrada inscripción existente en cache:', inscripcionExistente);
+          clearTimeout(timeoutId);
+          this.loading = false;
+          this.abrirDialogoInscripcion(inscripcionExistente.id, true);
+          return;
+        }
+
+        // Si no se encuentra en cache, intentar refrescar
+        console.log('[InscripcionButton] No encontrada en cache, intentando refrescar...');
+
+        // Intentar refrescar las inscripciones
+        const refreshObservable = this.inscriptionService.refreshInscriptions();
+
+        // Si refreshInscriptions devuelve EMPTY (por throttling), usar las inscripciones actuales
+        if (refreshObservable === EMPTY) {
+          console.log('[InscripcionButton] RefreshInscriptions devolvió EMPTY, usando datos actuales');
+          this.procesarInscripcionesExistentes(inscripciones, contestId, timeoutId);
+          return;
+        }
+
+        // Si no es EMPTY, proceder con el refresh
+        refreshObservable.pipe(
+          finalize(() => {
+            clearTimeout(timeoutId);
+            this.loading = false;
+          })
+        ).subscribe({
+          next: (response) => {
+            console.log('[InscripcionButton] Inscripciones actualizadas:', response);
+
+            // Obtener las inscripciones actualizadas
+            this.inscriptionService.inscriptions.pipe(take(1)).subscribe({
+              next: (inscripcionesActualizadas) => {
+                this.procesarInscripcionesExistentes(inscripcionesActualizadas, contestId, timeoutId);
+              },
+              error: (error) => {
+                console.error('[InscripcionButton] Error al obtener inscripciones actualizadas:', error);
+                this.procesarInscripcionesExistentes(inscripciones, contestId, timeoutId);
+              }
+            });
+          },
+          error: (error) => {
+            console.error('[InscripcionButton] Error al refrescar inscripciones:', error);
+            // Usar las inscripciones que ya tenemos
+            this.procesarInscripcionesExistentes(inscripciones, contestId, timeoutId);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('[InscripcionButton] Error al obtener inscripciones:', error);
+        clearTimeout(timeoutId);
+        this.loading = false;
+        this.notificationService.error('Error al obtener las inscripciones. Inténtelo de nuevo.');
+      }
+    });
+  }
+
+  /**
+   * Procesa las inscripciones existentes para encontrar una que se pueda continuar
+   */
+  private procesarInscripcionesExistentes(inscripciones: any[], contestId: number, timeoutId: any): void {
+    console.log('[InscripcionButton] Procesando inscripciones existentes:', inscripciones);
+
+    const inscripcionExistente = inscripciones.find(ins =>
+      ins.contestId === contestId &&
+      (ins.state === InscripcionState.IN_PROCESS || ins.state === InscripcionState.ACTIVE)
+    );
+
+    if (inscripcionExistente) {
+      console.log('[InscripcionButton] Encontrada inscripción existente para continuar:', inscripcionExistente);
+      this.abrirDialogoInscripcion(inscripcionExistente.id, true);
+    } else {
+      console.warn('[InscripcionButton] No se encontró inscripción existente en estado IN_PROCESS/ACTIVE');
+
+      // Buscar cualquier inscripción para este concurso
+      const cualquierInscripcion = inscripciones.find(ins => ins.contestId === contestId);
+
+      if (cualquierInscripcion) {
+        console.log('[InscripcionButton] Encontrada inscripción con estado:', cualquierInscripcion.state);
+
+        // Actualizar el estado local
+        this.inscripcionState$.next(cualquierInscripcion.state);
+
+        // Mostrar mensaje apropiado
+        this.notificationService.info(`Tu inscripción está en estado: ${cualquierInscripcion.state}`);
+      } else {
+        console.warn('[InscripcionButton] No se encontró ninguna inscripción, creando nueva');
+        this.crearNuevaInscripcion();
+      }
+    }
+  }
+
+  /**
+   * Crea una nueva inscripción
+   */
+  private crearNuevaInscripcion(): void {
+    console.log('[InscripcionButton] Creando nueva inscripción');
+
+    this.loading = true;
+    this.inscriptionService.createInscription(this.contest.id)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response: { id: string }) => {
+          console.log('Nueva inscripción creada:', response);
+          this.abrirDialogoInscripcion(response.id);
+        },
+        error: (error: { status?: number; message?: string }) => {
+          console.error('Error al crear nueva inscripción:', error);
+          this.notificationService.error('Error al crear la inscripción. Por favor, inténtelo de nuevo.');
         }
       });
   }
@@ -761,7 +817,7 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
             mensaje = 'Tu inscripción para este concurso fue cancelada';
           }
 
-          this.snackBar.open(mensaje, 'Cerrar', { duration: 5000 });
+          this.notificationService.warning(mensaje);
           return;
         }
 
@@ -831,4 +887,60 @@ export class InscripcionButtonComponent implements OnInit, OnDestroy {
     // Navegar a la página de inscripción
     this.router.navigate(['/dashboard/inscripcion'], { queryParams });
   }
+
+  /**
+   * Helper methods using the new unified state logic
+   */
+
+  /**
+   * Check if the state allows resuming the inscription process
+   */
+  canResumeState(state: InscripcionState): boolean {
+    return InscripcionStateUtils.canResume(state);
+  }
+
+  /**
+   * Check if the state is final (no modifications allowed)
+   */
+  isFinalState(state: InscripcionState): boolean {
+    return InscripcionStateUtils.isFinal(state);
+  }
+
+  /**
+   * Check if the state is approved
+   */
+  isApprovedState(state: InscripcionState): boolean {
+    return state === InscripcionState.APPROVED || state === InscripcionState.INSCRIPTO;
+  }
+
+  /**
+   * Check if the state is pending validation
+   */
+  isPendingValidationState(state: InscripcionState): boolean {
+    return InscripcionStateUtils.isPendingValidation(state);
+  }
+
+  /**
+   * Get display text for state
+   */
+  getStateDisplayText(state: InscripcionState): string {
+    return InscripcionStateUtils.getStateLabel(state);
+  }
+
+  /**
+   * Check if fallback content should be shown
+   */
+  shouldShowFallback(state: InscripcionState): boolean {
+    // Show fallback only for unknown states or NO_INSCRIPTO when no other condition matches
+    return state === InscripcionState.NO_INSCRIPTO ||
+           (!this.canResumeState(state) &&
+            !this.isPendingValidationState(state) &&
+            !this.isApprovedState(state) &&
+            state !== InscripcionState.REJECTED &&
+            state !== InscripcionState.CANCELLED &&
+            state !== InscripcionState.FROZEN &&
+            state !== InscripcionState.COMPLETED_PENDING_DOCS);
+  }
+
+
 }

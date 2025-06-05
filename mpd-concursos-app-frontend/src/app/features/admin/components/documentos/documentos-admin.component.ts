@@ -10,7 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -40,7 +40,6 @@ import { DocumentoViewerDialogComponent } from './documento-viewer-dialog/docume
     MatInputModule,
     MatSelectModule,
     MatChipsModule,
-    MatSnackBarModule,
     MatDialogModule,
     MatTabsModule,
     MatTooltipModule,
@@ -108,7 +107,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
   constructor(
     private documentosService: DocumentosService,
     private adminDocumentosService: AdminDocumentosService,
-    private snackBar: MatSnackBar,
+    private notificationService: UnifiedNotificationService,
     private dialog: MatDialog
   ) {
     // Inicializar dataSource con datos de ejemplo
@@ -138,7 +137,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Error al cargar tipos de documento:', error);
-        this.snackBar.open('Error al cargar tipos de documento', 'Cerrar', { duration: 3000 });
+        this.notificationService.error('Error al cargar tipos de documento');
       }
     });
   }
@@ -152,7 +151,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Error al cargar estadísticas:', error);
-        this.snackBar.open('Error al cargar estadísticas', 'Cerrar', { duration: 3000 });
+        this.notificationService.error('Error al cargar estadísticas');
 
         // Calcular estadísticas localmente con los datos de ejemplo
         this.calcularEstadisticasLocales();
@@ -184,7 +183,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
       },
       error: (error) => {
         console.error('Error al cargar documentos:', error);
-        this.snackBar.open('Error al cargar documentos', 'Cerrar', { duration: 3000 });
+        this.notificationService.error('Error al cargar documentos');
 
         // Usar datos de ejemplo
         this.dataSource.data = this.documentos;
@@ -240,7 +239,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
 
   aprobarDocumento(documento: DocumentoAdminView): void {
     if (!documento.id) {
-      this.snackBar.open('Error: ID de documento no válido', 'Cerrar', { duration: 3000 });
+      this.notificationService.error('Error: ID de documento no válido');
       return;
     }
 
@@ -263,11 +262,11 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
         // Actualizar estadísticas
         this.cargarEstadisticas();
 
-        this.snackBar.open('Documento aprobado correctamente', 'Cerrar', { duration: 3000 });
+        this.notificationService.success('Documento aprobado correctamente');
       },
       error: (error) => {
         console.error('Error al aprobar documento:', error);
-        this.snackBar.open('Error al aprobar documento', 'Cerrar', { duration: 3000 });
+        this.notificationService.error('Error al aprobar documento');
 
         // Para desarrollo, simulamos la aprobación
         const index = this.documentos.findIndex(d => d.id === documento.id);
@@ -277,7 +276,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
           this.documentos[index].validadoPor = 'admin';
           this.dataSource.data = [...this.documentos];
           this.calcularEstadisticasLocales();
-          this.snackBar.open('Documento aprobado correctamente (simulado)', 'Cerrar', { duration: 3000 });
+          this.notificationService.success('Documento aprobado correctamente (simulado)');
         }
       }
     });
@@ -285,7 +284,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
 
   rechazarDocumento(documento: DocumentoAdminView): void {
     if (!documento.id) {
-      this.snackBar.open('Error: ID de documento no válido', 'Cerrar', { duration: 3000 });
+      this.notificationService.error('Error: ID de documento no válido');
       return;
     }
 
@@ -312,11 +311,11 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
           // Actualizar estadísticas
           this.cargarEstadisticas();
 
-          this.snackBar.open('Documento rechazado correctamente', 'Cerrar', { duration: 3000 });
+          this.notificationService.success('Documento rechazado correctamente');
         },
         error: (error) => {
           console.error('Error al rechazar documento:', error);
-          this.snackBar.open('Error al rechazar documento', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al rechazar documento');
 
           // Para desarrollo, simulamos el rechazo
           const index = this.documentos.findIndex(d => d.id === documento.id);
@@ -327,7 +326,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
             this.documentos[index].motivoRechazo = motivo;
             this.dataSource.data = [...this.documentos];
             this.calcularEstadisticasLocales();
-            this.snackBar.open('Documento rechazado correctamente (simulado)', 'Cerrar', { duration: 3000 });
+            this.notificationService.success('Documento rechazado correctamente (simulado)');
           }
         }
       });

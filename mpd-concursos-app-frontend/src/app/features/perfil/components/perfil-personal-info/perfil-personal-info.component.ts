@@ -23,9 +23,9 @@ import { UserProfile } from '@core/models/perfil.model';
   ],
   template: `
     <div class="personal-info-container">
-      <!-- Profile Photo Section -->
+      <!-- Profile Photo Section - Rebuilt without custom-card wrapper -->
       <div class="profile-photo-section">
-        <app-custom-card>
+        <div class="photo-glassmorphism-container">
           <div class="photo-content">
             <div class="photo-container">
               <ng-container *ngIf="fotoPerfil && fotoPerfil !== 'assets/images/default-avatar.png'; else defaultAvatar">
@@ -36,17 +36,17 @@ import { UserProfile } from '@core/models/perfil.model';
                   <i class="fas fa-user" aria-hidden="true"></i>
                 </div>
               </ng-template>
-              <button 
-                class="change-photo-btn" 
-                (click)="abrirSelectorArchivo()" 
+              <button
+                class="change-photo-btn"
+                (click)="abrirSelectorArchivo()"
                 aria-label="Cambiar foto de perfil">
                 <i class="fas fa-camera" aria-hidden="true"></i>
               </button>
-              <input 
-                type="file" 
-                hidden 
-                #fileInput 
-                (change)="onFileSelected($event)" 
+              <input
+                type="file"
+                hidden
+                #fileInput
+                (change)="onFileSelected($event)"
                 accept="image/*">
             </div>
             <div class="photo-info">
@@ -54,7 +54,7 @@ import { UserProfile } from '@core/models/perfil.model';
               <p>Haga clic en el ícono de cámara para cambiar su foto</p>
             </div>
           </div>
-        </app-custom-card>
+        </div>
       </div>
 
       <!-- Personal Data Form -->
@@ -81,86 +81,82 @@ import { UserProfile } from '@core/models/perfil.model';
               <div class="form-section">
                 <h4>Información Básica</h4>
                 <div class="form-row">
-                  <app-custom-form-field
-                    label="Nombre de Usuario"
-                    [readonly]="true"
-                    hint="Campo no modificable">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label">Nombre de Usuario</label>
+                    <input
                       type="text"
+                      class="field-input"
                       formControlName="username"
                       readonly>
-                  </app-custom-form-field>
+                    <div class="hint-text">Campo no modificable</div>
+                  </div>
 
-                  <app-custom-form-field
-                    label="Email"
-                    [readonly]="true"
-                    hint="Campo no modificable">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label">Email</label>
+                    <input
                       type="email"
+                      class="field-input"
                       formControlName="email"
                       readonly>
-                  </app-custom-form-field>
+                    <div class="hint-text">Campo no modificable</div>
+                  </div>
                 </div>
 
                 <div class="form-row">
-                  <app-custom-form-field
-                    label="Nombre"
-                    [readonly]="!isEditing"
-                    [required]="true">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label required">Nombre</label>
+                    <input
                       type="text"
+                      class="field-input"
                       formControlName="firstName"
                       [readonly]="!isEditing">
-                    <div error *ngIf="perfilForm.get('firstName')?.errors?.['required'] && perfilForm.get('firstName')?.touched">
+                    <div class="error-message" *ngIf="perfilForm.get('firstName')?.errors?.['required'] && perfilForm.get('firstName')?.touched">
                       El nombre es requerido
                     </div>
-                  </app-custom-form-field>
+                  </div>
 
-                  <app-custom-form-field
-                    label="Apellido"
-                    [readonly]="!isEditing"
-                    [required]="true">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label required">Apellido</label>
+                    <input
                       type="text"
+                      class="field-input"
                       formControlName="lastName"
                       [readonly]="!isEditing">
-                    <div error *ngIf="perfilForm.get('lastName')?.errors?.['required'] && perfilForm.get('lastName')?.touched">
+                    <div class="error-message" *ngIf="perfilForm.get('lastName')?.errors?.['required'] && perfilForm.get('lastName')?.touched">
                       El apellido es requerido
                     </div>
-                  </app-custom-form-field>
+                  </div>
                 </div>
 
                 <div class="form-row">
-                  <app-custom-form-field
-                    label="DNI"
-                    [readonly]="!isEditing"
-                    [required]="true">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label required">DNI</label>
+                    <input
                       type="text"
+                      class="field-input"
                       formControlName="dni"
                       [readonly]="!isEditing"
                       maxlength="8"
                       pattern="^[0-9]{8}$">
-                    <div error *ngIf="perfilForm.get('dni')?.hasError('pattern') && perfilForm.get('dni')?.touched">
+                    <div class="error-message" *ngIf="perfilForm.get('dni')?.hasError('pattern') && perfilForm.get('dni')?.touched">
                       El DNI debe contener 8 dígitos numéricos
                     </div>
-                  </app-custom-form-field>
+                  </div>
 
-                  <app-custom-form-field
-                    label="CUIT"
-                    [readonly]="!isEditing"
-                    [required]="true"
-                    hint="Formato: XX-XXXXXXXX-X">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label required">CUIT</label>
+                    <input
                       type="text"
+                      class="field-input"
                       formControlName="cuit"
                       [readonly]="!isEditing"
                       placeholder="XX-XXXXXXXX-X"
                       maxlength="13">
-                    <div error *ngIf="perfilForm.get('cuit')?.hasError('pattern') && perfilForm.get('cuit')?.touched">
+                    <div class="hint-text">Formato: XX-XXXXXXXX-X</div>
+                    <div class="error-message" *ngIf="perfilForm.get('cuit')?.hasError('pattern') && perfilForm.get('cuit')?.touched">
                       El formato debe ser XX-XXXXXXXX-X
                     </div>
-                  </app-custom-form-field>
+                  </div>
                 </div>
               </div>
 
@@ -168,26 +164,26 @@ import { UserProfile } from '@core/models/perfil.model';
               <div class="form-section">
                 <h4>Información de Contacto</h4>
                 <div class="form-row">
-                  <app-custom-form-field
-                    label="Teléfono"
-                    [readonly]="!isEditing">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label">Teléfono</label>
+                    <input
                       type="text"
+                      class="field-input"
                       formControlName="telefono"
                       [readonly]="!isEditing"
                       placeholder="Ingrese su teléfono">
-                  </app-custom-form-field>
+                  </div>
 
-                  <app-custom-form-field
-                    label="Dirección (Centro de Vida)"
-                    [readonly]="!isEditing"
-                    hint="Esta dirección se utilizará como su centro de vida para las inscripciones a concursos">
-                    <input customInput
+                  <div class="form-field-wrapper">
+                    <label class="field-label">Dirección (Centro de Vida)</label>
+                    <input
                       type="text"
+                      class="field-input"
                       formControlName="direccion"
                       [readonly]="!isEditing"
                       placeholder="Ingrese su dirección completa">
-                  </app-custom-form-field>
+                    <div class="hint-text">Esta dirección se utilizará como su centro de vida para las inscripciones a concursos</div>
+                  </div>
                 </div>
               </div>
 

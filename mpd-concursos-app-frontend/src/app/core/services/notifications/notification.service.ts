@@ -1,36 +1,19 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  private snackBar: {
-    open: (message: string, action: string, config?: Record<string, unknown>) => void;
-    dismiss: () => void;
-  };
-
-  constructor() {
-    // En una implementación real, se inyectaría MatSnackBar
-    this.snackBar = {
-      open: (message: string, action: string, config?: Record<string, unknown>) => {
-        console.log(`Notificación: ${message}`, action, config);
-      },
-      dismiss: () => {
-        console.log('Notificación cerrada');
-      }
-    };
-  }
+  constructor(private unifiedNotificationService: UnifiedNotificationService) {}
 
   /**
    * Muestra un mensaje de éxito
    */
   mostrarExito(mensaje: string, duracion = 5000): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
+    this.unifiedNotificationService.success(mensaje, 'Éxito', {
       duration: duracion,
-      panelClass: ['success-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
@@ -38,11 +21,9 @@ export class NotificationService {
    * Muestra un mensaje de error
    */
   mostrarError(mensaje: string, duracion = 7000): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
+    this.unifiedNotificationService.error(mensaje, 'Error', {
       duration: duracion,
-      panelClass: ['error-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
@@ -50,11 +31,9 @@ export class NotificationService {
    * Muestra un mensaje de advertencia
    */
   mostrarAdvertencia(mensaje: string, duracion = 6000): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
+    this.unifiedNotificationService.warning(mensaje, 'Advertencia', {
       duration: duracion,
-      panelClass: ['warning-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
@@ -62,11 +41,9 @@ export class NotificationService {
    * Muestra un mensaje informativo
    */
   mostrarInfo(mensaje: string, duracion = 5000): void {
-    this.snackBar.open(mensaje, 'Cerrar', {
+    this.unifiedNotificationService.info(mensaje, 'Información', {
       duration: duracion,
-      panelClass: ['info-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
@@ -74,7 +51,7 @@ export class NotificationService {
    * Limpia cualquier notificación activa
    */
   cleanup(): void {
-    this.snackBar.dismiss();
+    this.unifiedNotificationService.dismissAll();
   }
 
   /**

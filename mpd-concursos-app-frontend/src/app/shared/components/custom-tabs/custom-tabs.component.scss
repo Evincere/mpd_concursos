@@ -1,0 +1,356 @@
+/* ===== CUSTOM TABS GLASSMORPHISM PREMIUM DARK ===== */
+/* Refactorizado según user-glassmorphism-refactoring-plan.md */
+
+.custom-tabs-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--user-glass-gradient-primary);
+  background-image: var(--user-glass-gradient-overlay);
+  border: 1px solid var(--user-border-glass);
+  border-radius: var(--user-border-radius-lg);
+  backdrop-filter: var(--user-backdrop-blur);
+  -webkit-backdrop-filter: var(--user-backdrop-blur);
+  box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
+  position: relative;
+  overflow: hidden;
+
+  /* Glassmorphism multicapa effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 30% 70%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.tabs-header {
+  position: relative;
+  background: linear-gradient(135deg,
+    rgba(75, 85, 99, 0.9) 0%,
+    rgba(55, 65, 81, 0.95) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--user-border-glass);
+  flex-shrink: 0;
+
+  /* Subtle shine effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent);
+  }
+}
+
+.tabs-nav {
+  display: flex;
+  position: relative;
+}
+
+.tab-button {
+  flex: 1;
+  padding: var(--user-spacing-lg) var(--user-spacing-xl);
+  background: transparent;
+  border: none;
+  color: var(--user-text-tab-inactive);
+  font-size: var(--user-font-size-tab);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--user-transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--user-spacing-sm);
+  position: relative;
+  min-height: 52px; /* Increased for better touch targets */
+
+  /* Focus state for accessibility */
+  &:focus-visible {
+    outline: 2px solid var(--user-focus-ring);
+    outline-offset: -2px;
+    z-index: 2;
+  }
+
+  i {
+    font-size: 1rem;
+    opacity: 0.8;
+    transition: var(--user-transition-normal);
+  }
+
+  span {
+    letter-spacing: -0.025em;
+    transition: var(--user-transition-normal);
+  }
+
+  &:hover:not(.disabled) {
+    color: var(--user-text-primary);
+    background: rgba(255, 255, 255, 0.08); /* Slightly more visible hover state */
+
+    i {
+      opacity: 1;
+      color: var(--user-text-accent);
+    }
+  }
+
+  &.active {
+    color: var(--user-text-tab-active);
+    font-weight: 600;
+    background: rgba(96, 165, 250, 0.15); /* Subtle background for active state */
+    border-bottom: 2px solid var(--user-border-tab-active);
+
+    i {
+      opacity: 1;
+      color: var(--user-text-tab-active);
+    }
+
+    span {
+      color: var(--user-text-tab-active);
+    }
+  }
+
+  &.disabled {
+    color: var(--user-text-muted);
+    cursor: not-allowed;
+    opacity: 0.5;
+
+    i {
+      opacity: 0.3;
+    }
+  }
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px; /* Increased height for better visibility */
+  background: linear-gradient(90deg, var(--user-text-accent), #60a5fa);
+  border-radius: 2px 2px 0 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: calc(100% / var(--tabs-count, 3));
+  box-shadow: 0 -2px 12px rgba(96, 165, 250, 0.4); /* Enhanced shadow for visibility */
+}
+
+.tabs-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0; /* Permite que flex shrink funcione correctamente */
+}
+
+.tab-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(20px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.1);
+
+  /* Enhanced custom scrollbar for glassmorphism */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin: 4px 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.3) 100%);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    &:hover {
+      background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.4) 100%);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    &:active {
+      background: linear-gradient(180deg,
+        rgba(255, 255, 255, 0.6) 0%,
+        rgba(255, 255, 255, 0.5) 100%);
+    }
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    position: absolute; /* Mantener absolute para el layout correcto */
+  }
+
+  /* Focus management for accessibility */
+  &:focus {
+    outline: none;
+  }
+
+  /* Smooth scrolling behavior */
+  scroll-behavior: smooth;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .tab-button {
+    padding: var(--user-spacing-md) var(--user-spacing-lg);
+    font-size: var(--user-font-size-tab-mobile);
+    min-height: 48px; /* Increased for better touch targets */
+
+    i {
+      font-size: 1rem; /* Increased icon size for better visibility */
+    }
+  }
+
+  .tabs-header {
+    border-radius: var(--user-border-radius-md) var(--user-border-radius-md) 0 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-button {
+    padding: var(--user-spacing-sm) var(--user-spacing-md);
+    font-size: var(--user-font-size-tab-mobile);
+    gap: var(--user-spacing-xs);
+    min-height: 44px; /* Maintained minimum touch target size */
+
+    span {
+      display: none; /* Hide text on very small screens, show only icons */
+    }
+
+    i {
+      font-size: 1.125rem; /* Larger icons for better visibility on small screens */
+    }
+  }
+
+  /* Show text if no icon is present */
+  .tab-button:not(:has(i)) span {
+    display: block;
+  }
+}
+
+/* ===== ACCESSIBILITY SUPPORT ===== */
+@media (prefers-reduced-motion: reduce) {
+  .tab-button,
+  .tab-indicator,
+  .tab-panel {
+    transition: none;
+  }
+
+  .tab-panel {
+    transform: none;
+  }
+}
+
+/* ===== HIGH CONTRAST SUPPORT ===== */
+@media (prefers-contrast: high) {
+  .custom-tabs-container {
+    border-color: var(--user-text-primary);
+  }
+
+  .tab-button {
+    &.active {
+      background: rgba(96, 165, 250, 0.3); /* Enhanced contrast for high contrast mode */
+      color: var(--user-text-high-contrast);
+      border: 2px solid var(--user-text-accent);
+    }
+
+    &:focus-visible {
+      outline-color: var(--user-text-primary);
+      outline-width: 3px;
+    }
+
+    &:hover:not(.disabled) {
+      background: rgba(255, 255, 255, 0.15); /* More visible hover in high contrast */
+    }
+  }
+
+  .tab-indicator {
+    height: 5px; /* Thicker indicator for high contrast */
+    background: var(--user-text-accent);
+    box-shadow: 0 0 8px var(--user-text-accent); /* Glow effect for visibility */
+  }
+}
+
+/* ===== DASHBOARD LAYOUT SPECIFIC OVERRIDES ===== */
+/* Ensure user glassmorphism variables are applied correctly */
+:host-context(.dashboard-layout) {
+  .tab-button {
+    font-size: var(--user-font-size-tab, 1rem) !important;
+    color: var(--user-text-tab-inactive, #d1d5db) !important;
+
+    &.active {
+      color: var(--user-text-tab-active, #ffffff) !important;
+      background: rgba(96, 165, 250, 0.15) !important;
+      border-bottom: 2px solid var(--user-border-tab-active, rgba(96, 165, 250, 0.6)) !important;
+      font-weight: 600 !important;
+
+      i {
+        color: var(--user-text-tab-active, #ffffff) !important;
+      }
+
+      span {
+        color: var(--user-text-tab-active, #ffffff) !important;
+      }
+    }
+
+    &:hover:not(.disabled):not(.active) {
+      color: var(--user-text-primary, #f9fafb) !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+
+      i {
+        color: var(--user-text-accent, #60a5fa) !important;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--user-border-input-focus, rgba(96, 165, 250, 0.5)) !important;
+    }
+  }
+
+  .tab-indicator {
+    background: linear-gradient(90deg, var(--user-text-accent, #60a5fa), #60a5fa) !important;
+    box-shadow: 0 -2px 12px rgba(96, 165, 250, 0.4) !important;
+  }
+
+  /* Mobile responsive overrides */
+  @media (max-width: 768px) {
+    .tab-button {
+      font-size: var(--user-font-size-tab-mobile, 0.9375rem) !important;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { Observable, Subject } from 'rxjs';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';
@@ -26,7 +26,7 @@ export interface Notification {
 export class NotificationService {
   private notificationSubject = new Subject<Notification>();
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private unifiedNotificationService: UnifiedNotificationService) {}
 
   /**
    * Limpia los recursos utilizados por el servicio
@@ -175,21 +175,23 @@ export class NotificationService {
   }
 
   /**
-   * Muestra una notificación usando MatSnackBar
+   * Muestra una notificación usando el sistema unificado
    * @param notification Datos de la notificación
    */
   private showSnackBar(notification: Notification): void {
     const { message, title, type, options } = notification;
 
-    const config: MatSnackBarConfig = {
+    // Mapear posición horizontal y vertical a posición unificada
+    const horizontalPosition = options?.horizontalPosition || 'end';
+    const verticalPosition = options?.verticalPosition || 'top';
+    const position = `${verticalPosition}-${horizontalPosition}` as any;
+
+    // Configuración para el sistema unificado
+    const unifiedConfig = {
       duration: options?.duration || this.defaultDurations[type],
-      horizontalPosition: options?.horizontalPosition || 'end',
-      verticalPosition: options?.verticalPosition || 'top',
-      panelClass: options?.panelClass || this.defaultPanelClasses[type],
+      position: position,
       data: options?.data
     };
-
-    const displayMessage = title ? `${title}: ${message}` : message;
 
     // Manejar diferentes tipos de acción
     if (options?.action && typeof options.action === 'object') {
@@ -197,18 +199,30 @@ export class NotificationService {
       const actionText = options.action.text || 'Cerrar';
       const actionCallback = options.action.callback;
 
-      const snackBarRef = this.snackBar.open(displayMessage, actionText, config);
-
-      // Suscribirse al evento de clic en la acción
-      if (actionCallback) {
-        snackBarRef.onAction().subscribe(() => {
-          actionCallback();
-        });
-      }
+      this.unifiedNotificationService.show({
+        message,
+        title,
+        type,
+        ...unifiedConfig,
+        actionText,
+        onAction: actionCallback
+      });
     } else {
-      // Si la acción es una cadena o no está definida
-      const action = options?.action as string || 'Cerrar';
-      this.snackBar.open(displayMessage, action, config);
+      // Notificación simple
+      switch (type) {
+        case 'success':
+          this.unifiedNotificationService.success(message, title, unifiedConfig);
+          break;
+        case 'error':
+          this.unifiedNotificationService.error(message, title, unifiedConfig);
+          break;
+        case 'warning':
+          this.unifiedNotificationService.warning(message, title, unifiedConfig);
+          break;
+        case 'info':
+          this.unifiedNotificationService.info(message, title, unifiedConfig);
+          break;
+      }
     }
   }
 }

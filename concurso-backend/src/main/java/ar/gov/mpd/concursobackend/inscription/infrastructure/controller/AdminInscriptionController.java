@@ -8,7 +8,6 @@ import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.Admi
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionNoteDTO;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionStateChangeDTO;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionReportRequestDTO;
-import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionReportResponseDTO;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.mapper.AdminInscriptionMapper;
 import ar.gov.mpd.concursobackend.shared.infrastructure.controller.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;

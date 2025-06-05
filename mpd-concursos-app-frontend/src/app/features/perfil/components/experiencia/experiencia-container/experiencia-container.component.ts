@@ -1,7 +1,9 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, EventEmitter, Output, Input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+
+// Custom Services
+import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { ProfileService, Experiencia } from '../../../../../core/services/profile/profile.service';
@@ -19,16 +21,7 @@ interface ExperienciaBackend {
   documentUrl?: string;
 }
 
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
+// Material UI imports removed - using custom components instead
 
 export enum PasoWizard {
   INFORMACION_BASICA = 0,
@@ -45,18 +38,7 @@ export enum PasoWizard {
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatProgressBarModule,
-    MatProgressSpinnerModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatSnackBarModule
+    ReactiveFormsModule
   ]
 })
 export class ExperienciaContainerComponent implements OnInit, OnDestroy {
@@ -90,7 +72,7 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar,
+    private notification: CustomNotificationService,
     private cdr: ChangeDetectorRef,
     private profileService: ProfileService,
     private experienceService: ExperienceService
@@ -146,9 +128,7 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (!this.usuarioId) {
       console.error('No se ha proporcionado un ID de usuario válido');
-      this.snackBar.open('Error: No se ha proporcionado un ID de usuario válido', 'Cerrar', {
-        duration: 5000
-      });
+      this.notification.error('Error: No se ha proporcionado un ID de usuario válido');
       this.cerrarModal();
     }
   }
@@ -243,9 +223,7 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
   // Guardar experiencia
   guardarExperiencia(): void {
     if (!this.validarTodosLosPasos()) {
-      this.snackBar.open('Por favor complete todos los campos requeridos antes de guardar', 'Cerrar', {
-        duration: 5000
-      });
+      this.notification.error('Por favor complete todos los campos requeridos antes de guardar');
       return;
     }
 
@@ -276,9 +254,7 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
             console.log(`Nueva experiencia creada con ID: ${nuevaExperiencia.id}`);
 
             // Mostrar mensaje de éxito
-            this.snackBar.open('Experiencia guardada correctamente', 'Cerrar', {
-              duration: 3000
-            });
+            this.notification.success('Experiencia guardada correctamente');
 
             // Emitir la experiencia creada para actualizar la lista en el componente padre
             if (experienciaMapeada) {
@@ -294,17 +270,13 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
             }
           } else {
             console.error('La experiencia se creó pero no tiene ID asignado:', nuevaExperiencia);
-            this.snackBar.open('Experiencia guardada parcialmente. Es posible que no se pueda adjuntar el certificado.', 'Cerrar', {
-              duration: 5000
-            });
+            this.notification.warning('Experiencia guardada parcialmente. Es posible que no se pueda adjuntar el certificado.');
             this.finalizarGuardado();
           }
         },
         error: (error: unknown) => {
           console.error('Error al guardar la experiencia:', error);
-          this.snackBar.open('Error al guardar la experiencia', 'Cerrar', {
-            duration: 5000
-          });
+          this.notification.error('Error al guardar la experiencia');
         }
       });
   }
@@ -318,11 +290,7 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
 
     // Validar archivo
     if (this.archivoSeleccionado.size > 10 * 1024 * 1024) { // 10MB
-      this.snackBar.open(
-        'El archivo es demasiado grande. El tamaño máximo permitido es 10MB.',
-        'Entendido',
-        { duration: 5000 }
-      );
+      this.notification.error('El archivo es demasiado grande. El tamaño máximo permitido es 10MB.');
       this.cargandoArchivo = false;
       this.cdr.markForCheck();
       this.finalizarGuardado();
@@ -350,9 +318,7 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
           } else if (event['type'] === 'success') {
             console.log('Certificado subido correctamente:', event['experience']);
 
-            this.snackBar.open('Certificado subido correctamente', 'Cerrar', {
-              duration: 3000
-            });
+            this.notification.success('Certificado subido correctamente');
 
             // Actualizar experiencia con la URL del documento si es necesario
             if (event['experience'] && event['experience']['documentUrl']) {
@@ -364,11 +330,7 @@ export class ExperienciaContainerComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error al subir el certificado:', error);
-          this.snackBar.open(
-            'Error al subir el certificado: ' + (error.message || 'Error desconocido'),
-            'Cerrar',
-            { duration: 5000 }
-          );
+          this.notification.error('Error al subir el certificado: ' + (error.message || 'Error desconocido'));
           this.finalizarGuardado();
         }
       });

@@ -1,54 +1,68 @@
 <div class="filtros-panel">
   <div class="panel-header">
     <h2>Filtros de Búsqueda</h2>
-    <button mat-icon-button (click)="cerrarPanel()" aria-label="Cerrar panel de filtros">
-      <mat-icon>close</mat-icon>
-    </button>
+    <app-custom-button
+      [variant]="'icon'"
+      [icon]="'times'"
+      [tooltip]="'Cerrar panel de filtros'"
+      [ariaLabel]="'Cerrar panel de filtros'"
+      (buttonClick)="cerrarPanel()">
+    </app-custom-button>
   </div>
 
   <form [formGroup]="filtrosForm" class="filtros-form">
     <!-- Estado -->
     <div class="filtro-seccion">
       <h3>Estado de la Postulación</h3>
-      <mat-button-toggle-group formControlName="estado" class="estado-toggle" aria-label="Estado de la postulación">
-        <mat-button-toggle *ngFor="let option of estadoOptions" [value]="option.value" [attr.aria-label]="option.label">
-          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
-          {{ option.label }}
-        </mat-button-toggle>
-      </mat-button-toggle-group>
+      <app-custom-select
+        [label]="'Estado'"
+        [placeholder]="'Seleccionar estado'"
+        [options]="estadoOptions"
+        [control]="estadoControl">
+      </app-custom-select>
     </div>
 
     <!-- Periodo -->
     <div class="filtro-seccion">
       <h3>Período</h3>
-      <mat-button-toggle-group formControlName="periodo" class="periodo-toggle" aria-label="Período de postulación">
-        <mat-button-toggle *ngFor="let option of periodoOptions" [value]="option.value" [attr.aria-label]="option.label">
-          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
-          {{ option.label }}
-        </mat-button-toggle>
-      </mat-button-toggle-group>
+      <app-custom-select
+        [label]="'Período'"
+        [placeholder]="'Seleccionar período'"
+        [options]="periodoOptions"
+        [control]="periodoControl">
+      </app-custom-select>
     </div>
 
     <!-- Dependencia -->
     <div class="filtro-seccion">
       <h3>Dependencia</h3>
-      <mat-button-toggle-group formControlName="dependencia" class="dependencia-toggle" aria-label="Dependencia">
-        <mat-button-toggle *ngFor="let option of dependenciaOptions" [value]="option.value" [attr.aria-label]="option.label">
-          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
-          {{ option.label }}
-        </mat-button-toggle>
-      </mat-button-toggle-group>
+      <app-custom-select
+        [label]="'Dependencia'"
+        [placeholder]="'Seleccionar dependencia'"
+        [options]="dependenciaOptions"
+        [control]="dependenciaControl">
+      </app-custom-select>
     </div>
 
     <!-- Cargo -->
     <div class="filtro-seccion">
       <h3>Cargo</h3>
-      <mat-button-toggle-group formControlName="cargo" class="cargo-toggle" aria-label="Cargo">
-        <mat-button-toggle *ngFor="let option of cargoOptions" [value]="option.value" [attr.aria-label]="option.label">
-          <mat-icon *ngIf="option.icon">{{option.icon}}</mat-icon>
-          {{ option.label }}
-        </mat-button-toggle>
-      </mat-button-toggle-group>
+      <app-custom-select
+        [label]="'Cargo'"
+        [placeholder]="'Seleccionar cargo'"
+        [options]="cargoOptions"
+        [control]="cargoControl">
+      </app-custom-select>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="filtros-actions">
+      <app-custom-button
+        [label]="'Limpiar Filtros'"
+        [variant]="'stroked'"
+        [icon]="'eraser'"
+        (buttonClick)="limpiarFiltros()">
+      </app-custom-button>
     </div>
   </form>
 </div>

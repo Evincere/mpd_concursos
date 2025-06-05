@@ -1,0 +1,169 @@
+<div class="glass-dialog-content">
+  <!-- Formulario -->
+  <form [formGroup]="documentoForm" class="glass-form">
+    <!-- Sección de tipo de documento (solo se muestra si no hay uno seleccionado) -->
+    <div class="glass-form-section" *ngIf="!tipoDocumentoSeleccionado">
+      <h3 class="glass-section-title">
+        <i class="fas fa-file-text"></i>
+        Información del documento
+      </h3>
+
+      <div class="glass-form-field">
+        <label for="tipoDocumento" class="glass-label">Tipo de documento *</label>
+        <div class="glass-select-container">
+          <select
+            id="tipoDocumento"
+            formControlName="tipoDocumentoId"
+            class="glass-select">
+            <option value="" disabled selected>Seleccione el tipo de documento</option>
+            <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">
+              {{ tipo.nombre }}
+            </option>
+          </select>
+          <i class="fas fa-chevron-down glass-select-arrow"></i>
+        </div>
+      </div>
+
+      <div *ngIf="documentoForm.get('tipoDocumentoId')?.hasError('required') &&
+                 documentoForm.get('tipoDocumentoId')?.touched"
+           class="glass-error-message">
+        <i class="fas fa-exclamation-circle"></i> 
+        Debe seleccionar un tipo de documento
+      </div>
+    </div>
+
+    <!-- Sección de tipo de documento seleccionado -->
+    <div class="glass-form-section" *ngIf="tipoDocumentoSeleccionado">
+      <h3 class="glass-section-title">
+        <i class="fas fa-file-text"></i>
+        Información del documento
+      </h3>
+
+      <div class="glass-form-field">
+        <label class="glass-label">Tipo de documento</label>
+        <div class="glass-selected-type">
+          <i class="fas fa-file-pdf"></i>
+          <span>{{ tipoDocumentoSeleccionado.nombre }}</span>
+        </div>
+        <input type="hidden" formControlName="tipoDocumentoId">
+      </div>
+    </div>
+
+    <!-- Sección de carga de archivo -->
+    <div class="glass-form-section">
+      <h3 class="glass-section-title">
+        <i class="fas fa-cloud-upload-alt"></i>
+        Archivo
+      </h3>
+
+      <div class="glass-upload-container"
+           [class.has-file]="selectedFile"
+           [class.drag-over]="isDragging"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)">
+
+        <ng-container *ngIf="!selectedFile; else fileSelected">
+          <i class="fas fa-cloud-upload-alt glass-upload-icon"></i>
+          <p class="glass-upload-text">Arrastra y suelta tu archivo PDF aquí</p>
+          <p class="glass-upload-divider">o</p>
+          <button type="button" class="glass-btn glass-btn-primary" (click)="fileInput.click()">
+            <i class="fas fa-file-upload"></i>
+            Seleccionar archivo
+          </button>
+          <p class="glass-upload-hint">Solo se permiten archivos PDF de máximo 5MB</p>
+        </ng-container>
+
+        <ng-template #fileSelected>
+          <ng-container *ngIf="selectedFile">
+            <div class="glass-selected-file">
+              <i class="fas fa-file-pdf glass-file-icon"></i>
+              <div class="glass-file-info">
+                <p class="glass-file-name">{{ selectedFile.name }}</p>
+                <p class="glass-file-size">{{ formatFileSize(selectedFile.size) }}</p>
+              </div>
+              <button type="button" class="glass-btn glass-btn-danger glass-btn-icon" (click)="removeFile()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </ng-container>
+        </ng-template>
+
+        <input type="file" #fileInput hidden accept="application/pdf" (change)="onFileSelected($event)">
+      </div>
+    </div>
+
+    <!-- Sección especial para DNI (frente/dorso) -->
+    <div class="glass-form-section" *ngIf="esTipoDNI()">
+      <h3 class="glass-section-title">
+        <i class="fas fa-id-card"></i>
+        Especificar lado del DNI
+      </h3>
+
+      <div class="glass-form-field">
+        <label class="glass-label">Seleccione qué lado del DNI está subiendo</label>
+        <div class="glass-radio-group">
+          <div class="glass-radio-option">
+            <input type="radio" id="dni-frente" formControlName="ladoDNI" value="frente">
+            <label for="dni-frente">Frente (Anverso)</label>
+          </div>
+          <div class="glass-radio-option">
+            <input type="radio" id="dni-dorso" formControlName="ladoDNI" value="dorso">
+            <label for="dni-dorso">Dorso (Reverso)</label>
+          </div>
+        </div>
+        <div *ngIf="documentoForm.get('ladoDNI')?.touched && !documentoForm.get('ladoDNI')?.value" 
+             class="glass-error-message">
+          <i class="fas fa-exclamation-circle"></i> 
+          Por favor, especifique qué lado del DNI está subiendo
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de comentarios -->
+    <div class="glass-form-section">
+      <h3 class="glass-section-title">
+        <i class="fas fa-comment-alt"></i>
+        Información adicional
+      </h3>
+
+      <div class="glass-form-field">
+        <label for="comentarios" class="glass-label">Comentarios (opcional)</label>
+        <textarea
+          id="comentarios"
+          formControlName="comentarios"
+          class="glass-textarea"
+          rows="3"
+          placeholder="Agregue detalles adicionales sobre el documento"></textarea>
+      </div>
+    </div>
+  </form>
+
+  <!-- Indicador de progreso de carga -->
+  <div *ngIf="isUploading" class="glass-upload-progress">
+    <div class="glass-progress-content">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Subiendo documento...</p>
+      <div class="glass-progress-bar">
+        <div class="glass-progress-fill" [style.width.%]="uploadProgress"></div>
+      </div>
+      <p class="glass-progress-text">{{ uploadProgress }}%</p>
+    </div>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="glass-dialog-actions">
+    <button class="glass-btn glass-btn-secondary" 
+            [disabled]="isUploading" 
+            (click)="onCancel()">
+      <i class="fas fa-times"></i>
+      Cancelar
+    </button>
+    <button class="glass-btn glass-btn-success"
+            [disabled]="!documentoForm.valid || !selectedFile || isUploading"
+            (click)="onSubmit()">
+      <i class="fas fa-upload"></i>
+      Cargar documento
+    </button>
+  </div>
+</div>

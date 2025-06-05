@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map, take } from 'rxjs/operators';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 import { IInscriptionFormState, InscriptionStateService } from  './inscription-state.service';
+import { InscriptionService } from './inscription.service';
 
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 
@@ -12,7 +15,8 @@ import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 export class InscriptionRecoveryService {
   constructor(
     private inscriptionStateService: InscriptionStateService,
-    private snackBar: MatSnackBar,
+    private inscriptionService: InscriptionService,
+    private notificationService: UnifiedNotificationService,
     private router: Router
   ) {}
 
@@ -33,7 +37,7 @@ export class InscriptionRecoveryService {
       return;
     }
 
-    // Obtener todas las inscripciones incompletas
+    // Obtener todas las inscripciones incompletas del localStorage
     const pendingInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
 
     // Filtrar inscripciones según su paso actual
@@ -44,41 +48,126 @@ export class InscriptionRecoveryService {
     });
 
     if (filteredInscriptions.length > 0) {
-      console.log('[InscriptionRecoveryService] Inscripciones pendientes encontradas:', filteredInscriptions);
+      console.log('[InscriptionRecoveryService] Inscripciones pendientes encontradas en localStorage:', filteredInscriptions);
 
-      // Si se debe omitir la notificación, no hacer nada
-      if (skipDialog) {
-        console.log('[InscriptionRecoveryService] Omitiendo notificación por solicitud');
-        return;
-      }
-
-      // Mostrar notificación informativa independientemente de la cantidad de inscripciones pendientes
-      this.showPendingInscriptionsSnackbar(filteredInscriptions);
+      // VALIDACIÓN CRÍTICA: Verificar que las inscripciones realmente existen en el backend
+      this.validateInscriptionsWithBackend(filteredInscriptions, skipDialog);
     }
   }
 
   /**
-   * Muestra un snackbar informando que hay inscripciones pendientes
+   * Valida que las inscripciones del localStorage realmente existen en el backend
+   * @param localInscriptions Inscripciones encontradas en localStorage
+   * @param skipDialog Si se debe omitir la notificación
+   */
+  private validateInscriptionsWithBackend(localInscriptions: IInscriptionFormState[], skipDialog: boolean): void {
+    // Obtener las inscripciones reales del backend
+    this.inscriptionService.inscriptions.pipe(take(1)).subscribe({
+      next: (backendInscriptions) => {
+        console.log('[InscriptionRecoveryService] Inscripciones del backend:', backendInscriptions);
+
+        // Filtrar solo las inscripciones que realmente existen en el backend y están en proceso
+        const validInscriptions = localInscriptions.filter(localInscription => {
+          const backendInscription = backendInscriptions.find(backend =>
+            backend.id === localInscription.inscriptionId
+          );
+
+          // Solo considerar válida si existe en el backend y está en un estado que permite reanudación
+          const isValid = backendInscription && this.canResumeInscription(backendInscription.state);
+
+          if (!isValid) {
+            console.log('[InscriptionRecoveryService] Limpiando inscripción inválida del localStorage:', localInscription.inscriptionId);
+            // Limpiar inscripciones que ya no existen o no se pueden reanudar
+            this.inscriptionStateService.clearInscriptionState(localInscription.inscriptionId);
+          }
+
+          return isValid;
+        });
+
+        console.log('[InscriptionRecoveryService] Inscripciones válidas después de validación:', validInscriptions);
+
+        // Solo mostrar notificación si hay inscripciones válidas
+        if (validInscriptions.length > 0 && !skipDialog) {
+          this.showPendingInscriptionsNotification(validInscriptions);
+        }
+      },
+      error: (error) => {
+        console.error('[InscriptionRecoveryService] Error al validar inscripciones con backend:', error);
+        // En caso de error, no mostrar notificación para evitar confusión
+      }
+    });
+  }
+
+  /**
+   * Determina si una inscripción puede ser reanudada basándose en su estado
+   * @param state Estado de la inscripción
+   * @returns true si puede ser reanudada, false en caso contrario
+   */
+  private canResumeInscription(state: string): boolean {
+    // Estados que permiten reanudación (usando la misma lógica que InscripcionStateUtils)
+    const resumableStates = ['ACTIVE', 'IN_PROCESS', 'COMPLETED_PENDING_DOCS'];
+    return resumableStates.includes(state);
+  }
+
+  /**
+   * Muestra una notificación informando que hay inscripciones pendientes
    * @param inscriptions Lista de inscripciones pendientes
    */
-  private showPendingInscriptionsSnackbar(inscriptions: IInscriptionFormState[]): void {
+  private showPendingInscriptionsNotification(inscriptions: IInscriptionFormState[]): void {
     const message = inscriptions.length === 1
       ? 'Tienes una inscripción en proceso. Puedes continuarla desde la sección "Mis Postulaciones".'
       : `Tienes ${inscriptions.length} inscripciones en proceso. Puedes continuarlas desde la sección "Mis Postulaciones".`;
 
-    const snackBarRef = this.snackBar.open(
-      message,
-      'Ver Postulaciones',
-      {
-        duration: 10000,
-        horizontalPosition: 'center',
-        verticalPosition: 'bottom',
-        panelClass: ['info-snackbar']
+    this.notificationService.info(message, 'Inscripciones Pendientes', {
+      duration: 10000,
+      position: 'bottom-center',
+      actionText: 'Ver Postulaciones',
+      onAction: () => {
+        this.router.navigate(['/dashboard/postulaciones']);
       }
-    );
+    });
+  }
 
-    snackBarRef.onAction().subscribe(() => {
-      this.router.navigate(['/dashboard/postulaciones']);
+  /**
+   * Limpia todas las inscripciones inválidas del localStorage
+   * Útil para casos donde se reinicia la base de datos o hay inconsistencias
+   */
+  cleanupInvalidInscriptions(): void {
+    console.log('[InscriptionRecoveryService] Iniciando limpieza de inscripciones inválidas...');
+
+    const localInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
+
+    if (localInscriptions.length === 0) {
+      console.log('[InscriptionRecoveryService] No hay inscripciones en localStorage para limpiar');
+      return;
+    }
+
+    // Obtener inscripciones del backend para validar
+    this.inscriptionService.inscriptions.pipe(take(1)).subscribe({
+      next: (backendInscriptions) => {
+        let cleanedCount = 0;
+
+        localInscriptions.forEach(localInscription => {
+          const existsInBackend = backendInscriptions.some(backend =>
+            backend.id === localInscription.inscriptionId
+          );
+
+          if (!existsInBackend) {
+            console.log('[InscriptionRecoveryService] Limpiando inscripción inexistente:', localInscription.inscriptionId);
+            this.inscriptionStateService.clearInscriptionState(localInscription.inscriptionId);
+            cleanedCount++;
+          }
+        });
+
+        if (cleanedCount > 0) {
+          console.log(`[InscriptionRecoveryService] Limpieza completada: ${cleanedCount} inscripciones eliminadas`);
+        } else {
+          console.log('[InscriptionRecoveryService] No se encontraron inscripciones inválidas para limpiar');
+        }
+      },
+      error: (error) => {
+        console.error('[InscriptionRecoveryService] Error durante la limpieza:', error);
+      }
     });
   }
 }

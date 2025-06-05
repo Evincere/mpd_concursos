@@ -2,7 +2,6 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Custom Components
-import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 
 // Models
@@ -13,12 +12,12 @@ import { UserProfile } from '@core/models/perfil.model';
   standalone: true,
   imports: [
     CommonModule,
-    CustomCardComponent,
     CustomButtonComponent
   ],
   template: `
     <div class="linkedin-container">
-      <app-custom-card>
+      <!-- Glassmorphism LinkedIn Card -->
+      <div class="linkedin-glassmorphism-card">
         <div class="linkedin-content">
           <!-- Header -->
           <div class="linkedin-header">
@@ -156,7 +155,7 @@ import { UserProfile } from '@core/models/perfil.model';
             </div>
           </div>
         </div>
-      </app-custom-card>
+      </div>
     </div>
   `,
   styleUrls: ['./perfil-linkedin.component.scss'],

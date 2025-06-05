@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Postulacion, AttachedDocument } from '@shared/interfaces/postulacion/postulacion.interface';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { InscripcionState, InscripcionStateUtils } from '@core/models/inscripcion/inscripcion-state.enum';
 
 @Component({
   selector: 'app-postulacion-detalle',
@@ -12,8 +12,7 @@ import { Postulacion, AttachedDocument } from '@shared/interfaces/postulacion/po
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    MatButtonModule
+    CustomButtonComponent
   ],
   animations: [
     trigger('slidePanel', [
@@ -56,15 +55,22 @@ export class PostulacionDetalleComponent {
   }
 
   getEstadoPostulacionLabel(estado: string): string {
+    // Convertir string a enum si es posible
+    const enumValue = Object.values(InscripcionState).find(value => value === estado);
+    if (enumValue) {
+      return InscripcionStateUtils.getStateLabel(enumValue as InscripcionState);
+    }
+
+    // Fallback para estados no reconocidos
     switch (estado) {
       case 'PENDING':
-        return 'En proceso'; // Inscripción interrumpida
+        return 'En proceso';
       case 'CONFIRMADA':
-        return 'Pendiente'; // Inscripción completada por el usuario, pendiente de validación
+        return 'Pendiente';
       case 'INSCRIPTO':
       case 'APPROVED':
       case 'ACCEPTED':
-        return 'Inscripto'; // Inscripción validada por el administrador
+        return 'Inscripto';
       case 'REJECTED':
         return 'Rechazada';
       case 'CANCELLED':

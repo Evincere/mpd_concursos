@@ -8,7 +8,10 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="spinner-container" [ngClass]="{'overlay': overlay, 'fullscreen': fullscreen}">
       <div class="spinner-content">
-        <div class="spinner" [ngClass]="size">
+        <div class="spinner"
+             [ngClass]="getSizeClass()"
+             [style.width.px]="getSizePixels()"
+             [style.height.px]="getSizePixels()">
           <div class="spinner-inner">
             <div class="spinner-circle"></div>
             <div class="spinner-circle-shadow"></div>
@@ -160,22 +163,36 @@ import { CommonModule } from '@angular/common';
 })
 export class CustomSpinnerComponent {
   /**
-   * Tamaño del spinner: 'small', 'medium' (default), 'large'
+   * Tamaño del spinner: 'small', 'medium' (default), 'large' o número en píxeles
    */
-  @Input() size: 'small' | 'medium' | 'large' = 'medium';
-  
+  @Input() size: 'small' | 'medium' | 'large' | number = 'medium';
+
   /**
    * Mensaje opcional para mostrar debajo del spinner
    */
   @Input() message?: string;
-  
+
   /**
    * Si el spinner debe mostrarse como un overlay sobre su contenedor
    */
   @Input() overlay = false;
-  
+
   /**
    * Si el spinner debe mostrarse a pantalla completa
    */
   @Input() fullscreen = false;
+
+  /**
+   * Obtiene la clase CSS para el tamaño del spinner
+   */
+  getSizeClass(): string {
+    return typeof this.size === 'string' ? this.size : 'custom';
+  }
+
+  /**
+   * Obtiene el tamaño en píxeles si es un número
+   */
+  getSizePixels(): number | null {
+    return typeof this.size === 'number' ? this.size : null;
+  }
 }

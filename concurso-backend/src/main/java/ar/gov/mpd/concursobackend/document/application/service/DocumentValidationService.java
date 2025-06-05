@@ -9,6 +9,7 @@ import java.util.List;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.pdf.PDFParser;
 import org.apache.tika.sax.BodyContentHandler;
@@ -28,10 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 public class DocumentValidationService {
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    // Solo PDF para documentación oficial
     private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList(
-            "application/pdf",
-            "image/jpeg",
-            "image/png");
+            "application/pdf");
 
     /**
      * Valida un archivo
@@ -58,7 +58,7 @@ public class DocumentValidationService {
         String detectedMimeType = detectMimeType(file);
         if (!ALLOWED_MIME_TYPES.contains(detectedMimeType)) {
             errors.add(new ValidationError("INVALID_FILE_TYPE",
-                    "Tipo de archivo no permitido. Solo se permiten PDF, JPG y PNG"));
+                    "Tipo de archivo no permitido. Solo se permiten archivos PDF"));
         }
 
         // Validar contenido malicioso
@@ -105,8 +105,20 @@ public class DocumentValidationService {
             return containsMaliciousPdfContent(file.getInputStream());
         }
 
-        // Para otros tipos de archivo, implementar validaciones específicas
-        return false;
+        // Validaciones específicas para otros tipos de archivo
+        if (mimeType.startsWith("image/")) {
+            return containsMaliciousImageContent(file);
+        }
+
+        if (mimeType.startsWith("application/vnd.openxmlformats-officedocument") ||
+            mimeType.startsWith("application/msword") ||
+            mimeType.startsWith("application/vnd.ms-excel") ||
+            mimeType.startsWith("application/vnd.ms-powerpoint")) {
+            return containsMaliciousOfficeContent(file);
+        }
+
+        // Para tipos de archivo no soportados específicamente, realizar validación básica
+        return containsBasicMaliciousContent(file);
     }
 
     /**
@@ -158,7 +170,7 @@ public class DocumentValidationService {
 
     /**
      * Valida la calidad de una imagen
-     * 
+     *
      * @param file Archivo de imagen a validar
      * @return Resultado de la validación
      */
@@ -170,5 +182,117 @@ public class DocumentValidationService {
         // específicas para análisis de imágenes
 
         return new DocumentValidationResult(errors.isEmpty(), errors);
+    }
+
+    /**
+     * Verifica si una imagen contiene contenido malicioso
+     *
+     * @param file Archivo de imagen a validar
+     * @return true si contiene contenido malicioso, false en caso contrario
+     */
+    private boolean containsMaliciousImageContent(MultipartFile file) {
+        try {
+            // Validaciones básicas para imágenes
+            String content = extractTextFromFile(file);
+
+            // Buscar patrones sospechosos en metadatos de imagen
+            List<String> suspiciousPatterns = Arrays.asList(
+                    "script", "javascript", "vbscript", "onload", "onerror",
+                    "eval(", "document.", "window.", "alert(", "prompt("
+            );
+
+            String lowerContent = content.toLowerCase();
+            for (String pattern : suspiciousPatterns) {
+                if (lowerContent.contains(pattern)) {
+                    log.warn("Detected suspicious content in image: {}", pattern);
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Exception e) {
+            log.error("Error al analizar imagen", e);
+            return true; // En caso de error, asumimos que podría ser malicioso
+        }
+    }
+
+    /**
+     * Verifica si un documento de Office contiene contenido malicioso
+     *
+     * @param file Archivo de Office a validar
+     * @return true si contiene contenido malicioso, false en caso contrario
+     */
+    private boolean containsMaliciousOfficeContent(MultipartFile file) {
+        try {
+            String content = extractTextFromFile(file);
+
+            // Patrones sospechosos comunes en documentos de Office
+            List<String> suspiciousPatterns = Arrays.asList(
+                    "macro", "vba", "activex", "shell", "cmd.exe", "powershell",
+                    "wscript", "cscript", "regsvr32", "rundll32", "mshta"
+            );
+
+            String lowerContent = content.toLowerCase();
+            for (String pattern : suspiciousPatterns) {
+                if (lowerContent.contains(pattern)) {
+                    log.warn("Detected suspicious content in Office document: {}", pattern);
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Exception e) {
+            log.error("Error al analizar documento de Office", e);
+            return true; // En caso de error, asumimos que podría ser malicioso
+        }
+    }
+
+    /**
+     * Validación básica de contenido malicioso para tipos de archivo genéricos
+     *
+     * @param file Archivo a validar
+     * @return true si contiene contenido malicioso, false en caso contrario
+     */
+    private boolean containsBasicMaliciousContent(MultipartFile file) {
+        try {
+            String content = extractTextFromFile(file);
+
+            // Patrones básicos de contenido malicioso
+            List<String> suspiciousPatterns = Arrays.asList(
+                    "virus", "malware", "trojan", "backdoor", "exploit",
+                    "shellcode", "payload", "injection", "xss", "csrf"
+            );
+
+            String lowerContent = content.toLowerCase();
+            for (String pattern : suspiciousPatterns) {
+                if (lowerContent.contains(pattern)) {
+                    log.warn("Detected suspicious content in file: {}", pattern);
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (Exception e) {
+            log.error("Error al realizar validación básica", e);
+            return false; // Para validación básica, no bloqueamos en caso de error
+        }
+    }
+
+    /**
+     * Extrae texto de un archivo usando Apache Tika
+     *
+     * @param file Archivo del cual extraer texto
+     * @return Texto extraído del archivo
+     */
+    private String extractTextFromFile(MultipartFile file) throws IOException, SAXException, TikaException {
+        BodyContentHandler handler = new BodyContentHandler();
+        Metadata metadata = new Metadata();
+        ParseContext context = new ParseContext();
+        AutoDetectParser parser = new AutoDetectParser();
+
+        try (InputStream inputStream = file.getInputStream()) {
+            parser.parse(inputStream, handler, metadata, context);
+            return handler.toString();
+        }
     }
 }

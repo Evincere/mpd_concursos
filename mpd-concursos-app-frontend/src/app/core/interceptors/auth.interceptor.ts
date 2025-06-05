@@ -5,12 +5,12 @@ import { Router } from '@angular/router';
 import { catchError } from  'rxjs/operators';
 import { throwError } from  'rxjs';
 import { environment } from '../../../environments/environment';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenService = inject(TokenService);
   const router = inject(Router);
-  const snackBar = inject(MatSnackBar);
+  const notificationService = inject(UnifiedNotificationService);
   const token = tokenService.getToken();
   const isApiUrl = req.url.startsWith(environment.apiUrl);
 
@@ -66,11 +66,9 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
         if (error instanceof HttpErrorResponse) {
           if (error.status === 401) {
             console.log('[AuthInterceptor] Error 401, sesión expirada');
-            snackBar.open('Su sesión ha expirado. Por favor, vuelva a iniciar sesión.', 'Cerrar', {
+            notificationService.error('Su sesión ha expirado. Por favor, vuelva a iniciar sesión.', 'Sesión Expirada', {
               duration: 5000,
-              horizontalPosition: 'center',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar']
+              position: 'top-center'
             });
             tokenService.signOut();
             router.navigate(['/login'], {
@@ -88,11 +86,9 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Si no hay token o no es válido, redirigimos al login
   console.log('[AuthInterceptor] Token no válido o ausente, redirigiendo a login');
-  snackBar.open('Debe iniciar sesión para acceder a esta funcionalidad.', 'Cerrar', {
+  notificationService.warning('Debe iniciar sesión para acceder a esta funcionalidad.', 'Acceso Requerido', {
     duration: 5000,
-    horizontalPosition: 'center',
-    verticalPosition: 'top',
-    panelClass: ['warning-snackbar']
+    position: 'top-center'
   });
   tokenService.signOut();
   router.navigate(['/login'], {

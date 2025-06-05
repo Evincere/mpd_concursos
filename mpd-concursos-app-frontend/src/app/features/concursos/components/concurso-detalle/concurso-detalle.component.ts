@@ -1,14 +1,7 @@
-import { Component, EventEmitter, Input, Output, OnInit, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnDestroy, ViewChild, TemplateRef } from '@angular/core';
 import { finalize } from 'rxjs/operators';
 import { Concurso, Contest } from '@shared/interfaces/concurso/concurso.interface';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { DatePipe } from '@angular/common';
 import { Subject, BehaviorSubject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -17,21 +10,23 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
 import { ContestDate } from '@shared/interfaces/concurso/contest-date.interface';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
+import { CustomTabsComponent, TabItem } from '@shared/components/custom-tabs/custom-tabs.component';
+import { CustomIconButtonComponent } from '@shared/components/custom-icon-button/custom-icon-button.component';
+import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
+
+import { NotificationService } from '@core/services/notification/notification.service';
 
 @Component({
   selector: 'app-concurso-detalle',
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    MatButtonModule,
-    MatCardModule,
-    MatDividerModule,
-    MatProgressSpinnerModule,
-    MatTabsModule,
     DatePipe,
     InscripcionButtonComponent,
-    ContestStatusBadgeComponent
+    ContestStatusBadgeComponent,
+    CustomTabsComponent,
+    CustomIconButtonComponent,
+    CustomButtonComponent
   ],
   templateUrl: './concurso-detalle.component.html',
   styleUrls: ['./concurso-detalle.component.scss']
@@ -41,13 +36,24 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   @Output() cerrarDetalle = new EventEmitter<void>();
   @Output() inscriptionComplete = new EventEmitter<Concurso>();
 
+  @ViewChild('infoGeneralTemplate', { static: true }) infoGeneralTemplate!: TemplateRef<any>;
+  @ViewChild('documentacionTemplate', { static: true }) documentacionTemplate!: TemplateRef<any>;
+  @ViewChild('fechasTemplate', { static: true }) fechasTemplate!: TemplateRef<any>;
+
   closing = false;
   inscripcionLoading = false;
   inscripcionState$ = new BehaviorSubject<InscripcionState>(InscripcionState.NO_INSCRIPTO);
   InscripcionState = InscripcionState;
   private destroy$ = new Subject<void>();
 
-  constructor(private snackBar: MatSnackBar, private inscriptionService: InscriptionService) {}
+  // Tab management
+  tabItems: TabItem[] = [];
+  activeTabIndex = 0;
+
+  constructor(
+    private notificationService: NotificationService,
+    private inscriptionService: InscriptionService
+  ) {}
 
   ngOnInit(): void {
     if (this.concurso) {
@@ -64,7 +70,37 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
       if (!this.concurso.dates) {
         this.concurso.dates = this.getDefaultDates();
       }
+
+      // Inicializar tabs
+      this.initializeTabs();
     }
+  }
+
+  private initializeTabs(): void {
+    this.tabItems = [
+      {
+        id: 'info-general',
+        label: 'Información General',
+        icon: 'info-circle',
+        template: this.infoGeneralTemplate
+      },
+      {
+        id: 'documentacion',
+        label: 'Documentación',
+        icon: 'file-alt',
+        template: this.documentacionTemplate
+      },
+      {
+        id: 'fechas',
+        label: 'Fechas',
+        icon: 'calendar-alt',
+        template: this.fechasTemplate
+      }
+    ];
+  }
+
+  onTabChange(index: number): void {
+    this.activeTabIndex = index;
   }
 
   ngOnDestroy(): void {
@@ -98,10 +134,8 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
         error: (error: Error) => {
           console.error('Error al verificar inscripción:', error);
           this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
-          this.snackBar.open(
-            'No se pudo verificar el estado de la inscripción',
-            'Cerrar',
-            { duration: 3000 }
+          this.notificationService.showError(
+            'No se pudo verificar el estado de la inscripción'
           );
         }
       });

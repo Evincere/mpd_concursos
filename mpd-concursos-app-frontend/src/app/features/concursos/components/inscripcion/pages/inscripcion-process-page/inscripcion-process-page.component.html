@@ -1,16 +1,16 @@
-<div class="inscripcion-process-container">
+<div class="inscripcion-process-container" #processContainer>
   <div class="inscripcion-header">
     <div class="header-content">
       <h1 class="page-title">Proceso de Inscripción</h1>
       <h2 class="contest-title" *ngIf="contest">{{ contest.title }}</h2>
-      <button class="btn-back"
-              (click)="volverAConcursos()"
-              (keydown.enter)="volverAConcursos()"
-              (keydown.space)="volverAConcursos()"
-              aria-label="Volver a la lista de concursos">
-        <mat-icon>arrow_back</mat-icon>
-        Volver a Concursos
-      </button>
+      <app-custom-button
+        variant="secondary"
+        label="Volver a Concursos"
+        icon="arrow-left"
+        (buttonClick)="volverAConcursos()"
+        ariaLabel="Volver a la lista de concursos"
+        class="btn-back">
+      </app-custom-button>
     </div>
   </div>
 
@@ -32,7 +32,7 @@
            [attr.role]="currentStep > i + 1 ? 'button' : 'presentation'"
            [attr.aria-label]="'Ir al paso ' + (i + 1) + ': ' + step.label">
         <div class="step-number">
-          <mat-icon *ngIf="currentStep > i + 1">check</mat-icon>
+          <i class="fas fa-check" *ngIf="currentStep > i + 1"></i>
           <span *ngIf="currentStep <= i + 1">{{i + 1}}</span>
         </div>
         <div class="step-label">{{step.label}}</div>
@@ -41,27 +41,79 @@
 
     <!-- Contenido de los pasos -->
     <div class="step-content-container" [formGroup]="inscriptionForm">
-      <!-- Paso 1: Términos y condiciones -->
+      <!-- Paso 1: Confirmación de Lectura de Bases -->
       <div class="step-content" *ngIf="currentStep === 1" @fadeInOut>
         <div class="content-section">
           <h3>Términos y Condiciones</h3>
-          <div class="terms-container">
-            <p>
-              Por favor, lea atentamente los siguientes términos y condiciones antes de continuar con el proceso de inscripción:
-            </p>
-            <ol>
-              <li>Declaro bajo juramento que los datos consignados en este formulario son correctos y completos.</li>
-              <li>Me comprometo a mantener actualizada mi información personal y de contacto.</li>
-              <li>Acepto que la falsedad u omisión en los datos declarados será causal de exclusión del proceso.</li>
-              <li>Autorizo al Ministerio Público de la Defensa a verificar la información proporcionada.</li>
-              <li>Declaro conocer y aceptar las bases y condiciones del concurso.</li>
-              <li>Me comprometo a presentar la documentación original cuando sea requerida.</li>
-            </ol>
+
+          <!-- Contenedor de términos y condiciones -->
+          <div class="terms-container" *ngIf="termsAndConditionsContent">
+            <div [innerHTML]="termsAndConditionsContent"></div>
           </div>
-          <div class="terms-acceptance">
-            <mat-checkbox formControlName="termsAccepted" color="primary">
-              Acepto los términos y condiciones
-            </mat-checkbox>
+
+          <h3>Confirmación de Lectura de Bases</h3>
+
+          <div class="confirmation-question-container">
+            <div class="question-box">
+              <div class="question-icon">
+                <i class="fas fa-question-circle"></i>
+              </div>
+              <div class="question-content">
+                <h4>Pregunta Obligatoria</h4>
+                <p class="question-text">
+                  ¿Ha leído atentamente las <strong>BASES CONCURSO DE ANTECEDENTES Y OPOSICIÓN</strong>
+                  y la <strong>DESCRIPCIÓN DEL PUESTO PSICOLABORAL</strong> y declara formalmente aceptar
+                  los términos y condiciones impuestos, así como los requisitos formales de cada una de
+                  las etapas que se explican?
+                </p>
+              </div>
+            </div>
+
+            <div class="response-options">
+              <div class="radio-group">
+                <div class="radio-option">
+                  <input
+                    type="radio"
+                    id="terms-yes"
+                    name="termsResponse"
+                    [value]="true"
+                    (change)="onTermsResponseChange(true)"
+                    [checked]="termsAcceptedControl.value === true">
+                  <label for="terms-yes" class="radio-label">
+                    <span class="radio-button"></span>
+                    <span class="radio-text">
+                      <strong>Sí</strong> - He leído y acepto las bases y condiciones
+                    </span>
+                  </label>
+                </div>
+
+                <div class="radio-option">
+                  <input
+                    type="radio"
+                    id="terms-no"
+                    name="termsResponse"
+                    [value]="false"
+                    (change)="onTermsResponseChange(false)"
+                    [checked]="termsAcceptedControl.value === false">
+                  <label for="terms-no" class="radio-label">
+                    <span class="radio-button"></span>
+                    <span class="radio-text">
+                      <strong>No</strong> - No he leído o no acepto las bases y condiciones
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="validation-message" *ngIf="showValidationErrors && termsAcceptedControl.invalid">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Debe seleccionar "Sí" para continuar con el proceso de inscripción</span>
+              </div>
+
+              <div class="warning-message" *ngIf="termsAcceptedControl.value === false">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Para continuar con la inscripción debe leer y aceptar las bases y condiciones del concurso.</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -89,12 +141,12 @@
           </div>
 
           <div class="info-box">
-            <mat-icon>info</mat-icon>
+            <i class="fas fa-info-circle"></i>
             <span>Esta dirección se guardará en su perfil como su centro de vida.</span>
           </div>
         </div>
 
-        <mat-divider class="custom-divider"></mat-divider>
+        <div class="custom-divider"></div>
 
         <div class="content-section">
           <h3>Circunscripciones Judiciales</h3>
@@ -104,13 +156,11 @@
 
           <div class="circunscripciones-container">
             <div class="circunscripcion-item" *ngFor="let circunscripcion of ['Primera', 'Segunda', 'Tercera', 'Cuarta']">
-              <mat-checkbox
-                [value]="circunscripcion"
-                (change)="onCircunscripcionChange($event, circunscripcion)"
+              <app-custom-checkbox
+                [label]="circunscripcion + ' Circunscripción'"
                 [checked]="isCircunscripcionSelected(circunscripcion)"
-                color="primary">
-                {{ circunscripcion }} Circunscripción
-              </mat-checkbox>
+                (change)="onCircunscripcionChange($event, circunscripcion)">
+              </app-custom-checkbox>
             </div>
           </div>
 
@@ -126,7 +176,7 @@
           <h3>Documentación Requerida</h3>
 
           <div class="info-box">
-            <mat-icon>info</mat-icon>
+            <i class="fas fa-info-circle"></i>
             <strong>Para completar su inscripción, debe cargar todos los documentos requeridos.</strong>
           </div>
 
@@ -147,56 +197,107 @@
           </p>
 
           <div class="confirmation-summary">
-            <div class="summary-section">
-              <h4>Datos del Concurso</h4>
-              <div class="summary-item">
-                <span class="label">Concurso:</span>
-                <span class="value">{{ contest?.title }}</span>
+            <!-- Información del Concurso -->
+            <div class="summary-section contest-info">
+              <div class="section-header">
+                <i class="fas fa-trophy"></i>
+                <h4>Información del Concurso</h4>
               </div>
-              <div class="summary-item">
-                <span class="label">Cargo:</span>
-                <span class="value">{{ contest?.position }}</span>
-              </div>
-            </div>
-
-            <div class="summary-section">
-              <h4>Centro de Vida</h4>
-              <div class="summary-item">
-                <span class="label">Domicilio:</span>
-                <span class="value">{{ centroDeVidaControl.value }}</span>
-              </div>
-            </div>
-
-            <div class="summary-section">
-              <h4>Circunscripciones Seleccionadas</h4>
-              <div class="summary-item">
-                <span class="label">Circunscripciones:</span>
-                <span class="value">{{ selectedCircunscripcionesControl.value.join(', ') }}</span>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">Concurso:</span>
+                  <span class="value">{{ contest?.title }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Cargo:</span>
+                  <span class="value">{{ contest?.position }}</span>
+                </div>
+                <div class="info-item" *ngIf="contest?.description">
+                  <span class="label">Descripción:</span>
+                  <span class="value">{{ contest?.description }}</span>
+                </div>
+                <div class="info-item" *ngIf="contest?.department">
+                  <span class="label">Dependencia:</span>
+                  <span class="value">{{ contest?.department }}</span>
+                </div>
               </div>
             </div>
 
-            <div class="summary-section">
-              <h4>Estado de la Documentación</h4>
+            <!-- Datos Personales -->
+            <div class="summary-section personal-info">
+              <div class="section-header">
+                <i class="fas fa-user"></i>
+                <h4>Datos Personales</h4>
+              </div>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">Centro de Vida:</span>
+                  <span class="value">{{ centroDeVidaControl.value }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Circunscripciones Seleccionadas:</span>
+                  <span class="value">{{ selectedCircunscripcionesControl.value.join(', ') }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado de Documentación -->
+            <div class="summary-section documentation-status">
+              <div class="section-header">
+                <i class="fas fa-file-alt"></i>
+                <h4>Estado de la Documentación</h4>
+                <div class="documentation-summary">
+                  <span class="docs-completed">{{ getDocumentosCompletados() }}</span>
+                  <span class="docs-separator">/</span>
+                  <span class="docs-total">{{ documentacionRequerida.length }}</span>
+                  <span class="docs-label">documentos</span>
+                </div>
+              </div>
+
+              <!-- Indicador de progreso de documentación -->
+              <div class="documentation-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="getDocumentationProgress()"></div>
+                </div>
+                <span class="progress-text">{{ getDocumentationProgress() }}% completado</span>
+              </div>
+
+              <!-- Lista de documentos -->
               <div class="documents-grid">
                 <div class="document-status-item" *ngFor="let doc of documentacionRequerida">
-                  <div class="doc-header">
-                    <mat-icon [class.completed]="doc.completed" [class.pending]="!doc.completed">
-                      {{doc.completed ? 'check_circle' : 'pending'}}
-                    </mat-icon>
-                    <span class="doc-title">{{doc.title}}</span>
+                  <div class="doc-icon">
+                    <i class="fas fa-file-pdf" [class.completed]="doc.completed" [class.pending]="!doc.completed"></i>
                   </div>
-                  <span class="doc-status" [class.completed]="doc.completed" [class.pending]="!doc.completed">
-                    {{doc.completed ? 'Completado' : 'Pendiente'}}
-                  </span>
+                  <div class="doc-info">
+                    <span class="doc-title">{{ doc.title }}</span>
+                    <div class="doc-status-badge" [class.completed]="doc.completed" [class.pending]="!doc.completed">
+                      <i class="fas" [class.fa-check-circle]="doc.completed" [class.fa-clock]="!doc.completed"></i>
+                      <span>{{ doc.completed ? 'Completado' : 'Pendiente' }}</span>
+                    </div>
+                  </div>
                 </div>
+              </div>
+
+              <!-- Alerta de inscripción provisional -->
+              <div class="provisional-alert" *ngIf="!allRequiredDocumentsUploaded()">
+                <div class="alert-header">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>Inscripción Provisional</span>
+                </div>
+                <p>
+                  Tu inscripción será registrada como <strong>provisional</strong> debido a documentación pendiente.
+                  Tienes <strong>3 días hábiles</strong> después del cierre de inscripciones para completar la documentación
+                  y evitar la descalificación automática.
+                </p>
               </div>
             </div>
           </div>
 
           <div class="confirmation-checkbox">
-            <mat-checkbox formControlName="confirmedPersonalData" color="primary">
-              Confirmo que todos los datos proporcionados son correctos y completos
-            </mat-checkbox>
+            <app-custom-checkbox
+              formControlName="confirmedPersonalData"
+              label="Confirmo que todos los datos proporcionados son correctos y completos">
+            </app-custom-checkbox>
           </div>
         </div>
       </div>
@@ -204,29 +305,32 @@
 
     <!-- Botones de acción -->
     <div class="action-buttons">
-      <button class="btn btn-secondary"
-              *ngIf="currentStep > 1"
-              (click)="previousStep()">
-        <mat-icon>arrow_back</mat-icon>
-        Atrás
-      </button>
-      <button class="btn btn-primary"
-              *ngIf="currentStep < 4"
-              [disabled]="!canProceed()"
-              (click)="nextStep()">
-        Siguiente
-        <mat-icon>arrow_forward</mat-icon>
-      </button>
-      <button class="btn btn-primary"
-              *ngIf="currentStep === 4"
-              [disabled]="!canFinish() || loading"
-              (click)="finish()">
-        <span *ngIf="!loading">
-          Finalizar Inscripción
-          <mat-icon>check_circle</mat-icon>
-        </span>
-        <div class="spinner" *ngIf="loading"></div>
-      </button>
+      <app-custom-button
+        *ngIf="currentStep > 1"
+        variant="secondary"
+        label="Atrás"
+        icon="arrow-left"
+        (buttonClick)="previousStep()">
+      </app-custom-button>
+
+      <app-custom-button
+        *ngIf="currentStep < 4"
+        variant="primary"
+        label="Siguiente"
+        icon="arrow-right"
+        [disabled]="!canProceed()"
+        (buttonClick)="nextStep()">
+      </app-custom-button>
+
+      <app-custom-button
+        *ngIf="currentStep === 4"
+        variant="success"
+        label="Finalizar Inscripción"
+        icon="check-circle"
+        [disabled]="!canFinish() || loading"
+        [loading]="loading"
+        (buttonClick)="finish()">
+      </app-custom-button>
     </div>
   </div>
 </div>

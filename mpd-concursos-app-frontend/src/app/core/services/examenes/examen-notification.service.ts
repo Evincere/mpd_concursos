@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { SecurityViolation, SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
@@ -14,7 +14,7 @@ export class ExamenNotificationService implements ICleanupService {
   private allowNotifications = true;
 
   constructor(
-    private snackBar: MatSnackBar,
+    private unifiedNotificationService: UnifiedNotificationService,
     private dialog: MatDialog,
     private router: Router
   ) {}
@@ -26,43 +26,37 @@ export class ExamenNotificationService implements ICleanupService {
     }
 
     const finalMessage = message || this.getSecurityMessage(violationType);
-    this.snackBar.open(
-      finalMessage,
-      'Entendido',
-      { duration: 5000 }
-    );
+    this.unifiedNotificationService.warning(finalMessage, 'Advertencia de Seguridad', {
+      duration: 5000,
+      position: 'top-center',
+      actionText: 'Entendido'
+    });
   }
 
   public mostrarError(mensaje: string): void {
     if (!this.allowNotifications) return;
 
-    this.snackBar.open(mensaje, 'Cerrar', {
+    this.unifiedNotificationService.error(mensaje, 'Error', {
       duration: 5000,
-      panelClass: ['error-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
   public mostrarExito(mensaje: string): void {
     if (!this.allowNotifications) return;
 
-    this.snackBar.open(mensaje, 'Cerrar', {
+    this.unifiedNotificationService.success(mensaje, 'Éxito', {
       duration: 3000,
-      panelClass: ['success-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
   public mostrarAdvertencia(mensaje: string): void {
     if (!this.allowNotifications) return;
 
-    this.snackBar.open(mensaje, 'Cerrar', {
+    this.unifiedNotificationService.warning(mensaje, 'Advertencia', {
       duration: 5000,
-      panelClass: ['warning-snackbar'],
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      position: 'bottom-center'
     });
   }
 
@@ -115,18 +109,23 @@ export class ExamenNotificationService implements ICleanupService {
   }
 
   showConnectionWarning(isOnline: boolean): void {
-    this.snackBar.dismiss();
+    this.unifiedNotificationService.dismissAll();
 
     const message = isOnline
       ? 'Conexión restaurada. Sincronizando...'
       : 'Sin conexión. Tus respuestas se guardarán localmente.';
 
-    this.snackBar.open(message, 'OK', {
-      duration: isOnline ? 3000 : undefined,
-      panelClass: isOnline ? 'success-snackbar' : 'warning-snackbar',
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
-    });
+    if (isOnline) {
+      this.unifiedNotificationService.success(message, 'Conexión', {
+        duration: 3000,
+        position: 'bottom-center'
+      });
+    } else {
+      this.unifiedNotificationService.warning(message, 'Sin Conexión', {
+        duration: 0, // Persistente hasta que se restaure la conexión
+        position: 'bottom-center'
+      });
+    }
   }
 
   async confirmAction(action: 'finalizar' | 'salir' | 'pantalla-completa'): Promise<boolean> {
@@ -202,7 +201,7 @@ export class ExamenNotificationService implements ICleanupService {
    * Limpia todas las notificaciones y diálogos activos
    */
   cleanup(): void {
-    this.snackBar.dismiss();
+    this.unifiedNotificationService.dismissAll();
     this.dialog.closeAll();
     this.allowNotifications = false;
   }

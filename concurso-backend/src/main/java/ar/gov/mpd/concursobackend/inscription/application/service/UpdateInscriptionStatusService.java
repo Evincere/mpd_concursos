@@ -10,9 +10,8 @@ import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
+
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import lombok.RequiredArgsConstructor;
@@ -71,7 +70,7 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
                 log.info("Notification sent to administrators about pending inscription: {}", id);
 
                 // Notify user about completed inscription
-                User user = userService.getByUsername(new UserUsername(inscription.getUserId().getValue().toString()))
+                User user = userService.getById(inscription.getUserId().getValue())
                         .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
                 NotificationRequest completionRequest = NotificationRequest.builder()
@@ -104,7 +103,7 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
             // enviamos una notificación general de cambio de estado
             if (status != InscriptionStatus.PENDING && status != InscriptionStatus.APPROVED && status != InscriptionStatus.REJECTED) {
                 // Obtener información del usuario
-                User user = userService.getByUsername(new UserUsername(inscription.getUserId().getValue().toString()))
+                User user = userService.getById(inscription.getUserId().getValue())
                         .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
                 // Enviar notificación

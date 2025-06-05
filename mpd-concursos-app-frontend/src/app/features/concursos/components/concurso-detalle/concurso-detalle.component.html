@@ -1,101 +1,124 @@
 <div class="detalle-container" [class.closing]="closing">
   <div class="detalle-header">
     <h2>Detalle del Concurso</h2>
-    <button mat-icon-button class="cerrar-btn" (click)="onCerrar()" (keydown.enter)="onCerrar()" (keydown.space)="onCerrar()" aria-label="Cerrar detalle del concurso">
-      <mat-icon aria-hidden="true">close</mat-icon>
-    </button>
+    <app-custom-icon-button
+      icon="times"
+      variant="ghost"
+      size="medium"
+      ariaLabel="Cerrar detalle del concurso"
+      (buttonClick)="onCerrar()">
+    </app-custom-icon-button>
   </div>
 
   <div class="detalle-content">
-    <mat-tab-group>
-      <!-- Pestaña de Información General -->
-      <mat-tab label="Información General">
-        <div class="tab-content">
-          <div class="info-grid">
-            <div class="info-item">
-              <div class="label">Cargo</div>
-              <div class="value">{{ concurso.position }}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">Categoría</div>
-              <div class="value">{{ concurso.category }}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">Clase</div>
-              <div class="value">{{ concurso.class }}</div>
-            </div>
-            <div class="info-item">
-              <div class="label">Estado</div>
-              <div class="value">
-                <app-contest-status-badge
-                  [status]="concurso.status"
-                  [showIcon]="true">
-                </app-contest-status-badge>
-              </div>
-            </div>
-          </div>
+    <app-custom-tabs [tabs]="tabItems" [activeTabIndex]="activeTabIndex" (tabChange)="onTabChange($event)">
+    </app-custom-tabs>
 
-          <div class="funciones-section" *ngIf="concurso.functions">
-            <h3>Funciones</h3>
-            <div class="funciones-content">
-              {{ concurso.functions }}
+    <!-- Tab Templates -->
+    <ng-template #infoGeneralTemplate>
+      <div class="tab-content">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="label">Cargo</div>
+            <div class="value">{{ concurso.position }}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Categoría</div>
+            <div class="value">{{ concurso.category }}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Clase</div>
+            <div class="value">{{ concurso.class }}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Estado</div>
+            <div class="value">
+              <app-contest-status-badge
+                [status]="concurso.status"
+                [showIcon]="true">
+              </app-contest-status-badge>
             </div>
           </div>
         </div>
-      </mat-tab>
 
-      <!-- Pestaña de Documentación -->
-      <mat-tab label="Documentación">
-        <div class="tab-content">
-          <div class="documentos-grid">
-            <div class="documento-item">
-              <mat-icon aria-hidden="true">description</mat-icon>
-              <div class="documento-info">
-                <h4>Bases y Condiciones</h4>
-                <a mat-button color="primary" [href]="concurso.basesUrl" target="_blank" aria-label="Descargar bases y condiciones en PDF">
-                  <mat-icon aria-hidden="true">download</mat-icon>
-                  Descargar PDF
-                </a>
-              </div>
+        <div class="funciones-section" *ngIf="concurso.functions">
+          <h3>Funciones</h3>
+          <div class="funciones-content">
+            {{ concurso.functions }}
+          </div>
+        </div>
+
+
+      </div>
+    </ng-template>
+
+    <ng-template #documentacionTemplate>
+      <div class="tab-content">
+        <div class="documentos-grid">
+          <div class="documento-item">
+            <i class="fas fa-file-alt" aria-hidden="true"></i>
+            <div class="documento-info">
+              <h4>Bases y Condiciones</h4>
+              <app-custom-button
+                variant="download"
+                size="small"
+                icon="download"
+                label="Descargar PDF"
+                [href]="concurso.basesUrl || ''"
+                target="_blank"
+                ariaLabel="Descargar bases y condiciones en PDF">
+              </app-custom-button>
             </div>
-            <div class="documento-item">
-              <mat-icon aria-hidden="true">work_outline</mat-icon>
-              <div class="documento-info">
-                <h4>Descripción del Puesto</h4>
-                <a mat-button color="primary" [href]="concurso.descriptionUrl" target="_blank" aria-label="Descargar descripción del puesto en PDF">
-                  <mat-icon aria-hidden="true">download</mat-icon>
-                  Descargar PDF
-                </a>
-              </div>
+          </div>
+          <div class="documento-item">
+            <i class="fas fa-briefcase" aria-hidden="true"></i>
+            <div class="documento-info">
+              <h4>Descripción del Puesto</h4>
+              <app-custom-button
+                variant="download"
+                size="small"
+                icon="download"
+                label="Descargar PDF"
+                [href]="concurso.descriptionUrl || ''"
+                target="_blank"
+                ariaLabel="Descargar descripción del puesto en PDF">
+              </app-custom-button>
             </div>
           </div>
         </div>
-      </mat-tab>
 
-      <!-- Pestaña de Fechas -->
-      <mat-tab label="Fechas">
-        <div class="tab-content">
-          <div class="fechas-timeline">
-            <div class="fecha-item" *ngFor="let fecha of concurso.dates">
-              <div class="fecha-icon">
-                <mat-icon aria-hidden="true">event</mat-icon>
-              </div>
-              <div class="fecha-content">
-                <h4>{{ fecha.label }}</h4>
-                <p>{{ fecha.startDate | date:'dd/MM/yyyy' }} - {{ fecha.endDate | date:'dd/MM/yyyy' }}</p>
-              </div>
+
+      </div>
+    </ng-template>
+
+    <ng-template #fechasTemplate>
+      <div class="tab-content">
+        <div class="fechas-timeline">
+          <div class="fecha-item" *ngFor="let fecha of concurso.dates">
+            <div class="fecha-icon">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            </div>
+            <div class="fecha-content">
+              <h4>{{ fecha.label }}</h4>
+              <p>{{ fecha.startDate | date:'dd/MM/yyyy' }} - {{ fecha.endDate | date:'dd/MM/yyyy' }}</p>
             </div>
           </div>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+
+
+      </div>
+    </ng-template>
   </div>
 
   <div class="actions-container">
-    <button mat-stroked-button class="volver-btn" (click)="onCerrar()" (keydown.enter)="onCerrar()" (keydown.space)="onCerrar()" aria-label="Volver a la lista de concursos">
-      <mat-icon aria-hidden="true">arrow_back</mat-icon>
-      Volver
-    </button>
+    <app-custom-button
+      variant="navigation"
+      size="medium"
+      icon="arrow-left"
+      label="Volver"
+      ariaLabel="Volver a la lista de concursos"
+      (buttonClick)="onCerrar()">
+    </app-custom-button>
     <app-inscripcion-button
       *ngIf="concurso.status === 'ACTIVE' && (inscripcionState$ | async) !== InscripcionState.CONFIRMADA"
       [contest]="concurso"

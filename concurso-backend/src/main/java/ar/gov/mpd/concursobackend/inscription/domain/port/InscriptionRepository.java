@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.Optional;
 import java.util.List;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -163,4 +164,13 @@ public interface InscriptionRepository {
      * @param id The ID of the inscription to delete
      */
     void deleteById(UUID id);
+
+    /**
+     * Find inscriptions by state and documentation deadline before a specific date
+     *
+     * @param state The state of the inscriptions to find
+     * @param deadline The deadline date to compare against
+     * @return A list of inscriptions matching the criteria
+     */
+    List<Inscription> findByStateAndDocumentationDeadlineBefore(InscriptionState state, LocalDateTime deadline);
 }

@@ -749,8 +749,8 @@
       </div>
     </div>
 
-    <!-- Tab 4: Estadísticas y Reportes -->
-    <div *ngIf="activeTab === 3" class="tab-panel" role="tabpanel">
+    <!-- Tab 5: Estadísticas y Reportes -->
+    <div *ngIf="activeTab === 4" class="tab-panel" role="tabpanel">
       <div class="statistics-management">
         <div class="section-header">
           <div class="header-info">
@@ -1183,6 +1183,201 @@
           <div class="loading-content">
             <div class="spinner"></div>
             <p>Cargando estadísticas...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Notificaciones del Sistema -->
+    <div *ngIf="activeTab === 3" class="tab-panel" role="tabpanel">
+      <div class="notifications-management">
+        <div class="section-header">
+          <div class="header-info">
+            <h2>
+              <i class="fas fa-bell"></i>
+              Notificaciones del Sistema
+            </h2>
+            <p class="section-description">Gestione y revise todas las notificaciones generadas por el sistema</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" (click)="loadNotificationsData()">
+              <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingNotifications"></i>
+              Actualizar
+            </button>
+            <button class="btn btn-primary" (click)="markAllNotificationsAsRead()">
+              <i class="fas fa-check-double"></i>
+              Marcar todas como leídas
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros y Búsqueda -->
+        <div class="filters-section">
+          <div class="search-filters">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="Buscar por título, mensaje, usuario o módulo..."
+                [(ngModel)]="notificationFilters.search"
+                (input)="applyNotificationFilters()">
+            </div>
+
+            <div class="filter-group">
+              <select class="form-select" [(ngModel)]="notificationFilters.type" (change)="applyNotificationFilters()">
+                <option value="">Todos los tipos</option>
+                <option value="info">Información</option>
+                <option value="warning">Advertencia</option>
+                <option value="error">Error</option>
+                <option value="success">Éxito</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <select class="form-select" [(ngModel)]="notificationFilters.status" (change)="applyNotificationFilters()">
+                <option value="">Todos los estados</option>
+                <option value="unread">No leídas</option>
+                <option value="read">Leídas</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <input
+                type="date"
+                class="form-input"
+                [(ngModel)]="notificationFilters.dateFrom"
+                (change)="applyNotificationFilters()"
+                placeholder="Desde">
+            </div>
+
+            <div class="filter-group">
+              <input
+                type="date"
+                class="form-input"
+                [(ngModel)]="notificationFilters.dateTo"
+                (change)="applyNotificationFilters()"
+                placeholder="Hasta">
+            </div>
+
+            <button class="btn btn-secondary" (click)="clearNotificationFilters()">
+              <i class="fas fa-times"></i>
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de Notificaciones -->
+        <div class="notifications-list" *ngIf="filteredNotifications.length > 0; else noNotificationsFound">
+          <div
+            *ngFor="let notification of paginatedNotifications"
+            class="notification-item"
+            [class.unread]="notification.status === 'unread'">
+
+            <div class="notification-icon" [class]="notification.type">
+              <i class="fas fa-{{getNotificationTypeIcon(notification.type)}}"></i>
+            </div>
+
+            <div class="notification-content">
+              <div class="notification-header">
+                <h3 class="notification-title">{{notification.title}}</h3>
+                <div class="notification-meta">
+                  <span class="notification-time">{{notification.timestamp | date:'dd/MM/yyyy HH:mm'}}</span>
+                  <span class="notification-module">{{notification.module}}</span>
+                  <span class="notification-status" [class]="notification.status">
+                    {{notification.status === 'unread' ? 'No leída' : 'Leída'}}
+                  </span>
+                </div>
+              </div>
+
+              <p class="notification-message">{{notification.message}}</p>
+
+              <div class="notification-details">
+                <span class="notification-user">
+                  <i class="fas fa-user"></i>
+                  {{notification.user}}
+                </span>
+              </div>
+            </div>
+
+            <div class="notification-actions">
+              <button
+                *ngIf="notification.link"
+                class="btn btn-sm btn-primary"
+                [routerLink]="notification.link"
+                title="Ver detalles">
+                <i class="fas fa-external-link-alt"></i>
+                Ver
+              </button>
+
+              <button
+                *ngIf="notification.status === 'unread'"
+                class="btn btn-sm btn-secondary"
+                (click)="markNotificationAsRead(notification)"
+                title="Marcar como leída">
+                <i class="fas fa-check"></i>
+                Leída
+              </button>
+
+              <button
+                class="btn btn-sm btn-danger"
+                (click)="deleteNotification(notification)"
+                title="Eliminar notificación">
+                <i class="fas fa-trash"></i>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Notifications Found -->
+        <ng-template #noNotificationsFound>
+          <div class="empty-state">
+            <i class="fas fa-bell-slash"></i>
+            <h3>No hay notificaciones</h3>
+            <p>No se encontraron notificaciones que coincidan con los filtros aplicados</p>
+            <button class="btn btn-primary" (click)="clearNotificationFilters()">
+              <i class="fas fa-refresh"></i>
+              Limpiar filtros
+            </button>
+          </div>
+        </ng-template>
+
+        <!-- Paginación -->
+        <div class="pagination-section" *ngIf="getTotalNotificationPages() > 1">
+          <div class="pagination-info">
+            Mostrando {{(currentNotificationPage - 1) * notificationPageSize + 1}} -
+            {{Math.min(currentNotificationPage * notificationPageSize, filteredNotifications.length)}}
+            de {{filteredNotifications.length}} notificaciones
+          </div>
+          <div class="pagination-controls">
+            <button
+              class="btn btn-sm btn-secondary"
+              [disabled]="currentNotificationPage === 1"
+              (click)="changeNotificationPage(currentNotificationPage - 1)">
+              <i class="fas fa-chevron-left"></i>
+              Anterior
+            </button>
+
+            <span class="page-info">
+              Página {{currentNotificationPage}} de {{getTotalNotificationPages()}}
+            </span>
+
+            <button
+              class="btn btn-sm btn-secondary"
+              [disabled]="currentNotificationPage === getTotalNotificationPages()"
+              (click)="changeNotificationPage(currentNotificationPage + 1)">
+              Siguiente
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoadingNotifications">
+          <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando notificaciones...</p>
           </div>
         </div>
       </div>

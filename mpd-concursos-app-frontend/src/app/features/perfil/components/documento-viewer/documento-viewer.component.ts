@@ -1,164 +1,250 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSliderModule } from '@angular/material/slider';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { FormsModule } from '@angular/forms';
+
+// Custom Components
+import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { finalize } from 'rxjs/operators';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
-import { HttpEventType, HttpResponse, HttpDownloadProgressEvent } from '@angular/common/http';
+import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } from '@angular/common/http';
 
 @Component({
   selector: 'app-documento-viewer',
   standalone: true,
   imports: [
     CommonModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatProgressSpinnerModule,
-    MatIconModule,
-    MatTooltipModule,
-    MatSliderModule,
-    MatProgressBarModule,
     FormsModule,
-    PdfViewerModule
+    PdfViewerModule,
+    CustomButtonComponent,
+    CustomSpinnerComponent
   ],
   template: `
-    <div class="documento-viewer-dialog">
+    <div class="documento-viewer-content">
       <div class="viewer-header">
-        <h2 mat-dialog-title>
-          <i class="fas" [ngClass]="{'fa-file-pdf': documentType === 'pdf' || documentType === 'unknown', 'fa-image': documentType === 'image'}"></i>
+        <h2>
+          <i class="fas" [ngClass]="{'fa-file-pdf': documentType === 'pdf' || documentType === 'unknown', 'fa-image': documentType === 'image'}" aria-hidden="true"></i>
           Visor de {{ documentType === 'pdf' ? 'PDF' : documentType === 'image' ? 'Imagen' : 'Documento' }}
         </h2>
         <div class="viewer-actions">
-          <button mat-icon-button (click)="descargarDocumento()" matTooltip="Descargar documento">
-            <i class="fas fa-download"></i>
-          </button>
-          <button mat-icon-button (click)="cerrarVisor()" matTooltip="Cerrar">
-            <i class="fas fa-times"></i>
-          </button>
+          <app-custom-button
+            variant="flat"
+            color="primary"
+            icon="download"
+            [tooltip]="'Descargar documento PDF'"
+            [disabled]="!pdfLoaded || !!error"
+            (buttonClick)="descargarDocumento()">
+          </app-custom-button>
+          <app-custom-button
+            variant="stroked"
+            icon="times"
+            [tooltip]="'Cerrar visor'"
+            (buttonClick)="cerrarVisor()">
+          </app-custom-button>
         </div>
       </div>
 
-      <div class="viewer-toolbar" *ngIf="pdfLoaded">
+      <div class="viewer-toolbar" *ngIf="pdfLoaded && !error">
         <div class="toolbar-section">
-          <button mat-icon-button (click)="zoomOut()" matTooltip="Reducir">
-            <i class="fas fa-search-minus"></i>
-          </button>
-          <span class="zoom-value">{{ zoom * 100 }}%</span>
-          <button mat-icon-button (click)="zoomIn()" matTooltip="Ampliar">
-            <i class="fas fa-search-plus"></i>
-          </button>
-          <button mat-icon-button (click)="resetZoom()" matTooltip="Restablecer zoom">
-            <i class="fas fa-undo"></i>
-          </button>
+          <app-custom-button
+            variant="icon"
+            icon="search-minus"
+            [tooltip]="'Reducir zoom'"
+            [disabled]="zoom <= 0.5"
+            (buttonClick)="zoomOut()">
+          </app-custom-button>
+          <span class="zoom-value">{{ (zoom * 100).toFixed(0) }}%</span>
+          <app-custom-button
+            variant="icon"
+            icon="search-plus"
+            [tooltip]="'Ampliar zoom'"
+            [disabled]="zoom >= 3"
+            (buttonClick)="zoomIn()">
+          </app-custom-button>
+          <app-custom-button
+            variant="icon"
+            icon="expand-arrows-alt"
+            [tooltip]="'Restablecer zoom (100%)'"
+            [disabled]="zoom === 1"
+            (buttonClick)="resetZoom()">
+          </app-custom-button>
         </div>
 
         <div class="toolbar-section">
-          <button mat-icon-button (click)="rotateCounterClockwise()" matTooltip="Rotar a la izquierda">
-            <i class="fas fa-undo"></i>
-          </button>
-          <button mat-icon-button (click)="rotateClockwise()" matTooltip="Rotar a la derecha">
-            <i class="fas fa-redo"></i>
-          </button>
+          <app-custom-button
+            variant="icon"
+            icon="undo-alt"
+            [tooltip]="'Rotar 90° a la izquierda'"
+            (buttonClick)="rotateCounterClockwise()">
+          </app-custom-button>
+          <app-custom-button
+            variant="icon"
+            icon="redo-alt"
+            [tooltip]="'Rotar 90° a la derecha'"
+            (buttonClick)="rotateClockwise()">
+          </app-custom-button>
+          <app-custom-button
+            variant="icon"
+            icon="external-link-alt"
+            [tooltip]="'Abrir en nueva ventana'"
+            (buttonClick)="abrirEnNuevaVentana()">
+          </app-custom-button>
         </div>
 
         <div class="toolbar-section" *ngIf="totalPages > 1">
-          <button mat-icon-button (click)="prevPage()" [disabled]="currentPage === 1" matTooltip="Página anterior">
-            <i class="fas fa-chevron-left"></i>
-          </button>
+          <app-custom-button
+            variant="icon"
+            icon="chevron-left"
+            [tooltip]="'Página anterior'"
+            [disabled]="currentPage === 1"
+            (buttonClick)="prevPage()">
+          </app-custom-button>
           <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-          <button mat-icon-button (click)="nextPage()" [disabled]="currentPage === totalPages" matTooltip="Página siguiente">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+          <app-custom-button
+            variant="icon"
+            icon="chevron-right"
+            [tooltip]="'Página siguiente'"
+            [disabled]="currentPage === totalPages"
+            (buttonClick)="nextPage()">
+          </app-custom-button>
         </div>
       </div>
 
-      <mat-dialog-content>
+      <div class="dialog-content">
         <div class="viewer-container">
+          <!-- Estado de carga -->
           <div *ngIf="isLoading" class="loading-container">
-            <mat-spinner *ngIf="!showProgress || loadProgress === 0" diameter="50"></mat-spinner>
-            <div *ngIf="showProgress && loadProgress > 0" class="progress-container">
-              <mat-progress-bar [value]="loadProgress" color="primary"></mat-progress-bar>
-              <p class="progress-text">
-                Cargando documento: {{ loadProgress }}%
-                <span *ngIf="fileSize > 0">
-                  ({{ (loadedSize / 1024 / 1024).toFixed(2) }} MB / {{ (fileSize / 1024 / 1024).toFixed(2) }} MB)
-                </span>
+            <div class="loading-content">
+              <app-custom-spinner *ngIf="!showProgress || loadProgress === 0" [size]="'large'"></app-custom-spinner>
+              <div *ngIf="showProgress && loadProgress > 0" class="progress-container">
+                <div class="custom-progress-bar">
+                  <div class="progress-fill" [style.width.%]="loadProgress"></div>
+                </div>
+                <p class="progress-text">
+                  <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                  Cargando documento: {{ loadProgress }}%
+                  <span *ngIf="fileSize > 0" class="file-size">
+                    ({{ (loadedSize / 1024 / 1024).toFixed(2) }} MB / {{ (fileSize / 1024 / 1024).toFixed(2) }} MB)
+                  </span>
+                </p>
+              </div>
+              <p *ngIf="!showProgress || loadProgress === 0" class="loading-text">
+                <i class="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                Preparando visor de documentos...
               </p>
             </div>
-            <p *ngIf="!showProgress || loadProgress === 0">Cargando documento...</p>
           </div>
 
-          <div *ngIf="!isLoading && pdfLoaded" class="document-container">
+          <!-- Documento cargado -->
+          <div *ngIf="!isLoading && pdfLoaded && !error" class="document-container">
             <!-- Visor de PDF -->
             <div *ngIf="documentType === 'pdf'" class="pdf-container">
+              <div class="pdf-status" *ngIf="pdfSrc">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                <span>PDF cargado correctamente</span>
+              </div>
               <pdf-viewer
                 [src]="pdfSrc"
                 [render-text]="true"
-                [original-size]="originalSize"
-                [show-all]="showAll"
+                [original-size]="false"
+                [show-all]="false"
                 [zoom]="zoom"
                 [rotation]="rotation"
                 [page]="currentPage"
+                [fit-to-page]="true"
                 (after-load-complete)="onPdfLoaded($event)"
-                style="width: 100%; height: 100%;"
+                (error)="onPdfError($event)"
+                (page-rendered)="onPageRendered($event)"
+                style="width: 100%; height: 100%; display: block;"
               ></pdf-viewer>
             </div>
 
             <!-- Visor de imágenes -->
             <div *ngIf="documentType === 'image'" class="image-container">
+              <div class="image-status">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                <span>Imagen cargada correctamente</span>
+              </div>
               <img [src]="imageUrl" [style.transform]="'rotate(' + rotation + 'deg) scale(' + zoom + ')'" alt="Documento" />
             </div>
           </div>
 
-          <div *ngIf="!isLoading && !pdfLoaded && error" class="error-container">
-            <i class="fas fa-exclamation-triangle"></i>
-            <p>{{ error }}</p>
-            <button mat-raised-button color="primary" (click)="cargarDocumento()">
-              <i class="fas fa-sync-alt"></i>
-              Reintentar
-            </button>
+          <!-- Estado de error -->
+          <div *ngIf="!isLoading && error" class="error-container">
+            <div class="error-content">
+              <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+              <h3>Error al cargar el documento</h3>
+              <p>{{ error }}</p>
+              <div class="error-details" *ngIf="debugInfo">
+                <details>
+                  <summary>Información técnica</summary>
+                  <pre>{{ debugInfo }}</pre>
+                </details>
+              </div>
+              <app-custom-button
+                variant="flat"
+                color="primary"
+                icon="sync-alt"
+                label="Reintentar carga"
+                (buttonClick)="cargarDocumento()">
+              </app-custom-button>
+            </div>
+          </div>
+
+          <!-- Estado vacío (sin documento) -->
+          <div *ngIf="!isLoading && !pdfLoaded && !error" class="empty-container">
+            <div class="empty-content">
+              <i class="fas fa-file-pdf" aria-hidden="true"></i>
+              <h3>Preparando visor</h3>
+              <p>El documento se está preparando para la visualización...</p>
+            </div>
           </div>
         </div>
-      </mat-dialog-content>
+      </div>
     </div>
   `,
   styles: [`
-    .documento-viewer-dialog {
+    .documento-viewer-content {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      height: 95vh;
+      width: 100%;
       overflow: hidden;
+      /* Remove dialog-specific styles since we're inside a dialog */
+      background: transparent;
     }
 
     .viewer-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 0;
+      /* Simplified header for dialog content */
+      background: transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 1rem;
 
       h2 {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
         margin: 0;
+        color: #f9fafb;
+        font-weight: 600;
+        font-size: 1.1rem;
 
         i {
-          color: var(--primary-color);
+          color: #3b82f6;
+          font-size: 1.2rem;
         }
       }
 
       .viewer-actions {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.75rem;
       }
     }
 
@@ -166,36 +252,49 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent } from '@angular
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.5rem 1rem;
-      background-color: #f5f5f5;
-      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 1.5rem;
+      /* Glassmorphism toolbar */
+      background: rgba(75, 85, 99, 0.8);
+      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
 
       .toolbar-section {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
       }
 
       .zoom-value, .page-info {
         font-size: 0.9rem;
-        min-width: 60px;
+        min-width: 70px;
         text-align: center;
+        color: #d1d5db;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
     }
 
-    mat-dialog-content {
+    .dialog-content {
       flex: 1;
-      padding: 0 !important;
-      margin: 0 !important;
-      max-height: none !important;
-      overflow: hidden !important;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      position: relative;
+      min-height: 80vh;
     }
 
     .viewer-container {
       height: 100%;
       width: 100%;
       position: relative;
-      background-color: #f5f5f5;
+      /* Simplified background for dialog content */
+      background: rgba(31, 41, 55, 0.3);
+      border-radius: 8px;
+      min-height: 80vh;
     }
 
     .loading-container {
@@ -204,21 +303,74 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent } from '@angular
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 1rem;
+      padding: 2rem;
 
-      p {
-        color: var(--text-color);
+      .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        max-width: 500px;
+        width: 100%;
+      }
+
+      .loading-text {
+        color: #f9fafb;
         margin: 0;
+        font-size: 1.1rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        i {
+          color: #3b82f6;
+          font-size: 1.2rem;
+        }
       }
 
       .progress-container {
-        width: 80%;
-        max-width: 500px;
+        width: 100%;
+
+        .custom-progress-bar {
+          width: 100%;
+          height: 12px;
+          background: rgba(75, 85, 99, 0.4);
+          border-radius: 8px;
+          overflow: hidden;
+          margin-bottom: 1rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+
+          .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            border-radius: 8px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+          }
+        }
 
         .progress-text {
           text-align: center;
-          margin-top: 0.5rem;
-          font-size: 0.9rem;
+          margin: 0;
+          font-size: 1rem;
+          color: #d1d5db;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+
+          i {
+            color: #3b82f6;
+          }
+
+          .file-size {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            margin-left: 0.5rem;
+          }
         }
       }
     }
@@ -227,17 +379,64 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent } from '@angular
       height: 100%;
       width: 100%;
       overflow: auto;
-      background-color: #f5f5f5;
+      /* Simplified document background */
+      background: rgba(17, 24, 39, 0.2);
+      border-radius: 8px;
+      min-height: 75vh;
     }
 
     .pdf-container {
       height: 100%;
       width: 100%;
       overflow: auto;
-      background-color: #f5f5f5;
+      padding: 0.5rem;
+      background: transparent;
+      position: relative;
+      min-height: 70vh;
+
+      .pdf-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+
+        i {
+          font-size: 1rem;
+        }
+      }
 
       ::ng-deep .ng2-pdf-viewer-container {
-        background-color: #f5f5f5 !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+      }
+
+      ::ng-deep .pdfViewer {
+        padding: 1rem !important;
+      }
+
+      ::ng-deep .pdfViewer .page {
+        margin: 1rem auto !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+      }
+
+      ::ng-deep .pdfViewer .textLayer {
+        opacity: 0.8;
       }
     }
 
@@ -245,17 +444,41 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent } from '@angular
       height: 100%;
       width: 100%;
       overflow: auto;
-      background-color: #f5f5f5;
+      padding: 1rem;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      background: transparent;
+      position: relative;
+
+      .image-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      }
 
       img {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
-        transition: transform 0.3s ease;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         transform-origin: center center;
+        border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
     }
 
@@ -265,20 +488,115 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent } from '@angular
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 1rem;
-      padding: 2rem;
-      text-align: center;
+      padding: 3rem;
 
-      i {
-        font-size: 3rem;
-        color: var(--color-error);
-      }
+      .error-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        text-align: center;
+        max-width: 500px;
 
-      p {
-        color: var(--text-color);
-        margin: 0;
-        font-size: 1.1rem;
+        i {
+          font-size: 4rem;
+          color: #ef4444;
+          opacity: 0.9;
+          animation: pulse 2s infinite;
+        }
+
+        h3 {
+          color: #f9fafb;
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+
+        p {
+          color: #d1d5db;
+          margin: 0;
+          font-size: 1.1rem;
+          line-height: 1.6;
+        }
+
+        .error-details {
+          width: 100%;
+          margin-top: 1rem;
+
+          details {
+            background: rgba(75, 85, 99, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+
+            summary {
+              color: #9ca3af;
+              cursor: pointer;
+              font-size: 0.9rem;
+              font-weight: 500;
+              margin-bottom: 0.5rem;
+
+              &:hover {
+                color: #d1d5db;
+              }
+            }
+
+            pre {
+              color: #f3f4f6;
+              font-size: 0.8rem;
+              background: rgba(17, 24, 39, 0.5);
+              padding: 0.75rem;
+              border-radius: 4px;
+              overflow-x: auto;
+              white-space: pre-wrap;
+              word-break: break-word;
+              margin: 0;
+            }
+          }
+        }
       }
+    }
+
+    .empty-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 3rem;
+
+      .empty-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        text-align: center;
+
+        i {
+          font-size: 4rem;
+          color: #6b7280;
+          opacity: 0.7;
+        }
+
+        h3 {
+          color: #f9fafb;
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 600;
+        }
+
+        p {
+          color: #9ca3af;
+          margin: 0;
+          font-size: 1rem;
+          line-height: 1.6;
+        }
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
     }
   `]
 })
@@ -308,11 +626,14 @@ export class DocumentoViewerComponent implements OnInit {
   documentType: 'pdf' | 'image' | 'unknown' = 'unknown';
   imageUrl: SafeResourceUrl | null = null;
 
+  // Propiedades para debugging
+  debugInfo: string | null = null;
+
   constructor(
     private documentosService: DocumentosService,
     private sanitizer: DomSanitizer,
-    public dialogRef: MatDialogRef<DocumentoViewerComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { documentoId: string }
+    public dialogRef: CustomDialogRef<DocumentoViewerComponent>,
+    @Inject(CUSTOM_DIALOG_DATA) public data: { documentoId: string }
   ) {}
 
   ngOnInit(): void {
@@ -320,8 +641,12 @@ export class DocumentoViewerComponent implements OnInit {
   }
 
   cargarDocumento(): void {
+    console.log('[DocumentoViewer] Iniciando carga de documento:', this.data.documentoId);
+
     this.isLoading = true;
     this.error = null;
+    this.debugInfo = null;
+    this.pdfLoaded = false;
     this.showProgress = true;
     this.loadProgress = 0;
     this.fileSize = 0;
@@ -330,75 +655,128 @@ export class DocumentoViewerComponent implements OnInit {
     this.documentosService.getDocumentoFile(this.data.documentoId, true)
       .pipe(
         finalize(() => {
+          console.log('[DocumentoViewer] Finalizando carga, isLoading = false');
           this.isLoading = false;
           this.showProgress = false;
         })
       )
       .subscribe({
         next: (event) => {
-          if (event.type === HttpEventType.DownloadProgress) {
-            // Actualizar el progreso de la descarga
-            // Verificar si es un evento de progreso de descarga
-            const progressEvent = event as unknown as HttpDownloadProgressEvent;
-            if (progressEvent.total) {
-              this.fileSize = progressEvent.total;
-              this.loadedSize = progressEvent.loaded;
-              this.loadProgress = Math.round(100 * progressEvent.loaded / progressEvent.total);
-            }
-          } else if (event.type === HttpEventType.Response) {
-            // Verificar si es un evento de respuesta completa
-            const responseEvent = event as unknown as HttpResponse<Blob>;
-            const blob = responseEvent.body;
+          console.log('[DocumentoViewer] Evento recibido:', event);
 
-            // Crear URL para el blob (para descarga y apertura en nueva ventana)
-            this.blobUrl = blob ? URL.createObjectURL(blob) : '';
+          // Verificar si es un Blob directo (sin progreso) o un evento HTTP
+          if (event instanceof Blob) {
+            console.log('[DocumentoViewer] Blob directo recibido, tamaño:', event.size, 'tipo:', event.type);
+            this.procesarBlob(event);
+          } else if (event && typeof event === 'object' && 'type' in event) {
+            // Es un evento HTTP
+            const httpEvent = event as HttpEvent<Blob>;
+            console.log('[DocumentoViewer] Evento HTTP tipo:', httpEvent.type);
 
-            // Detectar el tipo de documento
-            this.documentType = blob ? this.detectDocumentType(blob) : 'unknown';
-
-            if (this.documentType === 'pdf') {
-              // Procesar como PDF
-              this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
-
-              // Convertir blob a ArrayBuffer para el visor de PDF
-              const reader = new FileReader();
-              reader.onload = () => {
-                if (reader.result) {
-                  this.pdfSrc = new Uint8Array(reader.result as ArrayBuffer);
-                  this.pdfLoaded = true;
-                } else {
-                  this.error = 'Error al procesar el documento PDF.';
-                }
-              };
-              if (blob) {
-                reader.readAsArrayBuffer(blob);
-              } else {
-                this.error = 'Error al procesar el documento PDF: archivo no disponible.';
+            if (httpEvent.type === HttpEventType.DownloadProgress) {
+              // Actualizar el progreso de la descarga
+              const progressEvent = httpEvent as HttpDownloadProgressEvent;
+              if (progressEvent.total) {
+                this.fileSize = progressEvent.total;
+                this.loadedSize = progressEvent.loaded;
+                this.loadProgress = Math.round(100 * progressEvent.loaded / progressEvent.total);
+                console.log('[DocumentoViewer] Progreso:', this.loadProgress + '%');
               }
-            } else if (this.documentType === 'image') {
-              // Procesar como imagen
-              this.imageUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
-              this.pdfLoaded = true; // Usamos la misma variable para indicar que el documento está listo
-            } else {
-              // Tipo desconocido
-              this.error = 'Tipo de documento no soportado. Solo se pueden visualizar archivos PDF e imágenes.';
+            } else if (httpEvent.type === HttpEventType.Response) {
+              // Verificar si es un evento de respuesta completa
+              const responseEvent = httpEvent as HttpResponse<Blob>;
+              const blob = responseEvent.body;
+              console.log('[DocumentoViewer] Respuesta completa, blob:', blob);
+              if (blob) {
+                this.procesarBlob(blob);
+              } else {
+                this.error = 'El servidor no devolvió un archivo válido.';
+                this.debugInfo = 'HttpResponse.body es null';
+              }
             }
           }
         },
         error: (error) => {
-          console.error('Error al cargar el documento:', error);
+          console.error('[DocumentoViewer] Error al cargar el documento:', error);
           this.error = 'No se pudo cargar el documento. Por favor, intente nuevamente.';
+          this.debugInfo = `Error: ${error.message || error}\nURL: ${this.documentosService['apiUrl']}/${this.data.documentoId}/file`;
         }
       });
   }
 
+  private procesarBlob(blob: Blob): void {
+    console.log('[DocumentoViewer] Procesando blob - Tamaño:', blob.size, 'Tipo:', blob.type);
+
+    // Crear URL para el blob (para descarga y apertura en nueva ventana)
+    this.blobUrl = URL.createObjectURL(blob);
+    console.log('[DocumentoViewer] Blob URL creada:', this.blobUrl);
+
+    // Detectar el tipo de documento
+    this.documentType = this.detectDocumentType(blob);
+    console.log('[DocumentoViewer] Tipo de documento detectado:', this.documentType);
+
+    if (this.documentType === 'pdf') {
+      // Procesar como PDF
+      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
+      console.log('[DocumentoViewer] PDF URL sanitizada creada');
+
+      // Convertir blob a ArrayBuffer para el visor de PDF
+      const reader = new FileReader();
+      reader.onload = () => {
+        console.log('[DocumentoViewer] FileReader completado');
+        if (reader.result) {
+          this.pdfSrc = new Uint8Array(reader.result as ArrayBuffer);
+          console.log('[DocumentoViewer] PDF ArrayBuffer creado, tamaño:', this.pdfSrc.length);
+          this.pdfLoaded = true;
+          this.debugInfo = `PDF procesado correctamente\nTamaño: ${blob.size} bytes\nTipo MIME: ${blob.type}\nArrayBuffer: ${this.pdfSrc.length} bytes`;
+        } else {
+          console.error('[DocumentoViewer] FileReader result es null');
+          this.error = 'Error al procesar el documento PDF: no se pudo leer el archivo.';
+          this.debugInfo = 'FileReader.result es null';
+        }
+      };
+      reader.onerror = (error) => {
+        console.error('[DocumentoViewer] Error en FileReader:', error);
+        this.error = 'Error al leer el archivo PDF.';
+        this.debugInfo = `Error en FileReader: ${error}`;
+      };
+      reader.readAsArrayBuffer(blob);
+    } else if (this.documentType === 'image') {
+      // Procesar como imagen
+      this.imageUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
+      this.pdfLoaded = true; // Usamos la misma variable para indicar que el documento está listo
+      console.log('[DocumentoViewer] Imagen procesada correctamente');
+      this.debugInfo = `Imagen procesada correctamente\nTamaño: ${blob.size} bytes\nTipo MIME: ${blob.type}`;
+    } else {
+      // Tipo desconocido
+      console.error('[DocumentoViewer] Tipo de documento no soportado:', blob.type);
+      this.error = 'Tipo de documento no soportado. Solo se pueden visualizar archivos PDF e imágenes.';
+      this.debugInfo = `Tipo MIME no soportado: ${blob.type}\nTamaño: ${blob.size} bytes`;
+    }
+  }
+
   // Método para manejar cuando se carga el PDF
   onPdfLoaded(pdf: unknown): void {
+    console.log('[DocumentoViewer] PDF cargado en el visor:', pdf);
     if (pdf && typeof pdf === 'object' && 'numPages' in pdf) {
       this.totalPages = (pdf as { numPages: number }).numPages;
+      console.log('[DocumentoViewer] Total de páginas:', this.totalPages);
     } else {
       this.totalPages = 1; // Valor predeterminado si no se puede determinar
+      console.warn('[DocumentoViewer] No se pudo determinar el número de páginas, usando 1');
     }
+  }
+
+  // Método para manejar errores del PDF
+  onPdfError(error: unknown): void {
+    console.error('[DocumentoViewer] Error en el visor de PDF:', error);
+    this.error = 'Error al mostrar el documento PDF. El archivo podría estar corrupto.';
+    this.debugInfo = `Error del visor PDF: ${error}`;
+  }
+
+  // Método para manejar cuando se renderiza una página
+  onPageRendered(event: unknown): void {
+    console.log('[DocumentoViewer] Página renderizada:', event);
   }
 
   // Método para detectar el tipo de documento
@@ -449,6 +827,9 @@ export class DocumentoViewerComponent implements OnInit {
   abrirEnNuevaVentana(): void {
     if (this.blobUrl) {
       window.open(this.blobUrl, '_blank');
+      console.log('[DocumentoViewer] Documento abierto en nueva ventana');
+    } else {
+      console.error('[DocumentoViewer] No hay URL de blob disponible para abrir en nueva ventana');
     }
   }
 
@@ -462,17 +843,22 @@ export class DocumentoViewerComponent implements OnInit {
 
   // Métodos para controlar el zoom
   zoomIn(): void {
-    this.zoom += 0.25;
+    if (this.zoom < 3) {
+      this.zoom = Math.min(3, this.zoom + 0.25);
+      console.log('[DocumentoViewer] Zoom aumentado a:', this.zoom);
+    }
   }
 
   zoomOut(): void {
     if (this.zoom > 0.5) {
-      this.zoom -= 0.25;
+      this.zoom = Math.max(0.5, this.zoom - 0.25);
+      console.log('[DocumentoViewer] Zoom reducido a:', this.zoom);
     }
   }
 
   resetZoom(): void {
     this.zoom = 1;
+    console.log('[DocumentoViewer] Zoom restablecido a 100%');
   }
 
   // Métodos para controlar la rotación

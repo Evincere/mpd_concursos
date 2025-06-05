@@ -13,7 +13,6 @@ import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapp
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;

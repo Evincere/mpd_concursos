@@ -227,7 +227,7 @@ CREATE TABLE inscriptions (
     created_at DATETIME(6),
     updated_at DATETIME(6),
     inscription_date DATETIME(6),
-    status ENUM('ACTIVE', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'),
+    status ENUM('ACTIVE', 'PENDING', 'COMPLETED_WITH_DOCS', 'COMPLETED_PENDING_DOCS', 'FROZEN', 'APPROVED', 'REJECTED', 'CANCELLED'),
     current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED'),
     accepted_terms BOOLEAN DEFAULT FALSE,
     confirmed_personal_data BOOLEAN DEFAULT FALSE,
@@ -235,9 +235,30 @@ CREATE TABLE inscriptions (
     centro_de_vida VARCHAR(500),
     terms_acceptance_date DATETIME(6),
     data_confirmation_date DATETIME(6),
+    documentation_deadline DATETIME(6),
+    frozen_date DATETIME(6),
     PRIMARY KEY (id),
     FOREIGN KEY (contest_id) REFERENCES contests(id),
     FOREIGN KEY (user_id) REFERENCES user_entity(id)
+) ENGINE=InnoDB;
+
+-- Tabla de documentos de concursos
+CREATE TABLE contest_documents (
+    id BINARY(16) NOT NULL,
+    contest_id BIGINT,
+    name VARCHAR(255),
+    description TEXT,
+    file_url VARCHAR(500),
+    file_name VARCHAR(255),
+    file_type VARCHAR(100),
+    file_size BIGINT,
+    required BOOLEAN DEFAULT FALSE,
+    public BOOLEAN DEFAULT FALSE,
+    uploaded_by BINARY(16),
+    uploaded_at DATETIME(6),
+    PRIMARY KEY (id),
+    FOREIGN KEY (contest_id) REFERENCES contests(id),
+    FOREIGN KEY (uploaded_by) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 -- Tabla de sesiones de inscripción

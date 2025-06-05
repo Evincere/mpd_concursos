@@ -1,5 +1,9 @@
+/* ===== CONCURSOS GLASSMORPHISM - USUARIO COMÚN ===== */
+/* Concursos con glassmorphism premium dark unificado */
+/* Scoped específicamente para no afectar al administrador */
+
 @use 'variables' as *;
-@use '../styles/mixins' as *; 
+@use '../styles/mixins' as *;
 
 .concursos-feature-container {
   height: 100%;
@@ -7,15 +11,15 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: transparent; // Let the dashboard container background show through
+  background: transparent; /* Let the dashboard container background show through */
 
   .main-content {
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    padding: 1.5rem; // Keep internal padding for content spacing
-    transition: all 0.3s ease;
+    gap: var(--user-spacing-lg);
+    padding: var(--user-spacing-lg); /* Keep internal padding for content spacing */
+    transition: var(--user-transition-normal);
     position: relative;
     z-index: 1;
     background: transparent;
@@ -36,21 +40,21 @@
 
   app-filtros-panel {
     position: fixed;
-    top: 0;
+    top: var(--user-header-height, 90px); /* Comenzar desde el borde inferior del navbar */
     right: 0;
-    height: 100%;
-    z-index: 1000;
+    height: calc(100vh - var(--user-header-height, 90px)); /* Altura ajustada para respetar el navbar */
+    z-index: 500; /* Z-index menor que el navbar para no taparlo */
     box-shadow: -4px 0 25px rgba(0, 0, 0, 0.3);
   }
 
   .backdrop {
     position: fixed;
-    top: 0;
+    top: var(--user-header-height, 90px); /* Comenzar desde el borde inferior del navbar */
     left: 0;
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    z-index: 499; /* Z-index menor que el panel pero mayor que el contenido */
   }
 
   &.panel-active {
@@ -105,31 +109,18 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 3rem 2rem;
+      padding: var(--user-spacing-2xl) var(--user-spacing-xl);
       text-align: center;
-      background: #374151;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      margin: 1.5rem;
-      transition: all 0.3s ease;
-      box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        0 4px 16px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
+      /* Glassmorphism premium dark */
+      background: var(--user-glass-gradient-primary);
+      background-image: var(--user-glass-gradient-overlay);
+      border: 1px solid var(--user-border-glass);
+      border-radius: var(--user-border-radius-lg);
+      margin: var(--user-spacing-lg);
+      transition: var(--user-transition-normal);
+      box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
+      backdrop-filter: var(--user-backdrop-blur);
       position: relative;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-        pointer-events: none;
-        border-radius: 8px;
-      }
 
       > * {
         position: relative;
@@ -138,34 +129,35 @@
 
       i {
         font-size: 3rem;
-        color: #9ca3af;
-        margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
+        color: var(--user-text-muted);
+        margin-bottom: var(--user-spacing-lg);
+        transition: var(--user-transition-normal);
       }
 
       p {
         font-size: 1rem;
-        color: #d1d5db;
-        margin-bottom: 1.5rem;
+        color: var(--user-text-secondary);
+        margin-bottom: var(--user-spacing-lg);
         line-height: 1.6;
       }
 
       button {
         min-width: 180px;
         height: 48px;
-        padding: 0 1.5rem;
+        padding: 0 var(--user-spacing-lg);
         font-size: 1rem;
         font-weight: 500;
-        background: #3b82f6;
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 8px;
-        color: #f9fafb;
+        background: var(--user-text-accent);
+        border: 1px solid var(--user-border-glass-focus);
+        border-radius: var(--user-border-radius-lg);
+        color: var(--user-text-primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.75rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        gap: var(--user-spacing-md);
+        transition: var(--user-transition-normal);
+        box-shadow: var(--user-shadow-sm);
+        cursor: pointer;
 
         i {
           font-size: 1.125rem;
@@ -476,6 +468,16 @@
       gap: 1rem;
     }
 
+    /* Responsive positioning for mobile */
+    app-filtros-panel {
+      top: 85px; /* Altura del navbar en móvil */
+      height: calc(100vh - 85px);
+    }
+
+    .backdrop {
+      top: 85px; /* Altura del navbar en móvil */
+    }
+
     .concursos-content {
       .concursos-list {
         padding: 0.25rem;
@@ -521,6 +523,20 @@
           }
         }
       }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .concursos-feature-container {
+    /* Responsive positioning for small mobile */
+    app-filtros-panel {
+      top: 80px; /* Altura del navbar en móvil pequeño */
+      height: calc(100vh - 80px);
+    }
+
+    .backdrop {
+      top: 80px; /* Altura del navbar en móvil pequeño */
     }
   }
 }

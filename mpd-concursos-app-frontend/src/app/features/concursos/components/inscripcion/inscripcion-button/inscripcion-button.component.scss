@@ -1,97 +1,149 @@
-@use 'variables' as *;
+@use 'src/styles/variables' as *;
 
 :host {
-    display: block;
+  display: block;
 }
 
 .inscripcion-button {
-    min-width: 140px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0 1rem;
-    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  // Glassmorphism base styles - consistent with unified design system
+  min-width: 140px;
+  height: 40px;
+  position: relative;
+  overflow: hidden;
 
-    &:not([disabled]):hover {
-        background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  // State-specific glassmorphism styling
+  &.inscripto {
+    // Success state with glassmorphism
+    background: rgba(76, 175, 80, 0.15);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 4px 16px rgba(76, 175, 80, 0.2),
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    // Glassmorphism gradient overlay
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+      pointer-events: none;
+      border-radius: inherit;
     }
 
-    &:not([disabled]):active {
-        transform: translateY(0);
+    // Ensure content is above overlay
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  &.pending {
+    // Warning state with glassmorphism
+    background: rgba(255, 152, 0, 0.15);
+    border: 1px solid rgba(255, 152, 0, 0.3);
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 4px 16px rgba(255, 152, 0, 0.2),
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
+      pointer-events: none;
+      border-radius: inherit;
     }
 
-    &.loading {
-        pointer-events: none;
-        opacity: 0.8;
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  &.rejected {
+    // Danger state with glassmorphism
+    background: rgba(244, 67, 54, 0.15);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 4px 16px rgba(244, 67, 54, 0.2),
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(244, 67, 54, 0.05) 100%);
+      pointer-events: none;
+      border-radius: inherit;
     }
 
-    &.inscripto {
-        background: rgba(76, 175, 80, 0.12);
-        color: #4CAF50;
-        pointer-events: none;
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
 
-        i, mat-icon {
-            color: #4CAF50;
-        }
+  &.cancelled {
+    // Ghost state with glassmorphism
+    background: rgba(158, 158, 158, 0.15);
+    border: 1px solid rgba(158, 158, 158, 0.3);
+    backdrop-filter: blur(8px);
+    box-shadow:
+      0 4px 16px rgba(158, 158, 158, 0.2),
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(158, 158, 158, 0.1) 0%, rgba(158, 158, 158, 0.05) 100%);
+      pointer-events: none;
+      border-radius: inherit;
     }
 
-    &.confirmada {
-        background: rgba(255, 152, 0, 0.12);
-        color: #FF9800;
-        pointer-events: none;
+    > * {
+      position: relative;
+      z-index: 1;
+    }
+  }
 
-        i, mat-icon {
-            color: #FF9800;
-        }
+  // Hover effects for interactive states
+  &:not(.inscripto):not(.rejected):not(.cancelled) {
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
 
-    &.rejected {
-        background: rgba(244, 67, 54, 0.12);
-        color: #F44336;
-        pointer-events: none;
-
-        i, mat-icon {
-            color: #F44336;
-        }
+    &:active {
+      transform: translateY(0);
     }
+  }
 
-    &.cancelled {
-        background: rgba(158, 158, 158, 0.12);
-        color: #9E9E9E;
-        pointer-events: none;
-
-        i, mat-icon {
-            color: #9E9E9E;
-        }
-    }
-
-    &.retomar {
-        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-
-        &:not([disabled]):hover {
-            background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-        }
-    }
-
-    i {
-        font-size: 1rem;
-    }
-
-    mat-spinner {
-        margin-right: 0.5rem;
-        ::ng-deep circle {
-            stroke: #ffffff;
-        }
-    }
+  // Loading state
+  &.loading {
+    pointer-events: none;
+    opacity: 0.8;
+  }
 }

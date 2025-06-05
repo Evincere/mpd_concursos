@@ -4,7 +4,6 @@ import ar.gov.mpd.concursobackend.inscription.application.dto.UpdateInscriptionS
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionPreferences;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
-import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;

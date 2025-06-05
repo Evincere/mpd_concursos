@@ -14,7 +14,7 @@ import { ValidationErrorComponent } from '@shared/components/validation/validati
 
 // Interfaces y modelos
 import { AdminInscription, InscriptionFilter } from '@core/services/admin/admin-inscriptions.service';
-import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
+import { InscripcionState, InscripcionStateUtils } from '@core/models/inscripcion/inscripcion-state.enum';
 
 // Servicios
 import { NotificationService } from '@shared/services/notification.service';
@@ -67,11 +67,15 @@ export class CustomInscriptionsTableComponent implements OnInit, OnChanges {
   // Opciones para filtros
   statusOptions = [
     { value: 'ALL', label: 'Todos los estados' },
+    { value: InscripcionState.ACTIVE, label: 'Activa' },
     { value: InscripcionState.PENDING, label: 'Pendiente' },
+    { value: InscripcionState.COMPLETED_WITH_DOCS, label: 'Completada con Documentos' },
+    { value: InscripcionState.COMPLETED_PENDING_DOCS, label: 'Completada - Documentos Pendientes' },
+    { value: InscripcionState.FROZEN, label: 'Congelada' },
     { value: InscripcionState.APPROVED, label: 'Aprobada' },
     { value: InscripcionState.REJECTED, label: 'Rechazada' },
     { value: InscripcionState.CANCELLED, label: 'Cancelada' },
-    { value: InscripcionState.IN_PROCESS, label: 'En Proceso' }
+    { value: InscripcionState.IN_PROCESS, label: 'En Proceso (Legacy)' }
   ];
 
   documentStatusOptions = [
@@ -195,22 +199,9 @@ export class CustomInscriptionsTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // Obtener etiqueta según estado
+  // Obtener etiqueta según estado usando la nueva lógica unificada
   getStatusLabel(status: InscripcionState): string {
-    switch (status) {
-      case InscripcionState.PENDING:
-        return 'Pendiente';
-      case InscripcionState.APPROVED:
-        return 'Aprobada';
-      case InscripcionState.REJECTED:
-        return 'Rechazada';
-      case InscripcionState.CANCELLED:
-        return 'Cancelada';
-      case InscripcionState.IN_PROCESS:
-        return 'En Proceso';
-      default:
-        return 'Desconocido';
-    }
+    return InscripcionStateUtils.getStateLabel(status);
   }
 
   // Formatear fecha

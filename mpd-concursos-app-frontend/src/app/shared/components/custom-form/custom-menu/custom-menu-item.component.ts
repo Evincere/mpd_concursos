@@ -26,76 +26,73 @@ import { CommonModule } from '@angular/common';
     .custom-menu-item {
       display: flex;
       align-items: center;
-      padding: 0.875rem 1.25rem;
-      font-size: 0.9rem;
-      font-weight: 600;
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       user-select: none;
       outline: none;
-      border-radius: 8px;
-      margin: 0.125rem 0; /* Reduced margin for better spacing */
+      border-radius: 6px;
+      margin: 0.125rem 0.25rem;
       position: relative;
 
-      /* Enhanced glassmorphism for better visibility and contrast */
+      /* Less transparent glassmorphism for better text readability */
       background: linear-gradient(135deg,
-        rgba(71, 85, 105, 0.9) 0%,
-        rgba(51, 65, 85, 0.95) 100%);
-      background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(76, 175, 80, 0.1) 50%, rgba(255, 255, 255, 0.12) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+        rgba(75, 85, 99, 0.7) 0%,
+        rgba(55, 65, 81, 0.8) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.2),
-        0 2px 4px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        0 2px 6px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
-      color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-      min-height: 44px; /* Ensure minimum touch target size */
+      color: #f9fafb;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      min-height: 40px;
     }
 
     .custom-menu-item:hover:not(.disabled) {
       background: linear-gradient(135deg,
-        rgba(76, 175, 80, 0.8) 0%,
-        rgba(56, 142, 60, 0.9) 100%);
+        rgba(75, 85, 99, 0.85) 0%,
+        rgba(55, 65, 81, 0.9) 100%);
       background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.1) 100%);
-      transform: translateY(-2px);
+        linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(59, 130, 246, 0.1) 50%, rgba(255, 255, 255, 0.12) 100%);
+      transform: translateY(-1px);
       box-shadow:
-        0 8px 20px rgba(0, 0, 0, 0.3),
-        0 4px 8px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      border-color: rgba(76, 175, 80, 0.6);
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        0 2px 6px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.2);
       color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     }
 
     .custom-menu-item:focus:not(.disabled) {
       background: linear-gradient(135deg,
-        rgba(76, 175, 80, 0.7) 0%,
-        rgba(56, 142, 60, 0.8) 100%);
+        rgba(75, 85, 99, 0.8) 0%,
+        rgba(55, 65, 81, 0.85) 100%);
       background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 100%);
+        linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(59, 130, 246, 0.12) 50%, rgba(255, 255, 255, 0.15) 100%);
       box-shadow:
-        0 6px 16px rgba(0, 0, 0, 0.25),
+        0 4px 12px rgba(0, 0, 0, 0.2),
         0 2px 6px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.18),
-        0 0 0 3px rgba(76, 175, 80, 0.4);
-      border-color: rgba(76, 175, 80, 0.8);
+        0 0 0 2px rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.4);
       color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     }
 
     .custom-menu-item:active:not(.disabled) {
       transform: translateY(0);
       background: linear-gradient(135deg,
-        rgba(56, 142, 60, 0.9) 0%,
-        rgba(46, 125, 50, 0.95) 100%);
+        rgba(55, 65, 81, 0.8) 0%,
+        rgba(31, 41, 55, 0.9) 100%);
       box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        0 2px 6px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
         inset 0 -1px 0 rgba(0, 0, 0, 0.1);
     }
 

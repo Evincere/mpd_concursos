@@ -1,7 +1,9 @@
 import { Component, OnInit, ChangeDetectionStrategy, EventEmitter, Output, Input, OnDestroy, ChangeDetectorRef } from  '@angular/core';
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from  '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatSnackBarModule, MatSnackBar } from  '@angular/material/snack-bar';
+
+// Custom Services
+import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { Educacion, EducacionBuilder, TipoEducacion, CarreraNivelSuperior, CarreraGrado, Posgrado, ActividadCientifica, Diplomatura, CursoCapacitacion, EstadoEducacion, TipoActividadCientifica, CaracterActividadCientifica } from '../../../../../core/models/educacion.model';
 import { EducacionService } from '../../../../../core/services/educacion/educacion.service';
 
@@ -36,8 +38,7 @@ enum PasoWizard {
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatSnackBarModule
+    ReactiveFormsModule
   ]
 })
 export class EducacionContainerComponent implements OnInit, OnDestroy {
@@ -80,7 +81,7 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar,
+    private notification: CustomNotificationService,
     private cdr: ChangeDetectorRef,
     private educacionService: EducacionService
   ) {}
@@ -438,9 +439,7 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
     // Validar que el usuario tenga un ID válido
     if (!this.usuarioId) {
       console.error(`Error al guardar educación: ID de usuario inválido (${this.usuarioId})`);
-      this.snackBar.open('No se puede guardar educación sin un ID de usuario válido', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('No se puede guardar educación sin un ID de usuario válido');
       return;
     }
 
@@ -458,9 +457,7 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
       if (this.formularioEspecifico) this.mostrarErroresFormulario(this.formularioEspecifico, 'Específico');
 
       this.marcarCamposInvalidos();
-      this.snackBar.open('Por favor complete todos los campos requeridos correctamente', 'Cerrar', {
-        duration: 3000
-      });
+      this.notification.error('Por favor complete todos los campos requeridos correctamente');
       return;
     }
 
@@ -530,9 +527,7 @@ export class EducacionContainerComponent implements OnInit, OnDestroy {
               if (response.error) {
                 // Éxito parcial - educación guardada pero hubo un problema con el documento
                 console.warn('Éxito parcial al guardar educación:', response.error);
-                this.snackBar.open(`Educación guardada correctamente, pero hubo un problema al subir el documento: ${response.error}`, 'Entendido', {
-                  duration: 5000
-                });
+                this.notification.warning(`Educación guardada correctamente, pero hubo un problema al subir el documento: ${response.error}`);
               }
               this.finalizarGuardado(true, response.data || null, null);
             } else {

@@ -24,10 +24,10 @@ export interface DocumentoValidationConfig {
   providedIn: 'root'
 })
 export class DocumentoValidationService {
-  // Configuración por defecto
+  // Configuración por defecto - Solo PDF para documentación oficial
   private defaultConfig: DocumentoValidationConfig = {
     maxSizeBytes: 10 * 1024 * 1024, // 10MB
-    allowedTypes: ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'],
+    allowedTypes: ['application/pdf'],
     minImageResolution: { width: 800, height: 600 },
     minPdfQuality: 150, // DPI
     requiredPages: { min: 1, max: 50 }

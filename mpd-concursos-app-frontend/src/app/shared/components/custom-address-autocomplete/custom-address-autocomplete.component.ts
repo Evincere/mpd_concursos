@@ -2,7 +2,7 @@ import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, On
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { LocationResult, ArgentinaDataService } from '@core/services/geocoding/argentina-data.service';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map, switchMap, takeUntil, tap } from 'rxjs/operators';
@@ -21,8 +21,7 @@ export interface AddressResult {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatIconModule,
-    MatSnackBarModule
+    MatIconModule
   ],
   template: `
     <div class="custom-address-container">
@@ -293,7 +292,7 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
 
   constructor(
     private argentinaDataService: ArgentinaDataService,
-    private snackBar: MatSnackBar
+    private notificationService: UnifiedNotificationService
   ) {}
 
 
@@ -361,9 +360,7 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
         this.filteredOptions = [];
 
         // Mostrar un mensaje de error al usuario
-        this.snackBar.open('Error al buscar direcciones. Intente nuevamente más tarde.', 'Cerrar', {
-          duration: 3000
-        });
+        this.notificationService.error('Error al buscar direcciones. Intente nuevamente más tarde.');
       }
     });
   }
@@ -439,11 +436,9 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
     this.showSuggestions = false;
 
     // Mostrar un mensaje de confirmación
-    this.snackBar.open(`Dirección seleccionada: ${formattedAddress}`, 'OK', {
+    this.notificationService.success(`Dirección seleccionada: ${formattedAddress}`, 'Dirección Confirmada', {
       duration: 2000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: 'success-snackbar'
+      position: 'bottom-center'
     });
   }
 
@@ -453,9 +448,7 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
   useManualAddress(): void {
     const manualAddress = this.addressControl.value;
     if (!manualAddress) {
-      this.snackBar.open('Por favor ingrese una dirección', 'Cerrar', {
-        duration: 3000
-      });
+      this.notificationService.warning('Por favor ingrese una dirección');
       return;
     }
 
@@ -505,11 +498,9 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
     }
 
     // Mostrar un mensaje de confirmación
-    this.snackBar.open(confirmationMessage, 'OK', {
+    this.notificationService.success(confirmationMessage, 'Dirección Manual Confirmada', {
       duration: 4000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: 'success-snackbar'
+      position: 'bottom-center'
     });
   }
 

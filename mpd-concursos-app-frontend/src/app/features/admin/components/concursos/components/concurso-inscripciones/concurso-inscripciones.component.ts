@@ -10,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject } from 'rxjs';
@@ -45,7 +45,6 @@ import { NotificationService } from '@shared/services/notification.service';
     MatDatepickerModule,
     MatNativeDateModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
     MatDialogModule,
     MatTooltipModule,
     CustomTableComponent,
@@ -99,7 +98,7 @@ export class ConcursoInscripcionesComponent implements OnInit, OnDestroy {
     private inscripcionesService: AdminInscripcionesService,
     private dialogService: CustomDialogService,
     private notificationService: NotificationService,
-    private snackBar: MatSnackBar
+    private unifiedNotificationService: UnifiedNotificationService
   ) {
     this.filterForm = this.fb.group({
       state: ['ALL'],
@@ -142,7 +141,7 @@ export class ConcursoInscripcionesComponent implements OnInit, OnDestroy {
 
   loadInscripciones(): void {
     if (!this.contestId) {
-      this.snackBar.open('ID de concurso no válido', 'Cerrar', { duration: 3000 });
+      this.unifiedNotificationService.error('ID de concurso no válido');
       return;
     }
 
@@ -171,7 +170,7 @@ export class ConcursoInscripcionesComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando inscripciones:', error);
-          this.snackBar.open('Error al cargar las inscripciones', 'Cerrar', { duration: 3000 });
+          this.unifiedNotificationService.error('Error al cargar las inscripciones');
           this.isLoading = false;
         }
       });
@@ -209,7 +208,7 @@ export class ConcursoInscripcionesComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando inscripciones:', error);
-          this.snackBar.open('Error al cargar las inscripciones', 'Cerrar', { duration: 3000 });
+          this.unifiedNotificationService.error('Error al cargar las inscripciones');
           this.isLoading = false;
         }
       });

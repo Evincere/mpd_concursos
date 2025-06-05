@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { HttpErrorResponse } from  '@angular/common/http';
-import { BehaviorSubject, Observable, of, Subject, EMPTY } from   'rxjs';
-import { catchError, map, finalize, switchMap } from  'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, Subject, EMPTY } from 'rxjs';
+import { catchError, map, finalize, switchMap, tap } from 'rxjs/operators';
 import { Educacion } from '../../../core/models/educacion.model';
 import { environment } from '@env/environment';
 
@@ -26,7 +26,9 @@ export enum ErrorCodigo {
     providedIn: 'root'
 })
 export class EducacionService {
-    private apiUrl = `${environment.apiUrl}/educacion`;
+    // ✅ CORRECCIÓN CRÍTICA: Inyección real de HttpClient
+    private readonly http = inject(HttpClient);
+    private readonly apiUrl = `${environment.apiUrl}/educacion`;
 
     // Subject para mantener el estado actual de la educación
     private educacionSubject = new BehaviorSubject<Educacion[]>([]);
@@ -46,50 +48,19 @@ export class EducacionService {
 
     // Cache para evitar peticiones innecesarias
     private educacionCargada = false;
-    private http: {
-        get: (url: string, options?: Record<string, unknown>) => Observable<unknown>;
-        post: (url: string, body: unknown, options?: Record<string, unknown>) => Observable<unknown>;
-        put: (url: string, body: unknown, options?: Record<string, unknown>) => Observable<unknown>;
-        delete: (url: string, options?: Record<string, unknown>) => Observable<unknown>;
-    };
 
     constructor() {
-        // En una implementación real, se inyectaría HttpClient
-        this.http = {
-            get: (url: string, options?: Record<string, unknown>) => {
-                console.log(`GET simulado a ${url}`, options);
-                return new Observable(observer => {
-                    observer.next([]);
-                    observer.complete();
-                });
-            },
-            post: (url: string, body: unknown, options?: Record<string, unknown>) => {
-                console.log(`POST simulado a ${url}`, body, options);
-                return new Observable(observer => {
-                    observer.next({});
-                    observer.complete();
-                });
-            },
-            put: (url: string, body: unknown, options?: Record<string, unknown>) => {
-                console.log(`PUT simulado a ${url}`, body, options);
-                return new Observable(observer => {
-                    observer.next({});
-                    observer.complete();
-                });
-            },
-            delete: (url: string, options?: Record<string, unknown>) => {
-                console.log(`DELETE simulado a ${url}`, options);
-                return new Observable(observer => {
-                    observer.next({});
-                    observer.complete();
-                });
-            }
-        };
+        console.log('[EducacionService] ✅ SERVICIO REAL INICIALIZADO');
+        console.log('[EducacionService] API URL:', this.apiUrl);
+        console.log('[EducacionService] HttpClient inyectado correctamente');
     }
 
     // Cargar educación del usuario
     cargarEducacion(usuarioId: string): Observable<OperacionResponse<Educacion[]>> {
+        console.log('[EducacionService] ✅ Cargando educación del usuario del backend real:', usuarioId);
+
         if (this.educacionCargada && this.educacionSubject.value.length > 0) {
+            console.log('[EducacionService] Usando datos en caché');
             return of({
                 exito: true,
                 data: this.educacionSubject.value,
@@ -100,12 +71,14 @@ export class EducacionService {
         this.loadingSubject.next(true);
         this.errorSubject.next(null);
 
-        return this.http.get(`${this.apiUrl}/usuario/${usuarioId}`).pipe(
-            map((educacionData: unknown) => {
+        return this.http.get<Educacion[]>(`${this.apiUrl}/usuario/${usuarioId}`).pipe(
+            map((educacionData: Educacion[]) => {
+                console.log('[EducacionService] ✅ Educación obtenida del backend:', educacionData);
+
                 // Procesar los datos recibidos para asegurar que las propiedades específicas
                 // sean accesibles directamente
-                const educacionNormalizada = this.normalizarDatosEducacion(educacionData as Record<string, unknown>[]);
-                console.log('Educación normalizada:', educacionNormalizada);
+                const educacionNormalizada = this.normalizarDatosEducacion(educacionData);
+                console.log('[EducacionService] Educación normalizada:', educacionNormalizada);
 
                 this.educacionSubject.next(educacionNormalizada);
                 this.educacionCargada = true;
@@ -117,8 +90,9 @@ export class EducacionService {
                 } as OperacionResponse<Educacion[]>;
             }),
             catchError(error => {
-              const errorResponse = this.manejarError(error, 'Error al cargar educación');
-              return errorResponse as unknown as Observable<OperacionResponse<Educacion[]>>;
+                console.error('[EducacionService] ❌ Error al cargar educación:', error);
+                const errorResponse = this.manejarError(error, 'Error al cargar educación');
+                return errorResponse as unknown as Observable<OperacionResponse<Educacion[]>>;
             }),
             finalize(() => this.loadingSubject.next(false))
         );
@@ -126,23 +100,27 @@ export class EducacionService {
 
     // Guardar nuevo registro de educación
     guardarEducacion(educacion: unknown, usuarioId: string): Observable<OperacionResponse<Educacion>> {
+        console.log('[EducacionService] ✅ Guardando educación en backend real para usuario:', usuarioId);
+
         this.loadingSubject.next(true);
         this.errorSubject.next(null);
         this.mensajeSubject.next(null);
 
-        console.log('Enviando petición POST a:', `${this.apiUrl}/usuario/${usuarioId}`);
-        console.log('Datos enviados:', JSON.stringify(educacion));
+        console.log('[EducacionService] Enviando petición POST a:', `${this.apiUrl}/usuario/${usuarioId}`);
+        console.log('[EducacionService] Datos enviados:', JSON.stringify(educacion));
 
-        return this.http.post(`${this.apiUrl}/usuario/${usuarioId}`, educacion)
+        return this.http.post<Educacion>(`${this.apiUrl}/usuario/${usuarioId}`, educacion)
             .pipe(
-                map((nuevaEducacion: unknown) => {
+                tap(nuevaEducacion => {
+                    console.log('[EducacionService] ✅ Educación guardada correctamente en backend:', nuevaEducacion);
+                }),
+                map((nuevaEducacion: Educacion) => {
                     const educacionActual = this.educacionSubject.value;
-                    const educacionObj = nuevaEducacion as Educacion;
-                    this.educacionSubject.next([...educacionActual, educacionObj]);
+                    this.educacionSubject.next([...educacionActual, nuevaEducacion]);
                     this.mensajeSubject.next('Educación guardada correctamente');
                     return {
                         exito: true,
-                        data: educacionObj,
+                        data: nuevaEducacion,
                         mensaje: 'Educación guardada correctamente'
                     } as OperacionResponse<Educacion>;
                 }),
@@ -192,18 +170,22 @@ export class EducacionService {
 
     // Actualizar un registro existente
     actualizarEducacion(educacion: Educacion): Observable<OperacionResponse<Educacion>> {
+        console.log('[EducacionService] ✅ Actualizando educación en backend real:', educacion.id);
+
         this.loadingSubject.next(true);
         this.errorSubject.next(null);
         this.mensajeSubject.next(null);
 
-        return this.http.put(`${this.apiUrl}/${educacion.id}`, educacion).pipe(
-            map((educacionActualizada: unknown) => {
+        return this.http.put<Educacion>(`${this.apiUrl}/${educacion.id}`, educacion).pipe(
+            tap(educacionActualizada => {
+                console.log('[EducacionService] ✅ Educación actualizada correctamente en backend:', educacionActualizada);
+            }),
+            map((educacionActualizada: Educacion) => {
                 const educacionActual = this.educacionSubject.value;
                 const index = educacionActual.findIndex(e => e.id === educacion.id);
-                const educacionResult = educacionActualizada as Educacion;
 
                 if (index !== -1) {
-                    educacionActual[index] = educacionResult;
+                    educacionActual[index] = educacionActualizada;
                     this.educacionSubject.next([...educacionActual]);
                 }
 
@@ -211,7 +193,7 @@ export class EducacionService {
 
                 const successResponse: OperacionResponse<Educacion> = {
                     exito: true,
-                    data: educacionResult,
+                    data: educacionActualizada,
                     mensaje: 'Educación actualizada correctamente'
                 };
                 return successResponse;
@@ -231,19 +213,21 @@ export class EducacionService {
 
     // Eliminar un registro
     eliminarEducacion(educacionId: string): Observable<OperacionResponse<void>> {
+        console.log('[EducacionService] ✅ Eliminando educación del backend real:', educacionId);
+
         this.loadingSubject.next(true);
         this.errorSubject.next(null);
         this.mensajeSubject.next(null);
 
-        console.log(`Eliminando educación con ID (UUID): ${educacionId}`);
-
-        return this.http.delete(`${this.apiUrl}/${educacionId}`).pipe(
+        return this.http.delete<void>(`${this.apiUrl}/${educacionId}`).pipe(
+            tap(() => {
+                console.log('[EducacionService] ✅ Educación eliminada correctamente del backend:', educacionId);
+            }),
             map(() => {
                 // Eliminar del subject solo si existe en la lista
                 const educacionActual = this.educacionSubject.value;
                 const educacionFiltrada = educacionActual.filter(e => e.id !== educacionId);
 
-                console.log(`Educación eliminada correctamente: ${educacionId}`);
                 this.educacionSubject.next(educacionFiltrada);
                 this.mensajeSubject.next('Educación eliminada correctamente');
 
@@ -315,62 +299,49 @@ export class EducacionService {
         // Asegurarse de que el ID se utiliza como está, sin intentar convertirlo
         console.log(`Subiendo documento para educación ID: ${educacionId} de tipo ${typeof educacionId}`);
 
-        // Lista de posibles endpoints para probar
-        const urls = [
-            `${this.apiUrl}/${educacionId}/documento`,
-            `${this.apiUrl}/documento/${educacionId}`,
-            `${this.apiUrl}/upload/documento/${educacionId}`,
-            `${environment.apiUrl}/documentos/educacion/${educacionId}/documento`
-        ];
+        // ✅ CORRECCIÓN CRÍTICA: Usar endpoint real del backend
+        const uploadUrl = `${this.apiUrl}/${educacionId}/document`;
+        console.log('[EducacionService] ✅ Subiendo documento al backend real:', uploadUrl);
 
-        console.log(`Intentando subir documento para educación ID ${educacionId}. Probando múltiples endpoints...`);
+        return this.http.post<Record<string, unknown>>(uploadUrl, formData).pipe(
+            tap(respuesta => {
+                console.log('[EducacionService] ✅ Documento subido correctamente al backend:', respuesta);
+                this.mensajeSubject.next('Documento subido correctamente');
+            }),
+            map(respuesta => ({
+                exito: true,
+                data: respuesta,
+                mensaje: 'Documento subido correctamente'
+            })),
+            catchError(error => {
+                console.error('[EducacionService] ❌ Error al subir documento:', error);
 
-        // Crear un Subject para controlar el flujo
-        const resultSubject = new Subject<OperacionResponse<Record<string, unknown>>>();
+                // Intentar con endpoint alternativo de documentos genéricos
+                console.log('[EducacionService] Intentando con endpoint alternativo...');
+                const alternativeUrl = `${environment.apiUrl}/documents/education/${educacionId}/upload`;
 
-        // Intentar los endpoints en secuencia
-        const intentarSiguienteEndpoint = (indice = 0) => {
-            if (indice >= urls.length) {
-                // Hemos agotado todas las opciones
-                resultSubject.next({
-                    exito: false,
-                    error: 'No se pudo subir el documento. La funcionalidad no está disponible actualmente.',
-                    mensaje: 'No se pudo subir el documento. La funcionalidad no está disponible actualmente.'
-                });
-                resultSubject.complete();
-                this.loadingSubject.next(false);
-                return;
-            }
-
-            const currentUrl = urls[indice];
-            console.log(`Intento #${indice + 1}: Probando endpoint ${currentUrl}`);
-
-            this.http.post(currentUrl, formData).pipe(
-                catchError(error => {
-                    console.error(`Error al subir el documento al endpoint ${currentUrl}:`, error);
-                    // Intentar con el siguiente endpoint
-                    intentarSiguienteEndpoint(indice + 1);
-                    return EMPTY;
-                })
-            ).subscribe({
-                next: (respuesta) => {
-                    console.log(`Éxito: Documento subido correctamente al endpoint ${currentUrl}`, respuesta);
-                    this.mensajeSubject.next('Documento subido correctamente');
-                    resultSubject.next({
+                return this.http.post<Record<string, unknown>>(alternativeUrl, formData).pipe(
+                    tap(respuesta => {
+                        console.log('[EducacionService] ✅ Documento subido con endpoint alternativo:', respuesta);
+                        this.mensajeSubject.next('Documento subido correctamente');
+                    }),
+                    map(respuesta => ({
                         exito: true,
-                        data: respuesta as Record<string, unknown>,
+                        data: respuesta,
                         mensaje: 'Documento subido correctamente'
-                    });
-                    resultSubject.complete();
-                    this.loadingSubject.next(false);
-                }
-            });
-        };
-
-        // Comenzar el proceso con el primer endpoint
-        intentarSiguienteEndpoint();
-
-        return resultSubject.asObservable();
+                    })),
+                    catchError(secondError => {
+                        console.error('[EducacionService] ❌ Error en todos los intentos:', secondError);
+                        return of({
+                            exito: false,
+                            error: 'No se pudo subir el documento. El servicio podría no estar disponible.',
+                            mensaje: 'No se pudo subir el documento. El servicio podría no estar disponible.'
+                        });
+                    })
+                );
+            }),
+            finalize(() => this.loadingSubject.next(false))
+        );
     }
 
     // Patrón Facade: Método para guardar educación y subir documento en una operación

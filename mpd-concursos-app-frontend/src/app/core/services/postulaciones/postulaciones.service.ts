@@ -1,11 +1,23 @@
 import { Injectable } from '@angular/core';
-import { HttpParams, HttpErrorResponse } from  '@angular/common/http';
+import { HttpClient, HttpParams, HttpErrorResponse } from  '@angular/common/http';
 import { Observable, throwError, forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ContestStatus, Postulacion, PostulacionRequest, PostulacionResponse } from '../../../shared/interfaces/postulacion/postulacion.interface';
-
 import { PostulationStatus } from '../../../shared/interfaces/postulacion/postulacion.interface';
+import { AuthService } from '../auth/auth.service';
+
+// Interfaz temporal para respuestas del servidor
+interface ServerResponse {
+    content?: any[];
+    pageNumber?: number;
+    pageSize?: number;
+    totalElements?: number;
+    totalPages?: number;
+    last?: boolean;
+    number?: number;
+    size?: number;
+}
 
 @Injectable({
     providedIn: 'root'
@@ -14,37 +26,11 @@ export class PostulacionesService {
     private apiUrl = `${environment.apiUrl}/inscriptions`;
     private oldApiUrl = `${environment.apiUrl}/inscripciones`;
     private concursosUrl = `${environment.apiUrl}/contests/search`;
-    private http: {
-        get: <T>(url: string, options?: Record<string, unknown>) => Observable<T>;
-        post: <T>(url: string, body: unknown, options?: Record<string, unknown>) => Observable<T>;
-    };
-    private authService: {
-        getCurrentUserId: () => string;
-    };
 
-    constructor() {
-        // En una implementación real, se inyectaría HttpClient y AuthService
-        this.http = {
-            get: <T>(url: string, options?: Record<string, unknown>) => {
-                console.log(`GET simulado a ${url}`, options);
-                return new Observable<T>(observer => {
-                    observer.next({} as T);
-                    observer.complete();
-                });
-            },
-            post: <T>(url: string, body: unknown, options?: Record<string, unknown>) => {
-                console.log(`POST simulado a ${url}`, body, options);
-                return new Observable<T>(observer => {
-                    observer.next({} as T);
-                    observer.complete();
-                });
-            }
-        };
-
-        this.authService = {
-            getCurrentUserId: () => 'user-123'
-        };
-    }
+    constructor(
+        private http: HttpClient,
+        private authService: AuthService
+    ) {}
 
 
     getPostulaciones(page = 0, size = 10, sortBy = 'fechaPostulacion', sortDirection = 'desc'): Observable<PostulacionResponse> {
@@ -52,6 +38,7 @@ export class PostulacionesService {
         console.log('[PostulacionesService] Obteniendo postulaciones para userId:', userId);
 
         if (!userId) {
+            console.error('[PostulacionesService] Usuario no autenticado');
             return throwError(() => new Error('Usuario no autenticado'));
         }
 
@@ -65,25 +52,31 @@ export class PostulacionesService {
         console.log('[PostulacionesService] Parámetros de la petición:', params.toString());
 
         // Intentar con el nuevo endpoint primero
-        return this.http.get<PostulacionResponse>(`${this.apiUrl}/user/${userId}`, { params })
+        return this.http.get<ServerResponse>(`${this.apiUrl}/user/${userId}`, { params })
             .pipe(
                 catchError(error => {
                     console.log('[PostulacionesService] Error con endpoint nuevo, intentando con endpoint alternativo:', error);
                     // Si falla, intentar con el endpoint alternativo
-                    return this.http.get<PostulacionResponse>(`${this.apiUrl}/by-user/${userId}`, { params })
+                    return this.http.get<ServerResponse>(`${this.apiUrl}/by-user/${userId}`, { params })
                         .pipe(
                             catchError(secondError => {
                                 console.log('[PostulacionesService] Error con endpoint alternativo, intentando con endpoint antiguo:', secondError);
                                 // Si también falla, intentar con el endpoint antiguo
-                                return this.http.get<PostulacionResponse>(`${this.oldApiUrl}/me`, { params });
+                                return this.http.get<ServerResponse>(`${this.oldApiUrl}/me`, { params });
                             })
                         );
                 }),
-                switchMap(response => {
+                switchMap((response: ServerResponse) => {
                     console.log('[PostulacionesService] Respuesta del servidor:', response);
 
+                    // Verificar si la respuesta tiene contenido
+                    if (!response || !Array.isArray(response.content) || response.content.length === 0) {
+                        return of(response);
+                    }
+
                     // Obtener los detalles de cada concurso
-                    const concursoRequests = response.content.map(item => {
+                    const content = response.content || [];
+                    const concursoRequests = content.map((item: any) => {
                         // Construir los parámetros para buscar el concurso específico
                         const searchParams = new HttpParams()
                             .set('id', item.contestId.toString());
@@ -101,61 +94,118 @@ export class PostulacionesService {
                         );
                     });
 
+                    // Si no hay requests de concursos, retornar la respuesta original
+                    if (concursoRequests.length === 0) {
+                        return of(response);
+                    }
+
                     return forkJoin(concursoRequests).pipe(
-                        map(concursos => {
-                            const contentWithConcursos = response.content.map((item, index) => ({
+                        map((concursos: unknown) => {
+                            // Asegurar que concursos es un array
+                            const concursosArray = Array.isArray(concursos) ? concursos : [];
+                            // Asegurar que response.content existe y es un array
+                            const content = response.content || [];
+                            const contentWithConcursos = content.map((item: any, index: number) => ({
                                 ...item,
-                                contest: concursos[index]
+                                contest: concursosArray[index] || null
                             }));
                             return {
                                 ...response,
                                 content: contentWithConcursos
                             };
+                        }),
+                        catchError(error => {
+                            console.error('[PostulacionesService] Error al obtener detalles de concursos:', error);
+                            // Si falla la obtención de concursos, retornar la respuesta original sin detalles
+                            return of(response);
                         })
                     );
                 }),
                 map(response => this.transformResponse(response)),
                 catchError(error => {
                     console.error('[PostulacionesService] Error completo:', error);
+
+                    // Si es un error de red o el servidor devuelve un objeto vacío,
+                    // retornar una respuesta vacía válida en lugar de un error
+                    if (error.status === 0 || error.status === 404 || !error.error) {
+                        console.log('[PostulacionesService] Servidor no disponible o sin datos, retornando respuesta vacía');
+                        return of({
+                            content: [],
+                            pageNumber: 0,
+                            pageSize: 10,
+                            totalElements: 0,
+                            totalPages: 0,
+                            last: true
+                        });
+                    }
+
                     if (error.status === 400) {
                         return throwError(() => new Error('Parámetros de búsqueda inválidos'));
                     }
+
+                    if (error.status === 401 || error.status === 403) {
+                        return throwError(() => new Error('No autorizado. Por favor, inicie sesión nuevamente.'));
+                    }
+
                     return throwError(() => new Error('Error del servidor. Por favor, intente más tarde.'));
                 })
             );
     }
 
     private transformResponse(response: unknown): PostulacionResponse {
-        const responseAny = response as Record<string, unknown>;
-        const content = responseAny['content'] as unknown[];
+        console.log('[PostulacionesService] Transformando respuesta:', response);
+
+        // Manejar respuesta vacía o nula
+        if (!response || typeof response !== 'object') {
+            console.log('[PostulacionesService] Respuesta vacía o inválida, retornando respuesta por defecto');
+            return {
+                content: [],
+                pageNumber: 0,
+                pageSize: 10,
+                totalElements: 0,
+                totalPages: 0,
+                last: true
+            };
+        }
+
+        const serverResponse = response as ServerResponse;
+
+        // Verificar si la respuesta tiene la estructura esperada
+        let content: any[] = [];
+        if (Array.isArray(serverResponse.content)) {
+            content = serverResponse.content;
+        } else if (Array.isArray(response)) {
+            // Si la respuesta es directamente un array
+            content = response as any[];
+        }
 
         const transformedResponse: PostulacionResponse = {
-            content: content ? content.map((item: unknown) => this.mapPostulacion(item)) : [],
-            pageNumber: (responseAny['pageNumber'] as number) || 0,
-            pageSize: (responseAny['pageSize'] as number) || 10,
-            totalElements: responseAny['totalElements'] as number,
-            totalPages: responseAny['totalPages'] as number,
-            last: responseAny['last'] as boolean
+            content: content.map((item: unknown) => this.mapPostulacion(item)),
+            pageNumber: serverResponse.pageNumber || serverResponse.number || 0,
+            pageSize: serverResponse.pageSize || serverResponse.size || 10,
+            totalElements: serverResponse.totalElements || content.length,
+            totalPages: serverResponse.totalPages || Math.ceil(content.length / 10),
+            last: serverResponse.last !== undefined ? serverResponse.last : true
         };
 
-        console.log('Transformed Response:', transformedResponse);
+        console.log('[PostulacionesService] Respuesta transformada:', transformedResponse);
         return transformedResponse;
     }
 
     private mapPostulacion(item: unknown): Postulacion {
         const itemAny = item as Record<string, unknown>;
 
-        // Extraer y validar el objeto contest
+        // Extraer y validar el objeto contest desde InscriptionDetailResponse
         const contestObj = itemAny['contest'] as Record<string, unknown> | undefined;
 
-        // Convertir id a número si es string
-        let id: number | undefined;
-        if (typeof itemAny['id'] === 'number') {
-            id = itemAny['id'] as number;
-        } else if (typeof itemAny['id'] === 'string') {
-            id = parseInt(itemAny['id'] as string, 10) || 0;
+        // Mantener id como string (UUID)
+        let id: string | undefined;
+        if (typeof itemAny['id'] === 'string') {
+            id = itemAny['id'] as string;
+        } else if (typeof itemAny['id'] === 'number') {
+            id = itemAny['id'].toString();
         } else {
-            id = 0;
+            id = undefined;
         }
 
         // Convertir contestId a número
@@ -175,11 +225,14 @@ export class PostulacionesService {
                     ? parseInt(contestObj['id'] as string, 10) || 0
                     : 0;
 
+            // Mapear información del concurso desde InscriptionDetailResponse
+            const titulo = (contestObj['name'] as string) ||
+                          (contestObj['title'] as string) ||
+                          'Concurso para ' + (contestObj['position'] as string || 'No especificado');
+
             concurso = {
                 id: concursoId,
-                titulo: (contestObj['name'] as string) ||
-                        (contestObj['title'] as string) ||
-                        'Concurso para ' + (contestObj['position'] as string || 'No especificado'),
+                titulo: titulo,
                 cargo: (contestObj['position'] as string) || 'No especificado',
                 dependencia: (contestObj['department'] as string) || 'No especificada',
                 estado: (contestObj['status'] as ContestStatus) || ContestStatus.OPEN,
@@ -220,8 +273,16 @@ export class PostulacionesService {
 
     private mapearEstado(status: string): PostulationStatus {
         const estadosMap: Record<string, PostulationStatus> = {
-            'PENDING': PostulationStatus.PENDING,
-            'ACCEPTED': PostulationStatus.ACCEPTED,
+            'ACTIVE': PostulationStatus.ACTIVE,           // Inscripción en proceso (interrumpida)
+            'IN_PROCESS': PostulationStatus.ACTIVE,       // Legacy state
+            'PENDING': PostulationStatus.PENDING,         // Inscripción completada, pendiente de validación
+            'PENDIENTE': PostulationStatus.PENDING,       // Legacy Spanish state
+            'CONFIRMADA': PostulationStatus.PENDING,      // Legacy state
+            'COMPLETED': PostulationStatus.PENDING,       // Las inscripciones completadas están pendientes de validación
+            'COMPLETED_WITH_DOCS': PostulationStatus.PENDING,
+            'COMPLETED_PENDING_DOCS': PostulationStatus.PENDING,
+            'APPROVED': PostulationStatus.ACCEPTED,       // Inscripción aprobada
+            'INSCRIPTO': PostulationStatus.ACCEPTED,      // Legacy Spanish state
             'REJECTED': PostulationStatus.REJECTED,
             'CANCELLED': PostulationStatus.CANCELLED
         };
@@ -250,29 +311,32 @@ export class PostulacionesService {
 
     // Crear una nueva postulación
     crearPostulacion(postulacion: PostulacionRequest): Observable<Postulacion> {
-        return this.http.post<Postulacion>(this.apiUrl, postulacion, { withCredentials: true });
+        return this.http.post<Postulacion>(this.apiUrl, postulacion).pipe(
+            catchError(error => {
+                console.error('[PostulacionesService] Error al crear postulación:', error);
+                return throwError(() => error);
+            })
+        );
     }
 
     // Obtener una postulación específica
-    getPostulacion(id: number): Observable<Postulacion> {
-        console.log(`Intentando obtener postulación con ID: ${id}`);
+    getPostulacion(id: string): Observable<Postulacion> {
+        console.log(`[PostulacionesService] Intentando obtener postulación con ID: ${id}`);
 
-        return this.http.get<unknown>(`${this.apiUrl}/${id}`, {
-            withCredentials: true
-        }).pipe(
+        return this.http.get<unknown>(`${this.apiUrl}/${id}`).pipe(
             map(response => {
-                console.log('Respuesta completa:', response);
+                console.log('[PostulacionesService] Respuesta completa:', response);
 
                 // Transformar la respuesta a Postulacion
                 const postulacion = this.transformSingleResponse(response);
-                console.log('Detalles de postulación transformados:', postulacion);
+                console.log('[PostulacionesService] Detalles de postulación transformados:', postulacion);
                 return postulacion;
             }),
             catchError(error => {
-                console.error('Error al obtener postulación:', error);
+                console.error('[PostulacionesService] Error al obtener postulación:', error);
 
                 if (error instanceof HttpErrorResponse) {
-                    console.error('Detalles del error HTTP:', {
+                    console.error('[PostulacionesService] Detalles del error HTTP:', {
                         status: error.status,
                         message: error.message,
                         url: error.url

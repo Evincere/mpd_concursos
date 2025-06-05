@@ -1,28 +1,17 @@
 <ng-container *ngIf="inscripcionState$ | async as estado">
-    <button
-        mat-flat-button
-        color="primary"
+    <app-custom-button
+        [variant]="getButtonVariant(estado)"
+        [label]="getButtonLabel(estado)"
+        [icon]="getButtonIcon(estado)"
+        [loading]="loading"
+        [disabled]="loading || estado === InscripcionState.APPROVED || estado === InscripcionState.INSCRIPTO"
+        [ariaLabel]="getAriaLabel(estado)"
+        [tooltip]="getButtonTooltip(estado)"
+        (buttonClick)="onInscribirse()"
         class="inscripcion-button"
-        [class.loading]="loading"
-        [class.inscripto]="estado === InscripcionState.CONFIRMADA"
-        [disabled]="loading || estado === InscripcionState.CONFIRMADA"
-        (click)="onInscribirse()"
-        (keydown.enter)="onInscribirse()"
-        (keydown.space)="onInscribirse()"
-        [attr.aria-label]="getAriaLabel(estado)">
-        <ng-container *ngIf="!loading && estado !== InscripcionState.CONFIRMADA">
-            <i class="fas fa-user-plus" aria-hidden="true"></i>
-            <span>Inscribirse</span>
-        </ng-container>
-
-        <ng-container *ngIf="loading">
-            <mat-spinner diameter="20" aria-hidden="true"></mat-spinner>
-            <span>Inscribiendo...</span>
-        </ng-container>
-
-        <ng-container *ngIf="estado === InscripcionState.CONFIRMADA">
-            <i class="fas fa-check" aria-hidden="true"></i>
-            <span>Inscripto</span>
-        </ng-container>
-    </button>
+        [class.inscripto]="estado === InscripcionState.APPROVED || estado === InscripcionState.INSCRIPTO"
+        [class.pending]="estado === InscripcionState.PENDING || estado === InscripcionState.PENDIENTE"
+        [class.rejected]="estado === InscripcionState.REJECTED"
+        [class.cancelled]="estado === InscripcionState.CANCELLED">
+    </app-custom-button>
 </ng-container>

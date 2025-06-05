@@ -11,7 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -42,7 +42,6 @@ import { UserSegmentationComponent } from './components/user-segmentation/user-s
     MatDatepickerModule,
     MatNativeDateModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
     InscriptionFunnelComponent,
     DropOffAnalysisComponent,
     StepTimeAnalysisComponent,
@@ -71,7 +70,7 @@ export class UserBehaviorAnalysisComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private analyticsService: InscriptionAnalyticsService,
-    private snackBar: MatSnackBar
+    private notificationService: UnifiedNotificationService
   ) {
     // Inicializar formulario de filtros
     this.filterForm = this.fb.group({
@@ -119,7 +118,7 @@ export class UserBehaviorAnalysisComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error cargando datos del embudo:', error);
-          this.snackBar.open('Error al cargar datos del embudo', 'Cerrar', { duration: 3000 });
+          this.notificationService.error('Error al cargar datos del embudo');
           this.isLoading = false;
         }
       });

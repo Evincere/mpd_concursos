@@ -11,10 +11,10 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [],
   imports: [
     CommonModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    ConcursosComponent // Importar el componente standalone
   ]
 })
 export class ConcursosModule { }

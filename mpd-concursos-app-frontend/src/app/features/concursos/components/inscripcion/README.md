@@ -172,7 +172,11 @@ Contiene las interfaces para los datos del formulario de inscripción:
 
 ### InscripcionProcessComponent
 
-> **ELIMINADO**: Este componente ha sido eliminado. Utilizar `InscripcionProcessPageComponent` en su lugar.
+> **✅ ELIMINADO COMPLETAMENTE**: Este componente de diálogo modal ha sido eliminado del sistema.
+>
+> **Razón**: Conflictaba con la estrategia de eliminación de Material UI y duplicaba funcionalidad.
+>
+> **Reemplazo**: Utilizar `InscripcionProcessPageComponent` que ofrece mejor UX y diseño glassmorphism.
 
 ### InscripcionContainerComponent
 

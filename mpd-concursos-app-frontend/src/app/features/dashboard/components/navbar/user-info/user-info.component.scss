@@ -1,43 +1,70 @@
+/* ===== USER INFO GLASSMORPHISM - USUARIO COMÚN ===== */
+/* User info con glassmorphism premium dark unificado */
+
 .user-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem;
-  background-color: rgba(75, 85, 99, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: #f9fafb;
-  transition: all 0.3s ease;
+  justify-content: center; /* Centrado horizontal del contenido */
+  gap: 0.5rem; /* Gap optimizado para mejor ajuste */
+  padding: 0.4rem 0.6rem; /* Padding más compacto y balanceado */
+  /* Glassmorphism premium dark */
+  background: var(--user-glass-light);
+  border: 1px solid var(--user-border-glass);
+  border-radius: var(--user-border-radius-md);
+  color: var(--user-text-primary);
+  transition: var(--user-transition-normal);
   cursor: pointer;
-  margin-right: 0.5rem;
+  margin: 0;
+  backdrop-filter: var(--user-backdrop-blur-light);
+
+  /* SOLUCIÓN CRÍTICA: Restricciones de altura para evitar desbordamiento */
+  height: fit-content;
+  max-height: calc(var(--user-header-height) - 20px);
+  min-height: 48px;
+
+  /* Posicionamiento mejorado */
+  align-self: center;
+  flex-shrink: 0;
+
+  /* Contenedor con overflow controlado */
+  overflow: hidden;
+  box-sizing: border-box;
+
+  /* Centrado perfecto del contenido */
+  position: relative;
 
   &:hover {
-    background-color: rgba(75, 85, 99, 0.5);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--user-glass-hover);
+    transform: var(--user-transform-hover);
+    box-shadow: var(--user-shadow-sm);
+    border-color: var(--user-border-glass-strong);
   }
 
   &:focus {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid var(--user-text-accent);
     outline-offset: 2px;
   }
 
   .profile-image-container {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 30px; /* Tamaño optimizado para mejor ajuste */
+    height: 30px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-    transition: all 0.3s ease;
+    border: 2px solid var(--user-border-glass);
+    background: var(--user-glass-gradient-primary);
+    transition: var(--user-transition-normal);
     flex-shrink: 0;
+    /* Centrado perfecto del avatar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     .profile-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      border-radius: 50%;
     }
 
     .default-avatar {
@@ -46,71 +73,102 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #f9fafb;
+      color: var(--user-text-primary);
 
       i {
-        font-size: 1.1rem;
-        transition: color 0.3s ease;
+        font-size: 1rem; /* Tamaño optimizado */
+        transition: var(--user-transition-normal);
       }
     }
   }
 
   &:hover .profile-image-container {
-    border-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-color: var(--user-border-glass-strong);
+    box-shadow: var(--user-shadow-sm);
   }
 
   .user-details {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.1rem; /* Gap mínimo para máxima compactación */
     min-width: 0;
+    max-width: 110px; /* Ancho más restrictivo */
+    justify-content: center;
+    align-items: flex-start; /* Alineación izquierda del texto */
+    height: 100%; /* Ocupar toda la altura disponible */
 
     .username {
       font-weight: 600;
-      font-size: 0.875rem;
-      color: #f9fafb;
+      font-size: 0.75rem; /* Tamaño más pequeño */
+      color: var(--user-text-primary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.1; /* Altura de línea muy compacta */
+      margin: 0; /* Eliminar márgenes */
+      padding: 0; /* Eliminar padding */
     }
 
     .cuit {
-      font-size: 0.75rem;
-      color: #d1d5db;
+      font-size: 0.65rem; /* Tamaño más pequeño */
+      color: var(--user-text-secondary);
       font-weight: 400;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      line-height: 1.1; /* Altura de línea muy compacta */
+      margin: 0; /* Eliminar márgenes */
+      padding: 0; /* Eliminar padding */
     }
   }
 
-  // Responsive behavior
+  // Responsive behavior mejorado
   @media (max-width: 768px) {
-    padding: 0.4rem 0.8rem;
-    gap: 0.5rem;
+    padding: 0.35rem 0.5rem; /* Padding muy compacto */
+    gap: 0.4rem; /* Gap optimizado */
+    max-height: calc(var(--user-header-height) - 30px);
+    min-height: 42px; /* Altura mínima más pequeña */
 
     .profile-image-container {
-      width: 32px;
-      height: 32px;
+      width: 26px; /* Más pequeño en móvil */
+      height: 26px;
+
+      .default-avatar i {
+        font-size: 0.9rem; /* Icono más pequeño */
+      }
     }
 
     .user-details {
+      max-width: 90px; /* Ancho más restrictivo */
+
       .username {
-        font-size: 0.8rem;
+        font-size: 0.7rem; /* Más pequeño */
       }
 
       .cuit {
-        font-size: 0.7rem;
+        font-size: 0.6rem; /* Más pequeño */
       }
     }
   }
 
   @media (max-width: 480px) {
-    .user-details {
-      display: none;
+    padding: 0.3rem 0.4rem; /* Padding mínimo */
+    gap: 0; /* Sin gap para máximo aprovechamiento */
+    max-height: calc(var(--user-header-height) - 40px);
+    min-height: 38px; /* Altura mínima muy reducida */
+    justify-content: center; /* Centrar solo el avatar */
+
+    .profile-image-container {
+      width: 22px; /* Muy pequeño */
+      height: 22px;
+
+      .default-avatar i {
+        font-size: 0.8rem; /* Icono muy pequeño */
+      }
     }
 
-    padding: 0.5rem;
+    .user-details {
+      display: none; /* Ocultar texto en pantallas muy pequeñas */
+    }
   }
 }

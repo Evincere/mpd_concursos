@@ -3,11 +3,9 @@ import { LoginComponent } from '@features/auth/components/login/login.component'
 import { RegisterComponent } from '@features/auth/components/register/register.component';
 import { DashboardComponent } from '@features/dashboard/dashboard.component';
 import { MainComponent } from '@features/dashboard/components/main/main.component';
-import { PostulacionesComponent } from '@features/postulaciones/postulaciones.component';
 import { PerfilComponent } from '@features/perfil/perfil.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
-import { ConcursosComponent } from '@features/concursos/concursos.component';
 import { FeedbackExamplesComponent } from '@features/examples/feedback-examples/feedback-examples.component';
 
 export const routes: Routes = [
