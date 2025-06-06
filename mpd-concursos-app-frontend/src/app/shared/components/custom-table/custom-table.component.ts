@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CustomButtonComponent } from '../custom-form/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '../custom-form/custom-spinner/custom-spinner.component';
@@ -14,7 +14,7 @@ export interface TableColumn {
 export interface TableAction {
   icon: string;
   label: string;
-  color?: 'primary' | 'accent' | 'warn';
+  color?: 'primary' | 'accent' | 'warn' | 'success' | 'danger';
   action: string;
   tooltip?: string;
 }
@@ -288,7 +288,7 @@ export interface TableAction {
     }
   `]
 })
-export class CustomTableComponent implements OnInit {
+export class CustomTableComponent implements OnInit, OnChanges {
   @Input() data: any[] = [];
   @Input() columns: TableColumn[] = [];
   @Input() loading = false;
@@ -387,9 +387,9 @@ export class CustomTableComponent implements OnInit {
   getRowActions(row: any): TableAction[] {
     // Default actions for documents
     return [
-      { icon: 'fa-eye', label: 'Ver', action: 'view', color: 'primary', tooltip: 'Ver documento' },
-      { icon: 'fa-sync-alt', label: 'Reemplazar', action: 'replace', color: 'accent', tooltip: 'Reemplazar documento' },
-      { icon: 'fa-trash', label: 'Eliminar', action: 'delete', color: 'warn', tooltip: 'Eliminar documento' }
+      { icon: 'eye', label: 'Ver', action: 'view', color: 'primary', tooltip: 'Ver documento' },
+      { icon: 'sync-alt', label: 'Reemplazar', action: 'replace', color: 'success', tooltip: 'Reemplazar documento' },
+      { icon: 'trash', label: 'Eliminar', action: 'delete', color: 'danger', tooltip: 'Eliminar documento' }
     ];
   }
 

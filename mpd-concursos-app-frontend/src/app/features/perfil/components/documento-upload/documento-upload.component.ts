@@ -230,10 +230,10 @@ export class DocumentoUploadComponent implements OnInit {
       return;
     }
 
-    // Validar tamaño (5MB máximo)
-    const maxSize = 5 * 1024 * 1024; // 5MB en bytes
+    // Validar tamaño (10MB máximo - unificado con proceso de inscripción)
+    const maxSize = 10 * 1024 * 1024; // 10MB en bytes
     if (file.size > maxSize) {
-      this.notification.error('El archivo excede el tamaño máximo de 5MB');
+      this.notification.error('El archivo excede el tamaño máximo de 10MB');
       return;
     }
 

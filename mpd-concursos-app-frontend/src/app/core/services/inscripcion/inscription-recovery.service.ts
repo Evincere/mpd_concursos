@@ -23,17 +23,26 @@ export class InscriptionRecoveryService {
 
   /**
    * Verifica si hay inscripciones pendientes y muestra una notificación informativa
-   * @param skipDialog Si es true, no muestra ninguna notificación (usado cuando se navega desde la pestaña de documentación)
+   * SOLO en casos específicos como recuperación por desconexión
+   * @param skipDialog Si es true, no muestra ninguna notificación
+   * @param forceCheck Si es true, fuerza la verificación (usado para casos de desconexión)
    */
-  checkForPendingInscriptions(skipDialog = false): void {
+  checkForPendingInscriptions(skipDialog = false, forceCheck = false): void {
     // Verificar si hay parámetros en la URL que indiquen que se está continuando una inscripción
     const urlParams = new URLSearchParams(window.location.search);
     const continueInscription = urlParams.get('continueInscription') === 'true';
     const forceOpen = urlParams.get('forceOpen') === 'true';
+    const fromDisconnection = urlParams.get('fromDisconnection') === 'true';
 
     // Si se está continuando una inscripción y se debe forzar la apertura, no mostrar notificación
     if (continueInscription && forceOpen) {
       console.log('[InscriptionRecoveryService] Detectados parámetros para continuar inscripción, omitiendo notificación');
+      return;
+    }
+
+    // CORRECCIÓN: Solo verificar automáticamente en casos específicos
+    if (!forceCheck && !fromDisconnection) {
+      console.log('[InscriptionRecoveryService] Omitiendo verificación automática - el usuario debe decidir cuándo continuar desde "Mis Postulaciones"');
       return;
     }
 
@@ -115,12 +124,12 @@ export class InscriptionRecoveryService {
    */
   private showPendingInscriptionsNotification(inscriptions: IInscriptionFormState[]): void {
     const message = inscriptions.length === 1
-      ? 'Tienes una inscripción en proceso. Puedes continuarla desde la sección "Mis Postulaciones".'
-      : `Tienes ${inscriptions.length} inscripciones en proceso. Puedes continuarlas desde la sección "Mis Postulaciones".`;
+      ? 'Se detectó una inscripción interrumpida. Puedes continuarla desde "Mis Postulaciones".'
+      : `Se detectaron ${inscriptions.length} inscripciones interrumpidas. Puedes continuarlas desde "Mis Postulaciones".`;
 
-    this.notificationService.info(message, 'Inscripciones Pendientes', {
-      duration: 10000,
-      position: 'bottom-center',
+    this.notificationService.info(message, 'Inscripciones Recuperadas', {
+      duration: 8000,
+      position: 'bottom-end',
       actionText: 'Ver Postulaciones',
       onAction: () => {
         this.router.navigate(['/dashboard/postulaciones']);

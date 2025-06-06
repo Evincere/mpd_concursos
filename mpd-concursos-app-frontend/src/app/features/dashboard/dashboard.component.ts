@@ -48,23 +48,23 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Verificar si hay inscripciones pendientes al iniciar el dashboard
-    setTimeout(() => {
-      // Verificar si estamos en la página de concursos con parámetros de continuación
-      const urlParams = new URLSearchParams(window.location.search);
-      const continueInscription = urlParams.get('continueInscription') === 'true';
-      const fromDocumentation = urlParams.get('directContinuation') === 'true';
+    // CORRECCIÓN: No mostrar automáticamente el modal de continuación de inscripción
+    // El usuario debe decidir cuándo retomar una inscripción desde "Mis Postulaciones"
+    // Solo mostrar en casos específicos como desconexión o errores de red
 
-      // Si estamos continuando una inscripción desde la pestaña de documentación,
-      // no mostrar el diálogo de inscripciones pendientes
-      if (continueInscription && fromDocumentation) {
-        console.log('[DashboardComponent] Detectada continuación desde documentación, omitiendo verificación de inscripciones pendientes');
-        return;
-      }
+    // Verificar si hay parámetros específicos que indiquen una recuperación por desconexión
+    const urlParams = new URLSearchParams(window.location.search);
+    const recoveryMode = urlParams.get('recoveryMode') === 'true';
+    const fromDisconnection = urlParams.get('fromDisconnection') === 'true';
 
-      // En caso contrario, verificar normalmente
-      this.inscriptionRecoveryService.checkForPendingInscriptions();
-    }, 2000); // Retraso para asegurar que la UI esté lista
+    if (recoveryMode && fromDisconnection) {
+      console.log('[DashboardComponent] Modo de recuperación por desconexión detectado');
+      setTimeout(() => {
+        this.inscriptionRecoveryService.checkForPendingInscriptions();
+      }, 2000);
+    } else {
+      console.log('[DashboardComponent] Omitiendo verificación automática de inscripciones pendientes');
+    }
   }
 
   onSidebarCollapse(collapsed: boolean): void {

@@ -56,40 +56,51 @@
         Archivo
       </h3>
 
-      <div class="glass-upload-container"
+      <div class="file-upload-container"
            [class.has-file]="selectedFile"
            [class.drag-over]="isDragging"
            (dragover)="onDragOver($event)"
            (dragleave)="onDragLeave($event)"
            (drop)="onDrop($event)">
 
-        <ng-container *ngIf="!selectedFile; else fileSelected">
-          <i class="fas fa-cloud-upload-alt glass-upload-icon"></i>
-          <p class="glass-upload-text">Arrastra y suelta tu archivo PDF aquí</p>
-          <p class="glass-upload-divider">o</p>
-          <button type="button" class="glass-btn glass-btn-primary" (click)="fileInput.click()">
-            <i class="fas fa-file-upload"></i>
-            Seleccionar archivo
-          </button>
-          <p class="glass-upload-hint">Solo se permiten archivos PDF de máximo 5MB</p>
-        </ng-container>
+        <div class="upload-icon">
+          <i class="fas"
+             [class.fa-file-alt]="selectedFile"
+             [class.fa-cloud-upload-alt]="!selectedFile"
+             aria-hidden="true"></i>
+        </div>
 
-        <ng-template #fileSelected>
+        <div class="upload-text">
+          <ng-container *ngIf="!selectedFile">
+            <p>Arrastra y suelta tu archivo aquí o</p>
+            <button type="button" class="glass-btn glass-btn-primary" (click)="fileInput.click()">
+              <i class="fas fa-folder-open"></i>
+              Seleccionar archivo
+            </button>
+            <p class="upload-hint">Formatos permitidos: PDF (Máx. 10MB)</p>
+          </ng-container>
+
           <ng-container *ngIf="selectedFile">
-            <div class="glass-selected-file">
-              <i class="fas fa-file-pdf glass-file-icon"></i>
-              <div class="glass-file-info">
-                <p class="glass-file-name">{{ selectedFile.name }}</p>
-                <p class="glass-file-size">{{ formatFileSize(selectedFile.size) }}</p>
+            <div class="selected-file-info">
+              <div class="file-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="file-details">
+                <p class="file-name">{{ selectedFile.name }}</p>
+                <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
               </div>
               <button type="button" class="glass-btn glass-btn-danger glass-btn-icon" (click)="removeFile()">
                 <i class="fas fa-times"></i>
               </button>
             </div>
           </ng-container>
-        </ng-template>
+        </div>
 
-        <input type="file" #fileInput hidden accept="application/pdf" (change)="onFileSelected($event)">
+        <input type="file"
+               #fileInput
+               style="display: none"
+               accept=".pdf"
+               (change)="onFileSelected($event)">
       </div>
     </div>
 

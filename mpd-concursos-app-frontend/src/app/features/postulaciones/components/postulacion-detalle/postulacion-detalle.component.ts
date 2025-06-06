@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Postulacion, AttachedDocument } from '@shared/interfaces/postulacion/postulacion.interface';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
-import { InscripcionState, InscripcionStateUtils } from '@core/models/inscripcion/inscripcion-state.enum';
+import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
+import { translateContestStatus } from '@shared/utils/state-translations.util';
 
 @Component({
   selector: 'app-postulacion-detalle',
@@ -12,7 +13,8 @@ import { InscripcionState, InscripcionStateUtils } from '@core/models/inscripcio
   standalone: true,
   imports: [
     CommonModule,
-    CustomButtonComponent
+    CustomButtonComponent,
+    ContestStatusBadgeComponent
   ],
   animations: [
     trigger('slidePanel', [
@@ -54,29 +56,9 @@ export class PostulacionDetalleComponent {
     console.log('Eliminando documento:', doc);
   }
 
-  getEstadoPostulacionLabel(estado: string): string {
-    // Convertir string a enum si es posible
-    const enumValue = Object.values(InscripcionState).find(value => value === estado);
-    if (enumValue) {
-      return InscripcionStateUtils.getStateLabel(enumValue as InscripcionState);
-    }
 
-    // Fallback para estados no reconocidos
-    switch (estado) {
-      case 'PENDING':
-        return 'En proceso';
-      case 'CONFIRMADA':
-        return 'Pendiente';
-      case 'INSCRIPTO':
-      case 'APPROVED':
-      case 'ACCEPTED':
-        return 'Inscripto';
-      case 'REJECTED':
-        return 'Rechazada';
-      case 'CANCELLED':
-        return 'Cancelada';
-      default:
-        return estado;
-    }
+
+  getEstadoConcursoLabel(status: string | undefined): string {
+    return translateContestStatus(status || '');
   }
 }

@@ -246,24 +246,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Status mapping
-  mapPostulationToContestStatus(estado: string | undefined): string {
-    if (!estado) return 'PENDING';
-
-    const statusMap: Record<string, string> = {
-      'ACTIVE': 'IN_PROGRESS',      // Inscripción en proceso (interrumpida) - mostrar como "En Proceso"
-      'IN_PROCESS': 'IN_PROGRESS',  // Legacy state
-      'PENDING': 'PENDING',         // Inscripción completada, pendiente de validación
-      'CONFIRMADA': 'PENDING',      // Legacy state - ahora mapea a PENDING
-      'INSCRIPTO': 'ACTIVE',        // Inscripción aprobada
-      'APPROVED': 'ACTIVE',         // Inscripción aprobada
-      'ACCEPTED': 'ACTIVE',         // Inscripción aprobada
-      'REJECTED': 'CLOSED',
-      'CANCELLED': 'CANCELLED'
-    };
-
-    return statusMap[estado] || 'PENDING';
-  }
+  // Método eliminado - ahora usamos directamente el estado de inscripción con statusType="inscription"
 
   // Action Menu
   getActionsForPostulacion(postulacion: Postulacion): ActionMenuItem[] {

@@ -15,6 +15,7 @@ import { DocumentoUsuario, TipoDocumento } from '../../../../core/models/documen
 import { DocumentoUploadComponent } from '../documento-upload/documento-upload.component';
 import { DocumentoViewerComponent } from '../documento-viewer/documento-viewer.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
+import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -36,12 +37,14 @@ import { Subscription } from 'rxjs';
             <i class="fas fa-file-alt" aria-hidden="true"></i>
             <h3>Documentación</h3>
           </div>
-          <app-custom-button
-            color="primary"
-            icon="fa-plus"
-            label="Agregar documento"
-            (buttonClick)="abrirDialogoCargaDocumento()">
-          </app-custom-button>
+          <div class="header-actions">
+            <app-custom-button
+              color="success"
+              icon="upload"
+              label="Carga múltiple"
+              (buttonClick)="abrirDialogoCargaMultiple()">
+            </app-custom-button>
+          </div>
         </div>
 
       <!-- Mensaje de advertencia sobre formato de archivos -->
@@ -50,7 +53,7 @@ import { Subscription } from 'rxjs';
         <div class="warning-content">
           <strong>Importante:</strong>
           <ul>
-            <li>Solo se permitirán cargar archivos en formato PDF.</li>
+            <li>Solo se permitirán cargar archivos en formato PDF (máximo 10MB).</li>
             <li>En caso de tener múltiples páginas o documentos relacionados, por favor únalo en un único archivo PDF antes de cargarlo.</li>
           </ul>
         </div>
@@ -89,7 +92,9 @@ import { Subscription } from 'rxjs';
           <div *ngFor="let tipo of documentosRequeridos" class="documento-card"
                [class.completo]="isDocumentoSubido(tipo.id)">
             <div class="documento-icon">
-              <i class="fas fa-file-pdf"></i>
+              <i class="fas fa-file-pdf"
+                 [class.documento-completo]="isDocumentoSubido(tipo.id)"
+                 [class.documento-pendiente]="!isDocumentoSubido(tipo.id)"></i>
               <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.id)">
                 <i class="fas fa-check"></i>
               </div>
@@ -121,21 +126,21 @@ import { Subscription } from 'rxjs';
                 <app-custom-button
                   variant="icon"
                   color="primary"
-                  icon="fa-eye"
+                  icon="eye"
                   [tooltip]="'Ver documento'"
                   (buttonClick)="verDocumento(getDocumentoByTipo(tipo.id))">
                 </app-custom-button>
                 <app-custom-button
                   variant="icon"
-                  color="accent"
-                  icon="fa-sync-alt"
+                  color="success"
+                  icon="sync-alt"
                   [tooltip]="'Reemplazar documento'"
                   (buttonClick)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
                 </app-custom-button>
                 <app-custom-button
                   variant="icon"
-                  color="warn"
-                  icon="fa-trash"
+                  color="danger"
+                  icon="trash"
                   [tooltip]="'Eliminar documento'"
                   (buttonClick)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
                 </app-custom-button>
@@ -144,7 +149,7 @@ import { Subscription } from 'rxjs';
                 <app-custom-button
                   variant="stroked"
                   color="primary"
-                  icon="fa-upload"
+                  icon="upload"
                   label="Cargar"
                   (buttonClick)="cargarDocumentoTipo(tipo.id)">
                 </app-custom-button>
@@ -171,12 +176,14 @@ import { Subscription } from 'rxjs';
           <i class="fas fa-folder-open" aria-hidden="true"></i>
           <h4>No has cargado ningún documento aún</h4>
           <p>Comienza cargando los documentos requeridos para completar tu perfil</p>
-          <app-custom-button
-            color="primary"
-            icon="fa-upload"
-            label="Cargar documento"
-            (buttonClick)="abrirDialogoCargaDocumento()">
-          </app-custom-button>
+          <div class="empty-state-actions">
+            <app-custom-button
+              color="success"
+              icon="upload"
+              label="Carga múltiple"
+              (buttonClick)="abrirDialogoCargaMultiple()">
+            </app-custom-button>
+          </div>
         </div>
 
         <!-- Loading state -->
@@ -216,6 +223,12 @@ import { Subscription } from 'rxjs';
           color: #f9fafb;
         }
       }
+
+      .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
     }
 
     .documentacion-warning {
@@ -227,7 +240,7 @@ import { Subscription } from 'rxjs';
       background-color: rgba(255, 152, 0, 0.1);
       border: 1px solid rgba(255, 152, 0, 0.3);
       border-radius: 8px;
-      color: var(--text-color);
+      color: #f9fafb;
 
       i {
         color: #ff9800;
@@ -251,6 +264,7 @@ import { Subscription } from 'rxjs';
           li {
             margin-bottom: 0.25rem;
             font-size: 0.95rem;
+            color: #f9fafb;
 
             &:last-child {
               margin-bottom: 0;
@@ -329,7 +343,7 @@ import { Subscription } from 'rxjs';
         font-size: 1.2rem;
         font-weight: 500;
         margin-bottom: 1rem;
-        color: var(--text-color);
+        color: #f9fafb;
       }
     }
 
@@ -342,19 +356,23 @@ import { Subscription } from 'rxjs';
     .documento-card {
       display: flex;
       align-items: center;
-      padding: 1rem;
-      background-color: rgba(var(--surface-color-rgb), 0.5);
-      border-radius: 8px;
-      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+      background: rgba(55, 65, 81, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(249, 250, 251, 0.1);
+      border-radius: 12px;
       transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        background: rgba(55, 65, 81, 0.9);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
       }
 
       &.completo {
-        border-left: 4px solid var(--primary-color);
+        border-left: 4px solid #4CAF50;
+        background: rgba(76, 175, 80, 0.05);
       }
     }
 
@@ -364,7 +382,15 @@ import { Subscription } from 'rxjs';
 
       i {
         font-size: 2rem;
-        color: #f44336;
+        transition: color 0.3s ease;
+
+        &.documento-completo {
+          color: #4CAF50;
+        }
+
+        &.documento-pendiente {
+          color: #9e9e9e;
+        }
       }
 
       .estado-badge {
@@ -374,10 +400,11 @@ import { Subscription } from 'rxjs';
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        background-color: var(--primary-color);
+        background-color: #4CAF50;
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 
         i {
           font-size: 0.7rem;
@@ -393,13 +420,13 @@ import { Subscription } from 'rxjs';
         margin: 0 0 0.25rem 0;
         font-size: 1rem;
         font-weight: 500;
-        color: var(--text-color);
+        color: #f9fafb;
       }
 
       p {
         margin: 0 0 0.5rem 0;
         font-size: 0.85rem;
-        color: var(--text-secondary);
+        color: #d1d5db;
       }
     }
 
@@ -449,21 +476,7 @@ import { Subscription } from 'rxjs';
         font-size: 1.2rem;
         font-weight: 500;
         margin-bottom: 1rem;
-        color: var(--text-color);
-      }
-
-      table {
-        width: 100%;
-        background-color: rgba(var(--surface-color-rgb), 0.5);
-
-        th {
-          color: var(--text-color);
-          font-weight: 500;
-        }
-
-        td {
-          color: var(--text-color);
-        }
+        color: #f9fafb;
       }
     }
 
@@ -512,12 +525,32 @@ import { Subscription } from 'rxjs';
         font-size: 1.2rem;
         font-weight: 500;
         margin: 0 0 0.5rem 0;
-        color: var(--text-color);
+        color: #f9fafb;
       }
 
       p {
         margin: 0 0 1.5rem 0;
-        color: var(--text-secondary);
+        color: #d1d5db;
+      }
+
+      .empty-state-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header-actions,
+      .empty-state-actions {
+        flex-direction: column;
+        width: 100%;
+
+        app-custom-button {
+          width: 100%;
+        }
       }
     }
 
@@ -530,7 +563,7 @@ import { Subscription } from 'rxjs';
 
       p {
         margin-top: 1rem;
-        color: var(--text-color);
+        color: #f9fafb;
       }
     }
   `]
@@ -840,6 +873,41 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
   cargarDocumentoTipo(tipoDocumentoId: string): void {
     this.abrirDialogoCargaDocumento(tipoDocumentoId);
+  }
+
+  abrirDialogoCargaMultiple(): void {
+    console.log('[DocumentacionTab] Abriendo diálogo de carga múltiple de documentos');
+
+    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
+      title: 'Carga múltiple de documentos',
+      icon: 'fa-upload',
+      size: 'large',
+      showCloseButton: true,
+      showFooter: false,
+      data: {
+        tiposDocumento: this.tiposDocumento,
+        contexto: 'perfil' // Indicar que es desde el perfil, no desde inscripción
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: unknown) => {
+      if (result) {
+        // Mostrar mensaje de éxito
+        this.notification.success('Documentos cargados exitosamente');
+
+        // Recargar documentos después de una carga exitosa
+        this.cargarDocumentosUsuario();
+
+        // Notificar al servicio que se ha actualizado un documento
+        this.documentosService.notificarDocumentoActualizado();
+
+        // Forzar actualización de la interfaz después de un breve retraso
+        setTimeout(() => {
+          console.log('[DocumentacionTab] Forzando actualización después de carga múltiple...');
+          this.actualizarEstadoDocumentos();
+        }, 500);
+      }
+    });
   }
 
   verDocumento(documento: DocumentoUsuario | undefined): void {

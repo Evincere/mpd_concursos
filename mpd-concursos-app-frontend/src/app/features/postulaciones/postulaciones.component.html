@@ -52,7 +52,8 @@
               </div>
               <div class="header-actions">
                 <app-contest-status-badge
-                  [status]="mapPostulationToContestStatus(postulacion.estado)"
+                  [status]="postulacion.estado"
+                  [statusType]="'inscription'"
                   [showIcon]="true">
                 </app-contest-status-badge>
 

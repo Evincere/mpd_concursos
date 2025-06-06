@@ -319,8 +319,8 @@ export class PerfilCvComponent {
     return status === 'completed' ? 'fa-check-circle' : 'fa-clock';
   }
 
-  getEducationDetails(edu: any): Array<{label: string, value: any}> {
-    const details: Array<{label: string, value: any}> = [];
+  getEducationDetails(edu: any): {label: string, value: any}[] {
+    const details: {label: string, value: any}[] = [];
     const type = this.getEducationProperty(edu, 'tipo') || this.getEducationProperty(edu, 'type');
     
     // Add details based on education type

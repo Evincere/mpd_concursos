@@ -21,6 +21,7 @@ import { InscriptionService } from '@core/services/inscripcion/inscription.servi
 import { InscriptionStateService } from '@core/services/inscripcion/inscription-state.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { translateContestStatus } from '@shared/utils/state-translations.util';
 
 
 @Component({
@@ -285,13 +286,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
   }
 
   getEstadoConcursoLabel(status: string): string {
-    const estados: Record<string, string> = {
-      'ACTIVE': 'Activo',
-      'PENDING': 'Pendiente',
-      'CLOSED': 'Cerrado',
-      'FINISHED': 'Finalizado'
-    };
-    return estados[status] || status;
+    return translateContestStatus(status);
   }
 
   retryLoad(): void {

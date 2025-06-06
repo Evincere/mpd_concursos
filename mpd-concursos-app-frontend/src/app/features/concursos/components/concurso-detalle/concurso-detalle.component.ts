@@ -15,6 +15,7 @@ import { CustomIconButtonComponent } from '@shared/components/custom-icon-button
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 
 import { NotificationService } from '@core/services/notification/notification.service';
+import { translateContestStatus } from '@shared/utils/state-translations.util';
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -142,14 +143,7 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
   }
 
   getEstadoConcursoLabel(status: string): string {
-    const estados: Record<string, string> = {
-      'ACTIVE': 'Activo',
-      'CLOSED': 'Cerrado',
-      'IN_PROGRESS': 'En Proceso',
-      'DRAFT': 'Borrador',
-      'CANCELLED': 'Cancelado'
-    };
-    return estados[status] || status;
+    return translateContestStatus(status);
   }
 
   onCerrar(): void {

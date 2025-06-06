@@ -123,91 +123,89 @@
   }
 }
 
-.glass-upload-container {
-  @include glassmorphism-card('secondary', 'subtle');
-  border: 2px dashed var(--border-color);
-  border-radius: 0.5rem;
-  padding: 2rem;
-  text-align: center;
-  min-height: 200px;
+.file-upload-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 2rem;
   transition: all 0.3s ease;
-  cursor: pointer;
-  
+  background: rgba(0, 0, 0, 0.2);
+  text-align: center;
+  min-height: 200px;
+  margin-bottom: 1.5rem;
+
   &.drag-over {
-    border-color: var(--color-primary);
-    background: var(--color-primary-alpha);
-    transform: translateY(-2px);
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
   }
-  
+
   &.has-file {
-    border-style: solid;
-    border-color: var(--color-success);
-    background: var(--color-success-alpha);
-    min-height: auto;
-    padding: 1rem;
+    border-color: #4caf50;
+    background: rgba(76, 175, 80, 0.1);
   }
 }
 
-.glass-upload-icon {
-  font-size: 3rem;
-  color: var(--color-primary);
+.upload-icon {
   margin-bottom: 1rem;
+
+  i {
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
 }
 
-.glass-upload-text {
-  color: var(--text-primary);
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+.upload-text {
+  p {
+    margin: 0;
+    color: #f9fafb;
+    font-size: 1.1rem;
+
+    &.upload-hint {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #d1d5db;
+    }
+  }
 }
 
-.glass-upload-divider {
-  color: var(--text-secondary);
-  margin: 0.5rem 0;
-}
-
-.glass-upload-hint {
-  color: var(--text-tertiary);
-  font-size: 0.8rem;
-  margin-top: 1rem;
-}
-
-.glass-selected-file {
+.selected-file-info {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.5rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.glass-file-icon {
-  font-size: 2.5rem;
-  color: var(--color-danger);
+.file-icon {
+  i {
+    font-size: 2rem;
+    color: #d1d5db;
+  }
 }
 
-.glass-file-info {
+.file-details {
   flex: 1;
   text-align: left;
 }
 
-.glass-file-name {
-  color: var(--text-primary);
-  font-weight: 500;
+.file-name {
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 500;
+  color: #f9fafb;
+  word-break: break-all;
 }
 
-.glass-file-size {
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  margin: 0.25rem 0 0 0;
+.file-size {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #d1d5db;
 }
 
 .glass-radio-group {
@@ -300,6 +298,73 @@
   transition: width 0.3s ease;
 }
 
+.glass-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+
+  &.glass-btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+
+    &:hover {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.glass-btn-secondary {
+    background: rgba(75, 85, 99, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #f9fafb;
+
+    &:hover {
+      background: rgba(75, 85, 99, 0.9);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.glass-btn-success {
+    background: linear-gradient(135deg, #4CAF50, #388e3c);
+    color: white;
+
+    &:hover {
+      background: linear-gradient(135deg, #45a049, #2e7d32);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.glass-btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+
+    &:hover {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      transform: translateY(-1px);
+    }
+  }
+
+  &.glass-btn-icon {
+    padding: 8px;
+    min-width: auto;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+}
+
 .glass-dialog-actions {
   @include glassmorphism-card('secondary', 'subtle');
   padding: 1rem 1.5rem;
@@ -315,25 +380,25 @@
   .glass-dialog-content {
     max-height: 90vh;
   }
-  
+
   .glass-form {
     padding: 1rem;
   }
-  
-  .glass-upload-container {
+
+  .file-upload-container {
     padding: 1.5rem;
     min-height: 150px;
   }
-  
+
   .glass-radio-group {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .glass-dialog-actions {
     padding: 1rem;
     flex-direction: column;
-    
+
     .glass-btn {
       width: 100%;
     }
