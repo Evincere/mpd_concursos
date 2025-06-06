@@ -25,12 +25,25 @@ export class DashboardService {
       map((concursos: unknown) => {
         console.log('[DashboardService] Concursos obtenidos:', concursos);
         const concursosArray = concursos as Record<string, unknown>[];
-        const concursosActivos = concursosArray.filter(c => c['status'] === 'ACTIVE').length;
+        // ✅ CORRECCIÓN CRÍTICA: Cambiar ACTIVE por PUBLISHED para concursos disponibles
+        const concursosActivos = concursosArray.filter(c => c['status'] === 'PUBLISHED').length;
+        console.log('[DashboardService] Concursos PUBLISHED encontrados:', concursosActivos);
+
         const proximosAVencer = concursosArray.filter(c => {
           const fechaFin = new Date(c['endDate'] as string);
           const hoy = new Date();
           const diasRestantes = Math.ceil((fechaFin.getTime() - hoy.getTime()) / (1000 * 3600 * 24));
-          return diasRestantes <= 7 && diasRestantes > 0 && c['status'] === 'ACTIVE';
+          const esProximoAVencer = diasRestantes <= 7 && diasRestantes > 0 && c['status'] === 'PUBLISHED';
+
+          if (esProximoAVencer) {
+            console.log('[DashboardService] Concurso próximo a vencer:', {
+              titulo: c['title'],
+              fechaFin: c['endDate'],
+              diasRestantes
+            });
+          }
+
+          return esProximoAVencer;
         }).length;
 
         const cards: Card[] = [
@@ -39,20 +52,29 @@ export class DashboardService {
             count: concursosActivos,
             icon: 'fa-gavel',
             color: '#10b981',
+            description: 'Concursos disponibles para inscripción'
           },
           {
             title: 'Mis Postulaciones',
-            count: 0,
+            count: 0, // Se actualiza más abajo con datos de inscripciones
             icon: 'fa-file-alt',
             color: '#3b82f6',
+            description: 'Postulaciones activas y pendientes'
           },
           {
             title: 'Próximos a Vencer',
             count: proximosAVencer,
             icon: 'fa-clock',
             color: '#f59e0b',
+            description: 'Concursos que cierran en 7 días o menos'
           },
         ];
+
+        console.log('[DashboardService] Cards iniciales creadas:', {
+          concursosActivos,
+          proximosAVencer,
+          totalConcursos: concursosArray.length
+        });
         return cards;
       }),
       switchMap(cards => {
@@ -84,7 +106,11 @@ export class DashboardService {
                 'APROBADO',
                 'INSCRIPTO',
                 'IN_PROCESS', // Variantes de en proceso
-                'EN_PROCESO'
+                'EN_PROCESO',
+                'COMPLETED_WITH_DOCS',    // ✅ Estados de inscripción completa
+                'COMPLETED_PENDING_DOCS', // ✅ Estados de inscripción con docs pendientes
+                'ACTIVE',                 // ✅ Estado legacy por compatibilidad
+                'ACTIVO'                  // ✅ Variante en español
               ];
 
               const esActiva = estadosActivos.includes(estado);

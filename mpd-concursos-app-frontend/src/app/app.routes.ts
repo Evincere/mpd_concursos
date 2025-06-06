@@ -49,10 +49,13 @@ export const routes: Routes = [
       },
       {
         path: 'configuracion',
-        loadChildren: () => import('./features/admin/admin.module')
-          .then(m => m.AdminModule),
-        canActivate: [RoleGuard],
-        data: { role: 'ROLE_ADMIN' }
+        loadChildren: () => import('./features/configuracion/configuracion.module')
+          .then(m => m.ConfiguracionModule)
+      },
+      {
+        path: 'ayuda',
+        loadChildren: () => import('./features/ayuda/ayuda.module')
+          .then(m => m.AyudaModule)
       }
     ]
   },

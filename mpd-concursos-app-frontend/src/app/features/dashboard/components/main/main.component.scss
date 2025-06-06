@@ -30,11 +30,47 @@
     }
 }
 
-.dashboard-sections {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+/* ✅ NUEVA SECCIÓN: Recent Contests Section */
+.recent-contests-section {
+    margin-top: 1.5rem;
+    width: 100%;
+
+    @include md {
+        margin-top: 1.25rem;
+    }
+
+    @include sm {
+        margin-top: 1rem;
+    }
+
+    // Enhanced spacing for premium layout
+    @media (min-width: 1200px) {
+        margin-top: 2rem;
+    }
+}
+
+/* ✅ NUEVOS ESTILOS: Widgets Premium Section */
+.widgets-premium {
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
-    margin-top: 1rem;
+
+    @include md {
+        margin: 1.25rem 0;
+        gap: 1.25rem;
+    }
+
+    @include sm {
+        margin: 1rem 0;
+        gap: 1rem;
+    }
+}
+
+.widgets-row-1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
 
     @include lg {
         grid-template-columns: 1fr;
@@ -43,21 +79,73 @@
 
     @include md {
         gap: 1rem;
-        margin-top: 0.75rem;
     }
 
     @include sm {
         gap: 0.75rem;
-        margin-top: 0.5rem;
     }
 
-    // Enhanced grid behavior for better visual balance
-    @media (min-width: 1200px) {
-        grid-template-columns: 2.5fr 1fr;
+    // Enhanced layout for larger screens
+    @media (min-width: 1400px) {
         gap: 2rem;
     }
+}
 
-    @media (max-width: 900px) {
-        grid-template-columns: 1fr;
+.widgets-row-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+
+    @include md {
+        gap: 1.25rem;
+    }
+
+    @include sm {
+        gap: 1rem;
+    }
+}
+
+.widget-estado-perfil,
+.widget-vencimientos,
+.widget-acciones {
+    transition: all 0.3s ease;
+    position: relative;
+
+    &:hover {
+        z-index: 10;
+    }
+
+    // Ensure proper stacking context
+    &:focus-within {
+        z-index: 15;
+    }
+}
+
+/* Responsive adjustments for widgets */
+@media (max-width: 768px) {
+    .widgets-premium {
+        margin: 1rem 0;
+        gap: 1rem;
+    }
+
+    .widgets-row-1 {
+        gap: 1rem;
+    }
+
+    .widgets-row-2 {
+        gap: 1rem;
+    }
+}
+
+/* Enhanced spacing for premium layout */
+@media (min-width: 1200px) {
+    .main-content {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .widgets-premium {
+        margin: 2rem 0;
+        gap: 2rem;
     }
 }

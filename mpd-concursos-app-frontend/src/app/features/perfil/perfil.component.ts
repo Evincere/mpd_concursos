@@ -10,7 +10,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ProfileService } from '@core/services/profile/profile.service';
 import { ExperienceService } from '@core/services/experience/experience.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
-import { EducacionService } from '@core/services/educacion/educacion.service';
+import { EducacionService, OperacionResponse } from '@core/services/educacion/educacion.service';
 import { AuthService } from '@core/services/auth/auth.service';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
@@ -261,8 +261,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
     this.profileService.getUserProfile().subscribe({
       next: (profile) => {
-        console.log('Perfil recibido:', profile);
-        console.log('Campos del perfil:', {
+        console.log('🎯 Perfil recibido desde backend:', profile);
+        console.log('📋 Campos básicos del perfil:', {
           firstName: profile.firstName,
           lastName: profile.lastName,
           email: profile.email,
@@ -272,6 +272,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
           telefono: profile.telefono,
           direccion: profile.direccion
         });
+        console.log('💼 Experiencias en el perfil recibido:', profile.experiencias);
+        console.log('🎓 Educación en el perfil recibido:', profile.educacion);
+        console.log('🛠️ Habilidades en el perfil recibido:', profile.habilidades);
 
         // Guardar la referencia al perfil del usuario
         this.userProfile = profile;
@@ -416,9 +419,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
   private actualizarArrayExperiencias(profile: UserProfile): void {
     const experiencias = profile.experiencias as ExperienciaData[];
     const experienciasArray = this.perfilForm.get('experiencias') as FormArray;
+
+    console.log(`🔄 Actualizando array de experiencias: ${experiencias?.length || 0} encontradas`);
+
     experienciasArray.clear();
-    if (experiencias.length > 0) {
-      experiencias.forEach(exp => {
+
+    if (experiencias && experiencias.length > 0) {
+      experiencias.forEach((exp) => {
         // Mapeo de ExperienciaData a Experiencia
         const experiencia: Experiencia = {
           id: exp.id,
@@ -430,8 +437,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
           actual: exp.actual,
           ubicacion: exp.ubicacion
         };
+
         experienciasArray.push(this.createExperienciaFormGroup(experiencia));
       });
+
+      console.log(`✅ Array de experiencias actualizado exitosamente: ${experienciasArray.length} elementos`);
+    } else {
+      console.log('⚠️ No hay experiencias para mostrar');
     }
   }
 
@@ -458,6 +470,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     return this.fb.group({
       id: [experiencia?.id || null],
       puesto: [experiencia?.puesto || '', Validators.required],
+      cargo: [experiencia?.puesto || '', Validators.required], // Agregar campo cargo para compatibilidad
       empresa: [experiencia?.empresa || '', Validators.required],
       fechaInicio: [experiencia?.fechaInicio ? new Date(experiencia.fechaInicio) : null, Validators.required],
       fechaFin: [experiencia?.fechaFin ? new Date(experiencia.fechaFin) : null],
@@ -507,6 +520,12 @@ export class PerfilComponent implements OnInit, OnDestroy {
   // Getters para acceder a los FormArrays
   get experiencias() {
     return this.perfilForm.get('experiencias') as FormArray;
+  }
+
+  // Getter que devuelve una copia del array para forzar detección de cambios
+  get experienciasArray() {
+    const formArray = this.perfilForm.get('experiencias') as FormArray;
+    return [...formArray.controls];
   }
 
   get habilidades() {
@@ -566,15 +585,21 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((confirmed: unknown) => {
       if (confirmed) {
+        console.log('🗑️ Iniciando eliminación de experiencia con ID:', experiencia.id);
+
         this.experienceService.deleteExperience(experiencia.id!)
           .pipe(finalize(() => this.cdr.markForCheck()))
           .subscribe({
             next: () => {
-              experiencias.removeAt(index);
+              console.log('✅ Experiencia eliminada del backend exitosamente');
+
+              // Recargar las experiencias desde el backend para asegurar sincronización
+              this.recargarExperiencias();
+
               this.notification.success('Experiencia eliminada correctamente');
             },
             error: (error) => {
-              console.error('Error al eliminar experiencia:', error);
+              console.error('❌ Error al eliminar experiencia:', error);
               this.notification.error('Error al eliminar la experiencia');
             }
           });
@@ -791,39 +816,47 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Método para manejar la educación guardada
   onEducacionGuardada(educacion: Educacion): void {
-    // Log para depuración
-    console.log('Educación guardada recibida:', educacion);
+    console.log('onEducacionGuardada llamado con datos:', educacion);
 
-    // Verificar si la educación es válida antes de añadirla
-    if (!educacion) {
-      console.error('Error: Se recibió un objeto de educación nulo o indefinido');
-      this.notification.error('Error al guardar educación: datos inválidos');
+    // Cerrar el modal primero
+    this.mostrarModalEducacion = false;
+
+    // Recargar la educación desde el backend para asegurar sincronización
+    this.recargarEducacion();
+  }
+
+  // Método para recargar educación desde el backend
+  private recargarEducacion(): void {
+    if (!this.usuarioId) {
+      console.error('No hay usuarioId disponible para recargar educación');
       return;
     }
 
-    // Asegurarse de que el objeto tiene todas las propiedades base necesarias
-    if (!educacion.tipo || !educacion.titulo || !educacion.institucion) {
-      console.warn('Advertencia: El objeto de educación está incompleto', educacion);
-    }
+    console.log('Recargando educación desde el backend para usuario:', this.usuarioId);
 
-    // Actualizar la lista de educación añadiendo el nuevo registro
-    if (!this.educacionList) {
-      this.educacionList = [];
-    }
+    this.educacionService.cargarEducacion(this.usuarioId)
+      .subscribe({
+        next: (response: OperacionResponse<Educacion[]>) => {
+          console.log('Educación recargada desde backend:', response);
 
-    // Normalizar las propiedades específicas si es necesario antes de añadirlo
-    const educacionNormalizada = this.normalizarEducacion(educacion);
-    this.educacionList.push(educacionNormalizada);
-    console.log('Lista de educación actualizada:', this.educacionList);
+          if (response.exito && response.data) {
+            this.educacionList = response.data;
+            console.log('Lista de educación actualizada:', this.educacionList);
 
-    // Mostrar notificación
-    this.notification.success('Educación guardada exitosamente');
+            // Forzar detección de cambios
+            this.cdr.detectChanges();
 
-    // Cerrar el modal
-    this.cerrarModalEducacion();
-
-    // Forzar detección de cambios
-    this.cdr.markForCheck();
+            this.notification.success('Lista de educación actualizada');
+          } else {
+            console.error('Error en la respuesta del backend:', response);
+            this.notification.error('Error al actualizar la lista de educación');
+          }
+        },
+        error: (error: Error) => {
+          console.error('Error al recargar educación:', error);
+          this.notification.error('Error al actualizar la lista de educación');
+        }
+      });
   }
 
   /**
@@ -1461,48 +1494,64 @@ export class PerfilComponent implements OnInit, OnDestroy {
 
   // Método para manejar la experiencia guardada
   onExperienciaGuardada(datos: Record<string, unknown>): void {
-    if (!datos) {
-      console.log('No se recibieron datos de experiencia guardada');
-      this.mostrarModalExperiencia = false;
-      this.cdr.detectChanges();
+    console.log('onExperienciaGuardada llamado con datos:', datos);
+
+    // Cerrar el modal primero
+    this.mostrarModalExperiencia = false;
+
+    // Recargar las experiencias desde el backend para asegurar sincronización
+    this.recargarExperiencias();
+  }
+
+  // Método para recargar experiencias desde el backend
+  private recargarExperiencias(): void {
+    if (!this.usuarioId) {
+      console.error('No hay usuarioId disponible para recargar experiencias');
       return;
     }
 
-    console.log('Experiencia guardada recibida:', datos);
+    console.log('🔄 Recargando experiencias desde el backend...');
 
-    if (datos['experienciaNueva']) {
-      // Añadir la nueva experiencia a la lista
+    this.experienceService.getAllExperiencesByUserId(this.usuarioId)
+      .subscribe({
+        next: (experiencias) => {
+          console.log(`✅ ${experiencias.length} experiencias recargadas desde backend`);
 
-      // Cargar de nuevo las experiencias para asegurarnos de que tenemos los datos más actualizados
-      this.experienceService.getAllExperiencesByUserId(this.usuarioId)
-        .subscribe({
-          next: (experiencias) => {
-            // Actualizar la lista de experiencias en el perfil
-            if (this.userProfile) {
-              this.userProfile.experiencias = experiencias.map(exp => ({
-                id: exp.id,
-                empresa: exp.company,
-                cargo: exp.position,
-                puesto: exp.position,
-                fechaInicio: exp.startDate ? (typeof exp.startDate === 'string' ? exp.startDate : new Date(exp.startDate).toISOString().split('T')[0]) : '',
-                fechaFin: exp.endDate ? (typeof exp.endDate === 'string' ? exp.endDate : new Date(exp.endDate).toISOString().split('T')[0]) : '',
-                descripcion: exp.description,
-                comentario: exp.comments ?? '',
-                documentUrl: exp.documentUrl ?? '',
-                actual: false
-              }));
-              this.actualizarArrayExperiencias(this.userProfile);
+          // Actualizar la lista de experiencias en el perfil
+          if (this.userProfile) {
+            this.userProfile.experiencias = experiencias.map(exp => ({
+              id: exp.id,
+              empresa: exp.company,
+              cargo: exp.position,
+              puesto: exp.position,
+              fechaInicio: exp.startDate ? (typeof exp.startDate === 'string' ? exp.startDate : new Date(exp.startDate).toISOString().split('T')[0]) : '',
+              fechaFin: exp.endDate ? (typeof exp.endDate === 'string' ? exp.endDate : new Date(exp.endDate).toISOString().split('T')[0]) : '',
+              descripcion: exp.description,
+              comentario: exp.comments ?? '',
+              documentUrl: exp.documentUrl ?? '',
+              actual: !exp.endDate
+            }));
+
+            // Actualizar el FormArray
+            this.actualizarArrayExperiencias(this.userProfile);
+
+            // Forzar detección de cambios múltiples veces para asegurar actualización
+            this.cdr.detectChanges();
+            this.cdr.markForCheck();
+
+            // Forzar una nueva detección después de un pequeño delay
+            setTimeout(() => {
               this.cdr.detectChanges();
-            }
-          },
-          error: (error: Error) => {
-            console.error('Error al cargar experiencias actualizadas:', error);
-          }
-        });
-    }
+            }, 100);
 
-    this.mostrarModalExperiencia = false;
-    this.cdr.detectChanges();
+            this.notification.success('Lista de experiencias actualizada');
+          }
+        },
+        error: (error: Error) => {
+          console.error('❌ Error al recargar experiencias:', error);
+          this.notification.error('Error al actualizar la lista de experiencias');
+        }
+      });
   }
 
   /**

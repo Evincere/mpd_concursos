@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, OnInit, OnChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Custom Components
@@ -258,7 +258,7 @@ import { UserProfile } from '@core/models/perfil.model';
   styleUrls: ['./perfil-cv.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PerfilCvComponent {
+export class PerfilCvComponent implements OnInit, OnChanges {
   @Input() userProfile: UserProfile | null = null;
   @Input() experiencias: any[] = [];
   @Input() educacionList: any[] = [];
@@ -268,6 +268,29 @@ export class PerfilCvComponent {
   @Output() addEducation = new EventEmitter<void>();
   @Output() deleteExperience = new EventEmitter<number>();
   @Output() deleteEducation = new EventEmitter<string>();
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    console.log('🎯 PerfilCvComponent inicializado');
+    console.log('👤 UserProfile recibido:', this.userProfile);
+    console.log('💼 Experiencias recibidas:', this.experiencias);
+    console.log('🎓 Educación recibida:', this.educacionList);
+  }
+
+  ngOnChanges(): void {
+    // Solo log cuando hay cambios significativos
+    if (this.experiencias?.length !== this.previousExperienceCount) {
+      console.log('🔄 PerfilCvComponent - Cambio en experiencias detectado');
+      console.log('📊 Cantidad de experiencias:', this.experiencias?.length || 0);
+      this.previousExperienceCount = this.experiencias?.length || 0;
+    }
+
+    // Forzar detección de cambios para OnPush strategy
+    this.cdr.detectChanges();
+  }
+
+  private previousExperienceCount = 0;
 
   onAddExperience(): void {
     this.addExperience.emit();

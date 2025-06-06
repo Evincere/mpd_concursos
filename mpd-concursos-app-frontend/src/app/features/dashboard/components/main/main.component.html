@@ -1,8 +1,31 @@
 <main class="main-content">
+    <!-- Cards principales -->
     <app-cards [cards]="cards"></app-cards>
 
-    <div class="dashboard-sections">
+    <!-- Widgets premium del dashboard -->
+    <div class="widgets-premium" *ngIf="dashboardData">
+      <div class="widgets-row-1">
+        <app-estado-perfil-widget
+          [estadoPerfil]="dashboardData.estadoPerfil"
+          class="widget-estado-perfil">
+        </app-estado-perfil-widget>
+
+        <app-proximos-vencimientos-widget
+          [proximosVencimientos]="dashboardData.proximosVencimientos"
+          class="widget-vencimientos">
+        </app-proximos-vencimientos-widget>
+      </div>
+
+      <div class="widgets-row-2">
+        <app-acciones-rapidas-widget
+          [accionesRapidas]="dashboardData.accionesRapidas"
+          class="widget-acciones">
+        </app-acciones-rapidas-widget>
+      </div>
+    </div>
+
+    <!-- Sección de concursos recientes -->
+    <div class="recent-contests-section">
         <app-recent-section [recentConcursos]="recentConcursos"></app-recent-section>
-        <app-quick-actions></app-quick-actions>
     </div>
 </main>

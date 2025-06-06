@@ -1,20 +1,25 @@
 @use 'variables' as *;
 
 .recent-section {
-    background: #374151;
+    // ✅ GLASSMORPHISM PREMIUM DARK - Unificado con cards
+    background: linear-gradient(135deg,
+        rgba(55, 65, 81, 0.95) 0%,
+        rgba(75, 85, 99, 0.9) 50%,
+        rgba(55, 65, 81, 0.95) 100%);
     padding: 1.5rem;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        0 4px 16px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 6px 20px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(16px) saturate(180%);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 
-    // Glassmorphism gradient overlay
+    // ✅ GLASSMORPHISM PREMIUM OVERLAY - Multicapa
     &::before {
         content: '';
         position: absolute;
@@ -22,7 +27,25 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.15) 0%,
+            rgba(255, 255, 255, 0.08) 50%,
+            rgba(255, 255, 255, 0.05) 100%);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    // ✅ SEGUNDA CAPA GLASSMORPHISM
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 30% 20%,
+            rgba(255, 255, 255, 0.1) 0%,
+            transparent 50%);
         pointer-events: none;
         z-index: 1;
     }
@@ -33,18 +56,26 @@
         font-size: 1.25rem;
         font-weight: 600;
         position: relative;
-        z-index: 2;
+        z-index: 3; // ✅ Encima de las capas glassmorphism
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+        // ✅ Efecto premium en el título
+        background: linear-gradient(135deg, #f9fafb 0%, #d1d5db 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
 }
 
 .table-container {
     overflow-x: auto;
     position: relative;
-    z-index: 2;
+    z-index: 3; // ✅ Encima de las capas glassmorphism
     border-radius: 8px;
-    background: rgba(75, 85, 99, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(75, 85, 99, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
 
     table {
         width: 100%;

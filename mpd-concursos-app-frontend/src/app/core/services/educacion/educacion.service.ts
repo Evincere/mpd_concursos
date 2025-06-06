@@ -299,8 +299,8 @@ export class EducacionService {
         // Asegurarse de que el ID se utiliza como está, sin intentar convertirlo
         console.log(`Subiendo documento para educación ID: ${educacionId} de tipo ${typeof educacionId}`);
 
-        // ✅ CORRECCIÓN CRÍTICA: Usar endpoint real del backend
-        const uploadUrl = `${this.apiUrl}/${educacionId}/document`;
+        // ✅ CORRECCIÓN CRÍTICA: Usar endpoint real del backend (documento en español)
+        const uploadUrl = `${this.apiUrl}/${educacionId}/documento`;
         console.log('[EducacionService] ✅ Subiendo documento al backend real:', uploadUrl);
 
         return this.http.post<Record<string, unknown>>(uploadUrl, formData).pipe(
@@ -316,29 +316,21 @@ export class EducacionService {
             catchError(error => {
                 console.error('[EducacionService] ❌ Error al subir documento:', error);
 
-                // Intentar con endpoint alternativo de documentos genéricos
-                console.log('[EducacionService] Intentando con endpoint alternativo...');
-                const alternativeUrl = `${environment.apiUrl}/documents/education/${educacionId}/upload`;
+                let mensajeError = 'No se pudo subir el documento.';
+                if (error.status === 404) {
+                    mensajeError = 'El registro de educación no fue encontrado.';
+                } else if (error.status === 400) {
+                    mensajeError = 'El archivo no es válido o está vacío.';
+                } else if (error.status === 500) {
+                    mensajeError = 'Error interno del servidor al procesar el documento.';
+                }
 
-                return this.http.post<Record<string, unknown>>(alternativeUrl, formData).pipe(
-                    tap(respuesta => {
-                        console.log('[EducacionService] ✅ Documento subido con endpoint alternativo:', respuesta);
-                        this.mensajeSubject.next('Documento subido correctamente');
-                    }),
-                    map(respuesta => ({
-                        exito: true,
-                        data: respuesta,
-                        mensaje: 'Documento subido correctamente'
-                    })),
-                    catchError(secondError => {
-                        console.error('[EducacionService] ❌ Error en todos los intentos:', secondError);
-                        return of({
-                            exito: false,
-                            error: 'No se pudo subir el documento. El servicio podría no estar disponible.',
-                            mensaje: 'No se pudo subir el documento. El servicio podría no estar disponible.'
-                        });
-                    })
-                );
+                this.errorSubject.next(mensajeError);
+                return of({
+                    exito: false,
+                    error: mensajeError,
+                    mensaje: mensajeError
+                });
             }),
             finalize(() => this.loadingSubject.next(false))
         );

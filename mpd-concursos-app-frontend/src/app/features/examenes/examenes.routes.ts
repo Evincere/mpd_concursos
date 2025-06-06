@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { ExamenesComponent } from './examenes.component';
 import { ExamenDetalleComponent } from './components/examen-detalle/examen-detalle.component';
 import { ExamenRendicionComponent } from './components/examen-rendicion/examen-rendicion.component';
+import { ExamenesEnDesarrolloComponent } from './components/examenes-en-desarrollo/examenes-en-desarrollo.component';
 import { provideExamenFeature } from './providers/examenes.providers';
 import { ExamNavigationGuard } from '@core/services/examenes/security/guards/exam-navigation.guard';
 import { SECURITY_PROVIDERS } from './providers/security.providers';
@@ -12,6 +13,10 @@ import { ExamenNotificationService } from '@core/services/examenes/examen-notifi
 export const EXAMENES_ROUTES: Routes = [
   {
     path: '',
+    component: ExamenesEnDesarrolloComponent
+  },
+  {
+    path: 'legacy',
     component: ExamenesComponent,
     providers: [provideExamenFeature()]
   },

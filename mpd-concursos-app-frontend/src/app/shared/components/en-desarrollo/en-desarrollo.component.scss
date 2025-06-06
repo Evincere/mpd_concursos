@@ -1,0 +1,471 @@
+// Mixins para responsive design
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+.desarrollo-container {
+  --color-tema: #3b82f6;
+
+  min-height: 100vh;
+  padding: 2rem 2rem 4rem 2rem; // Padding inferior adicional para scroll completo
+  background: linear-gradient(135deg,
+    rgba(55, 65, 81, 0.95) 0%,
+    rgba(17, 24, 39, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow-x: hidden; // Solo ocultar scroll horizontal
+  overflow-y: auto; // Permitir scroll vertical
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; // Cambiar a flex-start para permitir scroll
+  gap: 2rem;
+
+  @include mobile {
+    padding: 1rem 1rem 3rem 1rem;
+    gap: 1.5rem;
+  }
+}
+
+/* Header Section */
+.desarrollo-header {
+  text-align: center;
+  z-index: 2;
+  position: relative;
+}
+
+.icono-principal {
+  font-size: 4rem;
+  color: var(--color-tema);
+  margin-bottom: 1rem;
+  animation: bounce 2s infinite;
+  
+  @include mobile {
+    font-size: 3rem;
+  }
+}
+
+.titulo-principal {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #f9fafb;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  
+  @include mobile {
+    font-size: 2rem;
+  }
+}
+
+.subtitulo {
+  font-size: 1.25rem;
+  color: #d1d5db;
+  margin: 0;
+  opacity: 0.9;
+  
+  @include mobile {
+    font-size: 1rem;
+  }
+}
+
+/* Imagen Central */
+.imagen-container {
+  position: relative;
+  z-index: 2;
+}
+
+.imagen-frame {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px) scale(1.02);
+  }
+  
+  @include mobile {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+.imagen-desarrollo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  filter: grayscale(20%) brightness(1.1);
+}
+
+.imagen-overlay {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.construccion-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  animation: pulse 2s infinite;
+}
+
+/* Mensaje con Humor */
+.mensaje-humor {
+  z-index: 2;
+  position: relative;
+}
+
+.humor-bubble {
+  background: rgba(59, 130, 246, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  max-width: 600px;
+  text-align: center;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid rgba(59, 130, 246, 0.15);
+  }
+  
+  @include mobile {
+    padding: 1rem 1.5rem;
+    max-width: 90%;
+  }
+}
+
+.humor-icon {
+  font-size: 2rem;
+  color: #fbbf24;
+  margin-bottom: 1rem;
+  animation: wink 3s infinite;
+}
+
+.humor-text {
+  font-size: 1.125rem;
+  color: #f9fafb;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.6;
+  
+  @include mobile {
+    font-size: 1rem;
+  }
+}
+
+/* Descripción */
+.descripcion-section {
+  z-index: 2;
+  position: relative;
+  max-width: 700px;
+  text-align: center;
+}
+
+.descripcion-text {
+  font-size: 1.125rem;
+  color: #d1d5db;
+  line-height: 1.7;
+  margin: 0;
+  
+  @include mobile {
+    font-size: 1rem;
+  }
+}
+
+/* Sección de Contacto */
+.contacto-section {
+  z-index: 2;
+  position: relative;
+  max-width: 600px;
+  width: 100%;
+}
+
+.contacto-card {
+  background: rgba(59, 130, 246, 0.1);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 20px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+  }
+
+  @include mobile {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+}
+
+.contacto-icon {
+  font-size: 3rem;
+  color: var(--color-tema);
+  flex-shrink: 0;
+
+  @include mobile {
+    font-size: 2.5rem;
+  }
+}
+
+.contacto-info {
+  flex: 1;
+}
+
+.contacto-titulo {
+  font-size: 1.5rem;
+  color: #f9fafb;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+
+  @include mobile {
+    font-size: 1.25rem;
+  }
+}
+
+.contacto-descripcion {
+  font-size: 1rem;
+  color: #d1d5db;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+
+  @include mobile {
+    font-size: 0.9rem;
+  }
+}
+
+.contacto-email {
+  font-size: 1.125rem;
+  color: var(--color-tema);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  display: inline-block;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  @include mobile {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    word-break: break-all;
+  }
+}
+
+/* Características Futuras */
+.caracteristicas-section {
+  z-index: 2;
+  position: relative;
+  max-width: 800px;
+  width: 100%;
+}
+
+.caracteristicas-titulo {
+  font-size: 1.5rem;
+  color: #f9fafb;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  i {
+    color: var(--color-tema);
+  }
+  
+  @include mobile {
+    font-size: 1.25rem;
+  }
+}
+
+.caracteristicas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+.caracteristica-item {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+  }
+}
+
+.caracteristica-numero {
+  width: 32px;
+  height: 32px;
+  background: var(--color-tema);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.caracteristica-texto {
+  color: #f9fafb;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Acciones */
+.acciones-section {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 2;
+  position: relative;
+
+  @include mobile {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+/* Elementos Decorativos */
+.decoracion-elementos {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.elemento-flotante {
+  position: absolute;
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.1);
+  animation: float 6s ease-in-out infinite;
+  
+  &.elemento-1 {
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+  }
+  
+  &.elemento-2 {
+    top: 20%;
+    right: 15%;
+    animation-delay: 1.5s;
+  }
+  
+  &.elemento-3 {
+    bottom: 20%;
+    left: 15%;
+    animation-delay: 3s;
+  }
+  
+  &.elemento-4 {
+    bottom: 10%;
+    right: 10%;
+    animation-delay: 4.5s;
+  }
+}
+
+/* Animaciones */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  }
+}
+
+@keyframes wink {
+  0%, 90%, 100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-20px) rotate(5deg);
+  }
+  66% {
+    transform: translateY(-10px) rotate(-5deg);
+  }
+}
