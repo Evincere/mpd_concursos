@@ -3,22 +3,22 @@
     <app-cards [cards]="cards"></app-cards>
 
     <!-- Widgets premium del dashboard -->
-    <div class="widgets-premium" *ngIf="dashboardData">
+    <div class="widgets-premium" *ngIf="simpleDashboardData">
       <div class="widgets-row-1">
         <app-estado-perfil-widget
-          [estadoPerfil]="dashboardData.estadoPerfil"
+          [dashboardData]="simpleDashboardData"
           class="widget-estado-perfil">
         </app-estado-perfil-widget>
 
         <app-proximos-vencimientos-widget
-          [proximosVencimientos]="dashboardData.proximosVencimientos"
+          [dashboardData]="simpleDashboardData"
           class="widget-vencimientos">
         </app-proximos-vencimientos-widget>
       </div>
 
       <div class="widgets-row-2">
         <app-acciones-rapidas-widget
-          [accionesRapidas]="dashboardData.accionesRapidas"
+          [dashboardData]="simpleDashboardData"
           class="widget-acciones">
         </app-acciones-rapidas-widget>
       </div>

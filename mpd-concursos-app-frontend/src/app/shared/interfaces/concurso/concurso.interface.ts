@@ -1,7 +1,7 @@
 
 import { ContestDate } from './contest-date.interface';
 
-export type ContestStatus = 'ACTIVE' | 'CLOSED' | 'IN_PROGRESS' | 'DRAFT' | 'CANCELLED' | 'PENDING';
+export type ContestStatus = 'ACTIVE' | 'CLOSED' | 'IN_PROGRESS' | 'DRAFT' | 'CANCELLED' | 'PENDING' | 'PUBLISHED' | 'PAUSED' | 'FINISHED' | 'ARCHIVED';
 
 export interface ContestStatusConfig {
   value: ContestStatus;

@@ -61,6 +61,14 @@ export class ContestStatusBadgeComponent {
       borderColor: 'rgba(16, 185, 129, 0.3)',
       icon: 'fas fa-play-circle'
     },
+    'ACTIVE': {
+      value: 'ACTIVE',
+      label: 'Activo',
+      color: '#f0fdf4',
+      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+      borderColor: 'rgba(16, 185, 129, 0.3)',
+      icon: 'fas fa-play-circle'
+    },
     'PAUSED': {
       value: 'PAUSED',
       label: 'Pausado',
@@ -68,6 +76,22 @@ export class ContestStatusBadgeComponent {
       backgroundColor: 'rgba(245, 158, 11, 0.15)',
       borderColor: 'rgba(245, 158, 11, 0.3)',
       icon: 'fas fa-pause-circle'
+    },
+    'PENDING': {
+      value: 'PENDING',
+      label: 'Pendiente',
+      color: '#fefce8',
+      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      borderColor: 'rgba(245, 158, 11, 0.3)',
+      icon: 'fas fa-clock'
+    },
+    'IN_PROGRESS': {
+      value: 'IN_PROGRESS',
+      label: 'En Progreso',
+      color: '#eff6ff',
+      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+      borderColor: 'rgba(59, 130, 246, 0.3)',
+      icon: 'fas fa-spinner'
     },
     'CLOSED': {
       value: 'CLOSED',
@@ -100,31 +124,6 @@ export class ContestStatusBadgeComponent {
       backgroundColor: 'rgba(75, 85, 99, 0.15)',
       borderColor: 'rgba(75, 85, 99, 0.3)',
       icon: 'fas fa-archive'
-    },
-    // Estados específicos para postulaciones
-    'PENDING_VALIDATION': {
-      value: 'PENDING_VALIDATION',
-      label: 'Pendiente',
-      color: '#fefce8',
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
-      borderColor: 'rgba(245, 158, 11, 0.3)',
-      icon: 'fas fa-clock'
-    },
-    'PENDING_DOCS': {
-      value: 'PENDING_DOCS',
-      label: 'Documentos Pendientes',
-      color: '#fef3c7',
-      backgroundColor: 'rgba(217, 119, 6, 0.15)',
-      borderColor: 'rgba(217, 119, 6, 0.3)',
-      icon: 'fas fa-file-upload'
-    },
-    'IN_PROGRESS': {
-      value: 'IN_PROGRESS',
-      label: 'En Progreso',
-      color: '#eff6ff',
-      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-      borderColor: 'rgba(59, 130, 246, 0.3)',
-      icon: 'fas fa-spinner'
     }
   };
 
@@ -252,30 +251,6 @@ export class ContestStatusBadgeComponent {
       backgroundColor: 'rgba(245, 158, 11, 0.15)',
       borderColor: 'rgba(245, 158, 11, 0.3)',
       icon: 'fas fa-clock'
-    },
-    'PENDING_VALIDATION': {
-      value: 'PENDING_VALIDATION',
-      label: 'Pendiente',
-      color: '#fefce8',
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
-      borderColor: 'rgba(245, 158, 11, 0.3)',
-      icon: 'fas fa-clock'
-    },
-    'PENDING_DOCS': {
-      value: 'PENDING_DOCS',
-      label: 'Documentos Pendientes',
-      color: '#fef3c7',
-      backgroundColor: 'rgba(217, 119, 6, 0.15)',
-      borderColor: 'rgba(217, 119, 6, 0.3)',
-      icon: 'fas fa-file-upload'
-    },
-    'IN_PROGRESS': {
-      value: 'IN_PROGRESS',
-      label: 'En Progreso',
-      color: '#eff6ff',
-      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-      borderColor: 'rgba(59, 130, 246, 0.3)',
-      icon: 'fas fa-spinner'
     }
   };
 

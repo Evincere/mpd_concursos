@@ -86,6 +86,21 @@ export interface DashboardData {
   configuracionWidgets: ConfiguracionWidget[];
 }
 
+// Interfaz simplificada para compatibilidad con widgets
+export interface SimpleDashboardData {
+  profileCompletion: number;
+  activeApplications: number;
+  pendingDocuments: number;
+  availableExams: number;
+  upcomingDeadlines: SimpleDeadline[];
+}
+
+export interface SimpleDeadline {
+  title: string;
+  date: string;
+  daysRemaining: number;
+}
+
 // Enums para mejor tipado
 export enum TipoVencimiento {
   INSCRIPCION = 'INSCRIPCION',

@@ -2,6 +2,9 @@
 
 Este documento detalla el plan de implementación de las mejoras identificadas para el sistema MPD Concursos, organizado en sprints de dos semanas con historias de usuario y tareas específicas.
 
+## ✅ Completado Recientemente
+- **Modal de Continuación de Inscripción**: Corregido comportamiento automático para inscripciones con estado `COMPLETED_PENDING_DOCS`. El modal ahora solo aparece automáticamente para inscripciones realmente interrumpidas (`IN_PROCESS`, `ACTIVE`). Para inscripciones completadas con documentación pendiente, el usuario debe decidir explícitamente cuándo continuar.
+
 ## Índice
 - [Sprint 1: Flujo de Inscripción Integrado](#sprint-1-flujo-de-inscripción-integrado)
 - [Sprint 2: Gestión de Documentos Mejorada](#sprint-2-gestión-de-documentos-mejorada)
@@ -250,6 +253,56 @@ Este documento detalla el plan de implementación de las mejoras identificadas p
 | Sprint 16 | 0/5 | 0/20 | 0% |
 | Sprint 17 | 2/2 | 8/8 | 100% |
 | **Total** | **59/74** | **238/296** | **80.41%** |
+
+## Correcciones Críticas Implementadas
+
+### ✅ CRÍTICO: Validación de Inscripciones Duplicadas (Completado)
+**Fecha:** 06/06/2025
+**Problema:** El sistema permitía crear múltiples inscripciones al mismo concurso debido a validación incompleta en backend y frontend.
+
+**Solución Implementada:**
+- **Backend:**
+  - Corregido `InscriptionPersistenceAdapter.findByContestIdAndUserId()` para incluir TODAS las inscripciones en validación
+  - Mejorado `CreateInscriptionService` para validar todos los estados que deben prevenir nuevas inscripciones
+  - Agregados métodos específicos en repositorio para diferentes tipos de consultas
+  - Solo permite nuevas inscripciones cuando el estado anterior es CANCELLED o REJECTED
+
+- **Frontend:**
+  - Mejorada validación local en `InscriptionService.createInscription()`
+  - Agregados métodos `shouldPreventNewInscription()` y `getInscriptionBlockMessage()`
+  - Mejorado manejo de errores con mensajes descriptivos según estado de inscripción existente
+  - Actualizado manejo de errores 409 (Conflict) para mostrar mensajes específicos del backend
+
+**Estados que previenen nueva inscripción:** ACTIVE, IN_PROCESS, PENDING, PENDIENTE, CONFIRMADA, COMPLETED_WITH_DOCS, COMPLETED_PENDING_DOCS, FROZEN, APPROVED, INSCRIPTO
+
+**Estados que permiten nueva inscripción:** CANCELLED, REJECTED
+
+### ✅ CRÍTICO: Estados de Inscripciones y Lógica de Reanudación (Completado)
+**Fecha:** 06/06/2025
+**Problema:** Uso incorrecto del estado "PAUSADO" (reservado para administración) y falta de diferenciación entre inscripciones finalizadas vs que permiten completar documentación.
+
+**Solución Implementada:**
+- **Frontend:**
+  - Creados estados específicos para postulaciones: `PENDING_VALIDATION` y `PENDING_DOCS`
+  - Corregido mapeo en `postulaciones.component.ts`:
+    - `COMPLETED_WITH_DOCS` → 'PENDING_VALIDATION' (Pendiente - amarillo)
+    - `COMPLETED_PENDING_DOCS` → 'PENDING_DOCS' (Documentos Pendientes - naranja)
+  - Actualizados `InscripcionStateUtils`:
+    - `COMPLETED_PENDING_DOCS` SÍ permite reanudación para completar documentación
+    - `COMPLETED_WITH_DOCS` es estado final (no permite modificaciones)
+  - Corregida lógica en `inscripcion-button.component.ts`:
+    - Botón muestra "Completar Documentos" para `COMPLETED_PENDING_DOCS`
+    - Permite reanudación desde paso de documentación
+    - Mensajes específicos para cada estado
+  - Agregado soporte en `contest-status-badge.component.ts` para nuevos estados
+
+**Estados finales (no permiten reanudación):** APPROVED, INSCRIPTO, REJECTED, CANCELLED, FROZEN, COMPLETED_WITH_DOCS
+
+**Estados que permiten reanudación:** ACTIVE, IN_PROCESS, COMPLETED_PENDING_DOCS
+
+**Estados específicos para postulaciones:**
+- `PENDING_VALIDATION`: Inscripción completa pendiente de validación administrativa
+- `PENDING_DOCS`: Inscripción con documentos pendientes (permite completar)
 
 ## Notas Adicionales
 

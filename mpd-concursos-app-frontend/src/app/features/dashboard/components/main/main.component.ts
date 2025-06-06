@@ -10,7 +10,7 @@ import { AccionesRapidasWidgetComponent } from '../widgets/acciones-rapidas-widg
 
 import { Card } from '@shared/interfaces/concurso/card.interface';
 import { RecentConcurso } from '@shared/interfaces/concurso/recent-concurso.interface';
-import { DashboardData } from '@shared/interfaces/dashboard/dashboard-widgets.interface';
+import { DashboardData, SimpleDashboardData } from '@shared/interfaces/dashboard/dashboard-widgets.interface';
 import { Subscription, fromEvent } from 'rxjs';
 import { DashboardService } from '@core/services/dashboard/dashboard.service';
 import { DashboardWidgetsService } from '@core/services/dashboard/dashboard-widgets.service';
@@ -37,6 +37,7 @@ export class MainComponent implements OnInit, OnDestroy {
   cards: Card[] = [];
   recentConcursos: RecentConcurso[] = [];
   dashboardData: DashboardData | null = null;
+  simpleDashboardData: SimpleDashboardData | null = null;
   private subscription: Subscription = new Subscription();
 
   constructor(
@@ -125,13 +126,39 @@ export class MainComponent implements OnInit, OnDestroy {
         next: (dashboardData: DashboardData) => {
           console.log('[MainComponent] Datos de widgets premium actualizados:', dashboardData);
           this.dashboardData = dashboardData;
+          this.simpleDashboardData = this.convertToSimpleDashboardData(dashboardData);
         },
         error: (error: unknown) => {
           console.error('[MainComponent] Error al cargar datos de widgets premium:', error);
           // Mantener funcionalidad básica aunque fallen los widgets premium
           this.dashboardData = null;
+          this.simpleDashboardData = this.getDefaultSimpleDashboardData();
         }
       })
     );
+  }
+
+  private convertToSimpleDashboardData(dashboardData: DashboardData): SimpleDashboardData {
+    return {
+      profileCompletion: dashboardData.estadoPerfil?.completitud || 0,
+      activeApplications: dashboardData.metricas?.inscripcionesActivas || 0,
+      pendingDocuments: dashboardData.estadoPerfil?.seccionesPendientes?.length || 0,
+      availableExams: 0, // Por ahora no hay exámenes disponibles
+      upcomingDeadlines: dashboardData.proximosVencimientos?.map(vencimiento => ({
+        title: vencimiento.titulo,
+        date: vencimiento.fechaLimite.toISOString(),
+        daysRemaining: vencimiento.diasRestantes
+      })) || []
+    };
+  }
+
+  private getDefaultSimpleDashboardData(): SimpleDashboardData {
+    return {
+      profileCompletion: 0,
+      activeApplications: 0,
+      pendingDocuments: 0,
+      availableExams: 0,
+      upcomingDeadlines: []
+    };
   }
 }

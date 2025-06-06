@@ -14,7 +14,7 @@ import java.util.List;
 public class ContestValidator {
 
     private static final List<String> VALID_STATUSES = Arrays.asList(
-        "DRAFT", "ACTIVE", "IN_PROGRESS", "CLOSED", "CANCELLED"
+        "DRAFT", "PUBLISHED", "ACTIVE", "IN_PROGRESS", "CLOSED", "CANCELLED"
     );
 
     private static final List<String> VALID_DEPARTMENTS = Arrays.asList(

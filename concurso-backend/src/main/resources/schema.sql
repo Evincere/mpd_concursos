@@ -101,7 +101,7 @@ CREATE TABLE contests (
     functions TEXT,
     department VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
-    status ENUM('DRAFT', 'ACTIVE', 'IN_PROGRESS', 'CLOSED', 'CANCELLED') NOT NULL,
+    status ENUM('DRAFT', 'PUBLISHED', 'ACTIVE', 'IN_PROGRESS', 'CLOSED', 'CANCELLED') NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     bases_url VARCHAR(255),

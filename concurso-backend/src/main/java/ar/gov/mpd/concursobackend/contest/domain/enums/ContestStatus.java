@@ -5,6 +5,7 @@ package ar.gov.mpd.concursobackend.contest.domain.enums;
  */
 public enum ContestStatus {
     DRAFT("Borrador"),
+    PUBLISHED("Publicado"),
     ACTIVE("Activo"),
     IN_PROGRESS("En Progreso"),
     CLOSED("Cerrado"),
