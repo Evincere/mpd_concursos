@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.inscription.domain.model;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.*;
@@ -123,11 +123,17 @@ public class Inscription {
     /**
      * Calcula el plazo perentorio para la documentación (3 días hábiles)
      *
+     * Nota: Implementación simplificada que agrega 3 días calendario.
+     * En una implementación completa se debería considerar:
+     * - Feriados nacionales y provinciales
+     * - Días no laborables específicos del MPD
+     * - Configuración de días hábiles por jurisdicción
+     *
      * @return Fecha límite para la documentación
      */
     private LocalDateTime calculateDocumentationDeadline() {
-        // TODO: Implementar cálculo de días hábiles
-        // Por ahora agregamos 3 días calendario
+        // Implementación simplificada: 3 días calendario
+        // En producción se debería usar un servicio de calendario laboral
         return LocalDateTime.now().plusDays(3);
     }
 
@@ -206,16 +212,7 @@ public class Inscription {
         return this.state;
     }
 
-    /**
-     * Obtiene el estado de la inscripción (método de compatibilidad)
-     *
-     * @return Estado de la inscripción
-     * @deprecated Use getState() instead
-     */
-    @Deprecated
-    public InscriptionState getStatus() {
-        return this.state;
-    }
+
 
     /**
      * Obtiene la fecha de última actualización
@@ -226,33 +223,13 @@ public class Inscription {
         return this.lastUpdated;
     }
 
-    /**
-     * Obtiene la fecha de última actualización (método de compatibilidad)
-     *
-     * @return Fecha de última actualización
-     * @deprecated Use getLastUpdated() instead
-     */
-    @Deprecated
-    public LocalDateTime getUpdatedAt() {
-        return this.lastUpdated;
-    }
+
 
     /**
      * Builder personalizado para Inscription
      */
     public static class InscriptionBuilder {
-        /**
-         * Método de compatibilidad para establecer el estado
-         *
-         * @param status Estado de la inscripción
-         * @return Builder
-         * @deprecated Use state() instead
-         */
-        @Deprecated
-        public InscriptionBuilder status(InscriptionState status) {
-            this.state = status;
-            return this;
-        }
+
     }
 
     /**

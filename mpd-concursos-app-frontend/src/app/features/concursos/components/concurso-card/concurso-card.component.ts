@@ -57,9 +57,10 @@ import { CustomButtonComponent } from '@shared/components/custom-form/custom-but
         </app-custom-button>
 
         <app-inscripcion-button
-          *ngIf="concurso.status === 'ACTIVE'"
+          *ngIf="concurso.status === 'ACTIVE' || concurso.status === 'PUBLISHED'"
           [contest]="concurso"
-          (inscriptionComplete)="inscriptionComplete.emit(concurso)">
+          (inscripcionClick)="onInscripcionClick($event)"
+          (continuarClick)="onContinuarClick($event)">
         </app-inscripcion-button>
       </div>
     </div>
@@ -319,5 +320,15 @@ export class ConcursoCardComponent {
   onVerDetalle(event: Event): void {
     event.stopPropagation();
     this.verDetalle.emit(this.concurso);
+  }
+
+  onInscripcionClick(concurso: Concurso): void {
+    console.log('[ConcursoCard] Iniciando inscripción para concurso:', concurso.id);
+    this.inscriptionComplete.emit(concurso);
+  }
+
+  onContinuarClick(concurso: Concurso): void {
+    console.log('[ConcursoCard] Continuando inscripción para concurso:', concurso.id);
+    this.inscriptionComplete.emit(concurso);
   }
 }

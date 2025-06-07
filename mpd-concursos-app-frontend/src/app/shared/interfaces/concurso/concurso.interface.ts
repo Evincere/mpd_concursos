@@ -1,7 +1,15 @@
 
 import { ContestDate } from './contest-date.interface';
 
-export type ContestStatus = 'ACTIVE' | 'CLOSED' | 'IN_PROGRESS' | 'DRAFT' | 'CANCELLED' | 'PENDING' | 'PUBLISHED' | 'PAUSED' | 'FINISHED' | 'ARCHIVED';
+// Estados unificados - sincronizados con backend
+export type ContestStatus =
+  // Estados administrativos fijos
+  | 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'CANCELLED' | 'FINISHED' | 'ARCHIVED'
+  // Estados dinámicos basados en fechas
+  | 'INSCRIPTION_PENDING' | 'INSCRIPTION_OPEN' | 'INSCRIPTION_CLOSED'
+  | 'IN_EVALUATION' | 'RESULTS_PUBLISHED'
+  // Estados legacy - DEPRECADOS (mantener temporalmente para compatibilidad)
+  | 'ACTIVE' | 'CLOSED' | 'IN_PROGRESS' | 'PENDING';
 
 export interface ContestStatusConfig {
   value: ContestStatus;

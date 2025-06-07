@@ -7,6 +7,7 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionNoteRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
+import ar.gov.mpd.concursobackend.inscription.domain.service.InscriptionStateMachine;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
 import ar.gov.mpd.concursobackend.notification.application.NotificationService;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -45,6 +47,7 @@ public class AdminInscriptionService {
     private final ContestRepository contestRepository;
     private final IDocumentRepository documentRepository;
     private final NotificationService notificationService;
+    private final InscriptionStateMachine stateMachine;
 
     /**
      * Obtiene todas las inscripciones con filtros y paginación
@@ -276,14 +279,8 @@ public class AdminInscriptionService {
         // Cargar concurso
         contestRepository.findById(inscription.getContestId().getValue())
                 .ifPresent(contest -> {
-                    // Convertir de Contest a model.Contest
-                    ar.gov.mpd.concursobackend.contest.domain.model.Contest modelContest =
-                        new ar.gov.mpd.concursobackend.contest.domain.model.Contest();
-                    modelContest.setId(UUID.randomUUID()); // Usar un ID temporal
-                    modelContest.setTitle(contest.getTitle());
-                    // Copiar otras propiedades según sea necesario
-
-                    inscription.setContest(modelContest);
+                    // El modelo Inscription ahora usa directamente el modelo legacy Contest
+                    inscription.setContest(contest);
                 });
 
         // Cargar notas
@@ -291,13 +288,42 @@ public class AdminInscriptionService {
     }
 
     /**
-     * Valida si el cambio de estado es permitido
+     * Valida si el cambio de estado es permitido usando la máquina de estado
      */
     private void validateStateChange(InscriptionState currentState, InscriptionState newState) {
-        // Implementar reglas de validación según los requisitos
-        // Por ejemplo, no se puede cambiar de REJECTED a INSCRIPTO directamente
+        try {
+            stateMachine.validateTransition(currentState, newState);
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException("Cambio de estado no permitido: " + e.getMessage());
+        }
+    }
 
-        // Por ahora, permitir cualquier cambio de estado
+    /**
+     * Obtiene los estados válidos siguientes para un estado actual
+     */
+    public Set<InscriptionState> getValidNextStates(InscriptionState currentState) {
+        return stateMachine.getValidNextStates(currentState);
+    }
+
+    /**
+     * Verifica si un estado permite carga de documentos
+     */
+    public boolean allowsDocumentUpload(InscriptionState state) {
+        return stateMachine.allowsDocumentUpload(state);
+    }
+
+    /**
+     * Verifica si una inscripción puede ser reanudada por el usuario
+     */
+    public boolean isResumable(InscriptionState state) {
+        return stateMachine.isResumable(state);
+    }
+
+    /**
+     * Verifica si un estado es final
+     */
+    public boolean isFinalState(InscriptionState state) {
+        return stateMachine.isFinalState(state);
     }
 
     /**
@@ -419,7 +445,7 @@ public class AdminInscriptionService {
                                 row.put(field, inscription.getContest().getCategory());
                                 break;
                             case "contestDepartment":
-                                row.put(field, inscription.getContest().getDepartment());
+                                row.put(field, inscription.getContest().getDependency());
                                 break;
                             case "inscriptionState":
                                 row.put(field, inscription.getState().toString());

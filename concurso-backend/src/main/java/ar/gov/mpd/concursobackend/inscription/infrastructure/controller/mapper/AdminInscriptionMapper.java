@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.controller.mapper;
 
-import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.Contest;
+
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
@@ -41,11 +42,11 @@ public class AdminInscriptionMapper {
 
         // Mapear información del concurso si está disponible
         if (inscription.getContest() != null) {
+            // El modelo Inscription ahora usa el modelo legacy Contest directamente
             Contest contest = inscription.getContest();
             dto.setContestInfo(AdminInscriptionDTO.ContestInfoDTO.builder()
                     .title(contest.getTitle())
-                    .position(contest.getPositions() != null && !contest.getPositions().isEmpty() ?
-                             contest.getPositions().get(0).getTitle() : "No especificado")
+                    .position(contest.getPosition() != null ? contest.getPosition() : "No especificado")
                     .build());
         }
 

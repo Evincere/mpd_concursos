@@ -296,7 +296,19 @@ export class ConcursosComponent implements OnInit, OnDestroy {
   }
 
   onInscriptionComplete(concurso: Concurso): void {
-    console.log('[ConcursosComponent] Inscripción completada para concurso:', concurso.id);
+    console.log('[ConcursosComponent] Iniciando proceso de inscripción para concurso:', concurso.id);
+
+    // CORRECCIÓN: Navegar al proceso de inscripción en lugar de asumir que ya está completada
+    this.router.navigate(['/dashboard/inscripcion'], {
+      queryParams: {
+        contestId: concurso.id
+      }
+    });
+  }
+
+  // Método para cuando realmente se complete una inscripción (llamado desde otros lugares)
+  onInscriptionReallyComplete(concurso: Concurso): void {
+    console.log('[ConcursosComponent] Inscripción realmente completada para concurso:', concurso.id);
 
     // Forzar una actualización de las inscripciones del usuario
     this.inscriptionService.refreshInscriptions();

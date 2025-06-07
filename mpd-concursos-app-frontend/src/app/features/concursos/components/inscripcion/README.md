@@ -55,8 +55,9 @@ Componente que muestra un botón para iniciar el proceso de inscripción. Maneja
 ```html
 <app-inscripcion-button
   [contest]="contest"
-  [disabled]="disabled"
-  (inscriptionCompleted)="onInscriptionCompleted()">
+  [userPostulation]="userPostulation"
+  (inscripcionClick)="onInscripcionClick($event)"
+  (continuarClick)="onContinuarClick($event)">
 </app-inscripcion-button>
 ```
 

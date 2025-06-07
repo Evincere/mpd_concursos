@@ -12,6 +12,7 @@ import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.contest.application.dto.ContestInscriptionRequest;
 import ar.gov.mpd.concursobackend.contest.application.port.in.CreateContestInscriptionUseCase;
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
@@ -57,8 +58,10 @@ public class CreateContestInscriptionService implements CreateContestInscription
                                 .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado"));
                 log.debug("Concurso encontrado: {}", contest.getTitle());
 
-                // Verificar que el concurso está publicado
-                if (!contest.getStatus().equals("PUBLISHED")) {
+                // Verificar que el concurso está disponible para inscripciones
+                // CORRECCIÓN INMEDIATA: PUBLISHED también permite inscripciones
+                if (!ContestStatus.ACTIVE.equals(contest.getStatus()) &&
+                    !ContestStatus.PUBLISHED.equals(contest.getStatus())) {
                         throw new IllegalStateException("El concurso no está disponible para inscripciones");
                 }
 

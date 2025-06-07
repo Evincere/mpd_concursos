@@ -11,11 +11,11 @@ import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestCreateReques
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestUpdateRequest;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
-import java.util.ArrayList;
-import java.time.LocalDateTime;
 
 @Component
 public class ContestMapper {
@@ -38,7 +38,7 @@ public class ContestMapper {
             .category(entity.getCategory())
             .class_(entity.getClass_())
             .functions(entity.getFunctions())
-            .status(entity.getStatus() != null ? entity.getStatus().name() : null)
+            .status(entity.getStatus())
             .position(entity.getPosition())
             .dependency(entity.getDepartment())
             .startDate(entity.getStartDate())
@@ -65,7 +65,7 @@ public class ContestMapper {
             .category(domain.getCategory())
             .class_(domain.getClass_())
             .functions(domain.getFunctions())
-            .status(ContestStatus.valueOf(domain.getStatus()))
+            .status(domain.getStatus())
             .department(domain.getDependency())
             .position(domain.getPosition())
             .startDate(domain.getStartDate())
@@ -89,7 +89,7 @@ public class ContestMapper {
             .category(domain.getCategory())
             .class_(domain.getClass_())
             .functions(domain.getFunctions())
-            .status(domain.getStatus())
+            .status(domain.getStatus() != null ? domain.getStatus().name() : null)
             .position(domain.getPosition())
             .dependency(domain.getDependency())
             .startDate(domain.getStartDate())
@@ -159,7 +159,7 @@ public class ContestMapper {
                 .functions(contest.getFunctions())
                 .department(contest.getDependency())
                 .dependencia(contest.getDependency())
-                .status(contest.getStatus())
+                .status(contest.getStatus() != null ? contest.getStatus().name() : null)
                 .startDate(contest.getStartDate())
                 .endDate(contest.getEndDate())
                 .termsUrl(contest.getBasesUrl())
@@ -169,8 +169,8 @@ public class ContestMapper {
                 .createdBy("system") // TODO: Obtener del contexto de seguridad
                 .updatedBy("system")
                 .totalInscriptions(0) // TODO: Calcular desde inscripciones
-                .isActive("ACTIVE".equals(contest.getStatus()))
-                .allowsInscriptions("ACTIVE".equals(contest.getStatus()))
+                .isActive(isActiveStatus(contest.getStatus()))
+                .allowsInscriptions(allowsInscriptions(contest.getStatus()))
                 .build();
     }
 
@@ -189,7 +189,7 @@ public class ContestMapper {
                 .class_(request.getContestClass())
                 .functions(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
                 .dependency(request.getDepartment())
-                .status(request.getStatus())
+                .status(ContestStatus.fromString(request.getStatus()))
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .basesUrl(request.getTermsUrl())
@@ -213,12 +213,34 @@ public class ContestMapper {
                 .class_(request.getContestClass())
                 .functions(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
                 .dependency(request.getDepartment())
-                .status(request.getStatus())
+                .status(ContestStatus.fromString(request.getStatus()))
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .basesUrl(request.getTermsUrl())
                 .descriptionUrl(request.getProfileUrl())
                 .dates(new ArrayList<>())
                 .build();
+    }
+
+    /**
+     * Verifica si un estado representa un concurso activo
+     * Usa los nuevos estados pero mantiene compatibilidad con legacy
+     */
+    private boolean isActiveStatus(ContestStatus status) {
+        return status == ContestStatus.PUBLISHED ||
+               status == ContestStatus.INSCRIPTION_OPEN ||
+               // Estados legacy (compatibilidad temporal)
+               status == ContestStatus.ACTIVE;
+    }
+
+    /**
+     * Verifica si un estado permite inscripciones
+     * Usa los nuevos estados pero mantiene compatibilidad con legacy
+     */
+    private boolean allowsInscriptions(ContestStatus status) {
+        return status == ContestStatus.PUBLISHED ||
+               status == ContestStatus.INSCRIPTION_OPEN ||
+               // Estados legacy (compatibilidad temporal)
+               status == ContestStatus.ACTIVE;
     }
 }

@@ -5,14 +5,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
+import ar.gov.mpd.concursobackend.contest.domain.service.ContestStateMachine;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStatsResponse;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStateResponse;
 import ar.gov.mpd.concursobackend.contest.application.validator.ContestValidator;
 
 import java.util.List;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Map;
 import org.springframework.data.domain.PageImpl;
 
@@ -20,10 +24,12 @@ import org.springframework.data.domain.PageImpl;
 public class ContestService {
     private final ContestRepository contestRepository;
     private final ContestValidator contestValidator;
+    private final ContestStateMachine stateMachine;
 
-    public ContestService(ContestRepository contestRepository, ContestValidator contestValidator) {
+    public ContestService(ContestRepository contestRepository, ContestValidator contestValidator, ContestStateMachine stateMachine) {
         this.contestRepository = contestRepository;
         this.contestValidator = contestValidator;
+        this.stateMachine = stateMachine;
     }
 
     public List<Contest> getAllContests() {
@@ -84,12 +90,41 @@ public class ContestService {
     }
 
     /**
-     * Cambia el estado de un concurso
+     * Cambia el estado de un concurso usando validación de máquina de estado
      */
     public Contest changeContestStatus(Long id, String status) {
         Contest contest = getContestById(id);
-        contest.setStatus(status);
+        ContestStatus currentStatus = contest.getStatus();
+        ContestStatus newStatus = ContestStatus.fromString(status);
+
+        // Validar la transición usando la máquina de estado
+        stateMachine.validateTransition(currentStatus, newStatus);
+
+        contest.setStatus(newStatus);
         return contestRepository.save(contest);
+    }
+
+    /**
+     * Obtiene los estados válidos siguientes para un concurso
+     */
+    public Set<ContestStatus> getValidNextStates(Long contestId) {
+        Contest contest = getContestById(contestId);
+        return stateMachine.getValidNextStates(contest.getStatus());
+    }
+
+    /**
+     * Verifica si un concurso permite inscripciones
+     */
+    public boolean allowsInscriptions(Long contestId) {
+        Contest contest = getContestById(contestId);
+        return stateMachine.allowsInscriptions(contest.getStatus());
+    }
+
+    /**
+     * Verifica si un estado de concurso es final
+     */
+    public boolean isFinalState(ContestStatus status) {
+        return stateMachine.isFinalState(status);
     }
 
     /**
@@ -97,7 +132,7 @@ public class ContestService {
      */
     public void deleteContest(Long id) {
         Contest contest = getContestById(id);
-        if (!"DRAFT".equals(contest.getStatus())) {
+        if (contest.getStatus() != ContestStatus.DRAFT) {
             throw new RuntimeException("Only contests in DRAFT status can be deleted");
         }
         contestRepository.deleteById(id);
@@ -110,11 +145,11 @@ public class ContestService {
         List<Contest> allContests = contestRepository.findAll();
 
         long total = allContests.size();
-        long active = allContests.stream().filter(c -> "ACTIVE".equals(c.getStatus())).count();
-        long draft = allContests.stream().filter(c -> "DRAFT".equals(c.getStatus())).count();
-        long closed = allContests.stream().filter(c -> "CLOSED".equals(c.getStatus())).count();
-        long inProgress = allContests.stream().filter(c -> "IN_PROGRESS".equals(c.getStatus())).count();
-        long cancelled = allContests.stream().filter(c -> "CANCELLED".equals(c.getStatus())).count();
+        long active = allContests.stream().filter(c -> ContestStatus.ACTIVE.equals(c.getStatus())).count();
+        long draft = allContests.stream().filter(c -> ContestStatus.DRAFT.equals(c.getStatus())).count();
+        long closed = allContests.stream().filter(c -> ContestStatus.CLOSED.equals(c.getStatus())).count();
+        long inProgress = allContests.stream().filter(c -> ContestStatus.IN_PROGRESS.equals(c.getStatus())).count();
+        long cancelled = allContests.stream().filter(c -> ContestStatus.CANCELLED.equals(c.getStatus())).count();
 
         return ContestStatsResponse.builder()
                 .total(total)
@@ -187,5 +222,60 @@ public class ContestService {
         if (contest.getStartDate().isAfter(contest.getEndDate())) {
             throw new RuntimeException("Start date must be before end date");
         }
+    }
+
+    /**
+     * Obtiene el estado dinámico actual de un concurso
+     * REFACTORING: Estado dinámico calculado automáticamente
+     *
+     * @param contestId ID del concurso
+     * @return Estado dinámico del concurso
+     */
+    public ContestStateResponse getContestState(Long contestId) {
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new IllegalArgumentException("Concurso no encontrado con ID: " + contestId));
+
+        // Por ahora, lógica simplificada hasta unificar modelos
+        ContestStatus currentStatus = calculateCurrentStatus(contest);
+        boolean allowsInscriptions = stateMachine.allowsInscriptions(currentStatus);
+
+        return ContestStateResponse.builder()
+                .storedStatus(contest.getStatus())
+                .currentStatus(currentStatus)
+                .allowsInscriptions(allowsInscriptions)
+                .inscriptionStartDate(null) // TODO: Obtener de contest_dates
+                .inscriptionEndDate(null)   // TODO: Obtener de contest_dates
+                .statusDescription(stateMachine.getStatusDescription(currentStatus))
+                .userMessage(generateUserMessage(currentStatus, allowsInscriptions))
+                .build();
+    }
+
+    /**
+     * Calcula el estado actual basado en fechas (simplificado)
+     */
+    private ContestStatus calculateCurrentStatus(Contest contest) {
+        // Por ahora, devolver el estado almacenado
+        // TODO: Implementar lógica dinámica cuando unifiquemos modelos
+        return contest.getStatus();
+    }
+
+    /**
+     * Genera mensaje para mostrar al usuario basado en el estado
+     */
+    private String generateUserMessage(ContestStatus status, boolean allowsInscriptions) {
+        if (allowsInscriptions) {
+            return "¡Inscripciones abiertas! Puedes postularte ahora.";
+        }
+
+        return switch (status) {
+            case INSCRIPTION_PENDING -> "Las inscripciones abrirán próximamente.";
+            case INSCRIPTION_CLOSED -> "Las inscripciones han cerrado.";
+            case IN_EVALUATION -> "Concurso en proceso de evaluación.";
+            case RESULTS_PUBLISHED -> "Resultados disponibles.";
+            case FINISHED -> "Concurso finalizado.";
+            case CANCELLED -> "Concurso cancelado.";
+            case ARCHIVED -> "Concurso archivado.";
+            default -> "Estado: " + status.getSpanishName();
+        };
     }
 }

@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.contest.infrastructure.controller;
 
 import ar.gov.mpd.concursobackend.contest.application.ContestService;
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestCreateRequest;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestUpdateRequest;
@@ -36,6 +37,7 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -142,9 +144,38 @@ public class AdminContestController {
     public ResponseEntity<ContestResponse> changeContestStatus(
             @PathVariable Long id,
             @RequestParam String status) {
-        Contest updatedContest = contestService.changeContestStatus(id, status);
-        ContestResponse response = contestMapper.toResponse(updatedContest);
-        return ResponseEntity.ok(response);
+        try {
+            Contest updatedContest = contestService.changeContestStatus(id, status);
+            ContestResponse response = contestMapper.toResponse(updatedContest);
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{id}/valid-next-states")
+    @Operation(summary = "Obtiene los estados válidos siguientes para un concurso")
+    public ResponseEntity<Set<String>> getValidNextStates(@PathVariable Long id) {
+        try {
+            Set<ContestStatus> validStates = contestService.getValidNextStates(id);
+            Set<String> stateNames = validStates.stream()
+                .map(ContestStatus::name)
+                .collect(java.util.stream.Collectors.toSet());
+            return ResponseEntity.ok(stateNames);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/allows-inscriptions")
+    @Operation(summary = "Verifica si un concurso permite inscripciones")
+    public ResponseEntity<Boolean> allowsInscriptions(@PathVariable Long id) {
+        try {
+            boolean allows = contestService.allowsInscriptions(id);
+            return ResponseEntity.ok(allows);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")

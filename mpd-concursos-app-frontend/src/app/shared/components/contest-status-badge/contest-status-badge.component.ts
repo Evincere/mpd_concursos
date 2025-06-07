@@ -124,6 +124,47 @@ export class ContestStatusBadgeComponent {
       backgroundColor: 'rgba(75, 85, 99, 0.15)',
       borderColor: 'rgba(75, 85, 99, 0.3)',
       icon: 'fas fa-archive'
+    },
+    // Nuevos estados dinámicos
+    'INSCRIPTION_PENDING': {
+      value: 'INSCRIPTION_PENDING',
+      label: 'Próximamente',
+      color: '#eff6ff',
+      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+      borderColor: 'rgba(59, 130, 246, 0.3)',
+      icon: 'fas fa-calendar-alt'
+    },
+    'INSCRIPTION_OPEN': {
+      value: 'INSCRIPTION_OPEN',
+      label: 'Inscripciones Abiertas',
+      color: '#f0fdf4',
+      backgroundColor: 'rgba(16, 185, 129, 0.15)',
+      borderColor: 'rgba(16, 185, 129, 0.3)',
+      icon: 'fas fa-door-open'
+    },
+    'INSCRIPTION_CLOSED': {
+      value: 'INSCRIPTION_CLOSED',
+      label: 'Inscripciones Cerradas',
+      color: '#fef2f2',
+      backgroundColor: 'rgba(239, 68, 68, 0.15)',
+      borderColor: 'rgba(239, 68, 68, 0.3)',
+      icon: 'fas fa-door-closed'
+    },
+    'IN_EVALUATION': {
+      value: 'IN_EVALUATION',
+      label: 'En Evaluación',
+      color: '#fef3c7',
+      backgroundColor: 'rgba(217, 119, 6, 0.15)',
+      borderColor: 'rgba(217, 119, 6, 0.3)',
+      icon: 'fas fa-clipboard-check'
+    },
+    'RESULTS_PUBLISHED': {
+      value: 'RESULTS_PUBLISHED',
+      label: 'Resultados Publicados',
+      color: '#eff6ff',
+      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+      borderColor: 'rgba(59, 130, 246, 0.3)',
+      icon: 'fas fa-trophy'
     }
   };
 

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ar.gov.mpd.concursobackend.contest.application.ContestService;
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStateResponse;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -45,5 +46,14 @@ public class ContestController {
     @GetMapping("/buscar")
     public ResponseEntity<List<Contest>> searchContests(@RequestParam String termino) {
         return ResponseEntity.ok(contestService.searchContests(termino));
+    }
+
+    /**
+     * Obtiene el estado dinámico actual de un concurso
+     * REFACTORING: Endpoint para estado dinámico
+     */
+    @GetMapping("/{id}/estado")
+    public ResponseEntity<ContestStateResponse> getContestState(@PathVariable Long id) {
+        return ResponseEntity.ok(contestService.getContestState(id));
     }
 }

@@ -1,6 +1,8 @@
 package ar.gov.mpd.concursobackend.contest.application.validator;
 
 import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
+import ar.gov.mpd.concursobackend.contest.domain.service.ContestStateMachine;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestCreateRequest;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestUpdateRequest;
 import org.springframework.stereotype.Component;
@@ -9,13 +11,22 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class ContestValidator {
 
-    private static final List<String> VALID_STATUSES = Arrays.asList(
-        "DRAFT", "PUBLISHED", "ACTIVE", "IN_PROGRESS", "CLOSED", "CANCELLED"
+    private final ContestStateMachine stateMachine;
+
+    private static final Set<ContestStatus> VALID_STATUSES = Set.of(
+        ContestStatus.DRAFT, ContestStatus.PUBLISHED, ContestStatus.ACTIVE,
+        ContestStatus.PAUSED, ContestStatus.CLOSED, ContestStatus.FINISHED,
+        ContestStatus.CANCELLED, ContestStatus.ARCHIVED, ContestStatus.IN_PROGRESS
     );
+
+    public ContestValidator(ContestStateMachine stateMachine) {
+        this.stateMachine = stateMachine;
+    }
 
     private static final List<String> VALID_DEPARTMENTS = Arrays.asList(
         "INFORMATICA", "RECURSOS_HUMANOS", "CONTADURIA", "LEGAL", "ADMINISTRACION"
@@ -64,8 +75,15 @@ public class ContestValidator {
 
         if (request.getStatus() == null || request.getStatus().trim().isEmpty()) {
             errors.add("El estado es requerido");
-        } else if (!VALID_STATUSES.contains(request.getStatus())) {
-            errors.add("El estado debe ser uno de: " + String.join(", ", VALID_STATUSES));
+        } else {
+            try {
+                ContestStatus status = ContestStatus.fromString(request.getStatus());
+                if (!VALID_STATUSES.contains(status)) {
+                    errors.add("El estado debe ser uno de: " + getValidStatusNames());
+                }
+            } catch (IllegalArgumentException e) {
+                errors.add("El estado debe ser uno de: " + getValidStatusNames());
+            }
         }
 
         // Validaciones de fechas
@@ -149,46 +167,53 @@ public class ContestValidator {
     }
 
     /**
-     * Valida un cambio de estado
+     * Valida un cambio de estado usando la máquina de estado
      */
-    public List<String> validateStatusChange(String currentStatus, String newStatus) {
+    public List<String> validateStatusChange(ContestStatus currentStatus, ContestStatus newStatus) {
         List<String> errors = new ArrayList<>();
 
-        if (newStatus == null || newStatus.trim().isEmpty()) {
+        if (newStatus == null) {
             errors.add("El nuevo estado es requerido");
             return errors;
         }
 
         if (!VALID_STATUSES.contains(newStatus)) {
-            errors.add("El estado debe ser uno de: " + String.join(", ", VALID_STATUSES));
+            errors.add("El estado debe ser uno de: " + getValidStatusNames());
             return errors;
         }
 
-        // Validar transiciones de estado permitidas
-        switch (currentStatus) {
-            case "DRAFT":
-                if (!Arrays.asList("ACTIVE", "CANCELLED").contains(newStatus)) {
-                    errors.add("Desde DRAFT solo se puede cambiar a ACTIVE o CANCELLED");
-                }
-                break;
-            case "ACTIVE":
-                if (!Arrays.asList("IN_PROGRESS", "CLOSED", "CANCELLED").contains(newStatus)) {
-                    errors.add("Desde ACTIVE solo se puede cambiar a IN_PROGRESS, CLOSED o CANCELLED");
-                }
-                break;
-            case "IN_PROGRESS":
-                if (!Arrays.asList("CLOSED", "CANCELLED").contains(newStatus)) {
-                    errors.add("Desde IN_PROGRESS solo se puede cambiar a CLOSED o CANCELLED");
-                }
-                break;
-            case "CLOSED":
-            case "CANCELLED":
-                errors.add("No se puede cambiar el estado de un concurso " + currentStatus);
-                break;
+        // Usar la máquina de estado para validar la transición
+        try {
+            stateMachine.validateTransition(currentStatus, newStatus);
+        } catch (IllegalStateException e) {
+            errors.add(e.getMessage());
         }
 
         return errors;
     }
+
+    /**
+     * Obtiene los estados válidos siguientes para un estado actual
+     */
+    public Set<ContestStatus> getValidNextStates(ContestStatus currentStatus) {
+        return stateMachine.getValidNextStates(currentStatus);
+    }
+
+    /**
+     * Verifica si un estado es final
+     */
+    public boolean isFinalState(ContestStatus status) {
+        return stateMachine.isFinalState(status);
+    }
+
+    /**
+     * Verifica si un estado permite inscripciones
+     */
+    public boolean allowsInscriptions(ContestStatus status) {
+        return stateMachine.allowsInscriptions(status);
+    }
+
+
 
     /**
      * Valida si un concurso puede ser eliminado
@@ -196,16 +221,24 @@ public class ContestValidator {
     public List<String> validateDeletion(Contest contest) {
         List<String> errors = new ArrayList<>();
 
-        if (!"DRAFT".equals(contest.getStatus())) {
+        if (contest.getStatus() != ContestStatus.DRAFT) {
             errors.add("Solo se pueden eliminar concursos en estado DRAFT");
         }
 
-        // TODO: Verificar si tiene inscripciones
-        // if (contest.getTotalInscriptions() > 0) {
-        //     errors.add("No se puede eliminar un concurso que tiene inscripciones");
-        // }
+        // Nota: La verificación de inscripciones se realiza a nivel de servicio
+        // donde se tiene acceso al repositorio de inscripciones
 
         return errors;
+    }
+
+    /**
+     * Obtiene los nombres de estados válidos como string
+     */
+    private String getValidStatusNames() {
+        return VALID_STATUSES.stream()
+                .map(ContestStatus::name)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
     }
 
     /**
@@ -213,7 +246,7 @@ public class ContestValidator {
      */
     private boolean isValidUrl(String url) {
         try {
-            new java.net.URL(url);
+            java.net.URI.create(url).toURL();
             return true;
         } catch (Exception e) {
             return false;

@@ -18,7 +18,7 @@ public class ContestFilterMapper {
     public ContestResponse toResponse(Contest contest) {
         return ContestResponse.builder()
             .id(contest.getId())
-            .status(contest.getStatus())
+            .status(contest.getStatus() != null ? contest.getStatus().name() : null)
             .startDate(contest.getStartDate())
             .endDate(contest.getEndDate())
             .department(contest.getDependency())  // Mapeamos dependency como department

@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/admin/inscriptions")
@@ -83,12 +84,55 @@ public class AdminInscriptionController {
             @PathVariable String id,
             @RequestBody InscriptionStateChangeDTO stateChangeDTO
     ) {
-        Inscription updatedInscription = adminInscriptionService.changeInscriptionState(
-                id,
-                stateChangeDTO.getNewState(),
-                stateChangeDTO.getNote()
-        );
-        return ResponseEntity.ok(adminInscriptionMapper.toAdminDTO(updatedInscription));
+        try {
+            Inscription updatedInscription = adminInscriptionService.changeInscriptionState(
+                    id,
+                    stateChangeDTO.getNewState(),
+                    stateChangeDTO.getNote()
+            );
+            return ResponseEntity.ok(adminInscriptionMapper.toAdminDTO(updatedInscription));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{id}/valid-next-states")
+    @Operation(summary = "Obtiene los estados válidos siguientes para una inscripción")
+    public ResponseEntity<Set<String>> getValidNextStates(@PathVariable String id) {
+        try {
+            Inscription inscription = adminInscriptionService.getInscriptionById(id);
+            Set<InscriptionState> validStates = adminInscriptionService.getValidNextStates(inscription.getState());
+            Set<String> stateNames = validStates.stream()
+                .map(InscriptionState::name)
+                .collect(java.util.stream.Collectors.toSet());
+            return ResponseEntity.ok(stateNames);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/allows-document-upload")
+    @Operation(summary = "Verifica si una inscripción permite carga de documentos")
+    public ResponseEntity<Boolean> allowsDocumentUpload(@PathVariable String id) {
+        try {
+            Inscription inscription = adminInscriptionService.getInscriptionById(id);
+            boolean allows = adminInscriptionService.allowsDocumentUpload(inscription.getState());
+            return ResponseEntity.ok(allows);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/is-resumable")
+    @Operation(summary = "Verifica si una inscripción puede ser reanudada por el usuario")
+    public ResponseEntity<Boolean> isResumable(@PathVariable String id) {
+        try {
+            Inscription inscription = adminInscriptionService.getInscriptionById(id);
+            boolean resumable = adminInscriptionService.isResumable(inscription.getState());
+            return ResponseEntity.ok(resumable);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("/{id}/notes")

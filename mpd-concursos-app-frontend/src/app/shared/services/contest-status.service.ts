@@ -123,9 +123,11 @@ export class ContestStatusService {
 
   /**
    * Check if a status represents an active/open contest
+   * CORRECCIÓN INMEDIATA: PUBLISHED también permite inscripciones
    */
   isActiveStatus(status: ContestStatus | string): boolean {
-    return status?.toUpperCase() === 'ACTIVE';
+    const upperStatus = status?.toUpperCase();
+    return upperStatus === 'ACTIVE' || upperStatus === 'PUBLISHED';
   }
 
   /**

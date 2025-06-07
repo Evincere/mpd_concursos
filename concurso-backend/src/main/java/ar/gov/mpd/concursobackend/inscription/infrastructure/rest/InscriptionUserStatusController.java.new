@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
 
-import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.out.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;

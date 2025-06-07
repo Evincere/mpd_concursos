@@ -10,6 +10,7 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
 - **Panel Administrativo**: Herramientas completas para la gestión del proceso
 - **Sistema de Notificaciones**: Alertas y comunicaciones automáticas
 - **Seguimiento de Estados**: Control del progreso de cada concurso y postulación
+- **Máquinas de Estado**: Validación centralizada de transiciones de estado con reglas de negocio
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -136,6 +137,71 @@ flowchart TD
     classDef doc fill:#EBDEF0,stroke:#AF7AC5,stroke-width:2px;
     classDef deploy fill:#D5F5E3,stroke:#28B463,stroke-width:2px;
 ```
+
+## 🔄 Sistema de Máquinas de Estado
+
+El sistema implementa máquinas de estado centralizadas para garantizar la consistencia y validación de transiciones en todos los procesos críticos.
+
+### Máquina de Estado de Concursos
+
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> PUBLISHED: Aprobar
+    DRAFT --> CANCELLED: Cancelar
+    PUBLISHED --> ACTIVE: Activar Inscripciones
+    PUBLISHED --> CANCELLED: Cancelar
+    ACTIVE --> PAUSED: Pausar
+    ACTIVE --> CLOSED: Cerrar Inscripciones
+    ACTIVE --> CANCELLED: Cancelar
+    PAUSED --> ACTIVE: Reactivar
+    PAUSED --> CANCELLED: Cancelar
+    CLOSED --> FINISHED: Finalizar
+    CLOSED --> CANCELLED: Cancelar
+    FINISHED --> ARCHIVED: Archivar
+    IN_PROGRESS --> CLOSED: Cerrar (Legacy)
+    IN_PROGRESS --> CANCELLED: Cancelar (Legacy)
+    CANCELLED --> [*]
+    ARCHIVED --> [*]
+```
+
+### Máquina de Estado de Inscripciones
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE
+    ACTIVE --> COMPLETED_WITH_DOCS: Completar con Docs
+    ACTIVE --> COMPLETED_PENDING_DOCS: Completar sin Docs
+    ACTIVE --> CANCELLED: Cancelar
+    COMPLETED_WITH_DOCS --> PENDING: Auto-envío
+    COMPLETED_WITH_DOCS --> CANCELLED: Cancelar
+    COMPLETED_PENDING_DOCS --> COMPLETED_WITH_DOCS: Completar Docs
+    COMPLETED_PENDING_DOCS --> FROZEN: Vencer Plazo
+    COMPLETED_PENDING_DOCS --> CANCELLED: Cancelar
+    PENDING --> APPROVED: Aprobar
+    PENDING --> REJECTED: Rechazar
+    PENDING --> CANCELLED: Cancelar
+    FROZEN --> REJECTED: Auto-rechazo
+    APPROVED --> [*]
+    REJECTED --> [*]
+    CANCELLED --> [*]
+```
+
+### Características de las Máquinas de Estado
+
+- **Validación Centralizada**: Todas las transiciones son validadas por las máquinas de estado
+- **Reglas de Negocio**: Cada estado tiene reglas específicas documentadas
+- **Transiciones Automáticas**: Algunos estados se transicionan automáticamente según condiciones
+- **Estados Legacy**: Soporte para estados heredados del sistema anterior
+- **API Endpoints**: Exposición de estados válidos y validaciones vía REST API
+
+### Beneficios
+
+- ✅ **Consistencia**: Garantiza que todas las transiciones sigan las reglas de negocio
+- ✅ **Mantenibilidad**: Centraliza la lógica de estados en componentes reutilizables
+- ✅ **Testabilidad**: Permite testing unitario de todas las transiciones
+- ✅ **Documentación**: Auto-documenta las reglas de negocio en código
+- ✅ **Extensibilidad**: Facilita agregar nuevos estados y transiciones
 
 ## 🚀 Instalación y Configuración
 
