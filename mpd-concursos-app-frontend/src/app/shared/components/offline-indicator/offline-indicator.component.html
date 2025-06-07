@@ -1,0 +1,222 @@
+<div class="offline-indicator-wrapper" *ngIf="indicatorState.isVisible">
+  
+  <!-- Indicador compacto -->
+  <div [class]="getIndicatorClass()" 
+       [class.pulse]="shouldPulse()"
+       (click)="toggleExpanded()">
+    
+    <!-- Icono y estado básico -->
+    <div class="indicator-main">
+      <div class="connection-icon" [style.color]="getConnectionColor()">
+        <i [class]="getConnectionIcon()"></i>
+      </div>
+      
+      <div class="connection-info">
+        <span class="connection-status" [style.color]="getConnectionColor()">
+          {{ getConnectionText() }}
+        </span>
+        
+        <div class="connection-details" *ngIf="!indicatorState.isExpanded">
+          <!-- Operaciones pendientes -->
+          <span class="pending-count" *ngIf="indicatorState.pendingOperations > 0">
+            {{ indicatorState.pendingOperations }} pendientes
+          </span>
+          
+          <!-- Tiempo offline -->
+          <span class="offline-time" *ngIf="indicatorState.connectionStatus === 'offline'">
+            {{ formatDuration(indicatorState.offlineTime) }}
+          </span>
+          
+          <!-- Información de red -->
+          <span class="network-info" *ngIf="shouldShowNetworkInfo() && getNetworkInfo()">
+            {{ getNetworkInfo() }}
+          </span>
+        </div>
+      </div>
+      
+      <!-- Indicador de expansión -->
+      <div class="expand-indicator">
+        <i class="fas" [ngClass]="indicatorState.isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </div>
+    </div>
+    
+    <!-- Barra de progreso para sincronización -->
+    <div class="sync-progress" 
+         *ngIf="indicatorState.connectionStatus === 'reconnecting'"
+         [style.width.%]="getSyncProgress()">
+    </div>
+  </div>
+  
+  <!-- Panel expandido -->
+  <div class="indicator-expanded" *ngIf="indicatorState.isExpanded">
+    
+    <!-- Header del panel expandido -->
+    <div class="expanded-header">
+      <div class="expanded-title">
+        <i [class]="getConnectionIcon()" [style.color]="getConnectionColor()"></i>
+        <span>Estado de Conectividad</span>
+      </div>
+      <button class="close-btn" (click)="closeExpanded()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <!-- Contenido del panel expandido -->
+    <div class="expanded-content">
+      
+      <!-- Mensaje detallado -->
+      <div class="detailed-message">
+        <p>{{ getDetailedMessage() }}</p>
+      </div>
+      
+      <!-- Información de conectividad -->
+      <div class="connectivity-info" *ngIf="connectivity">
+        <div class="info-grid">
+          
+          <!-- Estado de conexión -->
+          <div class="info-item">
+            <label>Estado:</label>
+            <span [style.color]="getConnectionColor()">
+              <i [class]="getConnectionIcon()"></i>
+              {{ getConnectionText() }}
+            </span>
+          </div>
+          
+          <!-- Tipo de conexión -->
+          <div class="info-item" *ngIf="connectivity.connectionType !== 'unknown'">
+            <label>Tipo:</label>
+            <span>{{ connectivity.connectionType | titlecase }}</span>
+          </div>
+          
+          <!-- Velocidad efectiva -->
+          <div class="info-item" *ngIf="connectivity.effectiveType !== 'unknown'">
+            <label>Velocidad:</label>
+            <span>{{ connectivity.effectiveType | titlecase }}</span>
+          </div>
+          
+          <!-- Velocidad de descarga -->
+          <div class="info-item" *ngIf="connectivity.downlink > 0">
+            <label>Descarga:</label>
+            <span>{{ connectivity.downlink }} Mbps</span>
+          </div>
+          
+          <!-- Latencia -->
+          <div class="info-item" *ngIf="connectivity.rtt > 0">
+            <label>Latencia:</label>
+            <span>{{ connectivity.rtt }}ms</span>
+          </div>
+          
+          <!-- Ahorro de datos -->
+          <div class="info-item">
+            <label>Ahorro de datos:</label>
+            <span [style.color]="connectivity.saveData ? '#f59e0b' : '#4CAF50'">
+              {{ connectivity.saveData ? 'Activado' : 'Desactivado' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Información de sincronización -->
+      <div class="sync-info" *ngIf="indicatorState.pendingOperations > 0 || indicatorState.lastSync">
+        <h4 class="sync-title">
+          <i class="fas fa-sync-alt"></i>
+          Sincronización
+        </h4>
+        
+        <div class="sync-details">
+          <!-- Operaciones pendientes -->
+          <div class="sync-item" *ngIf="indicatorState.pendingOperations > 0">
+            <label>Operaciones pendientes:</label>
+            <span class="pending-badge">{{ indicatorState.pendingOperations }}</span>
+          </div>
+          
+          <!-- Última sincronización -->
+          <div class="sync-item" *ngIf="indicatorState.lastSync">
+            <label>Última sincronización:</label>
+            <span>{{ indicatorState.lastSync | date:'short' }}</span>
+          </div>
+          
+          <!-- Estado de sincronización -->
+          <div class="sync-item">
+            <label>Estado:</label>
+            <span [style.color]="getConnectionColor()">
+              <i class="fas" [ngClass]="{
+                'fa-check-circle': indicatorState.connectionStatus === 'online' && indicatorState.pendingOperations === 0,
+                'fa-clock': indicatorState.pendingOperations > 0,
+                'fa-exclamation-triangle': indicatorState.connectionStatus === 'offline',
+                'fa-sync-alt fa-spin': indicatorState.connectionStatus === 'reconnecting'
+              }"></i>
+              <span *ngIf="indicatorState.connectionStatus === 'online' && indicatorState.pendingOperations === 0">
+                Sincronizado
+              </span>
+              <span *ngIf="indicatorState.pendingOperations > 0">
+                Pendiente
+              </span>
+              <span *ngIf="indicatorState.connectionStatus === 'offline'">
+                Pausado
+              </span>
+              <span *ngIf="indicatorState.connectionStatus === 'reconnecting'">
+                Sincronizando...
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tiempo offline -->
+      <div class="offline-time-info" *ngIf="indicatorState.connectionStatus === 'offline'">
+        <h4 class="offline-title">
+          <i class="fas fa-clock"></i>
+          Tiempo sin Conexión
+        </h4>
+        
+        <div class="offline-duration">
+          <span class="duration-value">{{ formatDuration(indicatorState.offlineTime) }}</span>
+          <span class="duration-label">desde la última conexión</span>
+        </div>
+        
+        <div class="offline-tips">
+          <h5>Funcionalidades disponibles offline:</h5>
+          <ul>
+            <li><i class="fas fa-check"></i> Navegación por la aplicación</li>
+            <li><i class="fas fa-check"></i> Visualización de datos cacheados</li>
+            <li><i class="fas fa-check"></i> Completar formularios</li>
+            <li><i class="fas fa-times"></i> Descargar nuevos datos</li>
+            <li><i class="fas fa-times"></i> Subir archivos</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Acciones -->
+      <div class="expanded-actions">
+        <!-- Botón de sincronización manual -->
+        <button class="action-btn sync-btn" 
+                *ngIf="shouldShowSyncButton()"
+                (click)="forceSync()">
+          <i class="fas fa-sync-alt"></i>
+          <span>Sincronizar Ahora</span>
+        </button>
+        
+        <!-- Botón de verificar conexión -->
+        <button class="action-btn check-btn" 
+                *ngIf="indicatorState.connectionStatus === 'offline'"
+                (click)="closeExpanded()">
+          <i class="fas fa-search"></i>
+          <span>Verificar Conexión</span>
+        </button>
+        
+        <!-- Información adicional -->
+        <div class="action-info" *ngIf="indicatorState.connectionStatus === 'offline'">
+          <i class="fas fa-info-circle"></i>
+          <span>Los cambios se sincronizarán automáticamente al restaurar la conexión</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Overlay para cerrar panel expandido -->
+  <div class="indicator-overlay" 
+       *ngIf="indicatorState.isExpanded"
+       (click)="closeExpanded()">
+  </div>
+</div>

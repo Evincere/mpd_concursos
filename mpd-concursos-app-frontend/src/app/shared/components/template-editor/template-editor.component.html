@@ -1,0 +1,240 @@
+<div class="template-editor" [class.disabled]="disabled">
+  
+  <!-- Header del editor -->
+  <div class="editor-header" *ngIf="showToolbar">
+    
+    <!-- Selector de modo -->
+    <div class="mode-selector">
+      <button class="mode-btn" 
+              *ngFor="let modeOption of modes"
+              [class.active]="mode === modeOption.value"
+              (click)="changeMode(modeOption.value)"
+              [title]="modeOption.label">
+        <i [class]="modeOption.icon"></i>
+        <span>{{ modeOption.label }}</span>
+      </button>
+    </div>
+
+    <!-- Barra de herramientas -->
+    <div class="toolbar">
+      <ng-container *ngFor="let tool of tools">
+        
+        <!-- Separador -->
+        <div class="toolbar-separator" *ngIf="tool.separator"></div>
+        
+        <!-- Herramienta simple -->
+        <button class="toolbar-btn" 
+                *ngIf="!tool.separator && !tool.dropdown"
+                [class.active]="isToolActive(tool)"
+                [disabled]="isToolDisabled(tool)"
+                (click)="executeAction(tool.action)"
+                [title]="tool.label + (tool.shortcut ? ' (' + tool.shortcut + ')' : '')">
+          <i [class]="getToolIcon(tool)"></i>
+        </button>
+        
+        <!-- Herramienta con dropdown -->
+        <div class="toolbar-dropdown" 
+             *ngIf="!tool.separator && tool.dropdown">
+          <button class="toolbar-btn dropdown-toggle"
+                  [class.active]="isToolActive(tool)"
+                  [disabled]="isToolDisabled(tool)"
+                  [title]="tool.label">
+            <i [class]="getToolIcon(tool)"></i>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+          </button>
+          <div class="dropdown-menu">
+            <button class="dropdown-item"
+                    *ngFor="let option of tool.dropdown"
+                    (click)="executeAction(tool.action, option.value)">
+              <i [class]="option.icon" *ngIf="option.icon"></i>
+              <span>{{ option.label }}</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Contenido del editor -->
+  <div class="editor-content">
+    
+    <!-- Panel principal -->
+    <div class="editor-main" [class.with-preview]="showPreviewPanel">
+      
+      <!-- Editor de texto -->
+      <div class="editor-area" *ngIf="mode === 'text' || mode === 'markdown'">
+        <textarea #editor
+                  class="text-editor"
+                  [(ngModel)]="content"
+                  [placeholder]="placeholder"
+                  [disabled]="disabled"
+                  [style.min-height]="minHeight"
+                  [style.max-height]="maxHeight"
+                  (input)="onContentChange($event)"
+                  (keydown)="onKeyDown($event)"
+                  (blur)="onTouched()">
+        </textarea>
+      </div>
+
+      <!-- Editor HTML -->
+      <div class="editor-area" *ngIf="mode === 'html'">
+        <div #htmlEditor
+             class="html-editor"
+             contenteditable="true"
+             [innerHTML]="content"
+             [style.min-height]="minHeight"
+             [style.max-height]="maxHeight"
+             (input)="onContentChange($event)"
+             (keydown)="onKeyDown($event)"
+             (blur)="onTouched()">
+        </div>
+      </div>
+
+      <!-- Información del editor -->
+      <div class="editor-info">
+        <div class="editor-stats">
+          <span class="stat">
+            <i class="fas fa-font"></i>
+            {{ content.length }} caracteres
+          </span>
+          <span class="stat" *ngIf="content.split(' ').length > 1">
+            <i class="fas fa-file-word"></i>
+            {{ content.split(' ').length }} palabras
+          </span>
+        </div>
+        
+        <div class="editor-actions">
+          <button class="action-btn" 
+                  (click)="toggleVariableSelector()"
+                  [class.active]="showVariables"
+                  *ngIf="showVariableSelector">
+            <i class="fas fa-code"></i>
+            <span>Variables</span>
+          </button>
+          
+          <button class="action-btn" 
+                  (click)="togglePreview()"
+                  [class.active]="showPreviewPanel"
+                  *ngIf="showPreview">
+            <i class="fas fa-eye"></i>
+            <span>Vista previa</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de vista previa -->
+    <div class="preview-panel" *ngIf="showPreviewPanel">
+      <div class="preview-header">
+        <h4>
+          <i class="fas fa-eye"></i>
+          Vista Previa
+        </h4>
+        <button class="close-preview" (click)="togglePreview()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="preview-content">
+        <div class="preview-notice">
+          <i class="fas fa-info-circle"></i>
+          <span>Vista previa con datos de ejemplo</span>
+        </div>
+        
+        <div class="preview-body" 
+             [innerHTML]="previewContent"
+             [style.min-height]="minHeight">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selector de variables -->
+  <div class="variables-panel" *ngIf="showVariables">
+    <app-template-variable-selector
+      [isOpen]="showVariables"
+      [allowedContexts]="allowedContexts"
+      [targetTextarea]="editorRef?.nativeElement"
+      [insertAtCursor]="false"
+      mode="single"
+      view="grid"
+      (openChanged)="showVariables = $event"
+      (variableSelected)="onVariableSelected($event)">
+    </app-template-variable-selector>
+  </div>
+
+  <!-- Ayuda contextual -->
+  <div class="editor-help" *ngIf="mode === 'markdown'">
+    <div class="help-header">
+      <h5>
+        <i class="fab fa-markdown"></i>
+        Sintaxis Markdown
+      </h5>
+    </div>
+    
+    <div class="help-content">
+      <div class="help-item">
+        <code>**texto**</code>
+        <span>Negrita</span>
+      </div>
+      <div class="help-item">
+        <code>*texto*</code>
+        <span>Cursiva</span>
+      </div>
+      <div class="help-item">
+        <code># Título</code>
+        <span>Encabezado</span>
+      </div>
+      <div class="help-item">
+        <code>[enlace](url)</code>
+        <span>Enlace</span>
+      </div>
+      <div class="help-item">
+        <code>- elemento</code>
+        <span>Lista</span>
+      </div>
+      <div class="help-item">
+        <code>`código`</code>
+        <span>Código</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicadores de estado -->
+  <div class="editor-status">
+    <div class="status-indicators">
+      <div class="status-indicator" 
+           [class.active]="editorState.canUndo"
+           title="Deshacer disponible">
+        <i class="fas fa-undo"></i>
+      </div>
+      <div class="status-indicator" 
+           [class.active]="editorState.canRedo"
+           title="Rehacer disponible">
+        <i class="fas fa-redo"></i>
+      </div>
+      <div class="status-indicator" 
+           [class.active]="editorState.isBold"
+           title="Texto en negrita">
+        <i class="fas fa-bold"></i>
+      </div>
+      <div class="status-indicator" 
+           [class.active]="editorState.isItalic"
+           title="Texto en cursiva">
+        <i class="fas fa-italic"></i>
+      </div>
+      <div class="status-indicator" 
+           [class.active]="editorState.isUnderline"
+           title="Texto subrayado">
+        <i class="fas fa-underline"></i>
+      </div>
+    </div>
+    
+    <div class="status-info">
+      <span class="mode-indicator">{{ mode.toUpperCase() }}</span>
+      <span class="cursor-position" *ngIf="editorState.cursorPosition > 0">
+        Pos: {{ editorState.cursorPosition }}
+      </span>
+    </div>
+  </div>
+</div>

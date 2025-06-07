@@ -1,0 +1,437 @@
+<div class="notification-queue">
+  <!-- Header -->
+  <div class="queue-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-layer-group"></i>
+          Cola de Notificaciones
+        </h1>
+        <p class="page-description">
+          Gestiona y monitorea la cola de notificaciones del sistema
+        </p>
+      </div>
+      <div class="header-stats" *ngIf="queueStats">
+        <div class="stat-item">
+          <span class="stat-number">{{ queueStats.totalNotifications }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item pending">
+          <span class="stat-number">{{ queueStats.pendingNotifications }}</span>
+          <span class="stat-label">Pendientes</span>
+        </div>
+        <div class="stat-item processing">
+          <span class="stat-number">{{ queueStats.processingNotifications }}</span>
+          <span class="stat-label">Procesando</span>
+        </div>
+        <div class="stat-item success">
+          <span class="stat-number">{{ queueStats.sentNotifications }}</span>
+          <span class="stat-label">Enviadas</span>
+        </div>
+        <div class="stat-item error">
+          <span class="stat-number">{{ queueStats.failedNotifications }}</span>
+          <span class="stat-label">Fallidas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación -->
+  <div class="queue-navigation">
+    <div class="nav-tabs">
+      <button class="nav-tab" 
+              [class.active]="activeView === 'queue'"
+              (click)="setActiveView('queue')">
+        <i class="fas fa-list"></i>
+        <span>Cola</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'configurations'"
+              (click)="setActiveView('configurations')">
+        <i class="fas fa-cogs"></i>
+        <span>Configuraciones</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'stats'"
+              (click)="setActiveView('stats')">
+        <i class="fas fa-chart-bar"></i>
+        <span>Estadísticas</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'monitoring'"
+              (click)="setActiveView('monitoring')">
+        <i class="fas fa-desktop"></i>
+        <span>Monitoreo</span>
+        <span class="live-indicator" *ngIf="realTimeEnabled"></span>
+      </button>
+    </div>
+
+    <div class="nav-actions">
+      <button class="action-btn secondary" (click)="retryAllFailed()">
+        <i class="fas fa-redo"></i>
+        <span>Reintentar Fallidas</span>
+      </button>
+      <button class="action-btn secondary" (click)="cleanupOldNotifications()">
+        <i class="fas fa-trash-alt"></i>
+        <span>Limpiar Antiguas</span>
+      </button>
+      <button class="action-btn secondary" (click)="checkQueueHealth()">
+        <i class="fas fa-heartbeat"></i>
+        <span>Verificar Salud</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="queue-content">
+    
+    <!-- Vista: Cola de notificaciones -->
+    <div class="queue-view" *ngIf="activeView === 'queue'">
+      
+      <!-- Controles de cola -->
+      <div class="queue-controls">
+        <div class="control-section">
+          <h3>Controles de Cola</h3>
+          <div class="control-buttons">
+            <button class="control-btn pause" (click)="pauseQueue()">
+              <i class="fas fa-pause"></i>
+              <span>Pausar Todas</span>
+            </button>
+            <button class="control-btn resume" (click)="resumeQueue()">
+              <i class="fas fa-play"></i>
+              <span>Reanudar Todas</span>
+            </button>
+            <div class="type-controls">
+              <button *ngFor="let type of notificationTypes" 
+                      class="type-control-btn"
+                      [style.border-color]="type.color"
+                      (click)="pauseQueue(type.value)"
+                      title="Pausar cola de {{ type.label }}">
+                <i [class]="type.icon" [style.color]="type.color"></i>
+                <span>{{ type.label }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulario para agregar notificación -->
+        <div class="enqueue-section">
+          <h3>Agregar a Cola</h3>
+          <form [formGroup]="enqueueForm" (ngSubmit)="enqueueNotification()" class="enqueue-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label for="type">Tipo</label>
+                <select id="type" formControlName="type">
+                  <option *ngFor="let type of notificationTypes" [value]="type.value">
+                    {{ type.label }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="priority">Prioridad</label>
+                <select id="priority" formControlName="priority">
+                  <option *ngFor="let priority of priorities" [value]="priority.value">
+                    {{ priority.label }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="scheduledAt">Programar para</label>
+                <input type="datetime-local" id="scheduledAt" formControlName="scheduledAt">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-field">
+                <label for="subject">Asunto</label>
+                <input type="text" id="subject" formControlName="subject" placeholder="Asunto de la notificación">
+              </div>
+              <div class="form-field">
+                <label for="recipients">Destinatarios</label>
+                <input type="text" 
+                       id="recipients" 
+                       formControlName="recipients" 
+                       placeholder="email1@example.com, email2@example.com"
+                       [class.error]="isFieldInvalid(enqueueForm, 'recipients')">
+                <div class="field-error" *ngIf="isFieldInvalid(enqueueForm, 'recipients')">
+                  {{ getFieldError(enqueueForm, 'recipients') }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-field full-width">
+              <label for="content">Contenido</label>
+              <textarea id="content" 
+                        formControlName="content" 
+                        placeholder="Contenido de la notificación"
+                        rows="3"
+                        [class.error]="isFieldInvalid(enqueueForm, 'content')"></textarea>
+              <div class="field-error" *ngIf="isFieldInvalid(enqueueForm, 'content')">
+                {{ getFieldError(enqueueForm, 'content') }}
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" 
+                      class="submit-btn"
+                      [disabled]="enqueueForm.invalid || processing">
+                <i class="fas" [ngClass]="processing ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
+                <span>{{ processing ? 'Agregando...' : 'Agregar a Cola' }}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters-section">
+        <form [formGroup]="filtersForm" class="filters-form">
+          <div class="filters-grid">
+            
+            <!-- Búsqueda -->
+            <div class="filter-field full-width">
+              <label for="search">Buscar notificaciones</label>
+              <input type="text" 
+                     id="search"
+                     formControlName="search"
+                     placeholder="Buscar por ID, asunto, contenido...">
+            </div>
+
+            <!-- Tipo -->
+            <div class="filter-field">
+              <label for="type">Tipo</label>
+              <select id="type" formControlName="type">
+                <option value="">Todos los tipos</option>
+                <option *ngFor="let type of notificationTypes" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Estado -->
+            <div class="filter-field">
+              <label for="status">Estado</label>
+              <select id="status" formControlName="status">
+                <option value="">Todos los estados</option>
+                <option *ngFor="let status of statuses" [value]="status.value">
+                  {{ status.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Prioridad -->
+            <div class="filter-field">
+              <label for="priority">Prioridad</label>
+              <select id="priority" formControlName="priority">
+                <option value="">Todas las prioridades</option>
+                <option *ngFor="let priority of priorities" [value]="priority.value">
+                  {{ priority.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Creado por -->
+            <div class="filter-field">
+              <label for="createdBy">Creado por</label>
+              <input type="text" id="createdBy" formControlName="createdBy" placeholder="Usuario">
+            </div>
+
+            <!-- Fuente -->
+            <div class="filter-field">
+              <label for="source">Fuente</label>
+              <select id="source" formControlName="source">
+                <option value="">Todas las fuentes</option>
+                <option value="system">Sistema</option>
+                <option value="trigger">Trigger</option>
+                <option value="manual">Manual</option>
+                <option value="api">API</option>
+              </select>
+            </div>
+
+            <!-- Fecha desde -->
+            <div class="filter-field">
+              <label for="dateFrom">Desde</label>
+              <input type="datetime-local" id="dateFrom" formControlName="dateFrom">
+            </div>
+
+            <!-- Fecha hasta -->
+            <div class="filter-field">
+              <label for="dateTo">Hasta</label>
+              <input type="datetime-local" id="dateTo" formControlName="dateTo">
+            </div>
+          </div>
+
+          <div class="filters-actions">
+            <button type="button" 
+                    class="clear-btn"
+                    (click)="clearFilters()">
+              <i class="fas fa-times"></i>
+              <span>Limpiar Filtros</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de notificaciones -->
+      <div class="notifications-list">
+        <div class="notification-item" 
+             *ngFor="let notification of filteredNotifications"
+             [class]="notification.status">
+          
+          <!-- Header de notificación -->
+          <div class="notification-header">
+            <div class="notification-info">
+              <div class="notification-icon" 
+                   [style.color]="getTypeConfig(notification.type)?.color">
+                <i [class]="getTypeConfig(notification.type)?.icon"></i>
+              </div>
+              <div class="notification-details">
+                <h3 class="notification-subject">{{ notification.subject || 'Sin asunto' }}</h3>
+                <p class="notification-meta">
+                  <span class="notification-id">{{ notification.id }}</span>
+                  <span class="notification-time">{{ formatRelativeTime(notification.metadata.createdAt) }}</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="notification-badges">
+              <span class="type-badge" [style.background-color]="getTypeConfig(notification.type)?.color">
+                {{ getTypeConfig(notification.type)?.label }}
+              </span>
+              <span class="priority-badge" [style.background-color]="getPriorityConfig(notification.priority)?.color">
+                {{ getPriorityConfig(notification.priority)?.label }}
+              </span>
+              <span class="status-badge" [style.background-color]="getStatusConfig(notification.status)?.color">
+                <i [class]="getStatusConfig(notification.status)?.icon"></i>
+                {{ getStatusConfig(notification.status)?.label }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Contenido de notificación -->
+          <div class="notification-content">
+            <p class="notification-text">{{ notification.content | slice:0:200 }}{{ notification.content.length > 200 ? '...' : '' }}</p>
+            
+            <!-- Destinatarios -->
+            <div class="notification-recipients">
+              <h4>Destinatarios ({{ notification.recipients.length }}):</h4>
+              <div class="recipients-list">
+                <span class="recipient" *ngFor="let recipient of notification.recipients.slice(0, 3)">
+                  {{ recipient.email || recipient.phone || recipient.userId }}
+                </span>
+                <span class="more-recipients" *ngIf="notification.recipients.length > 3">
+                  +{{ notification.recipients.length - 3 }} más
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información de procesamiento -->
+          <div class="notification-processing" *ngIf="notification.processing.attempts > 0">
+            <div class="processing-info">
+              <div class="processing-item">
+                <span class="processing-label">Intentos:</span>
+                <span class="processing-value">{{ notification.processing.attempts }}/{{ notification.settings.maxRetries }}</span>
+              </div>
+              <div class="processing-item" *ngIf="notification.processing.lastAttemptAt">
+                <span class="processing-label">Último intento:</span>
+                <span class="processing-value">{{ notification.processing.lastAttemptAt | date:'short' }}</span>
+              </div>
+              <div class="processing-item" *ngIf="notification.processing.nextRetryAt">
+                <span class="processing-label">Próximo intento:</span>
+                <span class="processing-value">{{ notification.processing.nextRetryAt | date:'short' }}</span>
+              </div>
+              <div class="processing-item" *ngIf="notification.processing.processingDuration">
+                <span class="processing-label">Duración:</span>
+                <span class="processing-value">{{ formatDuration(notification.processing.processingDuration) }}</span>
+              </div>
+            </div>
+            
+            <!-- Errores -->
+            <div class="processing-errors" *ngIf="notification.processing.errors.length > 0">
+              <h5>Errores:</h5>
+              <div class="error-list">
+                <div class="error-item" *ngFor="let error of notification.processing.errors">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>{{ error }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estadísticas de entrega -->
+          <div class="notification-delivery" *ngIf="notification.delivery.sentCount > 0">
+            <div class="delivery-stats">
+              <div class="delivery-stat">
+                <span class="stat-label">Enviadas:</span>
+                <span class="stat-value">{{ notification.delivery.sentCount }}</span>
+              </div>
+              <div class="delivery-stat">
+                <span class="stat-label">Entregadas:</span>
+                <span class="stat-value">{{ notification.delivery.deliveredCount }}</span>
+              </div>
+              <div class="delivery-stat">
+                <span class="stat-label">Fallidas:</span>
+                <span class="stat-value">{{ notification.delivery.failedCount }}</span>
+              </div>
+              <div class="delivery-stat" *ngIf="notification.delivery.openedCount > 0">
+                <span class="stat-label">Abiertas:</span>
+                <span class="stat-value">{{ notification.delivery.openedCount }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="notification-actions">
+            <button class="action-btn small" 
+                    *ngIf="notification.status === 'failed'"
+                    (click)="retryNotification(notification)"
+                    title="Reintentar">
+              <i class="fas fa-redo"></i>
+            </button>
+            <button class="action-btn small" 
+                    *ngIf="notification.status === 'pending' || notification.status === 'scheduled'"
+                    (click)="cancelNotification(notification)"
+                    title="Cancelar">
+              <i class="fas fa-ban"></i>
+            </button>
+            <button class="action-btn small" 
+                    (click)="selectedNotification = notification"
+                    title="Ver detalles">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+
+          <!-- Footer -->
+          <div class="notification-footer">
+            <div class="notification-metadata">
+              <span class="metadata-item">
+                <i class="fas fa-user"></i>
+                {{ notification.metadata.createdBy }}
+              </span>
+              <span class="metadata-item">
+                <i class="fas fa-code-branch"></i>
+                {{ notification.metadata.source }}
+              </span>
+              <span class="metadata-item" *ngIf="notification.scheduledAt">
+                <i class="fas fa-calendar"></i>
+                Programada: {{ notification.scheduledAt | date:'short' }}
+              </span>
+              <span class="metadata-item" *ngIf="notification.expiresAt">
+                <i class="fas fa-clock"></i>
+                Expira: {{ notification.expiresAt | date:'short' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div class="empty-state" *ngIf="filteredNotifications.length === 0 && !loading">
+          <i class="fas fa-layer-group"></i>
+          <h3>No se encontraron notificaciones</h3>
+          <p>No hay notificaciones en cola que coincidan con los filtros aplicados</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

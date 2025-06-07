@@ -1,0 +1,578 @@
+@import '../../../styles/variables';
+
+.template-editor {
+  background: $glass-background-primary;
+  border: 1px solid $glass-background-secondary;
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  &.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #374151, #4b5563);
+    border-bottom: 1px solid $glass-background-secondary;
+
+    .mode-selector {
+      display: flex;
+      gap: 4px;
+
+      .mode-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all $transition-smooth;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+
+        &.active {
+          background: #3b82f6;
+          border-color: #3b82f6;
+          color: white;
+        }
+
+        i {
+          font-size: 12px;
+        }
+      }
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .toolbar-separator {
+        width: 1px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 0 4px;
+      }
+
+      .toolbar-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        color: rgba(255, 255, 255, 0.8);
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all $transition-smooth;
+        position: relative;
+
+        &:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.2);
+          color: white;
+        }
+
+        &.active {
+          background: #3b82f6;
+          border-color: #3b82f6;
+          color: white;
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        i {
+          font-size: 12px;
+        }
+
+        .dropdown-arrow {
+          font-size: 8px;
+          margin-left: 2px;
+        }
+      }
+
+      .toolbar-dropdown {
+        position: relative;
+
+        .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          background: $glass-background-primary;
+          border: 1px solid $glass-background-secondary;
+          border-radius: 6px;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+          z-index: 1000;
+          min-width: 120px;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-4px);
+          transition: all $transition-smooth;
+
+          .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: $text-primary;
+            text-align: left;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all $transition-smooth;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.05);
+            }
+
+            i {
+              font-size: 12px;
+              width: 14px;
+            }
+          }
+        }
+
+        &:hover .dropdown-menu {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  .editor-content {
+    display: flex;
+    min-height: 300px;
+
+    .editor-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      &.with-preview {
+        border-right: 1px solid $glass-background-secondary;
+      }
+
+      .editor-area {
+        flex: 1;
+        position: relative;
+
+        .text-editor {
+          width: 100%;
+          height: 100%;
+          background: transparent;
+          border: none;
+          color: $text-primary;
+          padding: 16px;
+          font-size: 14px;
+          line-height: 1.6;
+          font-family: 'Courier New', monospace;
+          resize: none;
+          outline: none;
+
+          &::placeholder {
+            color: $text-secondary;
+            opacity: 0.7;
+          }
+
+          &:focus {
+            background: rgba(255, 255, 255, 0.02);
+          }
+        }
+
+        .html-editor {
+          width: 100%;
+          height: 100%;
+          padding: 16px;
+          font-size: 14px;
+          line-height: 1.6;
+          color: $text-primary;
+          outline: none;
+          overflow-y: auto;
+
+          &:focus {
+            background: rgba(255, 255, 255, 0.02);
+          }
+
+          &[contenteditable="true"]:empty:before {
+            content: attr(data-placeholder);
+            color: $text-secondary;
+            opacity: 0.7;
+          }
+        }
+      }
+
+      .editor-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid $glass-background-secondary;
+
+        .editor-stats {
+          display: flex;
+          gap: 16px;
+
+          .stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: $text-secondary;
+            font-size: 11px;
+            font-weight: 500;
+
+            i {
+              font-size: 10px;
+            }
+          }
+        }
+
+        .editor-actions {
+          display: flex;
+          gap: 8px;
+
+          .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: transparent;
+            border: 1px solid $glass-background-secondary;
+            color: $text-secondary;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all $transition-smooth;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.05);
+              color: $text-primary;
+            }
+
+            &.active {
+              background: #3b82f6;
+              border-color: #3b82f6;
+              color: white;
+            }
+
+            i {
+              font-size: 10px;
+            }
+          }
+        }
+      }
+    }
+
+    .preview-panel {
+      width: 50%;
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.02);
+
+      .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid $glass-background-secondary;
+
+        h4 {
+          color: $text-primary;
+          font-size: 13px;
+          font-weight: 600;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          i {
+            color: #3b82f6;
+            font-size: 12px;
+          }
+        }
+
+        .close-preview {
+          background: transparent;
+          border: none;
+          color: $text-secondary;
+          width: 20px;
+          height: 20px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all $transition-smooth;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: $text-primary;
+          }
+
+          i {
+            font-size: 10px;
+          }
+        }
+      }
+
+      .preview-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .preview-notice {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 16px;
+          background: rgba(59, 130, 246, 0.1);
+          color: #3b82f6;
+          font-size: 11px;
+          font-weight: 500;
+
+          i {
+            font-size: 10px;
+          }
+        }
+
+        .preview-body {
+          flex: 1;
+          padding: 16px;
+          color: $text-primary;
+          font-size: 14px;
+          line-height: 1.6;
+          overflow-y: auto;
+
+          h1, h2, h3, h4, h5, h6 {
+            color: $text-primary;
+            margin: 0 0 12px 0;
+          }
+
+          p {
+            margin: 0 0 12px 0;
+          }
+
+          strong {
+            font-weight: 600;
+          }
+
+          em {
+            font-style: italic;
+          }
+
+          code {
+            background: rgba(255, 255, 255, 0.1);
+            color: #3b82f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+          }
+
+          ul, ol {
+            margin: 0 0 12px 20px;
+          }
+
+          a {
+            color: #3b82f6;
+            text-decoration: none;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .variables-panel {
+    border-top: 1px solid $glass-background-secondary;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .editor-help {
+    border-top: 1px solid $glass-background-secondary;
+    background: rgba(255, 255, 255, 0.02);
+
+    .help-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid $glass-background-secondary;
+
+      h5 {
+        color: $text-primary;
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        i {
+          color: #f59e0b;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .help-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      padding: 12px 16px;
+
+      .help-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        code {
+          background: rgba(255, 255, 255, 0.1);
+          color: #3b82f6;
+          padding: 2px 4px;
+          border-radius: 3px;
+          font-family: 'Courier New', monospace;
+          font-size: 11px;
+          font-weight: 600;
+        }
+
+        span {
+          color: $text-secondary;
+          font-size: 10px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  .editor-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid $glass-background-secondary;
+
+    .status-indicators {
+      display: flex;
+      gap: 6px;
+
+      .status-indicator {
+        width: 16px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $text-secondary;
+        font-size: 8px;
+        transition: all $transition-smooth;
+
+        &.active {
+          background: #3b82f6;
+          color: white;
+        }
+      }
+    }
+
+    .status-info {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+
+      .mode-indicator {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        padding: 2px 6px;
+        border-radius: 8px;
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .cursor-position {
+        color: $text-secondary;
+        font-size: 10px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .template-editor {
+    .editor-header {
+      flex-direction: column;
+      gap: 8px;
+
+      .mode-selector {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .toolbar {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+
+    .editor-content {
+      flex-direction: column;
+
+      .editor-main.with-preview {
+        border-right: none;
+        border-bottom: 1px solid $glass-background-secondary;
+      }
+
+      .preview-panel {
+        width: 100%;
+        max-height: 300px;
+      }
+
+      .editor-info {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+      }
+    }
+
+    .editor-help .help-content {
+      grid-template-columns: 1fr;
+    }
+
+    .editor-status {
+      flex-direction: column;
+      gap: 8px;
+      text-align: center;
+    }
+  }
+}

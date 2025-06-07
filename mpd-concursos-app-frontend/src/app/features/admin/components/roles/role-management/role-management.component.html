@@ -1,0 +1,457 @@
+<div class="role-management-container">
+  <!-- Header con estadísticas -->
+  <div class="header-section" *hasPermission="'roles.read'">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-user-shield"></i>
+        Gestión de Roles y Permisos
+      </h1>
+      
+      <!-- Estadísticas rápidas -->
+      <div class="stats-grid" *ngIf="statistics">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users-cog"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.totalRoles }}</span>
+            <span class="stat-label">Total Roles</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.activeRoles }}</span>
+            <span class="stat-label">Roles Activos</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-key"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.totalPermissions }}</span>
+            <span class="stat-label">Permisos</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.usersWithRoles }}</span>
+            <span class="stat-label">Usuarios con Roles</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles y filtros -->
+  <div class="controls-section">
+    <div class="controls-header">
+      <div class="search-controls">
+        <form [formGroup]="searchForm" class="search-form">
+          <div class="search-field">
+            <i class="fas fa-search search-icon"></i>
+            <input 
+              type="text" 
+              formControlName="search"
+              placeholder="Buscar roles..."
+              class="search-input">
+          </div>
+          
+          <select formControlName="type" class="filter-select">
+            <option value="">Todos los tipos</option>
+            <option *ngFor="let type of roleTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          
+          <select formControlName="level" class="filter-select">
+            <option value="">Todos los niveles</option>
+            <option *ngFor="let level of roleLevels" [value]="level.value">
+              {{ level.label }}
+            </option>
+          </select>
+          
+          <select formControlName="isActive" class="filter-select">
+            <option [ngValue]="null">Todos los estados</option>
+            <option [ngValue]="true">Activos</option>
+            <option [ngValue]="false">Inactivos</option>
+          </select>
+        </form>
+      </div>
+      
+      <div class="action-controls">
+        <!-- Controles de vista -->
+        <div class="view-controls">
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'list'"
+            (click)="setViewMode('list')"
+            title="Vista de lista">
+            <i class="fas fa-list"></i>
+          </button>
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'cards'"
+            (click)="setViewMode('cards')"
+            title="Vista de tarjetas">
+            <i class="fas fa-th-large"></i>
+          </button>
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'matrix'"
+            (click)="setViewMode('matrix')"
+            title="Matriz de permisos">
+            <i class="fas fa-table"></i>
+          </button>
+        </div>
+        
+        <!-- Botón crear rol -->
+        <button 
+          class="create-btn"
+          *hasPermission="'roles.create'"
+          (click)="showCreateRoleForm()"
+          [disabled]="loading">
+          <i class="fas fa-plus"></i>
+          Crear Rol
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="main-content">
+    <!-- Vista de lista -->
+    <div class="roles-list" *ngIf="viewMode === 'list'">
+      <div class="table-container">
+        <table class="roles-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Nivel</th>
+              <th>Permisos</th>
+              <th>Usuarios</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let role of getPaginatedRoles()" 
+                class="role-row"
+                [class.selected]="selectedRole?.id === role.id"
+                (click)="selectRole(role)">
+              
+              <td class="role-name">
+                <div class="role-info">
+                  <span class="name">{{ role.name }}</span>
+                  <span class="description">{{ role.description }}</span>
+                </div>
+              </td>
+              
+              <td>
+                <span class="badge" [ngClass]="'badge-' + getRoleTypeColor(role.type)">
+                  {{ roleTypes.find(t => t.value === role.type)?.label }}
+                </span>
+              </td>
+              
+              <td>
+                <span class="badge" [ngClass]="'badge-' + getRoleLevelColor(role.level)">
+                  {{ roleLevels.find(l => l.value === role.level)?.label }}
+                </span>
+              </td>
+              
+              <td>
+                <span class="permissions-count">
+                  {{ role.permissions.length }} permisos
+                </span>
+              </td>
+              
+              <td>
+                <span class="users-count">
+                  {{ role.userCount || 0 }} usuarios
+                </span>
+              </td>
+              
+              <td>
+                <span class="status-badge" [ngClass]="role.isActive ? 'active' : 'inactive'">
+                  {{ role.isActive ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              
+              <td class="actions">
+                <button 
+                  class="action-btn edit-btn"
+                  *hasPermission="'roles.update'"
+                  (click)="selectRole(role); $event.stopPropagation()"
+                  title="Editar rol">
+                  <i class="fas fa-edit"></i>
+                </button>
+                
+                <button 
+                  class="action-btn toggle-btn"
+                  *hasPermission="'roles.update'"
+                  [disabled]="role.isSystem"
+                  (click)="toggleRoleStatus(role); $event.stopPropagation()"
+                  [title]="role.isActive ? 'Desactivar rol' : 'Activar rol'">
+                  <i class="fas" [ngClass]="role.isActive ? 'fa-pause' : 'fa-play'"></i>
+                </button>
+                
+                <button 
+                  class="action-btn delete-btn"
+                  *hasPermission="'roles.delete'"
+                  [disabled]="role.isSystem || (role.userCount && role.userCount > 0)"
+                  (click)="deleteRole(role); $event.stopPropagation()"
+                  title="Eliminar rol">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Paginación -->
+      <div class="pagination" *ngIf="totalItems > pageSize">
+        <button 
+          class="page-btn"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <span class="page-info">
+          Página {{ currentPage }} de {{ Math.ceil(totalItems / pageSize) }}
+        </span>
+        
+        <button 
+          class="page-btn"
+          [disabled]="currentPage >= Math.ceil(totalItems / pageSize)"
+          (click)="onPageChange(currentPage + 1)">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Vista de tarjetas -->
+    <div class="roles-cards" *ngIf="viewMode === 'cards'">
+      <div class="cards-grid">
+        <div *ngFor="let role of getPaginatedRoles()" 
+             class="role-card"
+             [class.selected]="selectedRole?.id === role.id"
+             (click)="selectRole(role)">
+          
+          <div class="card-header">
+            <h3 class="role-name">{{ role.name }}</h3>
+            <div class="role-badges">
+              <span class="badge" [ngClass]="'badge-' + getRoleTypeColor(role.type)">
+                {{ roleTypes.find(t => t.value === role.type)?.label }}
+              </span>
+              <span class="badge" [ngClass]="'badge-' + getRoleLevelColor(role.level)">
+                {{ roleLevels.find(l => l.value === role.level)?.label }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="card-content">
+            <p class="role-description">{{ role.description }}</p>
+            
+            <div class="role-stats">
+              <div class="stat">
+                <i class="fas fa-key"></i>
+                <span>{{ role.permissions.length }} permisos</span>
+              </div>
+              <div class="stat">
+                <i class="fas fa-users"></i>
+                <span>{{ role.userCount || 0 }} usuarios</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <div class="status">
+              <span class="status-badge" [ngClass]="role.isActive ? 'active' : 'inactive'">
+                {{ role.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+            
+            <div class="actions">
+              <button 
+                class="action-btn edit-btn"
+                *hasPermission="'roles.update'"
+                (click)="selectRole(role); $event.stopPropagation()"
+                title="Editar rol">
+                <i class="fas fa-edit"></i>
+              </button>
+              
+              <button 
+                class="action-btn delete-btn"
+                *hasPermission="'roles.delete'"
+                [disabled]="role.isSystem || (role.userCount && role.userCount > 0)"
+                (click)="deleteRole(role); $event.stopPropagation()"
+                title="Eliminar rol">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel lateral para crear/editar rol -->
+  <div class="side-panel" [class.open]="showCreateForm || selectedRole">
+    <div class="panel-header">
+      <h2>{{ selectedRole ? 'Editar Rol' : 'Crear Nuevo Rol' }}</h2>
+      <button class="close-btn" (click)="cancelEdit()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="panel-content">
+      <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
+        <!-- Información básica -->
+        <div class="form-section">
+          <h3>Información Básica</h3>
+          
+          <div class="form-group">
+            <label for="roleName">Nombre del Rol *</label>
+            <input 
+              id="roleName"
+              type="text" 
+              formControlName="name"
+              class="form-input"
+              [class.error]="isFieldInvalid('name')"
+              placeholder="Ej: Administrador de Concursos">
+            <div class="error-message" *ngIf="isFieldInvalid('name')">
+              {{ getFieldError('name') }}
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="roleDescription">Descripción *</label>
+            <textarea 
+              id="roleDescription"
+              formControlName="description"
+              class="form-textarea"
+              [class.error]="isFieldInvalid('description')"
+              placeholder="Describe las responsabilidades y alcance de este rol..."
+              rows="3">
+            </textarea>
+            <div class="error-message" *ngIf="isFieldInvalid('description')">
+              {{ getFieldError('description') }}
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="roleType">Tipo de Rol *</label>
+              <select 
+                id="roleType"
+                formControlName="type"
+                class="form-select">
+                <option *ngFor="let type of roleTypes" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="roleLevel">Nivel de Rol *</label>
+              <select 
+                id="roleLevel"
+                formControlName="level"
+                class="form-select">
+                <option *ngFor="let level of roleLevels" [value]="level.value">
+                  {{ level.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                formControlName="isActive"
+                class="form-checkbox">
+              <span class="checkmark"></span>
+              Rol activo
+            </label>
+          </div>
+        </div>
+
+        <!-- Permisos -->
+        <div class="form-section">
+          <h3>Permisos</h3>
+          
+          <div class="permissions-container">
+            <div *ngFor="let moduleEntry of getPermissionsByModule() | keyvalue" 
+                 class="permission-module">
+              
+              <div class="module-header">
+                <label class="module-checkbox">
+                  <input 
+                    type="checkbox"
+                    [checked]="areAllModulePermissionsSelected(moduleEntry.value)"
+                    [indeterminate]="areSomeModulePermissionsSelected(moduleEntry.value) && !areAllModulePermissionsSelected(moduleEntry.value)"
+                    (change)="toggleModulePermissions(moduleEntry.value)"
+                    class="form-checkbox">
+                  <span class="checkmark"></span>
+                  <span class="module-name">{{ moduleEntry.key }}</span>
+                </label>
+              </div>
+              
+              <div class="permissions-list">
+                <label *ngFor="let permission of moduleEntry.value" 
+                       class="permission-checkbox">
+                  <input 
+                    type="checkbox"
+                    [checked]="isPermissionSelected(permission.id)"
+                    (change)="togglePermission(permission.id)"
+                    class="form-checkbox">
+                  <span class="checkmark"></span>
+                  <div class="permission-info">
+                    <span class="permission-name">{{ permission.name }}</span>
+                    <span class="permission-description">{{ permission.description }}</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones del formulario -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="cancelEdit()">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="roleForm.invalid || loading">
+            <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+            {{ selectedRole ? 'Actualizar' : 'Crear' }} Rol
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Overlay para el panel lateral -->
+  <div class="panel-overlay" 
+       [class.visible]="showCreateForm || selectedRole"
+       (click)="cancelEdit()">
+  </div>
+</div>

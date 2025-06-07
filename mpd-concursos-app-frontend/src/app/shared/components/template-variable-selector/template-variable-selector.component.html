@@ -1,0 +1,327 @@
+<div [class]="getComponentClass()">
+  
+  <!-- Botón de toggle (cuando está cerrado) -->
+  <div class="selector-toggle" 
+       *ngIf="!isOpen"
+       (click)="toggle()">
+    <div class="toggle-icon">
+      <i class="fas fa-code"></i>
+    </div>
+    <span class="toggle-text">Variables</span>
+    <div class="selected-count" *ngIf="getSelectedCount() > 0">
+      {{ getSelectedCount() }}
+    </div>
+  </div>
+
+  <!-- Panel principal -->
+  <div class="selector-panel" *ngIf="isOpen">
+    
+    <!-- Header -->
+    <div class="panel-header">
+      <div class="header-title">
+        <h3>
+          <i class="fas fa-code"></i>
+          Variables Dinámicas
+        </h3>
+        <span class="variables-count">{{ getFilteredCount() }} variables</span>
+      </div>
+      
+      <div class="header-actions">
+        <button class="header-btn" 
+                (click)="clearSelection()"
+                [disabled]="getSelectedCount() === 0"
+                title="Limpiar selección">
+          <i class="fas fa-times-circle"></i>
+        </button>
+        <button class="header-btn" 
+                (click)="selectAllFiltered()"
+                [disabled]="mode !== 'multiple' || getFilteredCount() === 0"
+                title="Seleccionar todas">
+          <i class="fas fa-check-double"></i>
+        </button>
+        <button class="header-btn close-btn" 
+                (click)="close()"
+                title="Cerrar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Controles de filtro -->
+    <div class="panel-filters">
+      
+      <!-- Búsqueda -->
+      <div class="search-container">
+        <div class="search-input">
+          <i class="fas fa-search"></i>
+          <input type="text" 
+                 #searchInput
+                 placeholder="Buscar variables..."
+                 [(ngModel)]="searchTerm"
+                 (input)="onSearchChange($event.target.value)">
+          <button class="clear-search" 
+                  *ngIf="searchTerm"
+                  (click)="clearSearch()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-controls">
+        
+        <!-- Contexto -->
+        <div class="filter-group">
+          <label>Contexto:</label>
+          <select [(ngModel)]="selectedContext" 
+                  (ngModelChange)="onContextChange($event)">
+            <option *ngFor="let context of getAvailableContexts()" 
+                    [value]="context.value">
+              {{ context.label }} ({{ context.count }})
+            </option>
+          </select>
+        </div>
+
+        <!-- Vista -->
+        <div class="filter-group">
+          <label>Vista:</label>
+          <div class="view-buttons">
+            <button class="view-btn" 
+                    *ngFor="let viewOption of views"
+                    [class.active]="view === viewOption.value"
+                    (click)="onViewChange(viewOption.value)"
+                    [title]="viewOption.label">
+              <i [class]="viewOption.icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Solo activas -->
+        <div class="filter-group">
+          <label class="checkbox-label">
+            <input type="checkbox" 
+                   [(ngModel)]="showOnlyActive"
+                   (ngModelChange)="toggleActiveFilter()">
+            <span>Solo activas</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido de variables -->
+    <div class="panel-content">
+      
+      <!-- Estado de carga -->
+      <div class="loading-state" *ngIf="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Cargando variables...</p>
+      </div>
+
+      <!-- Estado vacío -->
+      <div class="empty-state" *ngIf="!loading && !hasVariables()">
+        <div class="empty-icon">
+          <i class="fas fa-code"></i>
+        </div>
+        <h4>No hay variables disponibles</h4>
+        <p *ngIf="searchTerm">
+          No se encontraron variables que coincidan con "{{ searchTerm }}"
+        </p>
+        <p *ngIf="!searchTerm">
+          No hay variables disponibles para el contexto seleccionado
+        </p>
+      </div>
+
+      <!-- Vista de cuadrícula -->
+      <div class="variables-grid" *ngIf="!loading && hasVariables() && view === 'grid'">
+        <div class="variable-card" 
+             *ngFor="let variable of filteredVariables"
+             [class.selected]="isVariableSelected(variable)"
+             [class.system]="variable.isSystem"
+             [class.inactive]="!variable.isActive"
+             (click)="selectVariable(variable)">
+          
+          <!-- Header de la variable -->
+          <div class="variable-header">
+            <div class="variable-icon" 
+                 [style.color]="getVariableTypeColor(variable.type)">
+              <i [class]="getVariableTypeIcon(variable.type)"></i>
+            </div>
+            <div class="variable-info">
+              <h4 class="variable-key">{{ variable.key }}</h4>
+              <span class="variable-context">
+                <i [class]="getContextIcon(variable.context)"></i>
+                {{ getContextLabel(variable.context) }}
+              </span>
+            </div>
+            <div class="variable-actions">
+              <button class="action-btn" 
+                      (click)="copyVariable(variable, $event)"
+                      title="Copiar">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Información de la variable -->
+          <div class="variable-details">
+            <h5 class="variable-label">{{ variable.label }}</h5>
+            <p class="variable-description">{{ variable.description }}</p>
+          </div>
+
+          <!-- Ejemplo -->
+          <div class="variable-example" *ngIf="variable.examples && variable.examples.length > 0">
+            <span class="example-label">Ejemplo:</span>
+            <code class="example-value">{{ getFormattedExample(variable) }}</code>
+          </div>
+
+          <!-- Metadatos -->
+          <div class="variable-meta">
+            <span class="meta-type" [style.color]="getVariableTypeColor(variable.type)">
+              {{ variable.type }}
+            </span>
+            <span class="meta-required" *ngIf="variable.required">
+              Requerida
+            </span>
+            <span class="meta-system" *ngIf="variable.isSystem">
+              Sistema
+            </span>
+          </div>
+
+          <!-- Indicador de selección -->
+          <div class="selection-indicator" *ngIf="isVariableSelected(variable)">
+            <i class="fas fa-check"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de lista -->
+      <div class="variables-list" *ngIf="!loading && hasVariables() && view === 'list'">
+        <div class="variable-item" 
+             *ngFor="let variable of filteredVariables"
+             [class.selected]="isVariableSelected(variable)"
+             [class.system]="variable.isSystem"
+             [class.inactive]="!variable.isActive"
+             (click)="selectVariable(variable)">
+          
+          <div class="item-icon" 
+               [style.color]="getVariableTypeColor(variable.type)">
+            <i [class]="getVariableTypeIcon(variable.type)"></i>
+          </div>
+
+          <div class="item-content">
+            <div class="item-header">
+              <h4 class="item-key">{{ variable.key }}</h4>
+              <span class="item-context">
+                <i [class]="getContextIcon(variable.context)"></i>
+                {{ getContextLabel(variable.context) }}
+              </span>
+            </div>
+            <h5 class="item-label">{{ variable.label }}</h5>
+            <p class="item-description">{{ variable.description }}</p>
+            <div class="item-example" *ngIf="variable.examples && variable.examples.length > 0">
+              <span>Ejemplo: </span>
+              <code>{{ getFormattedExample(variable) }}</code>
+            </div>
+          </div>
+
+          <div class="item-actions">
+            <button class="action-btn" 
+                    (click)="copyVariable(variable, $event)"
+                    title="Copiar">
+              <i class="fas fa-copy"></i>
+            </button>
+            <div class="selection-checkbox" *ngIf="mode === 'multiple'">
+              <i class="fas" 
+                 [ngClass]="isVariableSelected(variable) ? 'fa-check-square' : 'fa-square'">
+              </i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vista de árbol -->
+      <div class="variables-tree" *ngIf="!loading && hasVariables() && view === 'tree'">
+        <div class="context-group" 
+             *ngFor="let contextKey of getGroupedContextKeys()">
+          
+          <!-- Header del grupo -->
+          <div class="group-header">
+            <div class="group-icon">
+              <i [class]="getContextIcon(contextKey)"></i>
+            </div>
+            <h3 class="group-title">{{ getContextLabel(contextKey) }}</h3>
+            <span class="group-count">{{ groupedVariables[contextKey].length }}</span>
+          </div>
+
+          <!-- Variables del grupo -->
+          <div class="group-variables">
+            <div class="tree-variable" 
+                 *ngFor="let variable of groupedVariables[contextKey]"
+                 [class.selected]="isVariableSelected(variable)"
+                 [class.system]="variable.isSystem"
+                 [class.inactive]="!variable.isActive"
+                 (click)="selectVariable(variable)">
+              
+              <div class="tree-content">
+                <div class="tree-header">
+                  <div class="tree-icon" 
+                       [style.color]="getVariableTypeColor(variable.type)">
+                    <i [class]="getVariableTypeIcon(variable.type)"></i>
+                  </div>
+                  <div class="tree-info">
+                    <h4 class="tree-key">{{ variable.key }}</h4>
+                    <span class="tree-label">{{ variable.label }}</span>
+                  </div>
+                  <button class="tree-action" 
+                          (click)="copyVariable(variable, $event)"
+                          title="Copiar">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+                
+                <p class="tree-description">{{ variable.description }}</p>
+                
+                <div class="tree-example" *ngIf="variable.examples && variable.examples.length > 0">
+                  <code>{{ getFormattedExample(variable) }}</code>
+                </div>
+              </div>
+
+              <div class="tree-selection" *ngIf="isVariableSelected(variable)">
+                <i class="fas fa-check"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="panel-footer" *ngIf="hasVariables()">
+      <div class="footer-info">
+        <span>{{ getFilteredCount() }} variables disponibles</span>
+        <span *ngIf="getSelectedCount() > 0"> • {{ getSelectedCount() }} seleccionadas</span>
+      </div>
+      
+      <div class="footer-actions" *ngIf="mode === 'multiple'">
+        <button class="footer-btn" 
+                (click)="selectAllFiltered()"
+                [disabled]="getFilteredCount() === 0">
+          <i class="fas fa-check-double"></i>
+          <span>Seleccionar todas</span>
+        </button>
+        <button class="footer-btn secondary" 
+                (click)="clearSelection()"
+                [disabled]="getSelectedCount() === 0">
+          <i class="fas fa-times"></i>
+          <span>Limpiar selección</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar en móvil -->
+  <div class="selector-overlay" 
+       *ngIf="isOpen"
+       (click)="close()">
+  </div>
+</div>

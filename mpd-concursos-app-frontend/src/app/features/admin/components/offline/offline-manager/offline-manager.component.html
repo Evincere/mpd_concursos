@@ -1,0 +1,442 @@
+<div class="offline-manager-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-cloud-download-alt"></i>
+          Gestión de Modo Offline
+        </h1>
+        <p class="page-description">
+          Administra el funcionamiento offline, cache y sincronización de datos
+        </p>
+      </div>
+      <div class="header-status">
+        <div class="connectivity-indicator" [style.color]="getConnectivityStatus().color">
+          <i [class]="getConnectivityStatus().icon"></i>
+          <span>{{ getConnectivityStatus().text }}</span>
+        </div>
+        <div class="sync-status" *ngIf="syncQueue.length > 0">
+          <i class="fas fa-sync-alt" [class.fa-spin]="syncing"></i>
+          <span>{{ syncQueue.length }} pendientes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación de pestañas -->
+  <div class="tabs-navigation">
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'overview'"
+            (click)="setActiveTab('overview')">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>Resumen</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'sync'"
+            (click)="setActiveTab('sync')">
+      <i class="fas fa-sync-alt"></i>
+      <span>Sincronización</span>
+      <span class="badge" *ngIf="syncQueue.length > 0">{{ syncQueue.length }}</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'cache'"
+            (click)="setActiveTab('cache')">
+      <i class="fas fa-database"></i>
+      <span>Cache</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'config'"
+            (click)="setActiveTab('config')">
+      <i class="fas fa-cog"></i>
+      <span>Configuración</span>
+    </button>
+  </div>
+
+  <!-- Contenido de pestañas -->
+  <div class="tab-content">
+    
+    <!-- Pestaña: Resumen -->
+    <div class="tab-panel" *ngIf="activeTab === 'overview'">
+      
+      <!-- Estadísticas generales -->
+      <div class="overview-section">
+        <h2 class="section-title">
+          <i class="fas fa-chart-pie"></i>
+          Estadísticas Generales
+        </h2>
+        
+        <div class="stats-grid" *ngIf="offlineStats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ formatDuration(offlineStats.totalOfflineTime) }}</span>
+              <span class="stat-label">Tiempo Offline</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-list"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ offlineStats.syncQueueSize }}</span>
+              <span class="stat-label">En Cola</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ offlineStats.successfulSyncs }}</span>
+              <span class="stat-label">Sincronizadas</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ offlineStats.failedSyncs }}</span>
+              <span class="stat-label">Fallidas</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado de conectividad -->
+      <div class="overview-section" *ngIf="connectivity">
+        <h2 class="section-title">
+          <i class="fas fa-wifi"></i>
+          Estado de Conectividad
+        </h2>
+        
+        <div class="connectivity-details">
+          <div class="connectivity-card">
+            <div class="connectivity-header">
+              <div class="connectivity-status" [style.color]="getConnectivityStatus().color">
+                <i [class]="getConnectivityStatus().icon"></i>
+                <span>{{ getConnectivityStatus().text }}</span>
+              </div>
+              <button class="action-btn test-btn" 
+                      (click)="checkConnectivity()"
+                      [disabled]="loading">
+                <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+                <span>Verificar</span>
+              </button>
+            </div>
+            
+            <div class="connectivity-info">
+              <div class="info-grid">
+                <div class="info-item">
+                  <label>Tipo de Conexión:</label>
+                  <span>{{ connectivity.connectionType | titlecase }}</span>
+                </div>
+                <div class="info-item">
+                  <label>Velocidad Efectiva:</label>
+                  <span>{{ connectivity.effectiveType | titlecase }}</span>
+                </div>
+                <div class="info-item">
+                  <label>Velocidad de Descarga:</label>
+                  <span>{{ connectivity.downlink }} Mbps</span>
+                </div>
+                <div class="info-item">
+                  <label>Latencia:</label>
+                  <span>{{ connectivity.rtt }}ms</span>
+                </div>
+                <div class="info-item">
+                  <label>Ahorro de Datos:</label>
+                  <span [style.color]="connectivity.saveData ? '#f59e0b' : '#4CAF50'">
+                    {{ connectivity.saveData ? 'Activado' : 'Desactivado' }}
+                  </span>
+                </div>
+                <div class="info-item" *ngIf="connectivity.lastOffline">
+                  <label>Última Desconexión:</label>
+                  <span>{{ connectivity.lastOffline | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Uso de almacenamiento -->
+      <div class="overview-section" *ngIf="offlineStats">
+        <h2 class="section-title">
+          <i class="fas fa-hdd"></i>
+          Uso de Almacenamiento
+        </h2>
+        
+        <div class="storage-overview">
+          <div class="storage-chart">
+            <div class="storage-bar">
+              <div class="storage-used" 
+                   [style.width.%]="getStorageUsagePercentage()"
+                   [style.background-color]="getStorageUsagePercentage() > 80 ? '#ef4444' : '#4CAF50'">
+              </div>
+            </div>
+            <div class="storage-labels">
+              <span class="storage-used-label">
+                Usado: {{ formatBytes(offlineStats.storageUsed) }}
+              </span>
+              <span class="storage-available-label">
+                Disponible: {{ formatBytes(offlineStats.storageAvailable) }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="storage-stats">
+            <div class="storage-stat">
+              <span class="stat-value">{{ getStorageUsagePercentage() }}%</span>
+              <span class="stat-label">Uso Total</span>
+            </div>
+            <div class="storage-stat">
+              <span class="stat-value">{{ formatBytes(getTotalCacheSize()) }}</span>
+              <span class="stat-label">Cache Total</span>
+            </div>
+            <div class="storage-stat">
+              <span class="stat-value">{{ getTotalCacheItems() }}</span>
+              <span class="stat-label">Elementos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestaña: Sincronización -->
+    <div class="tab-panel" *ngIf="activeTab === 'sync'">
+      <div class="sync-section">
+        <div class="sync-header">
+          <h2 class="section-title">
+            <i class="fas fa-sync-alt"></i>
+            Cola de Sincronización
+          </h2>
+          <div class="sync-actions">
+            <button class="action-btn primary-btn" 
+                    (click)="forceSyncAll()"
+                    [disabled]="syncQueue.length === 0 || syncing || !connectivity?.isOnline">
+              <i class="fas" [ngClass]="syncing ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
+              <span>{{ syncing ? 'Sincronizando...' : 'Sincronizar Todo' }}</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="sync-queue" *ngIf="syncQueue.length > 0; else noSyncItems">
+          <div class="sync-item" *ngFor="let item of syncQueue; trackBy: trackBySyncId">
+            <div class="sync-item-header">
+              <div class="sync-item-info">
+                <div class="sync-type" [style.color]="getPriorityColor(item.priority)">
+                  <i class="fas" [ngClass]="{
+                    'fa-plus': item.type === 'CREATE',
+                    'fa-edit': item.type === 'UPDATE',
+                    'fa-trash': item.type === 'DELETE'
+                  }"></i>
+                  <span>{{ item.type }}</span>
+                </div>
+                <div class="sync-endpoint">{{ item.endpoint }}</div>
+              </div>
+              <div class="sync-item-meta">
+                <span class="sync-priority" [style.color]="getPriorityColor(item.priority)">
+                  {{ item.priority | titlecase }}
+                </span>
+                <span class="sync-timestamp">
+                  {{ item.timestamp | date:'short' }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="sync-item-details">
+              <div class="sync-retry-info" *ngIf="item.retryCount > 0">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Reintento {{ item.retryCount }}/3</span>
+              </div>
+              <div class="sync-data-preview">
+                <pre>{{ item.data | json }}</pre>
+              </div>
+            </div>
+            
+            <div class="sync-item-actions">
+              <button class="action-btn danger-btn small" 
+                      (click)="removeSyncItem(item)">
+                <i class="fas fa-trash"></i>
+                <span>Eliminar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <ng-template #noSyncItems>
+          <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <h3>Todo Sincronizado</h3>
+            <p>No hay elementos pendientes de sincronización</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Pestaña: Cache -->
+    <div class="tab-panel" *ngIf="activeTab === 'cache'">
+      <div class="cache-section">
+        <div class="cache-header">
+          <h2 class="section-title">
+            <i class="fas fa-database"></i>
+            Gestión de Cache
+          </h2>
+          <div class="cache-actions">
+            <button class="action-btn danger-btn" 
+                    (click)="clearAllCache()"
+                    [disabled]="loading">
+              <i class="fas fa-trash-alt"></i>
+              <span>Limpiar Todo</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="cache-grid">
+          <div class="cache-card" *ngFor="let cache of cacheInfo">
+            <div class="cache-header-info">
+              <div class="cache-icon" [style.color]="getStrategyColor(cache.strategy)">
+                <i [class]="cache.icon"></i>
+              </div>
+              <div class="cache-info">
+                <h3 class="cache-name">{{ cache.name }}</h3>
+                <span class="cache-strategy" [style.color]="getStrategyColor(cache.strategy)">
+                  {{ cache.strategy | titlecase }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="cache-stats">
+              <div class="cache-stat">
+                <span class="stat-value">{{ formatBytes(cache.size) }}</span>
+                <span class="stat-label">Tamaño</span>
+              </div>
+              <div class="cache-stat">
+                <span class="stat-value">{{ cache.items }}</span>
+                <span class="stat-label">Elementos</span>
+              </div>
+              <div class="cache-stat">
+                <span class="stat-value" *ngIf="cache.lastUpdated">
+                  {{ cache.lastUpdated | date:'short' }}
+                </span>
+                <span class="stat-value" *ngIf="!cache.lastUpdated">
+                  Nunca
+                </span>
+                <span class="stat-label">Última Actualización</span>
+              </div>
+            </div>
+            
+            <div class="cache-actions">
+              <button class="action-btn secondary-btn small" 
+                      (click)="clearCacheCategory(cache.category)"
+                      [disabled]="cache.size === 0 || loading">
+                <i class="fas fa-broom"></i>
+                <span>Limpiar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestaña: Configuración -->
+    <div class="tab-panel" *ngIf="activeTab === 'config'">
+      <div class="config-section">
+        <h2 class="section-title">
+          <i class="fas fa-cog"></i>
+          Configuración de Modo Offline
+        </h2>
+        
+        <form [formGroup]="configForm" (ngSubmit)="saveConfiguration()" class="config-form">
+          <div class="config-groups">
+            <div class="config-group">
+              <h3 class="group-title">General</h3>
+              <div class="config-options">
+                <label class="config-option">
+                  <input type="checkbox" formControlName="enableOfflineMode">
+                  <div class="option-content">
+                    <span class="option-title">Habilitar modo offline</span>
+                    <span class="option-description">Permite el funcionamiento de la aplicación sin conexión</span>
+                  </div>
+                </label>
+                
+                <label class="config-option">
+                  <input type="checkbox" formControlName="enableOfflineNotifications">
+                  <div class="option-content">
+                    <span class="option-title">Notificaciones offline</span>
+                    <span class="option-description">Muestra notificaciones sobre el estado offline</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="config-group">
+              <h3 class="group-title">Sincronización</h3>
+              <div class="config-options">
+                <label class="config-option">
+                  <input type="checkbox" formControlName="enableBackgroundSync">
+                  <div class="option-content">
+                    <span class="option-title">Sincronización en segundo plano</span>
+                    <span class="option-description">Sincroniza automáticamente cuando se restaura la conexión</span>
+                  </div>
+                </label>
+                
+                <div class="config-field">
+                  <label for="syncRetryAttempts">Intentos de reintento</label>
+                  <input type="number" 
+                         id="syncRetryAttempts"
+                         formControlName="syncRetryAttempts"
+                         min="1" max="10">
+                </div>
+                
+                <div class="config-field">
+                  <label for="syncRetryDelay">Delay entre reintentos (ms)</label>
+                  <input type="number" 
+                         id="syncRetryDelay"
+                         formControlName="syncRetryDelay"
+                         min="1000" max="60000" step="1000">
+                </div>
+              </div>
+            </div>
+
+            <div class="config-group">
+              <h3 class="group-title">Almacenamiento</h3>
+              <div class="config-options">
+                <div class="config-field">
+                  <label for="maxOfflineStorage">Almacenamiento máximo (MB)</label>
+                  <input type="number" 
+                         id="maxOfflineStorage"
+                         formControlName="maxOfflineStorage"
+                         min="10" max="500">
+                </div>
+                
+                <div class="config-field">
+                  <label for="offlineTimeout">Timeout de conexión (ms)</label>
+                  <input type="number" 
+                         id="offlineTimeout"
+                         formControlName="offlineTimeout"
+                         min="5000" max="30000" step="1000">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" 
+                    class="action-btn primary-btn"
+                    [disabled]="configForm.invalid">
+              <i class="fas fa-save"></i>
+              <span>Guardar Configuración</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,233 @@
+<div [class]="getWidgetClass()">
+  
+  <!-- Botón flotante (cuando está cerrado) -->
+  <div class="chat-toggle-btn" 
+       *ngIf="!widgetState.isOpen"
+       (click)="openWidget()">
+    <div class="toggle-icon">
+      <i class="fas fa-comments"></i>
+    </div>
+    <div class="unread-indicator" *ngIf="widgetState.hasUnreadMessages">
+      <span class="unread-count">{{ unreadCount }}</span>
+    </div>
+    <div class="connection-status" [class.connected]="widgetState.isConnected">
+      <div class="status-dot"></div>
+    </div>
+  </div>
+
+  <!-- Widget principal -->
+  <div class="chat-container" *ngIf="widgetState.isOpen">
+    
+    <!-- Header del chat -->
+    <div class="chat-header">
+      <div class="header-info">
+        <div class="chat-avatar">
+          <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="chat-title">
+          <h4>{{ conversation?.subject || 'Chat de Soporte' }}</h4>
+          <div class="chat-status">
+            <div class="status-indicator" [class.online]="widgetState.isConnected">
+              <div class="status-dot"></div>
+              <span>{{ widgetState.isConnected ? 'En línea' : 'Desconectado' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="header-btn minimize-btn" 
+                (click)="toggleMinimize()"
+                [title]="widgetState.isMinimized ? 'Maximizar' : 'Minimizar'">
+          <i class="fas" [ngClass]="widgetState.isMinimized ? 'fa-window-maximize' : 'fa-window-minimize'"></i>
+        </button>
+        <button class="header-btn close-btn" 
+                (click)="closeWidget()"
+                title="Cerrar chat">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenido del chat -->
+    <div class="chat-content" *ngIf="!widgetState.isMinimized">
+      
+      <!-- Estado de carga -->
+      <div class="chat-loading" *ngIf="loading">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <p>Cargando conversación...</p>
+      </div>
+
+      <!-- Mensajes -->
+      <div class="chat-messages" 
+           #messagesContainer
+           [style.max-height.px]="widgetConfig.maxHeight"
+           *ngIf="!loading">
+        
+        <!-- Estado vacío -->
+        <div class="empty-chat" *ngIf="messages.length === 0">
+          <div class="empty-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <h5>¡Hola! 👋</h5>
+          <p>¿En qué podemos ayudarte hoy?</p>
+        </div>
+
+        <!-- Lista de mensajes -->
+        <div class="messages-list" *ngIf="messages.length > 0">
+          <div class="message-group" *ngFor="let message of messages; let i = index">
+            
+            <!-- Timestamp -->
+            <div class="message-timestamp" *ngIf="shouldShowTimestamp(message, i)">
+              <span>{{ message.createdAt | date:'short' }}</span>
+            </div>
+
+            <!-- Mensaje -->
+            <div class="message-item" 
+                 [class.own-message]="isOwnMessage(message)"
+                 [class.system-message]="message.isSystemMessage">
+              
+              <!-- Avatar (solo para mensajes de otros) -->
+              <div class="message-avatar" *ngIf="!isOwnMessage(message) && !message.isSystemMessage">
+                <img [src]="getUserAvatar(message)" 
+                     [alt]="message.senderName"
+                     onerror="this.src='/assets/images/default-avatar.png'">
+              </div>
+
+              <!-- Contenido del mensaje -->
+              <div class="message-content">
+                
+                <!-- Información del remitente -->
+                <div class="message-sender" *ngIf="!isOwnMessage(message) && !message.isSystemMessage">
+                  <span class="sender-name">{{ message.senderName }}</span>
+                  <span class="sender-role">({{ message.senderRole }})</span>
+                </div>
+
+                <!-- Texto del mensaje -->
+                <div class="message-text">
+                  <p>{{ message.content }}</p>
+                  
+                  <!-- Adjuntos -->
+                  <div class="message-attachments" *ngIf="message.attachments && message.attachments.length > 0">
+                    <div class="attachment-item" *ngFor="let attachment of message.attachments">
+                      <i class="fas fa-paperclip"></i>
+                      <a [href]="attachment.url" target="_blank">{{ attachment.name }}</a>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Metadatos del mensaje -->
+                <div class="message-meta">
+                  <span class="message-time">{{ formatRelativeTime(message.createdAt) }}</span>
+                  <div class="message-status" *ngIf="isOwnMessage(message)">
+                    <i class="fas" [ngClass]="{
+                      'fa-check': message.status === 'sent',
+                      'fa-check-double': message.status === 'delivered',
+                      'fa-eye': message.status === 'read',
+                      'fa-exclamation-triangle': message.status === 'failed'
+                    }" [style.color]="message.status === 'read' ? '#4CAF50' : '#9ca3af'"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicador de escritura -->
+          <div class="typing-indicator" *ngIf="hasTypingUsers()">
+            <div class="typing-avatar">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="typing-content">
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="typing-text">{{ getTypingText() }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de mensaje -->
+      <div class="chat-input" *ngIf="!loading">
+        <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="input-form">
+          
+          <!-- Campo de texto -->
+          <div class="input-container">
+            <textarea #messageInput
+                      formControlName="content"
+                      placeholder="Escribe tu mensaje..."
+                      rows="1"
+                      maxlength="1000"
+                      (keydown.enter)="$event.ctrlKey && sendMessage(); $event.ctrlKey && $event.preventDefault()"
+                      [disabled]="sending"></textarea>
+            
+            <!-- Contador de caracteres -->
+            <div class="char-counter" 
+                 *ngIf="messageForm.get('content')?.value?.length > 800">
+              {{ 1000 - (messageForm.get('content')?.value?.length || 0) }}
+            </div>
+          </div>
+
+          <!-- Acciones -->
+          <div class="input-actions">
+            
+            <!-- Botón de adjuntar -->
+            <button type="button" 
+                    class="action-btn attach-btn"
+                    title="Adjuntar archivo"
+                    [disabled]="sending">
+              <i class="fas fa-paperclip"></i>
+            </button>
+
+            <!-- Selector de prioridad -->
+            <select formControlName="priority" 
+                    class="priority-select"
+                    title="Prioridad del mensaje"
+                    [disabled]="sending">
+              <option value="low">Baja</option>
+              <option value="normal">Normal</option>
+              <option value="high">Alta</option>
+              <option value="urgent">Urgente</option>
+            </select>
+
+            <!-- Botón de enviar -->
+            <button type="submit" 
+                    class="action-btn send-btn"
+                    [disabled]="messageForm.invalid || sending"
+                    title="Enviar mensaje (Ctrl+Enter)">
+              <i class="fas" [ngClass]="sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+            </button>
+          </div>
+        </form>
+
+        <!-- Ayuda -->
+        <div class="input-help">
+          <small>
+            <i class="fas fa-info-circle"></i>
+            Presiona <kbd>Ctrl</kbd> + <kbd>Enter</kbd> para enviar
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer minimizado -->
+    <div class="chat-footer-minimized" *ngIf="widgetState.isMinimized">
+      <div class="minimized-info">
+        <span class="conversation-title">{{ conversation?.subject || 'Chat' }}</span>
+        <span class="unread-count" *ngIf="widgetState.hasUnreadMessages">
+          {{ unreadCount }} nuevo{{ unreadCount > 1 ? 's' : '' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar en móvil -->
+  <div class="chat-overlay" 
+       *ngIf="widgetState.isOpen"
+       (click)="closeWidget()">
+  </div>
+</div>

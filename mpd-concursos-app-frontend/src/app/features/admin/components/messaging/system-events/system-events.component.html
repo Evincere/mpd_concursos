@@ -1,0 +1,528 @@
+<div class="system-events">
+  <!-- Header -->
+  <div class="events-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-stream"></i>
+          Eventos del Sistema
+        </h1>
+        <p class="page-description">
+          Monitorea y configura eventos del sistema en tiempo real
+        </p>
+      </div>
+      <div class="header-stats" *ngIf="eventStats">
+        <div class="stat-item">
+          <span class="stat-number">{{ eventStats.totalEvents }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ eventStats.eventsToday }}</span>
+          <span class="stat-label">Hoy</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ eventStats.processingStats.pending }}</span>
+          <span class="stat-label">Pendientes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación -->
+  <div class="events-navigation">
+    <div class="nav-tabs">
+      <button class="nav-tab" 
+              [class.active]="activeView === 'events'"
+              (click)="setActiveView('events')">
+        <i class="fas fa-list"></i>
+        <span>Eventos</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'configurations'"
+              (click)="setActiveView('configurations')">
+        <i class="fas fa-cogs"></i>
+        <span>Configuraciones</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'stats'"
+              (click)="setActiveView('stats')">
+        <i class="fas fa-chart-line"></i>
+        <span>Estadísticas</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'realtime'"
+              (click)="setActiveView('realtime')">
+        <i class="fas fa-broadcast-tower"></i>
+        <span>Tiempo Real</span>
+        <span class="live-indicator" *ngIf="realTimeEnabled"></span>
+      </button>
+    </div>
+
+    <div class="nav-actions">
+      <button class="action-btn secondary" (click)="publishTestEvent()">
+        <i class="fas fa-flask"></i>
+        <span>Evento de Prueba</span>
+      </button>
+      <button class="action-btn secondary" (click)="reprocessFailedEvents()">
+        <i class="fas fa-redo"></i>
+        <span>Reprocesar Fallidos</span>
+      </button>
+      <button class="action-btn secondary" (click)="cleanupOldEvents()">
+        <i class="fas fa-trash-alt"></i>
+        <span>Limpiar Antiguos</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="events-content">
+    
+    <!-- Vista: Lista de eventos -->
+    <div class="events-view" *ngIf="activeView === 'events'">
+      
+      <!-- Filtros -->
+      <div class="filters-section">
+        <form [formGroup]="filtersForm" class="filters-form">
+          <div class="filters-grid">
+            
+            <!-- Búsqueda -->
+            <div class="filter-field full-width">
+              <label for="search">Buscar eventos</label>
+              <input type="text" 
+                     id="search"
+                     formControlName="search"
+                     placeholder="Buscar por tipo, fuente, datos...">
+            </div>
+
+            <!-- Tipo -->
+            <div class="filter-field">
+              <label for="type">Tipo</label>
+              <select id="type" formControlName="type">
+                <option value="">Todos los tipos</option>
+                <option *ngFor="let config of configurations" [value]="config.type">
+                  {{ config.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Categoría -->
+            <div class="filter-field">
+              <label for="category">Categoría</label>
+              <select id="category" formControlName="category">
+                <option value="">Todas las categorías</option>
+                <option *ngFor="let category of eventCategories" [value]="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Fuente -->
+            <div class="filter-field">
+              <label for="source">Fuente</label>
+              <select id="source" formControlName="source">
+                <option value="">Todas las fuentes</option>
+                <option value="frontend">Frontend</option>
+                <option value="backend">Backend</option>
+                <option value="system">Sistema</option>
+                <option value="webhook">Webhook</option>
+              </select>
+            </div>
+
+            <!-- Estado de procesamiento -->
+            <div class="filter-field">
+              <label for="processed">Estado</label>
+              <select id="processed" formControlName="processed">
+                <option value="">Todos</option>
+                <option value="true">Procesados</option>
+                <option value="false">Pendientes</option>
+              </select>
+            </div>
+
+            <!-- Fecha desde -->
+            <div class="filter-field">
+              <label for="dateFrom">Desde</label>
+              <input type="datetime-local" id="dateFrom" formControlName="dateFrom">
+            </div>
+
+            <!-- Fecha hasta -->
+            <div class="filter-field">
+              <label for="dateTo">Hasta</label>
+              <input type="datetime-local" id="dateTo" formControlName="dateTo">
+            </div>
+          </div>
+
+          <div class="filters-actions">
+            <button type="button" 
+                    class="clear-btn"
+                    (click)="clearFilters()">
+              <i class="fas fa-times"></i>
+              <span>Limpiar Filtros</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de eventos -->
+      <div class="events-list">
+        <div class="event-item" 
+             *ngFor="let event of filteredEvents"
+             [class.processed]="event.processed"
+             [class.pending]="!event.processed">
+          
+          <!-- Header del evento -->
+          <div class="event-header">
+            <div class="event-info">
+              <div class="event-icon" 
+                   [style.color]="getCategoryColor(getEventConfiguration(event.type)?.category || 'system')">
+                <i [class]="getCategoryIcon(getEventConfiguration(event.type)?.category || 'system')"></i>
+              </div>
+              <div class="event-details">
+                <h3 class="event-type">{{ getEventConfiguration(event.type)?.name || event.type }}</h3>
+                <p class="event-source">{{ event.source }} • {{ event.timestamp | date:'medium' }}</p>
+              </div>
+            </div>
+
+            <div class="event-status">
+              <span class="status-badge" [class.processed]="event.processed">
+                {{ event.processed ? 'Procesado' : 'Pendiente' }}
+              </span>
+              <span class="event-id">{{ event.id }}</span>
+            </div>
+          </div>
+
+          <!-- Contexto del evento -->
+          <div class="event-context" *ngIf="event.context">
+            <div class="context-item" *ngIf="event.context.userId">
+              <span class="context-label">Usuario:</span>
+              <span class="context-value">{{ event.context.userId }}</span>
+            </div>
+            <div class="context-item" *ngIf="event.context.contestId">
+              <span class="context-label">Concurso:</span>
+              <span class="context-value">{{ event.context.contestId }}</span>
+            </div>
+            <div class="context-item" *ngIf="event.context.inscriptionId">
+              <span class="context-label">Inscripción:</span>
+              <span class="context-value">{{ event.context.inscriptionId }}</span>
+            </div>
+            <div class="context-item" *ngIf="event.context.sessionId">
+              <span class="context-label">Sesión:</span>
+              <span class="context-value">{{ event.context.sessionId }}</span>
+            </div>
+          </div>
+
+          <!-- Datos del evento -->
+          <div class="event-data">
+            <details>
+              <summary>Ver datos del evento</summary>
+              <pre class="data-content">{{ formatEventData(event.data) }}</pre>
+            </details>
+          </div>
+
+          <!-- Triggers ejecutados -->
+          <div class="event-triggers" *ngIf="event.triggersExecuted.length > 0">
+            <h4>Triggers Ejecutados ({{ event.triggersExecuted.length }}):</h4>
+            <div class="trigger-list">
+              <span class="trigger-item" *ngFor="let triggerId of event.triggersExecuted">
+                {{ triggerId }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Errores -->
+          <div class="event-errors" *ngIf="event.errors && event.errors.length > 0">
+            <h4>Errores:</h4>
+            <div class="error-list">
+              <div class="error-item" *ngFor="let error of event.errors">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>{{ error }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="event-footer">
+            <div class="event-metadata">
+              <span class="metadata-item">
+                <i class="fas fa-code-branch"></i>
+                v{{ event.metadata.version }}
+              </span>
+              <span class="metadata-item" *ngIf="event.metadata.correlationId">
+                <i class="fas fa-link"></i>
+                {{ event.metadata.correlationId }}
+              </span>
+              <span class="metadata-item" *ngIf="event.processedAt">
+                <i class="fas fa-clock"></i>
+                Procesado: {{ event.processedAt | date:'short' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div class="empty-state" *ngIf="filteredEvents.length === 0 && !loading">
+          <i class="fas fa-stream"></i>
+          <h3>No se encontraron eventos</h3>
+          <p>No hay eventos que coincidan con los filtros aplicados</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Configuraciones -->
+    <div class="configurations-view" *ngIf="activeView === 'configurations'">
+      <div class="configurations-header">
+        <h2>
+          <i class="fas fa-cogs"></i>
+          Configuraciones de Eventos
+        </h2>
+        <p>Configura el comportamiento de cada tipo de evento del sistema</p>
+      </div>
+
+      <div class="configurations-grid">
+        <div class="config-card" 
+             *ngFor="let config of configurations"
+             [class.inactive]="!config.isActive">
+          
+          <!-- Header de configuración -->
+          <div class="config-header">
+            <div class="config-info">
+              <div class="config-icon" [style.color]="getCategoryColor(config.category)">
+                <i [class]="getCategoryIcon(config.category)"></i>
+              </div>
+              <div class="config-details">
+                <h3 class="config-name">{{ config.name }}</h3>
+                <p class="config-type">{{ config.type }}</p>
+              </div>
+            </div>
+
+            <div class="config-actions">
+              <button class="action-btn small" 
+                      (click)="editConfiguration(config)"
+                      title="Editar configuración">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="config-description">
+            <p>{{ config.description }}</p>
+          </div>
+
+          <!-- Metadatos -->
+          <div class="config-meta">
+            <div class="meta-item">
+              <span class="meta-label">Categoría:</span>
+              <span class="meta-value">{{ eventCategories.find(c => c.value === config.category)?.label }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Retención:</span>
+              <span class="meta-value">{{ config.retentionDays }} días</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Triggers:</span>
+              <span class="meta-value">{{ config.triggers.length }}</span>
+            </div>
+          </div>
+
+          <!-- Configuración -->
+          <div class="config-settings">
+            <div class="setting-item">
+              <span class="setting-label">Logging:</span>
+              <span class="setting-value" [class.enabled]="config.settings.enableLogging">
+                {{ config.settings.enableLogging ? 'Habilitado' : 'Deshabilitado' }}
+              </span>
+            </div>
+            <div class="setting-item">
+              <span class="setting-label">Métricas:</span>
+              <span class="setting-value" [class.enabled]="config.settings.enableMetrics">
+                {{ config.settings.enableMetrics ? 'Habilitado' : 'Deshabilitado' }}
+              </span>
+            </div>
+            <div class="setting-item">
+              <span class="setting-label">Triggers:</span>
+              <span class="setting-value" [class.enabled]="config.settings.enableTriggers">
+                {{ config.settings.enableTriggers ? 'Habilitado' : 'Deshabilitado' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="config-footer">
+            <div class="config-status">
+              <span class="status-badge" [class.active]="config.isActive">
+                {{ config.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+            <div class="config-batch">
+              Lote: {{ config.settings.batchSize }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Estadísticas -->
+    <div class="stats-view" *ngIf="activeView === 'stats'">
+      <div class="stats-header">
+        <h2>
+          <i class="fas fa-chart-line"></i>
+          Estadísticas de Eventos
+        </h2>
+      </div>
+
+      <div class="stats-content" *ngIf="eventStats">
+        
+        <!-- Resumen general -->
+        <div class="stats-summary">
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-stream"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ eventStats.totalEvents }}</h3>
+              <p>Eventos Totales</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon today">
+              <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ eventStats.eventsToday }}</h3>
+              <p>Eventos Hoy</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon week">
+              <i class="fas fa-calendar-week"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ eventStats.eventsThisWeek }}</h3>
+              <p>Esta Semana</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon processed">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ eventStats.processingStats.processed }}</h3>
+              <p>Procesados</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon pending">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ eventStats.processingStats.pending }}</h3>
+              <p>Pendientes</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon failed">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ eventStats.processingStats.failed }}</h3>
+              <p>Fallidos</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribución por tipo -->
+        <div class="stats-section">
+          <h3>Top Tipos de Eventos</h3>
+          <div class="top-events">
+            <div class="event-rank" 
+                 *ngFor="let eventType of eventStats.topEventTypes; let i = index">
+              <div class="rank-number">{{ i + 1 }}</div>
+              <div class="event-info">
+                <h4>{{ getEventConfiguration(eventType.type)?.name || eventType.type }}</h4>
+                <p>{{ eventType.count }} eventos</p>
+              </div>
+              <div class="event-percentage">
+                <span class="percentage">{{ eventType.percentage }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Eventos recientes -->
+        <div class="stats-section">
+          <h3>Eventos Recientes</h3>
+          <div class="recent-events">
+            <div class="event-summary" 
+                 *ngFor="let event of eventStats.recentEvents">
+              <div class="event-type">{{ getEventConfiguration(event.type)?.name || event.type }}</div>
+              <div class="event-time">{{ event.timestamp | date:'short' }}</div>
+              <div class="event-status" [class.processed]="event.processed">
+                {{ event.processed ? 'Procesado' : 'Pendiente' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Tiempo Real -->
+    <div class="realtime-view" *ngIf="activeView === 'realtime'">
+      <div class="realtime-header">
+        <h2>
+          <i class="fas fa-broadcast-tower"></i>
+          Eventos en Tiempo Real
+          <span class="live-indicator" *ngIf="realTimeEnabled"></span>
+        </h2>
+        <div class="realtime-controls">
+          <button class="control-btn" 
+                  [class.active]="realTimeEnabled"
+                  (click)="realTimeEnabled ? stopRealTime() : startRealTime()">
+            <i class="fas" [ngClass]="realTimeEnabled ? 'fa-pause' : 'fa-play'"></i>
+            <span>{{ realTimeEnabled ? 'Pausar' : 'Iniciar' }}</span>
+          </button>
+          <button class="control-btn" (click)="realTimeEvents = []">
+            <i class="fas fa-trash"></i>
+            <span>Limpiar</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="realtime-events">
+        <div class="realtime-event" 
+             *ngFor="let event of realTimeEvents; trackBy: trackByEventId"
+             [@slideIn]>
+          
+          <div class="event-timestamp">
+            {{ event.timestamp | date:'HH:mm:ss.SSS' }}
+          </div>
+          
+          <div class="event-content">
+            <div class="event-type">
+              <i [class]="getCategoryIcon(getEventConfiguration(event.type)?.category || 'system')"
+                 [style.color]="getCategoryColor(getEventConfiguration(event.type)?.category || 'system')"></i>
+              <span>{{ getEventConfiguration(event.type)?.name || event.type }}</span>
+            </div>
+            
+            <div class="event-source">{{ event.source }}</div>
+            
+            <div class="event-preview">
+              {{ formatEventData(event.data) | slice:0:100 }}{{ formatEventData(event.data).length > 100 ? '...' : '' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div class="empty-realtime" *ngIf="realTimeEvents.length === 0">
+          <i class="fas fa-broadcast-tower"></i>
+          <h3>{{ realTimeEnabled ? 'Esperando eventos...' : 'Monitoreo pausado' }}</h3>
+          <p>{{ realTimeEnabled ? 'Los eventos aparecerán aquí en tiempo real' : 'Haz clic en Iniciar para comenzar el monitoreo' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

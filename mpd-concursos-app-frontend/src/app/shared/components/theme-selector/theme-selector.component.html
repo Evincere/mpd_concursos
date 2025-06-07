@@ -1,0 +1,257 @@
+<div class="theme-selector">
+  <!-- Temas predefinidos -->
+  <div class="themes-section">
+    <h4 class="section-title">Temas Predefinidos</h4>
+    <div class="themes-grid">
+      <div 
+        *ngFor="let theme of getPredefinedThemes()" 
+        class="theme-card"
+        [class.selected]="selectedTheme === theme.id"
+        (click)="onThemeChange(theme.id)">
+        
+        <!-- Preview del tema -->
+        <div class="theme-preview">
+          <div class="preview-bar" [style.background]="theme.preview.primary"></div>
+          <div class="preview-content">
+            <div class="preview-bg" [style.background]="theme.preview.background">
+              <div class="preview-accent" [style.background]="theme.preview.accent"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del tema -->
+        <div class="theme-info">
+          <h5 class="theme-name">{{ theme.name }}</h5>
+          <p class="theme-description">{{ theme.description }}</p>
+        </div>
+
+        <!-- Indicador de selección -->
+        <div class="selection-indicator" *ngIf="selectedTheme === theme.id">
+          <i class="fas fa-check"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Temas personalizados -->
+  <div class="themes-section" *ngIf="showCustomThemes && getCustomThemes().length > 0">
+    <h4 class="section-title">Temas Personalizados</h4>
+    <div class="themes-grid">
+      <div 
+        *ngFor="let theme of getCustomThemes()" 
+        class="theme-card custom-theme"
+        [class.selected]="selectedTheme === theme.id"
+        (click)="onThemeChange(theme.id)">
+        
+        <!-- Preview del tema -->
+        <div class="theme-preview">
+          <div class="preview-bar" [style.background]="theme.primaryColor"></div>
+          <div class="preview-content">
+            <div class="preview-bg" [style.background]="theme.backgroundColor">
+              <div class="preview-accent" [style.background]="theme.accentColor"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información del tema -->
+        <div class="theme-info">
+          <h5 class="theme-name">{{ theme.name }}</h5>
+          <p class="theme-description">Tema personalizado</p>
+        </div>
+
+        <!-- Acciones del tema personalizado -->
+        <div class="theme-actions">
+          <button 
+            class="action-btn copy-btn"
+            (click)="copyTheme(theme.id); $event.stopPropagation()"
+            title="Copiar tema">
+            <i class="fas fa-copy"></i>
+          </button>
+          <button 
+            class="action-btn delete-btn"
+            (click)="deleteCustomTheme(theme.id); $event.stopPropagation()"
+            title="Eliminar tema">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+
+        <!-- Indicador de selección -->
+        <div class="selection-indicator" *ngIf="selectedTheme === theme.id">
+          <i class="fas fa-check"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón para crear tema personalizado -->
+  <div class="create-theme-section" *ngIf="allowCustomCreation">
+    <button 
+      class="create-theme-btn"
+      [class.active]="showCreateTheme"
+      (click)="toggleCreateTheme()">
+      <i class="fas" [ngClass]="showCreateTheme ? 'fa-times' : 'fa-plus'"></i>
+      <span>{{ showCreateTheme ? 'Cancelar' : 'Crear Tema Personalizado' }}</span>
+    </button>
+
+    <!-- Formulario de creación de tema -->
+    <div class="create-theme-form" *ngIf="showCreateTheme">
+      <div class="form-header">
+        <h4>Crear Nuevo Tema</h4>
+        <button 
+          class="randomize-btn"
+          (click)="randomizeColors()"
+          title="Generar colores aleatorios">
+          <i class="fas fa-dice"></i>
+          Aleatorio
+        </button>
+      </div>
+
+      <div class="form-content">
+        <!-- Nombre del tema -->
+        <div class="form-group">
+          <label for="themeName">Nombre del tema:</label>
+          <input 
+            id="themeName"
+            type="text" 
+            [(ngModel)]="newTheme.name"
+            placeholder="Ej: Mi tema personalizado"
+            class="form-input">
+        </div>
+
+        <!-- Colores principales -->
+        <div class="colors-grid">
+          <div class="color-group">
+            <label for="primaryColor">Color Primario:</label>
+            <div class="color-input-wrapper">
+              <input 
+                id="primaryColor"
+                type="color" 
+                [(ngModel)]="newTheme.primaryColor"
+                class="color-input">
+              <input 
+                type="text" 
+                [(ngModel)]="newTheme.primaryColor"
+                class="color-text">
+            </div>
+          </div>
+
+          <div class="color-group">
+            <label for="accentColor">Color Acento:</label>
+            <div class="color-input-wrapper">
+              <input 
+                id="accentColor"
+                type="color" 
+                [(ngModel)]="newTheme.accentColor"
+                class="color-input">
+              <input 
+                type="text" 
+                [(ngModel)]="newTheme.accentColor"
+                class="color-text">
+            </div>
+          </div>
+
+          <div class="color-group">
+            <label for="backgroundColor">Fondo:</label>
+            <div class="color-input-wrapper">
+              <input 
+                id="backgroundColor"
+                type="color" 
+                [(ngModel)]="newTheme.backgroundColor"
+                class="color-input">
+              <input 
+                type="text" 
+                [(ngModel)]="newTheme.backgroundColor"
+                class="color-text">
+            </div>
+          </div>
+
+          <div class="color-group">
+            <label for="textColor">Texto:</label>
+            <div class="color-input-wrapper">
+              <input 
+                id="textColor"
+                type="color" 
+                [(ngModel)]="newTheme.textColor"
+                class="color-input">
+              <input 
+                type="text" 
+                [(ngModel)]="newTheme.textColor"
+                class="color-text">
+            </div>
+          </div>
+
+          <div class="color-group">
+            <label for="borderColor">Bordes:</label>
+            <div class="color-input-wrapper">
+              <input 
+                id="borderColor"
+                type="color" 
+                [(ngModel)]="newTheme.borderColor"
+                class="color-input">
+              <input 
+                type="text" 
+                [(ngModel)]="newTheme.borderColor"
+                class="color-text">
+            </div>
+          </div>
+
+          <div class="color-group">
+            <label for="hoverColor">Hover:</label>
+            <div class="color-input-wrapper">
+              <input 
+                id="hoverColor"
+                type="color" 
+                [(ngModel)]="newTheme.hoverColor"
+                class="color-input">
+              <input 
+                type="text" 
+                [(ngModel)]="newTheme.hoverColor"
+                class="color-text">
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview del nuevo tema -->
+        <div class="new-theme-preview">
+          <h5>Vista Previa:</h5>
+          <div class="preview-container">
+            <div class="preview-sidebar" [style.background]="newTheme.backgroundColor">
+              <div class="preview-header" [style.background]="newTheme.primaryColor"></div>
+              <div class="preview-item" [style.color]="newTheme.textColor">
+                <i class="fas fa-home" [style.color]="newTheme.accentColor"></i>
+                Dashboard
+              </div>
+              <div class="preview-item hover" 
+                   [style.color]="newTheme.textColor"
+                   [style.background]="newTheme.hoverColor">
+                <i class="fas fa-users" [style.color]="newTheme.accentColor"></i>
+                Usuarios
+              </div>
+              <div class="preview-item" [style.color]="newTheme.textColor">
+                <i class="fas fa-cog" [style.color]="newTheme.accentColor"></i>
+                Configuración
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones del formulario -->
+        <div class="form-actions">
+          <button 
+            class="action-btn cancel-btn"
+            (click)="toggleCreateTheme()">
+            Cancelar
+          </button>
+          <button 
+            class="action-btn create-btn"
+            [disabled]="!isNewThemeValid() || isCreatingTheme"
+            (click)="createCustomTheme()">
+            <i class="fas fa-spinner fa-spin" *ngIf="isCreatingTheme"></i>
+            <i class="fas fa-plus" *ngIf="!isCreatingTheme"></i>
+            {{ isCreatingTheme ? 'Creando...' : 'Crear Tema' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

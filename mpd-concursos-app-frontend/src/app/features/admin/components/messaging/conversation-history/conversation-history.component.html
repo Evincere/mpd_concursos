@@ -1,0 +1,516 @@
+<div class="conversation-history">
+  <!-- Header -->
+  <div class="history-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-history"></i>
+          Historial de Conversaciones
+        </h1>
+        <p class="page-description">
+          Explora y analiza el historial completo de comunicaciones
+        </p>
+      </div>
+      <div class="header-stats" *ngIf="historyStats">
+        <div class="stat-item">
+          <span class="stat-number">{{ historyStats.totalConversations }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number active">{{ historyStats.activeConversations }}</span>
+          <span class="stat-label">Activas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ historyStats.totalMessages }}</span>
+          <span class="stat-label">Mensajes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación de pestañas -->
+  <div class="tabs-navigation">
+    <button class="tab-btn" 
+            *ngFor="let option of viewOptions"
+            [class.active]="activeView === option.value"
+            (click)="setActiveView(option.value)">
+      <i [class]="option.icon"></i>
+      <span>{{ option.label }}</span>
+    </button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="history-content">
+    
+    <!-- Vista: Lista -->
+    <div class="list-view" *ngIf="activeView === 'list'">
+      
+      <!-- Filtros -->
+      <div class="filters-section">
+        <form [formGroup]="filtersForm" class="filters-form">
+          <div class="filters-grid">
+            
+            <!-- Búsqueda -->
+            <div class="filter-field full-width">
+              <label for="search">Buscar</label>
+              <input type="text" 
+                     id="search"
+                     formControlName="search"
+                     placeholder="Buscar por asunto, participantes...">
+            </div>
+
+            <!-- Rango de fechas -->
+            <div class="filter-field">
+              <label for="dateFrom">Desde</label>
+              <input type="date" id="dateFrom" formControlName="dateFrom">
+            </div>
+
+            <div class="filter-field">
+              <label for="dateTo">Hasta</label>
+              <input type="date" id="dateTo" formControlName="dateTo">
+            </div>
+
+            <!-- Estado -->
+            <div class="filter-field">
+              <label for="status">Estado</label>
+              <select id="status" formControlName="status">
+                <option value="all">Todos</option>
+                <option value="active">Activas</option>
+                <option value="archived">Archivadas</option>
+                <option value="closed">Cerradas</option>
+              </select>
+            </div>
+
+            <!-- Prioridad -->
+            <div class="filter-field">
+              <label for="priority">Prioridad</label>
+              <select id="priority" formControlName="priority">
+                <option value="all">Todas</option>
+                <option value="low">Baja</option>
+                <option value="normal">Normal</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+
+            <!-- Categoría -->
+            <div class="filter-field">
+              <label for="category">Categoría</label>
+              <select id="category" formControlName="category">
+                <option value="">Todas</option>
+                <option *ngFor="let category of categories" [value]="category">
+                  {{ category | titlecase }}
+                </option>
+              </select>
+            </div>
+
+            <!-- No leídas -->
+            <div class="filter-field">
+              <label for="hasUnread">Mensajes no leídos</label>
+              <select id="hasUnread" formControlName="hasUnread">
+                <option value="">Todas</option>
+                <option value="true">Con no leídos</option>
+                <option value="false">Sin no leídos</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filters-actions">
+            <button type="button" 
+                    class="clear-btn"
+                    (click)="clearFilters()"
+                    [disabled]="!hasActiveFilters()">
+              <i class="fas fa-times"></i>
+              <span>Limpiar Filtros</span>
+              <span class="filters-count" *ngIf="hasActiveFilters()">
+                ({{ getActiveFiltersCount() }})
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Controles de lista -->
+      <div class="list-controls">
+        <div class="sort-controls">
+          <span class="sort-label">Ordenar por:</span>
+          <button class="sort-btn" 
+                  *ngFor="let option of sortOptions"
+                  [class.active]="currentSort.field === option.value"
+                  (click)="updateSort(option.value)">
+            <span>{{ option.label }}</span>
+            <i [class]="getSortIcon(option.value)"></i>
+          </button>
+        </div>
+
+        <div class="list-info">
+          <span>{{ filteredConversations.length }} conversaciones</span>
+        </div>
+      </div>
+
+      <!-- Lista de conversaciones -->
+      <div class="conversations-list">
+        <div class="conversation-card" 
+             *ngFor="let conversation of filteredConversations"
+             (click)="navigateToConversation(conversation)">
+          
+          <!-- Header de la conversación -->
+          <div class="conversation-header">
+            <div class="conversation-info">
+              <h3 class="conversation-subject">{{ conversation.subject }}</h3>
+              <div class="conversation-meta">
+                <span class="conversation-id">#{{ conversation.id.substring(0, 8) }}</span>
+                <span class="conversation-category" *ngIf="conversation.metadata?.category">
+                  {{ conversation.metadata.category | titlecase }}
+                </span>
+              </div>
+            </div>
+
+            <div class="conversation-status">
+              <div class="status-indicator" [style.color]="getStatusColor(conversation.status)">
+                <i [class]="getStatusIcon(conversation.status)"></i>
+                <span>{{ conversation.status | titlecase }}</span>
+              </div>
+              <div class="priority-indicator" [style.color]="getPriorityColor(conversation.priority)">
+                <i class="fas fa-flag"></i>
+                <span>{{ conversation.priority | titlecase }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Participantes -->
+          <div class="conversation-participants">
+            <div class="participants-list">
+              <i class="fas fa-users"></i>
+              <span>{{ getParticipantsString(conversation) }}</span>
+            </div>
+            <div class="most-active" *ngIf="getMostActiveParticipant(conversation) as mostActive">
+              <i class="fas fa-star"></i>
+              <span>{{ mostActive.userName }} ({{ mostActive.messageCount }} mensajes)</span>
+            </div>
+          </div>
+
+          <!-- Estadísticas -->
+          <div class="conversation-stats">
+            <div class="stat-item">
+              <i class="fas fa-comments"></i>
+              <span class="stat-value">{{ conversation.messageCount }}</span>
+              <span class="stat-label">Mensajes</span>
+            </div>
+            <div class="stat-item">
+              <i class="fas fa-clock"></i>
+              <span class="stat-value">{{ formatDuration(conversation.averageResponseTime) }}</span>
+              <span class="stat-label">Resp. promedio</span>
+            </div>
+            <div class="stat-item">
+              <i class="fas fa-calendar"></i>
+              <span class="stat-value">{{ formatRelativeDate(conversation.firstMessageDate) }}</span>
+              <span class="stat-label">Iniciada</span>
+            </div>
+            <div class="stat-item">
+              <i class="fas fa-history"></i>
+              <span class="stat-value">{{ formatRelativeDate(conversation.lastActivityDate) }}</span>
+              <span class="stat-label">Última actividad</span>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="conversation-tags" *ngIf="conversation.tags && conversation.tags.length > 0">
+            <span class="tag" *ngFor="let tag of conversation.tags">
+              {{ tag }}
+            </span>
+          </div>
+
+          <!-- Indicador de no leídos -->
+          <div class="unread-indicator" *ngIf="conversation.unreadCount > 0">
+            <span class="unread-count">{{ conversation.unreadCount }}</span>
+          </div>
+        </div>
+
+        <!-- Botón cargar más -->
+        <div class="load-more" *ngIf="hasMoreData">
+          <button class="load-more-btn" 
+                  (click)="loadMore()"
+                  [disabled]="loading">
+            <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : 'fa-chevron-down'"></i>
+            <span>{{ loading ? 'Cargando...' : 'Cargar más conversaciones' }}</span>
+          </button>
+        </div>
+
+        <!-- Estado vacío -->
+        <div class="empty-state" *ngIf="filteredConversations.length === 0 && !loading">
+          <i class="fas fa-comments-slash"></i>
+          <h3>No se encontraron conversaciones</h3>
+          <p *ngIf="hasActiveFilters()">
+            Intenta ajustar los filtros para ver más resultados
+          </p>
+          <p *ngIf="!hasActiveFilters()">
+            No hay conversaciones en el historial
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Estadísticas -->
+    <div class="stats-view" *ngIf="activeView === 'stats'">
+      <div class="stats-container" *ngIf="historyStats">
+        
+        <!-- Estadísticas generales -->
+        <div class="stats-section">
+          <h2 class="section-title">
+            <i class="fas fa-chart-pie"></i>
+            Estadísticas Generales
+          </h2>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-comments"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-number">{{ historyStats.totalConversations }}</span>
+                <span class="stat-label">Total de Conversaciones</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-number">{{ historyStats.totalMessages }}</span>
+                <span class="stat-label">Total de Mensajes</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-calculator"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-number">{{ historyStats.averageMessagesPerConversation | number:'1.1-1' }}</span>
+                <span class="stat-label">Mensajes por Conversación</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-stopwatch"></i>
+              </div>
+              <div class="stat-content">
+                <span class="stat-number">{{ formatDuration(historyStats.averageResponseTime) }}</span>
+                <span class="stat-label">Tiempo de Respuesta</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Participantes más activos -->
+        <div class="stats-section" *ngIf="historyStats.mostActiveParticipants.length > 0">
+          <h2 class="section-title">
+            <i class="fas fa-users"></i>
+            Participantes Más Activos
+          </h2>
+          
+          <div class="participants-list">
+            <div class="participant-item" 
+                 *ngFor="let participant of historyStats.mostActiveParticipants.slice(0, 10)">
+              <div class="participant-info">
+                <div class="participant-avatar">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="participant-details">
+                  <h4>{{ participant.userName }}</h4>
+                  <span class="participant-role">{{ participant.userRole | titlecase }}</span>
+                </div>
+              </div>
+              <div class="participant-stats">
+                <div class="stat">
+                  <span class="stat-value">{{ participant.conversationCount }}</span>
+                  <span class="stat-label">Conversaciones</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">{{ participant.messageCount }}</span>
+                  <span class="stat-label">Mensajes</span>
+                </div>
+                <div class="stat">
+                  <span class="stat-value">{{ formatDuration(participant.averageResponseTime) }}</span>
+                  <span class="stat-label">Resp. promedio</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversaciones por categoría -->
+        <div class="stats-section" *ngIf="historyStats.conversationsByCategory.length > 0">
+          <h2 class="section-title">
+            <i class="fas fa-tags"></i>
+            Conversaciones por Categoría
+          </h2>
+          
+          <div class="categories-chart">
+            <div class="category-item" 
+                 *ngFor="let category of historyStats.conversationsByCategory">
+              <div class="category-info">
+                <h4>{{ category.category | titlecase }}</h4>
+                <span class="category-percentage">{{ category.percentage | number:'1.1-1' }}%</span>
+              </div>
+              <div class="category-bar">
+                <div class="bar-fill" [style.width.%]="category.percentage"></div>
+              </div>
+              <div class="category-stats">
+                <span>{{ category.count }} conversaciones</span>
+                <span>{{ category.averageMessages | number:'1.1-1' }} mensajes promedio</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Búsqueda -->
+    <div class="search-view" *ngIf="activeView === 'search'">
+      <div class="search-container">
+        <h2 class="search-title">
+          <i class="fas fa-search"></i>
+          Búsqueda Avanzada
+        </h2>
+        
+        <form [formGroup]="searchForm" class="search-form">
+          <div class="search-field">
+            <label for="query">Término de búsqueda</label>
+            <input type="text" 
+                   id="query"
+                   formControlName="query"
+                   placeholder="Buscar en conversaciones y mensajes...">
+          </div>
+          
+          <div class="search-options">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="includeMessages">
+              <span>Incluir contenido de mensajes</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="includeMetadata">
+              <span>Incluir metadatos</span>
+            </label>
+          </div>
+        </form>
+
+        <!-- Resultados de búsqueda -->
+        <div class="search-results" *ngIf="searchResults">
+          <div class="results-header">
+            <h3>Resultados de Búsqueda</h3>
+            <span class="results-count">
+              {{ searchResults.totalResults }} resultados en {{ searchResults.searchTime }}ms
+            </span>
+          </div>
+
+          <!-- Conversaciones encontradas -->
+          <div class="results-section" *ngIf="searchResults.conversations.length > 0">
+            <h4>Conversaciones ({{ searchResults.conversations.length }})</h4>
+            <div class="conversation-results">
+              <div class="conversation-result" 
+                   *ngFor="let conversation of searchResults.conversations"
+                   (click)="navigateToConversation(conversation)">
+                <h5>{{ conversation.subject }}</h5>
+                <p>{{ getParticipantsString(conversation) }}</p>
+                <span class="result-date">{{ conversation.lastActivityDate | date:'short' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mensajes encontrados -->
+          <div class="results-section" *ngIf="searchResults.messages.length > 0">
+            <h4>Mensajes ({{ searchResults.messages.length }})</h4>
+            <div class="message-results">
+              <div class="message-result" *ngFor="let message of searchResults.messages">
+                <div class="message-header">
+                  <span class="message-sender">{{ message.senderName }}</span>
+                  <span class="message-date">{{ message.createdAt | date:'short' }}</span>
+                </div>
+                <p class="message-content">{{ message.content }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sugerencias -->
+          <div class="search-suggestions" *ngIf="searchResults.suggestions.length > 0">
+            <h4>Sugerencias</h4>
+            <div class="suggestions-list">
+              <button class="suggestion-btn" 
+                      *ngFor="let suggestion of searchResults.suggestions"
+                      (click)="searchForm.patchValue({ query: suggestion })">
+                {{ suggestion }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Exportar -->
+    <div class="export-view" *ngIf="activeView === 'export'">
+      <div class="export-container">
+        <h2 class="export-title">
+          <i class="fas fa-download"></i>
+          Exportar Historial
+        </h2>
+        
+        <form [formGroup]="exportForm" class="export-form">
+          <div class="export-grid">
+            <div class="export-field">
+              <label for="format">Formato</label>
+              <select id="format" formControlName="format">
+                <option value="json">JSON</option>
+                <option value="csv">CSV</option>
+                <option value="xlsx">Excel</option>
+                <option value="pdf">PDF</option>
+              </select>
+            </div>
+
+            <div class="export-field">
+              <label for="dateFrom">Desde</label>
+              <input type="date" id="dateFrom" formControlName="dateFrom">
+            </div>
+
+            <div class="export-field">
+              <label for="dateTo">Hasta</label>
+              <input type="date" id="dateTo" formControlName="dateTo">
+            </div>
+
+            <div class="export-options">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="includeMessages">
+                <span>Incluir mensajes</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="includeAttachments">
+                <span>Incluir adjuntos</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="includeMetadata">
+                <span>Incluir metadatos</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="anonymize">
+                <span>Anonimizar datos personales</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="export-actions">
+            <button type="button" 
+                    class="export-btn"
+                    (click)="exportHistory()"
+                    [disabled]="exporting">
+              <i class="fas" [ngClass]="exporting ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+              <span>{{ exporting ? 'Exportando...' : 'Exportar Historial' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

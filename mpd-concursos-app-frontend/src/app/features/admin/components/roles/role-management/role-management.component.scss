@@ -1,0 +1,928 @@
+@import '../../../../../styles/variables';
+
+.role-management-container {
+  padding: 24px;
+  background: $glass-background-primary;
+  min-height: 100vh;
+  position: relative;
+
+  .header-section {
+    margin-bottom: 32px;
+
+    .header-content {
+      .page-title {
+        color: $text-primary;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+        i {
+          color: $focus-color;
+          font-size: 24px;
+        }
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+
+        .stat-card {
+          background: $glass-hover-primary;
+          border: 1px solid $glass-background-secondary;
+          border-radius: $border-radius-lg;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          backdrop-filter: blur(8px);
+          transition: all $transition-smooth;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border-color: $focus-color;
+          }
+
+          .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, $focus-color, #2563eb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+          }
+
+          .stat-content {
+            display: flex;
+            flex-direction: column;
+
+            .stat-number {
+              color: $text-primary;
+              font-size: 24px;
+              font-weight: 700;
+              line-height: 1;
+            }
+
+            .stat-label {
+              color: $text-secondary;
+              font-size: 12px;
+              font-weight: 500;
+              margin-top: 4px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .controls-section {
+    margin-bottom: 24px;
+
+    .controls-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      .search-controls {
+        flex: 1;
+        min-width: 300px;
+
+        .search-form {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+
+          .search-field {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+
+            .search-icon {
+              position: absolute;
+              left: 12px;
+              top: 50%;
+              transform: translateY(-50%);
+              color: $text-secondary;
+              font-size: 14px;
+            }
+
+            .search-input {
+              width: 100%;
+              background: $glass-hover-primary;
+              border: 1px solid $glass-background-secondary;
+              color: $text-primary;
+              padding: 10px 12px 10px 36px;
+              border-radius: 6px;
+              font-size: 14px;
+              backdrop-filter: blur(8px);
+
+              &:focus {
+                outline: none;
+                border-color: $focus-color;
+                box-shadow: 0 0 0 2px $focus-color-secondary;
+              }
+
+              &::placeholder {
+                color: $text-secondary;
+                opacity: 0.7;
+              }
+            }
+          }
+
+          .filter-select {
+            background: $glass-hover-primary;
+            border: 1px solid $glass-background-secondary;
+            color: $text-primary;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 120px;
+            backdrop-filter: blur(8px);
+
+            &:focus {
+              outline: none;
+              border-color: $focus-color;
+              box-shadow: 0 0 0 2px $focus-color-secondary;
+            }
+
+            option {
+              background: $glass-background-primary;
+              color: $text-primary;
+            }
+          }
+        }
+      }
+
+      .action-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+
+        .view-controls {
+          display: flex;
+          gap: 4px;
+          background: $glass-hover-primary;
+          border: 1px solid $glass-background-secondary;
+          border-radius: 6px;
+          padding: 4px;
+
+          .view-btn {
+            background: transparent;
+            border: none;
+            color: $text-secondary;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all $transition-smooth;
+            font-size: 14px;
+
+            &:hover {
+              color: $text-primary;
+              background: $glass-background-secondary;
+            }
+
+            &.active {
+              color: white;
+              background: $focus-color;
+              box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+            }
+          }
+        }
+
+        .create-btn {
+          background: $focus-color;
+          border: none;
+          color: white;
+          padding: 10px 16px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all $transition-smooth;
+
+          &:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+
+          i {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+
+  .main-content {
+    .roles-list {
+      .table-container {
+        background: $glass-hover-primary;
+        border: 1px solid $glass-background-secondary;
+        border-radius: $border-radius-lg;
+        overflow: hidden;
+        backdrop-filter: blur(8px);
+
+        .roles-table {
+          width: 100%;
+          border-collapse: collapse;
+
+          thead {
+            background: $glass-background-secondary;
+
+            th {
+              color: $text-primary;
+              font-weight: 600;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              padding: 16px 12px;
+              text-align: left;
+              border-bottom: 1px solid $glass-background-secondary;
+            }
+          }
+
+          tbody {
+            .role-row {
+              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+              cursor: pointer;
+              transition: all $transition-smooth;
+
+              &:hover {
+                background: $glass-background-secondary;
+              }
+
+              &.selected {
+                background: rgba(59, 130, 246, 0.1);
+                border-color: $focus-color;
+              }
+
+              td {
+                padding: 16px 12px;
+                color: $text-primary;
+                font-size: 14px;
+                vertical-align: middle;
+
+                &.role-name {
+                  .role-info {
+                    .name {
+                      display: block;
+                      font-weight: 600;
+                      margin-bottom: 4px;
+                    }
+
+                    .description {
+                      display: block;
+                      color: $text-secondary;
+                      font-size: 12px;
+                      opacity: 0.8;
+                    }
+                  }
+                }
+
+                .badge {
+                  display: inline-block;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 11px;
+                  font-weight: 600;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+
+                  &.badge-primary { background: $focus-color; color: white; }
+                  &.badge-success { background: #10b981; color: white; }
+                  &.badge-warning { background: #f59e0b; color: white; }
+                  &.badge-danger { background: #ef4444; color: white; }
+                  &.badge-info { background: #06b6d4; color: white; }
+                  &.badge-secondary { background: $glass-background-secondary; color: $text-secondary; }
+                }
+
+                .status-badge {
+                  display: inline-block;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 11px;
+                  font-weight: 600;
+
+                  &.active {
+                    background: rgba(16, 185, 129, 0.2);
+                    color: #10b981;
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                  }
+
+                  &.inactive {
+                    background: rgba(239, 68, 68, 0.2);
+                    color: #ef4444;
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                  }
+                }
+
+                &.actions {
+                  .action-btn {
+                    background: transparent;
+                    border: 1px solid $glass-background-secondary;
+                    color: $text-secondary;
+                    padding: 6px 8px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin-right: 4px;
+                    transition: all $transition-smooth;
+                    font-size: 12px;
+
+                    &:hover:not(:disabled) {
+                      transform: translateY(-1px);
+                    }
+
+                    &.edit-btn:hover {
+                      background: $focus-color;
+                      border-color: $focus-color;
+                      color: white;
+                    }
+
+                    &.toggle-btn:hover {
+                      background: #f59e0b;
+                      border-color: #f59e0b;
+                      color: white;
+                    }
+
+                    &.delete-btn:hover {
+                      background: #ef4444;
+                      border-color: #ef4444;
+                      color: white;
+                    }
+
+                    &:disabled {
+                      opacity: 0.3;
+                      cursor: not-allowed;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        margin-top: 24px;
+
+        .page-btn {
+          background: $glass-hover-primary;
+          border: 1px solid $glass-background-secondary;
+          color: $text-primary;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all $transition-smooth;
+
+          &:hover:not(:disabled) {
+            background: $focus-color;
+            border-color: $focus-color;
+            color: white;
+          }
+
+          &:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+          }
+        }
+
+        .page-info {
+          color: $text-secondary;
+          font-size: 14px;
+        }
+      }
+    }
+
+    .roles-cards {
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+
+        .role-card {
+          background: $glass-hover-primary;
+          border: 1px solid $glass-background-secondary;
+          border-radius: $border-radius-lg;
+          padding: 20px;
+          cursor: pointer;
+          transition: all $transition-smooth;
+          backdrop-filter: blur(8px);
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border-color: $focus-color;
+          }
+
+          &.selected {
+            border-color: $focus-color;
+            box-shadow: 0 0 0 2px $focus-color-secondary;
+          }
+
+          .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+
+            .role-name {
+              color: $text-primary;
+              font-size: 18px;
+              font-weight: 600;
+              margin: 0;
+            }
+
+            .role-badges {
+              display: flex;
+              gap: 4px;
+              flex-direction: column;
+            }
+          }
+
+          .card-content {
+            margin-bottom: 16px;
+
+            .role-description {
+              color: $text-secondary;
+              font-size: 14px;
+              line-height: 1.5;
+              margin-bottom: 16px;
+            }
+
+            .role-stats {
+              display: flex;
+              gap: 16px;
+
+              .stat {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                color: $text-secondary;
+                font-size: 12px;
+
+                i {
+                  color: $focus-color;
+                }
+              }
+            }
+          }
+
+          .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            .actions {
+              display: flex;
+              gap: 8px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Panel lateral para crear/editar
+  .side-panel {
+    position: fixed;
+    top: 0;
+    right: -500px;
+    width: 500px;
+    height: 100vh;
+    background: $glass-background-primary;
+    border-left: 1px solid $glass-background-secondary;
+    backdrop-filter: blur(16px);
+    z-index: 1000;
+    transition: right $transition-smooth;
+    overflow-y: auto;
+
+    &.open {
+      right: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid $glass-background-secondary;
+      background: $glass-hover-primary;
+
+      h2 {
+        color: $text-primary;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .close-btn {
+        background: transparent;
+        border: none;
+        color: $text-secondary;
+        padding: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all $transition-smooth;
+
+        &:hover {
+          background: $glass-background-secondary;
+          color: $text-primary;
+        }
+      }
+    }
+
+    .panel-content {
+      padding: 24px;
+
+      .form-section {
+        margin-bottom: 32px;
+
+        h3 {
+          color: $text-primary;
+          font-size: 16px;
+          font-weight: 600;
+          margin-bottom: 16px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid $glass-background-secondary;
+        }
+
+        .form-group {
+          margin-bottom: 16px;
+
+          label {
+            display: block;
+            color: $text-primary;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+          }
+
+          .form-input,
+          .form-textarea,
+          .form-select {
+            width: 100%;
+            background: $glass-hover-primary;
+            border: 1px solid $glass-background-secondary;
+            color: $text-primary;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            backdrop-filter: blur(8px);
+            transition: all $transition-smooth;
+
+            &:focus {
+              outline: none;
+              border-color: $focus-color;
+              box-shadow: 0 0 0 2px $focus-color-secondary;
+            }
+
+            &.error {
+              border-color: #ef4444;
+              box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+            }
+
+            &::placeholder {
+              color: $text-secondary;
+              opacity: 0.7;
+            }
+          }
+
+          .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+          }
+
+          .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: $text-primary;
+            font-size: 14px;
+
+            .form-checkbox {
+              appearance: none;
+              width: 16px;
+              height: 16px;
+              border: 2px solid $glass-background-secondary;
+              border-radius: 3px;
+              background: transparent;
+              cursor: pointer;
+              position: relative;
+              transition: all $transition-smooth;
+
+              &:checked {
+                background: $focus-color;
+                border-color: $focus-color;
+
+                &::after {
+                  content: '✓';
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  color: white;
+                  font-size: 10px;
+                  font-weight: bold;
+                }
+              }
+            }
+          }
+
+          .error-message {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 4px;
+          }
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        // Estilos específicos para permisos
+        .permissions-container {
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid $glass-background-secondary;
+          border-radius: 6px;
+          background: $glass-hover-primary;
+
+          .permission-module {
+            border-bottom: 1px solid $glass-background-secondary;
+
+            &:last-child {
+              border-bottom: none;
+            }
+
+            .module-header {
+              padding: 12px 16px;
+              background: $glass-background-secondary;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+              .module-checkbox {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                color: $text-primary;
+                font-weight: 600;
+
+                .form-checkbox {
+                  appearance: none;
+                  width: 16px;
+                  height: 16px;
+                  border: 2px solid $glass-background-secondary;
+                  border-radius: 3px;
+                  background: transparent;
+                  cursor: pointer;
+                  position: relative;
+                  transition: all $transition-smooth;
+
+                  &:checked {
+                    background: $focus-color;
+                    border-color: $focus-color;
+
+                    &::after {
+                      content: '✓';
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      color: white;
+                      font-size: 10px;
+                      font-weight: bold;
+                    }
+                  }
+
+                  &:indeterminate {
+                    background: rgba(59, 130, 246, 0.3);
+                    border-color: $focus-color;
+
+                    &::after {
+                      content: '−';
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      color: $focus-color;
+                      font-size: 12px;
+                      font-weight: bold;
+                    }
+                  }
+                }
+
+                .module-name {
+                  text-transform: capitalize;
+                }
+              }
+            }
+
+            .permissions-list {
+              padding: 8px 0;
+
+              .permission-checkbox {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                padding: 8px 16px;
+                cursor: pointer;
+                transition: background $transition-smooth;
+
+                &:hover {
+                  background: rgba(255, 255, 255, 0.02);
+                }
+
+                .form-checkbox {
+                  appearance: none;
+                  width: 14px;
+                  height: 14px;
+                  border: 2px solid $glass-background-secondary;
+                  border-radius: 2px;
+                  background: transparent;
+                  cursor: pointer;
+                  position: relative;
+                  transition: all $transition-smooth;
+                  margin-top: 2px;
+
+                  &:checked {
+                    background: $focus-color;
+                    border-color: $focus-color;
+
+                    &::after {
+                      content: '✓';
+                      position: absolute;
+                      top: 50%;
+                      left: 50%;
+                      transform: translate(-50%, -50%);
+                      color: white;
+                      font-size: 8px;
+                      font-weight: bold;
+                    }
+                  }
+                }
+
+                .permission-info {
+                  flex: 1;
+
+                  .permission-name {
+                    display: block;
+                    color: $text-primary;
+                    font-size: 13px;
+                    font-weight: 500;
+                    margin-bottom: 2px;
+                  }
+
+                  .permission-description {
+                    display: block;
+                    color: $text-secondary;
+                    font-size: 11px;
+                    opacity: 0.8;
+                    line-height: 1.3;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 24px;
+        border-top: 1px solid $glass-background-secondary;
+
+        .btn {
+          padding: 10px 20px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all $transition-smooth;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          &.btn-secondary {
+            background: transparent;
+            border: 1px solid $glass-background-secondary;
+            color: $text-secondary;
+
+            &:hover {
+              background: $glass-hover-primary;
+              color: $text-primary;
+            }
+          }
+
+          &.btn-primary {
+            background: $focus-color;
+            border: 1px solid $focus-color;
+            color: white;
+
+            &:hover:not(:disabled) {
+              background: #2563eb;
+              transform: translateY(-1px);
+            }
+
+            &:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
+          }
+
+          i {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+
+  .panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all $transition-smooth;
+
+    &.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .role-management-container {
+    padding: 16px;
+
+    .controls-section .controls-header {
+      flex-direction: column;
+      align-items: stretch;
+
+      .search-controls .search-form {
+        flex-direction: column;
+        gap: 8px;
+
+        .search-field {
+          min-width: auto;
+        }
+
+        .filter-select {
+          min-width: auto;
+        }
+      }
+
+      .action-controls {
+        justify-content: space-between;
+      }
+    }
+
+    .main-content .roles-cards .cards-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .side-panel {
+      width: 100%;
+      right: -100%;
+
+      &.open {
+        right: 0;
+      }
+    }
+  }
+}

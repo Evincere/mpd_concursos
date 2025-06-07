@@ -1,0 +1,805 @@
+<div class="notification-triggers">
+  <!-- Header -->
+  <div class="triggers-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-bolt"></i>
+          Triggers Automáticos
+        </h1>
+        <p class="page-description">
+          Gestiona triggers automáticos para notificaciones y acciones del sistema
+        </p>
+      </div>
+      <div class="header-stats" *ngIf="triggerStats">
+        <div class="stat-item">
+          <span class="stat-number">{{ triggerStats.totalTriggers }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number active">{{ triggerStats.activeTriggers }}</span>
+          <span class="stat-label">Activos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ triggerStats.totalExecutions }}</span>
+          <span class="stat-label">Ejecuciones</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación -->
+  <div class="triggers-navigation">
+    <div class="nav-tabs">
+      <button class="nav-tab" 
+              [class.active]="activeView === 'list'"
+              (click)="setActiveView('list')">
+        <i class="fas fa-list"></i>
+        <span>Lista de Triggers</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'create'"
+              (click)="setActiveView('create')">
+        <i class="fas fa-plus"></i>
+        <span>Nuevo Trigger</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'executions'"
+              (click)="setActiveView('executions')">
+        <i class="fas fa-history"></i>
+        <span>Ejecuciones</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'stats'"
+              (click)="setActiveView('stats')">
+        <i class="fas fa-chart-bar"></i>
+        <span>Estadísticas</span>
+      </button>
+    </div>
+
+    <div class="nav-actions" *ngIf="activeView === 'list'">
+      <button class="action-btn primary" (click)="createTrigger()">
+        <i class="fas fa-plus"></i>
+        <span>Nuevo Trigger</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="triggers-content">
+    
+    <!-- Vista: Lista de triggers -->
+    <div class="list-view" *ngIf="activeView === 'list'">
+      
+      <!-- Filtros -->
+      <div class="filters-section">
+        <form [formGroup]="filtersForm" class="filters-form">
+          <div class="filters-grid">
+            
+            <!-- Búsqueda -->
+            <div class="filter-field full-width">
+              <label for="search">Buscar triggers</label>
+              <input type="text" 
+                     id="search"
+                     formControlName="search"
+                     placeholder="Buscar por nombre, descripción...">
+            </div>
+
+            <!-- Tipo -->
+            <div class="filter-field">
+              <label for="type">Tipo</label>
+              <select id="type" formControlName="type">
+                <option value="">Todos los tipos</option>
+                <option *ngFor="let type of triggerTypes" [value]="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Evento -->
+            <div class="filter-field">
+              <label for="event">Evento</label>
+              <select id="event" formControlName="event">
+                <option value="">Todos los eventos</option>
+                <option *ngFor="let event of systemEvents" [value]="event.value">
+                  {{ event.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Estado -->
+            <div class="filter-field">
+              <label for="isActive">Estado</label>
+              <select id="isActive" formControlName="isActive">
+                <option value="">Todos</option>
+                <option value="true">Activos</option>
+                <option value="false">Inactivos</option>
+              </select>
+            </div>
+
+            <!-- Prioridad -->
+            <div class="filter-field">
+              <label for="priority">Prioridad</label>
+              <select id="priority" formControlName="priority">
+                <option value="">Todas</option>
+                <option *ngFor="let priority of priorityOptions" [value]="priority.value">
+                  {{ priority.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filters-actions">
+            <button type="button" 
+                    class="clear-btn"
+                    (click)="clearFilters()">
+              <i class="fas fa-times"></i>
+              <span>Limpiar Filtros</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de triggers -->
+      <div class="triggers-grid">
+        <div class="trigger-card" 
+             *ngFor="let trigger of filteredTriggers"
+             [class.inactive]="!trigger.isActive">
+          
+          <!-- Header del trigger -->
+          <div class="trigger-header">
+            <div class="trigger-info">
+              <div class="trigger-icon" [style.color]="getPriorityColor(trigger.priority)">
+                <i [class]="getTypeIcon(trigger.type)"></i>
+              </div>
+              <div class="trigger-details">
+                <h3 class="trigger-name">{{ trigger.name }}</h3>
+                <p class="trigger-description">{{ trigger.description }}</p>
+              </div>
+            </div>
+
+            <div class="trigger-actions">
+              <button class="action-btn small" 
+                      (click)="executeTrigger(trigger)"
+                      [disabled]="!trigger.isActive || executing"
+                      title="Ejecutar manualmente">
+                <i class="fas" [ngClass]="executing ? 'fa-spinner fa-spin' : 'fa-play'"></i>
+              </button>
+              <button class="action-btn small" 
+                      (click)="editTrigger(trigger)"
+                      title="Editar">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="action-btn small" 
+                      [class.active]="trigger.isActive"
+                      (click)="toggleTrigger(trigger)"
+                      [title]="trigger.isActive ? 'Desactivar' : 'Activar'">
+                <i class="fas" [ngClass]="trigger.isActive ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+              </button>
+              <button class="action-btn small danger" 
+                      (click)="deleteTrigger(trigger)"
+                      title="Eliminar">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Metadatos -->
+          <div class="trigger-meta">
+            <div class="meta-item">
+              <span class="meta-label">Tipo:</span>
+              <span class="meta-value">{{ triggerTypes.find(t => t.value === trigger.type)?.label }}</span>
+            </div>
+            <div class="meta-item" *ngIf="trigger.event">
+              <span class="meta-label">Evento:</span>
+              <span class="meta-value">{{ systemEvents.find(e => e.value === trigger.event)?.label }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Prioridad:</span>
+              <span class="meta-value priority" [style.color]="getPriorityColor(trigger.priority)">
+                {{ priorityOptions.find(p => p.value === trigger.priority)?.label }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Estadísticas de ejecución -->
+          <div class="trigger-stats">
+            <div class="stat">
+              <i class="fas fa-play-circle"></i>
+              <span>{{ trigger.metadata.executionCount }} ejecuciones</span>
+            </div>
+            <div class="stat">
+              <i class="fas fa-check-circle"></i>
+              <span>{{ trigger.metadata.successCount }} exitosas</span>
+            </div>
+            <div class="stat" *ngIf="trigger.metadata.lastExecuted">
+              <i class="fas fa-clock"></i>
+              <span>Última: {{ trigger.metadata.lastExecuted | date:'short' }}</span>
+            </div>
+          </div>
+
+          <!-- Acciones configuradas -->
+          <div class="trigger-actions-list">
+            <h4>Acciones ({{ trigger.actions.length }}):</h4>
+            <div class="action-item" *ngFor="let action of trigger.actions.slice(0, 3)">
+              <i [class]="actionTypes.find(a => a.value === action.type)?.icon"></i>
+              <span>{{ actionTypes.find(a => a.value === action.type)?.label }}</span>
+            </div>
+            <div class="more-actions" *ngIf="trigger.actions.length > 3">
+              +{{ trigger.actions.length - 3 }} más
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="trigger-footer">
+            <div class="trigger-status">
+              <span class="status-badge" [class.active]="trigger.isActive">
+                {{ trigger.isActive ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+            <div class="trigger-updated">
+              Actualizado: {{ trigger.metadata.updatedAt | date:'short' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div class="empty-state" *ngIf="filteredTriggers.length === 0 && !loading">
+          <i class="fas fa-bolt"></i>
+          <h3>No se encontraron triggers</h3>
+          <p>No hay triggers que coincidan con los filtros aplicados</p>
+          <button class="action-btn primary" (click)="createTrigger()">
+            <i class="fas fa-plus"></i>
+            <span>Crear Primer Trigger</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Crear/Editar trigger -->
+    <div class="form-view" *ngIf="activeView === 'create' || activeView === 'edit'">
+      <div class="form-container">
+        <div class="form-header">
+          <h2>
+            <i class="fas" [ngClass]="activeView === 'create' ? 'fa-plus' : 'fa-edit'"></i>
+            {{ activeView === 'create' ? 'Nuevo Trigger' : 'Editar Trigger' }}
+          </h2>
+          <div class="form-actions">
+            <button class="action-btn secondary" (click)="cancelEdit()">
+              <i class="fas fa-times"></i>
+              <span>Cancelar</span>
+            </button>
+            <button class="action-btn primary" 
+                    (click)="saveTrigger()"
+                    [disabled]="triggerForm.invalid || saving">
+              <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+              <span>{{ saving ? 'Guardando...' : 'Guardar' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <form [formGroup]="triggerForm" class="trigger-form">
+          <div class="form-grid">
+            
+            <!-- Información básica -->
+            <div class="form-section">
+              <h3>Información Básica</h3>
+              
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="name">Nombre *</label>
+                  <input type="text" 
+                         id="name"
+                         formControlName="name"
+                         placeholder="Nombre del trigger"
+                         [class.error]="isFieldInvalid(triggerForm, 'name')">
+                  <div class="field-error" *ngIf="isFieldInvalid(triggerForm, 'name')">
+                    {{ getFieldError(triggerForm, 'name') }}
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="type">Tipo *</label>
+                  <select id="type" 
+                          formControlName="type"
+                          [class.error]="isFieldInvalid(triggerForm, 'type')">
+                    <option *ngFor="let type of triggerTypes" [value]="type.value">
+                      {{ type.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field">
+                  <label for="priority">Prioridad</label>
+                  <select id="priority" formControlName="priority">
+                    <option *ngFor="let priority of priorityOptions" [value]="priority.value">
+                      {{ priority.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <div class="form-field checkbox-field">
+                  <label class="checkbox-label">
+                    <input type="checkbox" formControlName="isActive">
+                    <span>Trigger activo</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-field full-width">
+                <label for="description">Descripción</label>
+                <textarea id="description"
+                          formControlName="description"
+                          placeholder="Descripción del trigger"
+                          rows="2"></textarea>
+              </div>
+            </div>
+
+            <!-- Configuración del trigger -->
+            <div class="form-section">
+              <h3>Configuración del Trigger</h3>
+              
+              <!-- Evento del sistema -->
+              <div class="form-field" *ngIf="triggerForm.get('type')?.value === 'event'">
+                <label for="event">Evento del Sistema *</label>
+                <select id="event" 
+                        formControlName="event"
+                        [class.error]="isFieldInvalid(triggerForm, 'event')">
+                  <option value="">Selecciona un evento</option>
+                  <option *ngFor="let event of systemEvents" [value]="event.value">
+                    {{ event.label }} - {{ event.description }}
+                  </option>
+                </select>
+                <div class="field-error" *ngIf="isFieldInvalid(triggerForm, 'event')">
+                  {{ getFieldError(triggerForm, 'event') }}
+                </div>
+              </div>
+
+              <!-- Condiciones -->
+              <div class="conditions-section" *ngIf="triggerForm.get('type')?.value === 'condition'">
+                <div class="section-header">
+                  <h4>Condiciones</h4>
+                  <button type="button" class="add-btn" (click)="addCondition()">
+                    <i class="fas fa-plus"></i>
+                    <span>Agregar Condición</span>
+                  </button>
+                </div>
+                
+                <div class="conditions-list" formArrayName="conditions">
+                  <div class="condition-item" 
+                       *ngFor="let condition of conditionsArray.controls; let i = index"
+                       [formGroupName]="i">
+                    <div class="condition-fields">
+                      <div class="field">
+                        <label>Campo</label>
+                        <input type="text" formControlName="field" placeholder="Campo a evaluar">
+                      </div>
+                      <div class="field">
+                        <label>Operador</label>
+                        <select formControlName="operator">
+                          <option *ngFor="let op of conditionOperators" [value]="op.value">
+                            {{ op.label }}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label>Valor</label>
+                        <input type="text" formControlName="value" placeholder="Valor a comparar">
+                      </div>
+                      <div class="field">
+                        <label>Tipo</label>
+                        <select formControlName="dataType">
+                          <option value="string">Texto</option>
+                          <option value="number">Número</option>
+                          <option value="boolean">Booleano</option>
+                          <option value="date">Fecha</option>
+                        </select>
+                      </div>
+                    </div>
+                    <button type="button" class="remove-btn" (click)="removeCondition(i)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Programación -->
+              <div class="schedule-section" 
+                   *ngIf="triggerForm.get('type')?.value === 'schedule'"
+                   formGroupName="schedule">
+                <h4>Programación</h4>
+                
+                <div class="form-row">
+                  <div class="form-field">
+                    <label for="scheduleType">Tipo</label>
+                    <select id="scheduleType" formControlName="type">
+                      <option value="once">Una vez</option>
+                      <option value="recurring">Recurrente</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label for="startDate">Fecha de inicio</label>
+                    <input type="datetime-local" id="startDate" formControlName="startDate">
+                  </div>
+                </div>
+
+                <div class="form-row" *ngIf="triggerForm.get('schedule.type')?.value === 'recurring'">
+                  <div class="form-field">
+                    <label for="frequency">Frecuencia</label>
+                    <select id="frequency" formControlName="recurring.frequency">
+                      <option value="daily">Diario</option>
+                      <option value="weekly">Semanal</option>
+                      <option value="monthly">Mensual</option>
+                      <option value="yearly">Anual</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-field">
+                    <label for="interval">Intervalo</label>
+                    <input type="number" id="interval" formControlName="recurring.interval" min="1">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="form-section">
+              <div class="section-header">
+                <h3>Acciones</h3>
+                <button type="button" class="add-btn" (click)="addAction()">
+                  <i class="fas fa-plus"></i>
+                  <span>Agregar Acción</span>
+                </button>
+              </div>
+              
+              <div class="actions-list" formArrayName="actions">
+                <div class="action-item" 
+                     *ngFor="let action of actionsArray.controls; let i = index"
+                     [formGroupName]="i">
+                  <div class="action-header">
+                    <h4>Acción {{ i + 1 }}</h4>
+                    <button type="button" class="remove-btn" (click)="removeAction(i)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                  
+                  <div class="action-fields">
+                    <div class="form-field">
+                      <label>Tipo de Acción</label>
+                      <select formControlName="type">
+                        <option *ngFor="let actionType of actionTypes" [value]="actionType.value">
+                          {{ actionType.label }}
+                        </option>
+                      </select>
+                    </div>
+                    
+                    <div class="action-config" formGroupName="config">
+                      <!-- Configuración para enviar notificación -->
+                      <div *ngIf="action.get('type')?.value === 'send_notification'" class="config-fields">
+                        <div class="form-field">
+                          <label>Plantilla</label>
+                          <select formControlName="templateId">
+                            <option value="">Selecciona una plantilla</option>
+                            <option *ngFor="let template of availableTemplates" [value]="template.id">
+                              {{ template.name }}
+                            </option>
+                          </select>
+                        </div>
+                        
+                        <div class="form-field">
+                          <label>Prioridad</label>
+                          <select formControlName="priority">
+                            <option *ngFor="let priority of priorityOptions" [value]="priority.value">
+                              {{ priority.label }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <!-- Configuración para webhook -->
+                      <div *ngIf="action.get('type')?.value === 'call_webhook'" class="config-fields">
+                        <div class="form-field">
+                          <label>URL del Webhook</label>
+                          <input type="url" formControlName="webhookUrl" placeholder="https://...">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Configuración avanzada -->
+            <div class="form-section">
+              <h3>Configuración Avanzada</h3>
+              
+              <div formGroupName="settings" class="settings-group">
+                <div class="form-row">
+                  <div class="form-field">
+                    <label for="maxExecutions">Máximo de ejecuciones</label>
+                    <input type="number" 
+                           id="maxExecutions"
+                           formControlName="maxExecutions"
+                           placeholder="Sin límite"
+                           min="1">
+                  </div>
+
+                  <div class="form-field">
+                    <label for="cooldownPeriod">Período de enfriamiento (minutos)</label>
+                    <input type="number" 
+                           id="cooldownPeriod"
+                           formControlName="cooldownPeriod"
+                           min="0">
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-field checkbox-field">
+                    <label class="checkbox-label">
+                      <input type="checkbox" formControlName="requireApproval">
+                      <span>Requiere aprobación</span>
+                    </label>
+                  </div>
+
+                  <div class="form-field checkbox-field">
+                    <label class="checkbox-label">
+                      <input type="checkbox" formControlName="logExecution">
+                      <span>Registrar ejecuciones</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-field checkbox-field">
+                    <label class="checkbox-label">
+                      <input type="checkbox" formControlName="enableRetry">
+                      <span>Habilitar reintentos</span>
+                    </label>
+                  </div>
+
+                  <div class="form-field" *ngIf="triggerForm.get('settings.enableRetry')?.value">
+                    <label for="maxRetries">Máximo reintentos</label>
+                    <input type="number" 
+                           id="maxRetries"
+                           formControlName="maxRetries"
+                           min="1"
+                           max="10">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Vista: Ejecuciones -->
+    <div class="executions-view" *ngIf="activeView === 'executions'">
+      <div class="executions-header">
+        <h2>
+          <i class="fas fa-history"></i>
+          Historial de Ejecuciones
+        </h2>
+        <div class="executions-stats" *ngIf="triggerStats">
+          <div class="stat">
+            <span class="number">{{ triggerStats.totalExecutions }}</span>
+            <span class="label">Total</span>
+          </div>
+          <div class="stat success">
+            <span class="number">{{ triggerStats.successfulExecutions }}</span>
+            <span class="label">Exitosas</span>
+          </div>
+          <div class="stat error">
+            <span class="number">{{ triggerStats.failedExecutions }}</span>
+            <span class="label">Fallidas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="executions-list">
+        <div class="execution-item"
+             *ngFor="let execution of executions"
+             [class]="execution.status">
+
+          <div class="execution-header">
+            <div class="execution-info">
+              <h4 class="execution-trigger">{{ execution.triggerName }}</h4>
+              <p class="execution-time">{{ execution.executedAt | date:'medium' }}</p>
+            </div>
+
+            <div class="execution-status">
+              <span class="status-badge" [style.background-color]="getExecutionStatusColor(execution.status)">
+                {{ execution.status | titlecase }}
+              </span>
+              <span class="execution-duration" *ngIf="execution.duration">
+                {{ execution.duration }}ms
+              </span>
+            </div>
+          </div>
+
+          <div class="execution-actions">
+            <div class="action-item"
+                 *ngFor="let action of execution.actions"
+                 [class]="action.status">
+              <div class="action-info">
+                <i [class]="actionTypes.find(a => a.value === action.actionType)?.icon"></i>
+                <span>{{ actionTypes.find(a => a.value === action.actionType)?.label }}</span>
+              </div>
+              <div class="action-status">
+                <span class="status" [style.color]="getExecutionStatusColor(action.status)">
+                  {{ action.status | titlecase }}
+                </span>
+                <span class="retry-count" *ngIf="action.retryCount > 0">
+                  ({{ action.retryCount }} reintentos)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="execution-error" *ngIf="execution.error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>{{ execution.error }}</span>
+          </div>
+
+          <div class="execution-logs" *ngIf="execution.logs.length > 0">
+            <details>
+              <summary>Ver logs ({{ execution.logs.length }})</summary>
+              <div class="logs-content">
+                <div class="log-entry" *ngFor="let log of execution.logs">
+                  {{ log }}
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div class="empty-state" *ngIf="executions.length === 0">
+          <i class="fas fa-history"></i>
+          <h3>No hay ejecuciones</h3>
+          <p>No se han ejecutado triggers recientemente</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Estadísticas -->
+    <div class="stats-view" *ngIf="activeView === 'stats'">
+      <div class="stats-header">
+        <h2>
+          <i class="fas fa-chart-bar"></i>
+          Estadísticas de Triggers
+        </h2>
+      </div>
+
+      <div class="stats-content" *ngIf="triggerStats">
+
+        <!-- Resumen general -->
+        <div class="stats-summary">
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ triggerStats.totalTriggers }}</h3>
+              <p>Triggers Totales</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon active">
+              <i class="fas fa-toggle-on"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ triggerStats.activeTriggers }}</h3>
+              <p>Triggers Activos</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-play-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ triggerStats.totalExecutions }}</h3>
+              <p>Ejecuciones Totales</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ triggerStats.successfulExecutions }}</h3>
+              <p>Ejecuciones Exitosas</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon error">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ triggerStats.failedExecutions }}</h3>
+              <p>Ejecuciones Fallidas</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="card-content">
+              <h3>{{ triggerStats.averageExecutionTime }}ms</h3>
+              <p>Tiempo Promedio</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribución por tipo -->
+        <div class="stats-section">
+          <h3>Distribución por Tipo</h3>
+          <div class="type-distribution">
+            <div class="type-item"
+                 *ngFor="let type of triggerTypes"
+                 [style.--percentage]="(triggerStats.byType[type.value] || 0) / triggerStats.totalTriggers * 100 + '%'">
+              <div class="type-info">
+                <i [class]="type.icon"></i>
+                <span>{{ type.label }}</span>
+              </div>
+              <div class="type-count">{{ triggerStats.byType[type.value] || 0 }}</div>
+              <div class="type-bar">
+                <div class="type-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top triggers -->
+        <div class="stats-section">
+          <h3>Triggers Más Activos</h3>
+          <div class="top-triggers">
+            <div class="trigger-rank"
+                 *ngFor="let trigger of triggerStats.topTriggers; let i = index">
+              <div class="rank-number">{{ i + 1 }}</div>
+              <div class="trigger-info">
+                <h4>{{ trigger.name }}</h4>
+                <p>{{ trigger.executionCount }} ejecuciones</p>
+              </div>
+              <div class="success-rate">
+                <span class="rate" [style.color]="trigger.successRate >= 90 ? '#10b981' : trigger.successRate >= 70 ? '#f59e0b' : '#ef4444'">
+                  {{ trigger.successRate }}%
+                </span>
+                <span class="label">éxito</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ejecuciones recientes -->
+        <div class="stats-section">
+          <h3>Ejecuciones Recientes</h3>
+          <div class="recent-executions">
+            <div class="execution-summary"
+                 *ngFor="let execution of triggerStats.recentExecutions">
+              <div class="execution-trigger">{{ execution.triggerName }}</div>
+              <div class="execution-time">{{ execution.executedAt | date:'short' }}</div>
+              <div class="execution-status" [style.color]="getExecutionStatusColor(execution.status)">
+                {{ execution.status | titlecase }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado de carga -->
+      <div class="loading-state" *ngIf="!triggerStats && loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Cargando estadísticas...</p>
+      </div>
+    </div>
+  </div>
+</div>

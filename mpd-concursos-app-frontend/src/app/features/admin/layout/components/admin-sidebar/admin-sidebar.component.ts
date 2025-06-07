@@ -17,11 +17,17 @@ import {
 import { ConcursosService } from '@core/services/concursos/concursos.service';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { IInscription } from '@shared/interfaces/inscripcion/inscription.interface';
+import { AdminNotificationsService } from '@core/services/admin-notifications.service';
+import { WebSocketNotificationsService } from '@core/services/websocket-notifications.service';
+import { AlertPrioritizationService } from '@core/services/alert-prioritization.service';
+import { SidebarCustomizationService } from '@core/services/sidebar-customization.service';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
 
 // Componentes personalizados
 import { CustomDividerComponent } from '@shared/components/custom-form/custom-divider/custom-divider.component';
 import { TooltipDirective } from '@shared/directives/tooltip.directive';
 import { AnimateDirective } from '@shared/directives/animate.directive';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 /**
  * Interfaz para un módulo del sidebar
@@ -63,7 +69,8 @@ interface SidebarMenuItem {
     FormsModule,
     CustomDividerComponent,
     TooltipDirective,
-    AnimateDirective
+    AnimateDirective,
+    DragDropModule
   ],
   animations: [
     trigger('moduleAnimation', [
@@ -112,6 +119,11 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   activeFloatingModule: SidebarModule | null = null;
   activeFloatingMenu: SidebarMenuItem | null = null;
   floatingMenuPosition = { top: 0, left: 0 };
+
+  // Personalización y drag & drop
+  isDragMode = false;
+  isCustomizationMode = false;
+  showCustomizationPanel = false;
 
   // Para limpieza de suscripciones
   private destroy$ = new Subject<void>();
@@ -418,9 +430,13 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
 
 
 
-  constructor(private authService: AuthService, 
+  constructor(private authService: AuthService,
               private concursosService: ConcursosService,
-              private inscriptionService: InscriptionService) {
+              private inscriptionService: InscriptionService,
+              private adminNotificationsService: AdminNotificationsService,
+              private webSocketService: WebSocketNotificationsService,
+              private alertPrioritizationService: AlertPrioritizationService,
+              private sidebarCustomizationService: SidebarCustomizationService) {
     // Configurar búsqueda con debounce
     this.searchSubject.pipe(
       takeUntil(this.destroy$),
@@ -448,46 +464,10 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       }
     });
 
-    // --- ACTUALIZACIÓN DE BADGES DINÁMICOS ---
-    // Concursos
-    const concursosModulo = this.modules.find(m => m.id === 'concursos');
-    if (concursosModulo) {
-      const gestionConcursos = concursosModulo.items.find(i => i.id === 'concursos-listado');
-      this.concursosService.getConcursos().subscribe(concursos => {
-        if (gestionConcursos && gestionConcursos.badge) {
-          gestionConcursos.badge.value = concursos.length;
-        }
-      });
-    }
+    // --- ACTUALIZACIÓN DE BADGES DINÁMICOS CON SERVICIO CENTRALIZADO ---
+    this.setupDynamicBadges();
 
-    // Inscripciones
-    const inscripcionesModulo = this.modules.find(m => m.id === 'inscripciones');
-    if (inscripcionesModulo) {
-      const gestionInscripciones = inscripcionesModulo.items.find(i => i.id === 'inscripciones-listado');
-      const pendientes = inscripcionesModulo.items.find(i => i.id === 'inscripciones-pendientes');
-      const aprobadas = inscripcionesModulo.items.find(i => i.id === 'inscripciones-aprobadas');
-      const rechazadas = inscripcionesModulo.items.find(i => i.id === 'inscripciones-rechazadas');
-      const documentacion = inscripcionesModulo.items.find(i => i.id === 'inscripciones-documentacion');
 
-      this.inscriptionService.inscriptions.subscribe((inscripciones: IInscription[]) => {
-        if (gestionInscripciones && gestionInscripciones.badge) {
-          gestionInscripciones.badge.value = inscripciones.length;
-        }
-        if (pendientes && pendientes.badge) {
-          pendientes.badge.value = inscripciones.filter(i => i.state === 'PENDING').length;
-        }
-        if (aprobadas && aprobadas.badge) {
-          aprobadas.badge.value = inscripciones.filter(i => i.state === 'APPROVED').length;
-        }
-        if (rechazadas && rechazadas.badge) {
-          rechazadas.badge.value = inscripciones.filter(i => i.state === 'REJECTED').length;
-        }
-        if (documentacion && documentacion.badge) {
-          // Ajusta este filtro si tienes un criterio específico para "documentación pendiente"
-          documentacion.badge.value = inscripciones.filter(i => i.state === 'PENDING').length;
-        }
-      });
-    }
   }
 
   ngOnDestroy(): void {
@@ -1140,6 +1120,206 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
   onEscapeKey(): void {
     if (this.activeFloatingMenu || this.activeFloatingModule) {
       this.closeFloatingMenu();
+    }
+  }
+
+  /**
+   * Configura los badges dinámicos usando el servicio centralizado de notificaciones
+   */
+  private setupDynamicBadges(): void {
+    // Suscribirse a indicadores de concursos
+    this.adminNotificationsService.concursosCount$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(count => {
+      this.updateModuleBadge('concursos', 'concursos-listado', count, 'primary');
+    });
+
+    // Suscribirse a inscripciones pendientes
+    this.adminNotificationsService.inscripcionesPendientes$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(count => {
+      const numCount = typeof count === 'number' ? count : parseInt(count.toString(), 10) || 0;
+      this.updateModuleBadge('inscripciones', 'inscripciones-pendientes', count, numCount > 0 ? 'warn' : 'success');
+    });
+
+    // Suscribirse a documentos pendientes
+    this.adminNotificationsService.documentosPendientes$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(count => {
+      const numCount = typeof count === 'number' ? count : parseInt(count.toString(), 10) || 0;
+      this.updateModuleBadge('inscripciones', 'inscripciones-documentacion', count, numCount > 0 ? 'accent' : 'success');
+    });
+
+    // Suscribirse a alertas urgentes
+    this.adminNotificationsService.alertasUrgentes$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(count => {
+      if (count > 0) {
+        this.updateModuleBadge('dashboard', 'main-dashboard', count, 'warn');
+      }
+    });
+
+    // Suscribirse a actualizaciones WebSocket
+    this.webSocketService.indicatorUpdates$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(update => {
+      console.log('[AdminSidebar] Actualización WebSocket recibida:', update);
+      // Forzar actualización de indicadores
+      this.adminNotificationsService.forceUpdate();
+    });
+
+    // Suscribirse a alertas del sistema
+    this.webSocketService.systemAlerts$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(alert => {
+      console.log('[AdminSidebar] Alerta del sistema recibida:', alert);
+      // Aquí podrías mostrar una notificación toast o actualizar indicadores específicos
+    });
+  }
+
+  /**
+   * Actualiza el badge de un elemento específico del módulo
+   */
+  private updateModuleBadge(moduleId: string, itemId: string, value: number | string, color: 'primary' | 'accent' | 'warn' | 'success' | 'info'): void {
+    const module = this.modules.find(m => m.id === moduleId);
+    if (module) {
+      const item = module.items.find(i => i.id === itemId);
+      if (item) {
+        if (!item.badge) {
+          item.badge = { value: 0, color: 'primary' };
+        }
+        item.badge.value = value;
+        item.badge.color = color;
+      }
+    }
+  }
+
+  /**
+   * Maneja el evento de drop para reordenar módulos
+   */
+  onModuleDrop(event: CdkDragDrop<SidebarModule[]>): void {
+    if (event.previousIndex !== event.currentIndex) {
+      // Reordenar módulos localmente
+      const modules = [...this.modules];
+      const [movedModule] = modules.splice(event.previousIndex, 1);
+      modules.splice(event.currentIndex, 0, movedModule);
+      this.modules = modules;
+
+      // Actualizar en el servicio de personalización
+      this.sidebarCustomizationService.reorderModules(event);
+
+      console.log('[AdminSidebar] Módulos reordenados:', this.modules.map(m => m.label));
+    }
+  }
+
+  /**
+   * Activa/desactiva el modo de arrastrar
+   */
+  toggleDragMode(): void {
+    this.isDragMode = !this.isDragMode;
+    this.sidebarCustomizationService.setDragMode(this.isDragMode);
+
+    if (this.isDragMode) {
+      console.log('[AdminSidebar] Modo drag activado - Puedes reordenar los módulos');
+    } else {
+      console.log('[AdminSidebar] Modo drag desactivado');
+    }
+  }
+
+  /**
+   * Activa/desactiva el modo de personalización
+   */
+  toggleCustomizationMode(): void {
+    this.isCustomizationMode = !this.isCustomizationMode;
+    this.showCustomizationPanel = this.isCustomizationMode;
+
+    if (this.isCustomizationMode) {
+      console.log('[AdminSidebar] Modo personalización activado');
+    } else {
+      console.log('[AdminSidebar] Modo personalización desactivado');
+      this.isDragMode = false;
+      this.sidebarCustomizationService.setDragMode(false);
+    }
+  }
+
+  /**
+   * Cambia la visibilidad de un módulo
+   */
+  toggleModuleVisibility(moduleId: string): void {
+    this.sidebarCustomizationService.toggleModuleVisibility(moduleId);
+
+    // Actualizar localmente
+    const module = this.modules.find(m => m.id === moduleId);
+    if (module) {
+      // En una implementación real, esto se sincronizaría con el servicio
+      console.log(`[AdminSidebar] Visibilidad del módulo ${module.label} cambiada`);
+    }
+  }
+
+  /**
+   * Cambia el tema del sidebar
+   */
+  changeTheme(themeId: string): void {
+    this.sidebarCustomizationService.setTheme(themeId);
+    console.log(`[AdminSidebar] Tema cambiado a: ${themeId}`);
+  }
+
+  /**
+   * Cambia la densidad del sidebar
+   */
+  changeDensity(density: 'compact' | 'comfortable' | 'spacious'): void {
+    this.sidebarCustomizationService.setDensity(density);
+    console.log(`[AdminSidebar] Densidad cambiada a: ${density}`);
+  }
+
+  /**
+   * Restaura la configuración por defecto
+   */
+  resetToDefault(): void {
+    this.sidebarCustomizationService.resetToDefault();
+    this.initModules(); // Reinicializar módulos
+    this.isDragMode = false;
+    this.isCustomizationMode = false;
+    this.showCustomizationPanel = false;
+    console.log('[AdminSidebar] Configuración restaurada a valores por defecto');
+  }
+
+  /**
+   * Exporta la configuración actual
+   */
+  exportConfiguration(): void {
+    const config = this.sidebarCustomizationService.exportConfiguration();
+    const blob = new Blob([config], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sidebar-config-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    console.log('[AdminSidebar] Configuración exportada');
+  }
+
+  /**
+   * Importa una configuración
+   */
+  importConfiguration(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        const success = this.sidebarCustomizationService.importConfiguration(content);
+
+        if (success) {
+          this.initModules(); // Reinicializar módulos
+          console.log('[AdminSidebar] Configuración importada exitosamente');
+        } else {
+          console.error('[AdminSidebar] Error al importar configuración');
+        }
+      };
+      reader.readAsText(file);
     }
   }
 }

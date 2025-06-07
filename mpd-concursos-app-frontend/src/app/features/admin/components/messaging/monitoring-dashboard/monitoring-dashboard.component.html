@@ -1,0 +1,389 @@
+<div class="monitoring-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-desktop"></i>
+          Dashboard de Monitoreo
+        </h1>
+        <p class="page-description">
+          Monitoreo en tiempo real del sistema de comunicaciones
+        </p>
+      </div>
+      
+      <div class="header-controls">
+        <!-- Control de actualización automática -->
+        <div class="refresh-controls">
+          <button class="refresh-btn" 
+                  [class.active]="autoRefreshEnabled"
+                  (click)="toggleAutoRefresh()"
+                  title="Actualización automática">
+            <i class="fas" [ngClass]="autoRefreshEnabled ? 'fa-pause' : 'fa-play'"></i>
+            <span>{{ autoRefreshEnabled ? 'Pausar' : 'Iniciar' }}</span>
+          </button>
+          
+          <select class="refresh-interval" 
+                  [value]="refreshInterval"
+                  (change)="changeRefreshInterval(+$event.target.value)">
+            <option *ngFor="let option of refreshIntervalOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Selector de rango de tiempo -->
+        <div class="time-range-controls">
+          <select class="time-range" 
+                  [value]="selectedTimeRange"
+                  (change)="changeTimeRange($event.target.value)">
+            <option *ngFor="let option of timeRangeOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Acciones -->
+        <div class="header-actions">
+          <button class="action-btn secondary" (click)="runDiagnostics()">
+            <i class="fas fa-stethoscope"></i>
+            <span>Diagnóstico</span>
+          </button>
+          <button class="action-btn secondary" (click)="exportMetrics()">
+            <i class="fas fa-download"></i>
+            <span>Exportar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación -->
+  <div class="dashboard-navigation">
+    <div class="nav-tabs">
+      <button class="nav-tab" 
+              [class.active]="activeView === 'overview'"
+              (click)="setActiveView('overview')">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>Vista General</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'metrics'"
+              (click)="setActiveView('metrics')">
+        <i class="fas fa-chart-line"></i>
+        <span>Métricas</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'alerts'"
+              (click)="setActiveView('alerts')">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Alertas</span>
+        <span class="alert-count" *ngIf="activeAlerts.length > 0">{{ activeAlerts.length }}</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'performance'"
+              (click)="setActiveView('performance')">
+        <i class="fas fa-server"></i>
+        <span>Rendimiento</span>
+      </button>
+      <button class="nav-tab" 
+              [class.active]="activeView === 'settings'"
+              (click)="setActiveView('settings')">
+        <i class="fas fa-cogs"></i>
+        <span>Configuración</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="dashboard-content">
+    
+    <!-- Vista: Vista General -->
+    <div class="overview-view" *ngIf="activeView === 'overview'">
+      
+      <!-- Estado del sistema -->
+      <div class="system-status" *ngIf="systemMetrics">
+        <div class="status-card">
+          <div class="status-icon healthy">
+            <i class="fas fa-heartbeat"></i>
+          </div>
+          <div class="status-info">
+            <h3>Sistema Saludable</h3>
+            <p>Todos los servicios funcionando correctamente</p>
+          </div>
+          <div class="status-uptime">
+            <span class="uptime-label">Uptime:</span>
+            <span class="uptime-value">{{ formatDuration(systemMetrics.performance.uptime) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Métricas principales -->
+      <div class="main-metrics" *ngIf="systemMetrics">
+        <div class="metrics-grid">
+          
+          <!-- Mensajería -->
+          <div class="metric-card messaging">
+            <div class="metric-header">
+              <div class="metric-icon">
+                <i class="fas fa-comments"></i>
+              </div>
+              <div class="metric-info">
+                <h3>Mensajería</h3>
+                <p>Sistema de mensajes internos</p>
+              </div>
+            </div>
+            <div class="metric-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.messaging.totalMessages) }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.messaging.messagesLast24h) }}</span>
+                <span class="stat-label">Últimas 24h</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.messaging.unreadMessages) }}</span>
+                <span class="stat-label">No leídos</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.messaging.activeConversations) }}</span>
+                <span class="stat-label">Conversaciones</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notificaciones -->
+          <div class="metric-card notifications">
+            <div class="metric-header">
+              <div class="metric-icon">
+                <i class="fas fa-bell"></i>
+              </div>
+              <div class="metric-info">
+                <h3>Notificaciones</h3>
+                <p>Sistema de notificaciones</p>
+              </div>
+            </div>
+            <div class="metric-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.notifications.totalNotifications) }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.notifications.notificationsLast24h) }}</span>
+                <span class="stat-label">Últimas 24h</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.notifications.pendingNotifications) }}</span>
+                <span class="stat-label">Pendientes</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatPercentage(systemMetrics.notifications.successRate) }}</span>
+                <span class="stat-label">Tasa de éxito</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Triggers -->
+          <div class="metric-card triggers">
+            <div class="metric-header">
+              <div class="metric-icon">
+                <i class="fas fa-bolt"></i>
+              </div>
+              <div class="metric-info">
+                <h3>Triggers</h3>
+                <p>Automatización de procesos</p>
+              </div>
+            </div>
+            <div class="metric-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.triggers.totalTriggers) }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.triggers.activeTriggers) }}</span>
+                <span class="stat-label">Activos</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.triggers.triggersExecutedLast24h) }}</span>
+                <span class="stat-label">Ejecutados 24h</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatDuration(systemMetrics.triggers.averageExecutionTime) }}</span>
+                <span class="stat-label">Tiempo promedio</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Eventos -->
+          <div class="metric-card events">
+            <div class="metric-header">
+              <div class="metric-icon">
+                <i class="fas fa-stream"></i>
+              </div>
+              <div class="metric-info">
+                <h3>Eventos</h3>
+                <p>Sistema de eventos</p>
+              </div>
+            </div>
+            <div class="metric-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.events.totalEvents) }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.events.eventsLast24h) }}</span>
+                <span class="stat-label">Últimas 24h</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.events.pendingEvents) }}</span>
+                <span class="stat-label">Pendientes</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatDuration(systemMetrics.events.averageProcessingTime) }}</span>
+                <span class="stat-label">Tiempo promedio</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cola -->
+          <div class="metric-card queue">
+            <div class="metric-header">
+              <div class="metric-icon">
+                <i class="fas fa-layer-group"></i>
+              </div>
+              <div class="metric-info">
+                <h3>Cola</h3>
+                <p>Sistema de colas</p>
+              </div>
+            </div>
+            <div class="metric-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.queue.totalQueued) }}</span>
+                <span class="stat-label">En cola</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatDuration(systemMetrics.queue.averageWaitTime) }}</span>
+                <span class="stat-label">Tiempo espera</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatNumber(systemMetrics.queue.throughputPerHour) }}</span>
+                <span class="stat-label">Por hora</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" [style.color]="getHealthColor(systemMetrics.queue.queueHealth)">
+                  {{ systemMetrics.queue.queueHealth | titlecase }}
+                </span>
+                <span class="stat-label">Estado</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rendimiento -->
+          <div class="metric-card performance">
+            <div class="metric-header">
+              <div class="metric-icon">
+                <i class="fas fa-tachometer-alt"></i>
+              </div>
+              <div class="metric-info">
+                <h3>Rendimiento</h3>
+                <p>Métricas del sistema</p>
+              </div>
+            </div>
+            <div class="metric-stats">
+              <div class="stat-item">
+                <span class="stat-value">{{ formatPercentage(systemMetrics.performance.cpuUsage) }}</span>
+                <span class="stat-label">CPU</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatPercentage(systemMetrics.performance.memoryUsage) }}</span>
+                <span class="stat-label">Memoria</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatDuration(systemMetrics.performance.responseTime) }}</span>
+                <span class="stat-label">Respuesta</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">{{ formatPercentage(100 - systemMetrics.performance.errorRate) }}</span>
+                <span class="stat-label">Disponibilidad</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alertas activas -->
+      <div class="active-alerts" *ngIf="activeAlerts.length > 0">
+        <div class="alerts-header">
+          <h3>
+            <i class="fas fa-exclamation-triangle"></i>
+            Alertas Activas ({{ activeAlerts.length }})
+          </h3>
+        </div>
+        <div class="alerts-list">
+          <div class="alert-item" 
+               *ngFor="let alert of activeAlerts.slice(0, 5)"
+               [class]="alert.type">
+            <div class="alert-icon" [style.color]="getAlertTypeConfig(alert.type)?.color">
+              <i [class]="getAlertCategoryConfig(alert.category)?.icon"></i>
+            </div>
+            <div class="alert-content">
+              <h4 class="alert-title">{{ alert.title }}</h4>
+              <p class="alert-message">{{ alert.message }}</p>
+              <div class="alert-meta">
+                <span class="alert-time">{{ alert.timestamp | date:'short' }}</span>
+                <span class="alert-category">{{ getAlertCategoryConfig(alert.category)?.label }}</span>
+              </div>
+            </div>
+            <div class="alert-actions">
+              <button class="action-btn small" 
+                      *ngIf="!alert.acknowledged"
+                      (click)="acknowledgeAlert(alert)"
+                      title="Reconocer">
+                <i class="fas fa-check"></i>
+              </button>
+              <button class="action-btn small" 
+                      *ngIf="!alert.resolved"
+                      (click)="resolveAlert(alert)"
+                      title="Resolver">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="more-alerts" *ngIf="activeAlerts.length > 5">
+            <button class="view-all-btn" (click)="setActiveView('alerts')">
+              Ver todas las alertas ({{ activeAlerts.length - 5 }} más)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top triggers -->
+      <div class="top-triggers" *ngIf="systemMetrics?.triggers.topTriggers.length > 0">
+        <div class="section-header">
+          <h3>
+            <i class="fas fa-bolt"></i>
+            Top Triggers
+          </h3>
+        </div>
+        <div class="triggers-list">
+          <div class="trigger-item" 
+               *ngFor="let trigger of systemMetrics.triggers.topTriggers.slice(0, 5); let i = index">
+            <div class="trigger-rank">{{ i + 1 }}</div>
+            <div class="trigger-info">
+              <h4 class="trigger-name">{{ trigger.name }}</h4>
+              <p class="trigger-stats">{{ trigger.executions }} ejecuciones</p>
+            </div>
+            <div class="trigger-success-rate">
+              <span class="rate" [style.color]="trigger.successRate >= 90 ? '#10b981' : trigger.successRate >= 70 ? '#f59e0b' : '#ef4444'">
+                {{ formatPercentage(trigger.successRate) }}
+              </span>
+              <span class="rate-label">éxito</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

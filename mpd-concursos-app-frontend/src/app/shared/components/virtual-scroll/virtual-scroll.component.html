@@ -1,0 +1,83 @@
+<div class="virtual-scroll-container" 
+     #scrollContainer
+     [style.height]="height"
+     [style.width]="width">
+  
+  <!-- Loading state -->
+  <div *ngIf="loading" class="virtual-scroll-loading">
+    <ng-container *ngTemplateOutlet="loadingTemplate || defaultLoadingTemplate"></ng-container>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && items.length === 0" class="virtual-scroll-empty">
+    <ng-container *ngTemplateOutlet="emptyTemplate || defaultEmptyTemplate"></ng-container>
+  </div>
+
+  <!-- Content container -->
+  <div *ngIf="!loading && items.length > 0" 
+       class="virtual-scroll-content"
+       #contentContainer
+       [ngStyle]="getContentStyle()">
+    
+    <!-- Visible items -->
+    <div class="virtual-scroll-items" [ngStyle]="getVisibleItemsStyle()">
+      <div *ngFor="let item of visibleRange.visibleItems; 
+                   let i = index; 
+                   trackBy: trackByFn"
+           class="virtual-scroll-item"
+           [ngStyle]="getItemStyle(i)"
+           [attr.data-index]="visibleRange.start + i">
+        
+        <ng-container *ngTemplateOutlet="itemTemplate; context: { 
+          $implicit: item, 
+          index: visibleRange.start + i,
+          first: (visibleRange.start + i) === 0,
+          last: (visibleRange.start + i) === items.length - 1,
+          even: (visibleRange.start + i) % 2 === 0,
+          odd: (visibleRange.start + i) % 2 === 1
+        }"></ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicators -->
+  <div class="virtual-scroll-indicators" *ngIf="!loading && items.length > 0">
+    <div class="scroll-indicator scroll-indicator-top" 
+         [class.visible]="getFirstVisibleIndex() > 0">
+      <i class="fas fa-chevron-up"></i>
+    </div>
+    
+    <div class="scroll-indicator scroll-indicator-bottom" 
+         [class.visible]="getLastVisibleIndex() < items.length - 1">
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </div>
+
+  <!-- Scroll progress bar -->
+  <div class="virtual-scroll-progress" *ngIf="!loading && items.length > 0">
+    <div class="progress-bar" 
+         [style.height.%]="(getLastVisibleIndex() - getFirstVisibleIndex() + 1) / items.length * 100"
+         [style.top.%]="getFirstVisibleIndex() / items.length * 100">
+    </div>
+  </div>
+</div>
+
+<!-- Default loading template -->
+<ng-template #defaultLoadingTemplate>
+  <div class="default-loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p>Cargando elementos...</p>
+  </div>
+</ng-template>
+
+<!-- Default empty template -->
+<ng-template #defaultEmptyTemplate>
+  <div class="default-empty">
+    <div class="empty-icon">
+      <i class="fas fa-inbox"></i>
+    </div>
+    <p>No hay elementos para mostrar</p>
+  </div>
+</ng-template>

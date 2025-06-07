@@ -68,11 +68,39 @@
     <app-custom-divider *ngIf="!collapsed && favoriteItems.length > 0"></app-custom-divider>
   </div>
 
+  <!-- Botones de personalización -->
+  <div class="customization-controls" *ngIf="!collapsed">
+    <button
+      class="customization-btn"
+      [class.active]="isCustomizationMode"
+      (click)="toggleCustomizationMode()"
+      title="Personalizar sidebar">
+      <i class="fas fa-cog"></i>
+    </button>
+    <button
+      class="drag-btn"
+      [class.active]="isDragMode"
+      *ngIf="isCustomizationMode"
+      (click)="toggleDragMode()"
+      title="Reordenar módulos">
+      <i class="fas fa-arrows-alt"></i>
+    </button>
+  </div>
+
   <!-- Menú de navegación modular -->
   <nav class="sidebar-nav" *ngIf="!isSearching">
-    <ul class="modules-list">
+    <ul
+      class="modules-list"
+      [class.drag-mode]="isDragMode"
+      cdkDropList
+      (cdkDropListDropped)="onModuleDrop($event)">
       <!-- Módulos -->
-      <li *ngFor="let module of modules" class="module-item">
+      <li
+        *ngFor="let module of modules"
+        class="module-item"
+        [class.dragging]="isDragMode"
+        cdkDrag
+        [cdkDragDisabled]="!isDragMode">
         <!-- Cabecera del módulo -->
         <div
           class="module-header"
@@ -255,6 +283,53 @@
 
   <!-- Separador -->
   <app-custom-divider></app-custom-divider>
+
+  <!-- Panel de personalización -->
+  <div class="customization-panel" *ngIf="showCustomizationPanel && !collapsed">
+    <div class="panel-header">
+      <h4>Personalización</h4>
+      <button class="close-btn" (click)="toggleCustomizationMode()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="panel-content">
+      <!-- Controles de tema -->
+      <div class="control-group">
+        <label>Tema:</label>
+        <select (change)="changeTheme($any($event.target).value)" class="theme-select">
+          <option value="default">Predeterminado</option>
+          <option value="dark">Oscuro</option>
+          <option value="light">Claro</option>
+          <option value="colorful">Colorido</option>
+        </select>
+      </div>
+
+      <!-- Controles de densidad -->
+      <div class="control-group">
+        <label>Densidad:</label>
+        <select (change)="changeDensity($any($event.target).value)" class="density-select">
+          <option value="compact">Compacto</option>
+          <option value="comfortable">Cómodo</option>
+          <option value="spacious">Espacioso</option>
+        </select>
+      </div>
+
+      <!-- Acciones -->
+      <div class="panel-actions">
+        <button class="action-btn export-btn" (click)="exportConfiguration()">
+          <i class="fas fa-download"></i> Exportar
+        </button>
+        <label class="action-btn import-btn">
+          <i class="fas fa-upload"></i> Importar
+          <input type="file" accept=".json" (change)="importConfiguration($event)" style="display: none;">
+        </label>
+        <button class="action-btn reset-btn" (click)="resetToDefault()">
+          <i class="fas fa-undo"></i> Restaurar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Acciones de usuario -->
   <div class="sidebar-footer">

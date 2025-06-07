@@ -1,0 +1,476 @@
+<div class="messaging-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-comments"></i>
+          Centro de Mensajería
+        </h1>
+        <p class="page-description">
+          Gestiona comunicaciones con postulantes y administradores
+        </p>
+      </div>
+      <div class="header-stats" *ngIf="messagingStats">
+        <div class="stat-item">
+          <span class="stat-number">{{ messagingStats.totalMessages }}</span>
+          <span class="stat-label">Total Mensajes</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number unread">{{ messagingStats.unreadMessages }}</span>
+          <span class="stat-label">No Leídos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ messagingStats.activeConversations }}</span>
+          <span class="stat-label">Conversaciones</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación de pestañas -->
+  <div class="tabs-navigation">
+    <button class="tab-btn" 
+            [class.active]="activeView === 'conversations'"
+            (click)="setActiveView('conversations')">
+      <i class="fas fa-inbox"></i>
+      <span>Conversaciones</span>
+      <span class="badge" *ngIf="getTotalUnreadCount() > 0">{{ getTotalUnreadCount() }}</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeView === 'compose'"
+            (click)="setActiveView('compose')">
+      <i class="fas fa-edit"></i>
+      <span>Nuevo Mensaje</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeView === 'search'"
+            (click)="setActiveView('search')">
+      <i class="fas fa-search"></i>
+      <span>Buscar</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeView === 'stats'"
+            (click)="setActiveView('stats')">
+      <i class="fas fa-chart-bar"></i>
+      <span>Estadísticas</span>
+    </button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="dashboard-content">
+    
+    <!-- Vista: Conversaciones -->
+    <div class="conversations-view" *ngIf="activeView === 'conversations'">
+      <div class="conversations-layout">
+        
+        <!-- Lista de conversaciones -->
+        <div class="conversations-sidebar">
+          <div class="sidebar-header">
+            <h3>Conversaciones</h3>
+            <button class="new-conversation-btn" (click)="setActiveView('compose')">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+          
+          <div class="conversations-list">
+            <div class="conversation-item" 
+                 *ngFor="let conversation of conversations"
+                 [class.active]="selectedConversation?.id === conversation.id"
+                 [class.unread]="conversation.unreadCount > 0"
+                 (click)="selectConversation(conversation)">
+              
+              <div class="conversation-header">
+                <div class="conversation-info">
+                  <h4 class="conversation-subject">{{ conversation.subject }}</h4>
+                  <div class="conversation-participants">
+                    <span *ngFor="let participant of conversation.participants; let last = last">
+                      {{ participant.userName }}<span *ngIf="!last">, </span>
+                    </span>
+                  </div>
+                </div>
+                <div class="conversation-meta">
+                  <div class="priority-indicator" [style.color]="getPriorityColor(conversation.priority)">
+                    <i [class]="getPriorityIcon(conversation.priority)"></i>
+                  </div>
+                  <span class="conversation-time">
+                    {{ formatRelativeDate(conversation.updatedAt) }}
+                  </span>
+                  <span class="unread-badge" *ngIf="conversation.unreadCount > 0">
+                    {{ conversation.unreadCount }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="conversation-preview" *ngIf="conversation.lastMessage">
+                <p class="last-message">{{ conversation.lastMessage.content }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Panel de mensajes -->
+        <div class="messages-panel" *ngIf="selectedConversation">
+          
+          <!-- Header de conversación -->
+          <div class="conversation-header-panel">
+            <div class="conversation-title">
+              <h3>{{ selectedConversation.subject }}</h3>
+              <div class="conversation-actions">
+                <button class="action-btn" (click)="archiveConversation(selectedConversation)">
+                  <i class="fas fa-archive"></i>
+                  <span>Archivar</span>
+                </button>
+              </div>
+            </div>
+            <div class="conversation-participants-info">
+              <span *ngFor="let participant of selectedConversation.participants; let last = last">
+                <i class="fas fa-user"></i>
+                {{ participant.userName }} ({{ participant.userRole }})<span *ngIf="!last">, </span>
+              </span>
+            </div>
+          </div>
+          
+          <!-- Lista de mensajes -->
+          <div class="messages-container">
+            <div class="messages-list">
+              
+              <!-- Botón cargar más -->
+              <div class="load-more" *ngIf="hasMoreMessages">
+                <button class="load-more-btn" 
+                        (click)="loadMoreMessages()"
+                        [disabled]="loading">
+                  <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : 'fa-chevron-up'"></i>
+                  <span>{{ loading ? 'Cargando...' : 'Cargar mensajes anteriores' }}</span>
+                </button>
+              </div>
+              
+              <!-- Mensajes -->
+              <div class="message-item" 
+                   *ngFor="let message of messages"
+                   [class.own-message]="message.senderRole === 'admin'"
+                   [class.system-message]="message.isSystemMessage">
+                
+                <div class="message-header">
+                  <div class="message-sender">
+                    <i class="fas" [ngClass]="message.senderRole === 'admin' ? 'fa-user-shield' : 'fa-user'"></i>
+                    <span class="sender-name">{{ message.senderName }}</span>
+                    <span class="sender-role">({{ message.senderRole }})</span>
+                  </div>
+                  <div class="message-meta">
+                    <div class="message-priority" 
+                         *ngIf="message.priority !== 'normal'"
+                         [style.color]="getPriorityColor(message.priority)">
+                      <i [class]="getPriorityIcon(message.priority)"></i>
+                    </div>
+                    <span class="message-time">{{ message.createdAt | date:'short' }}</span>
+                    <div class="message-status">
+                      <i class="fas" [ngClass]="{
+                        'fa-check': message.status === 'sent',
+                        'fa-check-double': message.status === 'delivered',
+                        'fa-eye': message.status === 'read',
+                        'fa-exclamation-triangle': message.status === 'failed'
+                      }" [style.color]="message.status === 'read' ? '#4CAF50' : '#6b7280'"></i>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="message-content">
+                  <p>{{ message.content }}</p>
+                  
+                  <!-- Adjuntos -->
+                  <div class="message-attachments" *ngIf="message.attachments && message.attachments.length > 0">
+                    <div class="attachment-item" *ngFor="let attachment of message.attachments">
+                      <i class="fas fa-paperclip"></i>
+                      <a [href]="attachment.url" target="_blank">{{ attachment.name }}</a>
+                      <span class="attachment-size">({{ attachment.size | number }} bytes)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Formulario de respuesta -->
+          <div class="message-compose">
+            <form [formGroup]="messageForm" (ngSubmit)="sendMessage()" class="compose-form">
+              <div class="compose-header">
+                <select formControlName="priority" class="priority-select">
+                  <option value="low">Baja prioridad</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">Alta prioridad</option>
+                  <option value="urgent">Urgente</option>
+                </select>
+              </div>
+              
+              <div class="compose-content">
+                <textarea formControlName="content"
+                          placeholder="Escribe tu mensaje..."
+                          rows="3"
+                          [class.error]="isFieldInvalid(messageForm, 'content')"></textarea>
+              </div>
+              
+              <div class="compose-actions">
+                <button type="button" class="attach-btn">
+                  <i class="fas fa-paperclip"></i>
+                  <span>Adjuntar</span>
+                </button>
+                <button type="submit" 
+                        class="send-btn"
+                        [disabled]="messageForm.invalid || sending">
+                  <i class="fas" [ngClass]="sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+                  <span>{{ sending ? 'Enviando...' : 'Enviar' }}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <!-- Estado vacío -->
+        <div class="empty-conversation" *ngIf="!selectedConversation">
+          <div class="empty-state">
+            <i class="fas fa-comments"></i>
+            <h3>Selecciona una conversación</h3>
+            <p>Elige una conversación de la lista para ver los mensajes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Vista: Nuevo mensaje -->
+    <div class="compose-view" *ngIf="activeView === 'compose'">
+      <div class="compose-container">
+        <h2 class="compose-title">
+          <i class="fas fa-edit"></i>
+          Nueva Conversación
+        </h2>
+        
+        <form [formGroup]="composeForm" (ngSubmit)="createConversation()" class="compose-form-full">
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="recipientId">Destinatario *</label>
+              <select id="recipientId" 
+                      formControlName="recipientId"
+                      [class.error]="isFieldInvalid(composeForm, 'recipientId')">
+                <option value="">Seleccionar destinatario</option>
+                <!-- Opciones se cargarían dinámicamente -->
+              </select>
+            </div>
+            
+            <div class="form-field">
+              <label for="category">Categoría</label>
+              <select id="category" formControlName="category">
+                <option value="general">General</option>
+                <option value="inscription">Inscripción</option>
+                <option value="documentation">Documentación</option>
+                <option value="support">Soporte</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+            
+            <div class="form-field full-width">
+              <label for="subject">Asunto *</label>
+              <input type="text" 
+                     id="subject"
+                     formControlName="subject"
+                     placeholder="Asunto de la conversación"
+                     [class.error]="isFieldInvalid(composeForm, 'subject')">
+            </div>
+            
+            <div class="form-field full-width">
+              <label for="content">Mensaje *</label>
+              <textarea id="content"
+                        formControlName="content"
+                        placeholder="Escribe tu mensaje..."
+                        rows="6"
+                        [class.error]="isFieldInvalid(composeForm, 'content')"></textarea>
+            </div>
+            
+            <div class="form-field">
+              <label for="priority">Prioridad</label>
+              <select id="priority" formControlName="priority">
+                <option value="low">Baja</option>
+                <option value="normal">Normal</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" 
+                    class="cancel-btn"
+                    (click)="setActiveView('conversations')">
+              <i class="fas fa-times"></i>
+              <span>Cancelar</span>
+            </button>
+            <button type="submit" 
+                    class="send-btn"
+                    [disabled]="composeForm.invalid || sending">
+              <i class="fas" [ngClass]="sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+              <span>{{ sending ? 'Enviando...' : 'Enviar Mensaje' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Vista: Búsqueda -->
+    <div class="search-view" *ngIf="activeView === 'search'">
+      <div class="search-container">
+        <h2 class="search-title">
+          <i class="fas fa-search"></i>
+          Buscar Mensajes
+        </h2>
+        
+        <form [formGroup]="searchForm" class="search-form">
+          <div class="search-grid">
+            <div class="search-field full-width">
+              <label for="search">Buscar en mensajes</label>
+              <input type="text" 
+                     id="search"
+                     formControlName="search"
+                     placeholder="Buscar por contenido, remitente, asunto...">
+            </div>
+            
+            <div class="search-field">
+              <label for="type">Tipo</label>
+              <select id="type" formControlName="type">
+                <option value="">Todos</option>
+                <option value="text">Texto</option>
+                <option value="system">Sistema</option>
+                <option value="notification">Notificación</option>
+                <option value="document">Documento</option>
+              </select>
+            </div>
+            
+            <div class="search-field">
+              <label for="priority">Prioridad</label>
+              <select id="priority" formControlName="priority">
+                <option value="">Todas</option>
+                <option value="low">Baja</option>
+                <option value="normal">Normal</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+            
+            <div class="search-field">
+              <label for="dateFrom">Desde</label>
+              <input type="date" id="dateFrom" formControlName="dateFrom">
+            </div>
+            
+            <div class="search-field">
+              <label for="dateTo">Hasta</label>
+              <input type="date" id="dateTo" formControlName="dateTo">
+            </div>
+            
+            <div class="search-field">
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" formControlName="hasAttachments">
+                  <span>Con adjuntos</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" formControlName="isUnread">
+                  <span>No leídos</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="search-actions">
+            <button type="button" 
+                    class="search-btn"
+                    (click)="performSearch()">
+              <i class="fas fa-search"></i>
+              <span>Buscar</span>
+            </button>
+            <button type="button" 
+                    class="clear-btn"
+                    (click)="searchForm.reset()">
+              <i class="fas fa-times"></i>
+              <span>Limpiar</span>
+            </button>
+          </div>
+        </form>
+        
+        <!-- Resultados de búsqueda -->
+        <div class="search-results" *ngIf="searchResults.length > 0">
+          <h3>Resultados ({{ searchResults.length }})</h3>
+          <div class="results-list">
+            <div class="result-item" *ngFor="let message of searchResults">
+              <div class="result-header">
+                <span class="result-sender">{{ message.senderName }}</span>
+                <span class="result-date">{{ message.createdAt | date:'short' }}</span>
+                <div class="result-priority" [style.color]="getPriorityColor(message.priority)">
+                  <i [class]="getPriorityIcon(message.priority)"></i>
+                </div>
+              </div>
+              <div class="result-content">
+                <p>{{ message.content }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="no-results" *ngIf="searchForm.get('search')?.value && searchResults.length === 0">
+          <i class="fas fa-search"></i>
+          <p>No se encontraron mensajes que coincidan con tu búsqueda</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Vista: Estadísticas -->
+    <div class="stats-view" *ngIf="activeView === 'stats'">
+      <div class="stats-container">
+        <h2 class="stats-title">
+          <i class="fas fa-chart-bar"></i>
+          Estadísticas de Mensajería
+        </h2>
+        
+        <div class="stats-grid" *ngIf="messagingStats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ messagingStats.totalMessages }}</span>
+              <span class="stat-label">Total de Mensajes</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-envelope-open"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ messagingStats.unreadMessages }}</span>
+              <span class="stat-label">Mensajes No Leídos</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-comments"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ messagingStats.activeConversations }}</span>
+              <span class="stat-label">Conversaciones Activas</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ messagingStats.averageResponseTime }}m</span>
+              <span class="stat-label">Tiempo Promedio de Respuesta</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

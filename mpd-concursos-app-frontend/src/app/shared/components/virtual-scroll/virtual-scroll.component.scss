@@ -1,0 +1,304 @@
+@import '../../../styles/variables';
+
+.virtual-scroll-container {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: $glass-background-primary;
+  border: 1px solid $glass-background-secondary;
+  border-radius: $border-radius-lg;
+  backdrop-filter: blur(8px);
+
+  // Scrollbar personalizado
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    transition: background $transition-smooth;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  // Estados de carga y vacío
+  .virtual-scroll-loading,
+  .virtual-scroll-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 200px;
+    color: $text-secondary;
+    text-align: center;
+
+    .default-loading,
+    .default-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+
+      .loading-spinner,
+      .empty-icon {
+        font-size: 32px;
+        color: $text-secondary;
+        opacity: 0.7;
+
+        i {
+          font-size: inherit;
+        }
+      }
+
+      .loading-spinner i {
+        animation: spin 1s linear infinite;
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0.8;
+      }
+    }
+  }
+
+  // Contenedor de contenido
+  .virtual-scroll-content {
+    position: relative;
+    width: 100%;
+  }
+
+  // Contenedor de elementos visibles
+  .virtual-scroll-items {
+    width: 100%;
+  }
+
+  // Elemento individual
+  .virtual-scroll-item {
+    width: 100%;
+    box-sizing: border-box;
+    transition: transform $transition-smooth;
+
+    &:hover {
+      transform: translateX(2px);
+    }
+
+    // Separadores entre elementos
+    &:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  // Indicadores de scroll
+  .virtual-scroll-indicators {
+    position: absolute;
+    top: 0;
+    right: 16px;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+
+    .scroll-indicator {
+      position: absolute;
+      right: 0;
+      width: 32px;
+      height: 32px;
+      background: $glass-hover-primary;
+      border: 1px solid $glass-background-secondary;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $text-primary;
+      font-size: 12px;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all $transition-smooth;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+      &.visible {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      &.scroll-indicator-top {
+        top: 16px;
+        animation: bounce-up 2s infinite;
+      }
+
+      &.scroll-indicator-bottom {
+        bottom: 16px;
+        animation: bounce-down 2s infinite;
+      }
+
+      i {
+        font-size: inherit;
+      }
+    }
+  }
+
+  // Barra de progreso de scroll
+  .virtual-scroll-progress {
+    position: absolute;
+    top: 8px;
+    right: 4px;
+    bottom: 8px;
+    width: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+
+    .progress-bar {
+      width: 100%;
+      background: linear-gradient(to bottom, #f59e0b, #d97706);
+      border-radius: 2px;
+      transition: all $transition-smooth;
+      min-height: 20px;
+    }
+  }
+
+  // Estados de hover y focus
+  &:hover {
+    .virtual-scroll-progress {
+      opacity: 1;
+    }
+
+    .scroll-indicator.visible {
+      opacity: 0.8;
+    }
+  }
+
+  // Optimizaciones para rendimiento
+  .virtual-scroll-item {
+    contain: layout style paint;
+    will-change: transform;
+  }
+
+  // Smooth scrolling
+  &.smooth-scrolling {
+    scroll-behavior: smooth;
+  }
+}
+
+// Animaciones
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce-up {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-4px) scale(1.1);
+  }
+  60% {
+    transform: translateY(-2px) scale(1.05);
+  }
+}
+
+@keyframes bounce-down {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(4px) scale(1.1);
+  }
+  60% {
+    transform: translateY(2px) scale(1.05);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .virtual-scroll-container {
+    .virtual-scroll-indicators {
+      right: 8px;
+
+      .scroll-indicator {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
+
+        &.scroll-indicator-top {
+          top: 8px;
+        }
+
+        &.scroll-indicator-bottom {
+          bottom: 8px;
+        }
+      }
+    }
+
+    .virtual-scroll-progress {
+      right: 2px;
+      width: 3px;
+    }
+
+    .virtual-scroll-item {
+      &:not(:last-child)::after {
+        left: 8px;
+        right: 8px;
+      }
+    }
+  }
+}
+
+// Tema oscuro
+@media (prefers-color-scheme: dark) {
+  .virtual-scroll-container {
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    .virtual-scroll-progress {
+      background: rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+// Clases de utilidad para lazy loading
+.lazy-loading {
+  opacity: 0.6;
+  filter: blur(1px);
+  transition: all $transition-smooth;
+}
+
+.lazy-loaded {
+  opacity: 1;
+  filter: none;
+}
+
+.lazy-error {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}

@@ -1,0 +1,401 @@
+<div class="push-notifications-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1 class="page-title">
+          <i class="fas fa-bell"></i>
+          Notificaciones Push
+        </h1>
+        <p class="page-description">
+          Gestiona las notificaciones push de la aplicación y configura el sistema de mensajería
+        </p>
+      </div>
+      <div class="header-actions">
+        <button class="action-btn test-btn"
+                (click)="sendTestNotification()"
+                [disabled]="!canSendNotifications() || sending">
+          <i class="fas" [ngClass]="sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+          <span>{{ sending ? 'Enviando...' : 'Prueba' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación de pestañas -->
+  <div class="tabs-navigation">
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'overview'"
+            (click)="setActiveTab('overview')">
+      <i class="fas fa-chart-pie"></i>
+      <span>Resumen</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'templates'"
+            (click)="setActiveTab('templates')">
+      <i class="fas fa-layer-group"></i>
+      <span>Plantillas</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'send'"
+            (click)="setActiveTab('send')">
+      <i class="fas fa-paper-plane"></i>
+      <span>Enviar</span>
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'config'"
+            (click)="setActiveTab('config')">
+      <i class="fas fa-cog"></i>
+      <span>Configuración</span>
+    </button>
+  </div>
+
+  <!-- Contenido de pestañas -->
+  <div class="tab-content">
+    
+    <!-- Pestaña: Resumen -->
+    <div class="tab-panel" *ngIf="activeTab === 'overview'">
+      
+      <!-- Estado del sistema -->
+      <div class="overview-section">
+        <h2 class="section-title">
+          <i class="fas fa-info-circle"></i>
+          Estado del Sistema
+        </h2>
+        
+        <div class="status-grid">
+          <!-- Estado de soporte -->
+          <div class="status-card">
+            <div class="status-header">
+              <h3>Soporte del Navegador</h3>
+              <div class="status-indicator" 
+                   [style.color]="pushState?.isSupported ? '#4CAF50' : '#ef4444'">
+                <i class="fas" [ngClass]="pushState?.isSupported ? 'fa-check-circle' : 'fa-times-circle'"></i>
+              </div>
+            </div>
+            <div class="status-details" *ngIf="supportInfo">
+              <div class="detail-item" *ngFor="let support of supportInfo | keyvalue">
+                <span class="detail-label">{{ support.key | titlecase }}:</span>
+                <span class="detail-value" [style.color]="getCapabilityStatus(support.value).color">
+                  <i [class]="getCapabilityStatus(support.value).icon"></i>
+                  {{ getCapabilityStatus(support.value).text }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estado de permisos -->
+          <div class="status-card">
+            <div class="status-header">
+              <h3>Permisos</h3>
+              <div class="status-indicator" [style.color]="getPermissionStatus().color">
+                <i [class]="getPermissionStatus().icon"></i>
+              </div>
+            </div>
+            <div class="status-details">
+              <div class="detail-item">
+                <span class="detail-label">Estado:</span>
+                <span class="detail-value" [style.color]="getPermissionStatus().color">
+                  {{ getPermissionStatus().text }}
+                </span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Suscrito:</span>
+                <span class="detail-value" [style.color]="pushState?.isSubscribed ? '#4CAF50' : '#ef4444'">
+                  {{ pushState?.isSubscribed ? 'Sí' : 'No' }}
+                </span>
+              </div>
+            </div>
+            <div class="status-actions" *ngIf="pushState?.isSupported">
+              <button class="action-btn primary-btn" 
+                      *ngIf="!pushState?.isSubscribed"
+                      (click)="subscribeToPush()"
+                      [disabled]="loading">
+                <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : 'fa-bell'"></i>
+                <span>Activar Notificaciones</span>
+              </button>
+              <button class="action-btn danger-btn" 
+                      *ngIf="pushState?.isSubscribed"
+                      (click)="unsubscribeFromPush()"
+                      [disabled]="loading">
+                <i class="fas fa-bell-slash"></i>
+                <span>Desactivar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="overview-section" *ngIf="notificationStats">
+        <h2 class="section-title">
+          <i class="fas fa-chart-bar"></i>
+          Estadísticas
+        </h2>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-paper-plane"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ formatNumber(notificationStats.totalSent) }}</span>
+              <span class="stat-label">Enviadas</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-mouse-pointer"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ formatNumber(notificationStats.totalClicked) }}</span>
+              <span class="stat-label">Clics</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-percentage"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ getClickRatePercentage() }}%</span>
+              <span class="stat-label">Tasa de Clics</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ formatNumber(notificationStats.subscriptionCount) }}</span>
+              <span class="stat-label">Suscriptores</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestaña: Plantillas -->
+    <div class="tab-panel" *ngIf="activeTab === 'templates'">
+      <div class="templates-section">
+        <h2 class="section-title">
+          <i class="fas fa-layer-group"></i>
+          Plantillas Predefinidas
+        </h2>
+        
+        <div class="templates-grid">
+          <div class="template-card" *ngFor="let template of templates">
+            <div class="template-header">
+              <div class="template-icon" [style.color]="getCategoryIcon(template.category)">
+                <i [class]="getCategoryIcon(template.category)"></i>
+              </div>
+              <div class="template-info">
+                <h3 class="template-name">{{ template.name }}</h3>
+                <span class="template-category">{{ template.category | titlecase }}</span>
+              </div>
+              <div class="template-priority" [style.color]="getPriorityColor(template.priority)">
+                <i class="fas fa-flag"></i>
+                <span>{{ template.priority | titlecase }}</span>
+              </div>
+            </div>
+            
+            <div class="template-content">
+              <div class="template-preview">
+                <h4 class="preview-title">{{ template.title }}</h4>
+                <p class="preview-body">{{ template.body }}</p>
+              </div>
+              
+              <div class="template-actions" *ngIf="template.actions && template.actions.length > 0">
+                <span class="actions-label">Acciones:</span>
+                <div class="action-tags">
+                  <span class="action-tag" *ngFor="let action of template.actions">
+                    {{ action.title }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="template-footer">
+              <button class="action-btn primary-btn" 
+                      (click)="applyTemplate(template)"
+                      [disabled]="!canSendNotifications()">
+                <i class="fas fa-edit"></i>
+                <span>Usar Plantilla</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pestaña: Enviar -->
+    <div class="tab-panel" *ngIf="activeTab === 'send'">
+      <div class="send-section">
+        <h2 class="section-title">
+          <i class="fas fa-paper-plane"></i>
+          Enviar Notificación Personalizada
+        </h2>
+        
+        <form [formGroup]="notificationForm" (ngSubmit)="sendCustomNotification()" class="notification-form">
+          <div class="form-grid">
+            <!-- Título -->
+            <div class="form-field full-width">
+              <label for="title">Título *</label>
+              <input type="text" 
+                     id="title"
+                     formControlName="title"
+                     placeholder="Título de la notificación"
+                     [class.error]="isFieldInvalid(notificationForm, 'title')">
+              <span class="error-message" *ngIf="isFieldInvalid(notificationForm, 'title')">
+                {{ getFieldError(notificationForm, 'title') }}
+              </span>
+            </div>
+
+            <!-- Mensaje -->
+            <div class="form-field full-width">
+              <label for="body">Mensaje *</label>
+              <textarea id="body"
+                        formControlName="body"
+                        placeholder="Contenido de la notificación"
+                        rows="3"
+                        [class.error]="isFieldInvalid(notificationForm, 'body')"></textarea>
+              <span class="error-message" *ngIf="isFieldInvalid(notificationForm, 'body')">
+                {{ getFieldError(notificationForm, 'body') }}
+              </span>
+            </div>
+
+            <!-- Categoría -->
+            <div class="form-field">
+              <label for="category">Categoría *</label>
+              <select id="category" formControlName="category">
+                <option *ngFor="let category of categoryOptions" [value]="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Prioridad -->
+            <div class="form-field">
+              <label for="priority">Prioridad *</label>
+              <select id="priority" formControlName="priority">
+                <option *ngFor="let priority of priorityOptions" [value]="priority.value">
+                  {{ priority.label }}
+                </option>
+              </select>
+            </div>
+
+            <!-- URL -->
+            <div class="form-field full-width">
+              <label for="url">URL (opcional)</label>
+              <input type="url" 
+                     id="url"
+                     formControlName="url"
+                     placeholder="https://ejemplo.com/pagina">
+            </div>
+
+            <!-- Opciones avanzadas -->
+            <div class="form-field full-width">
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" formControlName="requireInteraction">
+                  <span class="checkbox-text">Requiere interacción del usuario</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" formControlName="silent">
+                  <span class="checkbox-text">Notificación silenciosa</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" formControlName="vibrate">
+                  <span class="checkbox-text">Vibración (móviles)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="form-actions">
+            <button type="button" 
+                    class="action-btn secondary-btn"
+                    (click)="notificationForm.reset()">
+              <i class="fas fa-undo"></i>
+              <span>Limpiar</span>
+            </button>
+            <button type="submit" 
+                    class="action-btn primary-btn"
+                    [disabled]="notificationForm.invalid || sending || !canSendNotifications()">
+              <i class="fas" [ngClass]="sending ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+              <span>{{ sending ? 'Enviando...' : 'Enviar Notificación' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Pestaña: Configuración -->
+    <div class="tab-panel" *ngIf="activeTab === 'config'">
+      <div class="config-section">
+        <h2 class="section-title">
+          <i class="fas fa-cog"></i>
+          Configuración del Sistema
+        </h2>
+        
+        <form [formGroup]="configForm" (ngSubmit)="saveConfiguration()" class="config-form">
+          <div class="config-grid">
+            <div class="config-group">
+              <h3 class="group-title">General</h3>
+              <div class="config-options">
+                <label class="config-option">
+                  <input type="checkbox" formControlName="enabled">
+                  <div class="option-content">
+                    <span class="option-title">Habilitar notificaciones push</span>
+                    <span class="option-description">Permite el envío de notificaciones push a los usuarios</span>
+                  </div>
+                </label>
+                
+                <label class="config-option">
+                  <input type="checkbox" formControlName="showPermissionPrompt">
+                  <div class="option-content">
+                    <span class="option-title">Mostrar prompt de permisos</span>
+                    <span class="option-description">Solicita automáticamente permisos de notificación</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="config-group">
+              <h3 class="group-title">Suscripciones</h3>
+              <div class="config-options">
+                <label class="config-option">
+                  <input type="checkbox" formControlName="autoSubscribe">
+                  <div class="option-content">
+                    <span class="option-title">Suscripción automática</span>
+                    <span class="option-description">Suscribe automáticamente a usuarios con permisos concedidos</span>
+                  </div>
+                </label>
+                
+                <label class="config-option">
+                  <input type="checkbox" formControlName="retryFailedSubscriptions">
+                  <div class="option-content">
+                    <span class="option-title">Reintentar suscripciones fallidas</span>
+                    <span class="option-description">Reintenta automáticamente las suscripciones que fallan</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" 
+                    class="action-btn primary-btn"
+                    [disabled]="configForm.invalid">
+              <i class="fas fa-save"></i>
+              <span>Guardar Configuración</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

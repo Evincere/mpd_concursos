@@ -1,0 +1,523 @@
+<div class="user-activity-container">
+  <!-- Header con estadísticas -->
+  <div class="header-section" *hasPermission="'audit.read'">
+    <div class="header-content">
+      <h1 class="page-title">
+        <i class="fas fa-history"></i>
+        Actividad de Usuarios
+      </h1>
+      
+      <!-- Estadísticas rápidas -->
+      <div class="stats-grid" *ngIf="showStatistics && statistics">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.totalActivities | number }}</span>
+            <span class="stat-label">Total Actividades</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.uniqueUsers | number }}</span>
+            <span class="stat-label">Usuarios Únicos</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.uniqueSessions | number }}</span>
+            <span class="stat-label">Sesiones</span>
+          </div>
+        </div>
+        
+        <div class="stat-card" [class.error]="statistics.errorRate > 5">
+          <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ statistics.errorRate | number:'1.1-1' }}%</span>
+            <span class="stat-label">Tasa de Error</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles y filtros -->
+  <div class="controls-section">
+    <div class="controls-header">
+      <div class="search-controls">
+        <form [formGroup]="searchForm" class="search-form">
+          <div class="search-field">
+            <i class="fas fa-search search-icon"></i>
+            <input 
+              type="text" 
+              formControlName="search"
+              placeholder="Buscar por usuario, acción, recurso..."
+              class="search-input">
+          </div>
+        </form>
+      </div>
+      
+      <div class="action-controls">
+        <!-- Controles de vista -->
+        <div class="view-controls">
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'list'"
+            (click)="setViewMode('list')"
+            title="Vista de lista">
+            <i class="fas fa-list"></i>
+          </button>
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'timeline'"
+            (click)="setViewMode('timeline')"
+            title="Vista de línea de tiempo">
+            <i class="fas fa-stream"></i>
+          </button>
+          <button 
+            class="view-btn"
+            [class.active]="viewMode === 'chart'"
+            (click)="setViewMode('chart')"
+            title="Vista de gráficos">
+            <i class="fas fa-chart-bar"></i>
+          </button>
+        </div>
+        
+        <!-- Controles de funcionalidad -->
+        <button 
+          class="control-btn"
+          [class.active]="realtimeEnabled"
+          (click)="toggleRealtime()"
+          title="Tiempo real">
+          <i class="fas fa-broadcast-tower"></i>
+          <span>Tiempo Real</span>
+        </button>
+        
+        <button 
+          class="control-btn"
+          [class.active]="showFilters"
+          (click)="toggleFilters()"
+          title="Filtros">
+          <i class="fas fa-filter"></i>
+          <span>Filtros</span>
+        </button>
+        
+        <button 
+          class="control-btn"
+          [class.active]="showStatistics"
+          (click)="toggleStatistics()"
+          title="Estadísticas">
+          <i class="fas fa-chart-pie"></i>
+          <span>Estadísticas</span>
+        </button>
+        
+        <!-- Acciones -->
+        <button 
+          class="action-btn export-btn"
+          *hasPermission="'audit.export'"
+          (click)="exportActivities()"
+          title="Exportar">
+          <i class="fas fa-download"></i>
+          <span>Exportar</span>
+        </button>
+        
+        <button 
+          class="action-btn report-btn"
+          *hasPermission="'audit.report'"
+          (click)="generateReport()"
+          [disabled]="loading"
+          title="Generar reporte">
+          <i class="fas fa-file-pdf"></i>
+          <span>Reporte</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel de filtros -->
+    <div class="filters-panel" *ngIf="showFilters">
+      <form [formGroup]="filtersForm" class="filters-form">
+        <div class="filters-grid">
+          <div class="filter-group">
+            <label for="userId">Usuario:</label>
+            <input 
+              id="userId"
+              type="text" 
+              formControlName="userId"
+              placeholder="ID o email del usuario"
+              class="filter-input">
+          </div>
+          
+          <div class="filter-group">
+            <label for="actions">Acciones:</label>
+            <select 
+              id="actions"
+              formControlName="actions"
+              multiple
+              class="filter-select">
+              <option *ngFor="let action of actionOptions" [value]="action.value">
+                {{ action.label }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="categories">Categorías:</label>
+            <select 
+              id="categories"
+              formControlName="categories"
+              multiple
+              class="filter-select">
+              <option *ngFor="let category of categoryOptions" [value]="category.value">
+                {{ category.label }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="severities">Severidad:</label>
+            <select 
+              id="severities"
+              formControlName="severities"
+              multiple
+              class="filter-select">
+              <option *ngFor="let severity of severityOptions" [value]="severity.value">
+                {{ severity.label }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="dateFrom">Desde:</label>
+            <input 
+              id="dateFrom"
+              type="datetime-local" 
+              formControlName="dateFrom"
+              class="filter-input">
+          </div>
+          
+          <div class="filter-group">
+            <label for="dateTo">Hasta:</label>
+            <input 
+              id="dateTo"
+              type="datetime-local" 
+              formControlName="dateTo"
+              class="filter-input">
+          </div>
+          
+          <div class="filter-group">
+            <label for="success">Estado:</label>
+            <select 
+              id="success"
+              formControlName="success"
+              class="filter-select">
+              <option [ngValue]="null">Todos</option>
+              <option [ngValue]="true">Exitosos</option>
+              <option [ngValue]="false">Fallidos</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="sortBy">Ordenar por:</label>
+            <select 
+              id="sortBy"
+              formControlName="sortBy"
+              class="filter-select">
+              <option value="timestamp">Fecha</option>
+              <option value="action">Acción</option>
+              <option value="userName">Usuario</option>
+              <option value="resource">Recurso</option>
+              <option value="severity">Severidad</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="filters-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="clearFilters()">
+            <i class="fas fa-times"></i>
+            Limpiar Filtros
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="main-content">
+    <!-- Vista de lista -->
+    <div class="activities-list" *ngIf="viewMode === 'list'">
+      <div class="table-container">
+        <table class="activities-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Recurso</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Severidad</th>
+              <th>IP</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let activity of getPaginatedActivities()" 
+                class="activity-row"
+                [class.error]="!activity.success"
+                [class.critical]="activity.details.severity === 'CRITICAL'"
+                (click)="selectActivity(activity)">
+              
+              <td class="user-info">
+                <div class="user-details">
+                  <span class="user-name">{{ activity.userName || 'Usuario Desconocido' }}</span>
+                  <span class="user-email">{{ activity.userEmail }}</span>
+                </div>
+              </td>
+              
+              <td class="action-info">
+                <div class="action-details">
+                  <i class="fas" [ngClass]="getActionIcon(activity.action)"></i>
+                  <span>{{ getActivitySummary(activity) }}</span>
+                </div>
+              </td>
+              
+              <td class="resource-info">
+                <span class="resource-name">{{ activity.resource }}</span>
+                <span class="resource-id" *ngIf="activity.resourceId">{{ activity.resourceId }}</span>
+              </td>
+              
+              <td class="timestamp">
+                <span class="relative-time">{{ formatRelativeDate(activity.timestamp) }}</span>
+                <span class="absolute-time">{{ activity.timestamp | date:'short' }}</span>
+              </td>
+              
+              <td class="status">
+                <span class="status-badge" 
+                      [style.background-color]="getSuccessColor(activity.success)">
+                  {{ getSuccessText(activity.success) }}
+                </span>
+              </td>
+              
+              <td class="severity">
+                <span class="severity-badge" 
+                      [style.background-color]="getSeverityColor(activity.details.severity)">
+                  {{ severityOptions.find(s => s.value === activity.details.severity)?.label }}
+                </span>
+              </td>
+              
+              <td class="ip-address">
+                {{ activity.ipAddress }}
+              </td>
+              
+              <td class="actions">
+                <button 
+                  class="action-btn view-btn"
+                  (click)="selectActivity(activity); $event.stopPropagation()"
+                  title="Ver detalles">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Paginación -->
+      <div class="pagination" *ngIf="totalItems > pageSize">
+        <button 
+          class="page-btn"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <span class="page-info">
+          Página {{ currentPage }} de {{ Math.ceil(totalItems / pageSize) }}
+          ({{ totalItems }} actividades)
+        </span>
+        
+        <button 
+          class="page-btn"
+          [disabled]="currentPage >= Math.ceil(totalItems / pageSize)"
+          (click)="onPageChange(currentPage + 1)">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Vista de línea de tiempo -->
+    <div class="activities-timeline" *ngIf="viewMode === 'timeline'">
+      <div class="timeline-container">
+        <div *ngFor="let activity of getPaginatedActivities()" 
+             class="timeline-item"
+             [class.error]="!activity.success">
+          
+          <div class="timeline-marker" 
+               [style.background-color]="getSeverityColor(activity.details.severity)">
+            <i class="fas" [ngClass]="getActionIcon(activity.action)"></i>
+          </div>
+          
+          <div class="timeline-content" (click)="selectActivity(activity)">
+            <div class="timeline-header">
+              <span class="timeline-user">{{ activity.userName }}</span>
+              <span class="timeline-time">{{ formatRelativeDate(activity.timestamp) }}</span>
+            </div>
+            
+            <div class="timeline-body">
+              <p class="timeline-description">{{ activity.details.description }}</p>
+              <div class="timeline-meta">
+                <span class="timeline-resource">{{ activity.resource }}</span>
+                <span class="timeline-ip">{{ activity.ipAddress }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista de gráficos -->
+    <div class="activities-charts" *ngIf="viewMode === 'chart'">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Actividades por Acción</h3>
+          <div class="chart-placeholder">
+            <!-- Aquí iría un gráfico de barras -->
+            <p>Gráfico de actividades por tipo de acción</p>
+          </div>
+        </div>
+        
+        <div class="chart-card">
+          <h3>Actividades por Hora</h3>
+          <div class="chart-placeholder">
+            <!-- Aquí iría un gráfico de líneas -->
+            <p>Gráfico de actividades por hora del día</p>
+          </div>
+        </div>
+        
+        <div class="chart-card">
+          <h3>Distribución de Severidad</h3>
+          <div class="chart-placeholder">
+            <!-- Aquí iría un gráfico de dona -->
+            <p>Gráfico de distribución por severidad</p>
+          </div>
+        </div>
+        
+        <div class="chart-card">
+          <h3>Usuarios Más Activos</h3>
+          <div class="chart-placeholder">
+            <!-- Aquí iría un gráfico de barras horizontales -->
+            <p>Ranking de usuarios más activos</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de detalles de actividad -->
+  <div class="activity-detail-panel" [class.open]="selectedActivity">
+    <div class="panel-header">
+      <h2>Detalles de Actividad</h2>
+      <button class="close-btn" (click)="closeActivityDetail()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="panel-content" *ngIf="selectedActivity">
+      <div class="detail-section">
+        <h3>Información General</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Usuario:</label>
+            <span>{{ selectedActivity.userName }} ({{ selectedActivity.userEmail }})</span>
+          </div>
+          <div class="detail-item">
+            <label>Acción:</label>
+            <span>{{ selectedActivity.action }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Recurso:</label>
+            <span>{{ selectedActivity.resource }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Fecha:</label>
+            <span>{{ selectedActivity.timestamp | date:'full' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Estado:</label>
+            <span [style.color]="getSuccessColor(selectedActivity.success)">
+              {{ getSuccessText(selectedActivity.success) }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Severidad:</label>
+            <span [style.color]="getSeverityColor(selectedActivity.details.severity)">
+              {{ severityOptions.find(s => s.value === selectedActivity.details.severity)?.label }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Detalles Técnicos</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>IP:</label>
+            <span>{{ selectedActivity.ipAddress }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Sesión:</label>
+            <span>{{ selectedActivity.sessionId }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Navegador:</label>
+            <span>{{ selectedActivity.metadata.browser?.name }} {{ selectedActivity.metadata.browser?.version }}</span>
+          </div>
+          <div class="detail-item">
+            <label>SO:</label>
+            <span>{{ selectedActivity.metadata.device?.os }} {{ selectedActivity.metadata.device?.osVersion }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedActivity.duration">
+            <label>Duración:</label>
+            <span>{{ formatDuration(selectedActivity.duration) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedActivity.errorMessage">
+            <label>Error:</label>
+            <span class="error-message">{{ selectedActivity.errorMessage }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedActivity.details.customData">
+        <h3>Datos Adicionales</h3>
+        <pre class="custom-data">{{ selectedActivity.details.customData | json }}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para el panel de detalles -->
+  <div class="panel-overlay" 
+       [class.visible]="selectedActivity"
+       (click)="closeActivityDetail()">
+  </div>
+
+  <!-- Indicador de carga -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Cargando actividades...</span>
+    </div>
+  </div>
+</div>

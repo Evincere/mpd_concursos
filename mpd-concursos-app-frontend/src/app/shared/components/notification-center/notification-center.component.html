@@ -1,0 +1,250 @@
+<div [class]="getComponentClass()">
+  
+  <!-- Botón de toggle (cuando está cerrado) -->
+  <div class="notification-toggle" 
+       *ngIf="!isOpen"
+       (click)="toggle()">
+    <div class="toggle-icon">
+      <i class="fas fa-bell"></i>
+    </div>
+    <div class="unread-badge" *ngIf="unreadCount > 0">
+      <span>{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+    </div>
+    <div class="connection-indicator" 
+         [style.background-color]="getConnectionStatusColor()">
+    </div>
+  </div>
+
+  <!-- Panel principal -->
+  <div class="notification-panel" 
+       *ngIf="isOpen"
+       [style.max-height.px]="maxHeight">
+    
+    <!-- Header -->
+    <div class="panel-header">
+      <div class="header-title">
+        <h3>
+          <i class="fas fa-bell"></i>
+          Notificaciones
+        </h3>
+        <div class="connection-status">
+          <div class="status-dot" [style.background-color]="getConnectionStatusColor()"></div>
+          <span class="status-text">{{ getConnectionStatusText() }}</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="header-btn" 
+                (click)="markAllAsRead()"
+                [disabled]="unreadCount === 0"
+                title="Marcar todas como leídas">
+          <i class="fas fa-check-double"></i>
+        </button>
+        <button class="header-btn" 
+                (click)="clearAll()"
+                [disabled]="notifications.length === 0"
+                title="Limpiar todas">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button class="header-btn close-btn" 
+                (click)="close()"
+                title="Cerrar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Estadísticas (si están habilitadas) -->
+    <div class="panel-stats" *ngIf="showStats && stats">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-number">{{ stats.totalReceived }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number unread">{{ stats.totalUnread }}</span>
+          <span class="stat-label">No leídas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ stats.totalRead }}</span>
+          <span class="stat-label">Leídas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="panel-filters">
+      
+      <!-- Pestañas de vista -->
+      <div class="view-tabs">
+        <button class="view-tab" 
+                *ngFor="let option of viewOptions"
+                [class.active]="currentFilters.view === option.value"
+                (click)="setView(option.value)">
+          <i [class]="option.icon"></i>
+          <span>{{ option.label }}</span>
+          <span class="tab-count" *ngIf="getViewCount(option.value) > 0">
+            {{ getViewCount(option.value) }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Búsqueda -->
+      <div class="search-container">
+        <div class="search-input">
+          <i class="fas fa-search"></i>
+          <input type="text" 
+                 placeholder="Buscar notificaciones..."
+                 [(ngModel)]="searchTerm"
+                 (input)="updateSearch($event.target.value)">
+          <button class="clear-search" 
+                  *ngIf="searchTerm"
+                  (click)="updateSearch('')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de notificaciones -->
+    <div class="panel-content">
+      
+      <!-- Estado de carga -->
+      <div class="loading-state" *ngIf="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Cargando notificaciones...</p>
+      </div>
+
+      <!-- Estado vacío -->
+      <div class="empty-state" *ngIf="!loading && !hasFilteredNotifications()">
+        <div class="empty-icon">
+          <i class="fas fa-bell-slash"></i>
+        </div>
+        <h4>No hay notificaciones</h4>
+        <p *ngIf="currentFilters.view === 'all'">
+          No tienes notificaciones en este momento
+        </p>
+        <p *ngIf="currentFilters.view === 'unread'">
+          No tienes notificaciones sin leer
+        </p>
+        <p *ngIf="searchTerm">
+          No se encontraron notificaciones que coincidan con "{{ searchTerm }}"
+        </p>
+      </div>
+
+      <!-- Lista agrupada de notificaciones -->
+      <div class="notifications-list" *ngIf="!loading && hasFilteredNotifications()">
+        <div class="notification-group" 
+             *ngFor="let group of getGroupedNotifications()">
+          
+          <!-- Encabezado del grupo -->
+          <div class="group-header">
+            <span class="group-date">{{ group.date }}</span>
+            <span class="group-count">{{ group.notifications.length }}</span>
+          </div>
+
+          <!-- Notificaciones del grupo -->
+          <div class="group-notifications">
+            <div class="notification-item" 
+                 *ngFor="let notification of group.notifications"
+                 [class.unread]="!notification.isRead"
+                 [class.expired]="isExpired(notification)"
+                 [class]="getPriorityClass(notification.priority)"
+                 (click)="onNotificationClick(notification)">
+              
+              <!-- Indicador de prioridad -->
+              <div class="priority-indicator" 
+                   [style.background-color]="getPriorityColor(notification.priority)">
+              </div>
+
+              <!-- Contenido principal -->
+              <div class="notification-content">
+                
+                <!-- Header de la notificación -->
+                <div class="notification-header">
+                  <div class="notification-icon" 
+                       [style.color]="getPriorityColor(notification.priority)">
+                    <i [class]="getTypeIcon(notification.type)"></i>
+                  </div>
+                  
+                  <div class="notification-info">
+                    <h5 class="notification-title">{{ notification.title }}</h5>
+                    <div class="notification-meta">
+                      <span class="notification-time">{{ formatRelativeTime(notification.timestamp) }}</span>
+                      <span class="notification-type">{{ notification.type | titlecase }}</span>
+                    </div>
+                  </div>
+
+                  <div class="notification-actions">
+                    <button class="action-btn remove-btn" 
+                            (click)="removeNotification(notification, $event)"
+                            title="Eliminar notificación">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Mensaje de la notificación -->
+                <div class="notification-message">
+                  <p>{{ notification.message }}</p>
+                </div>
+
+                <!-- Acciones de la notificación -->
+                <div class="notification-buttons" 
+                     *ngIf="notification.actions && notification.actions.length > 0">
+                  <button class="notification-action-btn" 
+                          *ngFor="let action of notification.actions"
+                          (click)="executeAction(notification, action, $event)"
+                          [style.color]="action.color || getPriorityColor(notification.priority)">
+                    <i [class]="action.icon" *ngIf="action.icon"></i>
+                    <span>{{ action.label }}</span>
+                  </button>
+                </div>
+
+                <!-- Indicador de expiración -->
+                <div class="expiration-warning" *ngIf="notification.expiresAt && !isExpired(notification)">
+                  <i class="fas fa-clock"></i>
+                  <span>Expira: {{ notification.expiresAt | date:'short' }}</span>
+                </div>
+
+                <!-- Indicador de expirado -->
+                <div class="expired-indicator" *ngIf="isExpired(notification)">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>Notificación expirada</span>
+                </div>
+              </div>
+
+              <!-- Indicador de no leída -->
+              <div class="unread-indicator" *ngIf="!notification.isRead">
+                <div class="unread-dot"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="panel-footer" *ngIf="hasFilteredNotifications()">
+      <div class="footer-info">
+        <span>{{ filteredNotifications.length }} notificaciones</span>
+        <span *ngIf="unreadCount > 0"> • {{ unreadCount }} sin leer</span>
+      </div>
+      
+      <div class="footer-actions">
+        <button class="footer-btn" 
+                (click)="markAllAsRead()"
+                [disabled]="unreadCount === 0">
+          <i class="fas fa-check"></i>
+          <span>Marcar todas como leídas</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar en móvil -->
+  <div class="notification-overlay" 
+       *ngIf="isOpen"
+       (click)="close()">
+  </div>
+</div>

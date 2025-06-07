@@ -1,0 +1,229 @@
+<div class="pwa-status-container">
+  <!-- Estado principal de la PWA -->
+  <div class="pwa-main-status" [class]="getPWAHealthStatus().status">
+    <div class="status-header">
+      <div class="status-icon" [style.color]="getPWAHealthStatus().color">
+        <i class="fas fa-mobile-alt"></i>
+      </div>
+      <div class="status-info">
+        <h3 class="status-title">Estado de la Aplicación</h3>
+        <p class="status-message" [style.color]="getPWAHealthStatus().color">
+          {{ getPWAHealthStatus().message }}
+        </p>
+      </div>
+      <button class="details-toggle" 
+              (click)="toggleDetails()"
+              [class.active]="showDetails">
+        <i class="fas" [ngClass]="showDetails ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+    </div>
+
+    <!-- Indicadores rápidos -->
+    <div class="quick-indicators">
+      <!-- Estado de conexión -->
+      <div class="indicator" [class]="getConnectionColor()">
+        <i [class]="getConnectionIcon()"></i>
+        <span>{{ getConnectionText() }}</span>
+      </div>
+
+      <!-- Estado de instalación -->
+      <div class="indicator" [class]="getInstallationColor()">
+        <i [class]="getInstallationIcon()"></i>
+        <span>{{ getInstallationText() }}</span>
+      </div>
+
+      <!-- Estado de actualización -->
+      <div class="indicator" 
+           [class]="pwaState?.hasUpdate ? 'warning' : 'success'"
+           *ngIf="pwaState?.isInstalled">
+        <i class="fas" [ngClass]="pwaState?.hasUpdate ? 'fa-exclamation-triangle' : 'fa-check-circle'"></i>
+        <span>{{ pwaState?.hasUpdate ? 'Actualización disponible' : 'Actualizada' }}</span>
+      </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="quick-actions">
+      <!-- Botón de instalación -->
+      <button class="action-btn install-btn"
+              *ngIf="canShowInstallButton()"
+              (click)="installPWA()"
+              [disabled]="isInstalling">
+        <i class="fas" [ngClass]="isInstalling ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+        <span>{{ isInstalling ? 'Instalando...' : 'Instalar App' }}</span>
+      </button>
+
+      <!-- Botón de actualización -->
+      <button class="action-btn update-btn"
+              *ngIf="canShowUpdateButton()"
+              (click)="applyUpdate()"
+              [disabled]="pwaState?.isUpdating">
+        <i class="fas" [ngClass]="pwaState?.isUpdating ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
+        <span>{{ pwaState?.isUpdating ? 'Actualizando...' : 'Actualizar' }}</span>
+      </button>
+
+      <!-- Botón de verificar actualizaciones -->
+      <button class="action-btn check-btn"
+              *ngIf="pwaState?.isInstalled && !pwaState?.hasUpdate"
+              (click)="checkForUpdates()"
+              [disabled]="isCheckingUpdate">
+        <i class="fas" [ngClass]="isCheckingUpdate ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+        <span>{{ isCheckingUpdate ? 'Verificando...' : 'Buscar actualizaciones' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Panel de detalles expandible -->
+  <div class="pwa-details" *ngIf="showDetails">
+    
+    <!-- Información de instalación -->
+    <div class="detail-section" *ngIf="installationInfo">
+      <h4 class="section-title">
+        <i class="fas fa-info-circle"></i>
+        Información de Instalación
+      </h4>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Plataforma:</label>
+          <span class="platform-badge" [class]="installationInfo.platform">
+            {{ installationInfo.platform | titlecase }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <label>Estado:</label>
+          <span [style.color]="getInstallationColor()">
+            {{ getInstallationText() }}
+          </span>
+        </div>
+        <div class="detail-item full-width" *ngIf="!pwaState?.isInstalled">
+          <label>Instrucciones:</label>
+          <p class="instructions">{{ getInstallInstructions() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capacidades de la PWA -->
+    <div class="detail-section" *ngIf="capabilities">
+      <h4 class="section-title">
+        <i class="fas fa-cogs"></i>
+        Capacidades Soportadas
+      </h4>
+      <div class="capabilities-grid">
+        <div class="capability-item" *ngFor="let cap of capabilities | keyvalue">
+          <div class="capability-status" [class]="getCapabilityStatus(cap.value).color">
+            <i [class]="getCapabilityStatus(cap.value).icon"></i>
+          </div>
+          <div class="capability-info">
+            <span class="capability-name">{{ cap.key | titlecase }}</span>
+            <span class="capability-status-text" [style.color]="getCapabilityStatus(cap.value).color">
+              {{ getCapabilityStatus(cap.value).text }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estadísticas offline -->
+    <div class="detail-section" *ngIf="offlineStats">
+      <h4 class="section-title">
+        <i class="fas fa-database"></i>
+        Cache y Almacenamiento
+      </h4>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-hdd"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ formatCacheSize(offlineStats.cacheSize) }}</span>
+            <span class="stat-label">Tamaño del Cache</span>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ offlineStats.cachedResources | number }}</span>
+            <span class="stat-label">Recursos Cacheados</span>
+          </div>
+        </div>
+        
+        <div class="stat-card" *ngIf="offlineStats.lastSync">
+          <div class="stat-icon">
+            <i class="fas fa-sync-alt"></i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ offlineStats.lastSync | date:'short' }}</span>
+            <span class="stat-label">Última Sincronización</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Acciones de cache -->
+      <div class="cache-actions">
+        <button class="action-btn danger-btn" (click)="clearCache()">
+          <i class="fas fa-trash-alt"></i>
+          <span>Limpiar Cache</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado de trabajo offline -->
+    <div class="detail-section" *ngIf="isWorkingOffline()">
+      <h4 class="section-title">
+        <i class="fas fa-wifi-slash"></i>
+        Modo Offline
+      </h4>
+      <div class="offline-info">
+        <div class="offline-status">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>La aplicación está funcionando sin conexión a internet. 
+             Algunas funcionalidades pueden estar limitadas.</p>
+        </div>
+        <div class="offline-features">
+          <h5>Funcionalidades disponibles offline:</h5>
+          <ul>
+            <li><i class="fas fa-check"></i> Navegación por la aplicación</li>
+            <li><i class="fas fa-check"></i> Visualización de datos cacheados</li>
+            <li><i class="fas fa-check"></i> Formularios (se sincronizarán al reconectar)</li>
+            <li><i class="fas fa-times"></i> Nuevas descargas de datos</li>
+            <li><i class="fas fa-times"></i> Subida de archivos</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuración avanzada -->
+    <div class="detail-section" *ngIf="pwaConfig">
+      <h4 class="section-title">
+        <i class="fas fa-sliders-h"></i>
+        Configuración
+      </h4>
+      <div class="config-grid">
+        <div class="config-item">
+          <label>Actualizaciones automáticas:</label>
+          <span class="config-value" [class]="pwaConfig.enableAutoUpdate ? 'enabled' : 'disabled'">
+            {{ pwaConfig.enableAutoUpdate ? 'Habilitadas' : 'Deshabilitadas' }}
+          </span>
+        </div>
+        <div class="config-item">
+          <label>Prompt de instalación:</label>
+          <span class="config-value" [class]="pwaConfig.enableInstallPrompt ? 'enabled' : 'disabled'">
+            {{ pwaConfig.enableInstallPrompt ? 'Habilitado' : 'Deshabilitado' }}
+          </span>
+        </div>
+        <div class="config-item">
+          <label>Notificaciones offline:</label>
+          <span class="config-value" [class]="pwaConfig.enableOfflineNotification ? 'enabled' : 'disabled'">
+            {{ pwaConfig.enableOfflineNotification ? 'Habilitadas' : 'Deshabilitadas' }}
+          </span>
+        </div>
+        <div class="config-item">
+          <label>Intervalo de verificación:</label>
+          <span class="config-value">{{ pwaConfig.updateCheckInterval / 1000 }}s</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

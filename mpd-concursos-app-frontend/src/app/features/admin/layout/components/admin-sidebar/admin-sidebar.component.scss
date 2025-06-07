@@ -1425,3 +1425,271 @@ $item-height: 40px;
     color: $color-primary-dark !important;
   }
 }
+
+// Estilos para personalización y drag & drop
+.customization-controls {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid $glass-background-secondary;
+  margin-bottom: 8px;
+
+  .customization-btn,
+  .drag-btn {
+    background: transparent;
+    border: 1px solid $glass-background-secondary;
+    color: $text-primary;
+    padding: 6px 8px;
+    border-radius: $border-radius-lg;
+    cursor: pointer;
+    transition: all $transition-smooth;
+    font-size: 12px;
+
+    &:hover {
+      background: $glass-hover-primary;
+      border-color: $focus-color;
+      transform: translateY(-1px);
+    }
+
+    &.active {
+      background: $focus-color;
+      border-color: $focus-color;
+      color: white;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    i {
+      font-size: 12px;
+    }
+  }
+}
+
+.modules-list {
+  &.drag-mode {
+    .module-item {
+      cursor: grab;
+      transition: all $transition-smooth;
+
+      &.dragging {
+        cursor: grabbing;
+      }
+
+      &.cdk-drag-preview {
+        background: $glass-background-primary;
+        border: 1px solid $focus-color;
+        border-radius: $border-radius-lg;
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(59, 130, 246, 0.3);
+        transform: rotate(2deg);
+        backdrop-filter: blur(16px);
+        z-index: 1000;
+      }
+
+      &.cdk-drag-placeholder {
+        opacity: 0.3;
+        background: $glass-hover-secondary;
+        border: 2px dashed $glass-background-secondary;
+        border-radius: $border-radius-lg;
+
+        .module-header {
+          opacity: 0.5;
+        }
+      }
+
+      &.cdk-drag-animating {
+        transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+      }
+
+      &:hover {
+        background: $glass-hover-primary;
+        transform: translateX(2px);
+        border-left: 3px solid $focus-color;
+      }
+    }
+  }
+}
+
+.customization-panel {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  background: $glass-background-primary;
+  backdrop-filter: blur(16px);
+  border-top: 1px solid $glass-background-secondary;
+  border-radius: $border-radius-lg $border-radius-lg 0 0;
+  box-shadow:
+    0 -8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+  animation: slideUpFade 0.3s ease-out;
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid $glass-background-secondary;
+
+    h4 {
+      margin: 0;
+      color: $text-primary;
+      font-size: 14px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: $text-primary;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all $transition-smooth;
+
+      &:hover {
+        background: $glass-hover-primary;
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  .panel-content {
+    padding: 16px;
+
+    .control-group {
+      margin-bottom: 16px;
+
+      label {
+        display: block;
+        color: $text-primary;
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 4px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      select {
+        width: 100%;
+        background: $glass-hover-primary;
+        border: 1px solid $glass-background-secondary;
+        color: $text-primary;
+        padding: 6px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        backdrop-filter: blur(8px);
+
+        &:focus {
+          outline: none;
+          border-color: $focus-color;
+          box-shadow: 0 0 0 2px $focus-color-secondary;
+        }
+
+        option {
+          background: $glass-background-primary;
+          color: $text-primary;
+        }
+      }
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      .action-btn {
+        background: $glass-hover-primary;
+        border: 1px solid $glass-background-secondary;
+        color: $text-primary;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        transition: all $transition-smooth;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        backdrop-filter: blur(8px);
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &.export-btn:hover {
+          background: #3b82f6;
+          border-color: #3b82f6;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        &.import-btn:hover {
+          background: #f59e0b;
+          border-color: #f59e0b;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        &.reset-btn:hover {
+          background: #ef4444;
+          border-color: #ef4444;
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        i {
+          font-size: 10px;
+        }
+      }
+    }
+  }
+}
+
+// Variables CSS personalizables para temas
+:root {
+  --sidebar-primary-color: #{$focus-color};
+  --sidebar-accent-color: #10b981;
+  --sidebar-background-color: #{$glass-background-primary};
+  --sidebar-text-color: #{$text-primary};
+  --sidebar-border-color: #{$glass-background-secondary};
+  --sidebar-hover-color: #{$glass-hover-primary};
+  --sidebar-item-height: 40px;
+  --sidebar-padding: 8px;
+  --sidebar-font-size: 14px;
+}
+
+// Animaciones para el panel de personalización
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive para personalización
+@media (max-width: 768px) {
+  .customization-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 50vh;
+  }
+
+  .customization-controls {
+    padding: 4px 8px;
+
+    .customization-btn,
+    .drag-btn {
+      padding: 4px 6px;
+      font-size: 10px;
+    }
+  }
+}
