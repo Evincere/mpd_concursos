@@ -20,15 +20,7 @@ public enum ContestStatus {
     INSCRIPTION_OPEN("Inscription Open", "Inscripciones Abiertas"),
     INSCRIPTION_CLOSED("Inscription Closed", "Inscripciones Cerradas"),
     IN_EVALUATION("In Evaluation", "En Evaluación"),
-    RESULTS_PUBLISHED("Results Published", "Resultados Publicados"),
-
-    // Estados legacy - DEPRECADOS (eliminar gradualmente)
-    @Deprecated
-    ACTIVE("Active", "Activo"),           // USAR: INSCRIPTION_OPEN
-    @Deprecated
-    CLOSED("Closed", "Cerrado"),          // USAR: INSCRIPTION_CLOSED
-    @Deprecated
-    IN_PROGRESS("In Progress", "En Progreso"); // USAR: IN_EVALUATION
+    RESULTS_PUBLISHED("Results Published", "Resultados Publicados");
 
     private final String englishName;
     private final String spanishName;
@@ -66,7 +58,7 @@ public enum ContestStatus {
      * Check if this status represents an active contest
      */
     public boolean isActive() {
-        return this == ACTIVE;
+        return this == INSCRIPTION_OPEN || this == PUBLISHED;
     }
 
     /**
@@ -80,6 +72,6 @@ public enum ContestStatus {
      * Check if inscriptions are allowed for this status
      */
     public boolean allowsInscriptions() {
-        return this == ACTIVE;
+        return this == INSCRIPTION_OPEN || this == PUBLISHED;
     }
 }

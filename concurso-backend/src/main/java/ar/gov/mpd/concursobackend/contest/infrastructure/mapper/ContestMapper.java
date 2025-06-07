@@ -228,9 +228,7 @@ public class ContestMapper {
      */
     private boolean isActiveStatus(ContestStatus status) {
         return status == ContestStatus.PUBLISHED ||
-               status == ContestStatus.INSCRIPTION_OPEN ||
-               // Estados legacy (compatibilidad temporal)
-               status == ContestStatus.ACTIVE;
+               status == ContestStatus.INSCRIPTION_OPEN;
     }
 
     /**
@@ -239,8 +237,6 @@ public class ContestMapper {
      */
     private boolean allowsInscriptions(ContestStatus status) {
         return status == ContestStatus.PUBLISHED ||
-               status == ContestStatus.INSCRIPTION_OPEN ||
-               // Estados legacy (compatibilidad temporal)
-               status == ContestStatus.ACTIVE;
+               status == ContestStatus.INSCRIPTION_OPEN;
     }
 }

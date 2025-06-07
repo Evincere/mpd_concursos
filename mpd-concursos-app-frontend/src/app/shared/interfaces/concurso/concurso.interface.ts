@@ -1,15 +1,13 @@
 
 import { ContestDate } from './contest-date.interface';
 
-// Estados unificados - sincronizados con backend
+// Estados unificados - sincronizados con backend (REFACTORING: Estados específicos)
 export type ContestStatus =
   // Estados administrativos fijos
   | 'DRAFT' | 'PUBLISHED' | 'PAUSED' | 'CANCELLED' | 'FINISHED' | 'ARCHIVED'
   // Estados dinámicos basados en fechas
   | 'INSCRIPTION_PENDING' | 'INSCRIPTION_OPEN' | 'INSCRIPTION_CLOSED'
-  | 'IN_EVALUATION' | 'RESULTS_PUBLISHED'
-  // Estados legacy - DEPRECADOS (mantener temporalmente para compatibilidad)
-  | 'ACTIVE' | 'CLOSED' | 'IN_PROGRESS' | 'PENDING';
+  | 'IN_EVALUATION' | 'RESULTS_PUBLISHED';
 
 export interface ContestStatusConfig {
   value: ContestStatus;

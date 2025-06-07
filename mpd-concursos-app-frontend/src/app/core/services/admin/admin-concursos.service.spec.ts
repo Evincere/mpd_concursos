@@ -37,7 +37,7 @@ describe('AdminConcursosService', () => {
             position: 'Test Position',
             department: 'INFORMATICA',
             category: 'PROFESIONAL',
-            status: 'ACTIVE',
+            status: 'INSCRIPTION_OPEN',
             startDate: new Date('2024-01-01'),
             endDate: new Date('2024-12-31')
           } as Concurso
@@ -50,7 +50,7 @@ describe('AdminConcursosService', () => {
 
       const filter: ConcursoFilter = {
         search: 'test',
-        status: 'ACTIVE',
+        status: 'INSCRIPTION_OPEN',
         page: 0,
         size: 10
       };
@@ -64,7 +64,7 @@ describe('AdminConcursosService', () => {
       const req = httpMock.expectOne(request => {
         return request.url === apiUrl && 
                request.params.get('search') === 'test' &&
-               request.params.get('status') === 'ACTIVE' &&
+               request.params.get('status') === 'INSCRIPTION_OPEN' &&
                request.params.get('page') === '0' &&
                request.params.get('size') === '10';
       });
@@ -109,7 +109,7 @@ describe('AdminConcursosService', () => {
         position: 'Test Position',
         department: 'INFORMATICA',
         category: 'PROFESIONAL',
-        status: 'ACTIVE',
+        status: 'INSCRIPTION_OPEN',
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-12-31')
       } as Concurso;
@@ -161,7 +161,7 @@ describe('AdminConcursosService', () => {
         position: 'Updated Position',
         department: 'INFORMATICA',
         category: 'PROFESIONAL',
-        status: 'ACTIVE',
+        status: 'INSCRIPTION_OPEN',
         startDate: new Date('2024-01-01'),
         endDate: new Date('2024-12-31')
       };
@@ -182,16 +182,16 @@ describe('AdminConcursosService', () => {
       const mockConcurso: Concurso = {
         id: 1,
         title: 'Test Concurso',
-        status: 'ACTIVE'
+        status: 'INSCRIPTION_OPEN'
       } as Concurso;
 
-      service.changeStatus(1, 'ACTIVE').subscribe(concurso => {
-        expect(concurso.status).toBe('ACTIVE');
+      service.changeStatus(1, 'INSCRIPTION_OPEN').subscribe(concurso => {
+        expect(concurso.status).toBe('INSCRIPTION_OPEN');
       });
 
       const req = httpMock.expectOne(`${apiUrl}/1/status`);
       expect(req.request.method).toBe('PATCH');
-      expect(req.request.body).toEqual({ status: 'ACTIVE' });
+      expect(req.request.body).toEqual({ status: 'INSCRIPTION_OPEN' });
       req.flush(mockConcurso);
     });
   });

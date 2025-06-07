@@ -62,9 +62,9 @@ export class ConcursoDetalleAdminComponent implements OnInit, OnDestroy, AfterVi
 
   statusOptions: { value: ContestStatus, label: string }[] = [
     { value: 'DRAFT', label: 'Borrador' },
-    { value: 'ACTIVE', label: 'Activo' },
-    { value: 'IN_PROGRESS', label: 'En Proceso' },
-    { value: 'CLOSED', label: 'Cerrado' },
+    { value: 'INSCRIPTION_OPEN', label: 'Inscripciones Abiertas' },
+    { value: 'IN_EVALUATION', label: 'En Evaluación' },
+    { value: 'INSCRIPTION_CLOSED', label: 'Inscripciones Cerradas' },
     { value: 'CANCELLED', label: 'Cancelado' }
   ];
 
@@ -271,9 +271,9 @@ export class ConcursoDetalleAdminComponent implements OnInit, OnDestroy, AfterVi
   getStatusClass(status: ContestStatus): string {
     switch (status) {
       case 'DRAFT': return 'status-draft';
-      case 'ACTIVE': return 'status-active';
-      case 'IN_PROGRESS': return 'status-in-progress';
-      case 'CLOSED': return 'status-closed';
+      case 'INSCRIPTION_OPEN': return 'status-inscription-open';
+      case 'IN_EVALUATION': return 'status-in-evaluation';
+      case 'INSCRIPTION_CLOSED': return 'status-inscription-closed';
       case 'CANCELLED': return 'status-cancelled';
       default: return '';
     }

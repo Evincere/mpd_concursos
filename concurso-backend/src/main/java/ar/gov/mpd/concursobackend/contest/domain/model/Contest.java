@@ -9,10 +9,10 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 /**
- * Domain model for contests
+ * Domain model for contests - MODELO PRINCIPAL
+ * Migrado para usar Long ID para compatibilidad con APIs existentes
  */
 @Getter
 @Setter
@@ -20,7 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Contest {
-    private UUID id;
+    private Long id;
     private String title;
     private String description;
     private String requirements;
@@ -36,7 +36,7 @@ public class Contest {
     private LocalDateTime resultsDate;
     private List<ContestDocument> documents;
     private List<ContestPosition> positions;
-    private UUID createdBy;
+    private Long createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String category;
@@ -64,15 +64,12 @@ public class Contest {
             }
         }
 
-        // Lógica original para ACTIVE
-        if (status == ContestStatus.ACTIVE) {
-            LocalDateTime now = LocalDateTime.now();
-            if (inscriptionStartDate != null && inscriptionEndDate != null) {
-                return now.isAfter(inscriptionStartDate) && now.isBefore(inscriptionEndDate);
-            }
-            // Para ACTIVE sin fechas específicas, asumir que están abiertas
-            return true;
+        // Lógica para estados específicos
+        if (status == ContestStatus.INSCRIPTION_OPEN) {
+            return true; // Estado específico que indica inscripciones abiertas
         }
+
+
 
         return false;
     }
@@ -131,17 +128,18 @@ public class Contest {
     public boolean allowsInscriptionsNow() {
         ContestStatus currentStatus = getCurrentStatus();
         return currentStatus == ContestStatus.INSCRIPTION_OPEN ||
-               currentStatus == ContestStatus.PUBLISHED ||  // Fallback
-               currentStatus == ContestStatus.ACTIVE;       // Legacy
+               currentStatus == ContestStatus.PUBLISHED;
     }
     
     /**
      * Check if the contest is active
-     * 
-     * @return true if the contest status is ACTIVE, false otherwise
+     * REFACTORING: Usar nuevos estados específicos con compatibilidad legacy
+     *
+     * @return true if the contest allows inscriptions, false otherwise
      */
     public boolean isActive() {
-        return status == ContestStatus.ACTIVE;
+        return status == ContestStatus.INSCRIPTION_OPEN ||
+               status == ContestStatus.PUBLISHED;
     }
     
     /**

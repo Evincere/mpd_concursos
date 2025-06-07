@@ -61,8 +61,8 @@ export class InscripcionButtonComponent {
   }
 
   get isDisabled(): boolean {
-    // Estados que permiten inscripciones
-    const allowedStates = ['PUBLISHED', 'INSCRIPTION_OPEN', 'ACTIVE']; // ACTIVE legacy
+    // Estados que permiten inscripciones (REFACTORING: Solo nuevos estados específicos)
+    const allowedStates = ['PUBLISHED', 'INSCRIPTION_OPEN'];
     return !allowedStates.includes(this.currentContest.status);
   }
 

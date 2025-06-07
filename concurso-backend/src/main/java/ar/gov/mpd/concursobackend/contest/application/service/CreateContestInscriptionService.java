@@ -59,8 +59,8 @@ public class CreateContestInscriptionService implements CreateContestInscription
                 log.debug("Concurso encontrado: {}", contest.getTitle());
 
                 // Verificar que el concurso está disponible para inscripciones
-                // CORRECCIÓN INMEDIATA: PUBLISHED también permite inscripciones
-                if (!ContestStatus.ACTIVE.equals(contest.getStatus()) &&
+                // REFACTORING: Usar solo nuevos estados específicos
+                if (!ContestStatus.INSCRIPTION_OPEN.equals(contest.getStatus()) &&
                     !ContestStatus.PUBLISHED.equals(contest.getStatus())) {
                         throw new IllegalStateException("El concurso no está disponible para inscripciones");
                 }

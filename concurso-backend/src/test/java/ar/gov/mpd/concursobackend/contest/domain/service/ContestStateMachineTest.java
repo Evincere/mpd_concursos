@@ -29,7 +29,7 @@ class ContestStateMachineTest {
     @Test
     @DisplayName("Should reject invalid transitions from DRAFT")
     void shouldRejectInvalidTransitionsFromDraft() {
-        assertFalse(stateMachine.canTransition(ContestStatus.DRAFT, ContestStatus.ACTIVE));
+        assertFalse(stateMachine.canTransition(ContestStatus.DRAFT, ContestStatus.INSCRIPTION_OPEN));
         assertFalse(stateMachine.canTransition(ContestStatus.DRAFT, ContestStatus.FINISHED));
         assertFalse(stateMachine.canTransition(ContestStatus.DRAFT, ContestStatus.ARCHIVED));
     }
@@ -37,30 +37,30 @@ class ContestStateMachineTest {
     @Test
     @DisplayName("Should allow valid transitions from PUBLISHED")
     void shouldAllowValidTransitionsFromPublished() {
-        assertTrue(stateMachine.canTransition(ContestStatus.PUBLISHED, ContestStatus.ACTIVE));
+        assertTrue(stateMachine.canTransition(ContestStatus.PUBLISHED, ContestStatus.INSCRIPTION_OPEN));
         assertTrue(stateMachine.canTransition(ContestStatus.PUBLISHED, ContestStatus.CANCELLED));
     }
 
     @Test
-    @DisplayName("Should allow valid transitions from ACTIVE")
-    void shouldAllowValidTransitionsFromActive() {
-        assertTrue(stateMachine.canTransition(ContestStatus.ACTIVE, ContestStatus.PAUSED));
-        assertTrue(stateMachine.canTransition(ContestStatus.ACTIVE, ContestStatus.CLOSED));
-        assertTrue(stateMachine.canTransition(ContestStatus.ACTIVE, ContestStatus.CANCELLED));
+    @DisplayName("Should allow valid transitions from INSCRIPTION_OPEN")
+    void shouldAllowValidTransitionsFromInscriptionOpen() {
+        assertTrue(stateMachine.canTransition(ContestStatus.INSCRIPTION_OPEN, ContestStatus.PAUSED));
+        assertTrue(stateMachine.canTransition(ContestStatus.INSCRIPTION_OPEN, ContestStatus.INSCRIPTION_CLOSED));
+        assertTrue(stateMachine.canTransition(ContestStatus.INSCRIPTION_OPEN, ContestStatus.CANCELLED));
     }
 
     @Test
     @DisplayName("Should allow valid transitions from PAUSED")
     void shouldAllowValidTransitionsFromPaused() {
-        assertTrue(stateMachine.canTransition(ContestStatus.PAUSED, ContestStatus.ACTIVE));
+        assertTrue(stateMachine.canTransition(ContestStatus.PAUSED, ContestStatus.PUBLISHED));
         assertTrue(stateMachine.canTransition(ContestStatus.PAUSED, ContestStatus.CANCELLED));
     }
 
     @Test
-    @DisplayName("Should allow valid transitions from CLOSED")
-    void shouldAllowValidTransitionsFromClosed() {
-        assertTrue(stateMachine.canTransition(ContestStatus.CLOSED, ContestStatus.FINISHED));
-        assertTrue(stateMachine.canTransition(ContestStatus.CLOSED, ContestStatus.CANCELLED));
+    @DisplayName("Should allow valid transitions from INSCRIPTION_CLOSED")
+    void shouldAllowValidTransitionsFromInscriptionClosed() {
+        assertTrue(stateMachine.canTransition(ContestStatus.INSCRIPTION_CLOSED, ContestStatus.IN_EVALUATION));
+        assertTrue(stateMachine.canTransition(ContestStatus.INSCRIPTION_CLOSED, ContestStatus.CANCELLED));
     }
 
     @Test
@@ -72,8 +72,8 @@ class ContestStateMachineTest {
     @Test
     @DisplayName("Should not allow transitions from final states")
     void shouldNotAllowTransitionsFromFinalStates() {
-        assertFalse(stateMachine.canTransition(ContestStatus.CANCELLED, ContestStatus.ACTIVE));
-        assertFalse(stateMachine.canTransition(ContestStatus.ARCHIVED, ContestStatus.ACTIVE));
+        assertFalse(stateMachine.canTransition(ContestStatus.CANCELLED, ContestStatus.INSCRIPTION_OPEN));
+        assertFalse(stateMachine.canTransition(ContestStatus.ARCHIVED, ContestStatus.INSCRIPTION_OPEN));
     }
 
     @Test
@@ -81,8 +81,8 @@ class ContestStateMachineTest {
     void shouldValidateTransitionsAndThrowException() {
         assertDoesNotThrow(() -> stateMachine.validateTransition(ContestStatus.DRAFT, ContestStatus.PUBLISHED));
         
-        IllegalStateException exception = assertThrows(IllegalStateException.class, 
-            () -> stateMachine.validateTransition(ContestStatus.DRAFT, ContestStatus.ACTIVE));
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+            () -> stateMachine.validateTransition(ContestStatus.DRAFT, ContestStatus.INSCRIPTION_OPEN));
         
         assertTrue(exception.getMessage().contains("Invalid contest state transition"));
     }
@@ -95,11 +95,11 @@ class ContestStateMachineTest {
         assertTrue(draftNextStates.contains(ContestStatus.PUBLISHED));
         assertTrue(draftNextStates.contains(ContestStatus.CANCELLED));
 
-        Set<ContestStatus> activeNextStates = stateMachine.getValidNextStates(ContestStatus.ACTIVE);
-        assertEquals(3, activeNextStates.size());
-        assertTrue(activeNextStates.contains(ContestStatus.PAUSED));
-        assertTrue(activeNextStates.contains(ContestStatus.CLOSED));
-        assertTrue(activeNextStates.contains(ContestStatus.CANCELLED));
+        Set<ContestStatus> inscriptionOpenNextStates = stateMachine.getValidNextStates(ContestStatus.INSCRIPTION_OPEN);
+        assertEquals(3, inscriptionOpenNextStates.size());
+        assertTrue(inscriptionOpenNextStates.contains(ContestStatus.PAUSED));
+        assertTrue(inscriptionOpenNextStates.contains(ContestStatus.INSCRIPTION_CLOSED));
+        assertTrue(inscriptionOpenNextStates.contains(ContestStatus.CANCELLED));
     }
 
     @Test
@@ -108,7 +108,7 @@ class ContestStateMachineTest {
         assertTrue(stateMachine.isFinalState(ContestStatus.CANCELLED));
         assertTrue(stateMachine.isFinalState(ContestStatus.ARCHIVED));
         assertFalse(stateMachine.isFinalState(ContestStatus.DRAFT));
-        assertFalse(stateMachine.isFinalState(ContestStatus.ACTIVE));
+        assertFalse(stateMachine.isFinalState(ContestStatus.INSCRIPTION_OPEN));
     }
 
     @Test
@@ -117,9 +117,6 @@ class ContestStateMachineTest {
         // Estados que permiten inscripciones
         assertTrue(stateMachine.allowsInscriptions(ContestStatus.PUBLISHED));
         assertTrue(stateMachine.allowsInscriptions(ContestStatus.INSCRIPTION_OPEN));
-
-        // Estados legacy que permiten inscripciones (deprecados)
-        assertTrue(stateMachine.allowsInscriptions(ContestStatus.ACTIVE));
 
         // Estados que NO permiten inscripciones
         assertFalse(stateMachine.allowsInscriptions(ContestStatus.DRAFT));
@@ -130,16 +127,12 @@ class ContestStateMachineTest {
         assertFalse(stateMachine.allowsInscriptions(ContestStatus.FINISHED));
         assertFalse(stateMachine.allowsInscriptions(ContestStatus.CANCELLED));
         assertFalse(stateMachine.allowsInscriptions(ContestStatus.ARCHIVED));
-
-        // Estados legacy que NO permiten inscripciones
-        assertFalse(stateMachine.allowsInscriptions(ContestStatus.CLOSED));
-        assertFalse(stateMachine.allowsInscriptions(ContestStatus.IN_PROGRESS));
     }
 
     @Test
     @DisplayName("Should correctly identify active statuses")
     void shouldCorrectlyIdentifyActiveStatuses() {
-        assertTrue(stateMachine.isActiveStatus(ContestStatus.ACTIVE));
+        assertTrue(stateMachine.isActiveStatus(ContestStatus.INSCRIPTION_OPEN));
         assertTrue(stateMachine.isActiveStatus(ContestStatus.PUBLISHED));
         assertFalse(stateMachine.isActiveStatus(ContestStatus.DRAFT));
         assertFalse(stateMachine.isActiveStatus(ContestStatus.CANCELLED));
@@ -152,25 +145,25 @@ class ContestStateMachineTest {
         assertNotNull(draftDescription);
         assertTrue(draftDescription.contains("preparación"));
 
-        String activeDescription = stateMachine.getStatusDescription(ContestStatus.ACTIVE);
-        assertNotNull(activeDescription);
-        assertTrue(activeDescription.contains("activo"));
+        String inscriptionOpenDescription = stateMachine.getStatusDescription(ContestStatus.INSCRIPTION_OPEN);
+        assertNotNull(inscriptionOpenDescription);
+        assertTrue(inscriptionOpenDescription.contains("abiertas"));
     }
 
     @Test
     @DisplayName("Should handle null values gracefully")
     void shouldHandleNullValuesGracefully() {
-        assertFalse(stateMachine.canTransition(null, ContestStatus.ACTIVE));
+        assertFalse(stateMachine.canTransition(null, ContestStatus.INSCRIPTION_OPEN));
         assertFalse(stateMachine.canTransition(ContestStatus.DRAFT, null));
         assertFalse(stateMachine.canTransition(null, null));
     }
 
     @Test
-    @DisplayName("Should support legacy IN_PROGRESS state")
-    void shouldSupportLegacyInProgressState() {
-        assertTrue(stateMachine.canTransition(ContestStatus.IN_PROGRESS, ContestStatus.CLOSED));
-        assertTrue(stateMachine.canTransition(ContestStatus.IN_PROGRESS, ContestStatus.CANCELLED));
-        assertFalse(stateMachine.canTransition(ContestStatus.IN_PROGRESS, ContestStatus.ACTIVE));
+    @DisplayName("Should support IN_EVALUATION state transitions")
+    void shouldSupportInEvaluationStateTransitions() {
+        assertTrue(stateMachine.canTransition(ContestStatus.IN_EVALUATION, ContestStatus.RESULTS_PUBLISHED));
+        assertTrue(stateMachine.canTransition(ContestStatus.IN_EVALUATION, ContestStatus.CANCELLED));
+        assertFalse(stateMachine.canTransition(ContestStatus.IN_EVALUATION, ContestStatus.INSCRIPTION_OPEN));
     }
 
     @Test
@@ -179,7 +172,7 @@ class ContestStateMachineTest {
         Set<ContestStatus> allStatuses = stateMachine.getAllStatuses();
         assertFalse(allStatuses.isEmpty());
         assertTrue(allStatuses.contains(ContestStatus.DRAFT));
-        assertTrue(allStatuses.contains(ContestStatus.ACTIVE));
+        assertTrue(allStatuses.contains(ContestStatus.INSCRIPTION_OPEN));
         assertTrue(allStatuses.contains(ContestStatus.CANCELLED));
     }
 
@@ -188,7 +181,7 @@ class ContestStateMachineTest {
     void shouldReturnNonFinalStatuses() {
         Set<ContestStatus> nonFinalStatuses = stateMachine.getNonFinalStatuses();
         assertTrue(nonFinalStatuses.contains(ContestStatus.DRAFT));
-        assertTrue(nonFinalStatuses.contains(ContestStatus.ACTIVE));
+        assertTrue(nonFinalStatuses.contains(ContestStatus.INSCRIPTION_OPEN));
         assertFalse(nonFinalStatuses.contains(ContestStatus.CANCELLED));
         assertFalse(nonFinalStatuses.contains(ContestStatus.ARCHIVED));
     }

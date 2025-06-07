@@ -145,10 +145,18 @@ public class ContestService {
         List<Contest> allContests = contestRepository.findAll();
 
         long total = allContests.size();
-        long active = allContests.stream().filter(c -> ContestStatus.ACTIVE.equals(c.getStatus())).count();
+        // REFACTORING: Usar solo nuevos estados específicos
+        long active = allContests.stream().filter(c ->
+            ContestStatus.INSCRIPTION_OPEN.equals(c.getStatus()) ||
+            ContestStatus.PUBLISHED.equals(c.getStatus())
+        ).count();
         long draft = allContests.stream().filter(c -> ContestStatus.DRAFT.equals(c.getStatus())).count();
-        long closed = allContests.stream().filter(c -> ContestStatus.CLOSED.equals(c.getStatus())).count();
-        long inProgress = allContests.stream().filter(c -> ContestStatus.IN_PROGRESS.equals(c.getStatus())).count();
+        long closed = allContests.stream().filter(c ->
+            ContestStatus.INSCRIPTION_CLOSED.equals(c.getStatus())
+        ).count();
+        long inProgress = allContests.stream().filter(c ->
+            ContestStatus.IN_EVALUATION.equals(c.getStatus())
+        ).count();
         long cancelled = allContests.stream().filter(c -> ContestStatus.CANCELLED.equals(c.getStatus())).count();
 
         return ContestStatsResponse.builder()

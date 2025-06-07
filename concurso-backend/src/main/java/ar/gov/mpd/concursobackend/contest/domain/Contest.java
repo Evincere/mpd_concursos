@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.contest.domain;
 
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -27,10 +28,13 @@ public class Contest {
     private String basesUrl;
     private String descriptionUrl;
     private List<ContestDate> dates;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public Contest(Long id, String title, String category, String class_, String functions,
                   ContestStatus status, String position, String dependency, LocalDate startDate,
-                  LocalDate endDate, String basesUrl, String descriptionUrl, List<ContestDate> dates) {
+                  LocalDate endDate, String basesUrl, String descriptionUrl, List<ContestDate> dates,
+                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.title = title;
         this.category = category;
@@ -44,6 +48,8 @@ public class Contest {
         this.basesUrl = basesUrl;
         this.descriptionUrl = descriptionUrl;
         this.dates = dates;
+        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+        this.updatedAt = updatedAt != null ? updatedAt : LocalDateTime.now();
     }
 
     // Getters
@@ -60,6 +66,8 @@ public class Contest {
     public String getBasesUrl() { return basesUrl; }
     public String getDescriptionUrl() { return descriptionUrl; }
     public List<ContestDate> getDates() { return dates; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     // Setters
     public void setId(Long id) { this.id = id; }
@@ -75,4 +83,6 @@ public class Contest {
     public void setBasesUrl(String basesUrl) { this.basesUrl = basesUrl; }
     public void setDescriptionUrl(String descriptionUrl) { this.descriptionUrl = descriptionUrl; }
     public void setDates(List<ContestDate> dates) { this.dates = dates; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -60,13 +60,8 @@ public class ContestModelMapper {
             return null;
         }
 
-        // Generar UUID determinístico basado en el Long ID
-        UUID principalId = legacy.getId() != null ?
-            UUID.nameUUIDFromBytes(legacy.getId().toString().getBytes()) :
-            UUID.randomUUID();
-
         return ar.gov.mpd.concursobackend.contest.domain.model.Contest.builder()
-            .id(principalId)
+            .id(legacy.getId())
             .title(legacy.getTitle())
             .description(legacy.getFunctions()) // Usar functions como description
             .requirements(legacy.getFunctions()) // Usar functions como requirements también
@@ -104,7 +99,7 @@ public class ContestModelMapper {
      * @return true si permite inscripciones, false en caso contrario
      */
     public boolean allowsInscriptions(ContestStatus status) {
-        return ContestStatus.ACTIVE.equals(status) || 
+        return ContestStatus.INSCRIPTION_OPEN.equals(status) ||
                ContestStatus.PUBLISHED.equals(status);
     }
 }

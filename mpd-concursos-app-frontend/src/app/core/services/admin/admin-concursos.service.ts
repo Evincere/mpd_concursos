@@ -167,7 +167,7 @@ export class AdminConcursosService {
       department: 'DEFENSORIAS PENALES',
       dependencia: 'DEFENSORIAS PENALES',
       category: 'JURIDICO',
-      status: 'ACTIVE' as ContestStatus,
+      status: 'INSCRIPTION_OPEN' as ContestStatus,
       startDate: today,
       endDate: futureDate,
       description: `Concurso de prueba generado automáticamente para el ID ${id}. Este es un concurso de respaldo para desarrollo.`,

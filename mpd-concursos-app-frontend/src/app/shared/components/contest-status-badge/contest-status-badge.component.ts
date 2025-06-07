@@ -61,14 +61,7 @@ export class ContestStatusBadgeComponent {
       borderColor: 'rgba(16, 185, 129, 0.3)',
       icon: 'fas fa-play-circle'
     },
-    'ACTIVE': {
-      value: 'ACTIVE',
-      label: 'Activo',
-      color: '#f0fdf4',
-      backgroundColor: 'rgba(16, 185, 129, 0.15)',
-      borderColor: 'rgba(16, 185, 129, 0.3)',
-      icon: 'fas fa-play-circle'
-    },
+
     'PAUSED': {
       value: 'PAUSED',
       label: 'Pausado',
@@ -77,30 +70,7 @@ export class ContestStatusBadgeComponent {
       borderColor: 'rgba(245, 158, 11, 0.3)',
       icon: 'fas fa-pause-circle'
     },
-    'PENDING': {
-      value: 'PENDING',
-      label: 'Pendiente',
-      color: '#fefce8',
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
-      borderColor: 'rgba(245, 158, 11, 0.3)',
-      icon: 'fas fa-clock'
-    },
-    'IN_PROGRESS': {
-      value: 'IN_PROGRESS',
-      label: 'En Progreso',
-      color: '#eff6ff',
-      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-      borderColor: 'rgba(59, 130, 246, 0.3)',
-      icon: 'fas fa-spinner'
-    },
-    'CLOSED': {
-      value: 'CLOSED',
-      label: 'Cerrado',
-      color: '#fef2f2',
-      backgroundColor: 'rgba(239, 68, 68, 0.15)',
-      borderColor: 'rgba(239, 68, 68, 0.3)',
-      icon: 'fas fa-times-circle'
-    },
+
     'FINISHED': {
       value: 'FINISHED',
       label: 'Finalizado',

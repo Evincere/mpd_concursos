@@ -57,7 +57,7 @@ import { CustomButtonComponent } from '@shared/components/custom-form/custom-but
         </app-custom-button>
 
         <app-inscripcion-button
-          *ngIf="concurso.status === 'ACTIVE' || concurso.status === 'PUBLISHED'"
+          *ngIf="concurso.status === 'INSCRIPTION_OPEN' || concurso.status === 'PUBLISHED'"
           [contest]="concurso"
           (inscripcionClick)="onInscripcionClick($event)"
           (continuarClick)="onContinuarClick($event)">

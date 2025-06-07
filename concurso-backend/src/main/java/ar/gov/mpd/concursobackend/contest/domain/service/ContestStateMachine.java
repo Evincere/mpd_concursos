@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.contest.domain.service;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,17 +14,30 @@ import java.util.Set;
 @Component
 public class ContestStateMachine {
     
-    private static final Map<ContestStatus, Set<ContestStatus>> VALID_TRANSITIONS = Map.of(
-        ContestStatus.DRAFT, Set.of(ContestStatus.PUBLISHED, ContestStatus.CANCELLED),
-        ContestStatus.PUBLISHED, Set.of(ContestStatus.ACTIVE, ContestStatus.CANCELLED),
-        ContestStatus.ACTIVE, Set.of(ContestStatus.PAUSED, ContestStatus.CLOSED, ContestStatus.CANCELLED),
-        ContestStatus.PAUSED, Set.of(ContestStatus.ACTIVE, ContestStatus.CANCELLED),
-        ContestStatus.CLOSED, Set.of(ContestStatus.FINISHED, ContestStatus.CANCELLED),
-        ContestStatus.FINISHED, Set.of(ContestStatus.ARCHIVED),
-        ContestStatus.IN_PROGRESS, Set.of(ContestStatus.CLOSED, ContestStatus.CANCELLED), // Legacy support
-        ContestStatus.CANCELLED, Set.of(), // Final state
-        ContestStatus.ARCHIVED, Set.of()   // Final state
-    );
+    private static final Map<ContestStatus, Set<ContestStatus>> VALID_TRANSITIONS = createTransitionsMap();
+
+    private static Map<ContestStatus, Set<ContestStatus>> createTransitionsMap() {
+        Map<ContestStatus, Set<ContestStatus>> transitions = new HashMap<>();
+
+        // Estados administrativos principales
+        transitions.put(ContestStatus.DRAFT, Set.of(ContestStatus.PUBLISHED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.PUBLISHED, Set.of(ContestStatus.INSCRIPTION_OPEN, ContestStatus.PAUSED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.PAUSED, Set.of(ContestStatus.PUBLISHED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.CANCELLED, Set.of()); // Final state
+        transitions.put(ContestStatus.FINISHED, Set.of(ContestStatus.ARCHIVED));
+        transitions.put(ContestStatus.ARCHIVED, Set.of()); // Final state
+
+        // Estados dinámicos específicos
+        transitions.put(ContestStatus.INSCRIPTION_PENDING, Set.of(ContestStatus.INSCRIPTION_OPEN, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.INSCRIPTION_OPEN, Set.of(ContestStatus.INSCRIPTION_CLOSED, ContestStatus.PAUSED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.INSCRIPTION_CLOSED, Set.of(ContestStatus.IN_EVALUATION, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.IN_EVALUATION, Set.of(ContestStatus.RESULTS_PUBLISHED, ContestStatus.CANCELLED));
+        transitions.put(ContestStatus.RESULTS_PUBLISHED, Set.of(ContestStatus.FINISHED, ContestStatus.CANCELLED));
+
+
+
+        return Map.copyOf(transitions);
+    }
 
     /**
      * Checks if a state transition is valid
@@ -85,9 +99,7 @@ public class ContestStateMachine {
      */
     public boolean allowsInscriptions(ContestStatus status) {
         return status == ContestStatus.PUBLISHED ||
-               status == ContestStatus.INSCRIPTION_OPEN ||
-               // Estados legacy (deprecados)
-               status == ContestStatus.ACTIVE;
+               status == ContestStatus.INSCRIPTION_OPEN;
     }
 
     /**
@@ -97,7 +109,8 @@ public class ContestStateMachine {
      * @return true if contest is active, false otherwise
      */
     public boolean isActiveStatus(ContestStatus status) {
-        return status == ContestStatus.ACTIVE || status == ContestStatus.PUBLISHED;
+        return status == ContestStatus.PUBLISHED ||
+               status == ContestStatus.INSCRIPTION_OPEN;
     }
 
     /**
@@ -123,10 +136,8 @@ public class ContestStateMachine {
             case IN_EVALUATION -> "En evaluación. Proceso de selección en curso.";
             case RESULTS_PUBLISHED -> "Resultados publicados. Proceso completado.";
 
-            // Estados legacy (deprecados)
-            case ACTIVE -> "DEPRECADO: Usar INSCRIPTION_OPEN. Concurso activo con inscripciones abiertas.";
-            case CLOSED -> "DEPRECADO: Usar INSCRIPTION_CLOSED. Inscripciones cerradas.";
-            case IN_PROGRESS -> "DEPRECADO: Usar IN_EVALUATION. Estado legacy.";
+            // Estados legacy (para compatibilidad temporal)
+            default -> "Estado legacy: " + status.getSpanishName() + ". Se recomienda migrar a estados específicos.";
         };
     }
 

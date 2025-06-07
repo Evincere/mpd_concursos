@@ -143,8 +143,8 @@ export class AdminReportsService {
     { id: 'contestState', label: 'Estado del concurso', type: 'enum', group: 'contest', options: [
       { value: 'DRAFT', label: 'Borrador' },
       { value: 'PUBLISHED', label: 'Publicado' },
-      { value: 'ACTIVE', label: 'Activo' },
-      { value: 'CLOSED', label: 'Cerrado' },
+      { value: 'INSCRIPTION_OPEN', label: 'Inscripciones Abiertas' },
+      { value: 'INSCRIPTION_CLOSED', label: 'Inscripciones Cerradas' },
       { value: 'FINISHED', label: 'Finalizado' }
     ]},
 
