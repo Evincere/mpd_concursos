@@ -9,13 +9,32 @@ import java.util.Set;
 /**
  * State machine for postulation status transitions
  * Implements business rules for valid state changes
+ * Updated to include documentation-specific states
  */
 @Component
 public class PostulationStateMachine {
-    
+
     private static final Map<PostulationStatus, Set<PostulationStatus>> VALID_TRANSITIONS = Map.of(
-        PostulationStatus.ACTIVE, Set.of(PostulationStatus.PENDING, PostulationStatus.CANCELLED),
-        PostulationStatus.PENDING, Set.of(PostulationStatus.APPROVED, PostulationStatus.REJECTED, PostulationStatus.CANCELLED),
+        PostulationStatus.ACTIVE, Set.of(
+            PostulationStatus.COMPLETED_WITH_DOCS,
+            PostulationStatus.COMPLETED_PENDING_DOCS,
+            PostulationStatus.CANCELLED
+        ),
+        PostulationStatus.COMPLETED_WITH_DOCS, Set.of(
+            PostulationStatus.PENDING,
+            PostulationStatus.CANCELLED
+        ),
+        PostulationStatus.COMPLETED_PENDING_DOCS, Set.of(
+            PostulationStatus.COMPLETED_WITH_DOCS,
+            PostulationStatus.FROZEN,
+            PostulationStatus.CANCELLED
+        ),
+        PostulationStatus.PENDING, Set.of(
+            PostulationStatus.APPROVED,
+            PostulationStatus.REJECTED,
+            PostulationStatus.CANCELLED
+        ),
+        PostulationStatus.FROZEN, Set.of(PostulationStatus.REJECTED),
         PostulationStatus.APPROVED, Set.of(), // Final state
         PostulationStatus.REJECTED, Set.of(), // Final state
         PostulationStatus.CANCELLED, Set.of() // Final state
@@ -74,34 +93,39 @@ public class PostulationStateMachine {
 
     /**
      * Checks if a status allows document uploads
-     * 
+     *
      * @param status Status to check
      * @return true if document uploads are allowed, false otherwise
      */
     public boolean allowsDocumentUpload(PostulationStatus status) {
-        return status == PostulationStatus.ACTIVE;
+        return status == PostulationStatus.ACTIVE ||
+               status == PostulationStatus.COMPLETED_PENDING_DOCS;
     }
 
     /**
      * Checks if a status allows admin review
-     * 
+     *
      * @param status Status to check
      * @return true if admin review is possible, false otherwise
      */
     public boolean allowsAdminReview(PostulationStatus status) {
-        return status == PostulationStatus.PENDING;
+        return status == PostulationStatus.PENDING ||
+               status == PostulationStatus.COMPLETED_WITH_DOCS;
     }
 
     /**
      * Gets business rules description for a status
-     * 
+     *
      * @param status Status to describe
      * @return Human-readable description of the status rules
      */
     public String getStatusDescription(PostulationStatus status) {
         return switch (status) {
             case ACTIVE -> "Postulación en proceso. El usuario puede completar documentos y enviar.";
+            case COMPLETED_WITH_DOCS -> "Postulación completada con toda la documentación. Lista para revisión administrativa.";
+            case COMPLETED_PENDING_DOCS -> "Postulación completada pero con documentos pendientes. El usuario tiene 3 días hábiles después del cierre para completar.";
             case PENDING -> "Postulación enviada, pendiente de revisión administrativa.";
+            case FROZEN -> "Postulación congelada por vencimiento del plazo de documentación. Será rechazada automáticamente.";
             case APPROVED -> "Postulación aprobada. Estado final.";
             case REJECTED -> "Postulación rechazada. Estado final.";
             case CANCELLED -> "Postulación cancelada por el usuario. Estado final.";
@@ -131,21 +155,40 @@ public class PostulationStateMachine {
 
     /**
      * Checks if a postulation can be resumed by the user
-     * 
+     *
      * @param status Current status
      * @return true if user can resume/modify the postulation
      */
     public boolean isResumable(PostulationStatus status) {
-        return status == PostulationStatus.ACTIVE;
+        return status == PostulationStatus.ACTIVE ||
+               status == PostulationStatus.COMPLETED_PENDING_DOCS;
     }
 
     /**
      * Checks if a postulation requires admin action
-     * 
+     *
      * @param status Current status
      * @return true if admin action is required
      */
     public boolean requiresAdminAction(PostulationStatus status) {
-        return status == PostulationStatus.PENDING;
+        return status == PostulationStatus.PENDING ||
+               status == PostulationStatus.COMPLETED_WITH_DOCS;
+    }
+
+    /**
+     * Determines the next automatic state based on business rules
+     *
+     * @param currentStatus Current status
+     * @param hasAllDocuments Whether all required documents are uploaded
+     * @return Next automatic state, or null if no automatic transition
+     */
+    public PostulationStatus getNextAutomaticState(PostulationStatus currentStatus, boolean hasAllDocuments) {
+        return switch (currentStatus) {
+            case ACTIVE -> hasAllDocuments ? PostulationStatus.COMPLETED_WITH_DOCS : PostulationStatus.COMPLETED_PENDING_DOCS;
+            case COMPLETED_WITH_DOCS -> PostulationStatus.PENDING; // Auto-transition to pending for admin review
+            case COMPLETED_PENDING_DOCS -> hasAllDocuments ? PostulationStatus.COMPLETED_WITH_DOCS : null;
+            case FROZEN -> PostulationStatus.REJECTED; // Auto-rejection after deadline
+            default -> null; // No automatic transitions for other states
+        };
     }
 }

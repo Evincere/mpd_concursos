@@ -58,7 +58,7 @@
                  #searchInput
                  placeholder="Buscar variables..."
                  [(ngModel)]="searchTerm"
-                 (input)="onSearchChange($event.target.value)">
+                 (input)="onSearchChange($event)">
           <button class="clear-search" 
                   *ngIf="searchTerm"
                   (click)="clearSearch()">

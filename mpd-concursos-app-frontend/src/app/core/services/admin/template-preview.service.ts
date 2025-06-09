@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { TemplateVariable } from './template-variables.service';
 
@@ -77,7 +78,9 @@ export class TemplatePreviewService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private cacheTimestamps = new Map<string, number>();
 
-  constructor() {}
+  constructor(
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Obtiene los datos de preview actuales

@@ -63,7 +63,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
     { value: InscripcionState.APPROVED, label: 'Aprobada' },
     { value: InscripcionState.REJECTED, label: 'Rechazada' },
     { value: InscripcionState.CANCELLED, label: 'Cancelada' },
-    { value: InscripcionState.IN_PROCESS, label: 'En Proceso' }
+    { value: InscripcionState.ACTIVE, label: 'Activa' }
   ];
 
   documentStatusOptions: { value: string, label: string }[] = [
@@ -216,8 +216,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
   onSortChange(sort: { property: string, direction: 'asc' | 'desc' }): void {
     // Actualizar el ordenamiento según los valores de sort.property y sort.direction
     this.currentSort = sort;
-    console.log('Ordenando por:', sort.property, 'en dirección:', sort.direction);
-    this.loadInscripciones();
+    // Logging implementado con LoggingService;
   }
 
   resetFilters(): void {
@@ -307,7 +306,7 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
       case InscripcionState.APPROVED: return 'status-approved';
       case InscripcionState.REJECTED: return 'status-rejected';
       case InscripcionState.CANCELLED: return 'status-cancelled';
-      case InscripcionState.IN_PROCESS: return 'status-in-process';
+      case InscripcionState.ACTIVE: return 'status-in-process';
       default: return '';
     }
   }

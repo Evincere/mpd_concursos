@@ -58,4 +58,12 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
                 .findByContestIdAndUserIdAndStatusNot(contestId, uuidToBytes(userId), InscriptionStatus.CANCELLED)
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public Optional<Inscription> findByContestIdAndUserIdIncludingCancelled(Long contestId, UUID userId) {
+        // Este método incluye TODAS las inscripciones, incluyendo las canceladas
+        return repository
+                .findByContestIdAndUserId(contestId, uuidToBytes(userId))
+                .map(mapper::toDomain);
+    }
 }

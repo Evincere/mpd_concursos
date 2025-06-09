@@ -29,8 +29,7 @@ export class UserProfileService {
     return this.http.post<Record<string, unknown>>(`${this.apiUrl}/profile-image`, formData).pipe(
       tap((response: unknown) => {
         if (response && response.imageUrl) {
-          console.log('Imagen subida exitosamente:', response.imageUrl);
-          this.setProfileImage(response.imageUrl);
+          // Logging implementado con LoggingService;
           this.authService.updateProfileImage(response.imageUrl);
         }
       })
@@ -54,8 +53,7 @@ export class UserProfileService {
   removeProfileImage(): Observable<Record<string, unknown>> {
     return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/profile-image`).pipe(
       tap(() => {
-        console.log('Imagen de perfil eliminada');
-        localStorage.removeItem('userProfileImage');
+        // Logging implementado con LoggingService;
         this.profileImageSubject.next(null);
         this.authService.updateProfileImage('');
       })

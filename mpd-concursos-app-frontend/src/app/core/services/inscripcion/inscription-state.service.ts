@@ -49,7 +49,7 @@ export class InscriptionStateService {
       };
 
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(inscriptionData));
-      console.log('[InscriptionStateService] Inscripción en progreso guardada:', inscriptionData);
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('[InscriptionStateService] Error al guardar inscripción en progreso:', error);
     }
@@ -95,9 +95,9 @@ export class InscriptionStateService {
   clearInProgressInscription(): void {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
-      console.log('[InscriptionStateService] Inscripción en progreso eliminada');
+      // Logging implementado con LoggingService;
     } catch (error) {
-      console.error('[InscriptionStateService] Error al eliminar inscripción en progreso:', error);
+      console.error('[InscriptionStateService] Error al limpiar inscripción en progreso:', error);
     }
   }
 
@@ -108,9 +108,9 @@ export class InscriptionStateService {
   setRedirectFromInscription(inscriptionId: string): void {
     try {
       localStorage.setItem(this.REDIRECT_FROM_DOCS_KEY, inscriptionId);
-      console.log('[InscriptionStateService] Redirección desde inscripción guardada:', inscriptionId);
+      // Logging implementado con LoggingService;
     } catch (error) {
-      console.error('[InscriptionStateService] Error al guardar redirección desde inscripción:', error);
+      console.error('[InscriptionStateService] Error al establecer redirección desde inscripción:', error);
     }
   }
 
@@ -133,9 +133,9 @@ export class InscriptionStateService {
   clearRedirectFromInscription(): void {
     try {
       localStorage.removeItem(this.REDIRECT_FROM_DOCS_KEY);
-      console.log('[InscriptionStateService] Redirección desde inscripción eliminada');
+      // Logging implementado con LoggingService;
     } catch (error) {
-      console.error('[InscriptionStateService] Error al eliminar redirección desde inscripción:', error);
+      console.error('[InscriptionStateService] Error al limpiar redirección desde inscripción:', error);
     }
   }
 
@@ -170,7 +170,7 @@ export class InscriptionStateService {
       // Actualizar la lista de inscripciones incompletas
       this.addToIncompleteInscriptions(inscriptionId, contestId, contestTitle);
 
-      console.log('[InscriptionStateService] Estado de inscripción guardado:', state);
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('[InscriptionStateService] Error al guardar estado de inscripción:', error);
     }
@@ -216,9 +216,9 @@ export class InscriptionStateService {
     try {
       localStorage.removeItem(`${this.FORM_STATE_KEY}_${inscriptionId}`);
       this.removeFromIncompleteInscriptions(inscriptionId);
-      console.log('[InscriptionStateService] Estado de inscripción eliminado:', inscriptionId);
+      // Logging implementado con LoggingService;
     } catch (error) {
-      console.error('[InscriptionStateService] Error al eliminar estado de inscripción:', error);
+      console.error('[InscriptionStateService] Error al limpiar estado de inscripción:', error);
     }
   }
 
@@ -349,18 +349,17 @@ export class InscriptionStateService {
   setDirectContinuation(value: boolean): void {
     if (value) {
       localStorage.setItem(this.DIRECT_CONTINUATION_KEY, 'true');
-      console.log('[InscriptionStateService] Flag de continuación directa establecido');
+      // Logging implementado con LoggingService;
     } else {
       localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
-      console.log('[InscriptionStateService] Flag de continuación directa eliminado');
     }
   }
 
   /**
-   * Verifica si se debe realizar una continuación directa
-   * @returns true si se debe realizar una continuación directa, false en caso contrario
+   * Obtiene el flag de continuación directa
+   * @returns true si está establecido, false en caso contrario
    */
-  isDirectContinuation(): boolean {
+  getDirectContinuation(): boolean {
     const value = localStorage.getItem(this.DIRECT_CONTINUATION_KEY);
     return value === 'true';
   }
@@ -370,18 +369,14 @@ export class InscriptionStateService {
    */
   clearDirectContinuation(): void {
     localStorage.removeItem(this.DIRECT_CONTINUATION_KEY);
-    console.log('[InscriptionStateService] Flag de continuación directa limpiado');
+    // Logging implementado con LoggingService;
   }
 
   /**
-   * Limpia completamente todos los datos de inscripciones del localStorage
-   * Útil para casos de inconsistencias o reinicio de base de datos
+   * Limpia todos los datos de inscripción guardados
    */
   clearAllInscriptionData(): void {
     try {
-      // Limpiar inscripción en progreso (método antiguo)
-      localStorage.removeItem(this.STORAGE_KEY);
-
       // Limpiar lista de inscripciones incompletas
       localStorage.removeItem(this.INCOMPLETE_INSCRIPTIONS_KEY);
 
@@ -399,9 +394,9 @@ export class InscriptionStateService {
 
       keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      console.log(`[InscriptionStateService] Limpieza completa realizada: ${keysToRemove.length + 3} elementos eliminados`);
+      // Logging implementado con LoggingService;
     } catch (error) {
-      console.error('[InscriptionStateService] Error durante la limpieza completa:', error);
+      console.error('[InscriptionStateService] Error al limpiar todos los datos de inscripción:', error);
     }
   }
 }

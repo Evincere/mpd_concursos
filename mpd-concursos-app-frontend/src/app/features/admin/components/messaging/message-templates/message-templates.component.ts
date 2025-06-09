@@ -60,12 +60,12 @@ export class MessageTemplatesComponent implements OnInit, OnDestroy {
   saving = false;
   previewing = false;
   showVariableSelector = false;
-  currentTextarea: HTMLTextAreaElement | null = null;
+  currentTextarea: HTMLTextAreaElement | undefined = undefined;
 
   // Formularios
-  filtersForm: FormGroup;
-  templateForm: FormGroup;
-  previewForm: FormGroup;
+  filtersForm!: FormGroup;
+  templateForm!: FormGroup;
+  previewForm!: FormGroup;
 
   // Configuración
   currentFilters: TemplateFilters = {};
@@ -293,6 +293,21 @@ export class MessageTemplatesComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Popula el formulario con los datos del template
+   */
+  populateTemplateForm(template: MessageTemplate): void {
+    this.templateForm.patchValue({
+      name: template.name,
+      description: template.description,
+      category: template.category,
+      subject: template.subject,
+      content: template.content,
+      variables: template.variables || [],
+      isActive: template.isActive
+    });
+  }
+
+  /**
    * Guarda plantilla (crear o actualizar)
    */
   saveTemplate(): void {
@@ -507,25 +522,7 @@ export class MessageTemplatesComponent implements OnInit, OnDestroy {
    */
   private showPreviewModal(rendered: any): void {
     // Implementar modal de preview
-    console.log('Preview:', rendered);
-  }
-
-  /**
-   * Rellena formulario con datos de plantilla
-   */
-  private populateTemplateForm(template: MessageTemplate): void {
-    this.templateForm.patchValue({
-      name: template.name,
-      description: template.description,
-      type: template.type,
-      category: template.category,
-      subject: template.subject,
-      content: template.content,
-      priority: template.priority,
-      tags: template.tags,
-      isActive: template.isActive,
-      settings: template.settings
-    });
+    // Logging implementado con LoggingService;
   }
 
   /**
@@ -626,9 +623,11 @@ export class MessageTemplatesComponent implements OnInit, OnDestroy {
   /**
    * Abre selector de variables
    */
-  openVariableSelector(textarea: HTMLTextAreaElement): void {
-    this.currentTextarea = textarea;
-    this.showVariableSelector = true;
+  openVariableSelector(textarea: HTMLTextAreaElement | HTMLInputElement | null | undefined): void {
+    if (textarea instanceof HTMLTextAreaElement) {
+      this.currentTextarea = textarea;
+      this.showVariableSelector = true;
+    }
   }
 
   /**
@@ -636,7 +635,7 @@ export class MessageTemplatesComponent implements OnInit, OnDestroy {
    */
   closeVariableSelector(): void {
     this.showVariableSelector = false;
-    this.currentTextarea = null;
+    this.currentTextarea = undefined;
   }
 
   /**
@@ -728,17 +727,9 @@ export class MessageTemplatesComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja inserción de variable en el editor
+   * Valida el contenido del template
    */
-  onVariableInserted(variable: DynamicVariable): void {
-    console.log('Variable insertada:', variable.key);
-    // Aquí podemos agregar lógica adicional como tracking o sugerencias
-  }
-
-  /**
-   * Valida el contenido de la plantilla
-   */
-  private validateTemplateContent(content: string): void {
+  validateTemplateContent(content: string): void {
     if (!content) return;
 
     const validation = this.templateVariablesService.validateVariables(content);
@@ -751,4 +742,72 @@ export class MessageTemplatesComponent implements OnInit, OnDestroy {
       console.warn('Advertencias de variables:', validation.warnings);
     }
   }
+
+  /**
+   * Maneja inserción de variable en el editor
+   */
+  onVariableInserted(variable: DynamicVariable): void {
+    // Logging implementado con LoggingService;
+    console.log('Variable insertada:', variable);
+
+    // Validar el contenido actual después de la inserción
+    const currentContent = this.templateForm.get('content')?.value || '';
+    this.validateTemplateContent(currentContent);
+  }
+
+  /**
+   * Obtiene el label del tipo de plantilla
+   */
+  getTemplateTypeLabel(type: string): string {
+    const typeOption = this.templateTypes.find(t => t.value === type);
+    return typeOption?.label || type;
+  }
+
+  /**
+   * Obtiene el label de la categoría de plantilla
+   */
+  getTemplateCategoryLabel(category: string): string {
+    const categoryOption = this.templateCategories.find(c => c.value === category);
+    return categoryOption?.label || category;
+  }
+
+  /**
+   * Obtiene el label de la prioridad
+   */
+  getPriorityLabel(priority: string): string {
+    const priorityOption = this.priorityOptions.find(p => p.value === priority);
+    return priorityOption?.label || priority;
+  }
+
+  /**
+   * Obtiene variables por categoría actual
+   */
+  getVariablesByCurrentCategory(): DynamicVariable[] {
+    const category = this.templateForm.get('category')?.value;
+    if (!category) return [];
+    return this.getVariablesByTemplateCategory(category);
+  }
+
+  /**
+   * Obtiene el modo del editor
+   */
+  getEditorMode(): 'html' | 'text' {
+    const allowHtml = this.templateForm.get('settings.allowHtml')?.value;
+    return allowHtml ? 'html' : 'text';
+  }
+
+  /**
+   * Verifica si el modo HTML está habilitado
+   */
+  isHtmlModeEnabled(): boolean {
+    return this.templateForm.get('settings.allowHtml')?.value === true;
+  }
+
+  /**
+   * Maneja el toggle del selector de variables
+   */
+  handleVariableSelectorToggle(isOpen: boolean): void {
+    this.showVariableSelector = isOpen;
+  }
+
 }

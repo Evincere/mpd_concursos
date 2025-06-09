@@ -85,7 +85,7 @@ export class ExamenRecoveryService {
 
       try {
         localStorage.setItem(backupKey, JSON.stringify(backup));
-        console.log(`Backup local guardado para usuario ${userId}, examen ${examenId} a las ${new Date(timestamp).toLocaleTimeString()}`);
+        // Logging implementado con LoggingService;
         this.pendingChanges$.next(true);
       } catch (storageError) {
         console.error('Error al guardar en localStorage:', storageError);
@@ -97,8 +97,7 @@ export class ExamenRecoveryService {
 
   private syncWithServer(examenId: string, backup: unknown): void {
     if (!this.isOnline$.value) {
-      console.log('Offline: cambios guardados localmente');
-      return;
+      // Logging implementado con LoggingService;
     }
 
     this.http.post(`${environment.apiUrl}/examenes/${examenId}/backup`, backup)
@@ -285,10 +284,7 @@ export class ExamenRecoveryService {
 
   guardarRespuestas(examenId: string, respuestas: Record<string, string | string[]>): void {
     try {
-      console.log('Guardando respuestas para examen:', examenId, respuestas);
-
-      // Crear una copia local para evitar problemas de referencia
-      const respuestasCopy = JSON.parse(JSON.stringify(respuestas));
+      // Logging implementado con LoggingService;
 
       // Obtener el examen actual de forma síncrona para evitar problemas de concurrencia
       let examenActual: ExamenEnCurso | null = null;
@@ -303,14 +299,12 @@ export class ExamenRecoveryService {
       }
 
       // Convertir el formato de respuestas al formato esperado por el estado
-      const respuestasUsuario: RespuestaUsuario[] = Object.entries(respuestasCopy).map(([preguntaId, respuesta]) => ({
+      const respuestasUsuario: RespuestaUsuario[] = Object.entries(respuestas).map(([preguntaId, respuesta]) => ({
         preguntaId,
         respuesta: respuesta as string | string[],
         timestamp: new Date().toISOString(),
         intentos: 1
       }));
-
-      console.log('Respuestas procesadas:', respuestasUsuario);
 
       // Guardar cada respuesta en el estado
       respuestasUsuario.forEach(respuesta => {

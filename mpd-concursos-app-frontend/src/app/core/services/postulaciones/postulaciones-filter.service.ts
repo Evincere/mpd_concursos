@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Postulacion, PostulationStatus } from '@shared/interfaces/postulacion/postulacion.interface';
 import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaciones.interface';
 
@@ -64,9 +65,9 @@ export class PostulacionesFilterService {
         cumpleFiltros = cumpleFiltros && postulacion.concurso.dependencia === filtros.dependencia;
       }
 
-      // Filtro por cargo
-      if (filtros.cargo !== 'todos' && filtros.cargo && postulacion.concurso?.cargo) {
-        cumpleFiltros = cumpleFiltros && postulacion.concurso.cargo === filtros.cargo;
+      // Filtro por cargo (REFACTORING: Usar terminología unificada)
+      if (filtros.cargo !== 'todos' && filtros.cargo && postulacion.concurso?.position) {
+        cumpleFiltros = cumpleFiltros && postulacion.concurso.position === filtros.cargo;
       }
 
       // Filtros por fecha (implementación futura)
@@ -85,12 +86,13 @@ export class PostulacionesFilterService {
     const termino = searchTerm.toLowerCase().trim();
     
     return postulaciones.filter(postulacion => {
-      const titulo = postulacion.concurso?.titulo?.toLowerCase() || '';
-      const cargo = postulacion.concurso?.cargo?.toLowerCase() || '';
-      const dependencia = postulacion.concurso?.dependencia?.toLowerCase() || '';
-      
-      return titulo.includes(termino) || 
-             cargo.includes(termino) || 
+      // REFACTORING: Usar terminología unificada en inglés
+      const titulo = postulacion.concurso?.title?.toLowerCase() || '';
+      const cargo = postulacion.concurso?.position?.toLowerCase() || '';
+      const dependencia = postulacion.concurso?.department?.toLowerCase() || '';
+
+      return titulo.includes(termino) ||
+             cargo.includes(termino) ||
              dependencia.includes(termino);
     });
   }
@@ -121,7 +123,7 @@ export class PostulacionesFilterService {
     const statusMap: Record<string, PostulationStatus> = {
       'en_proceso': PostulationStatus.ACTIVE,     // Inscripción en proceso (interrumpida)
       'pendiente': PostulationStatus.PENDING,    // Inscripción completada, pendiente de validación
-      'aprobado': PostulationStatus.ACCEPTED,    // Inscripción aprobada
+      'aprobado': PostulationStatus.APPROVED,    // Inscripción aprobada
       'rechazado': PostulationStatus.REJECTED,   // Inscripción rechazada
       'cancelado': PostulationStatus.CANCELLED   // Inscripción cancelada
     };

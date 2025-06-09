@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 import { IExamenState } from '@core/interfaces/examenes/state/examen-state.interface';

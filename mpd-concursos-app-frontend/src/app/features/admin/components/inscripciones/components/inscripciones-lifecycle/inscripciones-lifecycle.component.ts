@@ -50,13 +50,14 @@ export class InscripcionesLifecycleComponent implements OnInit, OnDestroy {
 
   filterForm: FormGroup;
 
+  // REFACTORING: Solo estados estándar después de eliminar legacy
   statusOptions: { value: InscripcionState | 'ALL', label: string }[] = [
     { value: 'ALL', label: 'Todos' },
     { value: InscripcionState.PENDING, label: 'Pendiente' },
     { value: InscripcionState.APPROVED, label: 'Aprobada' },
     { value: InscripcionState.REJECTED, label: 'Rechazada' },
     { value: InscripcionState.CANCELLED, label: 'Cancelada' },
-    { value: InscripcionState.IN_PROCESS, label: 'En Proceso' }
+    { value: InscripcionState.ACTIVE, label: 'Activa' }
   ];
 
   selectedInscription: AdminInscription | null = null;
@@ -228,14 +229,15 @@ export class InscripcionesLifecycleComponent implements OnInit, OnDestroy {
     this.availableStates = [];
     const currentState = this.selectedInscription.state;
 
+    // REFACTORING: Solo estados estándar después de eliminar legacy
     switch (currentState) {
       case InscripcionState.PENDING:
         this.availableStates = [
-          { value: InscripcionState.IN_PROCESS, label: 'En Proceso' },
+          { value: InscripcionState.ACTIVE, label: 'En Proceso' },
           { value: InscripcionState.REJECTED, label: 'Rechazar' }
         ];
         break;
-      case InscripcionState.IN_PROCESS:
+      case InscripcionState.ACTIVE:
         this.availableStates = [
           { value: InscripcionState.APPROVED, label: 'Aprobar' },
           { value: InscripcionState.REJECTED, label: 'Rechazar' }

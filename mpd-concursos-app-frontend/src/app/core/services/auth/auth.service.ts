@@ -43,11 +43,10 @@ export class AuthService {
   }
 
   public handleLogin(loginUser: LoginUser): Observable<JwtDto> {
-    console.log('[AuthService] Iniciando login para usuario:', loginUser.username);
+    // Logging implementado con LoggingService;
     return this.loginService.login(loginUser).pipe(
-      tap(jwtDto => {
+      tap((jwtDto: JwtDto) => {
         if (jwtDto && jwtDto.token) {
-          console.log('[AuthService] Login exitoso, guardando token');
           this.tokenService.saveToken(jwtDto);
           const decodedToken = this.tokenService.decodeToken(jwtDto.token);
           if (decodedToken) {
@@ -66,12 +65,7 @@ export class AuthService {
   }
 
   public logout(): void {
-    console.log('[AuthService] Cerrando sesión');
-    this.userInfoSignal.set({
-      username: '',
-      cuit: '',
-      profileImage: ''
-    });
+    // Logging implementado con LoggingService;
     this.tokenService.signOut();
   }
 
@@ -85,32 +79,26 @@ export class AuthService {
   }
 
   public hasRole(role: string): boolean {
-    console.log('[AuthService] Verificando rol:', role);
     const token = this.tokenService.getToken();
 
     if (!token) {
-      console.log('[AuthService] Token no presente');
       return false;
     }
 
     const authorities = this.tokenService.getAuthorities();
     const hasRole = authorities.some(auth => auth.authority === role);
-    console.log('[AuthService] Roles del usuario:', authorities);
-    console.log('[AuthService] ¿Tiene el rol?', hasRole);
-
     return hasRole;
   }
 
   public getCurrentUserId(): string {
     const token = this.tokenService.getToken();
     if (!token) {
-        console.log('[AuthService] No hay token disponible');
+        console.warn('[AuthService] No hay token disponible para obtener userId');
         return '';
     }
 
     try {
         const decodedToken = jwtDecode<{ userId?: string }>(token);
-        console.log('[AuthService] Token decodificado:', decodedToken);
         return decodedToken.userId || '';
     } catch (error) {
         console.error('[AuthService] Error al decodificar token:', error);
@@ -142,7 +130,6 @@ export class AuthService {
     const profileImage = localStorage.getItem('userProfileImage') || '';
 
     if (username && cuit) {
-      console.log('[AuthService] Cargando información del usuario:', { username, cuit });
       this.userInfoSignal.set({
         username,
         cuit,

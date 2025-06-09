@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable, combineLatest, of, BehaviorSubject } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
-import { 
-  EstadoPerfil, 
-  ProximoVencimiento, 
-  AccionRapida, 
+import {
+  EstadoPerfil,
+  ProximoVencimiento,
+  AccionRapida,
   DashboardData,
   SeccionPendiente,
-  DashboardUtils,
+  DashboardUtils, // Assuming DashboardUtils is available
   PrioridadVencimiento,
   TipoVencimiento,
   TipoAccion
@@ -15,145 +15,126 @@ import {
 import { ProfileService, UserProfile } from '@core/services/profile/profile.service';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { ConcursosService } from '@core/services/concursos/concursos.service';
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
+import { Contest } from '@shared/interfaces/concurso/concurso.interface'; // Assuming Contest interface
 
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardWidgetsService {
   private readonly dashboardData$ = new BehaviorSubject<DashboardData | null>(null);
+  private readonly LOG_TAG = 'DashboardWidgetsService'; // Tag for logging
 
   constructor(
     private profileService: ProfileService,
     private inscriptionService: InscriptionService,
-    private concursosService: ConcursosService
-  ) {}
+    private concursosService: ConcursosService,
+    private loggingService: LoggingService // Inject LoggingService
+  ) {
+    this.loggingService.debug(`[${this.LOG_TAG}] Initializing DashboardWidgetsService.`, undefined, this.LOG_TAG);
+  }
 
   /**
-   * Obtiene todos los datos necesarios para los widgets del dashboard
+   * Retrieves all necessary data for the dashboard widgets.
+   * Combines data from profile, inscriptions, and contests services.
+   * @returns An Observable of DashboardData.
    */
   getDashboardData(): Observable<DashboardData> {
-    console.log('[DashboardWidgetsService] Iniciando carga de datos de widgets...');
+    this.loggingService.info(`[${this.LOG_TAG}] Fetching all dashboard data.`, undefined, this.LOG_TAG);
 
     return combineLatest([
       this.getEstadoPerfil(),
       this.getProximosVencimientos(),
-      this.getAccionesRapidas()
+      this.getAccionesRapidas(),
+      // TODO: Add NotificationsService.getNotifications() if needed for `notificaciones`
+      // TODO: Add metrics data from other services if available
     ]).pipe(
       map(([estadoPerfil, proximosVencimientos, accionesRapidas]) => {
         const dashboardData: DashboardData = {
           estadoPerfil,
           proximosVencimientos,
           accionesRapidas,
-          notificaciones: [], // TODO: Implementar cuando esté el servicio de notificaciones
-          metricas: {
-            inscripcionesTotales: 0,
-            inscripcionesActivas: 0,
-            inscripcionesAprobadas: 0,
-            documentosSubidos: 0,
-            concursosDisponibles: 0,
+          notificaciones: [], // Placeholder, replace with actual notifications
+          metricas: { // Example metrics, adjust as needed
+            inscripcionesTotales: 0, // Should be calculated from inscriptionService data
+            inscripcionesActivas: (accionesRapidas.find(a => a.id === 'completar-inscripciones')?.badge || 0),
+            inscripcionesAprobadas: 0, // Needs specific logic
+            documentosSubidos: 0, // Needs specific logic
+            concursosDisponibles: 0, // Placeholder - SeccionPendiente doesn't have cantidad property
             proximosVencimientos: proximosVencimientos.length,
-            notificacionesPendientes: 0
+            notificacionesPendientes: 0 // Placeholder
           },
-          configuracionWidgets: []
+          configuracionWidgets: [] // Placeholder
         };
-
-        console.log('[DashboardWidgetsService] Datos de dashboard compilados:', dashboardData);
-        this.dashboardData$.next(dashboardData);
+        this.loggingService.info(`[${this.LOG_TAG}] Dashboard data compiled successfully.`, dashboardData, this.LOG_TAG);
+        this.dashboardData$.next(dashboardData); // Update BehaviorSubject
         return dashboardData;
       }),
       catchError(error => {
-        console.error('[DashboardWidgetsService] Error al cargar datos del dashboard:', error);
-        return of(this.getDefaultDashboardData());
+        this.loggingService.error(`[${this.LOG_TAG}] Error loading dashboard data:`, error, this.LOG_TAG);
+        const defaultData = this.getDefaultDashboardData();
+        this.dashboardData$.next(defaultData); // Update BehaviorSubject with default data on error
+        return of(defaultData);
       })
     );
   }
 
   /**
-   * Calcula el estado del perfil del usuario
+   * Calculates the user's profile status, including completeness and pending sections.
+   * @returns An Observable of EstadoPerfil.
    */
   private getEstadoPerfil(): Observable<EstadoPerfil> {
-    console.log('[DashboardWidgetsService] Calculando estado del perfil...');
-
+    this.loggingService.info(`[${this.LOG_TAG}] Calculating user profile status.`, undefined, this.LOG_TAG);
     return this.profileService.getUserProfile().pipe(
-      map((userProfile: UserProfile) => {
-        const secciones: SeccionPendiente[] = [
-          {
-            nombre: 'Información Personal',
-            descripcion: 'Datos básicos y de contacto',
-            prioridad: 'ALTA',
-            ruta: '/dashboard/perfil',
-            icono: 'fa-user',
-            completada: !!(userProfile?.dni && userProfile?.email && userProfile?.telefono)
-          },
-          {
-            nombre: 'Experiencia Laboral',
-            descripcion: 'Historial profesional',
-            prioridad: 'ALTA',
-            ruta: '/dashboard/perfil',
-            icono: 'fa-briefcase',
-            completada: !!(userProfile?.experiencias && userProfile.experiencias.length > 0)
-          },
-          {
-            nombre: 'Formación Académica',
-            descripcion: 'Títulos y certificaciones',
-            prioridad: 'MEDIA',
-            ruta: '/dashboard/perfil',
-            icono: 'fa-graduation-cap',
-            completada: !!(userProfile?.educacion && userProfile.educacion.length > 0)
-          },
-          {
-            nombre: 'Documentación',
-            descripcion: 'DNI, títulos y certificados',
-            prioridad: 'ALTA',
-            ruta: '/dashboard/perfil',
-            icono: 'fa-file-alt',
-            completada: this.verificarDocumentacion(userProfile)
-          }
-        ];
-
+      map(userProfile => {
+        const secciones = this.getSeccionesPerfil(userProfile); // Use local implementation
         const completitud = DashboardUtils.calcularCompletitudPerfil(secciones);
 
         const estadoPerfil: EstadoPerfil = {
           completitud,
-          seccionesPendientes: secciones.filter(s => !s.completada),
-          documentosVencidos: 0, // TODO: Implementar lógica de vencimiento
-          ultimaActualizacion: new Date(), // Usar fecha actual por ahora
+          seccionesPendientes: secciones.filter((s: SeccionPendiente) => !s.completada),
+          documentosVencidos: 0, // TODO: Implement actual document expiration logic
+          ultimaActualizacion: new Date(), // Using current date as a placeholder
           puntajeCompletitud: this.calcularPuntajeCompletitud(completitud, secciones)
         };
 
-        console.log('[DashboardWidgetsService] Estado del perfil calculado:', estadoPerfil);
+        this.loggingService.debug(`[${this.LOG_TAG}] Profile status calculated:`, estadoPerfil, this.LOG_TAG);
         return estadoPerfil;
       }),
       catchError(error => {
-        console.error('[DashboardWidgetsService] Error al calcular estado del perfil:', error);
+        this.loggingService.error(`[${this.LOG_TAG}] Error calculating profile status:`, error, this.LOG_TAG);
         return of(this.getDefaultEstadoPerfil());
       })
     );
   }
 
   /**
-   * Obtiene los próximos vencimientos críticos
+   * Retrieves the upcoming critical expirations (contests, documents, etc.).
+   * @returns An Observable of an array of ProximoVencimiento.
    */
   private getProximosVencimientos(): Observable<ProximoVencimiento[]> {
-    console.log('[DashboardWidgetsService] Obteniendo próximos vencimientos...');
-
+    this.loggingService.info(`[${this.LOG_TAG}] Getting upcoming critical expirations.`, undefined, this.LOG_TAG);
     return combineLatest([
       this.concursosService.getConcursos(),
-      this.inscriptionService.inscriptions
+      this.inscriptionService.getUserInscriptions()
     ]).pipe(
       map(([concursos, inscripciones]) => {
         const vencimientos: ProximoVencimiento[] = [];
         const hoy = new Date();
 
-        // Vencimientos de inscripciones a concursos
-        const concursosArray = concursos as unknown as Array<Record<string, unknown>>;
+        const concursosArray: Contest[] = Array.isArray(concursos) ? concursos : (concursos as any)?.content || [];
+        const inscripcionesArray: any[] = Array.isArray(inscripciones) ? inscripciones : (inscripciones as any)?.content || [];
+
+        this.loggingService.debug(`[${this.LOG_TAG}] Processing ${concursosArray.length} contests and ${inscripcionesArray.length} inscriptions for expirations.`, undefined, this.LOG_TAG);
+
+        // Contest inscription expirations
         concursosArray
           .filter(c => c['status'] === 'PUBLISHED')
           .forEach(concurso => {
             const fechaFin = new Date(concurso['endDate'] as string);
             const diasRestantes = Math.ceil((fechaFin.getTime() - hoy.getTime()) / (1000 * 3600 * 24));
 
-            if (diasRestantes >= 0 && diasRestantes <= 30) {
+            if (diasRestantes >= 0 && diasRestantes <= 30) { // Consider expirations within next 30 days
               vencimientos.push({
                 id: `concurso-${concurso['id']}`,
                 tipo: TipoVencimiento.INSCRIPCION,
@@ -161,29 +142,28 @@ export class DashboardWidgetsService {
                 descripcion: `Cierre de inscripciones`,
                 fechaLimite: fechaFin,
                 diasRestantes,
-                prioridad: DashboardUtils.calcularPrioridadVencimiento(diasRestantes),
+                prioridad: DashboardUtils.calcularPrioridadVencimiento(diasRestantes), // Assumed to be provided by DashboardUtils
                 concursoId: concurso['id'] as string,
                 accionRequerida: 'Completar inscripción',
                 ruta: `/dashboard/concursos/${concurso['id']}`
               });
+              this.loggingService.debug(`[${this.LOG_TAG}] Added contest inscription expiration: ${concurso['title']} (${diasRestantes} days left).`, undefined, this.LOG_TAG);
             }
           });
 
-        // Vencimientos de documentos pendientes
-        const inscripcionesArray = inscripciones as unknown as Array<Record<string, unknown>>;
+        // Pending document expirations (e.g., 3 days after contest close)
         inscripcionesArray
-          .filter(i => i['status'] === 'COMPLETED_PENDING_DOCS')
+          .filter(i => (i['estado'] as string)?.toUpperCase() === 'COMPLETED_PENDING_DOCS') // Assuming 'estado' for PostulacionResponse
           .forEach(inscripcion => {
-            // Calcular fecha límite (3 días después del cierre del concurso)
-            const concurso = concursosArray.find(c => c['id'] === inscripcion['contestId']);
+            const concurso = concursosArray.find(c => c['id'] === inscripcion['concursoId']); // Assuming 'concursoId' exists
             if (concurso) {
               const fechaCierre = new Date(concurso['endDate'] as string);
               const fechaLimiteDoc = new Date(fechaCierre);
-              fechaLimiteDoc.setDate(fechaLimiteDoc.getDate() + 3);
+              fechaLimiteDoc.setDate(fechaLimiteDoc.getDate() + 3); // Example: documents due 3 days after contest closes
 
               const diasRestantes = Math.ceil((fechaLimiteDoc.getTime() - hoy.getTime()) / (1000 * 3600 * 24));
 
-              if (diasRestantes >= 0) {
+              if (diasRestantes >= 0) { // Only show if still active or expired today
                 vencimientos.push({
                   id: `docs-${inscripcion['id']}`,
                   tipo: TipoVencimiento.DOCUMENTOS,
@@ -194,63 +174,70 @@ export class DashboardWidgetsService {
                   prioridad: DashboardUtils.calcularPrioridadVencimiento(diasRestantes),
                   concursoId: concurso['id'] as string,
                   accionRequerida: 'Subir documentos',
-                  ruta: `/dashboard/concursos/${concurso['id']}/inscripcion`
+                  ruta: `/dashboard/concursos/${concurso['id']}/inscripcion` // Example route
                 });
+                this.loggingService.debug(`[${this.LOG_TAG}] Added pending document expiration: ${concurso['title']} (${diasRestantes} days left).`, undefined, this.LOG_TAG);
               }
+            } else {
+              this.loggingService.warn(`[${this.LOG_TAG}] Could not find matching contest for inscription ID: ${inscripcion['id']} with pending documents. Skipping document expiration for this inscription.`, undefined, this.LOG_TAG);
             }
           });
 
-        // Ordenar por prioridad y días restantes
+        // Sort by priority (ALTA, MEDIA, BAJA) and then by remaining days
         vencimientos.sort((a, b) => {
-          const prioridadOrder = { 'ALTA': 0, 'MEDIA': 1, 'BAJA': 2 };
+          const prioridadOrder = { 'ALTA': 0, 'MEDIA': 1, 'BAJA': 2 } as { [key in PrioridadVencimiento]: number };
           const prioridadDiff = prioridadOrder[a.prioridad] - prioridadOrder[b.prioridad];
           if (prioridadDiff !== 0) return prioridadDiff;
           return a.diasRestantes - b.diasRestantes;
         });
 
-        console.log('[DashboardWidgetsService] Próximos vencimientos encontrados:', vencimientos);
-        return vencimientos.slice(0, 5); // Máximo 5 vencimientos
+        const topVencimientos = vencimientos.slice(0, 5); // Limit to top 5 critical expirations
+        this.loggingService.info(`[${this.LOG_TAG}] Found ${topVencimientos.length} critical expirations (top 5 shown).`, topVencimientos, this.LOG_TAG);
+        return topVencimientos;
       }),
       catchError(error => {
-        console.error('[DashboardWidgetsService] Error al obtener vencimientos:', error);
+        this.loggingService.error(`[${this.LOG_TAG}] Error getting upcoming expirations:`, error, this.LOG_TAG);
         return of([]);
       })
     );
   }
 
   /**
-   * Genera acciones rápidas contextuales basadas en el estado del usuario
+   * Generates contextual quick actions based on user's profile and application status.
+   * @returns An Observable of an array of AccionRapida.
    */
   private getAccionesRapidas(): Observable<AccionRapida[]> {
-    console.log('[DashboardWidgetsService] Generando acciones rápidas...');
+    this.loggingService.info(`[${this.LOG_TAG}] Generating quick actions.`, undefined, this.LOG_TAG);
 
     return combineLatest([
       this.profileService.getUserProfile(),
-      this.inscriptionService.inscriptions,
-      this.getProximosVencimientos()
+      this.inscriptionService.getUserInscriptions(),
+      this.getProximosVencimientos() // Re-use already calculated vencimientos
     ]).pipe(
       map(([userProfile, inscripciones, vencimientos]) => {
         const acciones: AccionRapida[] = [];
 
-        // Acción: Completar perfil
+        // Action: Complete profile
         const completitudPerfil = this.calcularCompletitudBasica(userProfile);
-        if (completitudPerfil < 80) {
+        if (completitudPerfil < 100) { // Only show if not 100% complete
           acciones.push({
             id: 'completar-perfil',
             titulo: 'Completar Perfil',
             descripcion: `${completitudPerfil}% completado`,
             icono: 'fa-user-edit',
             ruta: '/dashboard/perfil',
-            badge: Math.round((100 - completitudPerfil) / 20),
-            urgente: completitudPerfil < 50,
+            badge: Math.round((100 - completitudPerfil) / 20), // Badge indicating urgency/steps needed
+            urgente: completitudPerfil < 50, // More urgent if less than 50%
             tipo: TipoAccion.PERFIL,
             visible: true
           });
+          this.loggingService.debug(`[${this.LOG_TAG}] Added 'Completar Perfil' action (completeness: ${completitudPerfil}%).`, undefined, this.LOG_TAG);
         }
 
-        // Acción: Inscripciones pendientes
-        const inscripcionesPendientes = (inscripciones as unknown as Array<Record<string, unknown>>)
-          .filter(i => i['status'] === 'COMPLETED_PENDING_DOCS').length;
+        // Action: Pending inscriptions (those needing documents)
+        const inscripcionesArray: any[] = Array.isArray(inscripciones) ? inscripciones : (inscripciones as any)?.content || [];
+        const inscripcionesPendientes = inscripcionesArray
+          .filter(i => (i['estado'] as string)?.toUpperCase() === 'COMPLETED_PENDING_DOCS').length;
 
         if (inscripcionesPendientes > 0) {
           acciones.push({
@@ -260,13 +247,14 @@ export class DashboardWidgetsService {
             icono: 'fa-file-upload',
             ruta: '/dashboard/postulaciones',
             badge: inscripcionesPendientes,
-            urgente: true,
+            urgente: true, // Always urgent if pending documents
             tipo: TipoAccion.DOCUMENTO,
             visible: true
           });
+          this.loggingService.debug(`[${this.LOG_TAG}] Added 'Completar Inscripciones' action (${inscripcionesPendientes} pending docs).`, undefined, this.LOG_TAG);
         }
 
-        // Acción: Vencimientos críticos
+        // Action: Critical expirations
         const vencimientosCriticos = vencimientos?.filter(v => v.prioridad === 'ALTA').length || 0;
         if (vencimientosCriticos > 0) {
           acciones.push({
@@ -274,15 +262,16 @@ export class DashboardWidgetsService {
             titulo: 'Vencimientos Críticos',
             descripcion: `${vencimientosCriticos} elementos por vencer`,
             icono: 'fa-exclamation-triangle',
-            ruta: '/dashboard',
+            ruta: '/dashboard', // Can link to dashboard itself or a dedicated expirations section
             badge: vencimientosCriticos,
             urgente: true,
             tipo: TipoAccion.NOTIFICACION,
             visible: true
           });
+          this.loggingService.debug(`[${this.LOG_TAG}] Added 'Vencimientos Críticos' action (${vencimientosCriticos} critical expirations).`, undefined, this.LOG_TAG);
         }
 
-        // Acción: Explorar concursos
+        // Action: Explore contests (always available)
         acciones.push({
           id: 'explorar-concursos',
           titulo: 'Explorar Concursos',
@@ -293,36 +282,108 @@ export class DashboardWidgetsService {
           tipo: TipoAccion.INSCRIPCION,
           visible: true
         });
+        this.loggingService.debug(`[${this.LOG_TAG}] Added 'Explorar Concursos' action.`, undefined, this.LOG_TAG);
 
-        console.log('[DashboardWidgetsService] Acciones rápidas generadas:', acciones);
-        return acciones.slice(0, 4); // Máximo 4 acciones
+
+        const finalActions = acciones.slice(0, 4); // Limit to a maximum of 4 quick actions
+        this.loggingService.info(`[${this.LOG_TAG}] Quick actions generated. Total: ${finalActions.length}.`, finalActions, this.LOG_TAG);
+        return finalActions;
       }),
       catchError(error => {
-        console.error('[DashboardWidgetsService] Error al generar acciones rápidas:', error);
+        this.loggingService.error(`[${this.LOG_TAG}] Error generating quick actions:`, error, this.LOG_TAG);
         return of(this.getDefaultAccionesRapidas());
       })
     );
   }
 
-  // Métodos auxiliares privados
-  private verificarDocumentacion(userProfile: UserProfile | null): boolean {
-    // TODO: Implementar lógica real de verificación de documentos
-    // Por ahora, consideramos que la documentación está completa si tiene DNI
-    return !!(userProfile?.dni);
+  // --- Private Helper Methods ---
+
+  /**
+   * Gets profile sections with completion status.
+   * @param userProfile The user's profile.
+   * @returns Array of SeccionPendiente with completion status.
+   */
+  private getSeccionesPerfil(userProfile: UserProfile | null): SeccionPendiente[] {
+    const secciones: SeccionPendiente[] = [
+      {
+        nombre: 'Información Personal',
+        descripcion: 'Datos básicos del perfil',
+        prioridad: 'ALTA',
+        ruta: '/dashboard/perfil',
+        icono: 'fa-user',
+        completada: !!(userProfile?.dni && userProfile?.email && userProfile?.firstName && userProfile?.lastName)
+      },
+      {
+        nombre: 'Experiencia Laboral',
+        descripcion: 'Historial profesional',
+        prioridad: 'MEDIA',
+        ruta: '/dashboard/perfil',
+        icono: 'fa-briefcase',
+        completada: !!(userProfile?.experiencias && userProfile.experiencias.length > 0)
+      },
+      {
+        nombre: 'Educación',
+        descripcion: 'Formación académica',
+        prioridad: 'MEDIA',
+        ruta: '/dashboard/perfil',
+        icono: 'fa-graduation-cap',
+        completada: !!(userProfile?.educacion && userProfile.educacion.length > 0)
+      },
+      {
+        nombre: 'Documentación',
+        descripcion: 'Documentos requeridos',
+        prioridad: 'ALTA',
+        ruta: '/dashboard/perfil',
+        icono: 'fa-file-alt',
+        completada: this.verificarDocumentacion(userProfile)
+      }
+    ];
+
+    this.loggingService.debug(`[${this.LOG_TAG}] Profile sections calculated:`, secciones, this.LOG_TAG);
+    return secciones;
   }
 
+  /**
+   * Placeholder for actual document verification logic.
+   * @param userProfile The user's profile.
+   * @returns boolean indicating if documentation is considered complete.
+   */
+  private verificarDocumentacion(userProfile: UserProfile | null): boolean {
+    // TODO: Implement real document verification logic here (e.g., checking specific document statuses)
+    // For now, we consider documentation complete if DNI is present.
+    const isDniPresent = !!(userProfile?.dni);
+    this.loggingService.debug(`[${this.LOG_TAG}] Basic documentation check (DNI present): ${isDniPresent}.`, undefined, this.LOG_TAG);
+    return isDniPresent;
+  }
+
+  /**
+   * Calculates a completeness score based on overall completeness and high-priority sections.
+   * @param completitud Overall completeness percentage.
+   * @param secciones Array of pending sections.
+   * @returns Calculated completeness score.
+   */
   private calcularPuntajeCompletitud(completitud: number, secciones: SeccionPendiente[]): number {
     const bonusPrioridad = secciones
       .filter(s => s.completada && s.prioridad === 'ALTA')
       .length * 10;
-    return completitud + bonusPrioridad;
+    const score = completitud + bonusPrioridad;
+    this.loggingService.debug(`[${this.LOG_TAG}] Calculated completeness score: ${score} (completeness: ${completitud}, bonus: ${bonusPrioridad}).`, undefined, this.LOG_TAG);
+    return score;
   }
 
+  /**
+   * Calculates a basic profile completeness percentage based on key fields.
+   * @param userProfile The user's profile.
+   * @returns Basic completeness percentage (0-100).
+   */
   private calcularCompletitudBasica(userProfile: UserProfile | null): number {
-    if (!userProfile) return 0;
+    if (!userProfile) {
+      this.loggingService.warn(`[${this.LOG_TAG}] User profile is null for basic completeness calculation. Returning 0.`, undefined, this.LOG_TAG);
+      return 0;
+    }
 
     let puntos = 0;
-    const maxPuntos = 5;
+    const maxPuntos = 5; // DNI, email, telefono, experiencias, educacion
 
     if (userProfile.dni) puntos++;
     if (userProfile.email) puntos++;
@@ -330,23 +391,39 @@ export class DashboardWidgetsService {
     if (userProfile.experiencias && userProfile.experiencias.length > 0) puntos++;
     if (userProfile.educacion && userProfile.educacion.length > 0) puntos++;
 
-    return Math.round((puntos / maxPuntos) * 100);
+    const basicCompleteness = Math.round((puntos / maxPuntos) * 100);
+    this.loggingService.debug(`[${this.LOG_TAG}] Basic profile completeness calculated: ${basicCompleteness}%. (Points: ${puntos}/${maxPuntos}).`, undefined, this.LOG_TAG);
+    return basicCompleteness;
   }
 
+  // --- Default Data Methods (for error handling or initial state) ---
+
   private getDefaultEstadoPerfil(): EstadoPerfil {
-    return {
+    const defaultState = {
       completitud: 0,
       seccionesPendientes: [],
       documentosVencidos: 0,
       ultimaActualizacion: new Date(),
       puntajeCompletitud: 0
     };
+    this.loggingService.debug(`[${this.LOG_TAG}] Returning default profile status.`, defaultState, this.LOG_TAG);
+    return defaultState;
   }
 
   private getDefaultAccionesRapidas(): AccionRapida[] {
-    return [
+    const defaultActions = [
       {
-        id: 'completar-perfil',
+        id: 'explorar-concursos', // Always offer to explore contests
+        titulo: 'Explorar Concursos',
+        descripcion: 'Buscar nuevas oportunidades',
+        icono: 'fa-search',
+        ruta: '/dashboard/concursos',
+        urgente: false,
+        tipo: TipoAccion.INSCRIPCION,
+        visible: true
+      },
+      {
+        id: 'completar-perfil', // Offer to complete profile if no profile data available
         titulo: 'Completar Perfil',
         descripcion: 'Actualiza tu información profesional',
         icono: 'fa-user-edit',
@@ -356,10 +433,12 @@ export class DashboardWidgetsService {
         visible: true
       }
     ];
+    this.loggingService.debug(`[${this.LOG_TAG}] Returning default quick actions.`, defaultActions, this.LOG_TAG);
+    return defaultActions;
   }
 
   private getDefaultDashboardData(): DashboardData {
-    return {
+    const defaultData = {
       estadoPerfil: this.getDefaultEstadoPerfil(),
       proximosVencimientos: [],
       accionesRapidas: this.getDefaultAccionesRapidas(),
@@ -375,5 +454,16 @@ export class DashboardWidgetsService {
       },
       configuracionWidgets: []
     };
+    this.loggingService.debug(`[${this.LOG_TAG}] Returning default dashboard data.`, defaultData, this.LOG_TAG);
+    return defaultData;
+  }
+
+  /**
+   * Returns the current dashboard data as an observable.
+   * Consumers can subscribe to this to get real-time updates without re-fetching all data.
+   * @returns An Observable of DashboardData or null initially.
+   */
+  get currentDashboardData$(): Observable<DashboardData | null> {
+    return this.dashboardData$.asObservable();
   }
 }

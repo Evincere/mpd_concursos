@@ -244,4 +244,11 @@ export class ProfileEditDialogComponent implements OnInit, OnDestroy {
     if (!this.profile) return '';
     return `${this.profile.lastName}, ${this.profile.firstName}`;
   }
+
+  /**
+   * Establece el tab activo
+   */
+  setActiveTab(tabIndex: number): void {
+    this.activeTab = tabIndex;
+  }
 }

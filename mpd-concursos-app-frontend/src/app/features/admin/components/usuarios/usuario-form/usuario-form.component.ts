@@ -1,22 +1,23 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormGroup, Validators, ReactiveFormsModule, FormBuilder } from  '@angular/forms';
+import { FormGroup, Validators, ReactiveFormsModule, FormBuilder, AbstractControl } from '@angular/forms'; // Import AbstractControl
 
-// Componentes personalizados
+// Custom Components
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
 import { CustomSelectComponent } from '@shared/components/custom-form/custom-select/custom-select.component';
 import { CustomCheckboxComponent } from '@shared/components/custom-form/custom-checkbox/custom-checkbox.component';
 import { FormErrorComponent } from '@shared/components/form-error/form-error.component';
 
-// Servicios
+// Services
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { ApiErrorService } from '@core/services/error/api-error.service';
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
-// Validación
+// Validation
 import { UserValidationService } from '../domain/validation/user-validation.service';
 
-// Modelos
+// Models
 import { User, UserStatus } from '../domain/models/user.model';
 
 @Component({
@@ -38,15 +39,28 @@ export class UsuarioFormComponent implements OnInit {
   @Input() usuario: User | null = null;
   @Input() isEditMode = false;
 
-  @Output() saveUser = new EventEmitter<Record<string, unknown>>();
+  @Output() saveUser = new EventEmitter<any>(); // Emit User object or partial user data
   @Output() formCancel = new EventEmitter<void>();
 
   userForm!: FormGroup;
   isLoading = false;
-  formSubmitted = false;
+  formSubmitted = false; // Tracks if form has been submitted to show errors
 
-  // Mensajes de error personalizados
+  // Custom validation messages
   validationMessages = {
+    firstName: { // Changed from 'nombre' to 'firstName'
+      required: 'El nombre es obligatorio',
+      minlength: 'El nombre debe tener al menos 2 caracteres',
+      maxlength: 'El nombre no debe exceder los 50 caracteres',
+      invalidName: 'El nombre no debe contener números ni caracteres especiales'
+    },
+    lastName: { // Changed from 'apellido' to 'lastName'
+      required: 'El apellido es obligatorio',
+      minlength: 'El apellido debe tener al menos 2 caracteres',
+      maxlength: 'El apellido no debe exceder los 50 caracteres',
+      invalidName: 'El apellido no debe contener números ni caracteres especiales'
+    },
+    // Aliases para compatibilidad con templates
     nombre: {
       required: 'El nombre es obligatorio',
       minlength: 'El nombre debe tener al menos 2 caracteres',
@@ -61,18 +75,20 @@ export class UsuarioFormComponent implements OnInit {
     },
     dni: {
       required: 'El DNI es obligatorio',
-      invalidDni: 'El DNI debe tener entre 7 y 8 dígitos numéricos'
+      invalidDni: 'El DNI debe tener entre 7 y 8 dígitos numéricos',
+      dniExists: 'Este DNI ya está registrado' // Add async validation message
     },
     cuit: {
       pattern: 'El CUIT debe tener 11 dígitos numéricos sin guiones'
     },
     birthDate: {
-      required: 'La fecha de nacimiento es obligatoria'
+      required: 'La fecha de nacimiento es obligatoria',
+      invalidDate: 'La fecha de nacimiento no es válida'
     },
     email: {
       required: 'El email es obligatorio',
       email: 'Debe ingresar un email válido',
-      duplicateEmail: 'Este email ya está registrado'
+      emailExists: 'Este email ya está registrado' // Add async validation message
     },
     password: {
       required: 'La contraseña es obligatoria',
@@ -100,110 +116,153 @@ export class UsuarioFormComponent implements OnInit {
     },
     residentialAddress: {
       required: 'El domicilio real es obligatorio'
+    },
+    address: { // Assuming 'address' is an additional field for general address validation
+      addressInvalid: 'La dirección contiene caracteres no permitidos' // Custom validation message
     }
   };
 
   availableRoles = [
-    { value: 'admin', label: 'Administrador' },
-    { value: 'evaluador', label: 'Evaluador' },
-    { value: 'usuario', label: 'Usuario' }
+    { value: 'ROLE_ADMIN', label: 'Administrador' },
+    { value: 'ROLE_EVALUATOR', label: 'Evaluador' },
+    { value: 'ROLE_USER', label: 'Usuario' }
   ];
 
   estadoOptions = [
-    { value: 'activo', label: 'Activo' },
-    { value: 'inactivo', label: 'Inactivo' },
-    { value: 'bloqueado', label: 'Bloqueado' }
+    { value: UserStatus.ACTIVE, label: 'Activo' },
+    { value: UserStatus.INACTIVE, label: 'Inactivo' },
+    { value: UserStatus.BLOCKED, label: 'Bloqueado' }
   ];
 
   constructor(
     private fb: FormBuilder,
     private validationService: UserValidationService,
     private notificationService: CustomNotificationService,
-    private apiErrorService: ApiErrorService
+    private apiErrorService: ApiErrorService,
+    private loggingService: LoggingService // Inject LoggingService
   ) {}
 
   ngOnInit(): void {
+    this.loggingService.debug('[UsuarioFormComponent] Initializing form.', undefined, 'UserForm');
     this.initForm();
 
     if (this.isEditMode && this.usuario) {
+      this.loggingService.info('[UsuarioFormComponent] Populating form in edit mode.', this.usuario, 'UserForm');
       this.populateForm();
     }
   }
 
+  /**
+   * Initializes the user registration form with validation rules.
+   */
   initForm(): void {
     this.userForm = this.fb.group({
-      // Datos personales
-      nombre: ['', [
+      // Personal Data
+      firstName: ['', [ // Changed from 'nombre' to 'firstName'
         Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
         this.validationService.nameValidator()
       ]],
-      apellido: ['', [
+      lastName: ['', [ // Changed from 'apellido' to 'lastName'
         Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
         this.validationService.nameValidator()
       ]],
-      dni: ['', [
-        Validators.required,
-        this.validationService.dniValidator()
-      ],
-      this.isEditMode && this.usuario ? [] : [
-        this.validationService.dniExistsValidator()
-      ]],
+      dni: ['', {
+        validators: [
+          Validators.required,
+          this.validationService.dniValidator()
+        ],
+        asyncValidators: this.isEditMode && this.usuario ? null : [this.validationService.dniExistsValidator()],
+        updateOn: 'blur' // Trigger async validation on blur
+      }],
       cuit: ['', [
-        Validators.pattern(/^\d{11}$/)
+        Validators.pattern(/^\d{11}$/) // 11 numeric digits pattern
       ]],
       birthDate: [null, [
         Validators.required
+        // Consider adding a custom date validation, e.g., this.validationService.minAgeValidator(18)
       ]],
 
-      // Datos de contacto
-      email: ['', [
-        Validators.required,
-        this.validationService.emailValidator()
-      ],
-      this.isEditMode && this.usuario ? [] : [
-        this.validationService.emailExistsValidator()
-      ]],
+      // Contact Data
+      email: ['', {
+        validators: [
+          Validators.required,
+          Validators.email // Basic email format validation
+        ],
+        asyncValidators: this.isEditMode && this.usuario ? null : [this.validationService.emailExistsValidator()],
+        updateOn: 'blur' // Trigger async validation on blur
+      }],
       telefono: ['', [
-        this.validationService.phoneValidator()
+        this.validationService.phoneValidator() // Custom phone format validation
       ]],
 
-      // Datos de ubicación
+      // Location Data
       country: ['Argentina', Validators.required],
       province: ['', Validators.required],
       municipality: ['', Validators.required],
       legalAddress: ['', Validators.required],
       residentialAddress: ['', Validators.required],
-      direccion: ['', [
-        this.validationService.addressValidator()
+      // Assuming 'address' is a composite or specific field for general address. Adjust as per backend.
+      address: ['', [
+        // Add custom address validation if needed, e.g., this.validationService.addressValidator()
       ]],
 
-      // Roles y estado
+      // Roles and Status
       admin: [false],
       evaluador: [false],
       usuario: [false],
-      estado: ['activo' as UserStatus],
+      status: [UserStatus.ACTIVE], // Use UserStatus enum directly
 
-      // Credenciales
-      password: ['', this.isEditMode ? [] : [
+      // Credentials (only for create mode or when explicitly changing password in edit mode)
+      password: ['', this.isEditMode ? [] : [ // Password is required only in create mode
         Validators.required,
-        this.validationService.passwordValidator()
+        Validators.minLength(8),
+        this.validationService.passwordValidator() // Custom password complexity validation
       ]],
-      confirmPassword: ['', this.isEditMode ? [] : [
+      confirmPassword: ['', this.isEditMode ? [] : [ // Confirm password is required only in create mode
         Validators.required
       ]]
     }, {
+      // Cross-field validation for password match, only in create mode
       validators: this.isEditMode ? [] : this.validationService.passwordMatchValidator('password', 'confirmPassword')
     });
+
+    // Subscriptions to clear async validation errors when control value changes
+    this.userForm.get('dni')?.valueChanges.subscribe(() => {
+      // If dniExists error is present, update validity to re-run async validation
+      if (this.userForm.get('dni')?.hasError('dniExists')) {
+        this.userForm.get('dni')?.updateValueAndValidity({ emitEvent: false });
+      }
+    });
+
+    this.userForm.get('email')?.valueChanges.subscribe(() => {
+      // If emailExists error is present, update validity to re-run async validation
+      if (this.userForm.get('email')?.hasError('emailExists')) {
+        this.userForm.get('email')?.updateValueAndValidity({ emitEvent: false });
+      }
+    });
+
+    this.loggingService.debug('[UsuarioFormComponent] Form initialized with validators.', undefined, 'UserForm');
   }
 
+  /**
+   * Populates the form with existing user data in edit mode.
+   */
   populateForm(): void {
-    if (!this.usuario) return;
+    if (!this.usuario) {
+      this.loggingService.warn('[UsuarioFormComponent] Attempted to populate form with null user. Aborting.', undefined, 'UserForm');
+      return;
+    };
 
     this.userForm.patchValue({
-      nombre: this.usuario.firstName,
-      apellido: this.usuario.lastName,
+      firstName: this.usuario.firstName,
+      lastName: this.usuario.lastName,
       dni: this.usuario.dni,
       cuit: this.usuario.cuit || '',
+      // Ensure birthDate is a Date object for form input
       birthDate: this.usuario.birthDate ? new Date(this.usuario.birthDate) : null,
       email: this.usuario.email,
       telefono: this.usuario.telefono || '',
@@ -212,11 +271,11 @@ export class UsuarioFormComponent implements OnInit {
       municipality: this.usuario.municipality || '',
       legalAddress: this.usuario.legalAddress || '',
       residentialAddress: this.usuario.residentialAddress || '',
-      direccion: this.usuario.direccion || '',
-      estado: this.usuario.status || UserStatus.ACTIVE
+      address: this.usuario.direccion || '', // Using 'direccion' from User model
+      status: this.usuario.status || UserStatus.ACTIVE
     });
 
-    // Marcar los roles seleccionados
+    // Mark selected roles
     if (this.usuario.roles) {
       this.usuario.roles.forEach(rol => {
         if (rol === 'ROLE_ADMIN') this.userForm.get('admin')?.setValue(true);
@@ -224,61 +283,75 @@ export class UsuarioFormComponent implements OnInit {
         if (rol === 'ROLE_USER') this.userForm.get('usuario')?.setValue(true);
       });
     }
+
+    // Disable DNI and Email fields in edit mode as they are usually immutable identifiers
+    this.userForm.get('dni')?.disable();
+    this.userForm.get('email')?.disable();
+    this.loggingService.debug('[UsuarioFormComponent] Form populated and DNI/Email fields disabled for editing.', undefined, 'UserForm');
   }
 
-  passwordMatchValidator(group: FormGroup): Record<string, boolean> | null {
-    const password = group.get('password')?.value;
-    const confirmPassword = group.get('confirmPassword')?.value;
-
-    return password === confirmPassword ? null : { passwordMismatch: true };
-  }
-
+  /**
+   * Handles form submission. Validates the form and emits user data if valid.
+   */
   onSubmit(): void {
-    this.formSubmitted = true;
+    this.formSubmitted = true; // Mark form as submitted to trigger error display
+    this.loggingService.info('[UsuarioFormComponent] Form submission attempt.', undefined, 'UserForm');
 
+    // If form is invalid after initial checks
     if (this.userForm.invalid) {
-      this.userForm.markAllAsTouched();
+      this.userForm.markAllAsTouched(); // Mark all controls as touched to display errors
 
-      // Verificar si hay errores de validación asíncrona pendientes
+      // Check for pending asynchronous validations
       const asyncValidationPending = Object.values(this.userForm.controls).some(
         control => control.status === 'PENDING'
       );
 
       if (asyncValidationPending) {
         this.showError('Validando datos, por favor espere...', 'Validación en progreso');
-        return;
+        this.loggingService.warn('[UsuarioFormComponent] Form submission blocked: Pending asynchronous validations.', undefined, 'UserForm');
+        return; // Prevent submission if async validations are still running
       }
 
-      // Mostrar errores específicos
+      // Collect specific error messages for display
       const errorMessages: string[] = [];
-
       Object.keys(this.userForm.controls).forEach(key => {
         const control = this.userForm.get(key);
-        if (control?.invalid) {
-          // Usar el componente FormErrorComponent para obtener los mensajes de error
+        if (control?.invalid && (control.touched || this.formSubmitted)) {
+          // Iterate over all errors on the control
           const errors = control.errors || {};
-
-          Object.keys(errors).forEach(errorKey => {
-            const error = errors[errorKey];
-            if (error && typeof error === 'object' && 'message' in error) {
-              errorMessages.push(error.message as string);
-            } else {
-              // Fallback a los mensajes personalizados
-              const validationMessages = this.validationMessages;
-              const messages = validationMessages[key as keyof typeof validationMessages];
-              if (messages && errorKey in messages) {
-                errorMessages.push(messages[errorKey as keyof typeof messages]);
+          for (const errorKey in errors) {
+            if (errors.hasOwnProperty(errorKey)) {
+              // Check if it's a custom validation error with a 'message' property (e.g., from async validators)
+              const error = errors[errorKey];
+              if (error && typeof error === 'object' && 'message' in error) {
+                errorMessages.push(error.message as string);
+              } else {
+                // Fallback to predefined validation messages if no specific message is found
+                const validationMsgsForControl = this.validationMessages[key as keyof typeof this.validationMessages];
+                if (validationMsgsForControl && (validationMsgsForControl as any)[errorKey]) {
+                  errorMessages.push((validationMsgsForControl as any)[errorKey]);
+                } else {
+                  // Generic fallback if no specific message is found (should be rare with good validationMessages)
+                  errorMessages.push(`Error en ${key}: ${errorKey}`);
+                }
               }
             }
-          });
+          }
         }
       });
 
-      // Mostrar hasta 3 errores para no sobrecargar al usuario
-      const displayErrors = errorMessages.slice(0, 3).join('. ');
-      this.showError(displayErrors || 'Por favor, complete todos los campos requeridos correctamente', 'Error de Validación');
+      // Handle cross-field validation errors like passwordMismatch on the form group level
+      if (this.userForm.hasError('passwordMismatch') && (this.formSubmitted || this.userForm.get('confirmPassword')?.touched)) {
+        errorMessages.push(this.validationMessages.confirmPassword.passwordMismatch);
+      }
 
-      // Hacer scroll al primer campo con error
+
+      // Show a concise error notification
+      const uniqueMessages = Array.from(new Set(errorMessages));
+      const displayErrors = uniqueMessages.slice(0, 3).join('. ') + (errorMessages.length > 3 ? '...' : '');
+      this.showError(displayErrors || 'Por favor, complete todos los campos requeridos correctamente.', 'Error de Validación');
+
+      // Scroll to the first invalid field for better UX
       const firstInvalidControl = Object.keys(this.userForm.controls)
         .find(key => this.userForm.get(key)?.invalid);
 
@@ -289,26 +362,28 @@ export class UsuarioFormComponent implements OnInit {
         }
       }
 
-      return;
+      this.loggingService.warn('[UsuarioFormComponent] Form invalid due to synchronous validations. Displaying errors.', this.userForm.errors, 'UserForm');
+      return; // Stop submission if form is invalid
     }
 
-    this.isLoading = true;
+    this.isLoading = true; // Set loading state when form is valid and ready to submit
 
-    // Construir objeto de usuario
-    const formData = this.userForm.value;
+    // Construct user object using getRawValue to include disabled fields (like DNI, Email in edit mode)
+    const formData = this.userForm.getRawValue();
     const roles: string[] = [];
 
     if (formData.admin) roles.push('ROLE_ADMIN');
     if (formData.evaluador) roles.push('ROLE_EVALUATOR');
     if (formData.usuario) roles.push('ROLE_USER');
 
-    const userData = {
-      id: this.isEditMode && this.usuario ? this.usuario.id : undefined,
-      nombre: formData.nombre,
-      apellido: formData.apellido,
+    const userData: Partial<User> & { id?: string; password?: string; enabled?: boolean; createdAt?: Date } = {
+      id: this.isEditMode && this.usuario ? this.usuario.id : undefined, // Include ID only if in edit mode
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      username: formData.email, // Assuming username is derived from email
       dni: formData.dni,
       cuit: formData.cuit,
-      birthDate: formData.birthDate,
+      birthDate: formData.birthDate ? new Date(formData.birthDate) : undefined, // Convert to Date object
       email: formData.email,
       telefono: formData.telefono,
       country: formData.country,
@@ -316,139 +391,119 @@ export class UsuarioFormComponent implements OnInit {
       municipality: formData.municipality,
       legalAddress: formData.legalAddress,
       residentialAddress: formData.residentialAddress,
-      direccion: formData.direccion,
+      direccion: formData.address,
       roles: roles,
-      estado: formData.estado,
-      password: formData.password
+      status: formData.status,
+      // Include password only if in create mode or if password fields are filled in edit mode
+      password: this.isEditMode && !formData.password ? undefined : formData.password // Only send password if it was entered
     };
 
-    // Emitir el evento con los datos del usuario
-    this.saveUser.emit(userData);
+    // Remove confirmPassword as it's only for frontend validation
+    delete (userData as any).confirmPassword;
+
+    this.loggingService.info('[UsuarioFormComponent] Emitting saveUser event with processed user data.', userData, 'UserForm');
+    this.saveUser.emit(userData); // Emit the event with the constructed User object
   }
 
-  onClose(): void {
-    console.log('Cerrando formulario desde el botón Cancelar');
-
-    // Simplemente emitir el evento - sin intentar cerrar el diálogo directamente
+  /**
+   * Emits the formCancel event to notify the parent component about cancellation.
+   */
+  onCancel(): void {
+    this.loggingService.debug('[UsuarioFormComponent] Form cancelled. Emitting formCancel event.', undefined, 'UserForm');
     this.formCancel.emit();
   }
 
   /**
-   * Cierra el diálogo directamente buscando el componente de diálogo padre
-   * y llamando a su método closeDialog()
+   * Displays an error notification.
+   * @param message The error message.
+   * @param title The title of the notification.
    */
-  closeDialogDirectly(): void {
-    console.log('Cerrando diálogo directamente desde el botón Cancelar');
-
-    // Emitir el evento formCancel para mantener compatibilidad
-    this.formCancel.emit();
-
-    try {
-      // 1. Intentar usar el método global expuesto por el componente de diálogo
-      const globalCloseMethod = (window as any).customDialogCloseMethod;
-      if (typeof globalCloseMethod === 'function') {
-        console.log('Usando método global customDialogCloseMethod');
-        globalCloseMethod();
-        return;
-      }
-
-      // 2. Buscar el componente de diálogo padre y llamar a su método closeDialog
-      const dialogComponent = document.querySelector('app-custom-dialog');
-      if (dialogComponent) {
-        console.log('Encontrado componente de diálogo padre, llamando a closeDialog()');
-
-        // Llamar al método closeDialog del componente de diálogo
-        const closeDialogMethod = (dialogComponent as any).closeDialog;
-        if (typeof closeDialogMethod === 'function') {
-          closeDialogMethod.call(dialogComponent);
-          return;
-        }
-      }
-
-      // 3. Buscar el botón de cierre (X) y hacer clic en él
-      const closeButton = document.querySelector('.close-button');
-      if (closeButton && closeButton instanceof HTMLElement) {
-        console.log('Encontrado botón de cierre, simulando clic');
-        closeButton.click();
-        return;
-      }
-
-      // 4. Si no se encuentra el botón de cierre, intentar cerrar usando el servicio de diálogo global
-      const dialogService = (window as any).dialogService;
-      if (dialogService && typeof dialogService.close === 'function') {
-        console.log('Cerrando diálogo usando dialogService global');
-        dialogService.close();
-        return;
-      }
-
-      // 5. Como último recurso, eliminar manualmente los elementos de diálogo del DOM
-      console.log('Eliminando manualmente elementos de diálogo del DOM');
-      const selectors = [
-        '.dialog-backdrop',
-        '.custom-dialog-container',
-        '.dialog-container',
-        '.unified-dialog-container',
-        '.cdk-overlay-container',
-        '.cdk-overlay-backdrop'
-      ];
-
-      // Combinar todos los selectores en una sola consulta
-      const combinedSelector = selectors.join(', ');
-      const dialogElements = document.querySelectorAll(combinedSelector);
-
-      if (dialogElements.length > 0) {
-        console.log(`Eliminando ${dialogElements.length} elementos de diálogo del DOM`);
-
-        dialogElements.forEach(element => {
-          try {
-            if (element.parentNode) {
-              element.parentNode.removeChild(element);
-            }
-          } catch (removeErr) {
-            console.error('Error al eliminar elemento del DOM:', removeErr);
-          }
-        });
-
-        // Restaurar el desplazamiento del body
-        document.body.style.overflow = '';
-      }
-    } catch (error) {
-      console.error('Error al intentar cerrar el diálogo:', error);
-    }
-  }
-
   private showError(message: string, title = 'Error'): void {
     this.notificationService.error(message, title);
+    this.loggingService.error(`[UsuarioFormComponent] Displaying notification error: ${message}`, undefined, 'UserForm');
   }
 
   /**
-   * Maneja errores de la API aplicándolos al formulario
-   * @param error Error HTTP
+   * Handles API errors by applying validation errors to the form.
+   * This method would typically be called by the parent component after an API call fails.
+   * @param error HTTP Error response.
    */
   handleApiError(error: any): void {
-    // Aplicar errores de validación al formulario
+    this.loggingService.error('[UsuarioFormComponent] Handling API error received from parent:', error, 'UserForm');
+    // Assuming ApiErrorService can parse the error response and apply it to form controls
     this.apiErrorService.applyValidationErrorsToForm(this.userForm, error);
 
-    // Marcar el formulario como tocado para mostrar los errores
+    // Mark the form as touched to display errors
     this.userForm.markAllAsTouched();
+    this.isLoading = false; // Reset loading state
   }
 
-  // Método para verificar si un campo tiene errores
+  /**
+   * Checks if a form control has errors that should be displayed.
+   * @param controlName The name of the form control.
+   * @returns True if the control has errors and should display them, false otherwise.
+   */
   hasError(controlName: string): boolean {
     const control = this.userForm.get(controlName);
-    return !!control && control.invalid && (control.touched || this.formSubmitted);
+    if (!control) return false;
+
+    // Check for errors on the control itself (touched or form submitted)
+    const controlHasErrors = control.invalid && (control.touched || this.formSubmitted);
+
+    // Additionally, check for cross-field validation errors if applicable
+    if (controlName === 'confirmPassword' && this.userForm.hasError('passwordMismatch')) {
+        return controlHasErrors || (this.userForm.getError('passwordMismatch') && (control.touched || this.formSubmitted));
+    }
+
+    return controlHasErrors;
   }
 
-  // Método para obtener los mensajes de error de un campo
+  /**
+   * Gets the error messages for a specific form control.
+   * @param controlName The name of the form control.
+   * @returns An array of unique error messages.
+   */
   getErrorMessages(controlName: string): string[] {
     const control = this.userForm.get(controlName);
     if (!control || !control.errors) return [];
 
-    return Object.keys(control.errors).map(errorKey => {
-      const messages = this.validationMessages[controlName as keyof typeof this.validationMessages];
-      return messages && messages[errorKey as keyof typeof messages]
-        ? messages[errorKey as keyof typeof messages]
-        : `Error: ${errorKey}`;
-    });
+    const messages: string[] = [];
+    const controlErrors = control.errors;
+
+    // Handle cross-field validation errors (e.g., passwordMismatch)
+    if (this.userForm.hasError('passwordMismatch') && (controlName === 'password' || controlName === 'confirmPassword')) {
+        // Only show if the form has been submitted or the control is touched
+        if (this.formSubmitted || control.touched) {
+            messages.push(this.validationMessages.confirmPassword.passwordMismatch);
+        }
+    }
+
+    // Handle individual field validation errors
+    const validationMsgsForControl = this.validationMessages[controlName as keyof typeof this.validationMessages];
+    for (const errorKey in controlErrors) {
+        if (controlErrors.hasOwnProperty(errorKey)) {
+            // Check for custom validation errors from async validators (e.g., dniExists, emailExists)
+            const error = controlErrors[errorKey];
+            if (error && typeof error === 'object' && 'message' in error) {
+                messages.push(error.message as string);
+            } else if (validationMsgsForControl && (validationMsgsForControl as any)[errorKey]) {
+                messages.push((validationMsgsForControl as any)[errorKey]);
+            } else {
+                // Fallback for any unexpected errors
+                messages.push(`Error desconocido en ${controlName}: ${errorKey}`);
+            }
+        }
+    }
+
+    return Array.from(new Set(messages)); // Return unique messages to avoid duplicates
+  }
+
+  /**
+   * Cierra el diálogo directamente sin guardar
+   */
+  closeDialogDirectly(): void {
+    console.log('Cerrando diálogo directamente');
+    // TODO: Implementar lógica para cerrar diálogo
+    // this.dialogRef.close();
   }
 }

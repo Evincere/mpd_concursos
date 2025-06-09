@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, firstValueFrom } from 'rxjs';
 import { InjectionToken } from '@angular/core';
 
 /**
@@ -19,6 +19,14 @@ export class DialogRef<T = unknown> {
    */
   afterClosed(): Observable<T | undefined> {
     return this._afterClosed.asObservable();
+  }
+
+  /**
+   * Converts the afterClosed observable to a promise
+   * @returns Promise that resolves when the dialog is closed
+   */
+  toPromise(): Promise<T | undefined> {
+    return firstValueFrom(this.afterClosed());
   }
 
   /**

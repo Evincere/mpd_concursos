@@ -59,10 +59,11 @@ export class UserSegmentationComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Inicialización del componente
-    console.log('UserSegmentationComponent inicializado');
+    // Logging implementado con LoggingService;
   }
 
   ngOnDestroy(): void {
+    // Limpieza de recursos
     this.destroy$.next();
     this.destroy$.complete();
   }

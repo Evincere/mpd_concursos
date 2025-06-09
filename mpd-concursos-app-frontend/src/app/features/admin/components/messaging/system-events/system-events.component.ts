@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { 
@@ -50,8 +50,8 @@ export class SystemEventsComponent implements OnInit, OnDestroy {
   realTimeEnabled = false;
 
   // Formularios
-  filtersForm: FormGroup;
-  configForm: FormGroup;
+  filtersForm!: FormGroup;
+  configForm!: FormGroup;
 
   // Configuración
   currentFilters: EventFilters = {};
@@ -290,19 +290,20 @@ export class SystemEventsComponent implements OnInit, OnDestroy {
   async publishTestEvent(): Promise<void> {
     const eventTypes = this.configurations.map(c => c.type);
     
-    const result = await this.dialogService.showInputDialog({
-      title: 'Publicar Evento de Prueba',
-      message: 'Selecciona el tipo de evento a publicar:',
-      inputType: 'select',
-      options: eventTypes.map(type => ({ value: type, label: type })),
-      placeholder: 'Selecciona un tipo de evento'
-    }).toPromise();
+    try {
+      const dialogRef = this.dialogService.showInputDialog({
+        title: 'Publicar Evento de Prueba',
+        message: 'Selecciona el tipo de evento a publicar:',
+        placeholder: 'Selecciona un tipo de evento'
+      });
 
-    if (!result) return;
+      const result = await firstValueFrom(dialogRef.afterClosed());
 
-    const testData = this.generateTestData(result);
-    
-    this.systemEventsService.publishEvent(result, testData).pipe(
+      if (!result) return;
+
+      const testData = this.generateTestData(result);
+
+      this.systemEventsService.publishEvent(result, testData).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (event) => {
@@ -313,6 +314,10 @@ export class SystemEventsComponent implements OnInit, OnDestroy {
         this.notificationService.showError('Error al publicar evento de prueba');
       }
     });
+    } catch (error) {
+      console.error('Error in publishTestEvent:', error);
+      this.notificationService.showError('Error al publicar evento de prueba');
+    }
   }
 
   /**
@@ -405,13 +410,14 @@ export class SystemEventsComponent implements OnInit, OnDestroy {
    * Reprocesa eventos fallidos
    */
   async reprocessFailedEvents(): Promise<void> {
-    const confirmed = await this.dialogService.showConfirmDialog({
+    const dialogRef = this.dialogService.showConfirmDialog({
       title: 'Reprocesar Eventos Fallidos',
       message: '¿Deseas reprocesar todos los eventos que fallaron?',
       confirmText: 'Reprocesar',
-      cancelText: 'Cancelar',
-      type: 'info'
-    }).toPromise();
+      cancelText: 'Cancelar'
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
 
     if (!confirmed) return;
 
@@ -435,13 +441,13 @@ export class SystemEventsComponent implements OnInit, OnDestroy {
    * Limpia eventos antiguos
    */
   async cleanupOldEvents(): Promise<void> {
-    const result = await this.dialogService.showInputDialog({
+    const dialogRef = this.dialogService.showInputDialog({
       title: 'Limpiar Eventos Antiguos',
       message: 'Ingresa el número de días para mantener los eventos:',
-      inputType: 'number',
-      placeholder: '90',
-      defaultValue: '90'
-    }).toPromise();
+      placeholder: '90'
+    });
+
+    const result = await firstValueFrom(dialogRef.afterClosed());
 
     if (!result) return;
 
@@ -533,6 +539,14 @@ export class SystemEventsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Obtiene etiqueta de categoría
+   */
+  getCategoryLabel(category: string): string {
+    const categoryConfig = this.eventCategories.find(c => c.value === category);
+    return categoryConfig?.label || category;
+  }
+
+  /**
    * Obtiene configuración de evento por tipo
    */
   getEventConfiguration(eventType: string): EventConfiguration | undefined {
@@ -562,5 +576,19 @@ export class SystemEventsComponent implements OnInit, OnDestroy {
    */
   cancelEdit(): void {
     this.selectedConfiguration = null;
+  }
+
+  /**
+   * TrackBy function para optimizar el renderizado de eventos
+   */
+  trackByEventId(index: number, event: any): string {
+    return event.id || index.toString();
+  }
+
+  /**
+   * Limpia los eventos en tiempo real
+   */
+  setRealTimeEvents(): void {
+    this.realTimeEvents = [];
   }
 }

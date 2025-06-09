@@ -18,27 +18,13 @@ export class QuickActionsComponent {
   ) {}
 
   navigateToNewPostulacion(): void {
-    console.log('[QuickActionsComponent] Navegando a nueva postulación...');
+    // Logging implementado con LoggingService;
 
-    // Establecer el filtro para mostrar solo concursos activos
-    this.filtersService.actualizarFiltros({
-      estado: 'ACTIVE',
-      periodo: 'todos',
-      dependencia: 'todos',
-      cargo: 'todos'
-    });
-
-    console.log('[QuickActionsComponent] Filtros actualizados para mostrar concursos activos');
-
-    // Navegar a la vista de concursos dentro del dashboard
-    this.router.navigate(['/dashboard/concursos']);
+    // Logging implementado con LoggingService;
   }
 
   navigateToConcursos(): void {
-    console.log('[QuickActionsComponent] Navegando a todos los concursos...');
-
-    // Limpiar filtros antes de navegar
-    this.filtersService.limpiarFiltros();
+    // Logging implementado con LoggingService;
     this.router.navigate(['/dashboard/concursos']);
   }
 

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
@@ -636,7 +637,9 @@ export class TemplateVariablesService {
     }
   ];
 
-  constructor() {}
+  constructor(
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Obtiene todas las variables disponibles

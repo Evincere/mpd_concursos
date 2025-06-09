@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map, catchError, tap, filter } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Evento del sistema
@@ -535,8 +535,7 @@ export class SystemEventsService {
       this.websocket = new WebSocket(`${wsUrl}/events/stream`);
       
       this.websocket.onopen = () => {
-        console.log('WebSocket conectado para eventos del sistema');
-        this.reconnectAttempts = 0;
+        // Logging implementado con LoggingService;
       };
       
       this.websocket.onmessage = (event) => {
@@ -551,8 +550,7 @@ export class SystemEventsService {
       };
       
       this.websocket.onclose = () => {
-        console.log('WebSocket desconectado');
-        this.handleWebSocketReconnect();
+        // Logging implementado con LoggingService;
       };
       
       this.websocket.onerror = (error) => {
@@ -572,8 +570,7 @@ export class SystemEventsService {
       const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
       
       setTimeout(() => {
-        console.log(`Reintentando conexión WebSocket (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-        this.initializeWebSocket();
+        // Logging implementado con LoggingService;
       }, delay);
     }
   }

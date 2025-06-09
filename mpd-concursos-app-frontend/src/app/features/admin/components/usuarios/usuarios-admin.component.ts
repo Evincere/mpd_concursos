@@ -5,24 +5,25 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, filter } from 'rxjs/operators';
 
-// Componentes personalizados
+// Custom Components
 import { CustomFormModule } from '@shared/components/custom-form/custom-form.module';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
 import { TableColumn, SortEvent, PageEvent } from '@shared/components/custom-form/custom-table/custom-table.component';
 
-// Componentes del módulo
+// Module Components
 import { UsuarioFiltrosComponent } from './usuario-filtros/usuario-filtros.component';
 import { UsuarioDetalleComponent } from './usuario-detalle/usuario-detalle.component';
 import { CrearUsuarioDialogComponent } from './crear-usuario-dialog/crear-usuario-dialog.component';
 import { CustomConfirmDialogComponent } from '@shared/components/custom-confirm-dialog/custom-confirm-dialog.component';
 
-// Servicios y modelos
+// Services and Models
 import { UserService } from './application/services/user.service';
-import { NotificationService } from '@shared/services/notification.service';
-import { User, UserFilter, UserStatus, PaginatedUsersResponse } from './domain/models/user.model';
+import { NotificationService } from '@shared/services/notification.service'; // Assuming NotificationService is in this path
+import { User, UserFilter, UserStatus, PaginatedUsersResponse, UserStatusChangeRequest } from './domain/models/user.model';
 import { UserFilterEvent } from './domain/models/ui-events.model';
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
-// Proveedores
+// Providers
 import { USER_REPOSITORY_TOKEN } from './infrastructure/providers/user-service.provider';
 import { OptimizedUserRepositoryAdapter } from './infrastructure/adapters/optimized-user-repository.adapter';
 
@@ -41,7 +42,7 @@ import { OptimizedUserRepositoryAdapter } from './infrastructure/adapters/optimi
     UsuarioFiltrosComponent,
     UsuarioDetalleComponent
   ],
-  // Proporcionar el servicio UserService y sus dependencias
+  // Provide UserService and its dependencies
   providers: [
     {
       provide: USER_REPOSITORY_TOKEN,
@@ -51,28 +52,26 @@ import { OptimizedUserRepositoryAdapter } from './infrastructure/adapters/optimi
   ]
 })
 export class UsuariosAdminComponent implements OnInit, OnDestroy {
-  // Exponer UserStatus para usar en el template
+  // Expose UserStatus for use in the template
   UserStatus = UserStatus;
-  // Datos
+  // Data
   usuarios: User[] = [];
 
-  // Estado de la UI
+  // UI State
   isLoading = false;
   selectedUserId: string | null = null;
   showUserDetail = false;
 
-  // Paginación y ordenamiento
+  // Pagination and sorting
   totalUsuarios = 0;
   pageSizeOptions: number[] = [5, 10, 25, 50];
-  pageSize = this.pageSizeOptions[0]; // Usar el primer valor de pageSizeOptions
+  pageSize = this.pageSizeOptions[0];
   pageIndex = 0;
 
-  // Filtros
-  currentFilters: UserFilter = {
-    // No aplicar filtro de estado por defecto para mostrar usuarios de todos los estados
-  };
+  // Filters
+  currentFilters: UserFilter = {}; // No status filter by default to show users of all statuses
 
-  // Columnas para la tabla
+  // Table columns
   tableColumns: TableColumn[] = [
     { property: 'username', header: 'Usuario', sortable: true },
     { property: 'fullName', header: 'Nombre Completo', sortable: true },
@@ -83,7 +82,7 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
     { property: 'actions', header: 'Acciones', sortable: false }
   ];
 
-  // Para limpieza de suscripciones
+  // For cleaning up subscriptions
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -92,195 +91,193 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private loggingService: LoggingService // Inject LoggingService
   ) {
-    // Hacer que el servicio de diálogo esté disponible globalmente para facilitar el cierre de diálogos
+    // Make the dialog service globally available for easy closing of dialogs
     (window as any).dialogService = this.dialogService;
   }
 
   ngOnInit(): void {
-    // Suscribirse a los cambios en los datos de la ruta
+    this.loggingService.debug('[UsuariosAdminComponent] Initializing component.', undefined, 'UsersAdmin');
+
+    // Subscribe to route data changes to apply status filters from URL
     this.route.data
       .pipe(takeUntil(this.destroy$))
       .subscribe(data => {
-        console.log('Datos de ruta recibidos:', data);
+        this.loggingService.debug('[UsuariosAdminComponent] Route data changed:', data, 'UsersAdmin');
+        const statusFromRoute = data['status'] as UserStatus | undefined;
 
-        // Si hay un estado en los datos de la ruta, aplicarlo como filtro
-        if (data && data['status']) {
-          // Asegurarse de que el estado esté en mayúsculas para consistencia
-          const statusFilter = data['status'].toUpperCase();
-
+        if (statusFromRoute) {
+          const statusFilter = statusFromRoute.toUpperCase() as UserStatus;
           this.currentFilters = {
             ...this.currentFilters,
             status: statusFilter
           };
-          console.log(`Filtro de estado aplicado desde la ruta: ${statusFilter}`);
+          this.loggingService.info(`[UsuariosAdminComponent] Applying status filter from route: ${statusFilter}`, undefined, 'UsersAdmin');
 
-          // Actualizar el selector visual para reflejar el estado actual
+          // Update the status select element in the DOM
           setTimeout(() => {
             const statusSelect = document.getElementById('status-select') as HTMLSelectElement;
             if (statusSelect) {
               statusSelect.value = statusFilter;
+              this.loggingService.debug(`[UsuariosAdminComponent] Updated status select to: ${statusFilter}`, undefined, 'UsersAdmin');
             }
           }, 100);
         } else {
-          // Si no hay estado en la ruta, mostrar todos los usuarios
-          // Eliminar el filtro de estado si existe
+          // If no status in route, show all users
           const { status, ...restFilters } = this.currentFilters;
-          this.currentFilters = restFilters;
-          console.log('Mostrando todos los usuarios (sin filtro de estado)');
+          this.currentFilters = restFilters; // Remove status filter if present
+          this.loggingService.info('[UsuariosAdminComponent] No status filter from route. Showing all users.', undefined, 'UsersAdmin');
 
-          // Actualizar el selector visual para reflejar que no hay filtro
+          // Reset the status select element in the DOM
           setTimeout(() => {
             const statusSelect = document.getElementById('status-select') as HTMLSelectElement;
             if (statusSelect) {
-              statusSelect.value = '';
+              statusSelect.value = ''; // Set to default/empty option
+              this.loggingService.debug('[UsuariosAdminComponent] Reset status select to empty.', undefined, 'UsersAdmin');
             }
           }, 100);
         }
 
-        // Cargar los usuarios con los filtros actualizados
+        // Load users with updated filters
         this.loadUsers();
       });
+
+    // Add a generic listener for dialog closed events (can be removed in ngOnDestroy if needed)
+    window.addEventListener('dialog-closed', this.handleDialogClosed);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.loggingService.debug('[UsuariosAdminComponent] Component destroyed. Subscriptions cleaned.', undefined, 'UsersAdmin');
 
-    // Eliminar cualquier event listener que pueda haber quedado
+    // Remove any event listener that might have remained
     window.removeEventListener('dialog-closed', this.handleDialogClosed);
   }
 
-  // Método para manejar el evento dialog-closed (para poder eliminarlo en ngOnDestroy)
+  // Method to handle the dialog-closed event (to be able to remove it in ngOnDestroy)
   private handleDialogClosed = (event: any) => {
-    // Este método está vacío porque cada instancia de deleteUser crea su propio listener
-    // Pero necesitamos una referencia para poder eliminar listeners genéricos en ngOnDestroy
-  }
+    // This method is intentionally left empty. Its purpose is to provide a function reference
+    // for `removeEventListener` in `ngOnDestroy`. Specific dialog handling is done in `dialogRef.afterClosed().subscribe`.
+    this.loggingService.debug('[UsuariosAdminComponent] Generic dialog closed event caught.', event.detail, 'UsersAdmin');
+  };
 
   /**
-   * Carga los usuarios con los filtros actuales
+   * Loads users based on current filters, pagination, and sorting.
    */
   loadUsers(): void {
     this.isLoading = true;
+    this.loggingService.info('[UsuariosAdminComponent] Loading users...', {
+      page: this.pageIndex,
+      size: this.pageSize,
+      filters: this.currentFilters
+    }, 'UsersAdmin');
 
-    // Asegurarse de que los filtros incluyan la paginación actual
+    // Ensure filters include current pagination
     const filters: UserFilter = {
       ...this.currentFilters,
       page: this.pageIndex,
       size: this.pageSize
     };
 
-    // Limpiar filtros vacíos o nulos para evitar problemas en el backend
+    // Clean empty or null filters to avoid backend issues
     Object.keys(filters).forEach(key => {
       const typedKey = key as keyof UserFilter;
-      // Mantener el filtro de estado incluso si está vacío, para que el backend muestre todos los estados
+      // Keep status filter even if it's empty, so the backend can show all statuses
       if (typedKey !== 'status' && (filters[typedKey] === '' || filters[typedKey] === null || filters[typedKey] === undefined)) {
         delete filters[typedKey];
       }
     });
 
-    console.log('Cargando usuarios con filtros:', filters);
-
-    // Verificar explícitamente si hay un filtro de estado
+    // Ensure status parameter is uppercase for the backend if it exists
     if (filters.status) {
-      console.log(`Filtrando por estado: ${filters.status}`);
-
-      // Actualizar el selector visual para reflejar el estado actual
-      setTimeout(() => {
-        const statusSelect = document.getElementById('status-select') as HTMLSelectElement;
-        if (statusSelect && filters.status) {
-          statusSelect.value = filters.status;
-        }
-      }, 100);
-
-      // Asegurarse de que el parámetro status esté en mayúsculas para el backend
-      filters.status = filters.status.toUpperCase();
-    } else {
-      // Si no hay filtro de estado, mostrar todos los estados
-      console.log('No se está aplicando filtro de estado específico, mostrando todos los estados');
-
-      // No establecer un valor por defecto para status, para que el backend muestre todos los estados
-      // Esto es importante para que funcione correctamente cuando se navega a /admin/users sin filtro
+      filters.status = (filters.status as string).toUpperCase();
+      this.loggingService.debug(`[UsuariosAdminComponent] Normalized status filter to uppercase: ${filters.status}`, undefined, 'UsersAdmin');
     }
 
-    // Invalidar cualquier caché que pueda existir
-    if (window.caches) {
-      window.caches.keys().then(cacheNames => {
-        cacheNames.forEach(cacheName => {
-          if (cacheName.includes('api') || cacheName.includes('users')) {
-            console.log(`Intentando eliminar caché del navegador antes de cargar usuarios: ${cacheName}`);
-            window.caches.delete(cacheName);
-          }
-        });
-      });
-    }
-
-    // Añadir un timestamp a los filtros para evitar caché
+    // Add a timestamp to filters to prevent caching issues in some scenarios
     filters._t = new Date().getTime();
 
-    // Forzar una pequeña espera para asegurarnos de que el backend haya procesado los cambios
+    // Force a small delay to ensure backend has processed changes or for UI responsiveness
     setTimeout(() => {
       this.userService.getUsers(filters)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (response: PaginatedUsersResponse) => {
-            // Aplicar filtro adicional en el frontend para asegurar que solo se muestren usuarios con el estado correcto
+            this.loggingService.debug('[UsuariosAdminComponent] Users loaded successfully from backend:', response, 'UsersAdmin');
+
             let filteredUsers = response.users;
             let totalFiltered = response.total;
 
-            // Si hay un filtro de estado, asegurarnos de que solo se muestren usuarios con ese estado
+            // Frontend filtering for robustness (if backend sometimes doesn't perfectly filter)
             if (filters.status) {
               const usersWithStatus = response.users.filter(user => user.status === filters.status);
-              console.log(`Usuarios con estado ${filters.status}: ${usersWithStatus.length}`);
-
-              // Si el backend no filtró correctamente, hacerlo en el frontend
               if (usersWithStatus.length !== response.users.length) {
-                console.warn('El backend no filtró correctamente por estado. Aplicando filtro en el frontend.');
-                filteredUsers = usersWithStatus;
-                totalFiltered = usersWithStatus.length;
+                this.loggingService.warn(`[UsuariosAdminComponent] Frontend filtering applied: ${usersWithStatus.length} of ${response.users.length} matched status ${filters.status}.`, undefined, 'UsersAdmin');
               }
+              filteredUsers = usersWithStatus;
+              totalFiltered = usersWithStatus.length; // Adjust total if frontend filtering is applied
             }
 
             this.usuarios = filteredUsers;
             this.totalUsuarios = totalFiltered;
             this.isLoading = false;
-            console.log(`Usuarios cargados: ${filteredUsers.length} de ${totalFiltered} (después de filtrado adicional)`);
+            this.cdr.detectChanges(); // Manually trigger change detection
+            this.loggingService.info(`[UsuariosAdminComponent] Displaying ${this.usuarios.length} users. Total: ${this.totalUsuarios}`, undefined, 'UsersAdmin');
           },
           error: (error) => {
-            console.error('Error cargando usuarios:', error);
+            this.loggingService.error('[UsuariosAdminComponent] Error loading users:', error, 'UsersAdmin');
             this.notificationService.error('Error al cargar usuarios');
             this.isLoading = false;
           }
         });
-    }, 300); // Pequeña espera para asegurarnos de que el backend haya procesado los cambios
+    }, 300); // Small delay to ensure backend has processed changes
   }
 
   /**
-   * Maneja el cambio de página
+   * Handles page change events.
+   * @param event The page event.
    */
   onPageChange(event: PageEvent): void {
+    this.loggingService.debug('[UsuariosAdminComponent] Page changed event:', event, 'UsersAdmin');
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
     this.loadUsers();
   }
 
   /**
-   * Maneja el cambio de ordenamiento
+   * Handles sort change events.
+   * @param event The sort event.
    */
-  onSortChange(event: any): void {
-    // Asegurarse de que event.column existe antes de asignarlo
-    if (event && 'column' in event) {
-      // Si ya estamos ordenando por esta columna, invertir la dirección
-      if (this.currentFilters.sort === event.column) {
-        this.currentFilters.direction = this.currentFilters.direction === 'asc' ? 'desc' : 'asc';
-      } else {
-        // Si es una nueva columna, establecer la dirección a 'asc'
-        this.currentFilters.sort = event.column;
-        this.currentFilters.direction = 'asc';
-      }
+  onSortChange(event: SortEvent | {column: string, direction: string}): void {
+    this.loggingService.debug('[UsuariosAdminComponent] Sort changed event:', event, 'UsersAdmin');
+
+    let column: string;
+    let direction: string;
+
+    // Handle both SortEvent interface and legacy column/direction format
+    if ('property' in event) {
+      column = event.property;
+      direction = event.direction;
+    } else if ('column' in event) {
+      column = event.column;
+      direction = event.direction;
     } else {
-      this.currentFilters.sort = '';
+      // Reset sorting if event is invalid
+      this.currentFilters.sort = undefined;
+      this.currentFilters.direction = undefined;
+      this.loadUsers();
+      return;
+    }
+
+    // If already sorting by this column, reverse direction
+    if (this.currentFilters.sort === column) {
+      this.currentFilters.direction = this.currentFilters.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      // If it's a new column, set direction to 'asc'
+      this.currentFilters.sort = column;
       this.currentFilters.direction = 'asc';
     }
 
@@ -288,282 +285,215 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja el evento de filtrado
+   * Handles filter change events from the filter component.
+   * @param event The user filter event.
    */
   onFilterChange(event: UserFilterEvent): void {
-    // Crear un nuevo objeto de filtros para evitar referencias
+    this.loggingService.debug('[UsuariosAdminComponent] Filter changed event:', event, 'UsersAdmin');
+    // Create a new filters object to avoid reference issues
     this.currentFilters = {
-      // Mantener solo la paginación y ordenamiento del objeto actual
-      page: this.pageIndex,
+      // Keep only pagination and sorting from current object
+      page: 0, // Reset to first page on new filter
       size: this.pageSize,
-      // Sobrescribir con los nuevos filtros
+      sort: this.currentFilters.sort,
+      direction: this.currentFilters.direction,
+      // Overwrite with new filters
       ...event,
-      // Añadir timestamp para evitar caché
+      // Add timestamp to prevent caching
       _t: new Date().getTime()
     };
-
-    console.log('Filtros actualizados:', this.currentFilters);
-
-    // Resetear a la primera página cuando se aplican filtros
-    this.pageIndex = 0;
+    this.pageIndex = 0; // Reset page index when filters change
     this.loadUsers();
   }
 
   /**
-   * Abre el diálogo para crear un nuevo usuario
+   * Opens the dialog to create a new user.
    */
   openCreateUserDialog(): void {
+    this.loggingService.info('[UsuariosAdminComponent] Opening create user dialog.', undefined, 'UsersAdmin');
     const dialogRef = this.dialogService.open(CrearUsuarioDialogComponent, {
       size: 'large',
       title: 'Crear Nuevo Usuario',
       icon: 'user-plus',
       showCloseButton: true,
-      showFooter: false // No mostrar el footer del diálogo, ya que el formulario tiene sus propios botones
+      showFooter: false // Do not show dialog footer, as the form has its own buttons
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        this.loggingService.info('[UsuariosAdminComponent] Create user dialog closed with success. Reloading users.', result, 'UsersAdmin');
         this.loadUsers();
         this.notificationService.success('Usuario creado correctamente');
+      } else {
+        this.loggingService.debug('[UsuariosAdminComponent] Create user dialog cancelled or closed without result.', undefined, 'UsersAdmin');
       }
     });
   }
 
   /**
-   * Abre el detalle de un usuario
+   * Opens the detail view of a user.
+   * @param user The user object to display details for.
    */
-  openUserDetail(user: unknown): void {
-    console.log('🔍 Intentando abrir detalle de usuario:', user);
-    console.log('🔍 Estado actual - showUserDetail:', this.showUserDetail, 'selectedUserId:', this.selectedUserId);
-
-    // Verificar que user es un objeto y tiene la propiedad id
-    if (user && typeof user === 'object' && 'id' in user) {
-      const userId = (user as User).id;
-      console.log('✅ Usuario válido, ID:', userId);
-
-      // Limpiar completamente el estado antes de abrir
-      this.resetUserDialogState();
-
-      // Usar setTimeout para asegurar que el estado se actualice completamente
+  openUserDetail(user: User): void {
+    this.loggingService.info('[UsuariosAdminComponent] Opening user detail for:', user, 'UsersAdmin');
+    const userId = (user as any).id; // Access 'id' property
+    if (userId) {
+      this.loggingService.debug(`[UsuariosAdminComponent] Selected user ID for detail: ${userId}`, undefined, 'UsersAdmin');
+      // Use setTimeout to ensure state is fully updated before showing detail
       setTimeout(() => {
         this.selectedUserId = userId;
         this.showUserDetail = true;
-        this.cdr.markForCheck();
-        this.cdr.detectChanges();
-        console.log('✅ Detalle de usuario abierto - showUserDetail:', this.showUserDetail, 'selectedUserId:', this.selectedUserId);
-      }, 100);
+        this.cdr.markForCheck(); // Mark for change detection if needed
+        this.cdr.detectChanges(); // Force change detection
+        this.loggingService.debug('[UsuariosAdminComponent] User detail component set to visible.', undefined, 'UsersAdmin');
+      }, 0); // Use 0ms timeout for immediate next tick execution
     } else {
-      console.error('❌ Error: El usuario no tiene un ID válido', user);
+      this.loggingService.error('[UsuariosAdminComponent] Error: User object does not have a valid ID for detail view.', user, 'UsersAdmin');
       this.notificationService.error('Error al abrir el detalle del usuario');
     }
   }
 
   /**
-   * Cierra el detalle de un usuario
+   * Closes the user detail view.
    */
   closeUserDetail(): void {
-    console.log('🔒 Cerrando detalle de usuario - Estado antes:', { showUserDetail: this.showUserDetail, selectedUserId: this.selectedUserId });
+    this.loggingService.info('[UsuariosAdminComponent] Closing user detail.', undefined, 'UsersAdmin');
     this.selectedUserId = null;
     this.showUserDetail = false;
-    this.cdr.detectChanges();
-    console.log('🔒 Detalle de usuario cerrado - Estado después:', { showUserDetail: this.showUserDetail, selectedUserId: this.selectedUserId });
+    this.cdr.detectChanges(); // Force change detection to hide the component
+    this.loggingService.debug('[UsuariosAdminComponent] User detail component hidden.', undefined, 'UsersAdmin');
   }
 
   /**
-   * Limpia completamente el estado de los diálogos de usuario
+   * Opens the dialog to edit a user.
+   * @param user The user object to edit.
    */
-  private resetUserDialogState(): void {
-    console.log('🧹 Limpiando estado completo de diálogos de usuario');
-    this.selectedUserId = null;
-    this.showUserDetail = false;
-    this.cdr.markForCheck();
-    this.cdr.detectChanges();
-  }
+  editUser(user: User): void {
+    this.loggingService.info('[UsuariosAdminComponent] Opening edit user dialog for:', user, 'UsersAdmin');
+    try {
+      const userObj: User = user; // Ensure it's treated as a User object
+      if (userObj.id) {
+        // Dynamically import the edit user component
+        import('./editar-usuario-dialog/editar-usuario-dialog.component').then(module => {
+          const EditarUsuarioDialogComponent = module.EditarUsuarioDialogComponent;
 
-  /**
-   * Método de debugging para verificar el estado actual
-   */
-  debugUserDetailState(): void {
-    console.log('🐛 DEBUG - Estado actual:', {
-      showUserDetail: this.showUserDetail,
-      selectedUserId: this.selectedUserId,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  /**
-   * Edita un usuario
-   */
-  editUser(user: unknown): void {
-    // Verificar que user es un objeto válido
-    if (user && typeof user === 'object') {
-      // Convertir a User si es posible
-      try {
-        const userObj = user as User;
-        if (userObj.id) {
-          // Limpiar completamente el estado antes de abrir el diálogo de edición
-          this.resetUserDialogState();
-
-          // Importar dinámicamente el componente de edición
-          import('./editar-usuario-dialog/editar-usuario-dialog.component').then(module => {
-            const EditarUsuarioDialogComponent = module.EditarUsuarioDialogComponent;
-
-            // Abrir el diálogo de edición
-            const dialogRef = this.dialogService.open(EditarUsuarioDialogComponent, {
-              size: 'large',
-              title: 'Editar Usuario',
-              icon: 'user-edit',
-              showCloseButton: true,
-              showFooter: false, // No mostrar el footer del diálogo, ya que el formulario tiene sus propios botones
-              data: {
-                usuario: userObj
-              }
-            });
-
-            // Suscribirse al evento de cierre del diálogo
-            dialogRef.afterClosed().subscribe(result => {
-              if (result) {
-                console.log('Usuario actualizado, recargando lista de usuarios');
-                // Recargar la lista de usuarios
-                this.loadUsers();
-                this.notificationService.success('Usuario actualizado correctamente');
-              } else {
-                // Si se canceló la edición, simplemente cerrar todo y volver a la lista
-                console.log('Edición cancelada, volviendo a la lista de usuarios');
-                // Asegurar que el estado esté completamente limpio
-                this.resetUserDialogState();
-              }
-            });
+          // Open the edit dialog
+          const dialogRef = this.dialogService.open(EditarUsuarioDialogComponent, {
+            size: 'large',
+            title: 'Editar Usuario',
+            icon: 'user-edit',
+            showCloseButton: true,
+            showFooter: false, // Do not show dialog footer, as the form has its own buttons
+            data: {
+              usuario: userObj
+            }
           });
-        } else {
-          throw new Error('El usuario no tiene un ID válido');
-        }
-      } catch (error) {
-        console.error('Error al procesar el usuario para edición:', error);
-        this.notificationService.error('Error al editar el usuario');
+
+          // Subscribe to dialog close event
+          dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+              this.loggingService.info('[UsuariosAdminComponent] Edit user dialog closed with success. Reloading users.', result, 'UsersAdmin');
+              this.loadUsers();
+              this.notificationService.success('Usuario actualizado correctamente');
+            } else {
+              this.loggingService.debug('[UsuariosAdminComponent] Edit user dialog cancelled or closed without result.', undefined, 'UsersAdmin');
+            }
+          });
+        });
+      } else {
+        throw new Error('El usuario no tiene un ID válido para edición.');
       }
-    } else {
-      console.error('Error: El objeto de usuario no es válido', user);
+    } catch (error) {
+      this.loggingService.error('[UsuariosAdminComponent] Error processing user for edit:', error, 'UsersAdmin');
       this.notificationService.error('Error al editar el usuario');
     }
   }
 
   /**
-   * Cambia el estado de un usuario
+   * Changes the status of a user.
+   * @param user The user whose status is to be changed.
+   * @param newStatus The new status to set.
    */
   changeUserStatus(user: User, newStatus: UserStatus): void {
     this.isLoading = true;
+    this.loggingService.info(`[UsuariosAdminComponent] Attempting to change status for user ${user.id} to ${newStatus}`, undefined, 'UsersAdmin');
 
-    console.log(`Cambiando estado del usuario ${user.id} a ${newStatus}`);
-
-    // Crear objeto de solicitud con todos los datos necesarios
-    const statusChangeRequest = {
+    const statusChangeRequest: UserStatusChangeRequest = {
       userId: user.id,
-      status: newStatus,
-      reason: `Estado cambiado por administrador a ${newStatus}`
+      status: newStatus
     };
 
     this.userService.changeUserStatus(statusChangeRequest)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (updatedUser) => {
-          console.log('Usuario actualizado correctamente:', updatedUser);
+          this.loggingService.info(`[UsuariosAdminComponent] User ${user.id} status changed successfully to ${newStatus}.`, updatedUser, 'UsersAdmin');
+          this.notificationService.success(`Estado del usuario cambiado a ${this.getStatusText(newStatus)}`);
 
-          // Forzar una recarga completa de la lista de usuarios
-          console.log('Forzando recarga completa de la lista de usuarios después de cambiar el estado');
+          // Determine what to do based on the current status filter
+          const currentStatusFilter = this.currentFilters.status;
 
-          // Invalidar cualquier caché que pueda existir
-          if (window.caches) {
-            window.caches.keys().then(cacheNames => {
-              cacheNames.forEach(cacheName => {
-                if (cacheName.includes('api') || cacheName.includes('users')) {
-                  console.log(`Intentando eliminar caché del navegador: ${cacheName}`);
-                  window.caches.delete(cacheName);
-                }
-              });
-            });
-          }
-
-          // Esperar un momento para asegurar que el backend haya procesado el cambio
-          setTimeout(() => {
-            // Recargar la lista de usuarios con los filtros actuales
+          if (!currentStatusFilter) {
+            // If no status filter (showing all), simply reload
+            this.loggingService.debug('[UsuariosAdminComponent] No status filter active, reloading all users.', undefined, 'UsersAdmin');
             this.loadUsers();
-          }, 500);
-
-          // Determinar qué hacer según el filtro de estado actual
-          const currentStatus = this.currentFilters.status;
-
-          if (!currentStatus) {
-            // Si no hay filtro de estado (mostrando todos), simplemente recargar
+          } else if (currentStatusFilter === newStatus) {
+            // If filtering by the same status we changed to, reload
+            this.loggingService.debug(`[UsuariosAdminComponent] Status filter matches new status (${newStatus}), reloading users.`, undefined, 'UsersAdmin');
             this.loadUsers();
-          }
-          else if (currentStatus === newStatus) {
-            // Si estamos filtrando por el mismo estado al que cambiamos, recargar
-            this.loadUsers();
-          }
-          else {
-            // Si estamos filtrando por un estado diferente, el usuario ya no debería aparecer en esta vista
+          } else {
+            // If filtering by a different status, the user should no longer appear in this view
+            this.loggingService.debug(`[UsuariosAdminComponent] User's new status (${newStatus}) does not match current filter (${currentStatusFilter}). Removing from local view.`, undefined, 'UsersAdmin');
 
-            // Opción 1: Mantener el filtro actual y eliminar el usuario de la vista local
             if (this.usuarios && this.usuarios.length > 0) {
               const index = this.usuarios.findIndex(u => u.id === user.id);
               if (index !== -1) {
-                // Eliminar el usuario de la lista local
+                // Remove the user from the local list
                 this.usuarios = [
                   ...this.usuarios.slice(0, index),
                   ...this.usuarios.slice(index + 1)
                 ];
 
-                // Actualizar el total de usuarios
+                // Update total users count
                 this.totalUsuarios--;
 
-                // Mostrar notificación
+                // Show notification
                 this.notificationService.info(
                   `El usuario ha sido eliminado de esta vista porque su estado ha cambiado a ${this.getStatusText(newStatus)}`
                 );
               }
             }
-
-            // Opción 2 (alternativa): Cambiar automáticamente al nuevo filtro para seguir viendo el usuario
-            // Descomentar si prefieres esta opción
+            // Optional: If you prefer to automatically switch filter to new status:
             /*
-            // Cambiar el filtro al nuevo estado
             this.currentFilters.status = newStatus;
-
-            // Actualizar el selector de estado
             setTimeout(() => {
               const statusSelect = document.getElementById('status-select') as HTMLSelectElement;
               if (statusSelect) {
                 statusSelect.value = newStatus;
               }
             }, 100);
-
-            // Recargar con el nuevo filtro
             this.loadUsers();
-
-            // Mostrar notificación
             this.notificationService.info(
               `Filtro cambiado a "${this.getStatusText(newStatus)}" para seguir viendo el usuario actualizado`
             );
             */
           }
-
-          this.notificationService.success(`Estado del usuario cambiado a ${this.getStatusText(newStatus)}`);
+          this.isLoading = false; // Ensure loading state is reset
         },
         error: (error) => {
+          this.loggingService.error(`[UsuariosAdminComponent] Error changing status for user ${user.id}:`, error, 'UsersAdmin');
           console.error('Error cambiando estado del usuario:', error);
 
-          // Mensaje de error más descriptivo
-          let errorMessage = 'Error al cambiar el estado del usuario';
+          let errorMessage = 'Error al cambiar el estado del usuario.';
 
           if (error.status === 404) {
-            errorMessage = 'No se encontró el endpoint para cambiar el estado del usuario';
+            errorMessage = 'No se encontró el usuario o el endpoint para cambiar el estado.';
           } else if (error.status === 403) {
-            errorMessage = 'No tiene permisos para cambiar el estado del usuario';
+            errorMessage = 'No tiene permisos para cambiar el estado de este usuario.';
           } else if (error.status === 400) {
-            errorMessage = 'Datos inválidos para cambiar el estado del usuario';
+            errorMessage = 'Datos inválidos para cambiar el estado del usuario. Verifique la solicitud.';
           } else if (error.status === 500) {
-            errorMessage = 'Error interno del servidor al cambiar el estado del usuario';
+            errorMessage = 'Error interno del servidor al cambiar el estado del usuario. Intente más tarde.';
           }
 
           this.notificationService.error(errorMessage);
@@ -573,20 +503,21 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Elimina un usuario
+   * Deletes a user after confirmation.
+   * @param user The user to delete.
    */
   deleteUser(user: User): void {
-    // Guardar referencia al usuario actual para usar en el evento
     const currentUser = user;
+    this.loggingService.info(`[UsuariosAdminComponent] Attempting to delete user: ${currentUser.id}`, undefined, 'UsersAdmin');
 
-    // Mostrar diálogo de confirmación personalizado
-    this.dialogService.open(CustomConfirmDialogComponent, {
+    // Show custom confirmation dialog
+    const dialogRef = this.dialogService.open(CustomConfirmDialogComponent, {
       title: 'Eliminar Usuario',
       size: 'small',
       showCloseButton: true,
-      showFooter: false,
+      showFooter: false, // Dialog component will handle its own footer/buttons
       data: {
-        message: `¿Está seguro que desea eliminar al usuario ${currentUser.username}?`,
+        message: `¿Está seguro que desea eliminar al usuario "${currentUser.username}"? Esta acción es irreversible.`,
         confirmButtonText: 'Eliminar',
         cancelButtonText: 'Cancelar',
         confirmButtonColor: 'danger',
@@ -594,43 +525,35 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Escuchar el evento personalizado para la confirmación
-    const dialogClosedListener = (event: any) => {
-      // Verificar que el evento tenga el detalle esperado
-      if (event.detail && event.detail.result === true) {
-        console.log(`Confirmado: Eliminando usuario con ID: ${currentUser.id}`);
-        this.isLoading = true;
-
-        // Eliminar el listener para evitar duplicados
-        window.removeEventListener('dialog-closed', dialogClosedListener);
-
-        // Proceder con la eliminación
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) { // Check for explicit true result from dialog
+        this.loggingService.info(`[UsuariosAdminComponent] User deletion confirmed for: ${currentUser.id}. Proceeding with deletion.`, undefined, 'UsersAdmin');
+        this.isLoading = true; // Set loading state
         this.userService.deleteUser(currentUser.id)
           .pipe(takeUntil(this.destroy$))
           .subscribe({
-            next: (result) => {
-              console.log('Resultado de eliminación:', result);
-              this.loadUsers();
+            next: () => {
+              this.loggingService.info(`[UsuariosAdminComponent] User ${currentUser.id} deleted successfully.`, undefined, 'UsersAdmin');
               this.notificationService.success('Usuario eliminado correctamente');
+              this.loadUsers(); // Reload the list to reflect changes
             },
             error: (error) => {
+              this.loggingService.error(`[UsuariosAdminComponent] Error deleting user ${currentUser.id}:`, error, 'UsersAdmin');
               console.error('Error eliminando usuario:', error);
-              this.notificationService.error('Error al eliminar el usuario');
+              this.notificationService.error('Error al eliminar el usuario. Por favor, intente de nuevo.');
               this.isLoading = false;
             }
           });
-      } else if (event.detail) {
-        // Si el resultado es false, solo eliminar el listener
-        window.removeEventListener('dialog-closed', dialogClosedListener);
+      } else {
+        this.loggingService.debug(`[UsuariosAdminComponent] User deletion cancelled for: ${currentUser.id}.`, undefined, 'UsersAdmin');
       }
-    };
-
-    // Añadir el listener para el evento personalizado
-    window.addEventListener('dialog-closed', dialogClosedListener);
+    });
   }
 
   /**
-   * Obtiene la clase CSS para el estado del usuario
+   * Gets the CSS class for the user's status for styling.
+   * @param status The user's status.
+   * @returns The CSS class string.
    */
   getStatusClass(status: UserStatus | string): string {
     switch (status) {
@@ -645,7 +568,7 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
       case UserStatus.EXPIRED:
         return 'status-expired';
       default:
-        // Intentar mapear el string a un estado conocido
+        // Try mapping the string to a known status
         if (typeof status === 'string') {
           if (status.toUpperCase() === 'ACTIVE') return 'status-active';
           if (status.toUpperCase() === 'INACTIVE') return 'status-inactive';
@@ -653,12 +576,14 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
           if (status.toUpperCase() === 'LOCKED') return 'status-locked';
           if (status.toUpperCase() === 'EXPIRED') return 'status-expired';
         }
-        return '';
+        return ''; // Default empty class
     }
   }
 
   /**
-   * Obtiene el texto para el estado del usuario
+   * Gets the display text for the user's status.
+   * @param status The user's status.
+   * @returns The descriptive status text.
    */
   getStatusText(status: UserStatus | string): string {
     switch (status) {
@@ -673,13 +598,14 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
       case UserStatus.EXPIRED:
         return 'Expirado';
       default:
-        return status as string;
+        return status as string; // Return as is if not found
     }
   }
 
   /**
-   * Obtiene la clase CSS para el badge de rol basado en el tipo de rol
-   * Implementa colores distintivos para diferentes roles siguiendo el sistema glassmorphism
+   * Gets the CSS class for the role badge based on the role type, using glassmorphism styling.
+   * @param role The role string.
+   * @returns The CSS class string for the role badge.
    */
   getRoleClass(role: string): string {
     const roleType = role.replace('ROLE_', '').toLowerCase();
@@ -687,35 +613,37 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
     switch (roleType) {
       case 'admin':
       case 'administrator':
-        return 'role-admin'; // Rojo - Máximo privilegio
+        return 'role-admin'; // Red - Max privilege
       case 'moderator':
       case 'mod':
-        return 'role-moderator'; // Verde - Privilegios moderados
+        return 'role-moderator'; // Green - Moderate privileges
       case 'user':
       case 'usuario':
-        return 'role-user'; // Azul - Usuario estándar
+        return 'role-user'; // Blue - Standard user
       case 'guest':
       case 'invitado':
-        return 'role-guest'; // Gris - Acceso limitado
+        return 'role-guest'; // Gray - Limited access
       case 'editor':
-        return 'role-editor'; // Naranja - Permisos de edición
+        return 'role-editor'; // Orange - Editing permissions
       case 'viewer':
       case 'visualizador':
-        return 'role-viewer'; // Cyan - Solo lectura
+        return 'role-viewer'; // Cyan - Read-only
       default:
-        return 'role-default'; // Color por defecto
+        return 'role-default'; // Default color
     }
   }
 
   /**
-   * Obtiene el número total de páginas
+   * Gets the total number of pages based on total users and page size.
+   * @returns The total number of pages.
    */
   getTotalPages(): number {
     return Math.ceil(this.totalUsuarios / this.pageSize);
   }
 
   /**
-   * Obtiene las páginas visibles para la paginación
+   * Gets the visible page numbers for pagination control.
+   * @returns An array of visible page numbers.
    */
   getVisiblePages(): number[] {
     const totalPages = this.getTotalPages();
@@ -738,30 +666,28 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja el cambio de tamaño de página
+   * Handles changes in page size from the dropdown.
+   * @param event The change event from the select element.
    */
   onPageSizeChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     this.pageSize = Number(select.value);
     this.pageIndex = 0; // Reset to first page
-
+    this.loggingService.debug(`[UsuariosAdminComponent] Page size changed to: ${this.pageSize}. Resetting page to 0.`, undefined, 'UsersAdmin');
     this.onPageChange({ pageIndex: this.pageIndex, pageSize: this.pageSize });
   }
 
   /**
-   * Maneja el cambio rápido de filtro de estado
+   * Handles quick status filter changes from the dropdown, navigating to the corresponding route.
+   * @param event The change event from the select element.
    */
   onQuickStatusFilterChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     const statusValue = select.value;
+    this.loggingService.info(`[UsuariosAdminComponent] Quick status filter changed to: ${statusValue}`, undefined, 'UsersAdmin');
 
-    console.log('Filtro rápido de estado cambiado a:', statusValue || 'Todos');
-
-    // Actualizar la URL para reflejar el filtro seleccionado
     if (statusValue) {
-      // Si hay un valor de estado, navegar a la ruta correspondiente
-      let targetRoute = '';
-
+      let targetRoute: string;
       switch (statusValue) {
         case UserStatus.ACTIVE:
           targetRoute = '/admin/usuarios/activos';
@@ -782,39 +708,33 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
           targetRoute = `/admin/usuarios/${statusValue.toLowerCase()}`;
       }
 
-      // Navegar a la ruta correspondiente (esto activará la suscripción a route.data)
+      // Navigate to the corresponding route (this will trigger the route.data subscription)
       this.router.navigate([targetRoute]);
-
-      // Mostrar notificación del filtro aplicado
       this.notificationService.info(`Mostrando usuarios con estado: ${this.getStatusText(statusValue)}`);
     } else {
-      // Si el valor está vacío, navegar a la ruta base de usuarios
+      // If the value is empty, navigate to the base users route
       this.router.navigate(['/admin/usuarios']);
-
-      // Mostrar notificación
       this.notificationService.info('Mostrando usuarios de todos los estados');
     }
-
-    // No es necesario actualizar manualmente los filtros ni cargar los usuarios
-    // ya que la navegación activará la suscripción a route.data que se encargará de eso
   }
 
   /**
-   * Limpia el filtro de estado y muestra todos los usuarios
+   * Clears the status filter and shows all users by navigating to the base users route.
    */
   clearStatusFilter(): void {
-    // Navegar a la ruta base de usuarios (corregida a /admin/usuarios)
+    this.loggingService.info('[UsuariosAdminComponent] Clearing status filter and navigating to base users route.', undefined, 'UsersAdmin');
+    // Navigate to the base users route
     this.router.navigate(['/admin/usuarios']);
 
-    // Actualizar el selector para reflejar el cambio
+    // Update the select element to reflect the change
     setTimeout(() => {
       const statusSelect = document.getElementById('status-select') as HTMLSelectElement;
       if (statusSelect) {
         statusSelect.value = '';
+        this.loggingService.debug('[UsuariosAdminComponent] Reset status select value to empty after clear filter.', undefined, 'UsersAdmin');
       }
     }, 100);
 
-    // Mostrar notificación
     this.notificationService.info('Mostrando usuarios de todos los estados');
   }
 }

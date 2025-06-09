@@ -1,4 +1,5 @@
 import { Injectable, ComponentRef, EmbeddedViewRef } from    '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { ActionFeedbackComponent } from '../components/action-feedback/action-feedback.component';
 import { ComponentFactoryResolver } from '@angular/core';
 import { Injector } from '@angular/core';
@@ -11,9 +12,12 @@ export class FeedbackService {
   private feedbackRefs: ComponentRef<ActionFeedbackComponent>[] = [];
 
   constructor(
+    
     private componentFactoryResolver: ComponentFactoryResolver,
     private injector: Injector,
     private appRef: ApplicationRef
+  ,
+    private loggingService: LoggingService
   ) {}
 
   /**

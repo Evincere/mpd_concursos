@@ -44,12 +44,70 @@ npm install
 ng serve
 ```
 
-### Comandos útiles
+### Comandos Disponibles
 
-- `ng serve`: Inicia el servidor de desarrollo
-- `ng build`: Compila la aplicación para producción
-- `ng test`: Ejecuta las pruebas unitarias
-- `ng lint`: Verifica el código según las reglas de linting
+```bash
+# Desarrollo
+npm start                 # Servidor de desarrollo
+npm run start:dev        # Servidor con proxy configurado
+npm run start:clean      # Limpiar cache y iniciar
+
+# Build
+npm run build            # Build de producción
+npm run build:check      # Verificar build sin generar archivos
+npm run watch            # Build en modo watch
+
+# Testing
+npm test                 # Ejecutar tests
+npm run test:quick       # Tests rápidos sin coverage
+npm run test:coverage    # Tests con cobertura
+
+# Linting y Validación
+npm run lint             # Verificar código
+npm run lint:fix         # Corregir automáticamente
+npm run validate         # Validación personalizada de código
+npm run quality-check    # Verificación completa de calidad
+
+# Git Hooks
+npm run pre-commit       # Hook de pre-commit manual
+node scripts/setup-hooks.js  # Configurar hooks automáticos
+
+# Aplicación Web
+# La aplicación está optimizada para ejecutarse como webapp
+# Se eliminaron las dependencias de Electron para simplificar el proyecto
+```
+
+### 🔧 Herramientas de Calidad
+
+#### Validación de Código
+El proyecto incluye herramientas personalizadas de validación:
+
+```bash
+# Ejecutar validación completa
+npm run validate
+
+# Verificar calidad antes de commit
+npm run quality-check
+```
+
+#### Git Hooks Automáticos
+Para configurar hooks automáticos que validen el código en cada commit:
+
+```bash
+node scripts/setup-hooks.js
+```
+
+Esto configurará:
+- **pre-commit**: Valida código antes de cada commit
+- **pre-push**: Ejecuta tests completos antes de push
+- **commit-msg**: Valida formato de mensajes de commit
+
+#### Estándares de Codificación
+Consulta `CODING_STANDARDS.md` para:
+- Principios SOLID y Clean Code
+- Estándares TypeScript y Angular
+- Patrones de diseño recomendados
+- Prevención de errores comunes
 
 ## Arquitectura
 

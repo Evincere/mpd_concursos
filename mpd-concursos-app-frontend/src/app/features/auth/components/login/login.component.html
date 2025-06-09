@@ -1,14 +1,23 @@
 <div class="wrapper">
   <div class="cols">
-    <div class="login-box" [class.flipped]="isFlipped" (click)="onCardClick()" (keydown.enter)="onCardClick()" (keydown.space)="onCardClick()" tabindex="0" role="button" aria-label="Voltear tarjeta de inicio de sesión">
-      <div class="front">
+    <div class="login-box" [class.flipped]="isFlipped">
+      <div class="front" (click)="onFrontClick()" (keydown.enter)="onFrontClick()" (keydown.space)="onFrontClick()" tabindex="0" role="button" aria-label="Mostrar formulario de inicio de sesión">
         <img src="assets/images/mpd-logo.png" alt="Logo Defensa" class="logo-defensa" (error)="onLogoError($event)">
         <h2>Bienvenido</h2>
         <p>Inicie sesión para continuar</p>
+        <div class="click-indicator">
+          <i class="material-icons">touch_app</i>
+          <span>Haga clic para continuar</span>
+        </div>
       </div>
 
-      <div class="back">
-        <p>Iniciar Sesión</p>
+      <div class="back" (click)="onBackClick($event)">
+        <div class="back-header">
+          <button type="button" class="back-button" (click)="flipToWelcome()" aria-label="Volver a la pantalla de bienvenida">
+            <i class="material-icons">arrow_back</i>
+          </button>
+          <p>Iniciar Sesión</p>
+        </div>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <div class="user-box">
             <input matInput type="text" class="login-input" formControlName="username" placeholder=" " required id="username">

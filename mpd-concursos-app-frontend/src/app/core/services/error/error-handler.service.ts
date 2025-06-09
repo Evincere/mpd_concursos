@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { ErrorDialogService } from '@shared/components/error-dialog/error-dialog.service';
@@ -103,7 +104,10 @@ export class ErrorHandlerService {
   /**
    * Constructor
    */
-  constructor(private errorDialogService: ErrorDialogService) {}
+  constructor(
+    private errorDialogService: ErrorDialogService,
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Maneja un error HTTP

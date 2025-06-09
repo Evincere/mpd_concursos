@@ -611,4 +611,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         return true;
     }
   }
+
+  /**
+   * Establece el paso activo del wizard
+   */
+  setActiveStep(stepIndex: number): void {
+    this.activeStep = stepIndex;
+  }
 }

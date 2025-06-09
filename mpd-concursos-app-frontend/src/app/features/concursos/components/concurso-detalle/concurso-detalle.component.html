@@ -120,9 +120,10 @@
       (buttonClick)="onCerrar()">
     </app-custom-button>
     <app-inscripcion-button
-      *ngIf="concurso.status === 'INSCRIPTION_OPEN' && (inscripcionState$ | async) !== InscripcionState.CONFIRMADA"
+      *ngIf="concurso.status === 'INSCRIPTION_OPEN' && (inscripcionState$ | async) !== InscripcionState.PENDING"
       [contest]="concurso"
-      (inscriptionComplete)="onInscriptionComplete(concurso)">
+      (inscripcionClick)="onInscriptionComplete(concurso)"
+      (continuarClick)="onInscriptionComplete(concurso)">
     </app-inscripcion-button>
   </div>
 </div>

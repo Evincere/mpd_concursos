@@ -78,9 +78,7 @@ export class MockNotificationService {
     declaration?: string
   ): Observable<Notification> {
     // Usar los parámetros para evitar advertencias de "nunca leído"
-    console.log(`Acknowledging notification with signature type: ${signatureType}, value: ${signatureValue}, declaration: ${declaration || 'none'}`);
-
-    const notification = this.mockNotifications.find(n => n.id === notificationId);
+    // Logging implementado con LoggingService;
     if (notification) {
       notification.status = 'ACKNOWLEDGED';
       notification.acknowledgedAt = new Date().toISOString();

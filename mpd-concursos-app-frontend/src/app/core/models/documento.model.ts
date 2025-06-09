@@ -1,3 +1,9 @@
+export enum EstadoDocumento {
+  PENDIENTE = 'pendiente',
+  APROBADO = 'aprobado',
+  RECHAZADO = 'rechazado'
+}
+
 export interface TipoDocumento {
   id: string;
   code: string;
@@ -15,9 +21,10 @@ export interface DocumentoUsuario {
   tipoDocumento?: TipoDocumento;
   nombreArchivo: string;
   fechaCarga: Date;
-  estado: 'pendiente' | 'aprobado' | 'rechazado';
+  estado: EstadoDocumento;
   comentarios?: string;
   archivoUrl?: string;
+  url?: string; // Alias para archivoUrl para compatibilidad
   usuarioId?: string;
   validadoPor?: string;
   fechaValidacion?: Date;

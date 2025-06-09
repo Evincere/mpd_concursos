@@ -204,4 +204,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   navigateTo(route: string): void {
     this.router.navigate([route]);
   }
+
+  /**
+   * Establece el tab activo
+   */
+  setActiveTab(tabIndex: number): void {
+    this.activeTab = tabIndex;
+  }
 }

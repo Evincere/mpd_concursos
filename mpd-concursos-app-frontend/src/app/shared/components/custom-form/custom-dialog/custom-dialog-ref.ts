@@ -1,4 +1,4 @@
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, firstValueFrom } from 'rxjs';
 
 /**
  * Referencia a un diálogo personalizado.
@@ -13,6 +13,14 @@ export class CustomDialogRef<T = unknown> {
    */
   afterClosed(): Observable<T | undefined> {
     return this._afterClosed.asObservable();
+  }
+
+  /**
+   * Convierte el observable afterClosed a una promesa
+   * @returns Promesa que se resuelve cuando el diálogo se cierra
+   */
+  toPromise(): Promise<T | undefined> {
+    return firstValueFrom(this.afterClosed());
   }
 
   /**

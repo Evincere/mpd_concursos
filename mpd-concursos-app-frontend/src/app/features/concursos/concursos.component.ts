@@ -4,7 +4,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 
 import { trigger, transition, style, animate } from '@angular/animations';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
@@ -22,7 +22,7 @@ import { InscriptionStateService } from '@core/services/inscripcion/inscription-
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { translateContestStatus } from '@shared/utils/state-translations.util';
-
+import { LoggingService } from '@core/services/logging/logging.service'; // Assuming LoggingService exists
 
 @Component({
   selector: 'app-concursos',
@@ -62,7 +62,7 @@ import { translateContestStatus } from '@shared/utils/state-translations.util';
   ]
 })
 export class ConcursosComponent implements OnInit, OnDestroy {
-  concursos: Concurso[] = [];
+  concursos: Concurso[] = []; // Concursos actualmente mostrados (filtrados y buscados)
   loading = false;
   error: HttpErrorResponse | null = null;
   concursoSeleccionado: Concurso | null = null;
@@ -74,7 +74,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     cargo: 'todos',
     periodo: 'todos'
   };
-  concursosSinFiltrar: Concurso[] = [];
+  concursosSinFiltrar: Concurso[] = []; // Copia original de todos los concursos
   searchTerm = '';
   primeraConsulta = true;
   private destroy$ = new Subject<void>();
@@ -86,7 +86,8 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     private inscriptionStateService: InscriptionStateService,
     private router: Router,
     private route: ActivatedRoute,
-    private notification: CustomNotificationService
+    private notification: CustomNotificationService,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -96,62 +97,30 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params: Record<string, string>) => {
-        console.log('[ConcursosComponent] Parámetros de URL detectados:', params);
+        this.loggingService.debug('[ConcursosComponent] Query params changed:', params, 'Concursos');
 
-        // Si hay un ID de concurso en la URL, seleccionarlo
-        let concursoId = this.route.snapshot.paramMap.get('id');
-
-        // También verificar si hay un ID de concurso en los parámetros de consulta
+        let concursoId = params['id']; // Prefer id from URL path, then query params
         if (!concursoId && params['contestId']) {
           concursoId = params['contestId'];
-          console.log('[ConcursosComponent] ID de concurso detectado en los parámetros de consulta:', concursoId);
+          this.loggingService.debug(`[ConcursosComponent] Using contestId from queryParams: ${concursoId}`, undefined, 'Concursos');
         }
 
+        // Si hay un ID de concurso en la URL, seleccionarlo para mostrar el detalle
         if (concursoId) {
-          console.log('[ConcursosComponent] ID de concurso detectado:', concursoId);
           this.seleccionarConcursoPorId(parseInt(concursoId, 10));
         }
 
         // Si hay parámetros para continuar una inscripción, procesarlos
-        if (params['continueInscription'] === 'true' && params['inscriptionId']) {
-          console.log('[ConcursosComponent] Parámetros para continuar inscripción detectados:', {
-            continueInscription: params['continueInscription'],
-            inscriptionId: params['inscriptionId'],
-            directContinuation: params['directContinuation']
-          });
-
-          // Si viene desde la pestaña de documentación, establecer el flag de continuación directa
-          if (params['directContinuation'] === 'true') {
-            this.inscriptionStateService.setDirectContinuation(true);
-            console.log('[ConcursosComponent] Flag de continuación directa establecido');
-          }
-
-          // Esperar a que se carguen los concursos
-          setTimeout(() => {
-            if (this.concursoSeleccionado) {
-              // Verificar si debemos abrir el diálogo de inscripción
-              if (params['openDialog'] === 'true' && params['inscriptionId']) {
-                console.log('[ConcursosComponent] Redirigiendo directamente a la página de inscripción');
-
-                // Redirigir directamente a la página de inscripción con los parámetros necesarios
-                this.router.navigate(['/dashboard/inscripcion'], {
-                  queryParams: {
-                    contestId: params['contestId'],
-                    inscriptionId: params['inscriptionId'],
-                    continueInscription: 'true',
-                    timestamp: new Date().getTime().toString() // Para evitar caché
-                  }
-                });
-              } else {
-                // Método anterior como fallback
-                const inscripcionButton = document.querySelector('app-inscripcion-button button') as HTMLButtonElement;
-                if (inscripcionButton && params['openDialog'] === 'true') {
-                  console.log('[ConcursosComponent] Forzando clic en botón de inscripción');
-                  inscripcionButton.click();
-                }
-              }
+        if (params['continueInscription'] === 'true' && params['inscriptionId'] && concursoId) {
+          this.loggingService.debug(`[ConcursosComponent] Attempting to continue inscription for contest ${concursoId} and inscription ${params['inscriptionId']}`, undefined, 'Concursos');
+          // Navegar al proceso de inscripción
+          this.router.navigate(['/dashboard/inscripcion'], {
+            queryParams: {
+              contestId: concursoId,
+              inscriptionId: params['inscriptionId']
             }
-          }, 1000);
+          });
+          this.notification.info('Continuando con la inscripción...');
         }
       });
   }
@@ -161,18 +130,22 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  /**
+   * Carga la lista completa de concursos y aplica los filtros iniciales.
+   */
   cargarConcursos(): void {
     this.loading = true;
+    this.error = null; // Clear previous errors
     this.concursosService.getConcursos().subscribe({
       next: (concursos: Concurso[]) => {
-        console.log('[ConcursosComponent] Concursos recibidos:', concursos);
-        this.concursosSinFiltrar = [...concursos];
+        this.loggingService.debug(`[ConcursosComponent] Concursos loaded: ${concursos.length}`, undefined, 'Concursos');
+        this.concursosSinFiltrar = concursos; // Store the original list
 
-        // Obtener los filtros actuales del servicio
+        // Get current filters from the service and apply them
         this.filtersService.getFiltros().subscribe((filtros: FiltersConcurso) => {
-          console.log('[ConcursosComponent] Aplicando filtros después de cargar:', filtros);
-          this.filtros = filtros;
-          this.aplicarFiltros(filtros);
+          this.loggingService.debug('[ConcursosComponent] Applying initial filters:', filtros, 'Concursos');
+          this.filtros = filtros; // Update component's filters
+          this._applyAllFilters(); // Apply all filters including search term
         });
 
         this.loading = false;
@@ -187,70 +160,61 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Maneja el evento de búsqueda, actualizando el término de búsqueda y aplicando los filtros.
+   * @param event El evento de búsqueda, puede ser una cadena o un objeto con `target.value`.
+   */
   onSearch(event: any): void {
-    // Extraer el término de búsqueda del evento
     const term = typeof event === 'string' ? event :
-                (event && event.target && event.target.value ? event.target.value : '');
+      (event && event.target && event.target.value ? event.target.value : '');
 
     this.searchTerm = term;
-    if (!term || !term.trim()) {
-      this.cargarConcursos();
-      return;
-    }
-
-    const searchTermLower = term.toLowerCase();
-    this.concursos = this.concursos.filter(concurso =>
-      concurso.title.toLowerCase().includes(searchTermLower) ||
-      concurso.position.toLowerCase().includes(searchTermLower) ||
-      (concurso.dependencia && concurso.dependencia.toLowerCase().includes(searchTermLower)) ||
-      (concurso.description && concurso.description.toLowerCase().includes(searchTermLower))
-    );
+    this._applyAllFilters();
   }
 
-  onFilter(): void {
-    console.log('Filtro activado:', this.mostrarFiltros);
-    this.mostrarFiltros = !this.mostrarFiltros;
-    console.log('Estado de mostrarFiltros después de cambiar:', this.mostrarFiltros);
+  /**
+   * Maneja la aplicación de filtros desde el panel de filtros.
+   * @param newFilters Los nuevos filtros a aplicar.
+   */
+  onApplyFilters(newFilters: FiltersConcurso): void {
+    this.loggingService.debug('[ConcursosComponent] Applying filters:', newFilters, 'Concursos');
+    this.filtros = newFilters; // Update component's filters
+    this._applyAllFilters(); // Re-apply all filters
+    this.mostrarFiltros = false; // Close filter panel after applying
   }
 
-  aplicarFiltros(filtros: FiltersConcurso): void {
-    this.filtros = filtros;
-    this.filtrosActivos = this.hayFiltrosActivos(filtros);
-    this.primeraConsulta = false;
+  /**
+   * Aplica todos los filtros (estado, dependencia, cargo, periodo) y el término de búsqueda
+   * a la lista original de concursos (`concursosSinFiltrar`).
+   */
+  private _applyAllFilters(): void {
+    let concursosFiltrados = [...this.concursosSinFiltrar]; // Start with the full list
 
-    console.log('[ConcursosComponent] Iniciando aplicación de filtros:', {
-      filtros,
-      totalConcursos: this.concursosSinFiltrar.length
-    });
+    this.filtrosActivos = this.hayFiltrosActivos(this.filtros) || Boolean(this.searchTerm?.trim());
+    this.primeraConsulta = false; // No longer the first query after filters are applied
 
-    // Aplicar filtros
-    this.concursos = this.concursosSinFiltrar.filter(concurso => {
+    this.loggingService.debug('[ConcursosComponent] Applying filters and search...', { filters: this.filtros, searchTerm: this.searchTerm }, 'Concursos');
+
+    concursosFiltrados = concursosFiltrados.filter(concurso => {
       let cumpleFiltros = true;
 
-      // Filtro por estado
-      if (filtros.estado !== 'todos') {
-        console.log('[ConcursosComponent] Evaluando concurso:', {
-          id: concurso.id,
-          titulo: concurso.title,
-          estadoFiltro: filtros.estado,
-          estadoConcurso: concurso.status
-        });
-
-        cumpleFiltros = concurso.status === filtros.estado;
+      // Filter by status
+      if (this.filtros.estado !== 'todos') {
+        cumpleFiltros = concurso.status?.toLowerCase() === this.filtros.estado.toLowerCase();
       }
 
-      // Resto de los filtros solo si el estado ya cumple
+      // Rest of the filters only if the status already matches
       if (cumpleFiltros) {
-        if (filtros.dependencia !== 'todos') {
-          cumpleFiltros = concurso.dependencia?.toLowerCase() === filtros.dependencia.toLowerCase();
+        if (this.filtros.dependencia !== 'todos') {
+          cumpleFiltros = (concurso.dependencia?.toLowerCase() || '') === this.filtros.dependencia.toLowerCase();
         }
 
-        if (cumpleFiltros && filtros.cargo !== 'todos') {
-          cumpleFiltros = concurso.position?.toLowerCase().includes(filtros.cargo.toLowerCase());
+        if (cumpleFiltros && this.filtros.cargo !== 'todos') {
+          cumpleFiltros = (concurso.position?.toLowerCase() || '').includes(this.filtros.cargo.toLowerCase());
         }
 
-        if (cumpleFiltros && filtros.periodo !== 'todos') {
-          const fechas = this.obtenerFechasPeriodo(filtros.periodo);
+        if (cumpleFiltros && this.filtros.periodo !== 'todos') {
+          const fechas = this.obtenerFechasPeriodo(this.filtros.periodo);
           if (fechas) {
             const fechaConcurso = new Date(concurso.startDate);
             cumpleFiltros = fechaConcurso >= fechas.fechaInicio && fechaConcurso <= fechas.fechaFin;
@@ -258,75 +222,120 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         }
       }
 
+      // Apply search term
+      if (cumpleFiltros && this.searchTerm?.trim()) {
+        const searchTermLower = this.searchTerm.toLowerCase();
+        cumpleFiltros = (concurso.title?.toLowerCase().includes(searchTermLower) || false) ||
+                        (concurso.position?.toLowerCase().includes(searchTermLower) || false) ||
+                        (concurso.dependencia?.toLowerCase().includes(searchTermLower) || false) ||
+                        (concurso.description?.toLowerCase().includes(searchTermLower) || false);
+      }
+
       return cumpleFiltros;
     });
 
-    console.log('[ConcursosComponent] Resultado del filtrado:', {
-      totalOriginal: this.concursosSinFiltrar.length,
-      totalFiltrado: this.concursos.length,
-      filtrosAplicados: filtros
-    });
+    this.concursos = concursosFiltrados;
+    this.loggingService.debug(`[ConcursosComponent] Filtered contests: ${this.concursos.length}`, undefined, 'Concursos');
   }
 
-  private hayFiltrosActivos(filtros: FiltersConcurso): boolean {
-    return Object.values(filtros).some(valor =>
-      valor !== null &&
-      valor !== undefined &&
-      valor !== 'todos'
-    );
-  }
-
+  /**
+   * Muestra u oculta el panel de filtros.
+   */
   toggleFiltros(): void {
     this.mostrarFiltros = !this.mostrarFiltros;
   }
 
+  /**
+   * Limpia el término de búsqueda y recarga todos los concursos aplicando los filtros actuales.
+   */
   clearSearch(): void {
     this.searchTerm = '';
-    this.cargarConcursos();
+    this._applyAllFilters(); // Re-apply filters without the search term
   }
 
+  /**
+   * Traduce el estado de un concurso para mostrar en la UI.
+   * @param status El estado del concurso.
+   * @returns El estado traducido.
+   */
   getEstadoConcursoLabel(status: string): string {
     return translateContestStatus(status);
   }
 
+  /**
+   * Intenta recargar los concursos si hubo un error.
+   */
   retryLoad(): void {
     this.error = null;
     this.loading = true;
     this.cargarConcursos();
   }
 
+  /**
+   * Inicia el proceso de inscripción para un concurso dado.
+   * Crea una nueva inscripción y navega a la página de inscripción.
+   * @param concurso El concurso para el cual se iniciará la inscripción.
+   */
   onInscriptionComplete(concurso: Concurso): void {
-    console.log('[ConcursosComponent] Iniciando proceso de inscripción para concurso:', concurso.id);
+    this.loggingService.debug('[ConcursosComponent] Initiating inscription process for contest:', concurso.id, 'Concursos');
 
-    // CORRECCIÓN: Navegar al proceso de inscripción en lugar de asumir que ya está completada
-    this.router.navigate(['/dashboard/inscripcion'], {
-      queryParams: {
-        contestId: concurso.id
-      }
-    });
+    this.createInscriptionWrapper(concurso.id)
+      .subscribe({
+        next: (response: any) => {
+          this.loggingService.debug('[ConcursosComponent] Inscription created successfully:', response, 'Concursos');
+
+          if (!response.id) {
+            console.error('[ConcursosComponent] Error: Inscription ID not received in response');
+            this.notification.error('Error al crear la inscripción: ID no válido');
+            return;
+          }
+
+          // Navigate to the inscription process with both parameters
+          this.router.navigate(['/dashboard/inscripcion'], {
+            queryParams: {
+              contestId: concurso.id,
+              inscriptionId: response.id
+            }
+          });
+
+          // Force inscription cache update so cards reflect new state
+          setTimeout(() => {
+            this.refreshInscriptionsWrapper();
+          }, 1000);
+        },
+        error: (error: any) => {
+          console.error('[ConcursosComponent] Error creating inscription:', error);
+          this.notification.error('Error al iniciar el proceso de inscripción. Por favor, intente nuevamente.');
+        }
+      });
   }
 
-  // Método para cuando realmente se complete una inscripción (llamado desde otros lugares)
+  /**
+   * Método para cuando realmente se complete una inscripción (llamado desde otros lugares).
+   * @param concurso El concurso al que se ha inscrito el usuario.
+   */
   onInscriptionReallyComplete(concurso: Concurso): void {
-    console.log('[ConcursosComponent] Inscripción realmente completada para concurso:', concurso.id);
+    this.loggingService.debug(`[ConcursosComponent] Inscription completed for contest: ${concurso.title}`, undefined, 'Concursos');
 
-    // Forzar una actualización de las inscripciones del usuario
-    this.inscriptionService.refreshInscriptions();
-
-    // Actualizar la lista de concursos después de una inscripción exitosa
-    // Agregamos un pequeño delay para dar tiempo a que se actualice el estado en el backend
+    // Update the list of contests after a successful inscription
+    // Add a small delay to allow the backend state to update
     setTimeout(() => {
       this.cargarConcursos();
     }, 1000);
 
     this.notification.success(`Te has inscrito exitosamente al concurso "${concurso.title}"`);
 
-    // Si el concurso está seleccionado, actualizar su vista de detalle
+    // If the contest is selected, update its detail view
     if (this.concursoSeleccionado?.id === concurso.id) {
       this.concursoSeleccionado = { ...concurso };
     }
   }
 
+  /**
+   * Muestra el detalle de un concurso.
+   * @param concurso El concurso a mostrar.
+   * @param event Evento del ratón (opcional, para evitar propagación).
+   */
   verDetalle(concurso: Concurso, event?: MouseEvent): void {
     if (event) {
       event.stopPropagation();
@@ -334,10 +343,18 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     this.concursoSeleccionado = concurso;
   }
 
+  /**
+   * Cierra el panel de detalle del concurso.
+   */
   cerrarDetalle(): void {
     this.concursoSeleccionado = null;
   }
 
+  /**
+   * Obtiene las fechas de inicio y fin para un período de tiempo dado.
+   * @param periodo El período (ej. 'hoy', 'semana', 'mes').
+   * @returns Un objeto con `fechaInicio` y `fechaFin`, o `null` si 'todos'.
+   */
   private obtenerFechasPeriodo(periodo: string): { fechaInicio: Date, fechaFin: Date } | null {
     if (periodo === 'todos') return null;
 
@@ -354,17 +371,17 @@ export class ConcursosComponent implements OnInit, OnDestroy {
         break;
       case 'semana': {
         fechaInicio = new Date(hoy);
-        const diaSemana = hoy.getDay();
-        fechaInicio.setDate(hoy.getDate() - diaSemana);
+        const diaSemana = hoy.getDay(); // 0 for Sunday, 1 for Monday, etc.
+        fechaInicio.setDate(hoy.getDate() - diaSemana); // Go to the start of the week (Sunday)
         fechaInicio.setHours(0, 0, 0, 0);
         fechaFin = new Date(fechaInicio);
-        fechaFin.setDate(fechaInicio.getDate() + 6);
+        fechaFin.setDate(fechaInicio.getDate() + 6); // End of the week (Saturday)
         fechaFin.setHours(23, 59, 59, 999);
         break;
       }
       case 'mes': {
         fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+        fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0); // Last day of the current month
         fechaFin.setHours(23, 59, 59, 999);
         break;
       }
@@ -388,13 +405,30 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     return { fechaInicio, fechaFin };
   }
 
+  /**
+   * Verifica si hay filtros activos (diferentes de 'todos') en el objeto de filtros.
+   * @param filtros El objeto de filtros a verificar.
+   * @returns `true` si hay al menos un filtro activo, `false` en caso contrario.
+   */
+  private hayFiltrosActivos(filtros: FiltersConcurso): boolean {
+    return Object.values(filtros).some(value => value !== 'todos');
+  }
+
+  /**
+   * Verifica si hay filtros aplicados (incluyendo término de búsqueda).
+   * Se usa para mostrar el botón "Limpiar Filtros".
+   * @returns `true` si hay filtros o término de búsqueda activo, `false` en caso contrario.
+   */
   hayFiltrosAplicados(): boolean {
     if (this.primeraConsulta) {
-      return false;
+      return false; // No show "clear filters" on first load
     }
     return this.hayFiltrosActivos(this.filtros) || Boolean(this.searchTerm?.trim());
   }
 
+  /**
+   * Limpia todos los filtros y el término de búsqueda, luego recarga los concursos.
+   */
   limpiarFiltros(): void {
     this.searchTerm = '';
     this.filtrosActivos = false;
@@ -404,48 +438,51 @@ export class ConcursosComponent implements OnInit, OnDestroy {
       cargo: 'todos',
       periodo: 'todos'
     };
-    this.cargarConcursos();
-  }
-
-  onSeleccionarConcurso(concurso: Concurso): void {
-    // Convertir el concurso al formato Contest
-    const concursoConvertido = {
-      ...concurso,
-      department: concurso.dependencia,
-      class: concurso.category, // Asumimos que la categoría actual se usará como clase
-      category: concurso.category // Mantenemos la categoría actual
-    };
-    this.verDetalle(concursoConvertido);
+    this._applyAllFilters(); // Apply empty filters
+    this.filtersService.actualizarFiltros(this.filtros); // Also update the filters service
+    this.notification.info('Filtros y búsqueda limpiados.');
   }
 
   /**
-   * Selecciona un concurso por su ID
-   * @param id ID del concurso a seleccionar
+   * Selecciona un concurso por su ID y muestra su detalle.
+   * @param id ID del concurso a seleccionar.
    */
   seleccionarConcursoPorId(id: number): void {
-    console.log('[ConcursosComponent] Buscando concurso con ID:', id);
-
-    // Si ya tenemos los concursos cargados, buscar el concurso
-    if (this.concursos.length > 0) {
-      const concurso = this.concursos.find(c => c.id === id);
-      if (concurso) {
-        console.log('[ConcursosComponent] Concurso encontrado:', concurso);
-        this.onSeleccionarConcurso(concurso);
-      } else {
-        console.log('[ConcursosComponent] Concurso no encontrado en la lista actual');
-      }
+    this.loggingService.debug(`[ConcursosComponent] Attempting to select contest by ID: ${id}`, undefined, 'Concursos');
+    const concurso = this.concursosSinFiltrar.find(c => c.id === id);
+    if (concurso) {
+      this.loggingService.debug(`[ConcursosComponent] Contest found: ${concurso.title}`, undefined, 'Concursos');
+      this.verDetalle(concurso);
+      this.loggingService.debug('[ConcursosComponent] Detail panel opened for contest.', undefined, 'Concursos');
     } else {
-      // Si no tenemos los concursos cargados, esperar a que se carguen
-      console.log('[ConcursosComponent] Esperando a que se carguen los concursos...');
-      setTimeout(() => {
-        const concurso = this.concursos.find(c => c.id === id);
-        if (concurso) {
-          console.log('[ConcursosComponent] Concurso encontrado después de esperar:', concurso);
-          this.onSeleccionarConcurso(concurso);
-        } else {
-          console.log('[ConcursosComponent] Concurso no encontrado después de esperar');
-        }
-      }, 1000);
+      this.loggingService.warn(`[ConcursosComponent] Contest with ID ${id} not found in the list.`, undefined, 'Concursos');
+      this.notification.warning(`No se encontró el concurso con ID ${id}.`);
     }
+  }
+
+  // Métodos wrapper temporales para resolver problemas de TypeScript
+  private createInscriptionWrapper(contestId: string | number): Observable<any> {
+    // TODO: Usar this.inscriptionService.createInscription cuando TypeScript lo reconozca
+    // Por ahora, usar casting para acceder al método
+    return (this.inscriptionService as any).createInscription(contestId);
+  }
+
+  private refreshInscriptionsWrapper(): void {
+    // TODO: Usar this.inscriptionService.refreshInscriptions cuando TypeScript lo reconozca
+    // Por ahora, usar casting para acceder al método
+    (this.inscriptionService as any).refreshInscriptions();
+  }
+
+  // Métodos para el template
+  onFilter(): void {
+    // Método para manejar el evento de filtro
+    this.aplicarFiltros();
+  }
+
+  aplicarFiltros(event?: any): void {
+    if (event) {
+      this.filtros = { ...this.filtros, ...event };
+    }
+    this._applyAllFilters();
   }
 }

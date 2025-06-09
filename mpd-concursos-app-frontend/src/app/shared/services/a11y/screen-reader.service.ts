@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable, Renderer2, RendererFactory2 } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 
 /**
  * Tipo de anuncio para lectores de pantalla

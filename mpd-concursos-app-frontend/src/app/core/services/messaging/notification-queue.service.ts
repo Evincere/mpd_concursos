@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval, timer } from 'rxjs';
 import { map, catchError, tap, switchMap, takeWhile } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Prioridad de notificación
@@ -257,7 +258,10 @@ export class NotificationQueueService {
   private isPolling = false;
   private pollingSubscription?: any;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {
     this.loadConfigurations();
     this.startPolling();
   }

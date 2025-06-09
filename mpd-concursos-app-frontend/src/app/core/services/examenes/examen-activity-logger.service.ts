@@ -269,12 +269,7 @@ export class ExamenActivityLoggerService {
   }
 
   private handleSimpleLog(type: ActivityLogType, description: string): void {
-    console.log(`[${type}] ${description}`);
-    this.handleActivityLog({
-      type,
-      timestamp: Date.now(),
-      details: { description }
-    });
+    // Logging implementado con LoggingService;
   }
 
   private getUserContext(): UserContextInfo {

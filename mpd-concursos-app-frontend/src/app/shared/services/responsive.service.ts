@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '../../core/services/logging/logging.service';
 import { BehaviorSubject, Observable, fromEvent } from 'rxjs';
 import { debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 
@@ -18,7 +19,9 @@ export class ResponsiveService {
   private screenSizeSubject = new BehaviorSubject<ScreenSize>(this.getCurrentScreenSize());
   screenSize$: Observable<ScreenSize> = this.screenSizeSubject.asObservable();
 
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     // Observar cambios en el tamaño de la ventana
     fromEvent(window, 'resize')
       .pipe(

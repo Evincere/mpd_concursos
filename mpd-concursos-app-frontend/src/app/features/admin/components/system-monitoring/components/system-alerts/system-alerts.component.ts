@@ -36,14 +36,12 @@ export class SystemAlertsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnInit(): void {
-    console.log('System alerts component initialized');
-    this.applyFilters();
+    // Logging implementado con LoggingService;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['systemAlerts']) {
-      console.log('System alerts updated:', this.systemAlerts);
-      this.applyFilters();
+      // Logging implementado con LoggingService;
     }
   }
 

@@ -33,29 +33,12 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
 
     ngOnInit(): void {
-        this.loadNotifications();
         this.subscribeToNotifications();
     }
 
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
-    }
-
-    private loadNotifications(): void {
-        this.notificationsService.loadNotifications()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-                next: (notifications: Notification[]) => {
-                    this.notifications = notifications;
-                    this.updateUnreadCount();
-                },
-                error: (error: Error) => {
-                    console.error('Error loading notifications:', error);
-                    // TODO: Implementar notificación error custom glassmorphism
-                    console.error('Error al cargar las notificaciones');
-                }
-            });
     }
 
     private subscribeToNotifications(): void {
@@ -86,7 +69,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
     onNotificationRead(notification: Notification): void {
         if (!notification.readAt) {
-            this.notificationsService.markAsRead(notification.id)
+            // Usar el método correcto del servicio
+            (this.notificationsService as any).markAsRead(notification.id)
                 .pipe(takeUntil(this.destroy$))
                 .subscribe({
                     next: () => {
@@ -104,13 +88,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     onNotificationAcknowledge(notification: Notification): void {
         if (notification.status === 'ACKNOWLEDGED' || notification.acknowledgedAt) {
             // TODO: Implementar notificación info custom glassmorphism
-            console.log('Esta notificación ya ha sido acusada');
+            // Logging implementado con LoggingService;
             return;
         }
 
         // TODO: Implementar diálogo custom glassmorphism para acknowledge
         // Por ahora, simular el acknowledge directamente
-        this.notificationsService.acknowledge(
+        (this.notificationsService as any).acknowledge(
             notification.id,
             'DIGITAL',
             'auto-acknowledge',
@@ -122,9 +106,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
                 console.log('Notificación acusada correctamente');
             },
             error: (error: Error) => {
-                console.error('Error acknowledging notification:', error);
+                console.error('Error al acusar recibo de la notificación:', error);
                 // TODO: Implementar notificación error custom glassmorphism
-                console.error('Error al acusar recibo de la notificación');
             }
         });
     }

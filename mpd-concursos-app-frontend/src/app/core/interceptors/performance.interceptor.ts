@@ -136,7 +136,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
           }
           
           const delay = this.config.retryDelay * Math.pow(2, retryCount - 1);
-          console.log(`Retrying request ${req.url} (attempt ${retryCount}) after ${delay}ms`);
+          // TODO: Implement proper logging - console.debug('Retrying request ${req.url} (attempt ${retryCount}) after ${delay}ms', );
           return timer(delay);
         }
       }),
@@ -228,7 +228,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
 
     this.addMetrics(metrics);
     
-    console.log(`Request completed: ${metrics.url} in ${metrics.duration?.toFixed(2)}ms`);
+    // TODO: Implement proper logging - console.debug('Request completed: ${metrics.url} in ${metrics.duration?.toFixed(2)}ms', );
   }
 
   /**
@@ -284,7 +284,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
       return null;
     }
 
-    console.log(`Cache hit for: ${this.parseRequestKey(key).url}`);
+    // TODO: Implement proper logging - console.debug('Cache hit for: ${this.parseRequestKey(key).url}', );
     return entry.response;
   }
 
@@ -429,7 +429,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
    */
   public clearCache(): void {
     this.cache.clear();
-    console.log('HTTP cache cleared');
+    // TODO: Implement proper logging - console.debug('HTTP cache cleared', );
   }
 
   /**
@@ -437,7 +437,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
    */
   public clearMetrics(): void {
     this.metrics = [];
-    console.log('Performance metrics cleared');
+    // TODO: Implement proper logging - console.debug('Performance metrics cleared', );
   }
 
   /**
@@ -445,7 +445,7 @@ export class PerformanceInterceptor implements HttpInterceptor {
    */
   public updateConfig(newConfig: Partial<PerformanceConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    console.log('Performance interceptor config updated:', this.config);
+    // TODO: Implement proper logging - console.debug('Performance interceptor config updated:', this.config);
   }
 
   /**

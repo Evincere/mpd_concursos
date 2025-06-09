@@ -641,8 +641,6 @@ export class DocumentoViewerComponent implements OnInit {
   }
 
   cargarDocumento(): void {
-    console.log('[DocumentoViewer] Iniciando carga de documento:', this.data.documentoId);
-
     this.isLoading = true;
     this.error = null;
     this.debugInfo = null;
@@ -655,44 +653,35 @@ export class DocumentoViewerComponent implements OnInit {
     this.documentosService.getDocumentoFile(this.data.documentoId, true)
       .pipe(
         finalize(() => {
-          console.log('[DocumentoViewer] Finalizando carga, isLoading = false');
-          this.isLoading = false;
+          this.isLoading = false; // Always set isLoading to false when the observable completes
           this.showProgress = false;
         })
       )
       .subscribe({
-        next: (event) => {
-          console.log('[DocumentoViewer] Evento recibido:', event);
+        next: (response: Blob | HttpEvent<Blob>) => {
+          // Si es un Blob directo (sin progreso)
+          if (response instanceof Blob) {
+            this.procesarBlob(response);
+            return;
+          }
 
-          // Verificar si es un Blob directo (sin progreso) o un evento HTTP
-          if (event instanceof Blob) {
-            console.log('[DocumentoViewer] Blob directo recibido, tamaño:', event.size, 'tipo:', event.type);
-            this.procesarBlob(event);
-          } else if (event && typeof event === 'object' && 'type' in event) {
-            // Es un evento HTTP
-            const httpEvent = event as HttpEvent<Blob>;
-            console.log('[DocumentoViewer] Evento HTTP tipo:', httpEvent.type);
-
-            if (httpEvent.type === HttpEventType.DownloadProgress) {
-              // Actualizar el progreso de la descarga
-              const progressEvent = httpEvent as HttpDownloadProgressEvent;
-              if (progressEvent.total) {
-                this.fileSize = progressEvent.total;
-                this.loadedSize = progressEvent.loaded;
-                this.loadProgress = Math.round(100 * progressEvent.loaded / progressEvent.total);
-                console.log('[DocumentoViewer] Progreso:', this.loadProgress + '%');
-              }
-            } else if (httpEvent.type === HttpEventType.Response) {
-              // Verificar si es un evento de respuesta completa
-              const responseEvent = httpEvent as HttpResponse<Blob>;
+          // Si es un HttpEvent (con progreso)
+          const event = response as HttpEvent<Blob>;
+          if (event.type === HttpEventType.DownloadProgress) {
+            const progressEvent = event as HttpDownloadProgressEvent;
+            if (progressEvent.total) {
+              this.fileSize = progressEvent.total;
+              this.loadedSize = progressEvent.loaded;
+              this.loadProgress = Math.round(100 * progressEvent.loaded / progressEvent.total);
+            }
+          } else if (event.type === HttpEventType.Response) {
+            const responseEvent = event as HttpResponse<Blob>;
+            if (responseEvent.body) {
               const blob = responseEvent.body;
-              console.log('[DocumentoViewer] Respuesta completa, blob:', blob);
-              if (blob) {
-                this.procesarBlob(blob);
-              } else {
-                this.error = 'El servidor no devolvió un archivo válido.';
-                this.debugInfo = 'HttpResponse.body es null';
-              }
+              this.procesarBlob(blob);
+            } else {
+              this.error = 'El servidor no devolvió un archivo válido.';
+              this.debugInfo = 'HttpResponse.body es null';
             }
           }
         },
@@ -705,34 +694,20 @@ export class DocumentoViewerComponent implements OnInit {
   }
 
   private procesarBlob(blob: Blob): void {
-    console.log('[DocumentoViewer] Procesando blob - Tamaño:', blob.size, 'Tipo:', blob.type);
-
-    // Crear URL para el blob (para descarga y apertura en nueva ventana)
-    this.blobUrl = URL.createObjectURL(blob);
-    console.log('[DocumentoViewer] Blob URL creada:', this.blobUrl);
-
-    // Detectar el tipo de documento
-    this.documentType = this.detectDocumentType(blob);
-    console.log('[DocumentoViewer] Tipo de documento detectado:', this.documentType);
+    this.documentType = this.determineDocumentType(blob.type);
+    this.blobUrl = URL.createObjectURL(blob); // Create object URL for download/new tab
 
     if (this.documentType === 'pdf') {
-      // Procesar como PDF
-      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
-      console.log('[DocumentoViewer] PDF URL sanitizada creada');
-
-      // Convertir blob a ArrayBuffer para el visor de PDF
       const reader = new FileReader();
       reader.onload = () => {
-        console.log('[DocumentoViewer] FileReader completado');
-        if (reader.result) {
-          this.pdfSrc = new Uint8Array(reader.result as ArrayBuffer);
-          console.log('[DocumentoViewer] PDF ArrayBuffer creado, tamaño:', this.pdfSrc.length);
+        if (reader.result instanceof ArrayBuffer) {
+          this.pdfSrc = new Uint8Array(reader.result);
           this.pdfLoaded = true;
           this.debugInfo = `PDF procesado correctamente\nTamaño: ${blob.size} bytes\nTipo MIME: ${blob.type}\nArrayBuffer: ${this.pdfSrc.length} bytes`;
         } else {
-          console.error('[DocumentoViewer] FileReader result es null');
+          console.error('[DocumentoViewer] FileReader result es null o no es ArrayBuffer');
           this.error = 'Error al procesar el documento PDF: no se pudo leer el archivo.';
-          this.debugInfo = 'FileReader.result es null';
+          this.debugInfo = 'FileReader.result es null o no es un ArrayBuffer';
         }
       };
       reader.onerror = (error) => {
@@ -745,7 +720,6 @@ export class DocumentoViewerComponent implements OnInit {
       // Procesar como imagen
       this.imageUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.blobUrl);
       this.pdfLoaded = true; // Usamos la misma variable para indicar que el documento está listo
-      console.log('[DocumentoViewer] Imagen procesada correctamente');
       this.debugInfo = `Imagen procesada correctamente\nTamaño: ${blob.size} bytes\nTipo MIME: ${blob.type}`;
     } else {
       // Tipo desconocido
@@ -755,34 +729,7 @@ export class DocumentoViewerComponent implements OnInit {
     }
   }
 
-  // Método para manejar cuando se carga el PDF
-  onPdfLoaded(pdf: unknown): void {
-    console.log('[DocumentoViewer] PDF cargado en el visor:', pdf);
-    if (pdf && typeof pdf === 'object' && 'numPages' in pdf) {
-      this.totalPages = (pdf as { numPages: number }).numPages;
-      console.log('[DocumentoViewer] Total de páginas:', this.totalPages);
-    } else {
-      this.totalPages = 1; // Valor predeterminado si no se puede determinar
-      console.warn('[DocumentoViewer] No se pudo determinar el número de páginas, usando 1');
-    }
-  }
-
-  // Método para manejar errores del PDF
-  onPdfError(error: unknown): void {
-    console.error('[DocumentoViewer] Error en el visor de PDF:', error);
-    this.error = 'Error al mostrar el documento PDF. El archivo podría estar corrupto.';
-    this.debugInfo = `Error del visor PDF: ${error}`;
-  }
-
-  // Método para manejar cuando se renderiza una página
-  onPageRendered(event: unknown): void {
-    console.log('[DocumentoViewer] Página renderizada:', event);
-  }
-
-  // Método para detectar el tipo de documento
-  detectDocumentType(blob: Blob): 'pdf' | 'image' | 'unknown' {
-    const mimeType = blob.type.toLowerCase();
-
+  private determineDocumentType(mimeType: string): 'pdf' | 'image' | 'unknown' {
     if (mimeType === 'application/pdf') {
       return 'pdf';
     } else if (mimeType.startsWith('image/')) {
@@ -792,26 +739,71 @@ export class DocumentoViewerComponent implements OnInit {
     }
   }
 
+  // Método para manejar cuando se carga el PDF
+  onPdfLoaded(pdf: any): void { // `pdf` is typically the PDFDocumentProxy object
+    this.totalPages = pdf.numPages || 1;
+    this.pdfLoaded = true; // Confirm PDF is loaded
+    this.isLoading = false; // Ensure loading is false
+    this.error = null; // Clear any previous errors related to loading
+    this.debugInfo = `PDF cargado exitosamente. Páginas: ${this.totalPages}`;
+  }
+
+  // Método para manejar errores del PDF
+  onPdfError(error: unknown): void {
+    console.error('[DocumentoViewer] Error en el visor de PDF:', error);
+    this.error = 'Error al mostrar el documento PDF. El archivo podría estar corrupto o no ser un PDF válido.';
+    this.debugInfo = `Error del visor PDF: ${JSON.stringify(error)}`; // Stringify for better debugging
+    this.pdfLoaded = false;
+    this.isLoading = false;
+  }
+
+  // Método para manejar cuando se renderiza una página
+  onPageRendered(_event: unknown): void {
+    // console.log('[DocumentoViewer] Página renderizada:', _event);
+  }
+
   descargarDocumento(): void {
     if (this.blobUrl) {
       // Si ya tenemos el blob, usarlo directamente
       const a = document.createElement('a');
       a.href = this.blobUrl;
-      a.download = `documento-${this.data.documentoId}.pdf`;
+      // Intenta obtener un nombre de archivo más significativo
+      const filename = `documento-${this.data.documentoId}.${this.documentType === 'pdf' ? 'pdf' : 'png'}`; // Default to png for images
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
     } else {
-      // Si no tenemos el blob, solicitarlo nuevamente
-      this.documentosService.getDocumentoFile(this.data.documentoId).subscribe({
-        next: (blob) => {
-          // Crear un enlace temporal para la descarga
-          // Asegurarse de que blob es un Blob válido
-          const validBlob = blob instanceof Blob ? blob : new Blob([]);
-          const url = window.URL.createObjectURL(validBlob);
+      // Si no tenemos el blob, solicitarlo nuevamente (sin seguimiento de progreso para descarga)
+      this.documentosService.getDocumentoFile(this.data.documentoId, false).subscribe({
+        next: (response: Blob | HttpEvent<Blob>) => {
+          let blob: Blob;
+
+          // Si es un Blob directo
+          if (response instanceof Blob) {
+            blob = response;
+          } else {
+            // Si es un HttpEvent, extraer el blob de la respuesta
+            const event = response as HttpEvent<Blob>;
+            if (event.type === HttpEventType.Response) {
+              const responseEvent = event as HttpResponse<Blob>;
+              if (responseEvent.body) {
+                blob = responseEvent.body;
+              } else {
+                console.error('Error: HttpResponse.body es null');
+                return;
+              }
+            } else {
+              // Si no es una respuesta completa, ignorar
+              return;
+            }
+          }
+
+          const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `documento-${this.data.documentoId}.pdf`;
+          const filename = `documento-${this.data.documentoId}.${this.determineDocumentType(blob.type) === 'pdf' ? 'pdf' : 'png'}`;
+          a.download = filename;
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(url);
@@ -819,6 +811,7 @@ export class DocumentoViewerComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al descargar el documento:', error);
+          // show a notification here as well
         }
       });
     }
@@ -827,9 +820,6 @@ export class DocumentoViewerComponent implements OnInit {
   abrirEnNuevaVentana(): void {
     if (this.blobUrl) {
       window.open(this.blobUrl, '_blank');
-      console.log('[DocumentoViewer] Documento abierto en nueva ventana');
-    } else {
-      console.error('[DocumentoViewer] No hay URL de blob disponible para abrir en nueva ventana');
     }
   }
 
@@ -845,23 +835,19 @@ export class DocumentoViewerComponent implements OnInit {
   zoomIn(): void {
     if (this.zoom < 3) {
       this.zoom = Math.min(3, this.zoom + 0.25);
-      console.log('[DocumentoViewer] Zoom aumentado a:', this.zoom);
     }
   }
 
   zoomOut(): void {
     if (this.zoom > 0.5) {
       this.zoom = Math.max(0.5, this.zoom - 0.25);
-      console.log('[DocumentoViewer] Zoom reducido a:', this.zoom);
     }
   }
 
   resetZoom(): void {
     this.zoom = 1;
-    console.log('[DocumentoViewer] Zoom restablecido a 100%');
   }
 
-  // Métodos para controlar la rotación
   rotateClockwise(): void {
     this.rotation = (this.rotation + 90) % 360;
   }

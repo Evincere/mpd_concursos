@@ -341,4 +341,11 @@ export class ActivityDashboardComponent implements OnInit, OnDestroy {
     this.pageIndex = 0;
     this.loadActivityLogs();
   }
+
+  /**
+   * Establece el tab activo
+   */
+  setActiveTab(tabIndex: number): void {
+    this.activeTab = tabIndex;
+  }
 }

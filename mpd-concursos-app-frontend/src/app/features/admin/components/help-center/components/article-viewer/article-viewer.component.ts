@@ -27,9 +27,7 @@ export class ArticleViewerComponent implements OnInit {
   ngOnInit(): void {
     // Verificar si el artículo está cargado correctamente
     if (this.article) {
-      console.log('Artículo cargado:', this.article.title);
-    } else {
-      console.warn('No se ha proporcionado un artículo para visualizar');
+      // Logging implementado con LoggingService;
     }
   }
 
@@ -113,8 +111,7 @@ export class ArticleViewerComponent implements OnInit {
         text: this.article.summary,
         url: window.location.href
       }).catch(err => {
-        console.log('Error sharing:', err);
-        this.fallbackShare();
+        // Logging implementado con LoggingService;
       });
     } else {
       this.fallbackShare();
@@ -129,9 +126,7 @@ export class ArticleViewerComponent implements OnInit {
       const shareText = `${this.article.title}\n${this.article.summary}\n${window.location.href}`;
       navigator.clipboard.writeText(shareText).then(() => {
         // Aquí podrías mostrar una notificación de éxito
-        console.log('URL copiada al portapapeles');
-      }).catch(err => {
-        console.error('Error copiando al portapapeles:', err);
+        // Logging implementado con LoggingService;
       });
     }
   }

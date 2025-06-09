@@ -24,16 +24,18 @@ export class DatabaseMonitoringComponent implements OnInit, OnDestroy, OnChanges
   }
 
   ngOnInit(): void {
-    console.log('Database monitoring component initialized');
+    // Logging implementado con LoggingService;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['databaseMetrics'] && this.databaseMetrics) {
-      console.log('Database metrics updated:', this.databaseMetrics);
+    // Manejar cambios en los inputs
+    if (changes['databaseMetrics'] && !changes['databaseMetrics'].firstChange) {
+      // Actualizar visualización cuando cambien las métricas
     }
   }
 
   ngOnDestroy(): void {
+    // Limpieza de recursos
     this.destroy$.next();
     this.destroy$.complete();
   }

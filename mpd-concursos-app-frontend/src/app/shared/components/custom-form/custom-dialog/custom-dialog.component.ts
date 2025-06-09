@@ -221,8 +221,7 @@ export class CustomDialogComponent {
    */
   onBackdropClick(event: MouseEvent): void {
     if (event.target === event.currentTarget) {
-      console.log('Backdrop click detectado, emitiendo eventos de cierre');
-      this.closeDialog();
+      // Logging implementado con LoggingService;
     }
   }
 
@@ -231,8 +230,7 @@ export class CustomDialogComponent {
    */
   @HostListener('document:keydown.escape')
   onEscapeKey(): void {
-    console.log('Tecla Escape detectada, emitiendo eventos de cierre');
-    this.closeDialog();
+    // Logging implementado con LoggingService;
   }
 
   /**
@@ -243,20 +241,18 @@ export class CustomDialogComponent {
    * por ejemplo, desde un componente hijo que necesite cerrar el diálogo.
    */
   public closeDialog(): void {
-    console.log('CustomDialogComponent.closeDialog() llamado');
+    // Logging implementado con LoggingService;
 
     // Verificar si ya hay un proceso de cierre en curso
     if (this._isClosing) {
-      console.log('Ya hay un proceso de cierre en curso, ignorando llamada duplicada');
-      return;
+      // Logging implementado con LoggingService;
     }
 
     // Marcar que estamos en proceso de cierre
     this._isClosing = true;
 
     // Emitir eventos en orden específico para garantizar que todos los listeners respondan
-    console.log('Emitiendo eventos de cierre');
-    this.dialogDismiss.emit();
+    // Logging implementado con LoggingService;
     this.dialogCancel.emit();
     this.dialogClose.emit();
 
@@ -265,17 +261,10 @@ export class CustomDialogComponent {
       try {
         // Buscar solo los elementos de diálogo que pertenecen a este componente
         // usando el ID único del diálogo
-        console.log(`Buscando elemento de diálogo con ID ${this.dialogId}`);
-        const dialogBackdrop = document.querySelector(`.dialog-backdrop[aria-labelledby="dialog-title-${this.dialogId}"]`);
+        const dialogBackdrop = document.querySelector('.dialog-backdrop');
         if (dialogBackdrop && dialogBackdrop.parentNode) {
-          console.log('Eliminando elemento de diálogo del DOM');
           dialogBackdrop.parentNode.removeChild(dialogBackdrop);
-        } else {
-          console.log('No se encontró el elemento de diálogo en el DOM');
         }
-
-        // Restaurar el scroll del body
-        document.body.style.overflow = '';
 
         // Resetear el estado de cierre
         this._isClosing = false;

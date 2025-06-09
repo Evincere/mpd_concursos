@@ -1,8 +1,10 @@
 /**
  * Possible states of an inscription
  *
+ * REFACTORING PHASE 3: Legacy states removed - Only standardized English states
+ *
  * Standardized states (English):
- * - ACTIVE: Initial state when an inscription is created or in progress (formerly IN_PROCESS)
+ * - ACTIVE: Initial state when an inscription is created or in progress
  * - PENDING: Inscription completed by user, waiting for admin validation
  * - COMPLETED_WITH_DOCS: Inscription completed with all required documentation
  * - COMPLETED_PENDING_DOCS: Inscription completed but with pending documentation
@@ -10,31 +12,17 @@
  * - APPROVED: Inscription approved by admin
  * - REJECTED: Inscription rejected by admin
  * - CANCELLED: Inscription cancelled by user
- *
- * Legacy states (kept for backward compatibility):
- * - NO_INSCRIPTO: User not inscribed (initial state)
- * - IN_PROCESS: Inscription in progress (now ACTIVE)
- * - PENDIENTE: Spanish for PENDING
- * - INSCRIPTO: Spanish for APPROVED
- * - CONFIRMADA: Spanish for PENDING (old terminology)
  */
 export enum InscripcionState {
-  // Standard states (English)
-  ACTIVE = 'ACTIVE',                           // New standardized state (replaces IN_PROCESS)
-  PENDING = 'PENDING',                         // Standardized state
+  // Standard states (English) - ONLY THESE REMAIN
+  ACTIVE = 'ACTIVE',                           // Initial state when inscription is created or in progress
+  PENDING = 'PENDING',                         // Inscription completed, waiting for admin validation
   COMPLETED_WITH_DOCS = 'COMPLETED_WITH_DOCS', // Inscription completed with all documentation
   COMPLETED_PENDING_DOCS = 'COMPLETED_PENDING_DOCS', // Inscription completed but documentation pending
   FROZEN = 'FROZEN',                           // Inscription frozen after peremptory deadline
-  APPROVED = 'APPROVED',                       // Standardized state
-  REJECTED = 'REJECTED',                       // Standardized state
-  CANCELLED = 'CANCELLED',                     // Standardized state
-
-  // Legacy states (kept for backward compatibility)
-  NO_INSCRIPTO = 'NO_INSCRIPTO',  // Legacy initial state
-  IN_PROCESS = 'IN_PROCESS',      // Legacy state, now ACTIVE
-  PENDIENTE = 'PENDIENTE',        // Legacy state (Spanish), now PENDING
-  INSCRIPTO = 'INSCRIPTO',        // Legacy state (Spanish), now APPROVED
-  CONFIRMADA = 'CONFIRMADA'       // Legacy state, now PENDING
+  APPROVED = 'APPROVED',                       // Inscription approved by admin
+  REJECTED = 'REJECTED',                       // Inscription rejected by admin
+  CANCELLED = 'CANCELLED'                      // Inscription cancelled by user
 }
 
 /**
@@ -44,19 +32,19 @@ export class InscripcionStateUtils {
 
   /**
    * States that allow resuming/continuing the inscription process
+   * REFACTORING: Solo estados estándar
    */
   static readonly RESUMABLE_STATES = [
     InscripcionState.ACTIVE,
-    InscripcionState.IN_PROCESS,
     InscripcionState.COMPLETED_PENDING_DOCS
   ];
 
   /**
    * States that are considered final and don't allow modifications
+   * REFACTORING: Solo estados estándar
    */
   static readonly FINAL_STATES = [
     InscripcionState.APPROVED,
-    InscripcionState.INSCRIPTO,
     InscripcionState.REJECTED,
     InscripcionState.CANCELLED,
     InscripcionState.FROZEN
@@ -64,20 +52,19 @@ export class InscripcionStateUtils {
 
   /**
    * States that allow document upload
+   * REFACTORING: Solo estados estándar
    */
   static readonly DOCUMENT_UPLOAD_ALLOWED_STATES = [
     InscripcionState.ACTIVE,
-    InscripcionState.IN_PROCESS,
     InscripcionState.COMPLETED_PENDING_DOCS
   ];
 
   /**
    * States that indicate the inscription is completed but pending validation
+   * REFACTORING: Solo estados estándar
    */
   static readonly PENDING_VALIDATION_STATES = [
     InscripcionState.PENDING,
-    InscripcionState.PENDIENTE,
-    InscripcionState.CONFIRMADA,
     InscripcionState.COMPLETED_WITH_DOCS,
     InscripcionState.COMPLETED_PENDING_DOCS
   ];
@@ -114,13 +101,11 @@ export class InscripcionStateUtils {
    * Get user-friendly label for state
    */
   static getStateLabel(state: InscripcionState): string {
+    // REFACTORING: Solo estados estándar después de eliminar legacy
     switch (state) {
       case InscripcionState.ACTIVE:
-      case InscripcionState.IN_PROCESS:
         return 'En Proceso';
       case InscripcionState.PENDING:
-      case InscripcionState.PENDIENTE:
-      case InscripcionState.CONFIRMADA:
         return 'Pendiente';
       case InscripcionState.COMPLETED_WITH_DOCS:
         return 'Completada con Documentos';
@@ -129,16 +114,13 @@ export class InscripcionStateUtils {
       case InscripcionState.FROZEN:
         return 'Congelada';
       case InscripcionState.APPROVED:
-      case InscripcionState.INSCRIPTO:
         return 'Aprobada';
       case InscripcionState.REJECTED:
         return 'Rechazada';
       case InscripcionState.CANCELLED:
         return 'Cancelada';
-      case InscripcionState.NO_INSCRIPTO:
-        return 'No Inscripto';
       default:
-        return 'Desconocido';
+        return 'Estado Desconocido';
     }
   }
 
@@ -146,13 +128,11 @@ export class InscripcionStateUtils {
    * Get CSS class for state styling
    */
   static getStateClass(state: InscripcionState): string {
+    // REFACTORING: Solo estados estándar después de eliminar legacy
     switch (state) {
       case InscripcionState.ACTIVE:
-      case InscripcionState.IN_PROCESS:
         return 'status-in-process';
       case InscripcionState.PENDING:
-      case InscripcionState.PENDIENTE:
-      case InscripcionState.CONFIRMADA:
       case InscripcionState.COMPLETED_PENDING_DOCS:
         return 'status-pending';
       case InscripcionState.COMPLETED_WITH_DOCS:
@@ -160,7 +140,6 @@ export class InscripcionStateUtils {
       case InscripcionState.FROZEN:
         return 'status-frozen';
       case InscripcionState.APPROVED:
-      case InscripcionState.INSCRIPTO:
         return 'status-approved';
       case InscripcionState.REJECTED:
         return 'status-rejected';

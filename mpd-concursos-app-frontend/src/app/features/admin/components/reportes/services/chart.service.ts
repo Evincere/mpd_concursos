@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import {
   Chart,
   ChartConfiguration,
@@ -71,7 +72,9 @@ export interface CustomChartOptions {
 export class ChartService {
   private charts: Map<string, Chart> = new Map();
 
-  constructor() {}
+  constructor(
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Crea un gráfico de barras

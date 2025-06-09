@@ -2,7 +2,11 @@ import { Injectable, Inject, forwardRef } from '@angular/core';
 import { CanDeactivate } from '@angular/router';
 import { ExamenNotificationService } from '../../examen-notification.service';
 import { ExamenSecurityService } from '../examen-security.service';
-import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
+import { SecurityViolationType, SecurityViolationDetails } from '@core/interfaces/security/security-violation.interface';
+
+interface ISecurityService {
+  reportSecurityViolation(type: SecurityViolationType, details?: SecurityViolationDetails): void;
+}
 
 export interface ComponentWithExam {
   isExamInProgress?: boolean;
@@ -14,7 +18,7 @@ export interface ComponentWithExam {
 export class ExamNavigationGuard implements CanDeactivate<ComponentWithExam> {
   constructor(
     @Inject(forwardRef(() => ExamenNotificationService)) private notificationService: ExamenNotificationService,
-    @Inject(forwardRef(() => ExamenSecurityService)) private securityService: ExamenSecurityService
+    @Inject(forwardRef(() => ExamenSecurityService)) private securityService: ExamenSecurityService & ISecurityService
   ) {}
 
   async canDeactivate(
@@ -23,7 +27,7 @@ export class ExamNavigationGuard implements CanDeactivate<ComponentWithExam> {
     try {
       if (component.isExamInProgress) {
         // Mostrar diálogo de advertencia primero
-        await this.notificationService.showSecurityWarning(
+        this.notificationService.showSecurityWarning(
           SecurityViolationType.SUSPICIOUS_BEHAVIOR,
           'La navegación durante el examen no está permitida. Si decide salir, esto será registrado como una violación de seguridad.'
         );

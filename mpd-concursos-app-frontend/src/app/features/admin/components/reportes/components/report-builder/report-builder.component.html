@@ -197,7 +197,7 @@
           <div class="step-actions">
             <button
               class="btn-primary"
-              (click)="activeStep = 1"
+              (click)="setActiveStep(1)"
               [disabled]="!canAdvanceToStep(1)"
               [attr.aria-label]="'Continuar al paso de filtros'">
               <span>Siguiente</span>
@@ -384,7 +384,7 @@
           <div class="step-actions">
             <button
               class="btn-secondary"
-              (click)="activeStep = 0"
+              (click)="setActiveStep(0)"
               [attr.aria-label]="'Volver al paso anterior'">
               <i class="fas fa-arrow-left"></i>
               <span>Anterior</span>
@@ -545,7 +545,7 @@
           <div class="step-actions">
             <button
               class="btn-secondary"
-              (click)="activeStep = 1"
+              (click)="setActiveStep(activeStep - 1)"
               [attr.aria-label]="'Volver al paso anterior'">
               <i class="fas fa-arrow-left"></i>
               <span>Anterior</span>

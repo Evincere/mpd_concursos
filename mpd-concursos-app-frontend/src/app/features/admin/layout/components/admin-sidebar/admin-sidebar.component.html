@@ -33,7 +33,7 @@
       </div>
       <ul class="results-list" *ngIf="searchResults.length > 0" [@listAnimation]="searchResults.length">
         <li *ngFor="let item of searchResults" class="result-item">
-          <a [routerLink]="item.route" routerLinkActive="active" (click)="isSearching = false">
+          <a [routerLink]="item.route" routerLinkActive="active" (click)="setIsSearching()">
             <i class="fas fa-{{item.icon}} result-icon" aria-hidden="true"></i>
             <span class="result-label">{{item.label}}</span>
           </a>
@@ -46,7 +46,7 @@
   <div class="favorites-section" *ngIf="showFavorites && favoriteItems.length > 0 && !isSearching">
     <div class="section-header" *ngIf="!collapsed">
       <h3 class="section-title">Favoritos</h3>
-      <button class="toggle-button" (click)="showFavorites = !showFavorites" aria-label="Ocultar favoritos">
+      <button class="toggle-button" (click)="setShowFavorites()" aria-label="Ocultar favoritos">
         <i class="fas fa-chevron-up" aria-hidden="true"></i>
       </button>
     </div>
@@ -130,7 +130,7 @@
                 [routerLinkActive]="item.children ? '' : 'active'"
                 [routerLinkActiveOptions]="{ exact: true }"
                 [class.has-children]="item.children"
-                (click)="item.children ? (item.expanded = !item.expanded) : null">
+                (click)="setExpanded(item)">
                 <i class="fas fa-{{item.icon}} nav-icon" aria-hidden="true"></i>
                 <span class="nav-label">{{item.label}}</span>
 
@@ -250,7 +250,7 @@
           [routerLink]="item.route"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }"
-          (click)="activeFloatingModule = null">
+          (click)="setActiveFloatingModule()">
           <i class="fas fa-{{item.icon}} floating-icon" aria-hidden="true"></i>
           <span class="floating-label">{{item.label}}</span>
 

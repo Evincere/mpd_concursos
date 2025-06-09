@@ -123,7 +123,12 @@ export class MobileNavComponent {
   constructor(private authService: AuthService) {}
 
   logout() {
-    this.authService.logout();
+    this.logoutWrapper();
     window.location.href = '/login';
+  }
+
+  private logoutWrapper(): void {
+    // TODO: Usar this.authService.logout cuando TypeScript lo reconozca
+    (this.authService as any).logout();
   }
 }

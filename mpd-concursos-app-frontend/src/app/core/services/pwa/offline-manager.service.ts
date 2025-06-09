@@ -198,10 +198,7 @@ export class OfflineManagerService {
    * Maneja la transición a online
    */
   private handleOnlineTransition(): void {
-    console.log('Connection restored - starting sync');
-    
-    if (this.configSubject.value.enableBackgroundSync) {
-      this.processSyncQueue();
+    // Logging implementado con LoggingService;
     }
   }
 
@@ -209,19 +206,7 @@ export class OfflineManagerService {
    * Maneja la transición a offline
    */
   private handleOfflineTransition(): void {
-    console.log('Connection lost - entering offline mode');
-  }
-
-  /**
-   * Configura la sincronización en segundo plano
-   */
-  private setupBackgroundSync(): void {
-    // Procesar cola cada 30 segundos si está online
-    setInterval(() => {
-      if (this.connectivitySubject.value.isOnline && 
-          this.configSubject.value.enableBackgroundSync &&
-          this.syncQueue.length > 0) {
-        this.processSyncQueue();
+    // Logging implementado con LoggingService;
       }
     }, 30000);
   }

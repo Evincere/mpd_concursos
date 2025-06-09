@@ -41,7 +41,12 @@ public class UserStatusController {
             @PathVariable UUID userId,
             @RequestBody UserStatusChangeRequest request) {
 
-        log.info("Cambiando estado del usuario {} a {}", userId, request.getStatus());
+        // Obtener información del usuario que realiza la acción para auditoría
+        String currentUserId = securityUtils.getCurrentUserId();
+        String currentUsername = securityUtils.getCurrentUsername();
+
+        log.info("Usuario {} (ID: {}) cambiando estado del usuario {} a {}",
+                currentUsername, currentUserId, userId, request.getStatus());
 
         try {
             // Validar que el estado solicitado sea válido
@@ -49,35 +54,47 @@ public class UserStatusController {
             try {
                 newStatus = UserStatus.valueOf(request.getStatus().toUpperCase());
             } catch (IllegalArgumentException e) {
-                log.error("Estado inválido: {}", request.getStatus());
+                log.error("Estado inválido: {} solicitado por usuario {}", request.getStatus(), currentUsername);
                 return ResponseEntity.badRequest().build();
             }
 
-            // Obtener el usuario actual
-            User user = userService.getById(userId)
+            // Validación de seguridad: evitar que un usuario cambie su propio estado
+            if (currentUserId != null && currentUserId.equals(userId.toString())) {
+                log.warn("Usuario {} intentó cambiar su propio estado - operación denegada", currentUsername);
+                return ResponseEntity.status(403).build(); // Forbidden
+            }
+
+            // Obtener el usuario objetivo
+            User targetUser = userService.getById(userId)
                     .orElseThrow(() -> {
-                        log.error("Usuario no encontrado: {}", userId);
+                        log.error("Usuario objetivo no encontrado: {} (solicitado por {})", userId, currentUsername);
                         return new RuntimeException("Usuario no encontrado");
                     });
 
-            // Cambiar el estado del usuario
+            // Registrar el estado anterior para auditoría
+            UserStatus previousStatus = targetUser.getStatus();
+            log.info("Cambiando estado del usuario {} de {} a {} (acción realizada por {})",
+                    targetUser.getUsername().value(), previousStatus, newStatus, currentUsername);
+
             // Establecer el nuevo estado
-            user.setStatus(newStatus);
+            targetUser.setStatus(newStatus);
 
             // Actualizar el usuario
-            user = userService.updateUser(user);
+            targetUser = userService.updateUser(targetUser);
 
-            log.info("Estado del usuario {} cambiado a {} correctamente", userId, newStatus);
+            log.info("Estado del usuario {} cambiado exitosamente de {} a {} por el administrador {}",
+                    targetUser.getUsername().value(), previousStatus, newStatus, currentUsername);
 
             // Mapear y devolver la respuesta
             UserStatusResponse response = new UserStatusResponse();
             response.setId(userId.toString());
-            response.setUsername(user.getUsername().value());
+            response.setUsername(targetUser.getUsername().value());
             response.setStatus(newStatus.toString());
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            log.error("Error al cambiar el estado del usuario {}: {}", userId, e.getMessage());
+            log.error("Error al cambiar el estado del usuario {} (solicitado por {}): {}",
+                    userId, currentUsername, e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }

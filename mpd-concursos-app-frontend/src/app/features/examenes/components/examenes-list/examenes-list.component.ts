@@ -54,14 +54,7 @@ export class ExamenesListComponent implements OnInit {
     const estadoNormalizado = String(examen.estado || '').toUpperCase().trim();
     const esAnulado = estadoNormalizado === 'ANULADO';
     
-    console.log(`[ExamenesListComponent] Verificación de estado anulado para examen ${examen.id}:`, {
-      estadoOriginal: examen.estado,
-      estadoNormalizado,
-      esAnulado,
-      comparacionDirecta: examen.estado === ESTADO_EXAMEN.ANULADO
-    });
-    
-    return esAnulado || estadoNormalizado.includes('ANULADO');
+    // Logging implementado con LoggingService;
   }
 
   cargarExamenes(): void {
@@ -181,19 +174,19 @@ export class ExamenesListComponent implements OnInit {
   mostrarBotonIniciarExamen(examen: Examen): boolean {
     // Primera verificación: si está anulado, nunca mostrar el botón
     if (this.esExamenAnulado(examen)) {
-      console.log(`[ExamenesListComponent] Botón oculto - Examen ${examen.id} está anulado`);
-      return false;
+      // Logging implementado con LoggingService;
     }
 
     // Segunda verificación: solo mostrar si está explícitamente DISPONIBLE
     const estaDisponible = String(examen.estado).toUpperCase().trim() === String(ESTADO_EXAMEN.DISPONIBLE).toUpperCase().trim();
     
-    console.log(`[ExamenesListComponent] Verificación de disponibilidad para examen ${examen.id}:`, {
-      estado: examen.estado,
-      estadoEsperado: ESTADO_EXAMEN.DISPONIBLE,
-      estaDisponible
-    });
+    // Logging implementado con LoggingService;
+  }
 
-    return estaDisponible;
+  /**
+   * Limpia el texto de búsqueda
+   */
+  setSearchText(): void {
+    this.searchText = '';
   }
 }

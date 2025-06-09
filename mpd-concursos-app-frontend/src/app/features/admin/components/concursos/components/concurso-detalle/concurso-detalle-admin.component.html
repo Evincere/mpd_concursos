@@ -67,25 +67,25 @@
         <button
           class="tab-button"
           [class.active]="activeTab === 0"
-          (click)="activeTab = 0">
+          (click)="setActiveTab(0)">
           Información General
         </button>
         <button
           class="tab-button"
           [class.active]="activeTab === 1"
-          (click)="activeTab = 1">
+          (click)="setActiveTab(1)">
           Fechas Importantes ({{fechas.length}})
         </button>
         <button
           class="tab-button"
           [class.active]="activeTab === 2"
-          (click)="activeTab = 2">
+          (click)="setActiveTab(2)">
           Requisitos ({{requisitos.length}})
         </button>
         <button
           class="tab-button"
           [class.active]="activeTab === 3"
-          (click)="activeTab = 3">
+          (click)="setActiveTab(3)">
           Inscripciones
         </button>
       </div>

@@ -1,4 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable, fromEvent, merge } from 'rxjs';
 import { debounceTime, throttleTime, map, startWith } from 'rxjs/operators';
 
@@ -71,7 +72,10 @@ export class PerformanceOptimizationService {
   // Performance Observer
   private performanceObserver?: PerformanceObserver;
   
-  constructor(private ngZone: NgZone) {
+  constructor(
+    private ngZone: NgZone,
+    private loggingService: LoggingService
+  ) {
     this.initializePerformanceMonitoring();
     this.initializeLazyLoading();
     this.initializeNetworkMonitoring();

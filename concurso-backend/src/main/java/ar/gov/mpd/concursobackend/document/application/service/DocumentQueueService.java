@@ -157,4 +157,13 @@ public class DocumentQueueService {
             return isCompleted && isOld;
         });
     }
+
+    /**
+     * Obtiene el tamaño actual de la cola de documentos.
+     *
+     * @return Número de documentos en cola
+     */
+    public int getQueueSize() {
+        return documentQueue.size();
+    }
 }

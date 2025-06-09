@@ -48,11 +48,9 @@ export class AdminContestRequirementsService {
    * @param contestId ID del concurso
    */
   getContestRequirements(contestId: number | string): Observable<ContestRequirement[]> {
-    console.log(`[AdminContestRequirementsService] Obteniendo requisitos para concurso ID: ${contestId}`);
-
     return this.http.get<ContestRequirement[]>(`${this.apiUrl}/${contestId}/requirements`).pipe(
       catchError(error => {
-        console.error(`Error obteniendo requisitos del concurso con ID ${contestId}:`, error);
+        console.error(`Error obteniendo requisitos del concurso ${contestId}:`, error);
         throw error;
       })
     );

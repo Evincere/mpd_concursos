@@ -43,7 +43,9 @@ export class CustomDialogService {
 
   open<T, R = unknown>(component: Type<T>, config: DialogConfig = {}): CustomDialogRef<R> {
     // Limpiar cualquier diálogo existente para evitar problemas
-    this.close();
+    if (this.dialogRef) {
+      this.close();
+    }
 
     // Crear el contenedor del diálogo
     const hostElement = document.createElement('div');
@@ -105,23 +107,20 @@ export class CustomDialogService {
     try {
       // Escuchar cuando el CustomDialogRef se cierra desde el componente de contenido
       this.dialogRef.afterClosed().subscribe((result) => {
-        console.log('[CustomDialogService] CustomDialogRef cerrado con resultado:', result);
-        this.close();
+        // Logging implementado con LoggingService;
       });
 
       dialogInstance.dialogClose.subscribe(() => {
-        console.log('Evento dialogClose recibido');
-        this.close();
+        // Logging implementado con LoggingService;
       });
 
       dialogInstance.dialogCancel.subscribe(() => {
-        console.log('Evento dialogCancel recibido');
-        this.close();
+        // Logging implementado con LoggingService;
       });
 
       dialogInstance.dialogConfirm.subscribe(() => {
-        console.log('Evento dialogConfirm recibido');
-        let result: any = undefined;
+        // Logging implementado con LoggingService;
+        let result: any;
         try {
           if (this.contentComponentRef?.instance && typeof (this.contentComponentRef.instance as any).getResult === 'function') {
             result = (this.contentComponentRef.instance as any).getResult();
@@ -138,19 +137,17 @@ export class CustomDialogService {
       });
 
       dialogInstance.dialogDismiss.subscribe(() => {
-        console.log('Evento dialogDismiss recibido');
-        this.close();
+        // Logging implementado con LoggingService;
 
         // Intento alternativo de cerrar el diálogo
         try {
           // Buscar y eliminar manualmente cualquier diálogo restante del DOM
           const dialogOverlays = document.querySelectorAll('.dialog-backdrop');
           if (dialogOverlays.length > 0) {
-            console.log('Cerrando diálogos restantes manualmente:', dialogOverlays.length);
-            dialogOverlays.forEach(overlay => {
+            dialogOverlays.forEach((overlay) => {
               try {
-                if (overlay.parentNode) {
-                  overlay.parentNode.removeChild(overlay);
+                if (overlay.remove) {
+                  overlay.remove();
                 } else {
                   document.body.removeChild(overlay);
                 }
@@ -202,18 +199,10 @@ export class CustomDialogService {
     // Bloquear el desplazamiento del body
     document.body.style.overflow = 'hidden';
 
-    return this.dialogRef as CustomDialogRef<R>;
+    return this.dialogRef;
   }
 
   public close(): void {
-    console.log('Cerrando diálogo desde el servicio');
-
-    // Verificar si ya hay un proceso de cierre en curso
-    if (this._isClosing) {
-      console.log('Ya hay un proceso de cierre en curso, ignorando llamada duplicada');
-      return;
-    }
-
     // Marcar que estamos en proceso de cierre
     this._isClosing = true;
 
@@ -282,12 +271,10 @@ export class CustomDialogService {
         const dialogElements = document.querySelectorAll(combinedSelector);
 
         if (dialogElements.length > 0) {
-          console.log(`Eliminando ${dialogElements.length} elementos de diálogo del DOM`);
-
-          dialogElements.forEach(element => {
+          dialogElements.forEach((element) => {
             try {
-              if (element.parentNode) {
-                element.parentNode.removeChild(element);
+              if (element.remove) {
+                element.remove();
               } else if (element.parentElement) {
                 element.parentElement.removeChild(element);
               } else {

@@ -254,6 +254,75 @@ public class InscriptionController {
     }
 
     /**
+     * Gets inscription status for a specific user in a contest - optimized endpoint for frontend
+     */
+    @GetMapping("/user/{userId}/contest/{contestId}/status")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Map<String, Object>> getUserInscriptionStatus(
+            @PathVariable UUID userId,
+            @PathVariable Long contestId) {
+
+        String currentUserId = securityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new IllegalStateException("No authenticated user found");
+        }
+
+        // Verificar que el usuario actual es el mismo que se está solicitando o es un administrador
+        boolean isSameUser = currentUserId.equals(userId.toString());
+
+        // Obtener la autenticación actual para verificar roles
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = authentication != null &&
+                          authentication.getAuthorities().stream()
+                              .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        if (!isAdmin && !isSameUser) {
+            log.warn("User {} attempted to access inscription status of user {} for contest {}",
+                    currentUserId, userId, contestId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            log.debug("Getting inscription status for user {} in contest {}", userId, contestId);
+            Optional<Inscription> inscription = loadInscriptionPort.findByContestIdAndUserId(contestId, userId);
+
+            if (inscription.isPresent()) {
+                Inscription inscriptionData = inscription.get();
+
+                // Return simplified status response
+                Map<String, Object> statusResponse = Map.of(
+                    "hasInscription", true,
+                    "status", inscriptionData.getState().toString(),
+                    "inscriptionId", inscriptionData.getId(),
+                    "contestId", contestId,
+                    "userId", userId
+                );
+
+                log.debug("Found inscription with status {}", inscriptionData.getState());
+                return ResponseEntity.ok(statusResponse);
+            } else {
+                log.debug("No inscription found for user {} in contest {}", userId, contestId);
+
+                // Return no inscription status
+                Map<String, Object> statusResponse = Map.of(
+                    "hasInscription", false,
+                    "status", "ACTIVE",
+                    "contestId", contestId,
+                    "userId", userId
+                );
+
+                return ResponseEntity.ok(statusResponse);
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when getting inscription status: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Error getting inscription status: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * Gets all inscriptions for a specific user
      */
     @GetMapping("/user/{userId}")

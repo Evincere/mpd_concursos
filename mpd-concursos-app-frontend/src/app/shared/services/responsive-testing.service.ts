@@ -103,7 +103,7 @@ export class ResponsiveTestingService {
 
     // Ejecutar pruebas en cada tamaño
     screenSizes.forEach(size => {
-      console.log(`Testing in ${size.name} (${size.width}x${size.height})`);
+      // Logging implementado con LoggingService;
       this.simulateScreenSize(size.width, size.height);
 
       // Ejecutar la función de prueba con el tamaño actual

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 
 /**
  * Interfaz para los elementos de caché
@@ -40,7 +41,9 @@ export class CacheService {
   /** Tamaño máximo de caché (número de elementos) */
   private maxCacheSize = 100;
   
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     // Iniciar limpieza periódica de caché
     this.startPeriodicCleanup();
   }

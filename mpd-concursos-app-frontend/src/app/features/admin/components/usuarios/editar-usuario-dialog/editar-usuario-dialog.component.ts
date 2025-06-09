@@ -1,16 +1,18 @@
-import { Component, OnInit, Inject, Optional } from '@angular/core';
+import { Component, OnInit, Inject, Optional, ViewChild } from '@angular/core'; // Import ViewChild
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs/operators'; // Import finalize
 
-// Componentes personalizados
+// Custom Components
 import { UsuarioFormComponent } from '../usuario-form/usuario-form.component';
 import { CustomDialogRef } from '@shared/components/custom-form/custom-dialog/custom-dialog-ref';
 import { DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/dialog-ref';
 
-// Servicios
+// Services
 import { UserService } from '../application/services/user.service';
-import { NotificationService } from '@shared/services/notification.service';
+import { NotificationService } from '@shared/services/notification.service'; // Assuming NotificationService path
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
-// Modelos
+// Models
 import { User, UpdateUserRequest } from '../domain/models/user.model';
 
 @Component({
@@ -30,71 +32,82 @@ import { User, UpdateUserRequest } from '../domain/models/user.model';
   `,
   styles: [`
     :host {
-      display: contents;
+      display: contents; /* Allows the dialog content to stretch full width/height */
     }
   `]
 })
 export class EditarUsuarioDialogComponent implements OnInit {
+  @ViewChild(UsuarioFormComponent) userFormComponent!: UsuarioFormComponent; // Get reference to the child form component
+
   usuario: User | null = null;
-  isLoading = false;
+  isLoading = false; // State to manage loading indicator
 
   constructor(
     private userService: UserService,
     private notificationService: NotificationService,
-    @Optional() private dialogRef: CustomDialogRef,
-    @Optional() @Inject(DIALOG_DATA) private dialogData: { usuario: User }
+    @Optional() private dialogRef: CustomDialogRef<any>,
+    @Optional() @Inject(DIALOG_DATA) private dialogData: { usuario: User },
+    private loggingService: LoggingService // Inject LoggingService
   ) {
     if (this.dialogData && this.dialogData.usuario) {
       this.usuario = this.dialogData.usuario;
+      this.loggingService.debug('[EditarUsuarioDialogComponent] Dialog initialized with user data.', this.usuario, 'EditUserDialog');
+    } else {
+      this.loggingService.warn('[EditarUsuarioDialogComponent] Dialog initialized without user data. This might be an error.', undefined, 'EditUserDialog');
     }
   }
 
   ngOnInit(): void {
-    console.log('EditarUsuarioDialogComponent inicializado con usuario:', this.usuario);
+    // No additional initialization logic needed here, as the form is handled by UsuarioFormComponent
   }
 
-
-
+  /**
+   * Handles the formCancel event emitted by UsuarioFormComponent.
+   * Closes the dialog, indicating cancellation.
+   */
   onClose(): void {
-    console.log('Cerrando diálogo de edición de usuario');
-
-    // Simplemente delegar al dialogRef si está disponible
+    this.loggingService.info('[EditarUsuarioDialogComponent] Form cancelled. Closing dialog.', undefined, 'EditUserDialog');
     if (this.dialogRef) {
-      this.dialogRef.close(null);
+      this.dialogRef.close(false); // Close dialog and pass false for cancellation
     }
-    // No hacemos nada más aquí, ya que el botón Cancelar en el formulario
-    // ahora tiene su propia lógica para cerrar el diálogo
   }
 
-  onSaveUser(userData: Record<string, unknown>): void {
+  /**
+   * Handles the saveUser event emitted by UsuarioFormComponent.
+   * Sends the updated user data to the UserService.
+   * @param userData The user data emitted by the form.
+   */
+  onSaveUser(userData: any): void { // Changed type to any to accept form data with password
     if (!this.usuario || !this.usuario.id) {
       this.notificationService.error('Error: No se puede editar el usuario sin un ID válido');
+      this.loggingService.error('[EditarUsuarioDialogComponent] Attempted to save user without a valid ID.', userData, 'EditUserDialog');
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading = true; // Set loading state to true
+    this.userFormComponent.isLoading = true; // Also set loading state on the form component for visual feedback
 
-    // Construir el objeto de actualización de usuario
+    // Construct the update user request
     const updateUserRequest: UpdateUserRequest = {
-      id: this.usuario.id,
-      email: userData['email'] as string,
-      firstName: userData['nombre'] as string,
-      lastName: userData['apellido'] as string,
-      dni: userData['dni'] as string,
-      cuit: (userData['cuit'] as string) ? (userData['cuit'] as string) : undefined,
-      birthDate: userData['birthDate'] as Date,
-      country: userData['country'] as string,
-      province: userData['province'] as string,
-      municipality: userData['municipality'] as string,
-      legalAddress: userData['legalAddress'] as string,
-      residentialAddress: userData['residentialAddress'] as string,
-      roles: userData['roles'] as string[],
-      enabled: userData['estado'] === 'activo',
-      telefono: (userData['telefono'] as string) ? (userData['telefono'] as string) : undefined,
-      direccion: (userData['direccion'] as string) ? (userData['direccion'] as string) : undefined
+      id: this.usuario.id, // Ensure ID is from the original user being edited
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      dni: userData.dni,
+      cuit: userData.cuit,
+      birthDate: userData.birthDate, // Already ISO string from form
+      email: userData.email,
+      telefono: userData.telefono,
+      country: userData.country,
+      province: userData.province,
+      municipality: userData.municipality,
+      legalAddress: userData.legalAddress,
+      residentialAddress: userData.residentialAddress,
+      direccion: userData.direccion, // Use direccion instead of address
+      roles: userData.roles,
+      enabled: userData.enabled // Use enabled property instead of status
     };
 
-    // Eliminar propiedades undefined o null
+    // Clean undefined or null properties from the request to avoid sending unnecessary data
     Object.keys(updateUserRequest).forEach(key => {
       const typedKey = key as keyof UpdateUserRequest;
       if (updateUserRequest[typedKey] === undefined || updateUserRequest[typedKey] === null) {
@@ -102,158 +115,72 @@ export class EditarUsuarioDialogComponent implements OnInit {
       }
     });
 
-    // Validar datos antes de enviar
-    if (!this.validarDatos(updateUserRequest)) {
-      this.isLoading = false;
-      return;
-    }
+    this.loggingService.info(`[EditarUsuarioDialogComponent] Sending update request for user ${this.usuario.id}.`, updateUserRequest, 'EditUserDialog');
 
-    console.log('Enviando solicitud de actualización:', updateUserRequest);
-
-    // Llamar al servicio para actualizar el usuario
-    console.log('[EditarUsuarioDialog] Enviando solicitud de actualización al servicio:', updateUserRequest);
-
-    this.userService.updateUser(updateUserRequest).subscribe({
-      next: (updatedUser) => {
-        this.isLoading = false;
-        console.log('[EditarUsuarioDialog] Usuario actualizado correctamente:', updatedUser);
-
-        // Primero cerrar el diálogo para evitar superposiciones
-        if (this.dialogRef) {
-          this.dialogRef.close(updatedUser);
-        } else {
-          this.onClose();
-        }
-
-        // Mostrar notificación después de cerrar el diálogo
-        setTimeout(() => {
+    this.userService.updateUser(updateUserRequest)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false; // Always reset loading state
+          this.userFormComponent.isLoading = false; // Reset form component's loading state
+          this.loggingService.debug('[EditarUsuarioDialogComponent] User update request finalized.', undefined, 'EditUserDialog');
+        })
+      )
+      .subscribe({
+        next: (updatedUser) => {
+          this.loggingService.info(`[EditarUsuarioDialogComponent] User ${updatedUser.id} updated successfully.`, updatedUser, 'EditUserDialog');
           this.notificationService.success(`Usuario ${updatedUser.firstName} ${updatedUser.lastName} actualizado correctamente`);
 
-          // Emitir un evento personalizado para notificar que se ha actualizado un usuario
+          if (this.dialogRef) {
+            this.dialogRef.close(true); // Close dialog and pass true for success
+          }
+
+          // Emit a custom event to notify other parts of the application (e.g., table refresh)
           const event = new CustomEvent('userUpdated', { detail: updatedUser });
           document.dispatchEvent(event);
-        }, 300);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('[EditarUsuarioDialog] Error actualizando usuario:', error);
+          this.loggingService.debug('[EditarUsuarioDialogComponent] "userUpdated" event dispatched.', event.detail, 'EditUserDialog');
+        },
+        error: (error) => {
+          this.loggingService.error('[EditarUsuarioDialogComponent] Error updating user:', error, 'EditUserDialog');
+          console.error('[EditarUsuarioDialogComponent] Error actualizando usuario:', error);
 
-        // Mostrar más detalles del error
-        if (error.status) {
-          console.error(`[EditarUsuarioDialog] Status: ${error.status}, Mensaje: ${error.message}`);
-        }
-
-        if (error.error) {
-          console.error('[EditarUsuarioDialog] Error detallado:', error.error);
-        }
-
-        // Generar mensaje de error más descriptivo
-        let errorMessage = 'Error al actualizar el usuario';
-
-        if (error.status === 400) {
-          errorMessage = 'Error de validación en los datos del usuario';
-
-          if (error.error && error.error.detail) {
-            errorMessage += `: ${error.error.detail}`;
-          }
-        } else if (error.status === 500) {
-          errorMessage = 'Error interno del servidor al procesar la solicitud';
-
-          // Intentar proporcionar más información sobre el error
-          if (error.error && error.error.detail) {
-            errorMessage += `. ${error.error.detail}`;
-          } else {
-            errorMessage += '. Por favor, verifique los datos e intente nuevamente.';
+          // Delegate error handling to the form component to display field-specific errors
+          if (this.userFormComponent) {
+            this.userFormComponent.handleApiError(error);
           }
 
-          // Verificar si el error está relacionado con el CUIT
-          const errorString = JSON.stringify(error).toLowerCase();
-          if (errorString.includes('cuit')) {
-            errorMessage = 'Error al validar el CUIT. Asegúrese de que el CUIT tenga 11 dígitos numéricos y un formato válido, o déjelo en blanco.';
+          // Generate a more descriptive error message for the notification
+          let errorMessage = 'Error al actualizar el usuario.';
 
-            // Limpiar el CUIT en el formulario
-            if (this.usuario) {
-              this.usuario.cuit = undefined;
+          if (error.status === 400) {
+            errorMessage = 'Error de validación en los datos del usuario. Por favor, revise los campos marcados.';
+            if (error.error && error.error.detail) {
+              errorMessage += ` Detalles: ${error.error.detail}`;
             }
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor al procesar la solicitud.';
+            if (error.error && error.error.detail) {
+              errorMessage += ` Detalles: ${error.error.detail}`;
+            } else {
+              errorMessage += ' Por favor, verifique los datos e intente nuevamente.';
+            }
+
+            // Check if the error is related to CUIT (specific backend validation)
+            const errorString = JSON.stringify(error).toLowerCase();
+            if (errorString.includes('cuit')) {
+              errorMessage = 'Error al validar el CUIT. Asegúrese de que el CUIT tenga 11 dígitos numéricos y un formato válido, o déjelo en blanco.';
+              // Optionally, try to clear the CUIT in the form if it was the issue
+              if (this.usuario) {
+                 // Note: this.usuario is an @Input, directly modifying might not reflect on form unless re-patched
+                 // It's better for the form component itself to handle its own error display/clearing.
+              }
+            }
+          } else if (error.status === 0) {
+            errorMessage = 'Error de conexión. Por favor, verifique su conexión a internet e intente nuevamente.';
           }
 
-          // Mostrar el error
+          // Show error notification without closing the dialog
           this.notificationService.error(errorMessage);
-          return;
-        } else if (error.status === 0) {
-          errorMessage = 'Error de conexión. Por favor, verifique su conexión a internet e intente nuevamente.';
         }
-
-        // Mostrar notificación de error sin cerrar el diálogo para permitir corregir los datos
-        this.notificationService.error(errorMessage);
-      }
-    });
+      });
   }
-
-  /**
-   * Valida los datos del usuario antes de enviarlos al servidor
-   * @param user Datos del usuario a validar
-   * @returns true si los datos son válidos, false en caso contrario
-   */
-  private validarDatos(user: UpdateUserRequest): boolean {
-    // Validar email
-    if (user.email && !this.validarEmail(user.email)) {
-      this.notificationService.error('El formato del email no es válido');
-      return false;
-    }
-
-    // Validar que tenga al menos un rol
-    if (!user.roles || user.roles.length === 0) {
-      this.notificationService.error('El usuario debe tener al menos un rol asignado');
-      return false;
-    }
-
-    // Validar DNI
-    if (user.dni && !this.validarDNI(user.dni)) {
-      this.notificationService.error('El formato del DNI no es válido');
-      return false;
-    }
-
-    // Validar CUIT si está presente
-    if (user.cuit && !this.validarCUIT(user.cuit)) {
-      this.notificationService.error('El formato del CUIT no es válido. Debe tener 11 dígitos numéricos');
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Valida el formato de un CUIT
-   * @param cuit CUIT a validar
-   * @returns true si el CUIT es válido, false en caso contrario
-   */
-  private validarCUIT(cuit: string): boolean {
-    // Validar que el CUIT tenga 11 dígitos numéricos
-    const cuitRegex = /^\d{11}$/;
-    return cuitRegex.test(cuit);
-  }
-
-  /**
-   * Valida el formato de un email
-   * @param email Email a validar
-   * @returns true si el email es válido, false en caso contrario
-   */
-  private validarEmail(email: string): boolean {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-  }
-
-  /**
-   * Valida el formato de un DNI
-   * @param dni DNI a validar
-   * @returns true si el DNI es válido, false en caso contrario
-   */
-  private validarDNI(dni: string): boolean {
-    // Validar que el DNI tenga entre 7 y 9 dígitos
-    const dniRegex = /^\d{7,9}$/;
-    return dniRegex.test(dni);
-  }
-
-
 }

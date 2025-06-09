@@ -1,44 +1,16 @@
+import { Contest, ContestStatus } from '../concurso/concurso.interface';
+
 export interface Postulacion {
     id?: string; // Cambiado de number a string para manejar UUIDs
     contestId: number;
     userId?: string;
     estado: PostulationStatus;
     fechaPostulacion: string;
-    concurso?: Concurso;
+    concurso?: Contest;  // REFACTORING: Usar interface unificada
     attachedDocuments?: AttachedDocument[];
 }
 
-export interface Concurso {
-    id: number;
-    titulo: string;
-    cargo: string;
-    dependencia: string;
-    estado: string;
-    fechaInicio: string;
-    fechaFin: string;
-    results?: ContestResults;
-    resolution?: Resolution;
-    requirements?: Requirements;
-    category: string;
-    class: string;
-    status: ContestStatus;
-}
-
-export interface Contest {
-    id: number;
-    title: string;
-    position: string;
-    department: string;
-    category: string;
-    class: string;
-    type: ContestType;
-    status: ContestStatus;
-    startDate: string;
-    endDate: string;
-    resolution: Resolution;
-    requirements?: Requirements;
-    results?: ContestResults;
-}
+// REFACTORING: Interfaces duplicadas eliminadas - usar Contest de concurso.interface.ts
 
 export interface Resolution {
     number: string;
@@ -72,13 +44,15 @@ export interface AttachedDocument {
 }
 
 export enum PostulationStatus {
-    PENDING = 'PENDING',
-    ACCEPTED = 'ACCEPTED',
-    REJECTED = 'REJECTED',
-    CANCELLED = 'CANCELLED',
+    // Estados estándar de inscripción (únicos estados válidos)
     ACTIVE = 'ACTIVE',
-    IN_PROCESS = 'IN_PROCESS',
-    NO_INSCRIPTO = 'NO_INSCRIPTO'
+    PENDING = 'PENDING',
+    COMPLETED_WITH_DOCS = 'COMPLETED_WITH_DOCS',
+    COMPLETED_PENDING_DOCS = 'COMPLETED_PENDING_DOCS',
+    FROZEN = 'FROZEN',
+    APPROVED = 'APPROVED',
+    REJECTED = 'REJECTED',
+    CANCELLED = 'CANCELLED'
 }
 
 export enum ContestType {
@@ -86,13 +60,7 @@ export enum ContestType {
     CLOSED = 'CLOSED'
 }
 
-export enum ContestStatus {
-    OPEN = 'OPEN',
-    CLOSED = 'CLOSED',
-    IN_PROCESS = 'IN_PROCESS',
-    FAILED = 'FAILED',
-    FINISHED = 'FINISHED'
-}
+// REFACTORING: ContestStatus duplicado eliminado - usar ContestStatus de concurso.interface.ts
 
 export enum StageStatus {
     PENDING = 'PENDING',

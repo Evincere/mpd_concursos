@@ -1,3 +1,4 @@
+import { LoggingService } from '@core/services/logging/logging.service';
 /**
  * Opciones para el decorador de medición de rendimiento
  */
@@ -93,10 +94,7 @@ function logPerformance(
         'color: #ff9800; font-weight: bold;'
       );
     } else {
-      console.log(
-        `%c📊 Rendimiento: ${methodName} - ${executionTime.toFixed(2)}ms`,
-        'color: #4caf50;'
-      );
+      this.loggingService.debug('%c⚡ ${methodName}: ${executionTime.toFixed(2)}ms', 'color: #4caf50;', 'Performance');
     }
   }
   
@@ -156,10 +154,7 @@ export class PerformanceTracker {
     this.averages.set(name, average);
     
     if (logToConsole) {
-      console.log(
-        `%c📊 ${name} - ${executionTime.toFixed(2)}ms (promedio: ${(average.total / average.count).toFixed(2)}ms)`,
-        'color: #2196f3;'
-      );
+      this.loggingService.debug('%c⏱️ ${name}: ${executionTime.toFixed(2)}ms (promedio: ${(average.total / average.count).toFixed(2)}ms)', 'color: #2196f3;', 'Performance');
     }
     
     // Limpiar el temporizador
@@ -226,20 +221,18 @@ export class PerformanceTracker {
     console.group('📊 Resumen de rendimiento');
     
     if (this.averages.size > 0) {
-      console.log('%cPromedios de tiempo:', 'font-weight: bold;');
-      
+      this.loggingService.debug('%cPromedios de tiempo:', 'font-weight: bold; color: #2196f3;', 'Performance');
+
       this.averages.forEach((value, key) => {
-        console.log(
-          `  ${key}: ${(value.total / value.count).toFixed(2)}ms (${value.count} ejecuciones)`
-        );
+        this.loggingService.debug('  ${key}: ${(value.total / value.count).toFixed(2)}ms (${value.count} ejecuciones)', undefined, 'Performance');
       });
     }
-    
+
     if (this.counters.size > 0) {
-      console.log('%cContadores:', 'font-weight: bold;');
-      
+      this.loggingService.debug('%cContadores:', 'font-weight: bold; color: #9c27b0;', 'Performance');
+
       this.counters.forEach((value, key) => {
-        console.log(`  ${key}: ${value}`);
+        this.loggingService.debug('  ${key}: ${value}', undefined, 'Performance');
       });
     }
     

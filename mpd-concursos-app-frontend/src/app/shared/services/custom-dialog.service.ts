@@ -1,4 +1,5 @@
 import { Injectable, ComponentRef, ViewContainerRef, Type } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Subject, Observable } from 'rxjs';
 
 export interface DialogConfig {
@@ -24,7 +25,9 @@ export class CustomDialogService {
   private dialogContainer: ViewContainerRef | null = null;
   private activeDialogs: Map<string, DialogRef> = new Map();
 
-  constructor() {}
+  constructor(
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Establece el contenedor donde se renderizarán los diálogos

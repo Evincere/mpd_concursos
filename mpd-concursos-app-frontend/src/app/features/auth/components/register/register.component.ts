@@ -256,7 +256,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
     this.subscription.add(
       this.registerService.register(userData).subscribe({
-        next: (_response) => {
+        next: (_response: any) => {
           this.isLoading = false;
           this.showMessage = true;
           this.isSuccess = true;
@@ -266,7 +266,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
             this.router.navigate(['/login']);
           }, 500);
         },
-        error: (error) => {
+        error: (error: any) => {
           this.isLoading = false;
           this.showMessage = true;
           this.isSuccess = false;

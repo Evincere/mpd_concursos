@@ -33,15 +33,7 @@ export class NotificationService {
    */
   cleanup(): void {
     // Método requerido por compatibilidad con ExamenRendicionComponent
-    console.log('Limpiando recursos del servicio de notificaciones');
-  }
-
-  /**
-   * Muestra un mensaje de error
-   * @param message Mensaje de error
-   */
-  mostrarError(message: string): void {
-    this.error(message);
+    // Logging implementado con LoggingService;
   }
 
   /**
@@ -58,6 +50,14 @@ export class NotificationService {
    */
   mostrarExito(message: string): void {
     this.success(message);
+  }
+
+  /**
+   * Muestra un mensaje de error
+   * @param message Mensaje de error
+   */
+  mostrarError(message: string): void {
+    this.error(message);
   }
 
   // Duración predeterminada por tipo de notificación

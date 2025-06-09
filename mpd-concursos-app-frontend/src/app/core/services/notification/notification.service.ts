@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  constructor(private unifiedNotificationService: UnifiedNotificationService) {}
+  constructor(
+    private unifiedNotificationService: UnifiedNotificationService,
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Muestra un mensaje de éxito

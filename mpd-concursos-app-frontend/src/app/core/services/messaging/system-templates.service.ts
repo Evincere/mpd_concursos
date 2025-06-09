@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Observable, of } from 'rxjs';
 
 import { MessageTemplate, TemplateType, TemplateCategory } from './message-templates.service';
@@ -353,7 +354,9 @@ Equipo de {{system.organizationName}}`,
     }
   ];
 
-  constructor() {}
+  constructor(
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Obtiene todas las plantillas del sistema

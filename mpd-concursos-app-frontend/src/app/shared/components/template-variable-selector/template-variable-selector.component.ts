@@ -156,7 +156,15 @@ export class TemplateVariableSelectorComponent implements OnInit {
   /**
    * Actualiza búsqueda
    */
-  onSearchChange(term: string): void {
+  onSearchChange(event: Event | string): void {
+    let term: string;
+    if (typeof event === 'string') {
+      term = event;
+    } else {
+      const target = event.target as HTMLInputElement;
+      term = target?.value || '';
+    }
+
     this.searchTerm = term;
     this.applyFilters();
     this.groupVariablesByContext();
@@ -262,7 +270,7 @@ export class TemplateVariableSelectorComponent implements OnInit {
   /**
    * Obtiene ícono de contexto
    */
-  getContextIcon(context: VariableContext): string {
+  getContextIcon(context: VariableContext | string): string {
     const contextConfig = this.contexts.find(c => c.value === context);
     return contextConfig?.icon || 'fas fa-question';
   }
@@ -270,7 +278,7 @@ export class TemplateVariableSelectorComponent implements OnInit {
   /**
    * Obtiene label de contexto
    */
-  getContextLabel(context: VariableContext): string {
+  getContextLabel(context: VariableContext | string): string {
     const contextConfig = this.contexts.find(c => c.value === context);
     return contextConfig?.label || context;
   }

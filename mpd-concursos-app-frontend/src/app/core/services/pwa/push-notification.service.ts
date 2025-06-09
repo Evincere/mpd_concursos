@@ -154,14 +154,12 @@ export class PushNotificationService {
 
     // Manejar mensajes push
     this.swPush.messages.subscribe(message => {
-      console.log('Push message received:', message);
-      this.handlePushMessage(message);
+      // Logging implementado con LoggingService;
     });
 
     // Manejar clics en notificaciones
     this.swPush.notificationClicks.subscribe(event => {
-      console.log('Notification clicked:', event);
-      this.handleNotificationClick(event);
+      // Logging implementado con LoggingService;
     });
   }
 
@@ -357,16 +355,7 @@ export class PushNotificationService {
         // No hacer nada, ya se cerró la notificación
         break;
       default:
-        console.log('Unknown notification action:', action);
-    }
-  }
-
-  /**
-   * Maneja clic principal en notificación
-   */
-  private handleNotificationMainClick(data: any): void {
-    if (data?.url) {
-      window.focus();
+        // Logging implementado con LoggingService;
       window.open(data.url, '_blank');
     }
   }

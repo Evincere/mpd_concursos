@@ -14,11 +14,11 @@
 
   <div class="content-card">
     <div class="tabs">
-      <button class="tab" [class.active]="activeTab === 0" (click)="activeTab = 0">
+      <button class="tab" [class.active]="activeTab === 0" (click)="setActiveTab(0)">
         <i class="fas fa-list"></i>
         Listado de Documentos
       </button>
-      <button class="tab" [class.active]="activeTab === 1" (click)="activeTab = 1" [disabled]="!selectedDocument">
+      <button class="tab" [class.active]="activeTab === 1" (click)="setActiveTab(1)" [disabled]="!selectedDocument">
         <i class="fas fa-eye"></i>
         Visor de Documento
       </button>
@@ -152,7 +152,7 @@
       <div *ngIf="!selectedDocument" class="no-document-selected">
         <i class="fas fa-file-alt empty-icon"></i>
         <p>Seleccione un documento para visualizarlo</p>
-        <button class="button button-primary" (click)="activeTab = 0">
+        <button class="button button-primary" (click)="setActiveTab(0)">
           <i class="fas fa-arrow-left"></i>
           Volver al Listado
         </button>

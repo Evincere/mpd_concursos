@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.persistence;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.repository.ContestJpaRepository;

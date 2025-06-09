@@ -121,15 +121,16 @@ This document provides detailed information about the API endpoints available in
 - **URL**: `/api/inscriptions/{id}/user-status`
 - **Method**: `PATCH`
 - **Auth Required**: Yes (ROLE_USER)
-- **Description**: Allows a user to update the status of their own inscription (only to PENDING)
+- **Description**: Allows a user to update the status of their own inscription when completing the process
 - **Query Parameters**:
-  - `status`: New status (only "PENDING" is allowed)
+  - `status`: New status ("PENDING", "COMPLETED_WITH_DOCS", or "COMPLETED_PENDING_DOCS")
 - **Response**: 200 OK if successful
 - **Notes**:
   - This endpoint is used when a user completes the inscription process
-  - It automatically sends a notification to administrators about the pending inscription
+  - It automatically sends a notification to administrators about the completed inscription
   - Only the user who created the inscription can update its status
-  - Only allows changing to PENDING state
+  - Allows changing to PENDING, COMPLETED_WITH_DOCS, or COMPLETED_PENDING_DOCS states
+  - COMPLETED_PENDING_DOCS is used for provisional inscriptions with incomplete documentation
 
 ### Update Inscription Status (Admin)
 

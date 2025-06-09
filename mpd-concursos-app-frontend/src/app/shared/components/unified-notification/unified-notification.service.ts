@@ -1,4 +1,5 @@
 import { Injectable, ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Injector } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { UnifiedNotificationComponent, UnifiedNotificationConfig, UnifiedNotificationType } from './unified-notification.component';
 
 @Injectable({
@@ -10,9 +11,12 @@ export class UnifiedNotificationService {
   private readonly stackSpacing = 80; // Espaciado entre notificaciones apiladas
 
   constructor(
+    
     private appRef: ApplicationRef,
     private injector: Injector,
     private environmentInjector: EnvironmentInjector
+  ,
+    private loggingService: LoggingService
   ) {}
 
   /**

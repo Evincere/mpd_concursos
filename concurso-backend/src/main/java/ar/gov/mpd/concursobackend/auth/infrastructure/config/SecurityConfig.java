@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/api/concursos/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/api/documentos/queue/public/**").permitAll()
                         .requestMatchers("/api/v1/roles/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()

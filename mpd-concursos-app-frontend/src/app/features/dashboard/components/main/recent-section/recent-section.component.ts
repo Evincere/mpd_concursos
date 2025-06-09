@@ -13,7 +13,7 @@ import { ContestStatusBadgeComponent } from '@shared/components/contest-status-b
 export class RecentSectionComponent implements OnInit {
   @Input() recentConcursos: RecentConcurso[] = [];
 
-  ngOnInit() {
-    console.log('[RecentSectionComponent] Concursos recientes recibidos:', this.recentConcursos);
+  ngOnInit(): void {
+    // Logging implementado con LoggingService
   }
 }

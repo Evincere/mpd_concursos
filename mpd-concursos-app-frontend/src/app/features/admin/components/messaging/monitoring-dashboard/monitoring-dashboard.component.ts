@@ -72,8 +72,8 @@ export class MonitoringDashboardComponent implements OnInit, OnDestroy {
   selectedTimeRange = '24h';
 
   // Formularios
-  alertForm: FormGroup;
-  dashboardForm: FormGroup;
+  alertForm!: FormGroup;
+  dashboardForm!: FormGroup;
 
   // Configuración de widgets
   availableWidgets: WidgetConfig[] = [
@@ -355,9 +355,12 @@ export class MonitoringDashboardComponent implements OnInit, OnDestroy {
   /**
    * Cambia rango de tiempo
    */
-  changeTimeRange(timeRange: string): void {
-    this.selectedTimeRange = timeRange;
-    this.loadHistoricalData();
+  changeTimeRange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    if (target && target.value) {
+      this.selectedTimeRange = target.value;
+      this.loadHistoricalData();
+    }
   }
 
   /**
@@ -563,9 +566,12 @@ export class MonitoringDashboardComponent implements OnInit, OnDestroy {
   /**
    * Cambia intervalo de actualización
    */
-  changeRefreshInterval(interval: number): void {
-    this.refreshInterval = interval;
-    this.monitoringService.setAutoRefresh(this.autoRefreshEnabled, interval * 1000);
+  changeRefreshInterval(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    if (target && target.value) {
+      this.refreshInterval = +target.value;
+      this.monitoringService.setAutoRefresh(this.autoRefreshEnabled, this.refreshInterval * 1000);
+    }
     
     if (this.autoRefreshEnabled) {
       this.startAutoRefresh();
@@ -685,5 +691,12 @@ export class MonitoringDashboardComponent implements OnInit, OnDestroy {
       if (field.errors['max']) return `Valor máximo: ${field.errors['max'].max}`;
     }
     return '';
+  }
+
+  /**
+   * Verifica si hay top triggers disponibles
+   */
+  hasTopTriggers(): boolean {
+    return !!(this.systemMetrics?.triggers?.topTriggers && this.systemMetrics.triggers.topTriggers.length > 0);
   }
 }

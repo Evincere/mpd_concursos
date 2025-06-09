@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.contest.application.usecase;
 
 import ar.gov.mpd.concursobackend.contest.application.port.in.ContestQueryUseCase;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import org.springframework.stereotype.Service;

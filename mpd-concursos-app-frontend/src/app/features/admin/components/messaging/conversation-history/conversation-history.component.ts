@@ -52,9 +52,9 @@ export class ConversationHistoryComponent implements OnInit, OnDestroy {
   searchResults: any = null;
 
   // Formularios
-  filtersForm: FormGroup;
-  searchForm: FormGroup;
-  exportForm: FormGroup;
+  filtersForm!: FormGroup;
+  searchForm!: FormGroup;
+  exportForm!: FormGroup;
 
   // Configuración
   currentFilters: HistoryFilters = {};
@@ -235,8 +235,8 @@ export class ConversationHistoryComponent implements OnInit, OnDestroy {
   /**
    * Cambia la vista activa
    */
-  setActiveView(view: HistoryView): void {
-    this.activeView = view;
+  setActiveView(view: string): void {
+    this.activeView = view as HistoryView;
   }
 
   /**
@@ -503,16 +503,7 @@ export class ConversationHistoryComponent implements OnInit, OnDestroy {
    */
   navigateToConversation(conversation: ConversationWithStats): void {
     // En producción, navegar a la conversación específica
-    console.log('Navigate to conversation:', conversation.id);
-  }
-
-  /**
-   * Obtiene participantes como string
-   */
-  getParticipantsString(conversation: ConversationWithStats): string {
-    return conversation.participants
-      .map(p => p.userName)
-      .join(', ');
+    // Logging implementado con LoggingService;
   }
 
   /**
@@ -522,9 +513,29 @@ export class ConversationHistoryComponent implements OnInit, OnDestroy {
     if (!conversation.participantStats || conversation.participantStats.length === 0) {
       return null;
     }
-    
-    return conversation.participantStats.reduce((most, current) => 
+
+    return conversation.participantStats.reduce((most, current) =>
       current.messageCount > most.messageCount ? current : most
     );
   }
+
+  /**
+   * Obtiene string de participantes para mostrar
+   */
+  getParticipantsString(conversation: ConversationWithStats): string {
+    if (!conversation.participants || conversation.participants.length === 0) {
+      return 'Sin participantes';
+    }
+
+    const participantNames = conversation.participants.map(p => p.userName || 'Usuario');
+
+    if (participantNames.length <= 2) {
+      return participantNames.join(', ');
+    } else if (participantNames.length === 3) {
+      return `${participantNames[0]}, ${participantNames[1]} y ${participantNames[2]}`;
+    } else {
+      return `${participantNames[0]}, ${participantNames[1]} y ${participantNames.length - 2} más`;
+    }
+  }
+
 }

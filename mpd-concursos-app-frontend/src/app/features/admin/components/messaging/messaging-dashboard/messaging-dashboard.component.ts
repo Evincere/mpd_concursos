@@ -42,9 +42,9 @@ export class MessagingDashboardComponent implements OnInit, OnDestroy {
   searchResults: Message[] = [];
 
   // Formularios
-  messageForm: FormGroup;
-  searchForm: FormGroup;
-  composeForm: FormGroup;
+  messageForm!: FormGroup;
+  searchForm!: FormGroup;
+  composeForm!: FormGroup;
 
   // Filtros y paginación
   currentFilters: MessageFilters = {};

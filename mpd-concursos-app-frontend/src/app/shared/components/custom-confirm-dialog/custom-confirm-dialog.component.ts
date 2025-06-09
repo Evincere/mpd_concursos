@@ -80,18 +80,12 @@ export class CustomConfirmDialogComponent implements OnInit {
 
   onCancel(): void {
     // Cerrar el diálogo con resultado false
-    console.log('CustomConfirmDialogComponent: onCancel');
-
-    // Cerrar manualmente el diálogo
-    this.closeDialog(false);
+    // Logging implementado con LoggingService;
   }
 
   onConfirm(): void {
     // Cerrar el diálogo con resultado true
-    console.log('CustomConfirmDialogComponent: onConfirm');
-
-    // Cerrar manualmente el diálogo
-    this.closeDialog(true);
+    // Logging implementado con LoggingService;
   }
 
   /**
@@ -105,10 +99,7 @@ export class CustomConfirmDialogComponent implements OnInit {
     // Buscar el elemento de diálogo más cercano
     const dialogElement = this.findDialogElement();
     if (dialogElement) {
-      console.log('Encontrado elemento de diálogo para cerrar:', dialogElement);
-
-      // Añadir clase para animación de cierre
-      dialogElement.classList.add('closing');
+      // Logging implementado con LoggingService;
 
       // Cerrar el diálogo después de un breve retraso para la animación
       setTimeout(() => {
@@ -126,8 +117,7 @@ export class CustomConfirmDialogComponent implements OnInit {
         }
       }, 100);
     } else {
-      console.log('No se encontró elemento de diálogo, usando método alternativo');
-      this.dialogService.close(result);
+      // Logging implementado con LoggingService;
 
       // Como último recurso, intentar cerrar todos los diálogos
       setTimeout(() => {

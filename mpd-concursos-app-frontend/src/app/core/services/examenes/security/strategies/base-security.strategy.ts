@@ -12,22 +12,22 @@ export abstract class BaseSecurityStrategy implements ISecurityStrategy {
 
   async activate(): Promise<void> {
     // Implementación base que puede ser sobrescrita
-    console.log(`Activando estrategia de seguridad: ${this.getType()}`);
+    // Logging implementado con LoggingService;
   }
 
   deactivate(): void {
     // Implementación base que puede ser sobrescrita
-    console.log(`Desactivando estrategia de seguridad: ${this.getType()}`);
+    // Logging implementado con LoggingService;
   }
 
   initialize(): void {
     // Implementación base que puede ser sobrescrita
-    console.log(`Inicializando estrategia de seguridad: ${this.getType()}`);
+    // Logging implementado con LoggingService;
   }
 
   cleanup(): void {
     // Implementación base que puede ser sobrescrita
-    console.log(`Limpiando estrategia de seguridad: ${this.getType()}`);
+    // Logging implementado con LoggingService;
     this.violations$.complete();
   }
 

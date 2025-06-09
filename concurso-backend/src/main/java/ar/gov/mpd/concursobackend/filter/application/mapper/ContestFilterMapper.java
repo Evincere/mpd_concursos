@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.filter.application.mapper;
 
 import org.springframework.stereotype.Component;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.filter.application.dto.ContestResponse;
 
 /**
@@ -19,10 +19,10 @@ public class ContestFilterMapper {
         return ContestResponse.builder()
             .id(contest.getId())
             .status(contest.getStatus() != null ? contest.getStatus().name() : null)
-            .startDate(contest.getStartDate())
-            .endDate(contest.getEndDate())
+            .startDate(contest.getStartDate() != null ? contest.getStartDate().toLocalDate() : null)
+            .endDate(contest.getEndDate() != null ? contest.getEndDate().toLocalDate() : null)
             .department(contest.getDependency())  // Mapeamos dependency como department
-            .position(contest.getPosition())
+            .position(contest.getLocation() != null ? contest.getLocation() : "No especificado")
             .build();
     }
 }

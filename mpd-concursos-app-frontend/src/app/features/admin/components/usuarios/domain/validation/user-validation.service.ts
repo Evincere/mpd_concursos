@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Observable, of } from 'rxjs';
 import { map, catchError, debounceTime, switchMap } from 'rxjs/operators';
@@ -26,7 +27,10 @@ import { ROLES_VALIDATION } from './validation-messages';
   providedIn: 'root'
 })
 export class UserValidationService {
-  constructor(private usersService: AdminUsersService) {}
+  constructor(
+    private usersService: AdminUsersService,
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Validador para el nombre de usuario

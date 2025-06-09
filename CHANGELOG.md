@@ -5,6 +5,41 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2024-12-08
+
+### Fixed
+- **CRÍTICO**: Corrección del error "No se recibió el ID de inscripción" en el proceso de inscripción
+  - Modificado el flujo en `concursos.component.ts` para crear la inscripción antes de navegar
+  - Corregidos los eventos en `concurso-detalle.component.html` para usar `inscripcionClick` y `continuarClick`
+  - Implementada validación robusta del ID de inscripción antes de la navegación
+  - Agregado manejo de errores mejorado con notificaciones al usuario
+- **Estados de Finalización Corregidos**: Implementación correcta de estados `COMPLETED_WITH_DOCS` y `COMPLETED_PENDING_DOCS`
+  - Eliminado el estado genérico "PENDIENTE" en favor de estados específicos según documentación
+  - Corregido el mapeo de estados en `inscripcion-process-page.component.ts`
+  - Mejorada la experiencia de usuario con estados más descriptivos
+- **Detección de Inscripciones Existentes**: Implementada en cards de concursos
+  - Agregada lógica en `concurso-card.component.ts` para detectar inscripciones existentes
+  - Botones inteligentes que cambian según el estado de la inscripción del usuario
+  - Cache de inscripciones actualizado automáticamente después de crear inscripciones
+- **CRÍTICO - Error 403 Forbidden**: Solucionado problema de permisos al finalizar inscripción con documentación incompleta
+  - Corregido mapeo de estados `COMPLETED_WITH_DOCS` y `COMPLETED_PENDING_DOCS` a `PENDING` en el backend
+  - Ahora usa correctamente el endpoint `/user-status` que permite a usuarios cambiar estado a `PENDING`
+  - Eliminado uso incorrecto del endpoint `/status` que requiere permisos de administrador
+- **CRÍTICO - Detección de Inscripciones Canceladas**: Corregida inconsistencia en la interfaz de usuario
+  - Eliminada lógica de "reinscripción por tiempo" que contradecía la regla de negocio
+  - Implementado método `clearCacheAndRefresh()` para limpieza completa del cache
+  - Forzada actualización automática del cache después de cancelaciones
+  - Agregada suscripción reactiva a cambios de inscripciones en las cards
+  - Corregido mapeo de estados para mostrar correctamente el mensaje de bloqueo
+  - Mejorado logging para debugging de estados de inscripción
+- **CRÍTICO - Lógica de Negocio**: Implementada regla "una inscripción por concurso" (sin reinscripción)
+  - Corregida validación en `CreateInscriptionService` para impedir reinscripciones después de cancelación
+  - Agregado método `findByContestIdAndUserIdIncludingCancelled()` en backend para validación completa
+  - Implementada lógica en frontend para mostrar mensajes informativos en lugar de botón de inscripción
+  - **REGLA**: Una vez inscrito (cualquier estado), no se puede volver a inscribir al mismo concurso
+- Corrección del flujo de navegación desde la lista de concursos hacia el proceso de inscripción
+- Mejoras en la gestión de errores durante la creación de inscripciones
+
 ## [1.4.0] - 2024-12-07
 
 ### ✅ Completado - Pasos Recomendados Fase 4

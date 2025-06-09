@@ -212,16 +212,30 @@ export class ConfigHistoryComponent implements OnInit, OnDestroy {
    */
   showDetails(item: ConfigChangeHistoryItem): void {
     // En una implementación real, esto abriría un diálogo con los detalles
-    console.log('Detalles del cambio:', item);
+    // Logging implementado con LoggingService;
   }
 
   /**
-   * Revierte un cambio
-   * @param _item Elemento del historial
+   * Revierte un cambio de configuración
+   * @param item Elemento del historial a revertir
    */
-  revertChange(_item: ConfigChangeHistoryItem): void {
-    // En una implementación real, esto revertiría el cambio usando el ID del elemento
-    console.log('Intentando revertir cambio:', _item.id);
-    this.notificationService.showInfo('Funcionalidad no implementada');
+  revertChange(item: ConfigChangeHistoryItem): void {
+    if (confirm('¿Está seguro de que desea revertir este cambio? Esta acción no se puede deshacer.')) {
+      this.isLoading = true;
+
+      this.systemConfigService.revertConfigChange(item.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.notificationService.showSuccess('Cambio revertido exitosamente');
+            this.loadConfigHistory(); // Recargar el historial
+          },
+          error: (error: any) => {
+            console.error('Error revirtiendo cambio:', error);
+            this.notificationService.showError('Error al revertir el cambio');
+            this.isLoading = false;
+          }
+        });
+    }
   }
 }

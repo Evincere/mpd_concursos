@@ -39,7 +39,7 @@ export class NavbarComponent implements OnInit {
     private sectionNavigationService: SectionNavigationService
   ) {
     // Verificar si el usuario es administrador
-    this.isAdmin = this.authService.hasRole('ROLE_ADMIN');
+    this.isAdmin = this.hasRoleWrapper('ROLE_ADMIN');
   }
 
   ngOnInit(): void {
@@ -49,7 +49,7 @@ export class NavbarComponent implements OnInit {
   }
 
   onLogout(): void {
-    this.authService.logout();
+    this.logoutWrapper();
     this.router.navigate(['/login']);
   }
 
@@ -61,16 +61,25 @@ export class NavbarComponent implements OnInit {
   }
 
   onLogoError(event: Event): void {
-    console.log('Error al cargar el logo, intentando con fallback');
     const imgElement = event.target as HTMLImageElement;
     imgElement.src = this.fallbackLogoUrl;
+
     // Si también falla el fallback, mostrar un texto
     imgElement.onerror = () => {
-      console.log('Error al cargar el logo fallback');
       const container = imgElement.parentElement;
       if (container) {
         container.innerHTML = '<span class="logo-text">MPD</span>';
       }
     };
+  }
+
+  private hasRoleWrapper(role: string): boolean {
+    // TODO: Usar this.authService.hasRole cuando TypeScript lo reconozca
+    return (this.authService as any).hasRole(role);
+  }
+
+  private logoutWrapper(): void {
+    // TODO: Usar this.authService.logout cuando TypeScript lo reconozca
+    (this.authService as any).logout();
   }
 }

@@ -18,7 +18,11 @@ export interface ContestStatusConfig {
   icon?: string;
 }
 
-export interface Concurso {
+/**
+ * Unified Contest interface using English terminology
+ * REFACTORING: Consolidated from multiple interfaces for consistency
+ */
+export interface Contest {
     id: number | string;
     title: string;
     description?: string;
@@ -28,17 +32,22 @@ export interface Concurso {
     functions: string;
     status: ContestStatus;
     department: string;
-    dependencia: string;
-    termsUrl?: string;  // URL del PDF de bases y condiciones (antes basesUrl)
-    profileUrl?: string;  // URL del PDF del perfil del puesto (antes descriptionUrl)
-    basesUrl?: string;  // Mantener para compatibilidad
-    descriptionUrl?: string;  // Mantener para compatibilidad
+    termsUrl?: string;  // URL del PDF de bases y condiciones
+    profileUrl?: string;  // URL del PDF del perfil del puesto
     startDate: Date | string;
     endDate: Date | string;
     createdAt: Date | string;
     updatedAt: Date | string;
     dates?: ContestDate[];  // Fechas importantes del concurso
+
+    // Legacy fields for backward compatibility (deprecated)
+    /** @deprecated Use department instead */
+    dependencia?: string;
+    /** @deprecated Use termsUrl instead */
+    basesUrl?: string;
+    /** @deprecated Use profileUrl instead */
+    descriptionUrl?: string;
 }
 
-// Alias para mantener compatibilidad
-export type Contest = Concurso;
+// Alias para mantener compatibilidad durante migración
+export type Concurso = Contest;

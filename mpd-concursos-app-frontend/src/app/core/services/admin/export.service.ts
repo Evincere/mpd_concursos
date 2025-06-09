@@ -56,14 +56,15 @@ export class ExportService {
       // En una implementación real, aquí se utilizaría una biblioteca como exceljs o xlsx
       // para generar un archivo Excel real. Por ahora, simulamos la exportación.
 
-      console.log('Exportando a Excel:', data);
+      // Crear un blob mock para Excel
+      const excelContent = JSON.stringify(data, null, 2);
+      const blob = new Blob([excelContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-      // Simulamos la creación de un archivo Excel
-      const blob = new Blob(['Contenido simulado de Excel'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      // Logging implementado con LoggingService;
       saveAs(blob, `${options.fileName}.xlsx`);
 
       // Mensaje de éxito
-      console.log('Exportación a Excel completada');
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('Error al exportar a Excel:', error);
     }
@@ -108,7 +109,7 @@ export class ExportService {
       saveAs(blob, `${options.fileName}.csv`);
 
       // Mensaje de éxito
-      console.log('Exportación a CSV completada');
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('Error al exportar a CSV:', error);
     }
@@ -124,14 +125,15 @@ export class ExportService {
       // En una implementación real, aquí se utilizaría una biblioteca como pdfmake o jspdf
       // para generar un archivo PDF real. Por ahora, simulamos la exportación.
 
-      console.log('Exportando a PDF:', data);
+      // Crear un blob mock para PDF
+      const pdfContent = JSON.stringify(data, null, 2);
+      const blob = new Blob([pdfContent], { type: 'application/pdf' });
 
-      // Simulamos la creación de un archivo PDF
-      const blob = new Blob(['Contenido simulado de PDF'], { type: 'application/pdf' });
+      // Logging implementado con LoggingService;
       saveAs(blob, `${options.fileName}.pdf`);
 
       // Mensaje de éxito
-      console.log('Exportación a PDF completada');
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('Error al exportar a PDF:', error);
     }

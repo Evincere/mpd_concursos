@@ -180,18 +180,19 @@ export class ProgressIndicatorComponent implements OnInit, OnChanges {
   @Input() progress = 0;
   @Input() showLabel = false;
   @Input() label = 'Cargando...';
+
   constructor() {
     // Constructor vacío
   }
 
   ngOnInit(): void {
     // Inicialización adicional si es necesaria
-    console.log('ProgressIndicatorComponent inicializado');
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    // Manejar cambios en las propiedades de entrada
     if (changes['progress']) {
-      // Asegurar que el progreso esté entre 0 y 100
+      // Validar que el progreso esté entre 0 y 100
       this.progress = Math.max(0, Math.min(100, this.progress));
     }
   }

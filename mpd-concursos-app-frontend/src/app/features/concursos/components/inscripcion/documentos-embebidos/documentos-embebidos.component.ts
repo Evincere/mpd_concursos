@@ -1,19 +1,20 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
 import { FormsModule } from '@angular/forms';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
 
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { NotificationService } from '@shared/services/notification.service';
 
-import { DocumentoUsuario, TipoDocumento } from '@core/models/documento.model';
+import { DocumentoUsuario, TipoDocumento, EstadoDocumento } from '@core/models/documento.model'; // Import EstadoDocumento
 import { DocumentoUploadDialogComponent } from './documento-upload-dialog/documento-upload-dialog.component';
 import { DocumentoMultipleUploadDialogComponent } from './documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoViewerComponent } from '../../../../perfil/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
+import { LoggingService } from '@core/services/logging/logging.service';
 
-import { finalize } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { finalize, catchError, map } from 'rxjs/operators'; // Import map
+import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
 
 @Component({
   selector: 'app-documentos-embebidos',
@@ -23,7 +24,8 @@ import { Subscription } from 'rxjs';
     FormsModule,
     CustomButtonComponent,
     DocumentoViewerComponent,
-    DocumentoMultipleUploadDialogComponent
+    DocumentoMultipleUploadDialogComponent,
+    DatePipe // Add DatePipe for date formatting in template
   ],
   template: `
     <div class="documentos-container">
@@ -53,10 +55,10 @@ import { Subscription } from 'rxjs';
         <div class="custom-progress-bar">
           <div class="progress-track">
             <div class="progress-fill"
-                 [style.width.%]="progresoDocumentacion"
-                 [class.progress-low]="progresoDocumentacion < 50"
-                 [class.progress-medium]="progresoDocumentacion >= 50 && progresoDocumentacion < 100"
-                 [class.progress-complete]="progresoDocumentacion === 100">
+                  [style.width.%]="progresoDocumentacion"
+                  [class.progress-low]="progresoDocumentacion < 50"
+                  [class.progress-medium]="progresoDocumentacion >= 50 && progresoDocumentacion < 100"
+                  [class.progress-complete]="progresoDocumentacion === 100">
             </div>
           </div>
         </div>
@@ -67,7 +69,7 @@ import { Subscription } from 'rxjs';
           </span>
           <span *ngIf="progresoDocumentacion === 100">
             <i class="fas fa-check-circle"></i>
-            ¡Has completado toda la documentación requerida!
+            ¡Has completado toda la documentación obligatoria! Los documentos opcionales puedes cargarlos cuando desees.
           </span>
         </div>
       </div>
@@ -80,10 +82,10 @@ import { Subscription } from 'rxjs';
         </div>
         <div class="deadline-content">
           <div class="deadline-time"
-               [class.deadline-warning]="showDeadlineWarning"
-               [class.deadline-expired]="isDeadlineExpired">
+                [class.deadline-warning]="showDeadlineWarning"
+                [class.deadline-expired]="isDeadlineExpired">
             <span class="time-remaining">{{getTimeRemainingText()}}</span>
-            <span class="deadline-date">Vence: {{documentationDeadline | date:'dd/MM/yyyy HH:mm'}}</span>
+            <span class="deadline-date" *ngIf="documentationDeadline">Vence: {{documentationDeadline | date:'dd/MM/yyyy HH:mm'}}</span>
           </div>
           <div class="deadline-message">
             <p *ngIf="!isDeadlineExpired && showDeadlineWarning" class="warning-message">
@@ -102,60 +104,30 @@ import { Subscription } from 'rxjs';
         </div>
       </div>
 
-      <!-- NUEVA FUNCIONALIDAD: Confirmación de inscripción provisional -->
-      <div class="confirmacion-provisional" *ngIf="mostrarConfirmacionProvisional && !isDeadlineExpired">
-        <div class="confirmacion-header">
-          <i class="fas fa-exclamation-triangle"></i>
-          <span>Inscripción Provisional</span>
-        </div>
-        <div class="confirmacion-content">
-          <div class="confirmacion-checkbox">
-            <input
-              type="checkbox"
-              id="confirmacion-provisional"
-              [(ngModel)]="confirmacionInscripcionProvisional"
-              (ngModelChange)="onConfirmacionProvisionalChange($event)"
-              class="custom-checkbox">
-            <label for="confirmacion-provisional" class="checkbox-label">
-              <span class="checkbox-text">
-                Comprendo que mi inscripción será <strong>provisional</strong> hasta completar toda la documentación requerida
-                dentro del plazo perentorio establecido. Acepto que la falta de documentación completa puede resultar
-                en la <strong>descalificación automática</strong> de mi postulación.
-              </span>
-            </label>
-          </div>
-          <div class="confirmacion-warning">
-            <i class="fas fa-info-circle"></i>
-            <span>
-              Al continuar sin documentación completa, tu inscripción quedará en estado provisional.
-              Debes regularizar la documentación antes del vencimiento del plazo para evitar la descalificación.
-            </span>
-          </div>
-        </div>
-      </div>
+      <!-- ELIMINADO: La confirmación provisional ahora se maneja en el componente padre -->
 
       <!-- Sección de documentos requeridos -->
       <div class="documentos-requeridos">
         <div class="documentos-grid">
           <div *ngFor="let tipo of documentosRequeridos" class="documento-card"
-               [class.completo]="isDocumentoSubido(tipo.id)">
+                [class.completo]="isDocumentoSubido(tipo.tipoDocumentoId)">
             <!-- Header con icono y estado -->
             <div class="documento-header">
               <div class="documento-icon">
                 <i class="fas fa-file-alt"></i>
-                <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.id)">
+                <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.tipoDocumentoId)">
                   <i class="fas fa-check"></i>
                 </div>
               </div>
               <div class="documento-estado">
-                <ng-container *ngIf="isDocumentoSubido(tipo.id); else pendiente">
-                  <span class="estado-texto aprobado" *ngIf="getEstadoDocumento(tipo.id) === 'aprobado'">
+                <ng-container *ngIf="isDocumentoSubido(tipo.tipoDocumentoId); else pendiente">
+                  <span class="estado-texto aprobado" *ngIf="getEstadoDocumento(tipo.tipoDocumentoId) === EstadoDocumento.APROBADO">
                     <i class="fas fa-check-circle"></i> Aprobado
                   </span>
-                  <span class="estado-texto pendiente" *ngIf="getEstadoDocumento(tipo.id) === 'pendiente'">
+                  <span class="estado-texto pendiente" *ngIf="getEstadoDocumento(tipo.tipoDocumentoId) === EstadoDocumento.PENDIENTE">
                     <i class="fas fa-clock"></i> Pendiente de revisión
                   </span>
-                  <span class="estado-texto rechazado" *ngIf="getEstadoDocumento(tipo.id) === 'rechazado'">
+                  <span class="estado-texto rechazado" *ngIf="getEstadoDocumento(tipo.tipoDocumentoId) === EstadoDocumento.RECHAZADO">
                     <i class="fas fa-times-circle"></i> Rechazado
                   </span>
                 </ng-container>
@@ -165,40 +137,49 @@ import { Subscription } from 'rxjs';
                   </span>
                 </ng-template>
               </div>
+
+              <!-- Botón eliminar en esquina superior derecha -->
+              <div class="delete-button-corner" *ngIf="isDocumentoSubido(tipo.tipoDocumentoId)">
+                <app-custom-button
+                  variant="danger"
+                  icon="trash"
+                  size="small"
+                  [iconOnly]="true"
+                  [tooltip]="'Eliminar documento'"
+                  ariaLabel="Eliminar documento"
+                  (buttonClick)="eliminarDocumento(getDocumento(tipo.tipoDocumentoId))">
+                </app-custom-button>
+              </div>
             </div>
 
             <!-- Contenido principal -->
             <div class="documento-content">
-              <h5 class="documento-titulo">{{tipo.nombre}}</h5>
-              <p class="documento-descripcion" *ngIf="tipo.descripcion">{{tipo.descripcion}}</p>
+              <div class="documento-titulo-container">
+                <h5 class="documento-titulo">{{tipo.title}}</h5>
+                <span class="documento-badge" [ngClass]="tipo.required ? 'obligatorio' : 'opcional'">
+                  {{tipo.required ? 'Obligatorio' : 'Opcional'}}
+                </span>
+              </div>
+              <p class="documento-descripcion" *ngIf="tipo.description">{{tipo.description}}</p>
             </div>
 
             <!-- Acciones -->
             <div class="documento-actions">
               <app-custom-button
                 variant="primary"
-                [label]="isDocumentoSubido(tipo.id) ? 'Reemplazar' : 'Cargar'"
-                [icon]="isDocumentoSubido(tipo.id) ? 'sync' : 'upload'"
+                [label]="isDocumentoSubido(tipo.tipoDocumentoId) ? 'Reemplazar' : 'Cargar'"
+                [icon]="isDocumentoSubido(tipo.tipoDocumentoId) ? 'sync' : 'upload'"
                 size="small"
-                (buttonClick)="cargarDocumentoTipo(tipo.id)">
+                (buttonClick)="cargarDocumentoTipo(tipo.tipoDocumentoId)">
               </app-custom-button>
 
               <app-custom-button
-                *ngIf="isDocumentoSubido(tipo.id)"
+                *ngIf="isDocumentoSubido(tipo.tipoDocumentoId)"
                 variant="secondary"
                 label="Ver"
                 icon="eye"
                 size="small"
-                (buttonClick)="verDocumento(getDocumento(tipo.id))">
-              </app-custom-button>
-
-              <app-custom-button
-                *ngIf="isDocumentoSubido(tipo.id)"
-                variant="danger"
-                label="Eliminar"
-                icon="trash"
-                size="small"
-                (buttonClick)="eliminarDocumento(getDocumento(tipo.id))">
+                (buttonClick)="verDocumento(getDocumento(tipo.tipoDocumentoId))">
               </app-custom-button>
             </div>
           </div>
@@ -501,6 +482,20 @@ import { Subscription } from 'rxjs';
       }
     }
 
+    /* Botón eliminar en esquina superior derecha */
+    .delete-button-corner {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
     /* Nueva estructura de header */
     .documento-header {
       display: flex;
@@ -550,12 +545,43 @@ import { Subscription } from 'rxjs';
       position: relative;
     }
 
+    .documento-titulo-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+      gap: 0.75rem;
+    }
+
     .documento-titulo {
-      margin: 0 0 0.75rem;
+      margin: 0;
       font-size: 1.1rem;
       color: #fff;
       font-weight: 600;
       line-height: 1.3;
+      flex: 1;
+    }
+
+    .documento-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+
+      &.obligatorio {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      &.opcional {
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
     }
 
     .documento-descripcion {
@@ -872,23 +898,20 @@ import { Subscription } from 'rxjs';
 })
 export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   @Input() concursoId!: number;
+  @Input() documentationDeadline: Date | null = null; // New Input for deadline
   @Output() documentosCompletados = new EventEmitter<boolean>();
 
-  documentosRequeridos: TipoDocumento[] = [];
+  // SIMPLIFICADO: Solo mantener datos básicos, la lógica de validación está centralizada
+  documentosRequeridos: { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] = [];
   documentosUsuario: DocumentoUsuario[] = [];
   isLoading = true;
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
-  todosDocumentosCompletos = false; // Variable para controlar si todos los documentos están completos
-
-  // NUEVA FUNCIONALIDAD: Confirmación de inscripción provisional
-  confirmacionInscripcionProvisional = false;
-  mostrarConfirmacionProvisional = false; // Se muestra solo cuando hay documentos faltantes
+  todosDocumentosCompletos = false;
 
   private subscription: Subscription | undefined;
 
   // NUEVA FUNCIONALIDAD: Plazos perentorios
-  documentationDeadline: Date | null = null;
   hoursUntilDeadline = -1;
   isDeadlineExpired = false;
   showDeadlineWarning = false;
@@ -898,624 +921,489 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   private documentoSubidoCache: Record<string, boolean> = {};
   private documentoCache: Record<string, DocumentoUsuario> = {};
 
+  // Expose EstadoDocumento enum to the template
+  public readonly EstadoDocumento = EstadoDocumento;
+
   constructor(
     private dialog: CustomDialogService,
     private notificationService: NotificationService,
-    private documentosService: DocumentosService
+    private documentosService: DocumentosService,
+    private loggingService: LoggingService,
+    private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
   ) {}
 
-
-
   ngOnInit(): void {
-    // Forzar recarga de datos al inicializar
+    this.loggingService.debug('[DocumentosEmbebidos] Componente inicializado.', undefined, 'DocumentosEmbebidos');
+    // Force data reload on init
     this.cargarDatos(true);
 
-    // NUEVA FUNCIONALIDAD: Calcular plazos perentorios
+    // Calculate deadline on init if available
     this.calculateDocumentationDeadline();
 
-    // Suscribirse a las actualizaciones de documentos
+    // Subscribe to document updates from the service
     this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
-      console.log('[DocumentosEmbebidos] Recibida notificación de documento actualizado, recargando documentos...');
-      this.cargarDocumentosUsuario(true);
+      this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Recargando datos.', undefined, 'DocumentosEmbebidos');
+      this.cargarDatos(true); // Force reload all data
     });
 
-    // NUEVA FUNCIONALIDAD: Actualizar plazos cada minuto
+    // Update deadlines every minute
     setInterval(() => {
       this.calculateTimeUntilDeadline();
-    }, 60000); // Actualizar cada minuto
+    }, 60000); // Update every minute
   }
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
+    this.loggingService.debug('[DocumentosEmbebidos] Componente destruido. Suscripciones limpiadas.', undefined, 'DocumentosEmbebidos');
   }
 
-  cargarDatos(forzarRecarga = false): void {
-    console.log('[DocumentosEmbebidos] Cargando datos, forzarRecarga:', forzarRecarga);
+  /**
+   * Loads all required documents and user's uploaded documents.
+   * @param forceReload Whether to force a reload from the service.
+   */
+  cargarDatos(forceReload = false): void {
     this.isLoading = true;
-    this.cargarTiposDocumento(forzarRecarga);
-    this.cargarDocumentosUsuario(forzarRecarga);
-  }
+    this.loggingService.debug(`[DocumentosEmbebidos] Cargando datos (forzarRecarga: ${forceReload})...`, undefined, 'DocumentosEmbebidos');
 
-  cargarTiposDocumento(forzarRecarga = false): void {
-    console.log('[DocumentosEmbebidos] Cargando tipos de documento, forzarRecarga:', forzarRecarga);
-    this.documentosService.getTiposDocumento(forzarRecarga).subscribe({
-      next: (tipos: TipoDocumento[]) => {
-        console.log('[DocumentosEmbebidos] Tipos de documento obtenidos:', tipos);
+    // Use forkJoin to fetch both types of documents in parallel
+    forkJoin([
+      this.documentosService.getTiposDocumento(forceReload),
+      this.documentosService.getDocumentosUsuario(forceReload)
+    ]).pipe(
+      map(([tiposDocumento, documentosUsuario]) => {
+        // First, process and consolidate required document types
+        const processedRequiredDocs = this.processRequiredDocumentTypes(tiposDocumento);
+        this.documentosRequeridos = processedRequiredDocs;
 
-        // Filtrar solo los documentos requeridos para concursos
-        let documentosRequeridos = tipos.filter((tipo: TipoDocumento) => tipo.requerido);
-
-        // CORRECCIÓN CRÍTICA: Garantizar documentación base obligatoria
-        if (documentosRequeridos.length === 0) {
-          console.error('[DocumentosEmbebidos] CONFIGURACIÓN INCORRECTA: No hay documentos requeridos definidos');
-          console.warn('[DocumentosEmbebidos] Aplicando documentación base obligatoria de emergencia');
-
-          // Cargar documentación base mínima obligatoria como fallback
-          documentosRequeridos = this.getDocumentacionBaseObligatoria(tipos);
-
-          if (documentosRequeridos.length === 0) {
-            console.error('[DocumentosEmbebidos] ERROR CRÍTICO: No se pudo establecer documentación base');
-            this.mostrarError('Error crítico: No se pudo cargar la documentación requerida. Contacte al administrador.');
-            return;
+        // Then, update user's uploaded documents and caches
+        this.documentosUsuario = documentosUsuario;
+        this.documentoSubidoCache = {}; // Reset cache
+        this.documentoCache = {}; // Reset cache
+        for (const documento of documentosUsuario) {
+          if (documento.tipoDocumentoId) {
+            this.documentoSubidoCache[documento.tipoDocumentoId] = true;
+            this.documentoCache[documento.tipoDocumentoId] = documento;
           }
         }
-
-        // Identificar si existe el documento DNI general
-        const dniGeneral = documentosRequeridos.find((tipo: TipoDocumento) =>
-          (tipo.nombre.toLowerCase().includes('documento nacional de identidad') ||
-           tipo.code === 'dni') &&
-          !tipo.nombre.toLowerCase().includes('frente') &&
-          !tipo.nombre.toLowerCase().includes('dorso')
-        );
-
-        // Identificar si existen los documentos DNI frente y dorso
-        const dniFrenteExiste = documentosRequeridos.some((tipo: TipoDocumento) =>
-          tipo.id === 'dni-frente' ||
-          tipo.code === 'dni-frente' ||
-          (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('frente'))
-        );
-
-        const dniDorsoExiste = documentosRequeridos.some((tipo: TipoDocumento) =>
-          tipo.id === 'dni-dorso' ||
-          tipo.code === 'dni-dorso' ||
-          (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('dorso'))
-        );
-
-        // Si existe el DNI general y también existen DNI frente y dorso, eliminar el DNI general
-        if (dniGeneral && dniFrenteExiste && dniDorsoExiste) {
-          console.log('[DocumentosEmbebidos] Eliminando DNI general redundante:', dniGeneral);
-          documentosRequeridos = documentosRequeridos.filter((tipo: TipoDocumento) => tipo.id !== dniGeneral.id);
-        }
-
-        this.documentosRequeridos = documentosRequeridos;
-        this.calcularProgreso();
-      },
-      error: (error: unknown) => {
-        console.error('[DocumentosEmbebidos] Error al cargar tipos de documento:', error);
-        this.mostrarError('Error al cargar los tipos de documento');
+      }),
+      finalize(() => {
         this.isLoading = false;
+        this.loggingService.debug('[DocumentosEmbebidos] Carga de datos finalizada. Calculando progreso...', undefined, 'DocumentosEmbebidos');
+        this.calcularProgreso(); // Calculate progress after both lists are loaded and caches updated
+        this.cdr.detectChanges(); // Ensure UI updates
+      }),
+      catchError(error => {
+        console.error('[DocumentosEmbebidos] Error al cargar datos combinados:', error);
+        this.mostrarError('Error al cargar la documentación. Por favor, intente nuevamente.');
+        this.isLoading = false;
+        return of(null); // Return observable of null to gracefully handle errors
+      })
+    ).subscribe();
+  }
+
+  /**
+   * Processes the raw list of document types, consolidating DNI front/back if present.
+   * @param rawTipos The raw list of TipoDocumento from the service.
+   * @returns A consolidated and cleaned list of required documents.
+   */
+  private processRequiredDocumentTypes(rawTipos: TipoDocumento[]): { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] {
+    let documentosFinal: { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] = [];
+
+    // Prioritize getting DNI consolidated entry
+    const dniFrente = rawTipos.find(tipo => tipo.id === 'dni-frente' || tipo.code === 'dni-frente' || (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('frente')));
+    const dniDorso = rawTipos.find(tipo => tipo.id === 'dni-dorso' || tipo.code === 'dni-dorso' || (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('dorso')));
+    const dniGeneral = rawTipos.find(tipo => (tipo.id === 'dni' || tipo.code === 'dni' || tipo.nombre.toLowerCase().includes('dni') || tipo.nombre.toLowerCase().includes('documento nacional de identidad')) && !tipo.nombre.toLowerCase().includes('frente') && !tipo.nombre.toLowerCase().includes('dorso'));
+
+    const processedIds = new Set<string>();
+
+    if (dniFrente && dniDorso) {
+      // NUEVA IMPLEMENTACIÓN: Cards separadas para DNI Frente y Dorso
+      documentosFinal.push({
+        title: 'DNI (Frente)',
+        description: 'Lado frontal de su Documento Nacional de Identidad.',
+        required: true,
+        completed: false,
+        tipoDocumentoId: dniFrente.id
+      });
+      documentosFinal.push({
+        title: 'DNI (Dorso)',
+        description: 'Lado posterior de su Documento Nacional de Identidad.',
+        required: true,
+        completed: false,
+        tipoDocumentoId: dniDorso.id
+      });
+      processedIds.add(dniFrente.id);
+      processedIds.add(dniDorso.id);
+    }
+
+    // ELIMINADO: La lógica del DNI general para evitar card innecesaria
+    // El DNI siempre debe manejarse como frente y dorso separados
+    if (dniGeneral) {
+      processedIds.add(dniGeneral.id); // Marcar como procesado para evitar que aparezca
+    }
+
+    // Add all other documents that were not part of the DNI consolidation
+    // CRITICAL FIX: Usar la propiedad 'requerido' del backend para determinar si es obligatorio
+    rawTipos.forEach(tipo => {
+      if (!processedIds.has(tipo.id)) {
+        documentosFinal.push({
+          title: tipo.nombre,
+          description: tipo.descripcion,
+          required: tipo.requerido, // ✅ USAR LA PROPIEDAD DEL BACKEND
+          completed: false,
+          tipoDocumentoId: tipo.id
+        });
       }
     });
+
+    // CRITICAL FIX: Ensure essential documents are always present as a fallback
+    if (documentosFinal.length === 0) {
+      console.error('[DocumentosEmbebidos] CONFIGURACIÓN INCORRECTA: No hay documentos requeridos definidos desde el backend. Aplicando documentación base obligatoria de emergencia.');
+      this.notificationService.error('Error de configuración de documentos. Se usarán documentos básicos obligatorios.');
+      documentosFinal = this.getEmergencyBaseDocuments();
+    }
+
+    return documentosFinal;
   }
 
-  cargarDocumentosUsuario(forzarRecarga = false): void {
-    console.log('[DocumentosEmbebidos] Cargando documentos del usuario, forzarRecarga:', forzarRecarga);
-    // Limpiar el caché de documentos subidos
-    this.documentoSubidoCache = {};
-    this.documentoCache = {};
-
-    this.documentosService.getDocumentosUsuario(forzarRecarga)
-      .pipe(finalize(() => {
-        this.isLoading = false;
-        console.log('[DocumentosEmbebidos] Finalizada carga de documentos.');
-      }))
-      .subscribe({
-        next: (documentos: DocumentoUsuario[]) => {
-          console.log('[DocumentosEmbebidos] Documentos del usuario obtenidos:', documentos.length);
-          this.documentosUsuario = documentos;
-          this.calcularProgreso();
-          this.actualizarEstadoDocumentos();
-        },
-        error: (error: unknown) => {
-          console.error('[DocumentosEmbebidos] Error al cargar documentos del usuario:', error);
-          this.mostrarError('Error al cargar tus documentos');
-        }
-      });
+  /**
+   * Provides a list of emergency fallback base documents if no required documents are received from the backend.
+   * This is a safeguard against misconfigurations.
+   */
+  private getEmergencyBaseDocuments(): { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] {
+    return [
+      { title: 'DNI', description: 'Documento Nacional de Identidad', required: true, completed: false, tipoDocumentoId: 'dni-emergencia' },
+      { title: 'CUIL', description: 'Constancia de CUIL/CUIT', required: true, completed: false, tipoDocumentoId: 'cuil-emergencia' },
+      { title: 'Certificado de Antecedentes', description: 'Certificado de antecedentes penales', required: true, completed: false, tipoDocumentoId: 'antecedentes-emergencia' }
+    ];
   }
 
+  /**
+   * Calculates the progress of document completion and updates related state variables.
+   * CRITICAL FIX: Solo considera documentos marcados como 'required: true'
+   */
   calcularProgreso(): void {
-    console.log('[DocumentosEmbebidos] Calculando progreso de documentación');
-    console.log('[DocumentosEmbebidos] Documentos requeridos:', this.documentosRequeridos.length);
-    console.log('[DocumentosEmbebidos] Documentos del usuario:', this.documentosUsuario.length);
+    this.loggingService.debug('[DocumentosEmbebidos] Recalculando progreso de documentos...', undefined, 'DocumentosEmbebidos');
 
-    // Filtrar solo los documentos requeridos
-    const documentosRequeridos = this.documentosRequeridos.filter(doc => doc.requerido);
-    console.log('[DocumentosEmbebidos] Documentos requeridos filtrados:', documentosRequeridos.length);
+    // ✅ FILTRAR SOLO DOCUMENTOS OBLIGATORIOS
+    const documentosObligatorios = this.documentosRequeridos.filter(doc => doc.required === true);
 
-    // CORRECCIÓN CRÍTICA: Nunca debe haber 0 documentos requeridos
-    if (documentosRequeridos.length === 0) {
-      console.error('[DocumentosEmbebidos] ERROR CRÍTICO: No hay documentos requeridos para calcular progreso');
-      this.documentosFaltantes = 1; // Indicar que falta documentación
-      this.progresoDocumentacion = 0; // Progreso 0% hasta que se corrija la configuración
-      console.error('[DocumentosEmbebidos] Progreso establecido en 0% debido a configuración incorrecta');
+    if (!documentosObligatorios || documentosObligatorios.length === 0) {
+      this.documentosFaltantes = 0;
+      this.progresoDocumentacion = 100;
+      this.todosDocumentosCompletos = true;
+      this.loggingService.debug('[DocumentosEmbebidos] No hay documentos obligatorios, progreso 100%.', undefined, 'DocumentosEmbebidos');
       this.emitirEstadoDocumentos();
       return;
     }
 
-    // Contar documentos completados
-    let documentosCompletados = 0;
+    let documentosCompletadosCount = 0;
 
-    // Verificar cada documento requerido
-    for (const tipoDoc of documentosRequeridos) {
-      const subido = this.isDocumentoSubido(tipoDoc.id);
-      console.log(`[DocumentosEmbebidos] Documento ${tipoDoc.id} (${tipoDoc.nombre}): ${subido ? 'Subido' : 'No subido'}`);
-      if (subido) {
-        documentosCompletados++;
+    // ✅ ACTUALIZAR ESTADO DE COMPLETITUD PARA TODOS LOS DOCUMENTOS (obligatorios y opcionales)
+    this.documentosRequeridos.forEach(tipoDoc => {
+      // SIMPLIFICADO: Verificación directa para cada documento individual
+      // Ya no necesitamos lógica especial para DNI consolidado porque ahora son cards separadas
+      if (tipoDoc.tipoDocumentoId.includes('-emergencia')) {
+        // For emergency documents, check if corresponding real document is uploaded
+        if (tipoDoc.tipoDocumentoId === 'dni-emergencia') {
+          tipoDoc.completed = this.isDocumentoSubido('dni') || (this.isDocumentoSubido('dni-frente') && this.isDocumentoSubido('dni-dorso'));
+        } else if (tipoDoc.tipoDocumentoId === 'cuil-emergencia') {
+          tipoDoc.completed = this.isDocumentoSubido('cuil');
+        } else if (tipoDoc.tipoDocumentoId === 'antecedentes-emergencia') {
+          tipoDoc.completed = this.isDocumentoSubido('antecedentes');
+        } else {
+          tipoDoc.completed = this.isDocumentoSubido(tipoDoc.tipoDocumentoId);
+        }
+      } else {
+        // Verificación estándar para todos los documentos (incluidos DNI frente y dorso por separado)
+        tipoDoc.completed = this.isDocumentoSubido(tipoDoc.tipoDocumentoId);
       }
-    }
-
-    // Calcular documentos faltantes y progreso
-    this.documentosFaltantes = documentosRequeridos.length - documentosCompletados;
-    this.progresoDocumentacion = Math.round((documentosCompletados / documentosRequeridos.length) * 100);
-
-    console.log('[DocumentosEmbebidos] Progreso calculado:', {
-      total: documentosRequeridos.length,
-      completados: documentosCompletados,
-      faltantes: this.documentosFaltantes,
-      porcentaje: this.progresoDocumentacion
     });
 
-    // Actualizar el estado de completitud
+    // ✅ CONTAR SOLO DOCUMENTOS OBLIGATORIOS COMPLETADOS
+    documentosObligatorios.forEach(tipoDoc => {
+      if (tipoDoc.completed) {
+        documentosCompletadosCount++;
+      }
+    });
+
+    // ✅ CALCULAR PROGRESO BASADO SOLO EN DOCUMENTOS OBLIGATORIOS
+    this.documentosFaltantes = documentosObligatorios.length - documentosCompletadosCount;
+    this.progresoDocumentacion = Math.round((documentosCompletadosCount / documentosObligatorios.length) * 100);
     this.todosDocumentosCompletos = this.documentosFaltantes === 0;
 
-    // NUEVA FUNCIONALIDAD: Mostrar confirmación provisional solo si hay documentos faltantes
-    this.mostrarConfirmacionProvisional = this.documentosFaltantes > 0;
+    this.loggingService.debug(`[DocumentosEmbebidos] Progreso: ${this.progresoDocumentacion}%, Obligatorios faltantes: ${this.documentosFaltantes}/${documentosObligatorios.length}`, undefined, 'DocumentosEmbebidos');
 
-    // Si ya no hay documentos faltantes, resetear la confirmación provisional
+    // Notificar cuando se complete toda la documentación OBLIGATORIA
     if (this.todosDocumentosCompletos) {
-      this.confirmacionInscripcionProvisional = false;
-      this.mostrarConfirmacionProvisional = false;
+      this.notificationService.success('¡Has completado toda la documentación obligatoria!');
     }
 
-    // Emitir el estado de los documentos
     this.emitirEstadoDocumentos();
-  }
-
-  emitirEstadoDocumentos(): void {
-    // NUEVA LÓGICA: Permitir continuar si todos los documentos están completos
-    // O si hay documentos faltantes pero el usuario confirmó inscripción provisional
-    const puedeContinuar = this.todosDocumentosCompletos ||
-                          (this.documentosFaltantes > 0 && this.confirmacionInscripcionProvisional);
-
-    console.log('[DocumentosEmbebidos] Emitiendo estado de documentos:', {
-      todosCompletos: this.todosDocumentosCompletos,
-      documentosFaltantes: this.documentosFaltantes,
-      confirmacionProvisional: this.confirmacionInscripcionProvisional,
-      puedeContinuar: puedeContinuar
-    });
-
-    this.documentosCompletados.emit(puedeContinuar);
-  }
-
-  actualizarEstadoDocumentos(): void {
-    // Actualizar el caché de documentos subidos
-    for (const documento of this.documentosUsuario) {
-      if (documento.tipoDocumentoId) {
-        this.documentoSubidoCache[documento.tipoDocumentoId] = true;
-        this.documentoCache[documento.tipoDocumentoId] = documento;
-      }
-    }
-    this.calcularProgreso();
   }
 
   /**
-   * NUEVA FUNCIONALIDAD: Maneja el cambio del checkbox de confirmación provisional
+   * SIMPLIFICADO: Emite solo el estado de completitud de documentos
+   * La lógica de inscripción provisional se maneja en el componente padre
    */
-  onConfirmacionProvisionalChange(confirmado: boolean): void {
-    console.log('[DocumentosEmbebidos] Confirmación provisional cambiada:', confirmado);
-    this.confirmacionInscripcionProvisional = confirmado;
-
-    // Re-emitir el estado para actualizar el botón "Continuar"
-    this.emitirEstadoDocumentos();
+  emitirEstadoDocumentos(): void {
+    this.loggingService.debug(`[DocumentosEmbebidos] Emitiendo estado de documentos: ${this.todosDocumentosCompletos}`, undefined, 'DocumentosEmbebidos');
+    this.documentosCompletados.emit(this.todosDocumentosCompletos);
   }
 
+  /**
+   * SIMPLIFICADO: Verifica si un documento específico ha sido subido
+   * @param tipoDocumentoId The ID of the document type to check.
+   * @returns True if the document is uploaded, false otherwise.
+   */
   isDocumentoSubido(tipoDocumentoId: string): boolean {
-    // Usar caché si existe
-    if (Object.prototype.hasOwnProperty.call(this.documentoSubidoCache, tipoDocumentoId)) {
-      return this.documentoSubidoCache[tipoDocumentoId];
+    // Handle emergency DNI type (checks if general DNI or front/back are uploaded)
+    if (tipoDocumentoId === 'dni-emergencia') {
+      return this.documentoSubidoCache['dni'] || (this.documentoSubidoCache['dni-frente'] && this.documentoSubidoCache['dni-dorso']);
     }
-
-    // Caso especial para DNI general
-    if (tipoDocumentoId === 'dni' ||
-        (tipoDocumentoId.toLowerCase().includes('documento') &&
-         tipoDocumentoId.toLowerCase().includes('identidad') &&
-         !tipoDocumentoId.toLowerCase().includes('frente') &&
-         !tipoDocumentoId.toLowerCase().includes('dorso'))) {
-
-      // Verificar si tanto el frente como el dorso del DNI están cargados
-      const frenteSubido = this.documentosUsuario.some(doc =>
-        doc.tipoDocumentoId === 'dni-frente' ||
-        (doc.tipoDocumento && doc.tipoDocumento.code === 'dni-frente') ||
-        (doc.tipoDocumento && doc.tipoDocumento.nombre &&
-         doc.tipoDocumento.nombre.toLowerCase().includes('dni') &&
-         doc.tipoDocumento.nombre.toLowerCase().includes('frente'))
-      );
-
-      const dorsoSubido = this.documentosUsuario.some(doc =>
-        doc.tipoDocumentoId === 'dni-dorso' ||
-        (doc.tipoDocumento && doc.tipoDocumento.code === 'dni-dorso') ||
-        (doc.tipoDocumento && doc.tipoDocumento.nombre &&
-         doc.tipoDocumento.nombre.toLowerCase().includes('dni') &&
-         doc.tipoDocumento.nombre.toLowerCase().includes('dorso'))
-      );
-
-      // Si ambos están cargados, consideramos que el DNI general está cargado
-      const resultado = frenteSubido && dorsoSubido;
-      this.documentoSubidoCache[tipoDocumentoId] = resultado;
-      return resultado;
-    }
-
-    // Calcular y guardar en caché para otros tipos de documento
-    const resultado = this.documentosUsuario.some(doc => doc.tipoDocumentoId === tipoDocumentoId);
-    this.documentoSubidoCache[tipoDocumentoId] = resultado;
-    return resultado;
+    // Verificación estándar para todos los documentos (incluidos DNI frente y dorso por separado)
+    return this.documentoSubidoCache[tipoDocumentoId] === true;
   }
 
+  /**
+   * SIMPLIFICADO: Obtiene el documento subido para un tipo específico
+   * @param tipoDocumentoId The ID of the document type.
+   * @returns The DocumentoUsuario object, or undefined if not found.
+   */
   getDocumento(tipoDocumentoId: string): DocumentoUsuario | undefined {
-    // Usar caché si existe
-    if (Object.prototype.hasOwnProperty.call(this.documentoCache, tipoDocumentoId)) {
-      return this.documentoCache[tipoDocumentoId];
+    if (tipoDocumentoId === 'dni-emergencia') {
+      return this.documentoCache['dni'] || this.documentoCache['dni-frente'] || this.documentoCache['dni-dorso'];
     }
-
-    // Caso especial para DNI general
-    if (tipoDocumentoId === 'dni' ||
-        (tipoDocumentoId.toLowerCase().includes('documento') &&
-         tipoDocumentoId.toLowerCase().includes('identidad') &&
-         !tipoDocumentoId.toLowerCase().includes('frente') &&
-         !tipoDocumentoId.toLowerCase().includes('dorso'))) {
-
-      // Buscar el documento DNI frente (prioridad)
-      const dniFrenteDoc = this.documentosUsuario.find(doc =>
-        doc.tipoDocumentoId === 'dni-frente' ||
-        (doc.tipoDocumento && doc.tipoDocumento.code === 'dni-frente') ||
-        (doc.tipoDocumento && doc.tipoDocumento.nombre &&
-         doc.tipoDocumento.nombre.toLowerCase().includes('dni') &&
-         doc.tipoDocumento.nombre.toLowerCase().includes('frente'))
-      );
-
-      if (dniFrenteDoc) {
-        this.documentoCache[tipoDocumentoId] = dniFrenteDoc;
-        return dniFrenteDoc;
-      }
-    }
-
-    // Buscar y guardar en caché para otros tipos de documento
-    const documento = this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId);
-    if (documento) {
-      this.documentoCache[tipoDocumentoId] = documento;
-    }
-    return documento;
+    // Búsqueda directa para todos los documentos (incluidos DNI frente y dorso por separado)
+    return this.documentoCache[tipoDocumentoId];
   }
 
-  getEstadoDocumento(tipoDocumentoId: string): string {
-    const documento = this.getDocumento(tipoDocumentoId);
-    return documento ? documento.estado.toLowerCase() : 'no-subido';
+  /**
+   * Gets the approval status of a document (e.g., 'aprobado', 'pendiente', 'rechazado', 'no-subido').
+   * @param tipoDocumentoId The ID of the document type.
+   * @returns The status string.
+   */
+  getEstadoDocumento(tipoDocumentoId: string): EstadoDocumento | 'no-subido' {
+    const doc = this.getDocumento(tipoDocumentoId);
+    if (doc) {
+      return doc.estado || EstadoDocumento.PENDIENTE; // Default to PENDIENTE if state is missing
+    }
+    return 'no-subido';
   }
 
+  /**
+   * Opens the single document upload dialog for a specific document type.
+   * @param tipoDocumentoId The ID of the document type to upload.
+   */
   cargarDocumentoTipo(tipoDocumentoId: string): void {
-    const tipoDocumento = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
-    if (!tipoDocumento) {
-      this.mostrarError('Tipo de documento no encontrado');
+    const tipoDoc = this.documentosRequeridos.find(d => d.tipoDocumentoId === tipoDocumentoId);
+    if (!tipoDoc) {
+      this.notificationService.error('Tipo de documento no encontrado.');
       return;
     }
 
-    console.log('[DocumentosEmbebidos] Abriendo diálogo de carga para tipo:', tipoDocumento);
+    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo diálogo para cargar documento: ${tipoDocumentoId}`, undefined, 'DocumentosEmbebidos');
 
-    const dialogRef = this.dialog.open(DocumentoUploadDialogComponent, {
-      title: 'Cargar Documento',
-      icon: 'upload',
-      size: 'medium',
-      width: '600px',
-      showCloseButton: true,
-      showFooter: false,
-      data: { tipoDocumentoId, tipoDocumentoNombre: tipoDocumento.nombre }
-    });
-
-    dialogRef.afterClosed().subscribe((result: unknown) => {
-      if (result) {
-        console.log('[DocumentosEmbebidos] Documento subido correctamente, recargando lista');
-        // El documento se subió correctamente, actualizar la lista
-        this.cargarDocumentosUsuario(true); // Forzar recarga desde backend
+    this.dialog.open(DocumentoUploadDialogComponent, {
+      title: `Cargar ${tipoDoc.title}`,
+      data: { tipoDocumentoId: tipoDoc.tipoDocumentoId }
+    }).afterClosed().subscribe((result: any) => {
+      if (result && result.success) {
+        this.notificationService.success(`${tipoDoc.title} cargado exitosamente.`);
+        this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
+      } else if (result && result.cancelled) {
+        this.loggingService.debug('[DocumentosEmbebidos] Carga de documento cancelada.', undefined, 'DocumentosEmbebidos');
+      } else if (result !== null && result !== undefined) {
+        this.notificationService.error(`Error al cargar ${tipoDoc.title}.`);
       }
     });
   }
 
+  /**
+   * Opens the multiple document upload dialog.
+   */
   abrirCargaMultiple(): void {
-    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
-      data: { tiposDocumento: this.documentosRequeridos }
-    });
+    this.loggingService.debug('[DocumentosEmbebidos] Abriendo diálogo de carga múltiple.', undefined, 'DocumentosEmbebidos');
 
-    dialogRef.afterClosed().subscribe((result: unknown) => {
-      if (result) {
-        // Se subieron documentos correctamente, actualizar la lista
-        this.cargarDocumentosUsuario(true); // Forzar recarga desde backend
-
-        // Mostrar mensaje de éxito
-        this.notificationService.success('Documentos cargados correctamente');
+    // CRITICAL FIX: Convert documentosRequeridos to TipoDocumento format expected by the dialog
+    // First, get all document types from the service to have the complete TipoDocumento objects
+    this.documentosService.getTiposDocumento().subscribe({
+      next: (tiposDocumento) => {
+        this.dialog.open(DocumentoMultipleUploadDialogComponent, {
+          title: 'Carga Múltiple de Documentos',
+          data: {
+            tiposDocumento: tiposDocumento, // Pass the complete TipoDocumento array
+            concursoId: this.concursoId // Pass contest ID if needed by multi-upload
+          },
+          width: '600px', // Example width
+          height: '80vh' // Example height
+        }).afterClosed().subscribe((result: any) => {
+          if (result && result.success) {
+            this.notificationService.success('Documentos cargados exitosamente.');
+            this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
+          } else if (result && result.cancelled) {
+            this.loggingService.debug('[DocumentosEmbebidos] Carga múltiple de documentos cancelada.', undefined, 'DocumentosEmbebidos');
+          } else if (result !== null && result !== undefined) {
+            this.notificationService.error('Error al cargar documentos.');
+          }
+        });
+      },
+      error: (error) => {
+        console.error('[DocumentosEmbebidos] Error al cargar tipos de documento para diálogo múltiple:', error);
+        this.notificationService.error('Error al cargar los tipos de documento disponibles.');
       }
     });
   }
 
+  /**
+   * Opens the document viewer for an uploaded document.
+   * @param documento The DocumentoUsuario object to view.
+   */
   verDocumento(documento: DocumentoUsuario | undefined): void {
-    if (!documento || !documento.id) {
-      this.mostrarError('No se pudo encontrar el documento');
+    if (!documento || (!documento.url && !documento.archivoUrl)) {
+      this.notificationService.warning('Documento no disponible para ver.');
       return;
     }
-
-    console.log('[DocumentosEmbebidos] Abriendo visor para documento:', documento);
-
-    // Abrir visor de documentos mejorado
+    const documentUrl = documento.url || documento.archivoUrl;
+    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo visor para documento: ${documento.nombreArchivo}`, undefined, 'DocumentosEmbebidos');
     this.dialog.open(DocumentoViewerComponent, {
-      width: '95vw',
-      height: '95vh',
-      maxWidth: '1600px',
-      maxHeight: '1000px',
-      showCloseButton: true,
-      showFooter: false,
-      data: { documentoId: documento.id }
+      title: `Ver Documento: ${documento.nombreArchivo}`,
+      data: { documentUrl: documentUrl, fileName: documento.nombreArchivo },
+      width: '90vw', // Example width
+      height: '90vh' // Example height
     });
   }
 
+  /**
+   * Deletes an uploaded document after confirmation.
+   * @param documento The DocumentoUsuario object to delete.
+   */
   eliminarDocumento(documento: DocumentoUsuario | undefined): void {
     if (!documento || !documento.id) {
-      this.mostrarError('No se pudo encontrar el documento');
+      this.notificationService.error('Documento no válido para eliminar.');
       return;
     }
 
-    if (confirm('¿Estás seguro de que deseas eliminar este documento? Esta acción no se puede deshacer.')) {
-      this.documentosService.deleteDocumento(documento.id).subscribe({
-        next: () => {
-          this.notificationService.success('Documento eliminado correctamente');
-          this.cargarDocumentosUsuario(true); // Forzar recarga desde backend
-        },
-        error: (error: unknown) => {
-          console.error('Error al eliminar documento:', error);
-          this.mostrarError('Error al eliminar el documento');
-        }
-      });
-    }
-  }
+    this.loggingService.debug(`[DocumentosEmbebidos] Confirmando eliminación para documento: ${documento.nombreArchivo}`, undefined, 'DocumentosEmbebidos');
 
-  mostrarError(mensaje: string): void {
-    this.notificationService.error(mensaje);
+    // Usar un diálogo de confirmación simple
+    if (confirm(`¿Está seguro de que desea eliminar el documento "${documento.nombreArchivo}"? Esta acción no se puede deshacer.`)) {
+      this.loggingService.debug(`[DocumentosEmbebidos] Eliminando documento: ${documento.id}`, undefined, 'DocumentosEmbebidos');
+      if (!documento.id) {
+        this.notificationService.error('ID de documento no válido.');
+        return;
+      }
+      this.documentosService.deleteDocumento(documento.id).pipe(
+          finalize(() => this.isLoading = false),
+          catchError(error => {
+            console.error('[DocumentosEmbebidos] Error al eliminar documento:', error);
+            this.notificationService.error(`Error al eliminar ${documento.nombreArchivo}.`);
+            return of(null);
+          })
+        ).subscribe(success => {
+          if (success) {
+            this.notificationService.success(`"${documento.nombreArchivo}" eliminado exitosamente.`);
+            this.cargarDatos(true); // Recargar datos para actualizar la UI
+          } else {
+            this.notificationService.error(`Error al eliminar ${documento.nombreArchivo}.`);
+          }
+        });
+      }
   }
 
   /**
-   * Obtiene la documentación base obligatoria mínima para todos los concursos
-   * Esta función actúa como fallback cuando no hay documentos marcados como requeridos
-   */
-  private getDocumentacionBaseObligatoria(todosTipos: TipoDocumento[]): TipoDocumento[] {
-    console.log('[DocumentosEmbebidos] Aplicando documentación base obligatoria');
-
-    // Documentos base que SIEMPRE deben estar presentes en cualquier concurso
-    const documentosBaseCodes = [
-      'dni-frente',
-      'dni-dorso',
-      'dni', // DNI general como fallback
-      'cuil',
-      'antecedentes-penales'
-    ];
-
-    const documentosBaseNombres = [
-      'dni (frente)',
-      'dni (dorso)',
-      'documento nacional de identidad',
-      'constancia de cuil',
-      'certificado de antecedentes penales',
-      'antecedentes penales'
-    ];
-
-    // Buscar documentos base en la lista de todos los tipos
-    const documentosBase: TipoDocumento[] = [];
-
-    // Primero buscar por código
-    for (const code of documentosBaseCodes) {
-      const documento = todosTipos.find(tipo =>
-        tipo.code?.toLowerCase() === code.toLowerCase()
-      );
-      if (documento && !documentosBase.some(d => d.id === documento.id)) {
-        // Marcar como requerido temporalmente
-        const docRequerido = { ...documento, requerido: true };
-        documentosBase.push(docRequerido);
-        console.log(`[DocumentosEmbebidos] Documento base agregado por código: ${documento.nombre}`);
-      }
-    }
-
-    // Luego buscar por nombre si no encontramos suficientes
-    if (documentosBase.length < 3) {
-      for (const nombre of documentosBaseNombres) {
-        const documento = todosTipos.find(tipo =>
-          tipo.nombre?.toLowerCase().includes(nombre.toLowerCase())
-        );
-        if (documento && !documentosBase.some(d => d.id === documento.id)) {
-          // Marcar como requerido temporalmente
-          const docRequerido = { ...documento, requerido: true };
-          documentosBase.push(docRequerido);
-          console.log(`[DocumentosEmbebidos] Documento base agregado por nombre: ${documento.nombre}`);
-        }
-      }
-    }
-
-    // Verificar que tenemos al menos documentación mínima
-    if (documentosBase.length === 0) {
-      console.error('[DocumentosEmbebidos] No se pudo encontrar ningún documento base en el sistema');
-      // Como último recurso, crear documentos base virtuales
-      return this.crearDocumentosBaseVirtuales();
-    }
-
-    console.log(`[DocumentosEmbebidos] Documentación base establecida: ${documentosBase.length} documentos`);
-    return documentosBase;
-  }
-
-  /**
-   * Crea documentos base virtuales como último recurso
-   * Solo se usa si no hay ningún documento en el sistema
-   */
-  private crearDocumentosBaseVirtuales(): TipoDocumento[] {
-    console.warn('[DocumentosEmbebidos] Creando documentos base virtuales como último recurso');
-
-    return [
-      {
-        id: 'virtual-dni-frente',
-        code: 'dni-frente',
-        nombre: 'DNI (Frente)',
-        descripcion: 'Documento Nacional de Identidad - Lado frontal',
-        requerido: true,
-        orden: 1,
-        activo: true
-      },
-      {
-        id: 'virtual-dni-dorso',
-        code: 'dni-dorso',
-        nombre: 'DNI (Dorso)',
-        descripcion: 'Documento Nacional de Identidad - Lado posterior',
-        requerido: true,
-        orden: 2,
-        activo: true
-      },
-      {
-        id: 'virtual-cuil',
-        code: 'cuil',
-        nombre: 'Constancia de CUIL',
-        descripcion: 'Constancia de CUIL actualizada',
-        requerido: true,
-        orden: 3,
-        activo: true
-      }
-    ];
-  }
-
-  /**
-   * NUEVA FUNCIONALIDAD: Calcula y actualiza información de plazos perentorios
+   * Calculates the time remaining until the documentation deadline.
    */
   calculateDocumentationDeadline(): void {
-    // Por ahora, simular el cálculo del plazo perentorio
-    // En una implementación completa, esto vendría del backend
-
-    // Simular que el plazo es 3 días hábiles después del cierre de inscripciones
-    const now = new Date();
-    const deadline = new Date(now);
-    deadline.setDate(deadline.getDate() + 3); // 3 días desde ahora como ejemplo
-
-    this.documentationDeadline = deadline;
-    this.calculateTimeUntilDeadline();
-  }
-
-  /**
-   * NUEVA FUNCIONALIDAD: Calcula el tiempo restante hasta el deadline
-   */
-  calculateTimeUntilDeadline(): void {
     if (!this.documentationDeadline) {
       this.hoursUntilDeadline = -1;
       this.isDeadlineExpired = false;
       this.showDeadlineWarning = false;
+      this.loggingService.debug('[DocumentosEmbebidos] No se ha definido una fecha límite de documentación.', undefined, 'DocumentosEmbebidos');
       return;
     }
 
     const now = new Date();
-    const deadline = this.documentationDeadline;
-    const timeDiff = deadline.getTime() - now.getTime();
+    const deadlineTime = this.documentationDeadline.getTime();
+    const remainingMs = deadlineTime - now.getTime();
 
-    if (timeDiff <= 0) {
-      // Plazo vencido
-      this.hoursUntilDeadline = 0;
-      this.isDeadlineExpired = true;
-      this.showDeadlineWarning = true;
+    this.isDeadlineExpired = remainingMs <= 0;
 
-      // Notificar solo una vez cuando vence
-      if (this.lastNotificationHour !== 0) {
-        this.notificationService.error(
-          'El plazo para cargar documentación ha vencido. Su inscripción será congelada automáticamente.'
-        );
-        this.lastNotificationHour = 0;
-      }
-    } else {
-      // Calcular horas restantes
-      this.hoursUntilDeadline = Math.ceil(timeDiff / (1000 * 60 * 60));
-      this.isDeadlineExpired = false;
-
-      // Mostrar advertencia si quedan menos de 24 horas
-      this.showDeadlineWarning = this.hoursUntilDeadline <= 24;
-
-      // NUEVA FUNCIONALIDAD: Notificaciones automáticas
-      this.checkAndSendDeadlineNotifications();
-    }
-
-    console.log(`[DocumentosEmbebidos] Plazo: ${this.hoursUntilDeadline}h restantes, Vencido: ${this.isDeadlineExpired}, Advertencia: ${this.showDeadlineWarning}`);
-  }
-
-  /**
-   * NUEVA FUNCIONALIDAD: Obtiene el texto formateado del tiempo restante
-   */
-  getTimeRemainingText(): string {
     if (this.isDeadlineExpired) {
-      return 'Plazo vencido';
+      this.hoursUntilDeadline = 0;
+      this.showDeadlineWarning = false;
+      this.notificationService.warning('El plazo para cargar la documentación ha vencido. Su inscripción será provisional.');
+      this.emitirEstadoDocumentos(); // Emit updated status
+    } else {
+      this.hoursUntilDeadline = Math.ceil(remainingMs / (1000 * 60 * 60)); // Remaining hours
+      // Set warning if less than 48 hours (or any threshold)
+      this.showDeadlineWarning = this.hoursUntilDeadline <= 48;
     }
+    this.cdr.detectChanges(); // Ensure UI updates
 
-    if (this.hoursUntilDeadline <= 0) {
-      return 'Sin plazo definido';
-    }
-
-    if (this.hoursUntilDeadline < 24) {
-      return `${this.hoursUntilDeadline} horas restantes`;
-    }
-
-    const days = Math.floor(this.hoursUntilDeadline / 24);
-    const hours = this.hoursUntilDeadline % 24;
-
-    if (hours === 0) {
-      return `${days} día${days > 1 ? 's' : ''} restante${days > 1 ? 's' : ''}`;
-    }
-
-    return `${days} día${days > 1 ? 's' : ''} y ${hours} hora${hours > 1 ? 's' : ''} restantes`;
+    this.loggingService.debug(`[DocumentosEmbebidos] Plazo límite: ${this.documentationDeadline.toISOString()}, Horas restantes: ${this.hoursUntilDeadline}, Expirado: ${this.isDeadlineExpired}`, undefined, 'DocumentosEmbebidos');
   }
 
   /**
-   * NUEVA FUNCIONALIDAD: Verifica y envía notificaciones automáticas según el tiempo restante
+   * Updates the displayed time remaining. Called periodically.
    */
-  private checkAndSendDeadlineNotifications(): void {
-    // Solo notificar si hay documentos pendientes
-    if (this.documentosFaltantes === 0) {
+  calculateTimeUntilDeadline(): void {
+    if (this.isDeadlineExpired || !this.documentationDeadline) {
       return;
     }
 
-    const hours = this.hoursUntilDeadline;
+    const now = new Date();
+    const deadlineTime = this.documentationDeadline.getTime();
+    const remainingMs = deadlineTime - now.getTime();
 
-    // Notificaciones en momentos específicos (evitar duplicados)
-    if (hours === 72 && this.lastNotificationHour !== 72) {
-      // 3 días restantes
-      this.notificationService.warning(
-        'Recordatorio: Quedan 3 días para completar la documentación requerida para su inscripción.'
-      );
-      this.lastNotificationHour = 72;
-    } else if (hours === 24 && this.lastNotificationHour !== 24) {
-      // 1 día restante
-      this.notificationService.warning(
-        '¡Atención! Queda solo 1 día para completar la documentación requerida. Complete la carga de documentos para evitar que su inscripción sea congelada.'
-      );
-      this.lastNotificationHour = 24;
-    } else if (hours === 6 && this.lastNotificationHour !== 6) {
-      // 6 horas restantes
-      this.notificationService.error(
-        '¡URGENTE! Quedan solo 6 horas para completar la documentación. Su inscripción será congelada automáticamente si no completa la documentación a tiempo.'
-      );
-      this.lastNotificationHour = 6;
-    } else if (hours === 1 && this.lastNotificationHour !== 1) {
-      // 1 hora restante
-      this.notificationService.error(
-        '¡ÚLTIMA HORA! Queda solo 1 hora para completar la documentación. Complete inmediatamente para evitar la congelación de su inscripción.'
-      );
-      this.lastNotificationHour = 1;
+    if (remainingMs <= 0) {
+      this.isDeadlineExpired = true;
+      this.hoursUntilDeadline = 0;
+      this.showDeadlineWarning = false;
+      this.notificationService.warning('El plazo para cargar la documentación ha vencido. Su inscripción será provisional.');
+      this.emitirEstadoDocumentos(); // Emit updated status
+    } else {
+      const remainingHours = Math.ceil(remainingMs / (1000 * 60 * 60));
+      if (remainingHours !== this.lastNotificationHour) { // Avoid spamming notifications
+        if (remainingHours <= 24 && remainingHours > 0 && remainingHours !== this.lastNotificationHour) {
+          this.notificationService.warning(`¡Atención! Solo quedan ${remainingHours} horas para cargar la documentación.`);
+          this.lastNotificationHour = remainingHours;
+        } else if (remainingHours <= 48 && remainingHours > 24 && remainingHours !== this.lastNotificationHour) {
+          this.notificationService.info(`Quedan ${remainingHours} horas para el plazo de documentación.`);
+          this.lastNotificationHour = remainingHours;
+        }
+      }
+      this.hoursUntilDeadline = remainingHours;
+      this.showDeadlineWarning = this.hoursUntilDeadline <= 48; // Adjust warning threshold as needed
     }
+    this.cdr.detectChanges(); // Update UI
+  }
+
+  /**
+   * Formats the remaining time into a human-readable string.
+   */
+  getTimeRemainingText(): string {
+    if (this.isDeadlineExpired) {
+      return 'Plazo Vencido';
+    }
+    if (this.hoursUntilDeadline === 0) {
+      return 'Menos de 1 hora';
+    }
+    if (this.hoursUntilDeadline < 24) {
+      return `${this.hoursUntilDeadline} horas restantes`;
+    }
+    const days = Math.floor(this.hoursUntilDeadline / 24);
+    const hours = this.hoursUntilDeadline % 24;
+    return `${days} días y ${hours} horas restantes`;
+  }
+
+  // ELIMINADO: onConfirmacionProvisionalChange - La lógica provisional se maneja en el componente padre
+
+  /**
+   * Displays an error notification.
+   * @param message The error message.
+   */
+  private mostrarError(message: string): void {
+    this.notificationService.error(message);
   }
 }

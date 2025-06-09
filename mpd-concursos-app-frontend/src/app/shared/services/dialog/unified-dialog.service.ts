@@ -1,214 +1,242 @@
-import { Injectable, ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Type, Injector } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Injectable, ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Type, Injector, Renderer2, RendererFactory2 } from '@angular/core';
+import { Observable, Subject, firstValueFrom } from 'rxjs';
+import { LoggingService } from '../../../core/services/logging/logging.service';
 
 /**
- * Referencia a un diálogo unificado
- * @template T Tipo de dato que se devolverá al cerrar el diálogo
+ * Reference to a unified dialog
+ * @template T Type of data that will be returned when the dialog closes
  */
 export class UnifiedDialogRef<T = unknown> {
   private readonly _afterClosed = new Subject<T | undefined>();
   private _closeCallback?: (result?: T) => void;
+  private loggingService: LoggingService; // Added loggingService
+
+  constructor(loggingService: LoggingService) {
+    this.loggingService = loggingService;
+    this.loggingService.debug('[UnifiedDialogRef] New dialog reference created.', undefined, 'DialogService');
+  }
 
   /**
-   * Observable que emite cuando el diálogo se cierra
-   * @returns Observable que emite el resultado del diálogo
+   * Observable that emits when the dialog closes
+   * @returns Observable that emits the dialog result
    */
   afterClosed(): Observable<T | undefined> {
     return this._afterClosed.asObservable();
   }
 
   /**
-   * Establece el callback que se ejecutará cuando se cierre el diálogo
-   * @param callback Función que maneja el cierre real del diálogo
+   * Converts the afterClosed observable to a promise
+   * @returns Promise that resolves when the dialog closes
+   */
+  toPromise(): Promise<T | undefined> {
+    this.loggingService.debug('[UnifiedDialogRef] Converting afterClosed to Promise.', undefined, 'DialogService');
+    return firstValueFrom(this.afterClosed());
+  }
+
+  /**
+   * Sets the callback that will be executed when the dialog closes
+   * @param callback Function that handles the actual closing of the dialog
    */
   setCloseCallback(callback: (result?: T) => void): void {
+    this.loggingService.debug('[UnifiedDialogRef] Setting close callback.', undefined, 'DialogService');
     this._closeCallback = callback;
   }
 
   /**
-   * Cierra el diálogo con un resultado opcional
-   * @param result Resultado opcional a devolver
+   * Closes the dialog with an optional result
+   * @param result Optional result to return
    */
   close(result?: T): void {
-    console.log('🔍 [UnifiedDialogRef] close() llamado con resultado:', result);
+    this.loggingService.info(`[UnifiedDialogRef] Closing dialog with result: ${result !== undefined ? JSON.stringify(result) : 'undefined'}.`, undefined, 'DialogService');
 
-    // Ejecutar el callback de cierre si está disponible
+    // Execute the close callback if available
     if (this._closeCallback) {
-      console.log('✅ [UnifiedDialogRef] Ejecutando callback de cierre');
+      this.loggingService.debug('[UnifiedDialogRef] Executing stored close callback.', undefined, 'DialogService');
       this._closeCallback(result);
     } else {
-      console.log('⚠️ [UnifiedDialogRef] No hay callback de cierre disponible, solo emitiendo evento');
+      this.loggingService.warn('[UnifiedDialogRef] No close callback set, emitting directly.', undefined, 'DialogService');
+      this._afterClosed.next(result);
+      this._afterClosed.complete();
     }
-
-    // Emitir el evento de cierre
-    this._afterClosed.next(result);
-    this._afterClosed.complete();
   }
 }
 
 /**
- * Token de inyección para los datos del diálogo
+ * Injection token for dialog data
  */
 export const DIALOG_DATA = 'DIALOG_DATA';
 
 /**
- * Configuración para un diálogo unificado
+ * Configuration for a unified dialog
  */
 export interface UnifiedDialogConfig<D = any> {
   /**
-   * Título del diálogo
+   * Dialog title
    */
   title?: string;
 
   /**
-   * Icono del diálogo (nombre de clase de Font Awesome)
+   * Dialog icon (Font Awesome class name)
    */
   icon?: string;
 
   /**
-   * Tamaño del diálogo
+   * Dialog size
    */
   size?: 'small' | 'medium' | 'large' | 'fullscreen';
 
   /**
-   * Datos que se pasarán al diálogo
+   * Data to pass to the dialog
    */
   data?: D;
 
   /**
-   * Ancho del diálogo
+   * Dialog width
    */
   width?: string;
 
   /**
-   * Altura del diálogo
+   * Dialog height
    */
   height?: string;
 
   /**
-   * Si el diálogo se puede cerrar haciendo clic fuera de él
+   * Whether the dialog can be closed by clicking outside of it
    */
   disableClose?: boolean;
 
   /**
-   * Si el diálogo se puede cerrar con la tecla Escape
+   * Whether the dialog can be closed with the Escape key
    */
   disableEscClose?: boolean;
 
   /**
-   * Mostrar botón de cerrar
+   * Show close button
    */
   showCloseButton?: boolean;
 
   /**
-   * Mostrar pie de diálogo
+   * Show dialog footer
    */
   showFooter?: boolean;
 
   /**
-   * Mostrar botón de cancelar
+   * Show cancel button
    */
   showCancelButton?: boolean;
 
   /**
-   * Mostrar botón de confirmar
+   * Show confirm button
    */
   showConfirmButton?: boolean;
 
   /**
-   * Texto del botón de cancelar
+   * Text for the cancel button
    */
   cancelButtonText?: string;
 
   /**
-   * Texto del botón de confirmar
+   * Text for the confirm button
    */
   confirmButtonText?: string;
 
   /**
-   * Color del botón de confirmar
+   * Color for the confirm button
    */
   confirmButtonColor?: 'primary' | 'accent' | 'warn';
 
   /**
-   * Clase CSS personalizada para el diálogo
+   * Custom CSS class for the dialog
    */
   panelClass?: string | string[];
 
   /**
-   * Posición del diálogo
+   * Dialog position
    */
   position?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 }
 
 /**
- * Componente de diálogo unificado
- * Este es un componente mínimo que se utilizará para crear el contenedor del diálogo
+ * Unified dialog service
+ * This is a minimal component that will be used to create the dialog container
  */
 @Injectable({
   providedIn: 'root'
 })
 export class UnifiedDialogService {
   private activeDialogs: ComponentRef<any>[] = [];
+  private renderer: Renderer2;
 
   constructor(
     private appRef: ApplicationRef,
-    private environmentInjector: EnvironmentInjector
-  ) {}
+    private environmentInjector: EnvironmentInjector,
+    private loggingService: LoggingService, // Inject LoggingService
+    private rendererFactory: RendererFactory2
+  ) {
+    this.renderer = rendererFactory.createRenderer(null, null);
+    this.loggingService.debug('[UnifiedDialogService] Initializing UnifiedDialogService.', undefined, 'DialogService');
+  }
 
   /**
-   * Abre un diálogo con un componente personalizado
-   * @param component Componente a mostrar en el diálogo
-   * @param config Configuración del diálogo
-   * @returns Referencia al diálogo
+   * Opens a dialog with a custom component
+   * @param component Component to display in the dialog
+   * @param config Dialog configuration
+   * @returns Reference to the dialog
    */
   open<T, D = any, R = any>(component: Type<T>, config?: UnifiedDialogConfig<D>): UnifiedDialogRef<R> {
-    // Cerrar cualquier diálogo existente
-    this.closeAll();
+    this.loggingService.info(`[UnifiedDialogService] Attempting to open dialog with component: ${component.name}.`, config, 'DialogService');
 
-    // Crear referencia al diálogo
-    const dialogRef = new UnifiedDialogRef<R>();
+    // Close any existing dialogs to ensure only one is open at a time (configurable behavior)
+    if (this.activeDialogs.length > 0) {
+      this.loggingService.warn('[UnifiedDialogService] Closing existing dialogs before opening a new one.', undefined, 'DialogService');
+      this.closeAll();
+    }
 
-    // Variables para almacenar las referencias de los componentes
+    // Create dialog reference
+    const dialogRef = new UnifiedDialogRef<R>(this.loggingService); // Pass loggingService to UnifiedDialogRef
+
     let dialogComponentRef: ComponentRef<any>;
     let contentComponentRef: ComponentRef<any>;
 
-    // Configurar el callback de cierre
+    // Configure the close callback for UnifiedDialogRef
     dialogRef.setCloseCallback((result?: R) => {
-      console.log('🔍 [UnifiedDialogService] Callback de cierre ejecutado con resultado:', result);
+      this.loggingService.debug('[UnifiedDialogService] UnifiedDialogRef close callback triggered.', result, 'DialogService');
       this.closeDialog(dialogComponentRef, contentComponentRef, dialogRef, result);
     });
 
-    // Importar dinámicamente el componente CustomDialogComponent
-    import('@shared/components/custom-form/custom-dialog/custom-dialog.component').then(module => {
+    // Dynamically import CustomDialogComponent
+    import('../../components/custom-form/custom-dialog/custom-dialog.component').then(module => {
+      this.loggingService.debug('[UnifiedDialogService] CustomDialogComponent imported dynamically.', undefined, 'DialogService');
       const CustomDialogComponent = module.CustomDialogComponent;
 
-      // Crear el contenedor del diálogo
-      const hostElement = document.createElement('div');
-      hostElement.classList.add('unified-dialog-container');
+      const hostElement = this.renderer.createElement('div');
+      this.renderer.addClass(hostElement, 'unified-dialog-container');
 
-      // Aplicar clases CSS personalizadas si se proporcionan
+      // Apply custom CSS classes if provided
       if (config?.panelClass) {
         if (Array.isArray(config.panelClass)) {
           config.panelClass.forEach(className => {
-            if (className) {
-              hostElement.classList.add(className);
-            }
+            if (className) this.renderer.addClass(hostElement, className);
           });
+          this.loggingService.debug('[UnifiedDialogService] Applied multiple panelClasses to hostElement.', config.panelClass, 'DialogService');
         } else if (typeof config.panelClass === 'string') {
-          hostElement.classList.add(config.panelClass);
+          this.renderer.addClass(hostElement, config.panelClass);
+          this.loggingService.debug('[UnifiedDialogService] Applied single panelClass to hostElement.', config.panelClass, 'DialogService');
         }
       }
+      this.renderer.appendChild(document.body, hostElement);
+      this.loggingService.debug('[UnifiedDialogService] Host element appended to body.', hostElement, 'DialogService');
 
-      document.body.appendChild(hostElement);
 
-      // Crear el componente de diálogo
+      // Create the dialog container component
       dialogComponentRef = createComponent(CustomDialogComponent, {
         environmentInjector: this.environmentInjector,
-        hostElement: hostElement
+        hostElement: hostElement // Mount to the created hostElement
       });
+      this.loggingService.debug('[UnifiedDialogService] CustomDialogComponent created.', dialogComponentRef, 'DialogService');
 
-      // Crear un injector personalizado para el componente de contenido
+
+      // Create a custom injector for the content component
       const injector = Injector.create({
         parent: this.environmentInjector,
         providers: [
@@ -216,86 +244,113 @@ export class UnifiedDialogService {
           { provide: DIALOG_DATA, useValue: config?.data || {} }
         ]
       });
+      this.loggingService.debug('[UnifiedDialogService] Custom injector created for content component.', undefined, 'DialogService');
 
-      // Crear el componente de contenido con el injector personalizado
+      // Create the content component with the custom injector
       contentComponentRef = createComponent(component, {
         environmentInjector: this.environmentInjector,
         elementInjector: injector,
-        hostElement: document.createElement('div')
+        hostElement: this.renderer.createElement('div') // Create a temporary host element for content
       });
+      this.loggingService.debug('[UnifiedDialogService] Content component created.', contentComponentRef, 'DialogService');
 
-      // Configurar el diálogo
+
+      // Configure dialog instance properties
       const dialogInstance = dialogComponentRef.instance;
       dialogInstance.title = config?.title || '';
       dialogInstance.icon = config?.icon || '';
       dialogInstance.size = config?.size || 'medium';
-      dialogInstance.showCloseButton = config?.showCloseButton !== false;
-      dialogInstance.showFooter = config?.showFooter !== false;
-      dialogInstance.showCancelButton = config?.showCancelButton !== false;
-      dialogInstance.showConfirmButton = config?.showConfirmButton !== false;
+      dialogInstance.showCloseButton = config?.showCloseButton !== false; // Default to true
+      dialogInstance.showFooter = config?.showFooter !== false;         // Default to true
+      dialogInstance.showCancelButton = config?.showCancelButton !== false; // Default to true
+      dialogInstance.showConfirmButton = config?.showConfirmButton !== false; // Default to true
       dialogInstance.cancelButtonText = config?.cancelButtonText || 'Cancelar';
       dialogInstance.confirmButtonText = config?.confirmButtonText || 'Confirmar';
       dialogInstance.confirmButtonColor = config?.confirmButtonColor || 'primary';
+      dialogInstance.disableClose = config?.disableClose || false;
+      dialogInstance.disableEscClose = config?.disableEscClose || false;
+      this.loggingService.debug('[UnifiedDialogService] CustomDialogComponent instance configured.', dialogInstance, 'DialogService');
 
-      // Configurar eventos
+
+      // Configure event subscriptions for the dialog
       dialogInstance.dialogClose.subscribe(() => {
-        this.closeDialog(dialogComponentRef, contentComponentRef, dialogRef);
+        this.loggingService.debug('[UnifiedDialogService] dialogClose event triggered by CustomDialogComponent.', undefined, 'DialogService');
+        dialogRef.close(); // Use UnifiedDialogRef's close to trigger the callback
       });
 
       dialogInstance.dialogCancel.subscribe(() => {
-        this.closeDialog(dialogComponentRef, contentComponentRef, dialogRef);
+        this.loggingService.debug('[UnifiedDialogService] dialogCancel event triggered by CustomDialogComponent.', undefined, 'DialogService');
+        dialogRef.close(false as R); // Typically false for cancel
       });
 
       dialogInstance.dialogConfirm.subscribe(() => {
+        this.loggingService.debug('[UnifiedDialogService] dialogConfirm event triggered by CustomDialogComponent.', undefined, 'DialogService');
         let result: any = undefined;
         try {
+          // Attempt to get result from content component if it has a getResult method
           if (contentComponentRef?.instance && typeof (contentComponentRef.instance as any).getResult === 'function') {
             result = (contentComponentRef.instance as any).getResult();
+            this.loggingService.debug('[UnifiedDialogService] Result obtained from content component.', result, 'DialogService');
           }
         } catch (error) {
-          console.error('Error al obtener el resultado del componente de contenido:', error);
+          this.loggingService.error('[UnifiedDialogService] Error getting result from content component:', error, 'DialogService');
         }
-
-        this.closeDialog(dialogComponentRef, contentComponentRef, dialogRef, result);
+        dialogRef.close(result); // Use UnifiedDialogRef's close
       });
 
       dialogInstance.dialogDismiss.subscribe(() => {
-        this.closeDialog(dialogComponentRef, contentComponentRef, dialogRef);
+        this.loggingService.debug('[UnifiedDialogService] dialogDismiss event triggered by CustomDialogComponent.', undefined, 'DialogService');
+        dialogRef.close(); // Use UnifiedDialogRef's close
       });
 
-      // Adjuntar al árbol de componentes
+
+      // Attach component views to the application's view tree
       this.appRef.attachView(dialogComponentRef.hostView);
       this.appRef.attachView(contentComponentRef.hostView);
+      this.loggingService.debug('[UnifiedDialogService] Dialog and content component views attached to appRef.', undefined, 'DialogService');
 
-      // Esperar a que el DOM se actualice antes de agregar el componente de contenido
+
+      // Append the content component's native element to the dialog's content area
+      // Use setTimeout to ensure the dialog's DOM is rendered before appending content
       setTimeout(() => {
         try {
-          // Agregar el componente de contenido al diálogo
           const contentElement = contentComponentRef?.location?.nativeElement;
+          // Query the dialog's shadow DOM for the content insertion point if it uses shadow DOM
           const dialogContentElement = dialogComponentRef?.location?.nativeElement?.querySelector('.dialog-content');
 
           if (dialogContentElement && contentElement) {
-            // Asegurarse de que el elemento no esté ya en el DOM
+            // Ensure the element is not already in the DOM (e.g., if a previous attempt failed)
             if (contentElement.parentNode) {
-              contentElement.parentNode.removeChild(contentElement);
+              this.renderer.removeChild(contentElement.parentNode, contentElement);
+              this.loggingService.debug('[UnifiedDialogService] Removed content element from previous parent.', undefined, 'DialogService');
             }
-
-            dialogContentElement.appendChild(contentElement);
+            this.renderer.appendChild(dialogContentElement, contentElement);
+            this.loggingService.debug('[UnifiedDialogService] Content component appended to dialog content area.', undefined, 'DialogService');
+          } else {
+            this.loggingService.warn('[UnifiedDialogService] Could not find dialog content element or content element.', { dialogContentElement, contentElement }, 'DialogService');
           }
         } catch (error) {
-          console.error('Error al agregar el componente de contenido al diálogo:', error);
+          this.loggingService.error('[UnifiedDialogService] Error appending content component to dialog:', error, 'DialogService');
         }
-      }, 0);
+      }, 0); // Use 0ms timeout for next tick execution
 
-      // Guardar referencias
+      // Store references to active dialogs for later cleanup
       this.activeDialogs.push(dialogComponentRef, contentComponentRef);
+      this.loggingService.debug('[UnifiedDialogService] Dialog and content component references stored.', this.activeDialogs, 'DialogService');
+
+      // Prevent body scrolling
+      this.renderer.setStyle(document.body, 'overflow', 'hidden');
+
+    }).catch(error => {
+      this.loggingService.error('[UnifiedDialogService] Error loading CustomDialogComponent dynamically:', error, 'DialogService');
+      dialogRef.close(); // Close the dialogRef if the main dialog component cannot be loaded
     });
 
     return dialogRef;
   }
 
   /**
-   * Cierra un diálogo específico
+   * Closes a specific dialog.
    */
   private closeDialog<R>(
     dialogComponentRef: ComponentRef<any>,
@@ -303,84 +358,94 @@ export class UnifiedDialogService {
     dialogRef: UnifiedDialogRef<R>,
     result?: R
   ): void {
+    this.loggingService.info('[UnifiedDialogService] Closing a specific dialog.', { dialogRef, result }, 'DialogService');
     try {
-      console.log('🔍 [UnifiedDialogService] closeDialog() ejecutado');
-
-      // Limpiar el componente de diálogo
+      // Cleanup the dialog component
       if (dialogComponentRef) {
-        // Primero eliminar del DOM si es necesario
         const hostElement = dialogComponentRef?.location?.nativeElement;
         if (hostElement && hostElement.parentNode) {
-          hostElement.parentNode.removeChild(hostElement);
+          this.renderer.removeChild(hostElement.parentNode, hostElement);
+          this.loggingService.debug('[UnifiedDialogService] Removed dialog host element from DOM.', undefined, 'DialogService');
         }
-
-        // Luego desconectar la vista y destruir el componente
         this.appRef.detachView(dialogComponentRef.hostView);
         dialogComponentRef.destroy();
+        this.loggingService.debug('[UnifiedDialogService] Dialog component destroyed.', undefined, 'DialogService');
       }
 
-      // Limpiar el componente de contenido
+      // Cleanup the content component
       if (contentComponentRef) {
-        // Desconectar la vista y destruir el componente
         this.appRef.detachView(contentComponentRef.hostView);
         contentComponentRef.destroy();
+        this.loggingService.debug('[UnifiedDialogService] Content component destroyed.', undefined, 'DialogService');
       }
 
-      // Eliminar de la lista de diálogos activos
+      // Remove from the list of active dialogs
       this.activeDialogs = this.activeDialogs.filter(ref =>
         ref !== dialogComponentRef && ref !== contentComponentRef);
+      this.loggingService.debug('[UnifiedDialogService] References removed from active dialogs list.', this.activeDialogs, 'DialogService');
 
-      // Emitir el evento de cierre directamente sin llamar a dialogRef.close() para evitar recursión
+
+      // Emit the close event directly to UnifiedDialogRef's subject
+      // This is crucial to avoid recursion if dialogRef.close() was called already
       dialogRef['_afterClosed'].next(result);
       dialogRef['_afterClosed'].complete();
+      this.loggingService.debug('[UnifiedDialogService] UnifiedDialogRef _afterClosed subject completed.', undefined, 'DialogService');
 
-      // Restaurar el desplazamiento del body
-      document.body.style.overflow = '';
 
-      // Limpiar cualquier elemento de diálogo restante
+      // Restore body scrolling if no other dialogs are open
+      if (this.activeDialogs.length === 0) {
+        this.renderer.setStyle(document.body, 'overflow', '');
+        this.loggingService.debug('[UnifiedDialogService] Body scrolling restored (no active dialogs).', undefined, 'DialogService');
+      }
+
+      // Perform general cleanup of any remaining dialog-related DOM elements
       this.cleanupDialogElements();
 
-      console.log('✅ [UnifiedDialogService] Diálogo cerrado exitosamente');
+      this.loggingService.info('[UnifiedDialogService] Dialog successfully closed and cleaned.', undefined, 'DialogService');
     } catch (error) {
-      console.error('❌ [UnifiedDialogService] Error al cerrar el diálogo:', error);
+      this.loggingService.error('[UnifiedDialogService] Error during closeDialog cleanup:', error, 'DialogService');
     }
   }
 
   /**
-   * Cierra todos los diálogos activos
+   * Closes all active dialogs.
    */
   closeAll(): void {
-    // Hacer una copia de los diálogos activos para evitar problemas al modificar el array durante la iteración
+    this.loggingService.info('[UnifiedDialogService] Closing all active dialogs.', undefined, 'DialogService');
+    // Make a copy of active dialogs to avoid issues when modifying the array during iteration
     const activeDialogsCopy = [...this.activeDialogs];
 
-    // Limpiar todos los diálogos
     activeDialogsCopy.forEach(ref => {
       try {
         const hostElement = ref?.location?.nativeElement;
         if (hostElement && hostElement.parentNode) {
-          hostElement.parentNode.removeChild(hostElement);
+          this.renderer.removeChild(hostElement.parentNode, hostElement);
+          this.loggingService.debug('[UnifiedDialogService] Removed host element during closeAll:', hostElement, 'DialogService');
         }
         this.appRef.detachView(ref.hostView);
         ref.destroy();
+        this.loggingService.debug('[UnifiedDialogService] ComponentRef destroyed during closeAll:', ref, 'DialogService');
       } catch (error) {
-        console.error('Error al cerrar diálogo activo:', error);
+        this.loggingService.error('[UnifiedDialogService] Error closing active dialog during closeAll:', error, 'DialogService');
       }
     });
 
-    // Limpiar la lista de diálogos activos
+    // Clear the list of active dialogs
     this.activeDialogs = [];
+    this.loggingService.debug('[UnifiedDialogService] Active dialogs list cleared.', undefined, 'DialogService');
 
-    // Restaurar el desplazamiento del body
-    document.body.style.overflow = '';
+    // Restore body scrolling
+    this.renderer.setStyle(document.body, 'overflow', '');
+    this.loggingService.debug('[UnifiedDialogService] Body scrolling restored after closeAll.', undefined, 'DialogService');
 
-    // Limpiar cualquier elemento de diálogo restante
+    // Clean up any remaining dialog-related DOM elements
     this.cleanupDialogElements();
   }
 
   /**
-   * Abre un diálogo de confirmación
-   * @param options Opciones del diálogo de confirmación
-   * @returns Referencia al diálogo
+   * Opens a confirmation dialog.
+   * @param options Confirmation dialog options.
+   * @returns Reference to the dialog.
    */
   openConfirm(options: {
     title?: string;
@@ -391,11 +456,13 @@ export class UnifiedDialogService {
     icon?: string;
     size?: 'small' | 'medium' | 'large';
   }): UnifiedDialogRef<boolean> {
-    // Crear una referencia al diálogo
-    const dialogRef = new UnifiedDialogRef<boolean>();
+    this.loggingService.info('[UnifiedDialogService] Opening confirmation dialog.', options, 'DialogService');
+    // Create a new dialog reference for this confirmation
+    const dialogRef = new UnifiedDialogRef<boolean>(this.loggingService);
 
-    // Importar dinámicamente el componente ConfirmDialogComponent
-    import('@shared/components/confirm-dialog/confirm-dialog.component').then(module => {
+    // Dynamically import the ConfirmDialogComponent
+    import('../../components/confirm-dialog/confirm-dialog.component').then(module => {
+      this.loggingService.debug('[UnifiedDialogService] ConfirmDialogComponent imported dynamically.', undefined, 'DialogService');
       const ConfirmDialogComponent = module.ConfirmDialogComponent;
 
       const innerDialogRef = this.open<any, any, boolean>(ConfirmDialogComponent, {
@@ -414,48 +481,54 @@ export class UnifiedDialogService {
         confirmButtonColor: options.confirmButtonColor || 'primary'
       });
 
-      // Conectar la referencia interna con la externa
+      // Connect the inner dialog reference with the external one
       innerDialogRef.afterClosed().subscribe(result => {
-        dialogRef.close(result);
+        this.loggingService.debug('[UnifiedDialogService] Confirm dialog inner dialog closed. Propagating result.', result, 'DialogService');
+        dialogRef.close(result); // Close the outer dialogRef with the result from the inner dialog
       });
+    }).catch(error => {
+      this.loggingService.error('[UnifiedDialogService] Error loading ConfirmDialogComponent dynamically:', error, 'DialogService');
+      dialogRef.close(false); // Close the confirm dialog with false if component fails to load
     });
 
     return dialogRef;
   }
 
   /**
-   * Limpia cualquier elemento de diálogo restante en el DOM
+   * Cleans up any remaining dialog elements in the DOM.
    */
   private cleanupDialogElements(): void {
+    this.loggingService.debug('[UnifiedDialogService] Initiating cleanup of residual dialog elements in DOM.', undefined, 'DialogService');
     try {
-      // Limpiar todos los elementos de diálogo en un solo paso
+      // Selectors for dialog-related elements that might remain in the DOM
       const selectors = [
         '.dialog-backdrop',
-        '.dialog-container',
-        '.unified-dialog-container',
-        '.custom-dialog-container',
-        '[class*="dialog"]:not(.mat-dialog)'
+        '.dialog-container', // This is the host element for CustomDialogComponent
+        '.unified-dialog-container', // This is the host element created by this service
+        '.custom-dialog-container', // Another potential class if used
+        '[class*="dialog-"]:not(.mat-dialog-container)' // Generic selector for elements containing "dialog-" in their class, excluding material dialogs
       ];
 
-      // Combinar todos los selectores en una sola consulta
       const combinedSelector = selectors.join(', ');
       const dialogElements = document.querySelectorAll(combinedSelector);
 
       if (dialogElements.length > 0) {
-        console.log(`Eliminando ${dialogElements.length} elementos de diálogo del DOM`);
-
+        this.loggingService.info(`[UnifiedDialogService] Found ${dialogElements.length} residual dialog elements. Removing...`, undefined, 'DialogService');
         dialogElements.forEach(element => {
           try {
             if (element.parentNode) {
-              element.parentNode.removeChild(element);
+              this.renderer.removeChild(element.parentNode, element);
+              this.loggingService.debug('[UnifiedDialogService] Removed residual dialog element from DOM:', element, 'DialogService');
             }
           } catch (removeErr) {
-            console.error('Error al eliminar elemento del DOM:', removeErr);
+            this.loggingService.error('[UnifiedDialogService] Error removing residual dialog element from DOM:', removeErr, 'DialogService');
           }
         });
+      } else {
+        this.loggingService.debug('[UnifiedDialogService] No residual dialog elements found in DOM.', undefined, 'DialogService');
       }
     } catch (error) {
-      console.error('Error al limpiar elementos de diálogo:', error);
+      this.loggingService.error('[UnifiedDialogService] Error during cleanup of dialog elements:', error, 'DialogService');
     }
   }
 }

@@ -14,11 +14,11 @@
          (keydown.space)="verDetalle(concurso); $event.preventDefault()"
          tabindex="0"
          role="button"
-         [attr.aria-label]="'Ver detalles de concurso: ' + concurso.titulo">
+         [attr.aria-label]="'Ver detalles de concurso: ' + concurso.title">
       <div class="concurso-info">
-        <h3>{{ concurso.titulo }}</h3>
-        <p class="cargo">{{ concurso.cargo }}</p>
-        <p class="dependencia">{{ concurso.dependencia }}</p>
+        <h3>{{ concurso.title }}</h3>
+        <p class="cargo">{{ concurso.position }}</p>
+        <p class="dependencia">{{ concurso.department }}</p>
 
         <div class="meta-info">
           <span>

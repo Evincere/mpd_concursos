@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, Injector } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
@@ -21,15 +21,15 @@ import { ExamenRecoveryService } from '@core/services/examenes/examen-recovery.s
 import { ExamenRendicionService } from '@core/services/examenes/examen-rendicion.service';
 import { ExamenValidationService } from '@core/services/examenes/examen-validation.service';
 import { Examen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
-import { Pregunta, TipoPregunta, ExamenEnCurso } from '@shared/interfaces/examen/pregunta.interface';
+import { Pregunta, TipoPregunta, ExamenEnCurso, Opcion } from '@shared/interfaces/examen/pregunta.interface';
 import { SecurityViolationType } from '@core/interfaces/security/security-violation.interface';
 import { FormatTiempoPipe } from '@shared/pipes/format-tiempo.pipe';
-import { Subject, of } from 'rxjs';
+import { Subject, of, lastValueFrom } from 'rxjs'; // Import lastValueFrom
 import { takeUntil, catchError, map, filter, finalize, timeout } from 'rxjs/operators';
 
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { SECURITY_PROVIDERS } from '../../providers/security.providers';
-import { AuthService } from '@core/services/auth/auth.service';
+import { AuthService } from '@core/services/auth/auth.service'; // Assuming AuthService exists for user ID
 import { ExamenesStateService } from '@core/services/examenes/examenes-state.service';
 
 
@@ -86,7 +86,7 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   opcionesOrdenadas: { id: string; texto: string }[] = [];
   isExamInProgress = false;
 
-  @ViewChild('seleccionList') seleccionList!: HTMLElement;
+  @ViewChild('seleccionList') seleccionList!: ElementRef; // Changed to ElementRef
 
   private modoPrueba = false;
   private anulacionEnProgreso = false;
@@ -103,19 +103,16 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     private recoveryService: ExamenRecoveryService,
     private rendicionService: ExamenRendicionService,
     private securityService: ExamenValidationService,
-    private examenesService: ExamenesStateService,
-    private stateService: ExamenesStateService,
-    private injector: Injector
+    private authService: AuthService, // Assuming AuthService is injected for user ID
+    private examenesStateService: ExamenesStateService // Renamed to avoid conflict with `stateService` parameter
   ) {}
-
-
 
   ngOnInit(): void {
     // Verificar si estamos en modo prueba
     this.route.queryParams.subscribe((params: Record<string, string>) => {
       this.modoPrueba = params['modo'] === 'prueba';
       if (this.modoPrueba) {
-        console.log('MODO PRUEBA ACTIVADO: Se omitirán validaciones de fecha');
+        console.warn('MODO PRUEBA ACTIVADO: Algunas funcionalidades de seguridad y tiempo podrían no operar.');
       }
     });
 
@@ -126,15 +123,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       filter(id => !!id)
     ).subscribe((id: string | null) => {
       if (id) {
-        // Cargar el examen primero
-            this.cargarExamen(id);
-
-        // Las medidas de seguridad se inicializarán solo después de verificar
-        // que hay preguntas disponibles, en el método cargarPreguntas
+        this.cargarExamen(id);
       }
     });
-
-    // No nos suscribimos a los cambios de estado aquí, lo haremos después de cargar las preguntas
   }
 
   ngOnDestroy(): void {
@@ -155,81 +146,101 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Navigation methods
+  /**
+   * Navega a la pregunta anterior o siguiente.
+   * @param direccion 'anterior' o 'siguiente'
+   */
+  navegarPregunta(direccion: 'anterior' | 'siguiente'): void {
+    if (!this.preguntas.length) return;
+
+    let nuevoIndice = this.indicePreguntaActual;
+
+    if (direccion === 'anterior' && this.indicePreguntaActual > 0) {
+      nuevoIndice--;
+    } else if (direccion === 'siguiente' && this.indicePreguntaActual < this.preguntas.length - 1) {
+      nuevoIndice++;
+    } else if (direccion === 'siguiente' && this.indicePreguntaActual === this.preguntas.length - 1) {
+      // Si estamos en la última pregunta y queremos ir a la siguiente, ofrecemos finalizar
+      this.finalizar();
+      return;
+    }
+
+    this.irAPregunta(nuevoIndice + 1); // +1 porque irAPregunta espera un número de pregunta (1-indexed)
+  }
+
+  /**
+   * Navega a la pregunta anterior
+   */
   anterior(): void {
     this.navegarPregunta('anterior');
   }
 
+  /**
+   * Navega a la pregunta siguiente
+   */
   siguiente(): void {
     this.navegarPregunta('siguiente');
   }
 
-  // Este método se ha duplicado. La implementación correcta está más abajo en el archivo.
-  // Esta versión se mantiene para evitar errores de compilación, pero debería eliminarse en una refactorización futura.
-  navegarPregunta(direccion: 'anterior' | 'siguiente'): void {
-    // Llamar a la implementación correcta
-    if (!this.preguntas.length) return;
+  /**
+   * Navega a una pregunta específica por su número (1-indexed).
+   * @param numeroPregunta El número de la pregunta a la que navegar.
+   */
+  irAPregunta(numeroPregunta: number): void {
+    const indice = numeroPregunta - 1; // Convertir a 0-indexed
 
-    if (direccion === 'anterior' && this.indicePreguntaActual > 0) {
-      this.indicePreguntaActual--;
-    } else if (direccion === 'siguiente' && this.indicePreguntaActual < this.preguntas.length - 1) {
-      this.indicePreguntaActual++;
-    }
-
-    this.preguntaActual = this.preguntas[this.indicePreguntaActual];
-  }
-
-  // Este método ha sido reemplazado por navegarPregunta
-  // Se mantiene este comentario para documentar la refactorización
-
-  irAPregunta(indice: number): void {
-    if (indice > 0 && indice <= this.preguntas.length) {
-      this.indicePreguntaActual = indice - 1;
+    if (indice >= 0 && indice < this.preguntas.length) {
+      this.indicePreguntaActual = indice;
       this.preguntaActual = this.preguntas[this.indicePreguntaActual];
-
-      // Asegurarse de que las respuestas estén inicializadas para la pregunta actual
-      if (this.preguntaActual.tipo === TipoPregunta.SELECCION_MULTIPLE && !this.respuestas[this.preguntaActual.id]) {
-        this.respuestas[this.preguntaActual.id] = [];
-      }
 
       // Inicializar opciones ordenadas si es una pregunta de ordenamiento
       if (this.preguntaActual.tipo === TipoPregunta.ORDENAMIENTO) {
-        this.opcionesOrdenadas = [...(this.preguntaActual.opciones || [])];
+        // Asegurarse de que las opciones estén aleatorias por defecto si no hay respuesta guardada
+        const opcionesBase = [...(this.preguntaActual.opciones || [])];
         if (this.respuestas[this.preguntaActual.id]) {
-          // Si ya hay una respuesta, ordenar según la respuesta guardada
           const ordenGuardado = this.respuestas[this.preguntaActual.id] as string[];
-          this.opcionesOrdenadas.sort((a, b) => {
-            return ordenGuardado.indexOf(a.id) - ordenGuardado.indexOf(b.id);
-          });
+          this.opcionesOrdenadas = ordenGuardado
+            .map(id => opcionesBase.find(op => op.id === id))
+            .filter((op): op is Opcion => !!op);
+        } else {
+          // Mezclar opciones para la primera vez que se ve la pregunta de ordenamiento
+          this.opcionesOrdenadas = this.shuffleArray(opcionesBase);
         }
+      } else {
+        this.opcionesOrdenadas = []; // Limpiar para otros tipos de pregunta
       }
     }
   }
 
+  private shuffleArray(array: any[]): any[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    }
+    return array;
+  }
+
   // Answer handling methods
-  guardarRespuesta(respuesta: string | string[]): void {
+  /**
+   * Guarda la respuesta para preguntas de selección única o verdadero/falso.
+   * @param respuesta La respuesta seleccionada.
+   */
+  guardarRespuesta(respuesta: string): void { // Changed type to string for single selection
     if (!this.preguntaActual || !this.examen) {
       console.error('No hay pregunta actual o examen cargado');
       return;
     }
 
     try {
-      console.log(`Guardando respuesta para pregunta ${this.preguntaActual.id} catch (error) { console.error(error); }:`, respuesta);
-
-      // Guardar la respuesta localmente
       this.respuestas[this.preguntaActual.id] = respuesta;
       this.preguntasRespondidas.add(this.preguntaActual.id);
 
-      // Usar setTimeout para evitar bloquear la UI
       setTimeout(() => {
         try {
           if (this.examen) {
-            // Crear objeto de respuesta con timestamp
             const respuestaObj = {
               [this.preguntaActual!.id]: respuesta
             };
-
-            console.log('Enviando respuesta al servicio de recuperación:', respuestaObj);
             this.recoveryService.guardarRespuestas(this.examen.id, respuestaObj);
           }
         } catch (error) {
@@ -243,6 +254,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Guarda las respuestas para preguntas de selección múltiple.
+   * @param opciones Array de objetos con las opciones seleccionadas.
+   */
   guardarRespuestaMultiple(opciones: { value: string }[]): void {
     if (!this.preguntaActual || !this.examen) {
       console.error('No hay pregunta actual o examen cargado');
@@ -250,23 +265,16 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
 
     try {
-      const respuestas = opciones.map(opcion => opcion.value);
-      console.log(`Guardando respuesta múltiple para pregunta ${this.preguntaActual.id}:`, respuestas);
-
-      // Guardar la respuesta localmente
-      this.respuestas[this.preguntaActual.id] = respuestas;
+      const respuestasArr = opciones.map(opcion => opcion.value);
+      this.respuestas[this.preguntaActual.id] = respuestasArr;
       this.preguntasRespondidas.add(this.preguntaActual.id);
 
-      // Usar setTimeout para evitar bloquear la UI
       setTimeout(() => {
         try {
           if (this.examen) {
-            // Crear objeto de respuesta con solo la respuesta actual
             const respuestaObj = {
-              [this.preguntaActual!.id]: respuestas
+              [this.preguntaActual!.id]: respuestasArr
             };
-
-            console.log('Enviando respuesta múltiple al servicio de recuperación:', respuestaObj);
             this.recoveryService.guardarRespuestas(this.examen.id, respuestaObj);
           }
         } catch (error) {
@@ -280,6 +288,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Guarda la respuesta para preguntas de desarrollo (texto libre).
+   * @param event Evento del input/textarea.
+   */
   guardarRespuestaTexto(event: Event): void {
     if (!this.preguntaActual || !this.examen) {
       console.error('No hay pregunta actual o examen cargado');
@@ -289,22 +301,18 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     try {
       const input = event.target as HTMLTextAreaElement;
       const texto = input.value;
-      console.log(`Guardando respuesta de texto para pregunta ${this.preguntaActual.id} catch (error) { console.error(error); }`);
 
-      // Usar setTimeout para evitar bloquear la UI
       setTimeout(() => {
         try {
-          // Guardar la respuesta localmente
           this.respuestas[this.preguntaActual!.id] = texto;
           this.preguntasRespondidas.add(this.preguntaActual!.id);
 
-          // Crear objeto de respuesta con solo la respuesta actual
           const respuestaObj = {
             [this.preguntaActual!.id]: texto
           };
-
-          console.log('Enviando texto al servicio de recuperación:', respuestaObj);
-          this.recoveryService.guardarRespuestas(this.examen!.id, respuestaObj);
+          if (this.examen) {
+            this.recoveryService.guardarRespuestas(this.examen.id, respuestaObj);
+          }
         } catch (error) {
           console.error('Error al guardar respuesta de texto:', error);
           this.notificationService.mostrarError('Error al guardar su respuesta de texto');
@@ -317,6 +325,9 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
   }
 
   // Question marking methods
+  /**
+   * Marca o desmarca la pregunta actual para revisión.
+   */
   marcarParaRevisar(): void {
     if (this.preguntaActual) {
       if (this.preguntasMarcadas.has(this.preguntaActual.id)) {
@@ -327,8 +338,10 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Inicia el proceso de finalización del examen, mostrando un diálogo de confirmación.
+   */
   finalizar(): void {
-    // Mostrar diálogo de confirmación
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
@@ -346,44 +359,51 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Obtiene el estado de una pregunta para mostrar en la navegación.
+   * @param pregunta La pregunta a evaluar.
+   * @returns Una cadena que describe el estado de la pregunta.
+   */
   getEstadoPregunta(pregunta: Pregunta): string {
     let estado = '';
     if (this.preguntasRespondidas.has(pregunta.id)) {
-      estado += ' - Respondida';
+      estado += 'Respondida';
+    } else {
+      estado += 'Sin Responder';
     }
     if (this.preguntasMarcadas.has(pregunta.id)) {
-      estado += ' - Marcada para revisión';
+      estado += (estado ? ' / ' : '') + 'Marcada para revisión';
     }
     return estado;
   }
 
-  // Drag and drop handling
+  // Drag and drop handling for TipoPregunta.ORDENAMIENTO
+  /**
+   * Maneja el evento de soltar para preguntas de ordenamiento.
+   * Actualiza el orden local y guarda la respuesta.
+   * @param event El evento CdkDragDrop.
+   */
   drop(event: CdkDragDrop<string[]>): void {
-    if (!this.preguntaActual || !this.examen) {
-      console.error('No hay pregunta actual o examen cargado');
+    if (!this.preguntaActual || !this.examen || this.preguntaActual.tipo !== TipoPregunta.ORDENAMIENTO) {
+      console.error('No hay pregunta actual de ordenamiento o examen cargado');
       return;
     }
 
     try {
       moveItemInArray(this.opcionesOrdenadas, event.previousIndex, event.currentIndex);
-      console.log(`Guardando orden para pregunta ${this.preguntaActual.id} catch (error) { console.error(error); }`);
 
-      // Usar setTimeout para evitar bloquear la UI
       setTimeout(() => {
         try {
           const orden = this.opcionesOrdenadas.map(opcion => opcion.id);
-
-          // Guardar la respuesta localmente
           this.respuestas[this.preguntaActual!.id] = orden;
           this.preguntasRespondidas.add(this.preguntaActual!.id);
 
-          // Crear objeto de respuesta con solo la respuesta actual
           const respuestaObj = {
             [this.preguntaActual!.id]: orden
           };
-
-          console.log('Enviando orden al servicio de recuperación:', respuestaObj);
-          this.recoveryService.guardarRespuestas(this.examen!.id, respuestaObj);
+          if (this.examen) {
+            this.recoveryService.guardarRespuestas(this.examen.id, respuestaObj);
+          }
         } catch (error) {
           console.error('Error al guardar orden:', error);
           this.notificationService.mostrarError('Error al guardar el orden de las opciones');
@@ -395,41 +415,74 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Función de seguimiento para elementos en listas ngFor.
+   * @param _index El índice del elemento.
+   * @param opcion La opción del elemento.
+   * @returns El ID de la opción.
+   */
   trackByOpcion(_index: number, opcion: { id: string }): string {
     return opcion.id;
   }
 
   // Security methods
+  /**
+   * Previene la acción de copiar y registra la actividad.
+   * @param event El evento de copia.
+   */
   onCopy(event: Event): void {
     event.preventDefault();
-    this.registrarActividad('INTENTO_COPIA');
+    this.registrarActividad(SecurityViolationType.KEYBOARD_SHORTCUT, 'Intento de Copia');
+    this.notificationService.mostrarAdvertencia('La acción de copiar está deshabilitada durante el examen.');
   }
 
+  /**
+   * Previene la acción de cortar y registra la actividad.
+   * @param event El evento de corte.
+   */
   onCut(event: Event): void {
     event.preventDefault();
-    this.registrarActividad('INTENTO_CORTE');
+    this.registrarActividad(SecurityViolationType.KEYBOARD_SHORTCUT, 'Intento de Corte');
+    this.notificationService.mostrarAdvertencia('La acción de cortar está deshabilitada durante el examen.');
   }
 
+  /**
+   * Previene la acción de pegar y registra la actividad.
+   * @param event El evento de pegado.
+   */
   onPaste(event: Event): void {
     event.preventDefault();
-    this.registrarActividad('INTENTO_PEGADO');
+    this.registrarActividad(SecurityViolationType.KEYBOARD_SHORTCUT, 'Intento de Pegado');
+    this.notificationService.mostrarAdvertencia('La acción de pegar está deshabilitada durante el examen.');
   }
 
-  // Método auxiliar para registrar actividad
-  private registrarActividad(tipo: string): void {
-    console.log(`Actividad registrada: ${tipo}`);
-    // Este método reemplaza las llamadas al activityLogger
+  /**
+   * Método auxiliar para registrar actividad de seguridad.
+   * @param tipo El tipo de violación de seguridad.
+   * @param mensaje Un mensaje descriptivo de la actividad.
+   */
+  private registrarActividad(tipo: SecurityViolationType, mensaje: string): void {
+    if (this.examen) {
+      // Registrar violación de seguridad (método simplificado)
+      console.warn(`Violación de seguridad: ${tipo} - ${mensaje}`);
+    }
   }
 
+  /**
+   * Carga el examen desde el servicio.
+   * @param id El ID del examen.
+   */
   private cargarExamen(id: string): void {
-    console.log('Cargando examen:', id);
-    this.examenesService.getExamen(id)
+    this.cargando = true;
+    this.examenesStateService.getExamen(id)
       .pipe(
+        takeUntil(this.destroy$),
         catchError(error => {
           console.error('Error al cargar el examen:', error);
+          this.cargando = false;
           this.notificationService.mostrarError('No se pudo cargar el examen solicitado');
           this.router.navigate(['/dashboard/examenes']);
-          return of(null);
+          return of(null); // Return an observable of null to continue stream
         })
       )
       .subscribe({
@@ -439,11 +492,11 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
             this.router.navigate(['/dashboard/examenes']);
             return;
           }
+          this.examen = examen;
 
-          // Verificar si el examen está disponible
-          if (examen.estado !== 'DISPONIBLE' && examen.estado !== 'EN_CURSO') {
-            console.log(`El examen no está disponible. Estado actual: ${examen.estado}`);
-            this.notificationService.mostrarError('Este examen no está disponible en este momento');
+          // Verificar si el examen está disponible o en curso (solo si no estamos en modo prueba)
+          if (!this.modoPrueba && examen.estado !== ESTADO_EXAMEN.DISPONIBLE && examen.estado !== ESTADO_EXAMEN.EN_CURSO) {
+            this.notificationService.mostrarAdvertencia(`El examen no está disponible en este momento. Estado actual: ${this.examen.estado}`);
             this.router.navigate(['/dashboard/examenes']);
             return;
           }
@@ -452,34 +505,38 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           if (!this.modoPrueba) {
             const ahora = new Date();
             const fechaInicio = examen.fechaInicio ? new Date(examen.fechaInicio) : null;
+            const duracionSegundos = examen.duracion ? examen.duracion * 60 : 0;
+            const fechaFinEstimada = fechaInicio ? new Date(fechaInicio.getTime() + duracionSegundos * 1000) : null;
 
             if (fechaInicio && ahora < fechaInicio) {
-              console.log('El examen aún no ha comenzado', { ahora, fechaInicio });
-              this.notificationService.mostrarError('Este examen aún no ha comenzado');
+              this.notificationService.mostrarAdvertencia('El examen aún no ha comenzado. Por favor, espere la hora de inicio.');
+              this.router.navigate(['/dashboard/examenes']);
+              return;
+            }
+            if (fechaFinEstimada && ahora > fechaFinEstimada && examen.estado !== ESTADO_EXAMEN.FINALIZADO) {
+              this.notificationService.mostrarAdvertencia('El tiempo para este examen ha expirado.');
               this.router.navigate(['/dashboard/examenes']);
               return;
             }
           } else {
-            console.log('MODO PRUEBA: Omitiendo validación de fecha para el examen');
+            console.log('Modo prueba activo: Saltando verificación de horario de examen.');
+            this.notificationService.mostrarAdvertencia('MODO PRUEBA: Horario de examen no verificado.');
           }
 
-          this.examen = examen;
-          console.log('Examen cargado:', this.examen);
-
-          // Crear el objeto ExamenEnCurso
+          // Construir ExamenEnCurso para el state service
           const examenEnCurso: ExamenEnCurso = {
-            examenId: examen.id,
+            examenId: this.examen.id,
             usuarioId: this.getCurrentUserId(),
-            estado: 'EN_CURSO',
             fechaInicio: new Date().toISOString(),
-            fechaLimite: this.calcularFechaLimite(),
-            preguntaActual: 0,
+            fechaLimite: new Date(Date.now() + this.examen.duracion * 60 * 1000).toISOString(),
             respuestas: [],
-            duracion: examen.duracion
+            preguntaActual: 0,
+            estado: 'EN_CURSO',
+            duracion: this.examen.duracion
           };
 
           // Inicializar el estado del examen
-          this.stateService.inicializarExamen(examenEnCurso);
+          this.examenesStateService.inicializarExamen(examenEnCurso);
 
           // Cargar las preguntas
           this.cargarPreguntas(id);
@@ -488,30 +545,33 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           console.error('Error en la suscripción del examen:', error);
           this.notificationService.mostrarError('Error al procesar el examen');
           this.router.navigate(['/dashboard/examenes']);
+          this.cargando = false;
         }
       });
   }
 
+  /**
+   * Carga las preguntas para el examen actual.
+   * @param examenId El ID del examen.
+   */
   private cargarPreguntas(examenId: string): void {
-    console.log('Cargando preguntas para el examen:', examenId);
-    console.log('URL de petición de preguntas:', `api/examenes/${examenId}/questions`);
-
-    this.examenesService.getPreguntas(examenId)
+    this.cargando = true;
+    this.rendicionService.getPreguntas()
       .pipe(
+        takeUntil(this.destroy$),
         catchError(error => {
-          console.error('Error al cargar preguntas:', error);
+          console.error('Error al cargar las preguntas del examen:', error);
+          this.cargando = false;
           this.notificationService.mostrarError('Error al cargar las preguntas del examen');
 
-          // Desactivar medidas de seguridad antes de navegar
           try {
             if (this.securityService) {
               this.securityService.deactivateSecureMode();
+              this.securityService.cleanup();
             }
           } catch (err) {
-            console.warn('No se pudo desactivar el modo seguro:', err);
+            console.warn('No se pudo desactivar el modo seguro o limpiar:', err);
           }
-
-          // Detener el temporizador si está activo
           try {
             if (this.timeService) {
               this.timeService.detener();
@@ -521,35 +581,25 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           }
 
           this.router.navigate(['/dashboard/examenes']);
-          return of([]);
+          return of([]); // Return an observable of an empty array to continue stream
         })
       )
       .subscribe({
         next: (preguntas: Pregunta[]) => {
-          console.log('Respuesta del servidor para preguntas:', preguntas);
-          console.log('Tipos de preguntas recibidas:', preguntas.map((p: Pregunta) => ({ id: p.id, tipo: p.tipo, opcionesCount: p.opciones?.length || 0 })));
+          this.cargando = false;
 
           if (!preguntas || preguntas.length === 0) {
-            console.log('El examen no tiene preguntas configuradas');
+            console.warn('El examen no tiene preguntas configuradas.');
+            this.notificationService.mostrarError('Este examen no tiene preguntas configuradas. Por favor, contacte a soporte.');
 
-            if (this.modoPrueba) {
-              console.log('MODO PRUEBA: Cargando preguntas de ejemplo');
-              this.cargarPreguntasEjemplo();
-              return;
-            }
-
-            this.notificationService.mostrarError('Este examen no tiene preguntas configuradas');
-
-            // Desactivar medidas de seguridad antes de navegar
             try {
               if (this.securityService) {
                 this.securityService.deactivateSecureMode();
+                this.securityService.cleanup();
               }
             } catch (err) {
-              console.warn('No se pudo desactivar el modo seguro:', err);
+              console.warn('No se pudo desactivar el modo seguro o limpiar:', err);
             }
-
-            // Detener el temporizador si está activo
             try {
               if (this.timeService) {
                 this.timeService.detener();
@@ -562,60 +612,40 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
             return;
           }
 
-          // Solo iniciar el examen si hay preguntas
           this.preguntas = preguntas;
           this.indicePreguntaActual = 0;
           this.preguntaActual = this.preguntas[this.indicePreguntaActual];
 
-          // Inicializar respuestas para cada tipo de pregunta
-          this.preguntas.forEach(pregunta => {
-            if (!this.respuestas[pregunta.id]) {
-              switch (pregunta.tipo) {
-                case TipoPregunta.SELECCION_MULTIPLE:
-                  this.respuestas[pregunta.id] = [];
-                  break;
-                case TipoPregunta.VERDADERO_FALSO:
-                  this.respuestas[pregunta.id] = '';
-                  break;
-                case TipoPregunta.DESARROLLO:
-                  this.respuestas[pregunta.id] = '';
-                  break;
-                case TipoPregunta.ORDENAMIENTO:
-                  this.respuestas[pregunta.id] = pregunta.opciones?.map(o => o.id) || [];
-                  break;
-                case TipoPregunta.OPCION_MULTIPLE:
-                  this.respuestas[pregunta.id] = '';
-                  break;
-              }
+          // Recuperar respuestas guardadas si existen
+          this.recuperarEstadoExamen();
+
+          // Inicializar opciones ordenadas si la primera pregunta es de ordenamiento
+          if (this.preguntaActual.tipo === TipoPregunta.ORDENAMIENTO) {
+            this.opcionesOrdenadas = [...(this.preguntaActual.opciones || [])];
+            if (this.respuestas[this.preguntaActual.id]) {
+              const ordenGuardado = this.respuestas[this.preguntaActual.id] as string[];
+              this.opcionesOrdenadas.sort((a, b) => {
+                return ordenGuardado.indexOf(a.id) - ordenGuardado.indexOf(b.id);
+              });
+            } else {
+              this.opcionesOrdenadas = this.shuffleArray(this.opcionesOrdenadas);
             }
-            console.log(`Pregunta ${pregunta.id} inicializada:`, {
-              tipo: pregunta.tipo,
-              opciones: pregunta.opciones,
-              respuesta: this.respuestas[pregunta.id]
-            });
-          });
+          }
 
-          console.log('Preguntas cargadas correctamente:', this.preguntas.length);
-          console.log('Primera pregunta:', this.preguntaActual);
-          console.log('Estado inicial de respuestas:', this.respuestas);
+          // Iniciar el temporizador
+          this.iniciarTemporizador();
 
-          // Recuperar respuestas guardadas
-          this.recuperarRespuestas();
-
-          // Iniciar el examen
-          this.iniciarExamen();
-
-          // Iniciar monitoreo
+          // Iniciar monitoreo de seguridad
           this.iniciarMonitoreo();
 
-          // Actualizar estado
+          // Actualizar estado a "en curso" una vez que todo está listo
           this.estadoExamen = ESTADO_EXAMEN.EN_CURSO;
+          this.isExamInProgress = true;
         },
         error: (error: unknown) => {
           console.error('Error en la suscripción de preguntas:', error);
           this.notificationService.mostrarError('Error al procesar las preguntas del examen');
 
-          // Desactivar medidas de seguridad antes de navegar
           try {
             if (this.securityService) {
               this.securityService.deactivateSecureMode();
@@ -625,60 +655,71 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           }
 
           this.router.navigate(['/dashboard/examenes']);
+          this.cargando = false;
         }
       });
   }
 
+  /**
+   * Carga preguntas de ejemplo para el modo prueba.
+   */
   private cargarPreguntasEjemplo(): void {
-    console.log('Cargando preguntas de ejemplo para el modo prueba');
-
-    // Crear preguntas de ejemplo
     const preguntasEjemplo: Pregunta[] = [
       {
-        id: '1',
-        texto: '¿Cuál es el plazo para presentar un recurso de apelación en un proceso civil?',
+        id: 'q1',
+        texto: '¿Cuál es la capital de Argentina?',
         tipo: TipoPregunta.OPCION_MULTIPLE,
         opciones: [
-          { id: 'a', texto: '5 días hábiles', orden: 1 },
-          { id: 'b', texto: '10 días hábiles', orden: 2 },
-          { id: 'c', texto: '15 días hábiles', orden: 3 },
-          { id: 'd', texto: '30 días hábiles', orden: 4 }
+          { id: 'op1', texto: 'Santiago', orden: 1 },
+          { id: 'op2', texto: 'Buenos Aires', orden: 2 },
+          { id: 'op3', texto: 'Montevideo', orden: 3 }
         ],
         puntaje: 10,
         orden: 1
       },
       {
-        id: '2',
-        texto: 'Explique brevemente el principio de legalidad en el derecho penal',
-        tipo: TipoPregunta.DESARROLLO,
-        puntaje: 15,
+        id: 'q2',
+        texto: 'El sol gira alrededor de la Tierra.',
+        tipo: TipoPregunta.VERDADERO_FALSO,
+        opciones: [
+          { id: 'true', texto: 'Verdadero', orden: 1 },
+          { id: 'false', texto: 'Falso', orden: 2 }
+        ],
+        puntaje: 10,
         orden: 2
       },
       {
-        id: '3',
-        texto: 'Ordene cronológicamente las siguientes etapas del proceso penal',
-        tipo: TipoPregunta.ORDENAMIENTO,
-        opciones: [
-          { id: 'a', texto: 'Investigación preliminar', orden: 1 },
-          { id: 'b', texto: 'Juicio oral', orden: 3 },
-          { id: 'c', texto: 'Formalización de la investigación', orden: 2 },
-          { id: 'd', texto: 'Sentencia', orden: 4 }
-        ],
-        puntaje: 10,
+        id: 'q3',
+        texto: 'Explique la importancia de la programación orientada a objetos.',
+        tipo: TipoPregunta.DESARROLLO,
+        puntaje: 20,
         orden: 3
       },
       {
-        id: '4',
-        texto: 'Seleccione todas las garantías constitucionales que aplican al proceso penal',
+        id: 'q4',
+        texto: 'Ordene los siguientes pasos para hacer una torta:',
+        tipo: TipoPregunta.ORDENAMIENTO,
+        opciones: [
+          { id: 'step1', texto: 'Batir huevos y azúcar', orden: 1 },
+          { id: 'step2', texto: 'Hornear a 180°C', orden: 2 },
+          { id: 'step3', texto: 'Mezclar harina y polvo de hornear', orden: 3 },
+          { id: 'step4', texto: 'Enfriar y decorar', orden: 4 }
+        ],
+        puntaje: 15,
+        orden: 4
+      },
+      {
+        id: 'q5',
+        texto: 'Seleccione todas las frutas:',
         tipo: TipoPregunta.SELECCION_MULTIPLE,
         opciones: [
-          { id: 'a', texto: 'Derecho a la defensa', orden: 1 },
-          { id: 'b', texto: 'Presunción de inocencia', orden: 2 },
-          { id: 'c', texto: 'Derecho a guardar silencio', orden: 3 },
-          { id: 'd', texto: 'Derecho a un juicio público', orden: 4 }
+          { id: 'optA', texto: 'Manzana', orden: 1 },
+          { id: 'optB', texto: 'Tomate', orden: 2 },
+          { id: 'optC', texto: 'Zanahoria', orden: 3 },
+          { id: 'optD', texto: 'Banana', orden: 4 }
         ],
-        puntaje: 10,
-        orden: 4
+        puntaje: 15,
+        orden: 5
       }
     ];
 
@@ -686,117 +727,135 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     this.indicePreguntaActual = 0;
     this.preguntaActual = this.preguntas[this.indicePreguntaActual];
 
-    console.log('Preguntas de ejemplo cargadas correctamente:', this.preguntas.length);
-    console.log('Primera pregunta de ejemplo:', this.preguntaActual);
+    // Inicializar respuestas para cada tipo de pregunta de ejemplo
+    this.preguntas.forEach(pregunta => {
+      if (!this.respuestas[pregunta.id]) {
+        switch (pregunta.tipo) {
+          case TipoPregunta.SELECCION_MULTIPLE:
+            this.respuestas[pregunta.id] = [];
+            break;
+          case TipoPregunta.VERDADERO_FALSO:
+          case TipoPregunta.OPCION_MULTIPLE:
+          case TipoPregunta.DESARROLLO:
+            this.respuestas[pregunta.id] = '';
+            break;
+          case TipoPregunta.ORDENAMIENTO:
+            this.respuestas[pregunta.id] = this.shuffleArray(pregunta.opciones?.map(o => o.id) || []);
+            this.opcionesOrdenadas = this.opcionesOrdenadas.length > 0 ? this.opcionesOrdenadas : this.shuffleArray([...(this.preguntaActual!.opciones || [])]);
+            break;
+        }
+      }
+    });
 
-    // Inicializar respuestas
-    this.respuestas = {};
-
-    // Iniciar el examen (temporizador)
-    this.iniciarExamen();
+    // Iniciar el temporizador (ejemplo, 30 minutos)
+    this.timeService.iniciar(30 * 60); // 30 minutos
 
     // Iniciar monitoreo después de cargar preguntas
     this.iniciarMonitoreo();
 
-    // Actualizar estado del examen
     this.estadoExamen = ESTADO_EXAMEN.EN_CURSO;
-
-    this.notificationService.mostrarError('MODO PRUEBA: Se han cargado preguntas de ejemplo');
+    this.isExamInProgress = true;
+    this.cargando = false;
+    this.notificationService.mostrarAdvertencia('MODO PRUEBA: Se han cargado preguntas de ejemplo');
   }
 
-  private iniciarExamen(): void {
-    console.log('Iniciando examen...');
-
-    // Inicializar medidas de seguridad con mejor manejo de errores
-    try {
-      // Primero iniciamos el temporizador para asegurar que el tiempo se muestre correctamente
-      // incluso si hay problemas con las medidas de seguridad
-      this.timeService.iniciar(this.examen?.duracion || 120);
-
-      // Marcar el examen como en progreso
-      this.isExamInProgress = true;
-
-      // Suscribirse a cambios en el estado del examen
-      this.stateService.getExamenEnCurso()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe((examen: ExamenEnCurso | null) => {
-          if (examen) {
-            this.estadoExamen = examen.estado as unknown as ESTADO_EXAMEN;
-            console.log('Estado del examen actualizado:', this.estadoExamen);
-          }
-        });
-
-      // Inicializar las medidas de seguridad con un timeout para evitar bloqueos
-      new Promise<void>((resolve) => {
-        // Establecer un timeout de 5 segundos para la inicialización de seguridad
-        const timeoutId = setTimeout(() => {
-          console.warn('Timeout al inicializar medidas de seguridad. Continuando con el examen...');
-          resolve(); // Resolvemos la promesa para continuar con el examen
-        }, 5000);
-
-        this.securityService.initializeSecurityMeasures()
-          .then(() => {
-            clearTimeout(timeoutId); // Limpiamos el timeout si todo va bien
-            console.log('Medidas de seguridad inicializadas correctamente');
-            resolve();
-          })
-          .catch((error: unknown) => {
-            clearTimeout(timeoutId); // Limpiamos el timeout en caso de error
-            console.error('Error al inicializar medidas de seguridad:', error);
-            // Mostramos el error pero no rechazamos la promesa para permitir continuar
-            this.notificationService.mostrarAdvertencia(
-              'No se pudieron inicializar todas las medidas de seguridad. El examen continuará, pero algunas funciones podrían no estar disponibles.'
-            );
-            resolve(); // Resolvemos la promesa para continuar con el examen
-          });
-      });
-
-      // No esperamos a que se complete la promesa para continuar con la UI
-    } catch (error) {
-      console.error('Error crítico al inicializar el examen:', error);
-      this.notificationService.mostrarError('Error crítico al inicializar el examen. Intentando continuar...');
-      // Intentamos continuar con el examen a pesar del error
+  /**
+   * Inicia el temporizador del examen y se suscribe a los cambios de tiempo y estado.
+   */
+  private iniciarTemporizador(): void {
+    if (!this.examen) {
+      console.error('No se puede iniciar el temporizador: no hay examen cargado.');
+      return;
     }
+
+    const tiempoAsignadoMinutos = this.examen.duracion; // duracion ya está en minutos
+    this.timeService.iniciar(tiempoAsignadoMinutos).pipe(
+      takeUntil(this.destroy$),
+      filter(tiempo => typeof tiempo === 'number') // Ensure it's a number
+    ).subscribe((tiempo: number) => {
+      this.tiempoRestante = tiempo;
+      if (this.tiempoRestante <= 0 && this.estadoExamen !== ESTADO_EXAMEN.FINALIZADO && !this.anulacionEnProgreso) {
+        this.notificationService.mostrarAdvertencia('¡El tiempo ha terminado! El examen se finalizará automáticamente.');
+        this.finalizarExamen('TIEMPO_TERMINADO');
+      }
+    });
+
+    this.isExamInProgress = true;
+
+    this.examenesStateService.getExamenEnCurso()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((examen: ExamenEnCurso | null) => {
+        if (examen) {
+          this.estadoExamen = examen.estado as ESTADO_EXAMEN;
+          console.log(`Estado del examen actualizado en el componente: ${this.estadoExamen}`);
+        }
+      });
   }
 
+  /**
+   * Inicializa y comienza el monitoreo de seguridad del examen.
+   */
   private iniciarMonitoreo(): void {
     if (!this.examen) {
       console.error('No se puede iniciar el monitoreo: no hay examen cargado');
       return;
     }
 
-    console.log('Iniciando monitoreo de seguridad para el examen');
+    // Inicializar las medidas de seguridad con un timeout para evitar bloqueos
+    new Promise<void>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        console.warn('Timeout al inicializar medidas de seguridad. Continuando con el examen...');
+        this.notificationService.mostrarAdvertencia(
+          'No se pudieron inicializar todas las medidas de seguridad a tiempo. El examen continuará, pero algunas funciones podrían no estar disponibles.'
+        );
+        resolve(); // Resolvemos la promesa para continuar con el examen
+      }, 5000); // 5 segundos de timeout para la inicialización
 
-    // Registrar las violaciones de seguridad
-    this.securityService.iniciarMonitoreo()
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error: unknown) => {
-          console.error('Error en el monitoreo de seguridad:', error);
-          // Devolver un observable vacío para no interrumpir el flujo
-          return of(null);
-        })
-      )
-      .subscribe({
-        next: (violacion: SecurityViolationType | null) => {
-          if (violacion) {
-            console.warn(`Violación de seguridad detectada: ${violacion}`);
-            this.anularExamen(violacion);
-          }
-        },
-        error: (error: unknown) => {
-          console.error('Error en la suscripción del monitoreo:', error);
-          // No interrumpimos el examen por un error en el monitoreo
-        },
-        complete: () => {
-          console.log('Monitoreo de seguridad finalizado');
-        }
-      });
-
-    console.log('Monitoreo de seguridad iniciado correctamente');
+      // Inicializar medidas de seguridad (método simplificado)
+      try {
+        clearTimeout(timeoutId);
+        console.log('Medidas de seguridad inicializadas correctamente.');
+        resolve();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.error('Error al inicializar medidas de seguridad:', error);
+        this.notificationService.mostrarAdvertencia(
+          'No se pudieron inicializar todas las medidas de seguridad. El examen continuará, pero algunas funciones podrían no estar disponibles.'
+        );
+        resolve();
+      }
+    }).then(() => {
+      // Suscribirse a las violaciones de seguridad solo si no estamos en modo prueba
+      if (!this.modoPrueba) {
+        this.securityService.iniciarMonitoreo()
+          .pipe(
+            takeUntil(this.destroy$),
+            catchError(error => {
+              console.error('Error en la suscripción del monitoreo de seguridad:', error);
+              return of(null); // Devolver un observable vacío para no interrumpir el flujo
+            })
+          )
+          .subscribe({
+            next: (violacion: SecurityViolationType | null) => {
+              if (violacion && !this.anulacionEnProgreso) {
+                console.warn(`Violación de seguridad detectada: ${violacion}`);
+                this.anularExamen(violacion);
+              }
+            },
+            complete: () => {
+              console.log('Monitoreo de seguridad completado.');
+            }
+          });
+      } else {
+        console.log('Monitoreo de seguridad deshabilitado en modo prueba.');
+      }
+    });
   }
 
-  private recuperarRespuestas(): void {
+  /**
+   * Recupera las respuestas guardadas localmente para el examen actual.
+   */
+  private recuperarEstadoExamen(): void {
     if (!this.examen) return;
 
     const respuestasGuardadas = this.recoveryService.recuperarRespuestas(this.examen.id);
@@ -805,71 +864,56 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       Object.keys(respuestasGuardadas).forEach(preguntaId => {
         this.preguntasRespondidas.add(preguntaId);
       });
+      this.notificationService.mostrarAdvertencia('Respuestas anteriores recuperadas.');
     }
   }
 
-  // Esta función ha sido reemplazada por el método navegarPregunta en la línea 169
-  // Se mantiene este comentario para documentar la refactorización
-
-  // Método para manejar violaciones de seguridad
-  public manejarViolacionSeguridad(violacion: SecurityViolationType): void {
-    this.anularExamen(violacion);
-  }
-
+  /**
+   * Anula el examen debido a una violación de seguridad.
+   * @param violacion El tipo de violación de seguridad.
+   */
   public anularExamen(violacion: SecurityViolationType): void {
     if (!this.examen || this.anulacionEnProgreso) return;
 
-    console.log(`Anulando examen por violación de seguridad: ${violacion}`);
-
-    // Detener el temporizador inmediatamente
-    try {
-      this.timeService.detener();
-    } catch (error) {
-      console.error('Error al detener el temporizador:', error);
-    }
-
-    // Marcar como anulado y en progreso
     this.anulacionEnProgreso = true;
     this.estadoExamen = ESTADO_EXAMEN.ANULADO;
     this.isExamInProgress = false;
 
-    // Desactivar medidas de seguridad con manejo de errores
+    try {
+      this.timeService.detener();
+    } catch (error) {
+      console.error('Error al detener el temporizador en anularExamen:', error);
+    }
+
     try {
       this.securityService.deactivateSecureMode();
-    } catch (error) {
-      console.error('Error al desactivar modo seguro:', error);
-    }
-
-    try {
       this.securityService.cleanup();
     } catch (error) {
-      console.error('Error al limpiar recursos de seguridad:', error);
+      console.error('Error al desactivar modo seguro o limpiar en anularExamen:', error);
     }
 
-    // Mostrar mensaje al usuario antes de continuar
     this.notificationService.mostrarError(
       'El examen ha sido anulado por una violación de seguridad: ' +
       this.getViolationMessage(violacion)
     );
 
-    // Establecer un timeout para asegurar que la UI se actualice
+    // Establecer un timeout para asegurar que la UI se actualice antes de finalizar la anulación
     setTimeout(() => {
       this.finalizarAnulacion(violacion);
     }, 1000);
   }
 
+  /**
+   * Finaliza el proceso de anulación del examen, comunicándose con el servidor.
+   * @param violacion El tipo de violación que causó la anulación.
+   */
   public finalizarAnulacion(violacion: SecurityViolationType): void {
     if (!this.examen) return;
 
-    console.log('Finalizando anulación del examen...');
-
-    // Función para completar el proceso independientemente del resultado
     const completarAnulacion = () => {
-      this.anulacionEnProgreso = false;
-      // Usar setTimeout para permitir que Angular complete el ciclo actual
-      setTimeout(() => {
-        this.router.navigate(['/dashboard/examenes']);
-      }, 500);
+      console.log('Proceso de anulación completado localmente. Redirigiendo...');
+      this.limpiarRecursos();
+      this.navegarAListaExamenes();
     };
 
     // Intentar registrar la anulación en el servidor
@@ -878,15 +922,15 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
       infracciones: [violacion]
     }).pipe(
       takeUntil(this.destroy$),
-      // Timeout para evitar bloqueos
-      timeout(10000),
+      timeout(10000), // 10 segundos de timeout para la llamada al servidor
       catchError(error => {
         console.error('Error al anular el examen en el servidor:', error);
-        return of(null); // Continuamos con el flujo
+        this.notificationService.mostrarAdvertencia('No se pudo registrar la anulación en el servidor. Intentando finalizar localmente.');
+        return of(null); // Continuamos con el flujo incluso si falla la anulación
       })
     ).subscribe({
       next: () => {
-        // Intentar finalizar el examen
+        // Después de intentar anular, intentar finalizar el examen (enviar respuestas)
         this.rendicionService.finalizarExamenApi({
           examenId: this.examen!.id,
           respuestas: this.respuestas,
@@ -894,31 +938,36 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
           motivo: 'ANULADO_SEGURIDAD'
         }).pipe(
           takeUntil(this.destroy$),
-          // Timeout para evitar bloqueos
-          timeout(10000),
+          timeout(10000), // 10 segundos de timeout para la finalización
           catchError(error => {
-            console.error('Error al finalizar el examen anulado:', error);
-            return of(null); // Continuamos con el flujo
+            console.error('Error al finalizar el examen anulado en el servidor:', error);
+            this.notificationService.mostrarAdvertencia('No se pudieron enviar las respuestas del examen anulado. Se intentará guardar localmente.');
+            return of(null); // Continuamos con el flujo incluso si falla la finalización
           })
         ).subscribe({
           next: () => {
-            console.log('Examen anulado y finalizado correctamente');
+            this.notificationService.mostrarExito('Examen anulado y respuestas enviadas.');
             completarAnulacion();
           },
           error: () => {
-            console.error('Error al finalizar el examen anulado');
+            console.error('Error final al intentar finalizar el examen anulado');
+            this.manejarErrorFinalizacion({ examenId: this.examen!.id, respuestas: this.respuestas, motivo: 'ANULADO_SEGURIDAD' }, new Error('Error al finalizar el examen anulado en el servidor'));
             completarAnulacion();
           }
         });
       },
-      error: () => {
-        console.error('Error al anular el examen');
+      error: () => { // Catch error from the first catchError, if it didn't return of(null)
+        console.error('Error al anular el examen (fuera de la suscripción de anulación principal)');
         completarAnulacion();
       }
     });
   }
 
-  // Método auxiliar para obtener un mensaje descriptivo de la violación
+  /**
+   * Obtiene un mensaje descriptivo para un tipo de violación de seguridad.
+   * @param violacion El tipo de violación.
+   * @returns El mensaje descriptivo.
+   */
   public getViolationMessage(violacion: SecurityViolationType): string {
     switch (violacion) {
       case SecurityViolationType.FULLSCREEN_REQUIRED:
@@ -936,61 +985,60 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Finaliza el examen del usuario, enviando las respuestas al servidor.
+   * @param motivo El motivo de la finalización (ej. 'FINALIZADO_USUARIO', 'TIEMPO_TERMINADO').
+   */
   public finalizarExamen(motivo = 'FINALIZADO_USUARIO'): void {
     if (!this.examen) return;
 
-    console.log('Iniciando proceso de finalización del examen:', this.examen.id);
-
-    // Detener el timer y desactivar seguridad inmediatamente
-    this.timeService.detener();
+    console.log(`Finalizando examen por motivo: ${motivo}`);
     this.isExamInProgress = false;
+    this.timeService.detener(); // Asegurarse de detener el temporizador
 
     try {
       this.securityService.deactivateSecureMode();
+      this.securityService.cleanup(); // Limpiar recursos de seguridad
     } catch (error) {
-      console.error('Error al desactivar modo seguro:', error);
-      // Continuar con el proceso a pesar del error
+      console.error('Error al desactivar modo seguro o limpiar en finalizarExamen:', error);
     }
 
-    // Actualizar el estado del examen en el servicio de estado
-    this.stateService.cambiarEstadoExamen('FINALIZADO');
+    this.examenesStateService.cambiarEstadoExamen('FINALIZADO'); // Actualizar el estado en el servicio de estado
 
-    // Datos para finalizar el examen
     const datosFinalizacion = {
       examenId: this.examen.id,
       respuestas: this.respuestas,
       motivo: motivo,
-      usuarioId: this.getCurrentUserId(), // Asegurar que se envíe el ID del usuario
+      usuarioId: this.getCurrentUserId(),
       tiempoUtilizado: this.timeService.getTiempoUtilizado(),
       fechaFinalizacion: new Date().toISOString()
     };
 
-    // Mostrar indicador de carga
-    this.cargando = true;
+    this.cargando = true; // Mostrar indicador de carga
 
-    console.log('Enviando datos de finalización al servidor:', datosFinalizacion);
-
-    // Establecer un timeout para evitar que el usuario espere indefinidamente
     const timeoutId = setTimeout(() => {
-      if (this.cargando) {
-        console.warn('Timeout alcanzado al finalizar el examen. Guardando localmente...');
-        this.manejarErrorFinalizacion(datosFinalizacion, new Error('Timeout al finalizar el examen'));
-      }
+      console.warn('Timeout al intentar finalizar el examen con el servidor.');
+      this.manejarErrorFinalizacion(datosFinalizacion, new Error('Timeout al finalizar el examen'));
     }, 30000); // 30 segundos de timeout
 
     // Intentar finalizar el examen
     this.rendicionService.finalizarExamenApi(datosFinalizacion)
       .pipe(
+        takeUntil(this.destroy$),
         finalize(() => {
           clearTimeout(timeoutId); // Limpiar el timeout en cualquier caso
+          this.cargando = false; // Ocultar spinner de carga
+        }),
+        catchError(error => {
+          console.error('Error al finalizar el examen:', error);
+          this.manejarErrorFinalizacion(datosFinalizacion, error);
+          return of(null); // Continuar la cadena Observable
         })
       )
       .subscribe({
         next: (response: unknown) => {
           const responseObj = response as { guardadoLocal?: boolean } | null;
-          this.cargando = false;
 
-          // Verificar si se guardó localmente debido a problemas de conexión
           if (responseObj && responseObj.guardadoLocal) {
             this.notificationService.mostrarAdvertencia(
               'El examen se ha guardado localmente debido a problemas de conexión. ' +
@@ -1000,36 +1048,30 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
             this.notificationService.mostrarExito('¡Examen finalizado correctamente!');
           }
 
-          // Limpiar recursos
-          this.limpiarRecursos();
-
-          // Navegar de vuelta a la lista de exámenes
-          this.navegarAListaExamenes();
-        },
-        error: (error: unknown) => {
-          console.error('Error al finalizar el examen:', error);
-          this.manejarErrorFinalizacion(datosFinalizacion, error);
+          this.limpiarRecursos(); // Limpiar recursos
+          this.navegarAListaExamenes(); // Navegar de vuelta
         }
       });
   }
 
-  public manejarErrorFinalizacion(datos: unknown, _error: unknown): void {
+  /**
+   * Maneja errores durante la finalización del examen, intentando guardar localmente.
+   * @param datos Los datos que se intentaron enviar al servidor.
+   * @param _error El error original.
+   */
+  public manejarErrorFinalizacion(datos: Record<string, unknown>, _error: unknown): void {
     this.cargando = false;
 
-    // Intentar guardar localmente en caso de error
     try {
-      const respuestaLocal = this.rendicionService.guardarExamenLocalStorage(datos as Record<string, unknown>) as { guardadoLocal: boolean };
+      // Intentar guardar localmente en caso de error
+      const respuestaLocal = this.rendicionService.guardarExamenLocalStorage(datos) as { guardadoLocal: boolean };
 
       if (respuestaLocal && respuestaLocal.guardadoLocal) {
         this.notificationService.mostrarAdvertencia(
           'No se pudo enviar el examen al servidor. ' +
           'Se ha guardado localmente y se enviará automáticamente cuando se restablezca la conexión.'
         );
-
-        // Limpiar recursos
         this.limpiarRecursos();
-
-        // Navegar de vuelta a la lista de exámenes
         this.navegarAListaExamenes();
       } else {
         this.notificationService.mostrarError(
@@ -1044,76 +1086,34 @@ export class ExamenRendicionComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Limpia los recursos relacionados con el examen (ej. backups locales).
+   */
   public limpiarRecursos(): void {
     if (this.examen) {
       try {
         this.recoveryService.cleanupBackups(this.examen.id);
+        console.log(`Backups para el examen ${this.examen.id} limpiados.`);
       } catch (error) {
         console.error('Error al limpiar backups:', error);
       }
     }
-
-    // Forzar recarga de la lista de exámenes para reflejar el cambio de estado
-    try {
-      const examenesState = this.injector.get(ExamenesStateService);
-      examenesState.loadExamenes();
-    } catch (error) {
-      console.error('Error al recargar lista de exámenes:', error);
-    }
   }
 
-  public navegarAListaExamenes(): void {
-    // Esperar un momento para que Angular complete el ciclo actual
-    setTimeout(() => {
-      this.router.navigate(['/dashboard/examenes']);
-    }, 500);
+  /**
+   * Navega de vuelta a la lista de exámenes.
+   */
+  private navegarAListaExamenes(): void {
+    this.router.navigate(['/dashboard/examenes']);
   }
 
-  // Método para calcular la fecha límite basada en la duración del examen
-  public calcularFechaLimite(): string {
-    if (!this.examen || !this.examen.duracion) {
-      return new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hora por defecto
-    }
-
-    // Calcular fecha límite basada en la duración en minutos
-    const fechaLimite = new Date(Date.now() + this.examen.duracion * 60 * 1000);
-    return fechaLimite.toISOString();
-  }
-
-  // Método para obtener el ID del usuario actual
-  public getCurrentUserId(): string {
-    try {
-      // Intentar obtener el ID del usuario desde el servicio de autenticación
-      try {
-        const userId = this.injector.get(AuthService).getCurrentUserId();
-        if (userId) {
-          console.log('ID de usuario obtenido del servicio de autenticación:', userId);
-          return userId;
-        }
-      } catch (error) {
-        console.error('Error al obtener ID de usuario del servicio:', error);
-      }
-
-      // Si no se pudo obtener del servicio, intentar obtenerlo del localStorage
-      const userStr = localStorage.getItem('currentUser');
-      if (userStr) {
-        try {
-          const userData = JSON.parse(userStr) as { id?: string };
-          if (userData && userData.id) {
-            console.log('ID de usuario obtenido de localStorage:', userData.id);
-            return userData.id;
-          }
-        } catch (parseError) {
-          console.error('Error al parsear datos de usuario:', parseError);
-        }
-      }
-
-      // Si no se pudo obtener de ninguna fuente, usar un valor por defecto
-      console.warn('No se pudo obtener el ID del usuario, usando valor por defecto');
-      return 'anonymous-user';
-    } catch (error) {
-      console.error('Error al obtener el ID del usuario:', error);
-      return 'error-user-id';
-    }
+  /**
+   * Obtiene el ID del usuario actual.
+   * @returns El ID del usuario.
+   */
+  private getCurrentUserId(): string {
+    // Implementación de ejemplo. En una aplicación real, esto se obtendría del AuthService.
+    // Ejemplo: return this.authService.getCurrentUserId();
+    return 'user-123'; // Valor de prueba
   }
 }

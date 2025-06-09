@@ -87,7 +87,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
   statusOptions: { value: InscripcionState | 'ALL', label: string }[] = [
     { value: 'ALL', label: 'Todos' },
     { value: InscripcionState.PENDING, label: 'Pendiente' },
-    { value: InscripcionState.IN_PROCESS, label: 'En Proceso' }
+    { value: InscripcionState.ACTIVE, label: 'Activa' }
   ];
 
   // Estadísticas
@@ -193,7 +193,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
       const waitHours = Math.floor(Math.random() * 120) + 1; // Entre 1 y 120 horas
       const createdAt = new Date(now.getTime() - (waitHours * 60 * 60 * 1000));
 
-      const inscriptionState = i % 3 === 0 ? InscripcionState.IN_PROCESS : InscripcionState.PENDING;
+      const inscriptionState = i % 3 === 0 ? InscripcionState.ACTIVE : InscripcionState.PENDING;
 
       if (status !== 'ALL' && inscriptionState !== status) {
         continue;
@@ -304,7 +304,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
       case InscripcionState.APPROVED: return 'status-approved';
       case InscripcionState.REJECTED: return 'status-rejected';
       case InscripcionState.CANCELLED: return 'status-cancelled';
-      case InscripcionState.IN_PROCESS: return 'status-in-process';
+      case InscripcionState.ACTIVE: return 'status-in-process';
       default: return '';
     }
   }
@@ -315,7 +315,7 @@ export class InscripcionesTrackingComponent implements OnInit, OnDestroy {
       case InscripcionState.APPROVED: return 'Aprobada';
       case InscripcionState.REJECTED: return 'Rechazada';
       case InscripcionState.CANCELLED: return 'Cancelada';
-      case InscripcionState.IN_PROCESS: return 'En Proceso';
+      case InscripcionState.ACTIVE: return 'Activa';
       default: return status;
     }
   }

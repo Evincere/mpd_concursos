@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.controller;
 
 import ar.gov.mpd.concursobackend.contest.application.ContestService;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestCreateRequest;

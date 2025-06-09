@@ -136,6 +136,11 @@
 Este documento detalla el plan de implementación de las mejoras identificadas para el sistema MPD Concursos, organizado en sprints de dos semanas con historias de usuario y tareas específicas.
 
 ## ✅ Completado Recientemente
+- **CRÍTICO - Error 403 Forbidden**: Solucionado problema de permisos al finalizar inscripción con documentación incompleta. Corregido mapeo de estados `COMPLETED_WITH_DOCS` y `COMPLETED_PENDING_DOCS` para usar el endpoint `/user-status` en lugar del endpoint `/status` que requiere permisos de administrador.
+- **CRÍTICO - Lógica de Negocio**: Implementada regla "una inscripción por concurso" sin posibilidad de reinscripción. Una vez que un usuario se inscribe a un concurso (en cualquier estado), no puede volver a inscribirse. Esto incluye inscripciones canceladas, rechazadas o aprobadas.
+- **CRÍTICO - Estados de Finalización**: Corregidos los estados de finalización de inscripción para usar `COMPLETED_WITH_DOCS` y `COMPLETED_PENDING_DOCS` en lugar del estado genérico "PENDIENTE". Esto proporciona información más precisa sobre el estado de la documentación y mejora la experiencia del usuario.
+- **CRÍTICO - Detección de Inscripciones**: Implementada detección de inscripciones existentes en cards de concursos. Los botones ahora cambian inteligentemente según el estado de la inscripción del usuario, mostrando mensajes informativos en lugar de permitir reinscripciones.
+- **CRÍTICO - Error ID de Inscripción**: Corregido el error "No se recibió el ID de inscripción" que impedía el proceso de inscripción. Modificado el flujo en `concursos.component.ts` para crear la inscripción antes de navegar, corregidos los eventos en `concurso-detalle.component.html`, y agregado manejo robusto de errores con validación del ID de inscripción.
 - **Modal de Continuación de Inscripción**: Corregido comportamiento automático para inscripciones con estado `COMPLETED_PENDING_DOCS`. El modal ahora solo aparece automáticamente para inscripciones realmente interrumpidas (`IN_PROCESS`, `ACTIVE`). Para inscripciones completadas con documentación pendiente, el usuario debe decidir explícitamente cuándo continuar.
 
 ## Índice

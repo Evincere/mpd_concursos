@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.contest.application.port.in;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import java.util.List;
 import java.util.Optional;

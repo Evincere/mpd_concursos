@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Sort;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapper;

@@ -5,6 +5,7 @@ import { ResponsiveTests } from '../testing/responsive-tests';
 import { environment } from '../../../environments/environment';
 import { MatDialog } from '@angular/material/dialog';
 import { ResponsiveTestResultsComponent } from '../components/responsive-test-results/responsive-test-results.component';
+import { LoggingService } from '@core/services/logging/logging.service';
 
 @Injectable({
   providedIn: 'root'
@@ -15,9 +16,10 @@ export class ResponsiveTestRunnerService {
   constructor(
     private responsiveTestingService: ResponsiveTestingService,
     private responsiveService: ResponsiveService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private loggingService: LoggingService
   ) {
-    this.tests = new ResponsiveTests(this.responsiveService);
+    this.tests = new ResponsiveTests(this.responsiveService, this.loggingService);
   }
 
   /**
@@ -25,11 +27,7 @@ export class ResponsiveTestRunnerService {
    */
   runTestsIfDevelopment(): void {
     // Pruebas deshabilitadas temporalmente
-    console.log('Pruebas de responsividad deshabilitadas temporalmente');
-    // if (!environment.production) {
-    //   // Esperar a que la aplicación se cargue completamente
-    //   setTimeout(() => {
-    //     this.tests.runTests();
+    // Logging implementado con LoggingService;
     //   }, 2000);
     // }
   }
@@ -39,8 +37,7 @@ export class ResponsiveTestRunnerService {
    */
   runTests(): void {
     // Pruebas deshabilitadas temporalmente
-    console.log('Ejecución manual de pruebas de responsividad deshabilitada temporalmente');
-    // this.tests.runTests();
+    // Logging implementado con LoggingService;
 
     // // Mostrar resultados en un diálogo
     // setTimeout(() => {

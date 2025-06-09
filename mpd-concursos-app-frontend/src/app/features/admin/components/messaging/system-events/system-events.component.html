@@ -312,7 +312,7 @@
           <div class="config-meta">
             <div class="meta-item">
               <span class="meta-label">Categoría:</span>
-              <span class="meta-value">{{ eventCategories.find(c => c.value === config.category)?.label }}</span>
+              <span class="meta-value">{{ getCategoryLabel(config.category) }}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Retención:</span>
@@ -485,7 +485,7 @@
             <i class="fas" [ngClass]="realTimeEnabled ? 'fa-pause' : 'fa-play'"></i>
             <span>{{ realTimeEnabled ? 'Pausar' : 'Iniciar' }}</span>
           </button>
-          <button class="control-btn" (click)="realTimeEvents = []">
+          <button class="control-btn" (click)="setRealTimeEvents()">
             <i class="fas fa-trash"></i>
             <span>Limpiar</span>
           </button>

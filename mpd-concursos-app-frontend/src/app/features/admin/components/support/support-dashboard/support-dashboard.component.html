@@ -1,0 +1,463 @@
+<div class="support-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="dashboard-title">
+          <i class="fas fa-headset"></i>
+          Dashboard de Soporte
+        </h1>
+        <p class="dashboard-subtitle">Gestión integral de tickets y atención al usuario</p>
+      </div>
+      
+      <div class="header-actions">
+        <button class="action-btn primary" (click)="createNewTicket()">
+          <i class="fas fa-plus"></i>
+          <span>Nuevo Ticket</span>
+        </button>
+        
+        <button class="action-btn secondary" (click)="refreshDashboard()">
+          <i class="fas fa-sync-alt" [class.spinning]="loading"></i>
+          <span>Actualizar</span>
+        </button>
+        
+        <button class="action-btn secondary" (click)="executeEscalationRules()">
+          <i class="fas fa-level-up-alt"></i>
+          <span>Ejecutar Escalamiento</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="view-navigation">
+      <div class="nav-tabs">
+        <button 
+          *ngFor="let option of viewOptions"
+          class="nav-tab"
+          [class.active]="activeView === option.value"
+          (click)="setActiveView(option.value)">
+          <i [class]="option.icon"></i>
+          <span>{{ option.label }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Cargando datos...</span>
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="dashboard-content" [class.loading]="loading">
+    
+    <!-- Vista: Resumen General -->
+    <div class="overview-view" *ngIf="activeView === 'overview'">
+      
+      <!-- Estadísticas Principales -->
+      <div class="stats-section" *ngIf="statistics">
+        <h2 class="section-title">
+          <i class="fas fa-chart-pie"></i>
+          Estadísticas Generales
+        </h2>
+        
+        <div class="stats-grid">
+          <div class="stat-card total">
+            <div class="stat-icon">
+              <i class="fas fa-ticket-alt"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ statistics.total }}</span>
+              <span class="stat-label">Total de Tickets</span>
+            </div>
+          </div>
+
+          <div class="stat-card open">
+            <div class="stat-icon">
+              <i class="fas fa-folder-open"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ statistics.byStatus[TicketStatus.OPEN] || 0 }}</span>
+              <span class="stat-label">Tickets Abiertos</span>
+            </div>
+          </div>
+
+          <div class="stat-card progress">
+            <div class="stat-icon">
+              <i class="fas fa-spinner"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ statistics.byStatus[TicketStatus.IN_PROGRESS] || 0 }}</span>
+              <span class="stat-label">En Progreso</span>
+            </div>
+          </div>
+
+          <div class="stat-card overdue">
+            <div class="stat-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ statistics.overdueTickets }}</span>
+              <span class="stat-label">Tickets Vencidos</span>
+            </div>
+          </div>
+
+          <div class="stat-card response-time">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ formatTime(statistics.averageResponseTime) }}</span>
+              <span class="stat-label">Tiempo Promedio de Respuesta</span>
+            </div>
+          </div>
+
+          <div class="stat-card satisfaction">
+            <div class="stat-icon">
+              <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ statistics.satisfactionAverage.toFixed(1) }}</span>
+              <span class="stat-label">Satisfacción Promedio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Distribución por Estado -->
+      <div class="distribution-section" *ngIf="statistics">
+        <div class="distribution-grid">
+          
+          <!-- Por Estado -->
+          <div class="distribution-card">
+            <h3 class="card-title">
+              <i class="fas fa-chart-donut"></i>
+              Distribución por Estado
+            </h3>
+            <div class="distribution-list">
+              <div 
+                *ngFor="let status of statusOptions" 
+                class="distribution-item"
+                [class]="'status-' + status.color">
+                <div class="item-info">
+                  <i [class]="status.icon"></i>
+                  <span class="item-label">{{ status.label }}</span>
+                </div>
+                <div class="item-value">
+                  <span class="item-count">{{ statistics.byStatus[status.value] || 0 }}</span>
+                  <div class="item-bar">
+                    <div 
+                      class="bar-fill" 
+                      [style.width.%]="calculatePercentage(statistics.byStatus[status.value] || 0, statistics.total)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Por Prioridad -->
+          <div class="distribution-card">
+            <h3 class="card-title">
+              <i class="fas fa-chart-bar"></i>
+              Distribución por Prioridad
+            </h3>
+            <div class="distribution-list">
+              <div 
+                *ngFor="let priority of priorityOptions" 
+                class="distribution-item"
+                [class]="'priority-' + priority.color">
+                <div class="item-info">
+                  <i [class]="priority.icon"></i>
+                  <span class="item-label">{{ priority.label }}</span>
+                </div>
+                <div class="item-value">
+                  <span class="item-count">{{ statistics.byPriority[priority.value] || 0 }}</span>
+                  <div class="item-bar">
+                    <div 
+                      class="bar-fill" 
+                      [style.width.%]="calculatePercentage(statistics.byPriority[priority.value] || 0, statistics.total)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Por Categoría -->
+          <div class="distribution-card">
+            <h3 class="card-title">
+              <i class="fas fa-chart-line"></i>
+              Distribución por Categoría
+            </h3>
+            <div class="distribution-list">
+              <div 
+                *ngFor="let category of categoryOptions" 
+                class="distribution-item">
+                <div class="item-info">
+                  <i [class]="category.icon"></i>
+                  <span class="item-label">{{ category.label }}</span>
+                </div>
+                <div class="item-value">
+                  <span class="item-count">{{ statistics.byCategory[category.value] || 0 }}</span>
+                  <div class="item-bar">
+                    <div 
+                      class="bar-fill" 
+                      [style.width.%]="calculatePercentage(statistics.byCategory[category.value] || 0, statistics.total)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tickets Recientes y Asignados -->
+      <div class="tickets-section">
+        <div class="tickets-grid">
+          
+          <!-- Tickets Recientes -->
+          <div class="tickets-card">
+            <h3 class="card-title">
+              <i class="fas fa-clock"></i>
+              Tickets Recientes
+            </h3>
+            <div class="tickets-list" *ngIf="recentTickets.length > 0; else noRecentTickets">
+              <div 
+                *ngFor="let ticket of recentTickets" 
+                class="ticket-item"
+                (click)="viewTicketDetail(ticket.id)">
+                <div class="ticket-header">
+                  <span class="ticket-number">#{{ ticket.ticketNumber }}</span>
+                  <span class="ticket-priority" [class]="'priority-' + getPriorityColor(ticket.priority)">
+                    {{ getPriorityLabel(ticket.priority) }}
+                  </span>
+                </div>
+                <div class="ticket-title">{{ ticket.title }}</div>
+                <div class="ticket-meta">
+                  <span class="ticket-status" [class]="'status-' + getStatusColor(ticket.status)">
+                    {{ getStatusLabel(ticket.status) }}
+                  </span>
+                  <span class="ticket-date">{{ ticket.createdAt | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+            <ng-template #noRecentTickets>
+              <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <span>No hay tickets recientes</span>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Mis Tickets Asignados -->
+          <div class="tickets-card">
+            <h3 class="card-title">
+              <i class="fas fa-user-check"></i>
+              Mis Tickets Asignados
+            </h3>
+            <div class="tickets-list" *ngIf="myAssignedTickets.length > 0; else noAssignedTickets">
+              <div 
+                *ngFor="let ticket of myAssignedTickets" 
+                class="ticket-item"
+                (click)="viewTicketDetail(ticket.id)">
+                <div class="ticket-header">
+                  <span class="ticket-number">#{{ ticket.ticketNumber }}</span>
+                  <span class="ticket-priority" [class]="'priority-' + getPriorityColor(ticket.priority)">
+                    {{ getPriorityLabel(ticket.priority) }}
+                  </span>
+                </div>
+                <div class="ticket-title">{{ ticket.title }}</div>
+                <div class="ticket-meta">
+                  <span class="ticket-status" [class]="'status-' + getStatusColor(ticket.status)">
+                    {{ getStatusLabel(ticket.status) }}
+                  </span>
+                  <span class="ticket-date">{{ ticket.createdAt | date:'short' }}</span>
+                </div>
+              </div>
+            </div>
+            <ng-template #noAssignedTickets>
+              <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <span>No tienes tickets asignados</span>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Tickets Vencidos -->
+          <div class="tickets-card urgent" *ngIf="overdueTickets.length > 0">
+            <h3 class="card-title">
+              <i class="fas fa-exclamation-triangle"></i>
+              Tickets Vencidos
+            </h3>
+            <div class="tickets-list">
+              <div 
+                *ngFor="let ticket of overdueTickets" 
+                class="ticket-item overdue"
+                (click)="viewTicketDetail(ticket.id)">
+                <div class="ticket-header">
+                  <span class="ticket-number">#{{ ticket.ticketNumber }}</span>
+                  <span class="ticket-priority" [class]="'priority-' + getPriorityColor(ticket.priority)">
+                    {{ getPriorityLabel(ticket.priority) }}
+                  </span>
+                </div>
+                <div class="ticket-title">{{ ticket.title }}</div>
+                <div class="ticket-meta">
+                  <span class="ticket-status" [class]="'status-' + getStatusColor(ticket.status)">
+                    {{ getStatusLabel(ticket.status) }}
+                  </span>
+                  <span class="overdue-indicator">
+                    <i class="fas fa-clock"></i>
+                    Vencido
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Gestión de Tickets -->
+    <div class="tickets-view" *ngIf="activeView === 'tickets'">
+      <!-- Filtros -->
+      <div class="filters-section">
+        <form [formGroup]="filtersForm" class="filters-form">
+          <div class="filters-grid">
+            <div class="filter-field">
+              <label for="searchText">Búsqueda</label>
+              <input 
+                type="text" 
+                id="searchText"
+                formControlName="searchText"
+                placeholder="Buscar por título, descripción o número...">
+            </div>
+
+            <div class="filter-field">
+              <label for="status">Estado</label>
+              <select id="status" formControlName="status" multiple>
+                <option *ngFor="let status of statusOptions" [value]="status.value">
+                  {{ status.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label for="priority">Prioridad</label>
+              <select id="priority" formControlName="priority" multiple>
+                <option *ngFor="let priority of priorityOptions" [value]="priority.value">
+                  {{ priority.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label for="category">Categoría</label>
+              <select id="category" formControlName="category" multiple>
+                <option *ngFor="let category of categoryOptions" [value]="category.value">
+                  {{ category.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filters-actions">
+            <button type="button" class="btn secondary" (click)="clearFilters()">
+              <i class="fas fa-times"></i>
+              Limpiar Filtros
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de Tickets -->
+      <div class="tickets-table-section">
+        <div class="table-header">
+          <h3>Lista de Tickets</h3>
+          <span class="ticket-count">{{ tickets.length }} tickets encontrados</span>
+        </div>
+
+        <div class="tickets-table" *ngIf="tickets.length > 0; else noTicketsFound">
+          <div class="table-header-row">
+            <div class="table-cell">Ticket</div>
+            <div class="table-cell">Título</div>
+            <div class="table-cell">Estado</div>
+            <div class="table-cell">Prioridad</div>
+            <div class="table-cell">Categoría</div>
+            <div class="table-cell">Asignado a</div>
+            <div class="table-cell">Creado</div>
+            <div class="table-cell">Acciones</div>
+          </div>
+
+          <div 
+            *ngFor="let ticket of tickets" 
+            class="table-row"
+            (click)="viewTicketDetail(ticket.id)">
+            <div class="table-cell">
+              <span class="ticket-number">#{{ ticket.ticketNumber }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="ticket-title">{{ ticket.title }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="status-badge" [class]="'status-' + getStatusColor(ticket.status)">
+                {{ getStatusLabel(ticket.status) }}
+              </span>
+            </div>
+            <div class="table-cell">
+              <span class="priority-badge" [class]="'priority-' + getPriorityColor(ticket.priority)">
+                {{ getPriorityLabel(ticket.priority) }}
+              </span>
+            </div>
+            <div class="table-cell">
+              <span class="category-label">{{ getCategoryLabel(ticket.category) }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="assigned-user">{{ ticket.assignedToName || 'Sin asignar' }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="created-date">{{ ticket.createdAt | date:'short' }}</span>
+            </div>
+            <div class="table-cell">
+              <div class="action-buttons">
+                <button class="action-btn small" (click)="viewTicketDetail(ticket.id); $event.stopPropagation()">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noTicketsFound>
+          <div class="empty-state large">
+            <i class="fas fa-search"></i>
+            <h3>No se encontraron tickets</h3>
+            <p>Intenta ajustar los filtros de búsqueda</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Vista: Análisis y Métricas -->
+    <div class="analytics-view" *ngIf="activeView === 'analytics'">
+      <div class="analytics-placeholder">
+        <i class="fas fa-chart-line"></i>
+        <h3>Análisis y Métricas</h3>
+        <p>Vista de análisis en desarrollo</p>
+      </div>
+    </div>
+
+    <!-- Vista: Configuración SLA -->
+    <div class="sla-view" *ngIf="activeView === 'sla'">
+      <div class="sla-placeholder">
+        <i class="fas fa-clock"></i>
+        <h3>Configuración SLA</h3>
+        <p>Configuración de SLA en desarrollo</p>
+      </div>
+    </div>
+  </div>
+</div>

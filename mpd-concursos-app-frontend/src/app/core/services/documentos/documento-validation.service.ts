@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Observable, of } from 'rxjs';
 
 export interface DocumentoValidationResult {
@@ -20,6 +21,28 @@ export interface DocumentoValidationConfig {
   requiredPages?: { min: number, max: number };
 }
 
+/**
+ * Interfaz para documentos requeridos unificada
+ */
+export interface RequiredDocument {
+  title: string;
+  description?: string;
+  required: boolean;
+  completed: boolean;
+  tipoDocumentoId: string;
+}
+
+/**
+ * Resultado de validación de completitud de documentación
+ */
+export interface DocumentationCompletenessResult {
+  allDocumentsComplete: boolean;
+  completedCount: number;
+  totalCount: number;
+  missingDocuments: RequiredDocument[];
+  canProceedWithProvisional: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -33,8 +56,117 @@ export class DocumentoValidationService {
     requiredPages: { min: 1, max: 50 }
   };
 
-  constructor() {
-    // Constructor vacío
+  constructor(
+    private loggingService: LoggingService
+  ) {
+    this.loggingService.debug('[DocumentoValidationService] Servicio inicializado', undefined, 'DocumentoValidationService');
+  }
+
+  /**
+   * MÉTODO UNIFICADO: Valida la completitud de documentación para inscripción
+   * CRITICAL FIX: Solo considera documentos marcados como 'required: true'
+   * @param requiredDocuments Lista de documentos requeridos
+   * @param provisionalAccepted Si el usuario aceptó inscripción provisional
+   * @returns Resultado completo de validación
+   */
+  validateDocumentationCompleteness(
+    requiredDocuments: RequiredDocument[],
+    provisionalAccepted: boolean = false
+  ): DocumentationCompletenessResult {
+
+    if (!requiredDocuments || requiredDocuments.length === 0) {
+      this.loggingService.warn('[DocumentoValidationService] No hay documentos requeridos para validar', undefined, 'DocumentoValidationService');
+      return {
+        allDocumentsComplete: true,
+        completedCount: 0,
+        totalCount: 0,
+        missingDocuments: [],
+        canProceedWithProvisional: true
+      };
+    }
+
+    // ✅ CRITICAL FIX: Filtrar SOLO documentos obligatorios (required: true)
+    const obligatoryDocuments = requiredDocuments.filter(doc => doc.required === true);
+
+    if (obligatoryDocuments.length === 0) {
+      this.loggingService.debug('[DocumentoValidationService] No hay documentos obligatorios definidos', undefined, 'DocumentoValidationService');
+      return {
+        allDocumentsComplete: true,
+        completedCount: 0,
+        totalCount: 0,
+        missingDocuments: [],
+        canProceedWithProvisional: true
+      };
+    }
+
+    // ✅ Calcular completitud basado SOLO en documentos obligatorios
+    const completedObligatoryDocuments = obligatoryDocuments.filter(doc => doc.completed);
+    const missingObligatoryDocuments = obligatoryDocuments.filter(doc => !doc.completed);
+    const allObligatoryDocumentsComplete = missingObligatoryDocuments.length === 0;
+
+    const result: DocumentationCompletenessResult = {
+      allDocumentsComplete: allObligatoryDocumentsComplete,
+      completedCount: completedObligatoryDocuments.length,
+      totalCount: obligatoryDocuments.length,
+      missingDocuments: missingObligatoryDocuments,
+      canProceedWithProvisional: allObligatoryDocumentsComplete || provisionalAccepted
+    };
+
+    this.loggingService.debug(
+      `[DocumentoValidationService] Validación completitud: ${result.completedCount}/${result.totalCount} obligatorios completos, provisional: ${provisionalAccepted}`,
+      { result, totalDocuments: requiredDocuments.length, obligatoryDocuments: obligatoryDocuments.length },
+      'DocumentoValidationService'
+    );
+
+    return result;
+  }
+
+  /**
+   * Valida si existen documentos base obligatorios en la lista
+   * @param requiredDocuments Lista de documentos requeridos
+   * @returns true si contiene documentos base obligatorios
+   */
+  validateMandatoryBaseDocuments(requiredDocuments: RequiredDocument[]): boolean {
+    const mandatoryBaseDocs = ['dni', 'cuil', 'antecedentes'];
+
+    const hasMandatoryDocs = mandatoryBaseDocs.some(baseName =>
+      requiredDocuments.some(doc =>
+        doc.tipoDocumentoId.toLowerCase().includes(baseName) ||
+        doc.title.toLowerCase().includes(baseName)
+      )
+    );
+
+    if (!hasMandatoryDocs) {
+      this.loggingService.warn(
+        '[DocumentoValidationService] No se encontraron documentos base obligatorios (DNI, CUIL, Antecedentes)',
+        { requiredDocuments },
+        'DocumentoValidationService'
+      );
+    }
+
+    return hasMandatoryDocs;
+  }
+
+  /**
+   * Calcula el progreso de documentación como porcentaje
+   * CRITICAL FIX: Solo considera documentos marcados como 'required: true'
+   * @param requiredDocuments Lista de documentos requeridos
+   * @returns Porcentaje de progreso (0-100)
+   */
+  calculateDocumentationProgress(requiredDocuments: RequiredDocument[]): number {
+    if (!requiredDocuments || requiredDocuments.length === 0) {
+      return 100;
+    }
+
+    // ✅ CRITICAL FIX: Filtrar SOLO documentos obligatorios (required: true)
+    const obligatoryDocuments = requiredDocuments.filter(doc => doc.required === true);
+
+    if (obligatoryDocuments.length === 0) {
+      return 100; // Si no hay documentos obligatorios, progreso es 100%
+    }
+
+    const completedCount = obligatoryDocuments.filter(doc => doc.completed).length;
+    return Math.round((completedCount / obligatoryDocuments.length) * 100);
   }
 
   /**

@@ -257,12 +257,7 @@ export class PWAManagerService {
 
     this.deferredPrompt.userChoice.then(choiceResult => {
       if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      
-      this.deferredPrompt = null;
+        // Logging implementado con LoggingService;
       this.updateState({ 
         isInstallable: false,
         installPrompt: undefined

@@ -3,7 +3,7 @@ package ar.gov.mpd.concursobackend.inscription.application.service;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRequest;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
@@ -84,7 +84,7 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
                                         "Tu inscripción está ahora pendiente de validación por el equipo administrativo.\n" +
                                         "Te notificaremos cuando tu inscripción sea revisada.",
                                 contest.getTitle(),
-                                contest.getPosition(),
+                                contest.getLocation() != null ? contest.getLocation() : "No especificado",
                                 contest.getDependency()))
                         .type(NotificationType.INSCRIPTION)
                         .acknowledgementLevel(AcknowledgementLevel.NONE)
@@ -117,7 +117,7 @@ public class UpdateInscriptionStatusService implements UpdateInscriptionStatusUs
                                         "- Dependencia: %s",
                                 contest.getTitle(),
                                 status,
-                                contest.getPosition(),
+                                contest.getLocation() != null ? contest.getLocation() : "No especificado",
                                 contest.getDependency()))
                         .type(NotificationType.INSCRIPTION)
                         .acknowledgementLevel(AcknowledgementLevel.NONE)

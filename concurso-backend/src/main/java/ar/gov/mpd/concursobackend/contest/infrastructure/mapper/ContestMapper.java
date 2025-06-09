@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.mapper;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.ContestDate;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestDateEntity;
@@ -25,78 +25,87 @@ public class ContestMapper {
             return null;
         }
 
-        List<ContestDate> dates = new ArrayList<>();
-        if (entity.getDates() != null) {
-            dates = entity.getDates().stream()
-                .map(this::toDomainDate)
-                .collect(Collectors.toList());
+        // Crear lista de posiciones desde el campo position de la entidad
+        List<ar.gov.mpd.concursobackend.contest.domain.model.ContestPosition> positions = new ArrayList<>();
+        if (entity.getPosition() != null) {
+            // TODO: Implementar mapeo completo de posiciones cuando se requiera
         }
 
         return Contest.builder()
             .id(entity.getId())
             .title(entity.getTitle())
+            .description(entity.getFunctions()) // Mapear functions a description
+            .requirements(entity.getFunctions()) // Usar functions como requirements también
+            .location(entity.getPosition()) // Mapear position a location
+            .district(entity.getDepartment()) // Mapear department a district
             .category(entity.getCategory())
-            .class_(entity.getClass_())
-            .functions(entity.getFunctions())
-            .status(entity.getStatus())
-            .position(entity.getPosition())
             .dependency(entity.getDepartment())
-            .startDate(entity.getStartDate())
-            .endDate(entity.getEndDate())
-            .basesUrl(entity.getBasesUrl())
-            .descriptionUrl(entity.getDescriptionUrl())
-            .dates(dates)
+            .status(entity.getStatus())
+            .startDate(entity.getStartDate() != null ? entity.getStartDate().atStartOfDay() : null)
+            .endDate(entity.getEndDate() != null ? entity.getEndDate().atStartOfDay() : null)
+            .inscriptionStartDate(entity.getStartDate() != null ? entity.getStartDate().atStartOfDay() : null)
+            .inscriptionEndDate(entity.getEndDate() != null ? entity.getEndDate().atStartOfDay() : null)
+            .documents(new ArrayList<>()) // TODO: Mapear documentos cuando se implemente
+            .positions(positions)
+            .createdAt(entity.getCreatedAt())
+            .updatedAt(entity.getUpdatedAt())
             .build();
     }
 
     public ContestEntity toEntity(Contest domain) {
         if (domain == null) return null;
 
-        List<ContestDateEntity> dates = new ArrayList<>();
-        if (domain.getDates() != null) {
-            dates = domain.getDates().stream()
-                .map(this::toEntityDate)
-                .collect(Collectors.toList());
+        // Extraer la primera posición de la lista de posiciones
+        String position = "No especificado";
+        if (domain.getPositions() != null && !domain.getPositions().isEmpty()) {
+            position = domain.getPositions().get(0).getTitle();
+        } else if (domain.getLocation() != null) {
+            position = domain.getLocation(); // Usar location como fallback
         }
 
         return ContestEntity.builder()
             .id(domain.getId())
             .title(domain.getTitle())
             .category(domain.getCategory())
-            .class_(domain.getClass_())
-            .functions(domain.getFunctions())
+            .class_(domain.getDescription()) // Mapear description a class_
+            .functions(domain.getDescription()) // Usar description como functions
             .status(domain.getStatus())
             .department(domain.getDependency())
-            .position(domain.getPosition())
-            .startDate(domain.getStartDate())
-            .endDate(domain.getEndDate())
-            .basesUrl(domain.getBasesUrl())
-            .descriptionUrl(domain.getDescriptionUrl())
-            .dates(dates)
+            .position(position)
+            .startDate(domain.getStartDate() != null ? domain.getStartDate().toLocalDate() : null)
+            .endDate(domain.getEndDate() != null ? domain.getEndDate().toLocalDate() : null)
+            .basesUrl(null) // TODO: Agregar al modelo principal si es necesario
+            .descriptionUrl(null) // TODO: Agregar al modelo principal si es necesario
+            .createdAt(domain.getCreatedAt())
+            .updatedAt(domain.getUpdatedAt())
             .build();
     }
 
     public ContestDTO toDTO(Contest domain) {
         if (domain == null) return null;
 
-        List<ContestDateDTO> dates = domain.getDates().stream()
-            .map(this::toDateDTO)
-            .collect(Collectors.toList());
+        // Extraer la primera posición de la lista de posiciones
+        String position = "No especificado";
+        if (domain.getPositions() != null && !domain.getPositions().isEmpty()) {
+            position = domain.getPositions().get(0).getTitle();
+        } else if (domain.getLocation() != null) {
+            position = domain.getLocation();
+        }
 
         return ContestDTO.builder()
             .id(domain.getId())
             .title(domain.getTitle())
             .category(domain.getCategory())
-            .class_(domain.getClass_())
-            .functions(domain.getFunctions())
+            .class_(domain.getDescription()) // Mapear description a class_
+            .functions(domain.getDescription()) // Usar description como functions
             .status(domain.getStatus() != null ? domain.getStatus().name() : null)
-            .position(domain.getPosition())
+            .position(position)
             .dependency(domain.getDependency())
-            .startDate(domain.getStartDate())
-            .endDate(domain.getEndDate())
-            .basesUrl(domain.getBasesUrl())
-            .descriptionUrl(domain.getDescriptionUrl())
-            .dates(dates)
+            .startDate(domain.getStartDate() != null ? domain.getStartDate().toLocalDate() : null)
+            .endDate(domain.getEndDate() != null ? domain.getEndDate().toLocalDate() : null)
+            .basesUrl(null) // TODO: Agregar al modelo principal si es necesario
+            .descriptionUrl(null) // TODO: Agregar al modelo principal si es necesario
+            .dates(new ArrayList<>()) // TODO: Mapear fechas cuando se implemente
             .build();
     }
 
@@ -149,23 +158,31 @@ public class ContestMapper {
             return null;
         }
 
+        // Extraer la primera posición de la lista de posiciones
+        String position = "No especificado";
+        if (contest.getPositions() != null && !contest.getPositions().isEmpty()) {
+            position = contest.getPositions().get(0).getTitle();
+        } else if (contest.getLocation() != null) {
+            position = contest.getLocation();
+        }
+
         return ContestResponse.builder()
                 .id(contest.getId())
                 .title(contest.getTitle())
-                .description(contest.getFunctions()) // Usar functions como description
-                .position(contest.getPosition())
+                .description(contest.getDescription()) // Usar description del modelo principal
+                .position(position)
                 .category(contest.getCategory())
-                .contestClass(contest.getClass_())
-                .functions(contest.getFunctions())
+                .contestClass(contest.getDescription()) // Mapear description a contestClass
+                .functions(contest.getDescription()) // Usar description como functions
                 .department(contest.getDependency())
                 .dependencia(contest.getDependency())
                 .status(contest.getStatus() != null ? contest.getStatus().name() : null)
-                .startDate(contest.getStartDate())
-                .endDate(contest.getEndDate())
-                .termsUrl(contest.getBasesUrl())
-                .profileUrl(contest.getDescriptionUrl())
-                .createdAt(LocalDateTime.now()) // TODO: Agregar campos de auditoría al dominio
-                .updatedAt(LocalDateTime.now())
+                .startDate(contest.getStartDate() != null ? contest.getStartDate().toLocalDate() : null)
+                .endDate(contest.getEndDate() != null ? contest.getEndDate().toLocalDate() : null)
+                .termsUrl(null) // TODO: Agregar al modelo principal si es necesario
+                .profileUrl(null) // TODO: Agregar al modelo principal si es necesario
+                .createdAt(contest.getCreatedAt() != null ? contest.getCreatedAt() : LocalDateTime.now())
+                .updatedAt(contest.getUpdatedAt() != null ? contest.getUpdatedAt() : LocalDateTime.now())
                 .createdBy("system") // TODO: Obtener del contexto de seguridad
                 .updatedBy("system")
                 .totalInscriptions(0) // TODO: Calcular desde inscripciones
@@ -184,17 +201,19 @@ public class ContestMapper {
 
         return Contest.builder()
                 .title(request.getTitle())
-                .position(request.getPosition())
+                .description(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
+                .requirements(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
+                .location(request.getPosition())
+                .district(request.getDepartment())
                 .category(request.getCategory())
-                .class_(request.getContestClass())
-                .functions(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
                 .dependency(request.getDepartment())
                 .status(ContestStatus.fromString(request.getStatus()))
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .basesUrl(request.getTermsUrl())
-                .descriptionUrl(request.getProfileUrl())
-                .dates(new ArrayList<>())
+                .startDate(request.getStartDate() != null ? request.getStartDate().atStartOfDay() : null)
+                .endDate(request.getEndDate() != null ? request.getEndDate().atStartOfDay() : null)
+                .inscriptionStartDate(request.getStartDate() != null ? request.getStartDate().atStartOfDay() : null)
+                .inscriptionEndDate(request.getEndDate() != null ? request.getEndDate().atStartOfDay() : null)
+                .documents(new ArrayList<>())
+                .positions(new ArrayList<>()) // TODO: Crear posiciones desde request.getPosition()
                 .build();
     }
 
@@ -208,17 +227,19 @@ public class ContestMapper {
 
         return Contest.builder()
                 .title(request.getTitle())
-                .position(request.getPosition())
+                .description(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
+                .requirements(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
+                .location(request.getPosition())
+                .district(request.getDepartment())
                 .category(request.getCategory())
-                .class_(request.getContestClass())
-                .functions(request.getFunctions() != null ? request.getFunctions() : request.getDescription())
                 .dependency(request.getDepartment())
                 .status(ContestStatus.fromString(request.getStatus()))
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .basesUrl(request.getTermsUrl())
-                .descriptionUrl(request.getProfileUrl())
-                .dates(new ArrayList<>())
+                .startDate(request.getStartDate() != null ? request.getStartDate().atStartOfDay() : null)
+                .endDate(request.getEndDate() != null ? request.getEndDate().atStartOfDay() : null)
+                .inscriptionStartDate(request.getStartDate() != null ? request.getStartDate().atStartOfDay() : null)
+                .inscriptionEndDate(request.getEndDate() != null ? request.getEndDate().atStartOfDay() : null)
+                .documents(new ArrayList<>())
+                .positions(new ArrayList<>()) // TODO: Crear posiciones desde request.getPosition()
                 .build();
     }
 

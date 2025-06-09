@@ -13,27 +13,22 @@ export class AdminGuard {
   ) {}
 
   canActivate(): boolean {
-    console.log('[AdminGuard] Verificando acceso administrativo...');
-
+    // Verificar si el usuario está autenticado
     const isAuthenticated = this.authService.isAuthenticated();
-    const hasAdminRole = this.authService.hasRole('ROLE_ADMIN');
-
-    console.log('[AdminGuard] Estado de autenticación:', isAuthenticated);
-    console.log('[AdminGuard] Tiene rol de admin:', hasAdminRole);
-
-    if (isAuthenticated && hasAdminRole) {
-      console.log('[AdminGuard] Acceso concedido');
-      return true;
-    }
 
     if (!isAuthenticated) {
-      console.log('[AdminGuard] Usuario no autenticado, redirigiendo a login');
       this.router.navigate(['/login']);
-    } else {
-      console.log('[AdminGuard] Usuario sin permisos de admin, redirigiendo a dashboard');
-      this.router.navigate(['/dashboard']);
+      return false;
     }
 
-    return false;
+    // Verificar si el usuario tiene rol de administrador
+    const hasAdminRole = this.authService.hasRole('ROLE_ADMIN');
+
+    if (!hasAdminRole) {
+      this.router.navigate(['/unauthorized']);
+      return false;
+    }
+
+    return true;
   }
 }

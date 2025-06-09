@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
 import { map, catchError, tap, shareReplay } from 'rxjs/operators';
@@ -45,7 +46,10 @@ export class RoleManagementService {
   // Cache para permisos efectivos
   private effectivePermissionsCache = new Map<string, UserEffectivePermissions>();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {
     this.loadInitialData();
   }
 

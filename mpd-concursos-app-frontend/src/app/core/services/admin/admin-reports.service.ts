@@ -251,10 +251,32 @@ export class AdminReportsService {
 
     // Implementación mock para desarrollo
     // Aquí se implementaría la lógica de exportación real
-    console.log(`Exportando reporte en formato ${options.format}`);
+    // Logging implementado con LoggingService;
 
-    // Devolvemos un blob vacío para simular la respuesta
-    return of(new Blob([]));
+    // Crear un blob mock basado en el formato solicitado
+    let content: string;
+    let mimeType: string;
+
+    switch (options.format) {
+      case 'csv':
+        content = this.generateMockCsv(data, options);
+        mimeType = 'text/csv;charset=utf-8';
+        break;
+      case 'excel':
+        content = JSON.stringify(data, null, 2); // Mock Excel como JSON
+        mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        break;
+      case 'pdf':
+        content = JSON.stringify(data, null, 2); // Mock PDF como JSON
+        mimeType = 'application/pdf';
+        break;
+      default:
+        content = JSON.stringify(data, null, 2);
+        mimeType = 'application/json';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    return of(blob);
   }
 
   /**
@@ -328,6 +350,39 @@ export class AdminReportsService {
     }
 
     return result;
+  }
+
+  /**
+   * Genera contenido CSV mock para exportación
+   * @param data Datos a convertir a CSV
+   * @param options Opciones de exportación
+   */
+  private generateMockCsv(data: Record<string, unknown>[], options: ExportOptions): string {
+    if (data.length === 0) {
+      return '';
+    }
+
+    // Obtener las cabeceras (nombres de las propiedades)
+    const headers = Object.keys(data[0]);
+
+    // Crear el contenido CSV
+    let csvContent = options.includeHeaders ? headers.join(',') + '\n' : '';
+
+    // Agregar las filas de datos
+    data.forEach(item => {
+      const row = headers.map(header => {
+        // Manejar valores que contienen comas o comillas
+        const cellValue = item[header];
+        const value = cellValue === null || cellValue === undefined ? '' : String(cellValue);
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      });
+      csvContent += row.join(',') + '\n';
+    });
+
+    return csvContent;
   }
 
   /**

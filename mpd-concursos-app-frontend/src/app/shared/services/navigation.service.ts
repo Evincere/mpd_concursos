@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Location } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { BehaviorSubject, Observable, filter } from 'rxjs';
@@ -33,8 +34,11 @@ export class NavigationService {
   currentUrl$: Observable<string> = this.currentUrlSubject.asObservable();
   
   constructor(
+    
     private location: Location,
     private router: Router
+  ,
+    private loggingService: LoggingService
   ) {
     // Inicializar el historial desde sessionStorage si existe
     const savedHistory = sessionStorage.getItem('navigationHistory');

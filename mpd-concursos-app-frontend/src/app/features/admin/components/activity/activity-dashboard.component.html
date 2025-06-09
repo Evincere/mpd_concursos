@@ -9,14 +9,14 @@
       <button
         class="tab-button"
         [class.active]="activeTab === 0"
-        (click)="activeTab = 0">
+        (click)="setActiveTab(0)">
         <mat-icon>list</mat-icon>
         Registros de Actividad
       </button>
       <button
         class="tab-button"
         [class.active]="activeTab === 1"
-        (click)="activeTab = 1">
+        (click)="setActiveTab(1)">
         <mat-icon>analytics</mat-icon>
         Estadísticas
       </button>

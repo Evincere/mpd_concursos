@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.controller.mapper;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
@@ -46,7 +46,7 @@ public class AdminInscriptionMapper {
             Contest contest = inscription.getContest();
             dto.setContestInfo(AdminInscriptionDTO.ContestInfoDTO.builder()
                     .title(contest.getTitle())
-                    .position(contest.getPosition() != null ? contest.getPosition() : "No especificado")
+                    .position(contest.getLocation() != null ? contest.getLocation() : "No especificado")
                     .build());
         }
 

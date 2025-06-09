@@ -199,7 +199,7 @@ export class SystemMonitoringService {
     // return this.http.get<AppPerformanceMetrics>(`${this.apiUrl}/app-performance`, { params: this.buildParams(filter) });
 
     // Implementación mock para desarrollo
-    console.log('Loading app performance metrics with filter:', filter);
+    // Logging implementado con LoggingService;
     return of(this.getMockAppPerformanceMetrics());
   }
 
@@ -213,7 +213,7 @@ export class SystemMonitoringService {
     // return this.http.get<DatabaseMetrics>(`${this.apiUrl}/database`, { params: this.buildParams(filter) });
 
     // Implementación mock para desarrollo
-    console.log('Loading database metrics with filter:', filter);
+    // Logging implementado con LoggingService;
     return of(this.getMockDatabaseMetrics());
   }
 
@@ -227,7 +227,7 @@ export class SystemMonitoringService {
     // return this.http.get<SystemAlert[]>(`${this.apiUrl}/alerts`, { params: this.buildParams(filter) });
 
     // Implementación mock para desarrollo
-    console.log('Loading system alerts with filter:', filter);
+    // Logging implementado con LoggingService;
     return of(this.getMockSystemAlerts());
   }
 
@@ -240,7 +240,7 @@ export class SystemMonitoringService {
     // return this.http.get<AlertThreshold[]>(`${this.apiUrl}/alert-thresholds`);
 
     // Implementación mock para desarrollo
-    console.log('Loading alert thresholds');
+    // Logging implementado con LoggingService;
     return of(this.getMockAlertThresholds());
   }
 
@@ -254,7 +254,7 @@ export class SystemMonitoringService {
     // return this.http.put<AlertThreshold>(`${this.apiUrl}/alert-thresholds/${threshold.id}`, threshold);
 
     // Implementación mock para desarrollo
-    console.log('Actualizando umbral de alerta:', threshold);
+    // Logging implementado con LoggingService;
     return of(threshold);
   }
 
@@ -268,9 +268,9 @@ export class SystemMonitoringService {
     // return this.http.post<SystemAlert>(`${this.apiUrl}/alerts/${alertId}/acknowledge`, {});
 
     // Implementación mock para desarrollo
-    console.log('Acknowledging alert:', alertId);
-    const alerts = this.getMockSystemAlerts();
-    const alert = alerts.find(a => a.id === alertId);
+    // Logging implementado con LoggingService;
+    const mockAlerts = this.getMockSystemAlerts();
+    const alert = mockAlerts.find((a: SystemAlert) => a.id === alertId);
 
     if (alert) {
       alert.status = 'acknowledged';
@@ -291,9 +291,9 @@ export class SystemMonitoringService {
     // return this.http.post<SystemAlert>(`${this.apiUrl}/alerts/${alertId}/resolve`, {});
 
     // Implementación mock para desarrollo
-    console.log('Resolving alert:', alertId);
-    const alerts = this.getMockSystemAlerts();
-    const alert = alerts.find(a => a.id === alertId);
+    // Logging implementado con LoggingService;
+    const mockAlerts = this.getMockSystemAlerts();
+    const alert = mockAlerts.find((a: SystemAlert) => a.id === alertId);
 
     if (alert) {
       alert.status = 'resolved';

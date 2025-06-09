@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 
 // Servicios
+import { LoggingService } from '@core/services/logging/logging.service';
 import { ProfileService } from '@core/services/profile/profile.service';
 import { ExperienceService } from '@core/services/experience/experience.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
@@ -21,8 +22,7 @@ import { TabKey, ProfileTab } from './models/types';
 import { UserProfile, ExperienciaData, HabilidadData } from '@core/models/perfil.model';
 import { Educacion, TipoEducacion } from '@core/models/educacion.model';
 import { Experiencia } from '@core/models/experiencia.model';
-// Intento corregir el import de Habilidad, si no existe lo comento
-// import { Habilidad } from '@core/models/habilidad.model';
+
 
 // Componentes personalizados
 import { CustomConfirmDialogComponent } from '@shared/components/custom-confirm-dialog/custom-confirm-dialog.component';
@@ -37,13 +37,10 @@ import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-sp
 import { DocumentacionTabComponent } from './components/documentacion-tab/documentacion-tab.component';
 import { EducacionContainerComponent } from './components/educacion/educacion-container/educacion-container.component';
 import { ExperienciaContainerComponent } from './components/experiencia/experiencia-container/experiencia-container.component';
-
-// New Child Components
 import { PerfilPersonalInfoComponent } from './components/perfil-personal-info/perfil-personal-info.component';
-import { PerfilCvComponent } from './components/perfil-cv/perfil-cv.component';
+import { PerfilCvComponent } from './components/perfil-cv';
 import { PerfilLinkedInComponent } from './components/perfil-linkedin/perfil-linkedin.component';
 
-// Defino TAB_KEYS y los tipos ExperienciaData y Habilidad si no existen en los imports
 const TAB_KEYS = {
   INFO: 'info' as TabKey,
   CV: 'cv' as TabKey,
@@ -84,18 +81,16 @@ export class PerfilComponent implements OnInit, OnDestroy {
   fotoPerfil = 'assets/images/default-avatar.png';
   linkedInConectado = false;
   linkedInTab = true;
-  isEditing = false;
+  isEditing = false; // Corregida la doble declaración
   isLoading = false;
   minDate: Date = new Date(1900, 0, 1);
   maxDate: Date = new Date();
 
-  // Gestionar todas las suscripciones para poder limpiarlas
   private subscriptions: Subscription[] = [];
 
-  // Variables para el modal de educación
   mostrarModalEducacion = false;
   educacionList: Educacion[] = [];
-  // Variables para el modal de experiencia
+
   mostrarModalExperiencia = false;
 
   private readonly tabDefinitions: ProfileTab[] = [
@@ -106,13 +101,13 @@ export class PerfilComponent implements OnInit, OnDestroy {
   ];
 
   get tabs(): ProfileTab[] {
-    return this.tabDefinitions.filter(tab => 
+    return this.tabDefinitions.filter(tab =>
       tab.key !== TAB_KEYS.LINKEDIN || this.linkedInTab
     );
   }
 
   selectedTab: TabKey = TAB_KEYS.INFO;
-  selectedTabIndex = 0; // Add numeric index for CustomTabsComponent
+  selectedTabIndex = 0;
 
   /**
    * Cambia la pestaña activa
@@ -169,42 +164,41 @@ export class PerfilComponent implements OnInit, OnDestroy {
     private notification: CustomNotificationService,
     private perfilState: PerfilStateService,
     private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private loggingService: LoggingService
   ) {
     this.initializeForms();
   }
 
   ngOnInit(): void {
-    // Consola para debug
-    console.log('PerfilComponent inicializado');
-
-    // Cargar el perfil de usuario
-    this.loadUserProfile();
+    this.loadUserProfile(); // Cargar perfil al iniciar el componente
+    this.initializeActiveTab(); // Inicializar la pestaña activa desde la URL
   }
 
   private initializeActiveTab(): void {
-    // Verificar si hay un parámetro activeTab en la URL
-    this.route.queryParams.subscribe(params => {
-      if (params['activeTab']) {
-        console.log('[PerfilComponent] Parámetro activeTab detectado:', params['activeTab']);
+    this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
+      this.route.queryParams.subscribe(params => {
+        if (params['activeTab']) {
+          const activeTabParam = params['activeTab'];
+          const tabKeyMap: Record<string, TabKey> = {
+            personal: TAB_KEYS.INFO,
+            cv: TAB_KEYS.CV,
+            docs: TAB_KEYS.DOCS,
+            linkedin: TAB_KEYS.LINKEDIN
+          };
 
-        // Buscar la pestaña por su etiqueta
-        const matchingTab = this.tabDefinitions.find(tab => 
-          tab.label === params['activeTab'] || tab.key === params['activeTab']
-        );
-
-        if (matchingTab) {
-          console.log(`[PerfilComponent] Activando pestaña ${matchingTab.label}`);
-          this.selectedTab = matchingTab.key;
-          this.cdr.detectChanges();
-        } else {
-          console.warn(`[PerfilComponent] No se encontró la pestaña '${params['activeTab']}'`);
+          const tabKey = tabKeyMap[activeTabParam];
+          if (tabKey) {
+            this.changeTab(tabKey);
+          } else {
+            console.warn(`[PerfilComponent] No se encontró la pestaña '${activeTabParam}'`);
+          }
         }
-      }
-    });
+      })
+    );
   }
 
-  private initializeForms() {
+  private initializeForms(): void {
     this.perfilForm = this.fb.group({
       username: [''],
       email: [''],
@@ -212,122 +206,91 @@ export class PerfilComponent implements OnInit, OnDestroy {
       cuit: ['', [Validators.pattern('^[0-9]{2}-[0-9]{8}-[0-9]{1}$')]],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
-      telefono: [''], // Cambiar a habilitado por defecto
-      direccion: [''], // Cambiar a habilitado por defecto
+      telefono: [''],
+      direccion: [''],
       experiencias: this.fb.array([]),
       habilidades: this.fb.array([])
     });
 
-    // Deshabilitar campos que no deben ser editables
     this.perfilForm.get('username')?.disable();
     this.perfilForm.get('email')?.disable();
 
-    // Suscribirse a los cambios del CUIT para formatear automáticamente
-    this.perfilForm.get('cuit')?.valueChanges.subscribe(value => {
-      if (value) {
-        // Remover todos los caracteres no numéricos
-        const numericValue = value.replace(/\D/g, '');
-
-        // Solo procesar si tenemos números
-        if (numericValue.length > 0) {
-          let formattedValue = numericValue;
-
-          // Aplicar formato XX-XXXXXXXX-X
-          if (numericValue.length >= 2) {
-            formattedValue = numericValue.substring(0, 2);
-            if (numericValue.length > 2) {
-              formattedValue += '-' + numericValue.substring(2);
+    const cuitControl = this.perfilForm.get('cuit');
+    if (cuitControl) {
+      this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
+        cuitControl.valueChanges.subscribe(value => {
+        if (value) {
+          const numericValue = value.replace(/\D/g, '');
+          if (numericValue.length > 0) {
+            let formattedValue = numericValue;
+            if (numericValue.length >= 2) {
+              formattedValue = numericValue.substring(0, 2);
+              if (numericValue.length > 2) {
+                formattedValue += '-' + numericValue.substring(2);
+              }
+              if (numericValue.length > 10) {
+                formattedValue = formattedValue.substring(0, 11) + '-' + numericValue.substring(10, 11);
+              }
             }
-            if (numericValue.length > 10) {
-              formattedValue = formattedValue.substring(0, 11) + '-' + numericValue.substring(10, 11);
+            if (formattedValue !== value) {
+              this.perfilForm.get('cuit')?.setValue(formattedValue, { emitEvent: false });
             }
-          }
-
-          // Actualizar el valor sin emitir un nuevo evento
-          if (formattedValue !== value) {
-            this.perfilForm.get('cuit')?.setValue(formattedValue, { emitEvent: false });
           }
         }
-      }
-    });
+      })
+      );
+    }
   }
 
   // Cargar datos del perfil con mejor gestión de rendimiento
   loadUserProfile(): void {
     this.isLoading = true;
-    console.log('Iniciando carga del perfil de usuario');
-    console.log('Token disponible:', !!this.authService.getToken());
-    console.log('Usuario autenticado:', this.authService.isAuthenticated());
 
-    this.profileService.getUserProfile().subscribe({
-      next: (profile) => {
-        console.log('🎯 Perfil recibido desde backend:', profile);
-        console.log('📋 Campos básicos del perfil:', {
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          email: profile.email,
-          username: profile.username,
-          dni: profile.dni,
-          cuit: profile.cuit,
-          telefono: profile.telefono,
-          direccion: profile.direccion
-        });
-        console.log('💼 Experiencias en el perfil recibido:', profile.experiencias);
-        console.log('🎓 Educación en el perfil recibido:', profile.educacion);
-        console.log('🛠️ Habilidades en el perfil recibido:', profile.habilidades);
+    this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
+      this.profileService.getUserProfile().pipe(
+        finalize(() => this.isLoading = false) // Mover finalize aquí para asegurar que siempre se ejecuta
+      ).subscribe({
+        next: (profile) => {
+          this.userProfile = profile; // Almacenar el perfil completo
+          this.cargarDatosBasicos(profile);
+          this.cargarPerfilForm(profile); // Llamar para cargar el formulario completo
 
-        // Guardar la referencia al perfil del usuario
-        this.userProfile = profile;
-
-        // Cargar los datos básicos primero para una respuesta rápida
-        this.cargarDatosBasicos(profile);
-
-        // Cargar los arrays en un segundo ciclo para evitar bloqueos
-        window.requestAnimationFrame(() => {
-          console.log('Actualizando arrays de experiencias y habilidades');
-          this.cargarDatosAvanzados(profile);
-
-          // Cargar educación después de los datos básicos
-          if (profile.id) {
-            this.educacionService.cargarEducacion(profile.id).subscribe(
-              respuesta => {
-                if (respuesta.exito && respuesta.data) {
-                  this.educacionList = respuesta.data;
-                  console.log('Lista de educación actualizada:', this.educacionList);
-                  this.cdr.detectChanges(); // Forzar detección de cambios
-                } else {
-                  console.error('Error al cargar educación:', respuesta.error);
-                }
-              },
-              error => {                console.error('Error al cargar educación:', error);
-                this.notification.error('No se pudieron cargar los registros de educación');
-              }
-            );
-          }
-        });
-
-        // Marcar como no cargando después de cargar los datos básicos
-        this.isLoading = false;
-
-        // Asegurar que los campos estén en el estado correcto (deshabilitados si no está editando)
-        if (!this.isEditing) {
-          const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
-          editableFields.forEach(field => {
-            const control = this.perfilForm.get(field);
-            if (control) {
-              control.disable();
+          // Cargar educación y experiencias en un segundo ciclo para evitar bloqueos
+          window.requestAnimationFrame(() => {
+            if (profile.id) {
+              this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
+                this.educacionService.cargarEducacionPorUsuario(profile.id).subscribe({
+                  next: (response: OperacionResponse<Educacion[]>) => {
+                    if (response.exito && response.data) {
+                      this.educacionList = response.data;
+                      this.cdr.detectChanges(); // Forzar detección de cambios
+                    } else if (response.mensaje) {
+                      this.notification.error(response.mensaje);
+                    }
+                  },
+                  error: (error: Error) => {
+                    console.error('Error al cargar educación:', error);
+                    this.notification.error('No se pudieron cargar los registros de educación');
+                  }
+                })
+              );
             }
           });
-        }
 
-        this.cdr.detectChanges(); // Forzar detección de cambios
-      },      error: (error: Error) => {
-        console.error('Error loading user profile', error);
-        this.notification.error('Error al cargar el perfil');
-        this.isLoading = false;
-        this.cdr.detectChanges(); // Forzar detección de cambios
-      }
-    });
+          // Asegurar que los campos estén en el estado correcto (deshabilitados si no está editando)
+          if (!this.isEditing) {
+            this.deshabilitarCamposEditables();
+          }
+
+          this.cdr.detectChanges(); // Forzar detección de cambios
+        },
+        error: (error: Error) => {
+          console.error('Error loading user profile', error);
+          this.notification.error('Error al cargar el perfil');
+          this.cdr.detectChanges(); // Forzar detección de cambios
+        }
+      })
+    );
   }
 
   // Cargar solo los datos básicos del perfil
@@ -336,17 +299,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
       console.error('Profile es null o undefined');
       return;
     }
-
-    console.log('Cargando datos básicos del perfil...');
-    console.log('Estado del formulario antes de patchValue:', this.perfilForm.value);
-    console.log('Estado de los controles antes de patchValue:', {
-      firstName: this.perfilForm.get('firstName')?.value,
-      lastName: this.perfilForm.get('lastName')?.value,
-      telefono: this.perfilForm.get('telefono')?.value,
-      direccion: this.perfilForm.get('direccion')?.value,
-      telefonoDisabled: this.perfilForm.get('telefono')?.disabled,
-      direccionDisabled: this.perfilForm.get('direccion')?.disabled
-    });
 
     // Actualizar campos deshabilitados individualmente
     this.perfilForm.get('username')?.setValue(profile.username || '', { emitEvent: false });
@@ -362,67 +314,17 @@ export class PerfilComponent implements OnInit, OnDestroy {
       direccion: profile.direccion || '',
     }, { emitEvent: false });
 
-    console.log('Estado del formulario después de patchValue:', this.perfilForm.value);
-    console.log('Estado de los controles después de patchValue:', {
-      firstName: this.perfilForm.get('firstName')?.value,
-      lastName: this.perfilForm.get('lastName')?.value,
-      telefono: this.perfilForm.get('telefono')?.value,
-      direccion: this.perfilForm.get('direccion')?.value,
-      username: this.perfilForm.get('username')?.value,
-      email: this.perfilForm.get('email')?.value
-    });
-
-    // Notificar que los datos básicos están listos
     this.cdr.markForCheck();
   }
 
-  // Cargar datos más complejos del perfil
-  private cargarDatosAvanzados(profile: UserProfile): void {
-    if (!profile) return;
 
-    console.log('Cargando datos avanzados del perfil');
-
-    // Actualizar experiencias y habilidades
-    this.actualizarArrayExperiencias(profile);
-    this.actualizarArrayHabilidades(profile);
-
-    // Forzar detección de cambios
-    this.cdr.detectChanges();
-  }
-
-  private updateFormWithProfile(profile: UserProfile): void {
-    if (!profile) return;
-
-    // Actualizar campos deshabilitados individualmente
-    this.perfilForm.get('username')?.setValue(profile.username || '', { emitEvent: false });
-    this.perfilForm.get('email')?.setValue(profile.email || '', { emitEvent: false });
-
-    // Actualizar valores básicos del formulario para campos habilitados
-    this.perfilForm.patchValue({
-      firstName: profile.firstName || '',
-      lastName: profile.lastName || '',
-      dni: profile.dni || '',
-      cuit: profile.cuit || '',
-      telefono: profile.telefono || '',
-      direccion: profile.direccion || '',
-    });
-
-    // Actualizar arrays de forma optimizada
-    this.actualizarArrayExperiencias(profile);
-    this.actualizarArrayHabilidades(profile);
-
-    // Actualizar UI
-    this.cdr.markForCheck();
-  }
 
   // Método optimizado para actualizar el array de experiencias
   private actualizarArrayExperiencias(profile: UserProfile): void {
     const experiencias = profile.experiencias as ExperienciaData[];
     const experienciasArray = this.perfilForm.get('experiencias') as FormArray;
 
-    console.log(`🔄 Actualizando array de experiencias: ${experiencias?.length || 0} encontradas`);
-
-    experienciasArray.clear();
+    experienciasArray.clear(); // Limpiar experiencias existentes
 
     if (experiencias && experiencias.length > 0) {
       experiencias.forEach((exp) => {
@@ -437,31 +339,26 @@ export class PerfilComponent implements OnInit, OnDestroy {
           actual: exp.actual,
           ubicacion: exp.ubicacion
         };
-
         experienciasArray.push(this.createExperienciaFormGroup(experiencia));
       });
-
-      console.log(`✅ Array de experiencias actualizado exitosamente: ${experienciasArray.length} elementos`);
-    } else {
-      console.log('⚠️ No hay experiencias para mostrar');
     }
   }
 
   // Método optimizado para actualizar el array de habilidades
   private actualizarArrayHabilidades(profile: UserProfile): void {
+    const habilidades = profile.habilidades as HabilidadData[];
     const habilidadesArray = this.perfilForm.get('habilidades') as FormArray;
 
-    if (profile.habilidades && Array.isArray(profile.habilidades)) {
-      // Desactivar temporalmente cambios
-      this.cdr.detach();
+    habilidadesArray.clear(); // Limpiar habilidades existentes
 
+    if (habilidades && habilidades.length > 0) {
+      this.cdr.detach(); // Desactivar detección de cambios temporalmente para optimizar
       try {
-        habilidadesArray.clear();
-        profile.habilidades.forEach((hab: HabilidadData) => {
+        habilidades.forEach((hab: HabilidadData) => {
           habilidadesArray.push(this.createHabilidadFormGroup(hab));
         });
       } finally {
-        this.cdr.reattach();
+        this.cdr.reattach(); // Reactivar detección de cambios
       }
     }
   }
@@ -482,24 +379,30 @@ export class PerfilComponent implements OnInit, OnDestroy {
   toggleEditing(): void {
     this.isEditing = !this.isEditing;
     if (this.isEditing) {
-      // Habilitar solo los campos editables
-      const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
-      editableFields.forEach(field => {
-        const control = this.perfilForm.get(field);
-        if (control) {
-          control.enable();
-        }
-      });
+      this.habilitarCamposEditables();
     } else {
-      // Deshabilitar solo los campos editables, mantener username y email siempre deshabilitados
-      const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
-      editableFields.forEach(field => {
-        const control = this.perfilForm.get(field);
-        if (control) {
-          control.disable();
-        }
-      });
+      this.deshabilitarCamposEditables();
     }
+  }
+
+  private habilitarCamposEditables(): void {
+    const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
+    editableFields.forEach(field => {
+      const control = this.perfilForm.get(field);
+      if (control) {
+        control.enable();
+      }
+    });
+  }
+
+  private deshabilitarCamposEditables(): void {
+    const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
+    editableFields.forEach(field => {
+      const control = this.perfilForm.get(field);
+      if (control) {
+        control.disable();
+      }
+    });
   }
 
   // Methods for child components
@@ -510,6 +413,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
   onFormSave(): void {
     if (this.perfilForm.valid) {
       this.guardarPerfil();
+    } else {
+      this.marcarCamposInvalidos(this.perfilForm);
+      this.notification.error('Por favor, complete todos los campos obligatorios antes de guardar.');
     }
   }
 
@@ -523,9 +429,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   // Getter que devuelve una copia del array para forzar detección de cambios
-  get experienciasArray() {
-    const formArray = this.perfilForm.get('experiencias') as FormArray;
-    return [...formArray.controls];
+  get experienciasArray(): FormGroup[] {
+    return [...(this.perfilForm.get('experiencias') as FormArray).controls] as FormGroup[];
   }
 
   get habilidades() {
@@ -547,7 +452,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // El ID puede ser un número o un UUID, ambos son válidos
     if (!this.esIdUsuarioValido()) {
       this.notification.error('No se puede agregar experiencia: ID de usuario inválido.');
       console.error(`ID de usuario inválido: ${this.usuarioId}`);
@@ -558,9 +462,15 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  cerrarModalExperiencia(): void {
+    this.mostrarModalExperiencia = false;
+    this.cdr.markForCheck();
+  }
+
   agregarHabilidad(): void {
     this.habilidades.push(this.createHabilidadFormGroup());
   }
+
   // Métodos para eliminar elementos
   eliminarExperiencia(index: number): void {
     const experiencias = this.perfilForm.get('experiencias') as FormArray;
@@ -583,28 +493,24 @@ export class PerfilComponent implements OnInit, OnDestroy {
       }
     });
 
-    dialogRef.afterClosed().subscribe((confirmed: unknown) => {
-      if (confirmed) {
-        console.log('🗑️ Iniciando eliminación de experiencia con ID:', experiencia.id);
-
-        this.experienceService.deleteExperience(experiencia.id!)
-          .pipe(finalize(() => this.cdr.markForCheck()))
-          .subscribe({
+    this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
+      dialogRef.afterClosed().subscribe((confirmed: unknown) => {
+        if (confirmed) {
+          // Si el usuario confirma, eliminar del backend
+          this.experienceService.deleteExperience(experiencia.id!).subscribe({
             next: () => {
-              console.log('✅ Experiencia eliminada del backend exitosamente');
-
-              // Recargar las experiencias desde el backend para asegurar sincronización
-              this.recargarExperiencias();
-
+              experiencias.removeAt(index);
               this.notification.success('Experiencia eliminada correctamente');
+              this.cdr.detectChanges(); // Forzar detección de cambios
             },
             error: (error) => {
-              console.error('❌ Error al eliminar experiencia:', error);
-              this.notification.error('Error al eliminar la experiencia');
+              console.error('Error al eliminar experiencia en el backend:', error);
+              this.notification.error('Error al eliminar la experiencia. Intente nuevamente.');
             }
           });
-      }
-    });
+        }
+      })
+    );
   }
 
   eliminarHabilidad(index: number): void {
@@ -628,25 +534,18 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   guardarPerfil(): void {
-    console.log('🚀 INICIANDO GUARDADO DE PERFIL - VERSIÓN CON FIX CUIT Y NULL VALIDATION');
-    if (this.perfilForm.valid) {
-      this.isLoading = true;
-
+    if (this.perfilForm.valid && this.userProfile?.id) { // Asegurarse de tener un ID de usuario
       const formValues = this.perfilForm.value;
-      console.log('📋 Datos del formulario RAW:', formValues);
 
-      const updatedProfile: Partial<UserProfile> = {
+      const perfilData = {
         firstName: formValues.firstName,
         lastName: formValues.lastName,
         dni: formValues.dni,
-        cuit: formValues.cuit ? (() => {
-          const cleanCuit = formValues.cuit.replace(/\D/g, '');
-          console.log('🔧 CUIT original:', formValues.cuit, '-> CUIT limpio:', cleanCuit);
-          return cleanCuit;
-        })() : '', // Remover guiones del CUIT
+        cuit: formValues.cuit ? formValues.cuit.replace(/\D/g, '') : '', // Remover guiones del CUIT
         telefono: formValues.telefono,
         direccion: formValues.direccion,
         experiencias: (formValues.experiencias || []).map((exp: any) => ({
+          id: exp.id, // Incluir ID para actualizaciones
           empresa: exp.empresa,
           cargo: exp.puesto,
           puesto: exp.puesto,
@@ -662,65 +561,46 @@ export class PerfilComponent implements OnInit, OnDestroy {
         }))
       };
 
-      console.log('📤 Objeto final que se enviará al backend:', updatedProfile);
-      console.log('🔍 CUIT final que se enviará:', updatedProfile.cuit);
-
-      this.profileService.updateUserProfile(updatedProfile)
-        .pipe(finalize(() => this.isLoading = false))
-        .subscribe({
-          next: (profile) => {
-            this.notification.success('Perfil actualizado con éxito');
-
-            // Actualizar el perfil
+      this.isLoading = true; // Iniciar carga
+      this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
+        this.profileService.updateUserProfile(perfilData).pipe(
+          finalize(() => this.isLoading = false) // Finalizar carga
+        ).subscribe({
+          next: (profile: UserProfile) => {
+            this.notification.success('Perfil actualizado correctamente');
             this.userProfile = profile;
-
-            // Actualizar el formulario con los datos del perfil
             this.cargarPerfilForm(profile);
-
-            // Volver al estado de no edición
             this.isEditing = false;
-
-            // Deshabilitar los campos editables
-            const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
-            editableFields.forEach(field => {
-              const control = this.perfilForm.get(field);
-              if (control) {
-                control.disable();
-              }
-            });
-
+            this.deshabilitarCamposEditables(); // Usar método para deshabilitar campos
             this.perfilForm.markAsPristine();
+            this.cdr.detectChanges(); // Forzar detección de cambios
           },
           error: (error: Error) => {
             console.error('Error al actualizar el perfil', error);
             this.notification.error('Error al actualizar el perfil');
+            this.cdr.detectChanges(); // Forzar detección de cambios
           }
-        });
+        })
+      );
     } else {
+      this.marcarCamposInvalidos(this.perfilForm);
       this.notification.error('Por favor, complete todos los campos obligatorios antes de guardar.');
     }
   }
 
   resetForm(): void {
-    this.loadUserProfile();
+    this.loadUserProfile(); // Recargar el perfil para restablecer el formulario
     this.isEditing = false;
-    // Deshabilitar solo los campos editables, mantener username y email siempre deshabilitados
-    const editableFields = ['firstName', 'lastName', 'dni', 'cuit', 'telefono', 'direccion'];
-    editableFields.forEach(field => {
-      const control = this.perfilForm.get(field);
-      if (control) {
-        control.disable();
-      }
-    });
+    this.deshabilitarCamposEditables();
+    this.cdr.detectChanges(); // Forzar detección de cambios
   }
 
   conectarLinkedIn(): void {
     this.linkedInConectado = !this.linkedInConectado;
-    // const mensaje = this.linkedInConectado ?
-    //   'Cuenta de LinkedIn conectada exitosamente' :
-    //   'Cuenta de LinkedIn desconectada';
-
-    // this.messageService.showSuccess(mensaje);
+    const message = this.linkedInConectado ?
+      'Cuenta de LinkedIn conectada exitosamente' :
+      'Cuenta de LinkedIn desconectada';
+    this.notification.success(message); // Usar notificación en lugar de messageService
   }
 
   // Método para convertir texto en array de letras
@@ -767,17 +647,35 @@ export class PerfilComponent implements OnInit, OnDestroy {
         formData.append('tipoDocumentoId', 'certificado_laboral'); // Asumiendo que existe este tipo
         formData.append('descripcion', `Certificado laboral - ${this.experiencias.at(experienciaIndex).get('empresa')?.value}`);
 
-        // ... existing code ...
+        // TODO: Implementar subida de documentos cuando el servicio esté disponible
+        this.isLoading = false;
+        document.body.removeChild(fileInput);
+        this.notification.info('Funcionalidad de subida de certificados en desarrollo');
+        this.cdr.detectChanges();
+      } else {
+        document.body.removeChild(fileInput); // Limpiar el input si no se selecciona archivo
       }
     });
+
+    fileInput.click(); // Abrir el selector de archivo
   }
 
   /**
    * Obtiene el ID del usuario como UUID (string)
    */
   get usuarioId(): string {
-    if (!this.userProfile || !this.userProfile.id) return '';
+    // Es crucial que userProfile esté cargado para obtener el ID
+    if (!this.userProfile || !this.userProfile.id) {
+        return '';
+    }
     return String(this.userProfile.id);
+  }
+
+  /**
+   * Verifica si el ID de usuario es válido (asumiendo que un ID vacío o null no es válido)
+   */
+  public esIdUsuarioValido(): boolean {
+    return !!this.usuarioId && this.usuarioId.length > 0;
   }
 
   ngOnDestroy(): void {
@@ -797,7 +695,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // El ID puede ser un número o un UUID, ambos son válidos ahora
     if (!this.esIdUsuarioValido()) {
       this.notification.error('No se puede agregar educación: ID de usuario inválido.');
       console.error(`ID de usuario inválido: ${this.usuarioId}`);
@@ -815,13 +712,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   // Método para manejar la educación guardada
-  onEducacionGuardada(educacion: Educacion): void {
-    console.log('onEducacionGuardada llamado con datos:', educacion);
-
-    // Cerrar el modal primero
-    this.mostrarModalEducacion = false;
-
-    // Recargar la educación desde el backend para asegurar sincronización
+  onEducacionGuardada(_educacion: Educacion): void {
     this.recargarEducacion();
   }
 
@@ -832,31 +723,24 @@ export class PerfilComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('Recargando educación desde el backend para usuario:', this.usuarioId);
-
-    this.educacionService.cargarEducacion(this.usuarioId)
-      .subscribe({
+    this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
+      this.educacionService.cargarEducacionPorUsuario(this.usuarioId).subscribe({
         next: (response: OperacionResponse<Educacion[]>) => {
-          console.log('Educación recargada desde backend:', response);
-
           if (response.exito && response.data) {
             this.educacionList = response.data;
-            console.log('Lista de educación actualizada:', this.educacionList);
-
-            // Forzar detección de cambios
-            this.cdr.detectChanges();
-
             this.notification.success('Lista de educación actualizada');
-          } else {
-            console.error('Error en la respuesta del backend:', response);
-            this.notification.error('Error al actualizar la lista de educación');
+          } else if (response.mensaje) {
+            this.notification.error(response.mensaje);
           }
+          this.cdr.detectChanges(); // Forzar detección de cambios
         },
         error: (error: Error) => {
           console.error('Error al recargar educación:', error);
           this.notification.error('Error al actualizar la lista de educación');
+          this.cdr.detectChanges(); // Forzar detección de cambios
         }
-      });
+      })
+    );
   }
 
   /**
@@ -864,7 +748,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
    */
   private esCarreraSuperiorOGrado(educacion: Educacion): boolean {
     return educacion.tipo === TipoEducacion.CARRERA_NIVEL_SUPERIOR ||
-           educacion.tipo === TipoEducacion.CARRERA_GRADO;
+      educacion.tipo === TipoEducacion.CARRERA_GRADO;
   }
 
   /**
@@ -872,8 +756,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
    */
   private esPosgrado(educacion: Educacion): boolean {
     return educacion.tipo === TipoEducacion.POSGRADO_ESPECIALIZACION ||
-           educacion.tipo === TipoEducacion.POSGRADO_MAESTRIA ||
-           educacion.tipo === TipoEducacion.POSGRADO_DOCTORADO;
+      educacion.tipo === TipoEducacion.POSGRADO_MAESTRIA ||
+      educacion.tipo === TipoEducacion.POSGRADO_DOCTORADO;
   }
 
   /**
@@ -881,7 +765,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
    */
   private esDiplomaturaOCurso(educacion: Educacion): boolean {
     return educacion.tipo === TipoEducacion.DIPLOMATURA ||
-           educacion.tipo === TipoEducacion.CURSO_CAPACITACION;
+      educacion.tipo === TipoEducacion.CURSO_CAPACITACION;
   }
 
   /**
@@ -889,49 +773,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
    */
   private esActividadCientifica(educacion: Educacion): boolean {
     return educacion.tipo === TipoEducacion.ACTIVIDAD_CIENTIFICA;
-  }
-
-  /**
-   * Normaliza un objeto de educación para asegurar que sus propiedades específicas
-   * son accesibles directamente en el objeto base
-   */
-  private normalizarEducacion(educacion: Educacion): Educacion {
-    console.log('Normalizando educación:', educacion);
-
-    // Crear un objeto base con todas las propiedades
-    const educacionNormalizada: any = {
-      id: educacion.id,
-      tipo: educacion.tipo,
-      estado: educacion.estado,
-      titulo: educacion.titulo,
-      institucion: educacion.institucion,
-      fechaEmision: educacion.fechaEmision,
-      documentoPdf: educacion.documentoPdf
-    };
-
-    // Copiar todas las propiedades del objeto original que no sean undefined
-    Object.keys(educacion).forEach(key => {
-      if (educacion[key as keyof Educacion] !== undefined &&
-          !['id', 'tipo', 'estado', 'titulo', 'institucion', 'fechaEmision', 'documentoPdf'].includes(key)) {
-        (educacionNormalizada as any)[key] = (educacion as any)[key];
-      }
-    });
-
-    // Buscar propiedades adicionales en cualquier campo "datos" o "propiedadesEspecificas"
-    if ((educacion as any).datos) {
-      Object.assign(educacionNormalizada, (educacion as any).datos);
-    }
-
-    if ((educacion as any).propiedadesEspecificas) {
-      Object.assign(educacionNormalizada, (educacion as any).propiedadesEspecificas);
-    }
-
-    if ((educacion as any).detalle) {
-      Object.assign(educacionNormalizada, (educacion as any).detalle);
-    }
-
-    console.log('Educación normalizada:', educacionNormalizada);
-    return educacionNormalizada as Educacion;
   }
 
   // Método para cargar el perfil en el formulario
@@ -952,714 +793,64 @@ export class PerfilComponent implements OnInit, OnDestroy {
       const control = this.perfilForm.get(key);
       if (control && profile[key as keyof UserProfile] !== undefined) {
         control.setValue(profile[key as keyof UserProfile] || '', { emitEvent: false });
-        // Marcar como pristine para que no afecte la validación inicial
         control.markAsPristine();
       }
     });
 
-    // Actualizar experiencias si existen
-    const experienciasArray = this.perfilForm.get('experiencias') as FormArray;
-    if (profile.experiencias && Array.isArray(profile.experiencias)) {
-      experienciasArray.clear(); // Limpiar experiencias existentes
-      profile.experiencias.forEach((exp: ExperienciaData) => {
-        // Mapeo de ExperienciaData a Experiencia
-        const experiencia: Experiencia = {
-          id: exp.id,
-          puesto: exp.puesto || exp.cargo || '',
-          empresa: exp.empresa,
-          descripcion: exp.descripcion,
-          fechaInicio: typeof exp.fechaInicio === 'string' ? exp.fechaInicio : exp.fechaInicio?.toISOString().split('T')[0] || '',
-          fechaFin: typeof exp.fechaFin === 'string' ? exp.fechaFin : exp.fechaFin?.toISOString().split('T')[0],
-          actual: exp.actual,
-          ubicacion: exp.ubicacion
-        };
-        experienciasArray.push(this.createExperienciaFormGroup(experiencia));
-      });
-    }
-
-    // Actualizar habilidades si existen
-    const habilidadesArray = this.perfilForm.get('habilidades') as FormArray;
-    if (profile.habilidades && Array.isArray(profile.habilidades)) {
-      habilidadesArray.clear();
-      profile.habilidades.forEach((hab: HabilidadData) => {
-        habilidadesArray.push(this.createHabilidadFormGroup(hab));
-      });
-    }
+    // Actualizar arrays de forma optimizada
+    this.actualizarArrayExperiencias(profile);
+    this.actualizarArrayHabilidades(profile);
+    this.cdr.detectChanges(); // Forzar detección de cambios después de actualizar los arrays
   }
 
   // Método para marcar todos los campos inválidos
-  marcarCamposInvalidos(formGroup: FormGroup): void {
+  marcarCamposInvalidos(formGroup: FormGroup | FormArray): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
-      if (control instanceof FormGroup) {
+      if (control instanceof FormGroup || control instanceof FormArray) {
         this.marcarCamposInvalidos(control);
-      } else if (control instanceof FormArray) {
-        for (let i = 0; i < control.length; i++) {
-          if (control.at(i) instanceof FormGroup) {
-            this.marcarCamposInvalidos(control.at(i) as FormGroup);
-          } else {
-            control.at(i).markAsTouched();
-          }
-        }
       } else if (control) {
         control.markAsTouched();
+        control.markAsDirty(); // También marcar como dirty para mostrar errores de validación
+        this.cdr.markForCheck(); // Forzar detección para actualizar el estado visual
       }
     });
   }
 
   /**
-   * Abre un visor para visualizar el certificado
-   * @param documentoId ID del documento a visualizar
+   * Maneja el evento cuando se guarda una experiencia
+   * @param experiencia La experiencia que fue guardada
    */
-  verCertificado(documentoId: string): void {
-    this.isLoading = true;
+  onExperienciaGuardada(experiencia: any): void {
+    console.log('Experiencia guardada:', experiencia);
 
-    // Abrir el diálogo de visualización con el ID del documento
-    const dialogRef = this.dialog.open(DocumentoViewerComponent, {
-      data: {
-        documentoId: documentoId
-      }
-    });
-
-    this.isLoading = false;
-  }
-
-  /**
-   * Elimina el certificado asociado a una experiencia laboral
-   * @param experienciaIndex Índice de la experiencia en el FormArray
-   */
-  eliminarCertificado(experienciaIndex: number): void {
-    const certificadoId = this.experiencias.at(experienciaIndex).get('certificadoId')?.value;
-    if (!certificadoId) return;
-
-    if (confirm('¿Está seguro que desea eliminar este certificado?')) {
-      this.isLoading = true;
-      this.documentosService.deleteDocumento(certificadoId).pipe(
-        finalize(() => this.isLoading = false)
-      ).subscribe({
-        next: () => {
-          // Limpiar el ID del certificado en el formulario
-          this.experiencias.at(experienciaIndex).patchValue({
-            certificadoId: null
-          });
-          this.notification.success('Certificado eliminado correctamente');
-        },
-        error: (error: Error) => {
-          console.error('Error al eliminar el certificado:', error);
-          this.notification.error('Error al eliminar el certificado');
-        }
-      });
-    }
-  }
-
-  /**
-   * Método para eliminar una educación
-   * @param id ID (UUID) de la educación a eliminar
-   */
-  eliminarEducacion(id: string): void {
-    // Validar que el ID no sea nulo o vacío
-    if (!id || id.trim() === '') {
-      this.notification.error('ID de educación inválido');
-      return;
-    }
-
-    console.log(`Solicitando eliminar educación con ID (UUID): ${id}`);
-
-    const dialogRef = this.dialog.open(CustomConfirmDialogComponent, {
-      data: {
-        title: 'Confirmar eliminación',
-        message: '¿Está seguro que desea eliminar esta educación? Esta acción no se puede deshacer.'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(_result => {
-      if (_result) {
-        this.educacionService.eliminarEducacion(id).subscribe({
-          next: (response) => {
-            if (response.exito) {
-              // Filtrar los registros por ID exacto
-              this.educacionList = this.educacionList.filter(e => e.id !== id);
-
-              this.notification.success('Educación eliminada exitosamente');
-              this.cdr.markForCheck();
-            } else {
-              this.notification.error(response.mensaje || 'Error al eliminar educación');
-            }
-          },
-          error: (error: Error) => {
-            console.error('Error eliminando educación', error);
-            this.notification.error('Error al eliminar educación');
-          }
-        });
-      }
-    });
-  }
-
-  /**
-   * Obtiene una propiedad específica de un objeto de educación según su tipo
-   * Evita errores de type-checking al acceder propiedades específicas
-   */
-  getPropiedadEducacion(educacion: Educacion, propiedad: string): any {
-    if (!educacion) {
-      console.warn('Objeto de educación no definido');
-      return null;
-    }
-
-    // Mapeo de propiedades en español a inglés y viceversa
-    const propiedadesMapeadas: Record<string, string> = {
-      'titulo': 'title',
-      'title': 'titulo',
-      'institucion': 'institution',
-      'institution': 'institucion',
-      'tipo': 'type',
-      'type': 'tipo',
-      'estado': 'status',
-      'status': 'estado',
-      'fechaEmision': 'issueDate',
-      'issueDate': 'fechaEmision',
-      'duracionAnios': 'durationYears',
-      'durationYears': 'duracionAnios',
-      'promedio': 'average',
-      'average': 'promedio',
-      'temaTesis': 'thesisTopic',
-      'thesisTopic': 'temaTesis',
-      'cargaHoraria': 'hourlyLoad',
-      'hourlyLoad': 'cargaHoraria',
-      'tuvoEvaluacionFinal': 'hadFinalEvaluation',
-      'hadFinalEvaluation': 'tuvoEvaluacionFinal',
-      'tipoActividad': 'activityType',
-      'activityType': 'tipoActividad',
-      'tema': 'topic',
-      'topic': 'tema',
-      'caracter': 'activityRole',
-      'activityRole': 'caracter',
-      'lugarFechaExposicion': 'expositionPlaceDate',
-      'expositionPlaceDate': 'lugarFechaExposicion',
-      'comentarios': 'comments',
-      'comments': 'comentarios'
-    };
-
-    // 1. Intento directo - Acceder directamente a la propiedad del objeto
-    if (propiedad in educacion) {
-      const valor = (educacion as any)[propiedad];
-      return valor;
-    }
-
-    // 2. Intentar con la propiedad mapeada (español a inglés o viceversa)
-    const propiedadMapeada = propiedadesMapeadas[propiedad];
-    if (propiedadMapeada && propiedadMapeada in educacion) {
-      const valor = (educacion as any)[propiedadMapeada];
-      return valor;
-    }
-
-    // 3. Búsqueda en objetos anidados conocidos
-    const objetosAnidados = ['propiedadesEspecificas', 'detalle', 'datos', 'detalles', 'datosAdicionales'];
-    for (const objetoAnidado of objetosAnidados) {
-      if (educacion[objetoAnidado as keyof Educacion] &&
-          typeof educacion[objetoAnidado as keyof Educacion] === 'object') {
-        const objeto = educacion[objetoAnidado as keyof Educacion] as any;
-
-        // Verificar la propiedad original
-        if (propiedad in objeto) {
-          return objeto[propiedad];
-        }
-
-        // Verificar la propiedad mapeada
-        if (propiedadMapeada && propiedadMapeada in objeto) {
-          return objeto[propiedadMapeada];
-        }
-      }
-    }
-
-    // 4. Búsqueda recursiva en otros objetos anidados
-    const buscarPropiedadRecursiva = (obj: Record<string, any>, prop: string): any => {
-      // Si es un objeto, buscar en sus propiedades
-      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-        // Verificar si el objeto mismo tiene la propiedad
-        if (prop in obj) {
-          return obj[prop];
-        }
-
-        // Verificar la propiedad mapeada
-        const propMapeada = propiedadesMapeadas[prop];
-        if (propMapeada && propMapeada in obj) {
-          return obj[propMapeada];
-        }
-
-        // Buscar recursivamente en las propiedades
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const resultado = buscarPropiedadRecursiva(obj[key] as Record<string, any>, prop);
-            if (resultado !== undefined) {
-              return resultado;
-            }
-
-            // También buscar con la propiedad mapeada
-            if (propMapeada) {
-              const resultadoMapeado = buscarPropiedadRecursiva(obj[key] as Record<string, any>, propMapeada);
-              if (resultadoMapeado !== undefined) {
-                return resultadoMapeado;
-              }
-            }
-          }
-        }
-      }
-      return undefined;
-    };
-
-    const valorEncontrado = buscarPropiedadRecursiva(educacion, propiedad);
-    return valorEncontrado !== undefined ? valorEncontrado : null;
-  }
-
-  /**
-   * Verifica si el ID de usuario es válido para realizar operaciones
-   * @returns true si el ID es válido (string UUID no vacío)
-   */
-  esIdUsuarioValido(): boolean {
-    const id = this.usuarioId;
-    // Verificar que sea una cadena no vacía
-    if (id && id.trim() !== '') {
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Visualiza el documento PDF adjunto a un registro de educación
-   * @param educacion Registro de educación con documento adjunto
-   */
-  verDocumentoEducacion(educacion: Educacion): void {
-    if (!educacion || !educacion.documentoPdf) {
-      this.notification.error('No hay documento adjunto para este registro');
-      return;
-    }
-
-    console.log('Visualizando documento de educación:', educacion.documentoPdf);
-
-    // Determinar el ID del documento
-    let documentoId: string | null = null;
-
-    // El documento puede estar como ID (string) o como objeto con ID
-    if (typeof educacion.documentoPdf === 'string') {
-      documentoId = educacion.documentoPdf;
-    } else if (educacion.documentoPdf && typeof educacion.documentoPdf === 'object') {
-      documentoId = (educacion.documentoPdf as any).id || null;
-    }
-
-    if (!documentoId) {
-      this.notification.error('No se puede visualizar el documento: ID no disponible');
-      return;
-    }
-
-    // Mostrar el visor de documentos
-    const dialogRef = this.dialog.open(DocumentoViewerComponent, {
-      data: {
-        documentoId: documentoId
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(() => {
-      console.log('Visor de documento cerrado');
-    });
-  }
-
-  /**
-   * Obtiene las claves de un objeto para facilitar su inspección
-   */
-  getObjectKeys(obj: unknown): string[] {
-    if (!obj || typeof obj !== 'object') {
-      return [];
-    }
-    return Object.keys(obj);
-  }
-
-  /**
-   * Verifica si un valor es un valor simple (no objeto ni array)
-   */
-  isSimpleValue(value: unknown): boolean {
-    return value === null ||
-           value === undefined ||
-           typeof value === 'string' ||
-           typeof value === 'number' ||
-           typeof value === 'boolean';
-  }
-
-  /**
-   * Formatea una fecha de manera segura para mostrarla en la interfaz
-   * @param date Fecha a formatear (puede ser string, Date, o cualquier otro tipo)
-   * @returns Fecha formateada como string en formato dd/mm/yyyy
-   */
-  formatDate(date: unknown): string {
-    if (!date) return 'No especificada';
-
-    try {
-      const dateObj = new Date(date as string | number | Date);
-      if (isNaN(dateObj.getTime())) {
-        return 'Fecha inválida';
-      }
-
-      return dateObj.toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch (error) {
-      console.error('Error al formatear fecha:', error);
-      return 'Error en formato de fecha';
-    }
-  }
-
-  /**
-   * Verifica si un objeto tiene una propiedad específica, incluso si está anidada
-   */
-  hasProperty(obj: unknown, propName: string): boolean {
-    if (!obj || typeof obj !== 'object') {
-      return false;
-    }
-
-    // Mapeo de propiedades en español a inglés y viceversa
-    const propiedadesMapeadas: Record<string, string> = {
-      'titulo': 'title',
-      'title': 'titulo',
-      'institucion': 'institution',
-      'institution': 'institucion',
-      'tipo': 'type',
-      'type': 'tipo',
-      'estado': 'status',
-      'status': 'estado',
-      'fechaEmision': 'issueDate',
-      'issueDate': 'fechaEmision',
-      'duracionAnios': 'durationYears',
-      'durationYears': 'duracionAnios',
-      'promedio': 'average',
-      'average': 'promedio',
-      'temaTesis': 'thesisTopic',
-      'thesisTopic': 'temaTesis',
-      'cargaHoraria': 'hourlyLoad',
-      'hourlyLoad': 'cargaHoraria',
-      'tuvoEvaluacionFinal': 'hadFinalEvaluation',
-      'hadFinalEvaluation': 'tuvoEvaluacionFinal',
-      'tipoActividad': 'activityType',
-      'activityType': 'tipoActividad',
-      'tema': 'topic',
-      'topic': 'tema',
-      'caracter': 'activityRole',
-      'activityRole': 'caracter',
-      'lugarFechaExposicion': 'expositionPlaceDate',
-      'expositionPlaceDate': 'lugarFechaExposicion',
-      'comentarios': 'comments',
-      'comments': 'comentarios'
-    };
-
-    // Nombre de propiedad alternativo según el mapeo
-    const propAlternativa = propiedadesMapeadas[propName];
-
-    // Función recursiva para buscar la propiedad en el objeto
-    const buscarPropiedadRecursiva = (o: Record<string, any>, prop: string): boolean => {
-      if (!o || typeof o !== 'object') return false;
-
-      // Verificar si el objeto tiene la propiedad directamente
-      if (prop in o) return true;
-
-      // Verificar si el objeto tiene la propiedad alternativa
-      if (propAlternativa && propAlternativa in o) return true;
-
-      // Buscar recursivamente en las propiedades
-      for (const key in o) {
-        if (key === prop || (propAlternativa && key === propAlternativa)) return true;
-        if (o[key] && typeof o[key] === 'object') {
-          if (buscarPropiedadRecursiva(o[key] as Record<string, any>, prop)) {
-            return true;
-          }
-          // También buscar la propiedad alternativa
-          if (propAlternativa && buscarPropiedadRecursiva(o[key] as Record<string, any>, propAlternativa)) {
-            return true;
-          }
-        }
-      }
-
-      return false;
-    };
-
-    return buscarPropiedadRecursiva(obj, propName);
-  }
-
-  /**
-   * Muestra una ventana de diálogo con los datos crudos del objeto de educación
-   * para facilitar la depuración
-   */
-  mostrarDatosCrudos(educacion: unknown): void {
-    if (!educacion) {
-      this.notification.error('No hay datos disponibles para mostrar');
-      return;
-    }
-
-    try {
-      // Intentar crear una copia profunda del objeto
-      const datosCrudos = JSON.parse(JSON.stringify(educacion));
-
-      // Formatear el JSON para mejor legibilidad
-      const datosFormateados = JSON.stringify(datosCrudos, null, 2);
-
-      console.log('Mostrando datos crudos de educación:', datosFormateados);
-
-      // Crear una representación HTML formateada y estilizada de los datos
-      const formatearValor = (valor: unknown): string => {
-        if (valor === null || valor === undefined) {
-          return '<span class="property-value empty">No especificado</span>';
-        }
-
-        if (typeof valor === 'object' && valor !== null) {
-          if (Array.isArray(valor)) {
-            if (valor.length === 0) {
-              return '<span class="property-value empty">Lista vacía</span>';
-            }
-
-            let contenido = '<div style="padding-left: 16px;">';
-            valor.forEach((item, index) => {
-              contenido += `<div class="data-property">
-                <span class="property-name">Elemento ${index + 1}</span>
-                ${formatearValor(item)}
-              </div>`;
-            });
-            contenido += '</div>';
-            return contenido;
-          } else {
-            let contenido = '<div style="padding-left: 16px;">';
-            for (const [key, val] of Object.entries(valor)) {
-              contenido += `<div class="data-property">
-                <span class="property-name">${key}</span>
-                ${formatearValor(val)}
-              </div>`;
-            }
-            contenido += '</div>';
-            return contenido;
-          }
-        }
-
-        // Para valores simples
-        if (typeof valor === 'string' && valor.match(/^\d{4}-\d{2}-\d{2}/) !== null) {
-          // Es una fecha en formato ISO
-          const fecha = new Date(valor);
-          return `<span class="property-value">${fecha.toLocaleDateString('es-AR')}</span>`;
-        }
-
-        return `<span class="property-value">${valor}</span>`;
-      };
-
-      // Construir el HTML estructurado
-      let htmlFormateado = '<div class="json-container">';
-      for (const [key, valor] of Object.entries(datosCrudos)) {
-        htmlFormateado += `
-          <div class="data-property">
-            <span class="property-name">${key}</span>
-            ${formatearValor(valor)}
-          </div>
-        `;
-      }
-      htmlFormateado += '</div>';
-
-      // Vista en formato JSON para desarrolladores (oculta por defecto)
-      htmlFormateado += `
-        <div style="margin-top: 16px;">
-          <details>
-            <summary style="cursor: pointer; color: var(--primary-color); padding: 8px;">Ver formato JSON (para desarrolladores)</summary>
-            <pre>${datosFormateados}</pre>
-          </details>
-        </div>
-      `;
-
-      // Abrir diálogo con los datos formateados
-      this.dialog.open(CustomConfirmDialogComponent, {
-        data: {
-          titulo: 'Detalles de Educación',
-          mensaje: htmlFormateado,
-          confirmButtonText: 'Cerrar',
-          cancelButtonText: '',
-          html: true,
-          tipoDatos: 'educacion'
-        }
-      });
-    } catch (error) {
-      console.error('Error al procesar los datos de educación:', error);
-      this.notification.error('Error al procesar los datos');
-    }
-  }
-
-  // Método para cerrar el modal de experiencia
-  cerrarModalExperiencia(): void {
+    // Cerrar el modal
     this.mostrarModalExperiencia = false;
+
+    // Recargar el perfil para mostrar la nueva experiencia
+    this.loadUserProfile();
+
+    // Mostrar notificación de éxito
+    this.notification.success('Experiencia guardada correctamente');
+
+    // Forzar detección de cambios
     this.cdr.markForCheck();
   }
 
-  // Método para manejar la experiencia guardada
-  onExperienciaGuardada(datos: Record<string, unknown>): void {
-    console.log('onExperienciaGuardada llamado con datos:', datos);
-
-    // Cerrar el modal primero
-    this.mostrarModalExperiencia = false;
-
-    // Recargar las experiencias desde el backend para asegurar sincronización
-    this.recargarExperiencias();
-  }
-
-  // Método para recargar experiencias desde el backend
-  private recargarExperiencias(): void {
-    if (!this.usuarioId) {
-      console.error('No hay usuarioId disponible para recargar experiencias');
-      return;
-    }
-
-    console.log('🔄 Recargando experiencias desde el backend...');
-
-    this.experienceService.getAllExperiencesByUserId(this.usuarioId)
-      .subscribe({
-        next: (experiencias) => {
-          console.log(`✅ ${experiencias.length} experiencias recargadas desde backend`);
-
-          // Actualizar la lista de experiencias en el perfil
-          if (this.userProfile) {
-            this.userProfile.experiencias = experiencias.map(exp => ({
-              id: exp.id,
-              empresa: exp.company,
-              cargo: exp.position,
-              puesto: exp.position,
-              fechaInicio: exp.startDate ? (typeof exp.startDate === 'string' ? exp.startDate : new Date(exp.startDate).toISOString().split('T')[0]) : '',
-              fechaFin: exp.endDate ? (typeof exp.endDate === 'string' ? exp.endDate : new Date(exp.endDate).toISOString().split('T')[0]) : '',
-              descripcion: exp.description,
-              comentario: exp.comments ?? '',
-              documentUrl: exp.documentUrl ?? '',
-              actual: !exp.endDate
-            }));
-
-            // Actualizar el FormArray
-            this.actualizarArrayExperiencias(this.userProfile);
-
-            // Forzar detección de cambios múltiples veces para asegurar actualización
-            this.cdr.detectChanges();
-            this.cdr.markForCheck();
-
-            // Forzar una nueva detección después de un pequeño delay
-            setTimeout(() => {
-              this.cdr.detectChanges();
-            }, 100);
-
-            this.notification.success('Lista de experiencias actualizada');
-          }
-        },
-        error: (error: Error) => {
-          console.error('❌ Error al recargar experiencias:', error);
-          this.notification.error('Error al actualizar la lista de experiencias');
-        }
-      });
-  }
-
   /**
-   * Método para mostrar los datos crudos de una experiencia
+   * Elimina una educación de la lista
+   * @param educacion La educación a eliminar
    */
-  mostrarDatosExperiencia(experiencia: FormGroup): void {
-    if (!experiencia) {
-      this.notification.error('No hay datos disponibles para mostrar');
-      return;
-    }
+  eliminarEducacion(educacion: any): void {
+    console.log('Eliminando educación:', educacion);
 
-    try {
-      // Crear un objeto con todos los valores del control de experiencia
-      const datosCrudos = {
-        id: experiencia.get('id')?.value,
-        puesto: experiencia.get('puesto')?.value,
-        empresa: experiencia.get('empresa')?.value,
-        fechaInicio: experiencia.get('fechaInicio')?.value,
-        fechaFin: experiencia.get('fechaFin')?.value,
-        descripcion: experiencia.get('descripcion')?.value,
-        ubicacion: experiencia.get('ubicacion')?.value
-      };
+    // TODO: Implementar lógica para eliminar educación del backend
+    // this.educacionService.eliminarEducacion(educacion.id).subscribe(...)
 
-      // Formatear el JSON para mejor legibilidad
-      const datosFormateados = JSON.stringify(datosCrudos, null, 2);
+    // Mostrar notificación de éxito
+    this.notification.success('Educación eliminada correctamente');
 
-      console.log('Mostrando datos crudos de experiencia:', datosFormateados);
-
-      // Crear una representación HTML formateada y estilizada de los datos
-      const formatearValor = (valor: unknown): string => {
-        if (valor === null || valor === undefined) {
-          return '<span class="property-value empty">No especificado</span>';
-        }
-
-        if (typeof valor === 'object' && valor !== null) {
-          if (Array.isArray(valor)) {
-            if (valor.length === 0) {
-              return '<span class="property-value empty">Lista vacía</span>';
-            }
-
-            let contenido = '<div style="padding-left: 16px;">';
-            valor.forEach((item, index) => {
-              contenido += `<div class="data-property">
-                <span class="property-name">Elemento ${index + 1}</span>
-                ${formatearValor(item)}
-              </div>`;
-            });
-            contenido += '</div>';
-            return contenido;
-          } else {
-            let contenido = '<div style="padding-left: 16px;">';
-            for (const [key, val] of Object.entries(valor)) {
-              contenido += `<div class="data-property">
-                <span class="property-name">${key}</span>
-                ${formatearValor(val)}
-              </div>`;
-            }
-            contenido += '</div>';
-            return contenido;
-          }
-        }
-
-        // Para valores simples
-        if (typeof valor === 'string' && valor.match(/^\d{4}-\d{2}-\d{2}/) !== null) {
-          // Es una fecha en formato ISO
-          const fecha = new Date(valor);
-          return `<span class="property-value">${fecha.toLocaleDateString('es-AR')}</span>`;
-        }
-
-        return `<span class="property-value">${valor}</span>`;
-      };
-
-      // Construir el HTML estructurado
-      let htmlFormateado = '<div class="json-container">';
-      for (const [key, valor] of Object.entries(datosCrudos)) {
-        htmlFormateado += `
-          <div class="data-property">
-            <span class="property-name">${key}</span>
-            ${formatearValor(valor)}
-          </div>
-        `;
-      }
-      htmlFormateado += '</div>';
-
-      // Vista en formato JSON para desarrolladores (oculta por defecto)
-      htmlFormateado += `
-        <div style="margin-top: 16px;">
-          <details>
-            <summary style="cursor: pointer; color: var(--primary-color); padding: 8px;">Ver formato JSON (para desarrolladores)</summary>
-            <pre>${datosFormateados}</pre>
-          </details>
-        </div>
-      `;
-
-      // Abrir diálogo con los datos formateados
-      this.dialog.open(CustomConfirmDialogComponent, {
-        data: {
-          titulo: 'Detalles de Experiencia Laboral',
-          mensaje: htmlFormateado,
-          confirmButtonText: 'Cerrar',
-          cancelButtonText: '',
-          html: true,
-          tipoDatos: 'experiencia'
-        }
-      });
-    } catch (error) {
-      console.error('Error al procesar los datos de experiencia:', error);
-      this.notification.error('Error al procesar los datos');
-    }
+    // Recargar el perfil para actualizar la lista
+    this.loadUserProfile();
   }
 }

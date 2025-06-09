@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
@@ -25,7 +25,7 @@ import java.util.UUID;
 
 /**
  * Controlador para permitir a los usuarios actualizar el estado de sus propias inscripciones
- * Solo permite cambiar de IN_PROCESS a PENDING cuando se completa el proceso de inscripción
+ * Permite cambiar a PENDING, COMPLETED_WITH_DOCS o COMPLETED_PENDING_DOCS cuando se completa el proceso de inscripción
  */
 @RestController
 @RequestMapping({"/api/inscriptions", "/api/inscripciones"})
@@ -44,10 +44,10 @@ public class InscriptionUserStatusController {
 
     /**
      * Endpoint para que un usuario pueda actualizar el estado de su propia inscripción
-     * Solo permite cambiar a PENDING cuando se completa el proceso
+     * Permite cambiar a PENDING, COMPLETED_WITH_DOCS o COMPLETED_PENDING_DOCS cuando se completa el proceso
      *
      * @param id ID de la inscripción
-     * @param status Nuevo estado (solo se acepta PENDING)
+     * @param status Nuevo estado (PENDING, COMPLETED_WITH_DOCS o COMPLETED_PENDING_DOCS)
      * @return ResponseEntity sin contenido
      */
     @PatchMapping("/{id}/user-status")
@@ -68,16 +68,18 @@ public class InscriptionUserStatusController {
                 return ResponseEntity.notFound().build();
             }
 
-            // Solo permitir cambiar a PENDING
-            if (!"PENDING".equalsIgnoreCase(status)) {
-                log.error("El usuario {} intentó cambiar el estado a {}, pero solo se permite PENDING",
+            // Permitir cambiar a PENDING, COMPLETED_WITH_DOCS o COMPLETED_PENDING_DOCS
+            if (!"PENDING".equalsIgnoreCase(status) &&
+                !"COMPLETED_WITH_DOCS".equalsIgnoreCase(status) &&
+                !"COMPLETED_PENDING_DOCS".equalsIgnoreCase(status)) {
+                log.error("El usuario {} intentó cambiar el estado a {}, pero solo se permite PENDING, COMPLETED_WITH_DOCS o COMPLETED_PENDING_DOCS",
                         currentUserId, status);
                 return ResponseEntity.badRequest().build();
             }
 
             // Actualizar el estado
             updateInscriptionStatusUseCase.updateStatus(id, status);
-            log.info("Usuario {} actualizó su inscripción {} a estado PENDING", currentUserId, id);
+            log.info("Usuario {} actualizó su inscripción {} a estado {}", currentUserId, id, status);
 
             // Send notifications about the pending inscription
             try {
@@ -106,7 +108,7 @@ public class InscriptionUserStatusController {
                                         "Tu inscripción está ahora pendiente de validación por el equipo administrativo.\n" +
                                         "Te notificaremos cuando tu inscripción sea revisada.",
                                 contest.getTitle(),
-                                contest.getPosition(),
+                                contest.getLocation() != null ? contest.getLocation() : "No especificado",
                                 contest.getDependency()))
                         .type(NotificationType.INSCRIPTION)
                         .acknowledgementLevel(AcknowledgementLevel.NONE)

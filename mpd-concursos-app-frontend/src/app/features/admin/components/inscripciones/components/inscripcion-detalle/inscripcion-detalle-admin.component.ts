@@ -63,7 +63,7 @@ export class InscripcionDetalleAdminComponent implements OnInit, OnDestroy {
     { value: InscripcionState.APPROVED, label: 'Aprobada' },
     { value: InscripcionState.REJECTED, label: 'Rechazada' },
     { value: InscripcionState.CANCELLED, label: 'Cancelada' },
-    { value: InscripcionState.IN_PROCESS, label: 'En Proceso' }
+    { value: InscripcionState.ACTIVE, label: 'Activa' }  // REFACTORING: Estado estándar
   ];
 
   documentStatusOptions: { value: string, label: string }[] = [
@@ -221,7 +221,7 @@ export class InscripcionDetalleAdminComponent implements OnInit, OnDestroy {
       case InscripcionState.APPROVED: return 'status-approved';
       case InscripcionState.REJECTED: return 'status-rejected';
       case InscripcionState.CANCELLED: return 'status-cancelled';
-      case InscripcionState.IN_PROCESS: return 'status-in-process';
+      case InscripcionState.ACTIVE: return 'status-in-process';  // REFACTORING: Estado estándar
       default: return '';
     }
   }

@@ -13,7 +13,7 @@
           [color]="viewMode === 'cards' ? 'primary' : 'accent'"
           [tooltip]="'Vista de tarjetas'"
           [disabled]="viewMode === 'cards'"
-          (buttonClick)="viewMode === 'table' && toggleViewMode()">
+          (buttonClick)="handleCardsViewClick()">
         </app-custom-button>
         <app-custom-button
           [icon]="'bars'"
@@ -21,7 +21,7 @@
           [color]="viewMode === 'table' ? 'primary' : 'accent'"
           [tooltip]="'Vista de tabla'"
           [disabled]="viewMode === 'table'"
-          (buttonClick)="viewMode === 'cards' && toggleViewMode()">
+          (buttonClick)="handleTableViewClick()">
         </app-custom-button>
       </div>
 

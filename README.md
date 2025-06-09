@@ -50,7 +50,7 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
     │   ├── app/               # Código fuente Angular
     │   ├── assets/            # Recursos estáticos
     │   └── environments/      # Configuraciones por ambiente
-    ├── electron/              # Configuración Electron
+    ├── build/                 # Archivos de build
     └── package.json           # Dependencias npm
 ```
 
@@ -206,6 +206,19 @@ stateDiagram-v2
 
 ## 🎊 Estado Actual del Proyecto - Diciembre 2024
 
+### ✅ Correcciones Críticas Implementadas (Diciembre 2024)
+
+#### 🔧 Error "No se recibió el ID de inscripción" - SOLUCIONADO
+- **Flujo de navegación corregido** para crear inscripción antes de navegar al proceso
+- **Estados de finalización mejorados** con diferenciación entre `COMPLETED_WITH_DOCS` y `COMPLETED_PENDING_DOCS`
+- **Detección de inscripciones existentes** implementada en cards de concursos
+- **Cache de inscripciones actualizado** automáticamente después de crear inscripciones
+
+#### 🎯 Mejoras en el Sistema de Estados
+- **Estados correctos** según documentación: "Documentos Pendientes" en lugar de "Pendiente" genérico
+- **Botones inteligentes** que detectan inscripciones existentes y cambian a "Ver Postulación" o "Continuar"
+- **Sincronización mejorada** entre frontend y backend para estados de inscripción
+
 ### ✅ Pasos Recomendados Completados
 
 El proyecto ha completado exitosamente todos los **pasos recomendados de la Fase 4**, incluyendo:
@@ -218,7 +231,7 @@ El proyecto ha completado exitosamente todos los **pasos recomendados de la Fase
 
 #### ✅ Sistema Verificado y Funcionando
 - **Frontend**: Compilación exitosa, servidor Angular operativo (puerto 4200)
-- **Backend**: Spring Boot funcionando correctamente (puerto 8082)
+- **Backend**: Spring Boot funcionando correctamente (puerto 8080)
 - **Base de datos**: H2 conectada, migraciones ejecutadas
 - **Arquitectura**: Hexagonal consolidada en backend, modular en frontend
 
@@ -300,9 +313,9 @@ Los siguientes archivos están listos para futuras implementaciones:
    npm run start
    ```
 
-3. Para compilar versión de escritorio:
+3. Para compilar versión de producción:
    ```bash
-   npm run electron:build
+   npm run build
    ```
 
 ## 🔐 Seguridad

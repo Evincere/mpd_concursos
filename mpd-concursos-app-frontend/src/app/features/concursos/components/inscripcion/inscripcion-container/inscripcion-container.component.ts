@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -46,9 +47,12 @@ export class InscripcionContainerComponent implements OnInit {
   loading = false;
 
   constructor(
+    
     private router: Router,
     private inscriptionService: InscriptionService,
     private notificationService: NotificationService
+  ,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -65,7 +69,15 @@ export class InscripcionContainerComponent implements OnInit {
     this.inscriptionService.createInscription(this.contest.id)
       .subscribe({
         next: (response: { id: string }) => {
-          console.log('[InscripcionContainer] Inscripción inicial creada:', response);
+          this.loggingService.debug('[InscripcionContainer] Respuesta de creación de inscripción:', response, 'InscripcionContainer');
+
+          // Validar que el ID de inscripción esté presente
+          if (!response.id) {
+            console.error('[InscripcionContainer] Error: ID de inscripción no recibido en la respuesta');
+            this.notificationService.error('Error al crear la inscripción: ID no válido');
+            this.loading = false;
+            return;
+          }
 
           // Navegar a la página de inscripción
           this.router.navigate(['/dashboard/inscripcion'], {

@@ -1,5 +1,6 @@
 import { Injectable, Type, inject } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { LoggingService } from '@core/services/logging/logging.service';
+import { Observable, Subject, firstValueFrom } from 'rxjs';
 import { UnifiedDialogService } from './unified-dialog.service';
 
 /**
@@ -12,6 +13,7 @@ import { UnifiedDialogService } from './unified-dialog.service';
 })
 export class DialogService {
   private unifiedDialogService = inject(UnifiedDialogService);
+  private loggingService = inject(LoggingService);
 
   /**
    * Abre un diálogo
@@ -37,7 +39,7 @@ export class DialogService {
     }
   ): DialogRef<R> {
     const dialogRef = this.unifiedDialogService.open<T, D, R>(component, options);
-    return new DialogRef<R>(dialogRef);
+    return new DialogRef<R>(dialogRef, this.loggingService);
   }
 
   /**
@@ -55,7 +57,7 @@ export class DialogService {
     size?: 'small' | 'medium' | 'large';
   }): DialogRef<boolean> {
     const dialogRef = this.unifiedDialogService.openConfirm(options);
-    return new DialogRef<boolean>(dialogRef);
+    return new DialogRef<boolean>(dialogRef, this.loggingService);
   }
 
   /**
@@ -72,7 +74,7 @@ export class DialogService {
     size?: 'small' | 'medium' | 'large';
   }): DialogRef<void> {
     // Crear una referencia al diálogo
-    const dialogRef = new DialogRef<void>(null);
+    const dialogRef = new DialogRef<void>(null, this.loggingService);
 
     // Implementar cuando se cree el componente de alerta
     // Por ahora, simplemente devolvemos una referencia vacía
@@ -98,7 +100,7 @@ export class DialogService {
     size?: 'small' | 'medium' | 'large';
   }): DialogRef<string> {
     // Crear una referencia al diálogo
-    const dialogRef = new DialogRef<string>(null);
+    const dialogRef = new DialogRef<string>(null, this.loggingService);
 
     // Implementar cuando se cree el componente de prompt
     // Por ahora, simplemente devolvemos una referencia vacía
@@ -115,7 +117,10 @@ export class DialogRef<R> {
   private afterClosedSubject = new Subject<R>();
   readonly afterClosed$ = this.afterClosedSubject.asObservable();
 
-  constructor(private dialogRef: any) {
+  constructor(
+    private dialogRef: any,
+    private loggingService: LoggingService
+  ) {
     if (this.dialogRef) {
       this.dialogRef.afterClosed().subscribe((result: R) => {
         this.afterClosedSubject.next(result);
@@ -143,5 +148,13 @@ export class DialogRef<R> {
    */
   afterClosed(): Observable<R> {
     return this.afterClosed$;
+  }
+
+  /**
+   * Convierte el observable afterClosed a una promesa
+   * @returns Promesa que se resuelve cuando el diálogo se cierra
+   */
+  toPromise(): Promise<R | undefined> {
+    return firstValueFrom(this.afterClosed());
   }
 }

@@ -25,7 +25,7 @@
           
           <select class="refresh-interval" 
                   [value]="refreshInterval"
-                  (change)="changeRefreshInterval(+$event.target.value)">
+                  (change)="changeRefreshInterval($event)">
             <option *ngFor="let option of refreshIntervalOptions" [value]="option.value">
               {{ option.label }}
             </option>
@@ -36,7 +36,7 @@
         <div class="time-range-controls">
           <select class="time-range" 
                   [value]="selectedTimeRange"
-                  (change)="changeTimeRange($event.target.value)">
+                  (change)="changeTimeRange($event)">
             <option *ngFor="let option of timeRangeOptions" [value]="option.value">
               {{ option.label }}
             </option>
@@ -360,7 +360,7 @@
       </div>
 
       <!-- Top triggers -->
-      <div class="top-triggers" *ngIf="systemMetrics?.triggers.topTriggers.length > 0">
+      <div class="top-triggers" *ngIf="hasTopTriggers()">
         <div class="section-header">
           <h3>
             <i class="fas fa-bolt"></i>
@@ -369,7 +369,7 @@
         </div>
         <div class="triggers-list">
           <div class="trigger-item" 
-               *ngFor="let trigger of systemMetrics.triggers.topTriggers.slice(0, 5); let i = index">
+               *ngFor="let trigger of systemMetrics?.triggers?.topTriggers?.slice(0, 5); let i = index">
             <div class="trigger-rank">{{ i + 1 }}</div>
             <div class="trigger-info">
               <h4 class="trigger-name">{{ trigger.name }}</h4>

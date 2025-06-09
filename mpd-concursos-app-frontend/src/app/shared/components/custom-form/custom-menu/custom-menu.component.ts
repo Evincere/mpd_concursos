@@ -187,18 +187,20 @@ export class CustomMenuComponent implements AfterContentInit {
   @Input() maxWidth = 280;
   @Input() xPosition: 'before' | 'after' = 'after';
   @Input() yPosition: 'above' | 'below' = 'below';
-  
+
   @Output() menuClosed = new EventEmitter<void>();
   @Output() menuOpened = new EventEmitter<void>();
-  
+
   @ViewChild('menuContainer') menuContainer!: ElementRef;
   @ContentChildren(CustomMenuItemComponent) menuItems!: QueryList<CustomMenuItemComponent>;
-  
+
   isOpen = false;
   positionX = 0;
   positionY = 0;
-  
+
   private triggerElement: HTMLElement | null = null;
+
+  constructor(private elementRef: ElementRef) {}
   
   ngAfterContentInit(): void {
     // Configurar los elementos del menú
@@ -212,19 +214,17 @@ export class CustomMenuComponent implements AfterContentInit {
   open(triggerElement: HTMLElement): void {
     if (this.isOpen) return;
 
-    console.log('Opening menu with trigger element:', triggerElement);
-
     this.triggerElement = triggerElement;
     this.calculatePosition();
     this.isOpen = true;
     this.menuOpened.emit();
 
-    console.log('Menu opened. Position:', { x: this.positionX, y: this.positionY, isOpen: this.isOpen });
-
-    // Enfocar el primer elemento del menú
+    // Focus management after opening
     setTimeout(() => {
-      if (this.menuItems && this.menuItems.first) {
-        this.menuItems.first.focus();
+      // Focus first menu item if available
+      const firstMenuItem = this.elementRef.nativeElement.querySelector('[role="menuitem"]');
+      if (firstMenuItem) {
+        firstMenuItem.focus();
       }
     }, 100);
   }
@@ -337,26 +337,6 @@ export class CustomMenuComponent implements AfterContentInit {
     // Set final positions
     this.positionX = calculatedX;
     this.positionY = calculatedY;
-
-    console.log('Smart menu position calculated:', {
-      triggerRect,
-      viewportWidth,
-      viewportHeight,
-      calculatedWidth,
-      positionX: this.positionX,
-      positionY: this.positionY,
-      maxWidth: this.maxWidth
-    });
-  }
-  
-  @HostListener('document:click', ['$event'])
-  onClickOutside(event: MouseEvent): void {
-    if (this.isOpen && this.menuContainer && !this.menuContainer.nativeElement.contains(event.target)) {
-      // Verificar si el clic fue en el elemento trigger
-      if (this.triggerElement && !this.triggerElement.contains(event.target as Node)) {
-        this.close();
-      }
-    }
   }
   
   @HostListener('document:keydown.escape')

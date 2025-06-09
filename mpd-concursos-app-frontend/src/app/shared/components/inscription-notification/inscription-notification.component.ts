@@ -54,10 +54,9 @@ export class InscriptionNotificationComponent implements OnInit {
       return;
     }
 
+    // REFACTORING: Solo estados estándar después de eliminar legacy
     switch (this.status) {
       case InscripcionState.PENDING:
-      case InscripcionState.PENDIENTE:
-      case InscripcionState.CONFIRMADA:
         this.statusInfo = {
           icon: 'hourglass_top',
           color: 'warn',

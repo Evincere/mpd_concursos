@@ -5,7 +5,7 @@
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Buscar</mat-label>
         <input matInput placeholder="Buscar examen..." [(ngModel)]="searchText" name="searchText">
-        <button *ngIf="searchText" matSuffix mat-icon-button aria-label="Clear" (click)="searchText=''">
+        <button *ngIf="searchText" matSuffix mat-icon-button aria-label="Clear" (click)="setSearchText()"'">
           <mat-icon>close</mat-icon>
         </button>
         <mat-icon matPrefix>search</mat-icon>

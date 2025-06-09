@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from  'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -44,7 +45,10 @@ export class AuthService {
   private userKey = 'user_data';
   private http: HttpClient;
 
-  constructor(httpClient: HttpClient) {
+  constructor(
+    httpClient: HttpClient,
+    private loggingService: LoggingService
+  ) {
     this.http = httpClient;
   }
 

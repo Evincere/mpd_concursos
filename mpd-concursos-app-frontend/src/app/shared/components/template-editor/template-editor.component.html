@@ -154,11 +154,11 @@
     <app-template-variable-selector
       [isOpen]="showVariables"
       [allowedContexts]="allowedContexts"
-      [targetTextarea]="editorRef?.nativeElement"
+      [targetTextarea]="getEditorTextarea()"
       [insertAtCursor]="false"
       mode="single"
       view="grid"
-      (openChanged)="showVariables = $event"
+      (openChanged)="handleVariablesToggle($event)"
       (variableSelected)="onVariableSelected($event)">
     </app-template-variable-selector>
   </div>

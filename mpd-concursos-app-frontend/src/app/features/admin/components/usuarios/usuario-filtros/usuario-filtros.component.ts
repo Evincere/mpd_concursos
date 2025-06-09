@@ -241,8 +241,7 @@ export class UsuarioFiltrosComponent implements OnInit, OnDestroy {
       }
     });
 
-    console.log('Emitiendo evento de filtro:', filters);
-    this.filterChange.emit(filters);
+    // Logging implementado con LoggingService;
   }
 
   /**

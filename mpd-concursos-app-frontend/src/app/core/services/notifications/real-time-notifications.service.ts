@@ -1,4 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable, Subject, interval, fromEvent } from 'rxjs';
 import { takeUntil, filter, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -181,9 +182,12 @@ export class RealTimeNotificationsService {
   private maxCacheSize = 100;
 
   constructor(
+    
     private ngZone: NgZone,
     private customNotificationService: CustomNotificationService,
     private pushNotificationService: PushNotificationService
+  ,
+    private loggingService: LoggingService
   ) {
     this.initializeService();
   }

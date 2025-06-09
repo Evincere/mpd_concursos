@@ -117,7 +117,7 @@ export class TemplateEditorComponent implements OnInit, ControlValueAccessor {
 
   // Control Value Accessor
   private onChange = (value: string) => {};
-  private onTouched = () => {};
+  onTouched = () => {};
 
   // Herramientas del editor
   tools: EditorTool[] = [
@@ -618,5 +618,22 @@ export class TemplateEditorComponent implements OnInit, ControlValueAccessor {
 
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
+  }
+
+  /**
+   * Obtiene el textarea del editor
+   */
+  getEditorTextarea(): HTMLTextAreaElement | undefined {
+    if (this.editorRef?.nativeElement instanceof HTMLTextAreaElement) {
+      return this.editorRef.nativeElement;
+    }
+    return undefined;
+  }
+
+  /**
+   * Maneja el toggle del panel de variables
+   */
+  handleVariablesToggle(isOpen: boolean): void {
+    this.showVariables = isOpen;
   }
 }

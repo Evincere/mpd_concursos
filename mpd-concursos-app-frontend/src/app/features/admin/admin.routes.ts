@@ -57,12 +57,37 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'comunicaciones',
         children: [
-          { path: '', redirectTo: 'mensajes', pathMatch: 'full' },
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard',
+            loadComponent: () => import('./components/messaging/messaging-dashboard/messaging-dashboard.component')
+              .then(m => m.MessagingDashboardComponent)
+          },
           { path: 'mensajes', component: ComunicacionesAdminComponent, data: { activeTab: 'mensajes' } },
-          { path: 'plantillas', component: ComunicacionesAdminComponent, data: { activeTab: 'plantillas' } },
-          { path: 'historial', component: ComunicacionesAdminComponent, data: { activeTab: 'historial' } },
+          { path: 'plantillas',
+            loadComponent: () => import('./components/messaging/message-templates/message-templates.component')
+              .then(m => m.MessageTemplatesComponent)
+          },
+          { path: 'historial',
+            loadComponent: () => import('./components/messaging/conversation-history/conversation-history.component')
+              .then(m => m.ConversationHistoryComponent)
+          },
           { path: 'estadisticas', component: ComunicacionesAdminComponent, data: { activeTab: 'estadisticas' } },
-          { path: 'notificaciones', component: ComunicacionesAdminComponent, data: { activeTab: 'notificaciones' } }
+          { path: 'notificaciones',
+            loadComponent: () => import('./components/messaging/notification-queue/notification-queue.component')
+              .then(m => m.NotificationQueueComponent)
+          },
+          { path: 'triggers',
+            loadComponent: () => import('./components/messaging/notification-triggers/notification-triggers.component')
+              .then(m => m.NotificationTriggersComponent)
+          },
+          { path: 'eventos',
+            loadComponent: () => import('./components/messaging/system-events/system-events.component')
+              .then(m => m.SystemEventsComponent)
+          },
+          { path: 'monitoreo',
+            loadComponent: () => import('./components/messaging/monitoring-dashboard/monitoring-dashboard.component')
+              .then(m => m.MonitoringDashboardComponent)
+          }
         ]
       },
       // Rutas para concursos
@@ -179,6 +204,17 @@ export const ADMIN_ROUTES: Routes = [
           { path: 'tutorial/:id', component: AdminHelpCenterComponent, data: { activeTab: 2 } },
           { path: 'buscar', component: AdminHelpCenterComponent, data: { showSearch: true } }
         ]
+      },
+
+      // Rutas para soporte
+      {
+        path: 'soporte',
+        loadChildren: () => import('./components/support/support.routes')
+          .then(m => m.supportRoutes),
+        data: {
+          title: 'Sistema de Soporte',
+          breadcrumb: 'Soporte'
+        }
       }
     ]
   }

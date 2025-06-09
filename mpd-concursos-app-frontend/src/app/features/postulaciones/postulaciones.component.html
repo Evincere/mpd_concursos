@@ -45,7 +45,7 @@
             <!-- Encabezado con título y estado -->
             <div class="header-container">
               <div class="titulo-container">
-                <h3>{{ postulacion.concurso?.titulo || 'Sin título' }}</h3>
+                <h3>{{ postulacion.concurso?.title || 'Sin título' }}</h3>
                 <span class="categoria" *ngIf="postulacion.concurso?.category">
                   {{ postulacion.concurso?.category }}
                 </span>
@@ -62,18 +62,32 @@
                   [variant]="'icon'"
                   [icon]="'eye'"
                   [tooltip]="'Ver detalle'"
-                  [ariaLabel]="'Ver detalle de postulación: ' + (postulacion.concurso?.titulo || 'Sin título')"
+                  [ariaLabel]="'Ver detalle de postulación: ' + (postulacion.concurso?.title || 'Sin título')"
                   (buttonClick)="verDetalle(postulacion)">
                 </app-custom-button>
-
-                <app-action-menu
-                  [actions]="getActionsForPostulacion(postulacion)"
-                  [primaryActionId]="getPrimaryActionId(postulacion)"
-                  [showLabels]="false"
-                  [compact]="true"
-                  (actionClick)="onActionClick($event, postulacion)">
-                </app-action-menu>
               </div>
+            </div>
+
+            <!-- Mensaje descriptivo del estado -->
+            <div class="status-message" [class.urgent]="requiresUrgentAction(postulacion)">
+              <i class="fas fa-info-circle" aria-hidden="true"></i>
+              <span>{{ getStatusMessage(postulacion) }}</span>
+            </div>
+
+            <!-- Botón para completar documentación si está pendiente -->
+            <app-custom-button
+              *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'"
+              [variant]="'primary'"
+              [icon]="'file-upload'"
+              [tooltip]="'Completar documentación'"
+              [ariaLabel]="'Completar documentación para: ' + (postulacion.concurso?.title || 'Sin título')"
+              (buttonClick)="completarDocumentacion(postulacion)">
+            </app-custom-button>
+
+            <!-- Alerta para documentación pendiente -->
+            <div class="alert-banner" *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Documentación pendiente - Tienes 3 días hábiles para completarla</span>
             </div>
 
             <!-- Información principal -->
@@ -82,14 +96,14 @@
                 <i class="fas fa-briefcase" aria-hidden="true"></i>
                 <div class="detalle-content">
                   <span class="label">Cargo</span>
-                  <span class="value">{{ postulacion.concurso?.cargo || 'No especificado' }}</span>
+                  <span class="value">{{ postulacion.concurso?.position || 'No especificado' }}</span>
                 </div>
               </div>
               <div class="detalle-item dependencia">
                 <i class="fas fa-building" aria-hidden="true"></i>
                 <div class="detalle-content">
                   <span class="label">Dependencia</span>
-                  <span class="value">{{ postulacion.concurso?.dependencia || 'No especificada' }}</span>
+                  <span class="value">{{ postulacion.concurso?.department || 'No especificada' }}</span>
                 </div>
               </div>
             </div>
@@ -103,18 +117,18 @@
                   <span class="value">{{ postulacion.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}</span>
                 </div>
               </div>
-              <div class="fecha-item" *ngIf="postulacion.concurso?.fechaInicio">
+              <div class="fecha-item" *ngIf="postulacion.concurso?.startDate">
                 <i class="fas fa-calendar-alt" aria-hidden="true"></i>
                 <div class="fecha-content">
                   <span class="label">Inicio</span>
-                  <span class="value">{{ postulacion.concurso?.fechaInicio | date:'dd/MM/yyyy' }}</span>
+                  <span class="value">{{ postulacion.concurso?.startDate | date:'dd/MM/yyyy' }}</span>
                 </div>
               </div>
-              <div class="fecha-item" *ngIf="postulacion.concurso?.fechaFin">
+              <div class="fecha-item" *ngIf="postulacion.concurso?.endDate">
                 <i class="fas fa-calendar-times" aria-hidden="true"></i>
                 <div class="fecha-content">
                   <span class="label">Fin</span>
-                  <span class="value">{{ postulacion.concurso?.fechaFin | date:'dd/MM/yyyy' }}</span>
+                  <span class="value">{{ postulacion.concurso?.endDate | date:'dd/MM/yyyy' }}</span>
                 </div>
               </div>
             </div>
@@ -235,7 +249,7 @@
 
     <div class="dialog-content">
       <p>¿Está seguro que desea cancelar su postulación para el concurso
-        <strong>"{{ postulacionACancelar?.concurso?.titulo }}"</strong>?
+        <strong>"{{ postulacionACancelar?.concurso?.title }}"</strong>?
       </p>
       <p class="warning-text">Esta acción no se puede deshacer.</p>
     </div>

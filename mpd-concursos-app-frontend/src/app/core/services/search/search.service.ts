@@ -13,11 +13,7 @@ export class SearchService implements ISearchService {
   private loading$ = this.loadingSubject.asObservable();
 
   constructor() {
-    console.log('[SearchService] Inicializado');
-  }
-
-  search(term: string): void {
-    this.loadingSubject.next(true);
+    // Logging implementado con LoggingService;
     this.searchTermSubject.next(term);
   }
 

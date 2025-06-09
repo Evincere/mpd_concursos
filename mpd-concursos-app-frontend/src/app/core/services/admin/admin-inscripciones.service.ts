@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -77,7 +78,10 @@ export interface InscriptionStateChange {
 export class AdminInscripcionesService {
   private apiUrl = `${environment.apiUrl}/admin/inscriptions`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Obtiene todas las inscripciones con filtros y paginación

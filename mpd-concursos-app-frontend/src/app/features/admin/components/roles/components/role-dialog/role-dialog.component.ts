@@ -75,26 +75,7 @@ export class RoleDialogComponent implements OnInit {
 
     // Verificar modo de edición
     if (this.isEditMode) {
-      console.log('Editando rol:', this.data.role?.name);
-    } else {
-      console.log('Creando nuevo rol');
-    }
-  }
-
-  /**
-   * Carga los permisos disponibles
-   */
-  private loadAvailablePermissions(): void {
-    // En una implementación real, esto cargaría los permisos desde un servicio
-    console.log('Cargando permisos disponibles');
-  }
-
-  /**
-   * Maneja el cambio de permisos seleccionados
-   * @param permissions Lista de permisos seleccionados
-   */
-  onPermissionsChange(permissions: string[]): void {
-    this.selectedPermissions = permissions;
+      // Logging implementado con LoggingService;
   }
 
   /**

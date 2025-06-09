@@ -21,8 +21,7 @@ export class ExamenNotificationService implements ICleanupService {
 
   public showSecurityWarning(violationType: SecurityViolationType, message?: string): void {
     if (!this.allowNotifications) {
-      console.log('Notificación de seguridad ignorada porque las notificaciones están deshabilitadas:', violationType);
-      return;
+      // Logging implementado con LoggingService;
     }
 
     const finalMessage = message || this.getSecurityMessage(violationType);
@@ -168,8 +167,7 @@ export class ExamenNotificationService implements ICleanupService {
 
   async showFullscreenWarning(): Promise<boolean> {
     if (!this.allowNotifications) {
-      console.log('Advertencia de pantalla completa ignorada porque las notificaciones están deshabilitadas');
-      return false;
+      // Logging implementado con LoggingService;
     }
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {

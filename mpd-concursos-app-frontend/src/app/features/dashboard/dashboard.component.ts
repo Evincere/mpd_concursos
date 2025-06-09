@@ -58,16 +58,14 @@ export class DashboardComponent implements OnInit {
     const fromDisconnection = urlParams.get('fromDisconnection') === 'true';
 
     if (recoveryMode && fromDisconnection) {
-      console.log('[DashboardComponent] Modo de recuperación por desconexión detectado');
+      // Mostrar modal de recuperación después de un breve delay
       setTimeout(() => {
-        this.inscriptionRecoveryService.checkForPendingInscriptions();
+        this.inscriptionRecoveryService.checkForPendingInscriptions(false, true);
       }, 2000);
-    } else {
-      console.log('[DashboardComponent] Omitiendo verificación automática de inscripciones pendientes');
     }
   }
 
-  onSidebarCollapse(collapsed: boolean): void {
+  onSidebarToggle(collapsed: boolean): void {
     this.isSidebarCollapsed = collapsed;
     const mainContent = document.querySelector('router-outlet + *');
     if (mainContent) {
@@ -77,5 +75,9 @@ export class DashboardComponent implements OnInit {
         mainContent.classList.remove('sidebar-collapsed');
       }
     }
+  }
+
+  onSidebarCollapse(collapsed: boolean): void {
+    this.onSidebarToggle(collapsed);
   }
 }

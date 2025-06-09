@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Examen } from '@shared/interfaces/examen/examen.interface';
 import { ExamenEnCurso, Pregunta } from '@shared/interfaces/examen/pregunta.interface';
@@ -15,7 +16,10 @@ export class ExamenesStateService {
   private examenEnCurso$ = new BehaviorSubject<ExamenEnCurso | null>(null);
   private apiUrl = '/api/examenes';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {}
 
 
   // Getters para los observables

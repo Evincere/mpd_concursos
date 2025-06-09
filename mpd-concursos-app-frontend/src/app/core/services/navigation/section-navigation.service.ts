@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Router, NavigationEnd } from '@angular/router';
 import { BehaviorSubject, Observable, filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
@@ -26,8 +27,11 @@ export class SectionNavigationService {
   public currentSection$: Observable<AppSection> = this.currentSectionSubject.asObservable();
 
   constructor(
+    
     private router: Router,
     private authService: AuthService
+  ,
+    private loggingService: LoggingService
   ) {
     // Detectar cambios en la ruta para actualizar la sección actual
     this.router.events.pipe(

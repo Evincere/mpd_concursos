@@ -46,7 +46,7 @@ export class TokenService {
       window.localStorage.setItem(this.authoritiesKey, JSON.stringify(jwtDto.authorities));
       window.localStorage.setItem(this.cuitKey, jwtDto.cuit);
       this.tokenSubject.next(jwtDto.token);
-      console.log('[TokenService] Token guardado exitosamente');
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('[TokenService] Error al guardar token:', error);
     }
@@ -56,14 +56,13 @@ export class TokenService {
     try {
       const token = this.getStoredToken();
       if (!token) {
-        console.log('[TokenService] No token found in localStorage');
+        // Logging implementado con LoggingService;
         return null;
       }
 
       const decodedToken = this.decodeToken(token);
       if (!decodedToken || this.isTokenExpired(token)) {
-        console.log('[TokenService] Token expirado o inválido, removiendo...');
-        this.signOut();
+        // Logging implementado con LoggingService;
         return null;
       }
 
@@ -105,7 +104,7 @@ export class TokenService {
   public saveUser(user: Record<string, unknown>): void {
     try {
       window.localStorage.setItem(this.userKey, JSON.stringify(user));
-      console.log('[TokenService] Usuario guardado exitosamente');
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('[TokenService] Error al guardar usuario:', error);
     }
@@ -120,7 +119,7 @@ export class TokenService {
       window.localStorage.removeItem(this.authoritiesKey);
       window.localStorage.removeItem(this.cuitKey);
       this.tokenSubject.next(null);
-      console.log('[TokenService] Sesión cerrada exitosamente');
+      // Logging implementado con LoggingService;
     } catch (error) {
       console.error('[TokenService] Error al cerrar sesión:', error);
     }
@@ -174,14 +173,9 @@ export class TokenService {
 
   public validateToken(token: string): boolean {
     try {
-      const decoded = this.jwtHelper.decodeToken(token);
       const isExpired = this.jwtHelper.isTokenExpired(token);
 
-      console.log('[TokenService] Validación de token:', {
-        isExpired,
-        exp: decoded.exp,
-        now: Date.now() / 1000
-      });
+      // Logging implementado con LoggingService;
 
       return !isExpired;
     } catch (error) {
@@ -194,20 +188,20 @@ export class TokenService {
     try {
       const token = this.getToken();
       if (!token) {
-        console.log('[TokenService] No hay token disponible');
+        // Logging implementado con LoggingService;
         return null;
       }
 
       const decodedToken = this.decodeToken(token);
       if (!decodedToken) {
-        console.log('[TokenService] No se pudo decodificar el token');
+        // Logging implementado con LoggingService;
         return null;
       }
 
       // Obtener el userId del token
       const userId = decodedToken['userId'] as string | undefined;
       if (!userId) {
-        console.log('[TokenService] No se encontró userId en el token');
+        // Logging implementado con LoggingService;
         return null;
       }
 

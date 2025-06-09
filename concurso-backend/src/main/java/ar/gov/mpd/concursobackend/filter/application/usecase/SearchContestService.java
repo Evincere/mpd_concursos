@@ -3,8 +3,8 @@ package ar.gov.mpd.concursobackend.filter.application.usecase;
 import ar.gov.mpd.concursobackend.contest.application.port.in.ContestQueryUseCase;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.filter.application.dto.ContestFilterCommand;
-import ar.gov.mpd.concursobackend.filter.application.dto.ContestResponse;
-import ar.gov.mpd.concursobackend.filter.application.mapper.ContestFilterMapper;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
+import ar.gov.mpd.concursobackend.contest.infrastructure.mapper.ContestMapper;
 import ar.gov.mpd.concursobackend.filter.application.port.in.SearchContestUseCase;
 import ar.gov.mpd.concursobackend.filter.domain.model.ContestFilter;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class SearchContestService implements SearchContestUseCase {
     private final ContestQueryUseCase contestQueryUseCase;
-    private final ContestFilterMapper contestMapper;
+    private final ContestMapper contestMapper;
 
-    public SearchContestService(ContestQueryUseCase contestQueryUseCase, ContestFilterMapper contestMapper) {
+    public SearchContestService(ContestQueryUseCase contestQueryUseCase, ContestMapper contestMapper) {
         this.contestQueryUseCase = contestQueryUseCase;
         this.contestMapper = contestMapper;
     }

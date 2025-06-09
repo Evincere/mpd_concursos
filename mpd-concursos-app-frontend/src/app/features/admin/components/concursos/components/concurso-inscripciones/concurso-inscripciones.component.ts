@@ -73,10 +73,9 @@ export class ConcursoInscripcionesComponent implements OnInit, OnDestroy {
   // Estados de inscripción para el filtro
   inscripcionStates = [
     { value: 'ALL', label: 'Todos los estados' },
-    { value: InscripcionState.NO_INSCRIPTO, label: 'No inscripto' },
-    { value: InscripcionState.IN_PROCESS, label: 'En proceso' },
-    { value: InscripcionState.PENDIENTE, label: 'Pendiente' },
-    { value: InscripcionState.INSCRIPTO, label: 'Inscripto' },
+    { value: InscripcionState.ACTIVE, label: 'Activa' },
+    { value: InscripcionState.PENDING, label: 'Pendiente' },
+    { value: InscripcionState.APPROVED, label: 'Aprobada' },
     { value: InscripcionState.CANCELLED, label: 'Cancelado' },
     { value: InscripcionState.REJECTED, label: 'Rechazado' }
   ];
@@ -233,9 +232,9 @@ export class ConcursoInscripcionesComponent implements OnInit, OnDestroy {
 
   getStateClass(state: InscripcionState): string {
     switch (state) {
-      case 'INSCRIPTO': return 'state-approved';
-      case 'PENDIENTE': return 'state-pending';
-      case 'IN_PROCESS': return 'state-in-process';
+      case 'APPROVED': return 'state-approved';  // REFACTORING: Estado estándar
+      case 'PENDING': return 'state-pending';   // REFACTORING: Estado estándar
+      case 'ACTIVE': return 'state-in-process'; // REFACTORING: Estado estándar
       case 'REJECTED': return 'state-rejected';
       case 'CANCELLED': return 'state-cancelled';
       default: return 'state-default';

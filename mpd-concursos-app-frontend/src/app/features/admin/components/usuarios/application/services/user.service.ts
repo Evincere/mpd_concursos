@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Observable, tap } from 'rxjs';
 import { UserRepositoryPort } from '../ports/user-repository.port';
 import { USER_REPOSITORY_TOKEN } from '../../infrastructure/providers/user-service.provider';

@@ -10,7 +10,7 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.*;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
@@ -40,19 +40,27 @@ public class CreateInscriptionService implements CreateInscriptionUseCase {
                 log.debug("Iniciando creación de inscripción para concurso {} y usuario {}",
                                 request.getContestId(), request.getUserId());
 
-                // Verificar si ya existe una inscripción activa
-                Optional<Inscription> existingInscription = loadInscriptionPort.findByContestIdAndUserId(
+                // Verificar si ya existe una inscripción (incluyendo canceladas)
+                // REGLA DE NEGOCIO: Una vez cancelada una inscripción, no se puede volver a inscribir
+                Optional<Inscription> existingInscription = loadInscriptionPort.findByContestIdAndUserIdIncludingCancelled(
                                 request.getContestId(),
                                 request.getUserId());
 
                 if (existingInscription.isPresent()) {
                         Inscription inscription = existingInscription.get();
-                        if (InscriptionStateConverter.equals(inscription.getState(), InscriptionStatus.ACTIVE) ||
-                                        InscriptionStateConverter.equals(inscription.getState(), InscriptionStatus.PENDING)) {
-                                log.error("Ya existe una inscripción activa para el concurso {} y usuario {}",
-                                                request.getContestId(), request.getUserId());
-                                throw new IllegalStateException("Ya existe una inscripción activa para este concurso");
-                        }
+
+                        // Cualquier inscripción existente (incluyendo canceladas) impide crear una nueva
+                        String errorMessage = switch (inscription.getState().toString()) {
+                                case "ACTIVE", "PENDING" -> "Ya existe una inscripción activa para este concurso";
+                                case "CANCELLED" -> "No puede volver a inscribirse a un concurso donde ya canceló su inscripción";
+                                case "REJECTED" -> "No puede volver a inscribirse a un concurso donde su inscripción fue rechazada";
+                                case "APPROVED" -> "Ya tiene una inscripción aprobada para este concurso";
+                                default -> "Ya existe una inscripción para este concurso";
+                        };
+
+                        log.error("Intento de inscripción rechazado para concurso {} y usuario {} - Estado existente: {}",
+                                request.getContestId(), request.getUserId(), inscription.getState());
+                        throw new IllegalStateException(errorMessage);
                 }
 
                 // Obtener el concurso

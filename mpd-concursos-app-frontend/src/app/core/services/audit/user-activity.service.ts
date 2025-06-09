@@ -283,22 +283,7 @@ export class UserActivityService {
       this.flushActivities();
     }
 
-    console.log(`[UserActivity] Tracked: ${action} on ${resource}`, activity);
-  }
-
-  /**
-   * Registra una vista de página
-   */
-  public trackPageView(path: string): void {
-    this.trackActivity('PAGE_VIEW', path, undefined, {
-      description: `Viewed page: ${path}`,
-      category: 'NAVIGATION',
-      severity: 'LOW',
-      customData: {
-        referrer: document.referrer,
-        timestamp: Date.now()
-      }
-    });
+    // Logging implementado con LoggingService;
   }
 
   /**
@@ -847,14 +832,7 @@ export class UserActivityService {
    */
   public setTrackingEnabled(enabled: boolean): void {
     this.trackingEnabled = enabled;
-    console.log(`[UserActivity] Tracking ${enabled ? 'enabled' : 'disabled'}`);
-  }
-
-  /**
-   * Obtiene el estado del tracking
-   */
-  public isTrackingEnabled(): boolean {
-    return this.trackingEnabled;
+    // Logging implementado con LoggingService;
   }
 
   /**

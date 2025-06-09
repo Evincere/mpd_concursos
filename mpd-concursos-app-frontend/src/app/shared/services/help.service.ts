@@ -1,4 +1,5 @@
 import { Injectable, ComponentRef, ApplicationRef, ComponentFactoryResolver, Injector, EmbeddedViewRef } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { ContextualHelpComponent } from '../components/contextual-help/contextual-help.component';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -19,9 +20,12 @@ export class HelpService {
   private helpVisibilitySubject = new BehaviorSubject<Record<string, boolean>>({});
 
   constructor(
+    
     private appRef: ApplicationRef,
     private componentFactoryResolver: ComponentFactoryResolver,
     private injector: Injector
+  ,
+    private loggingService: LoggingService
   ) {
     // Cargar ayudas predefinidas
     this.loadPredefinedHelp();

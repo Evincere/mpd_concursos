@@ -1,7 +1,8 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { AppPerformanceMetrics } from   '@core/services/admin/system-monitoring.service';
+import { AppPerformanceMetrics } from '@core/services/admin/system-monitoring.service';
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
 @Component({
   selector: 'app-app-performance',
@@ -15,52 +16,60 @@ import { AppPerformanceMetrics } from   '@core/services/admin/system-monitoring.
 export class AppPerformanceComponent implements OnChanges {
   @Input() appPerformanceMetrics: AppPerformanceMetrics | null = null;
 
-  // Columnas para la tabla de endpoints
+  // Columns for the endpoints table
   endpointColumns: string[] = ['path', 'method', 'totalRequests', 'averageResponseTime', 'errorRate', 'requestsPerMinute', 'status'];
 
-  // Columnas para la tabla de errores
+  // Columns for the errors table
   errorColumns: string[] = ['timestamp', 'type', 'message', 'endpoint', 'userId'];
 
-
+  constructor(private loggingService: LoggingService) {
+    this.loggingService.debug('[AppPerformanceComponent] Initializing AppPerformanceComponent.', undefined, 'AppPerformance');
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['appPerformanceMetrics'] && this.appPerformanceMetrics) {
-      console.log('Métricas de rendimiento actualizadas:', this.appPerformanceMetrics);
-      // Aquí se podrían procesar los datos para visualizaciones o cálculos adicionales
+      this.loggingService.info('[AppPerformanceComponent] appPerformanceMetrics input changed. New metrics:', this.appPerformanceMetrics, 'AppPerformance');
     }
   }
 
   /**
-   * Formatea el tiempo de actividad
-   * @param seconds Tiempo en segundos
-   * @returns Tiempo formateado
+   * Formats uptime from seconds into a human-readable string (days, hours, minutes).
+   * @param seconds Uptime in seconds.
+   * @returns Formatted uptime string.
    */
   formatUptime(seconds: number): string {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    let result = '';
-
-    if (days > 0) {
-      result += `${days} día${days !== 1 ? 's' : ''} `;
+    this.loggingService.debug(`[AppPerformanceComponent] Formatting uptime for ${seconds} seconds.`, undefined, 'AppPerformance');
+    if (seconds < 60) {
+      return `${seconds} segundo${seconds !== 1 ? 's' : ''}`;
     }
 
-    if (hours > 0 || days > 0) {
-      result += `${hours} hora${hours !== 1 ? 's' : ''} `;
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor((seconds % (3600 * 24)) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+
+    const parts: string[] = [];
+    if (d > 0) {
+      parts.push(`${d} día${d !== 1 ? 's' : ''}`);
+    }
+    if (h > 0) {
+      parts.push(`${h} hora${h !== 1 ? 's' : ''}`);
+    }
+    // Only include minutes if there are no days/hours, or if minutes are non-zero.
+    // If all are zero, it's handled by the initial 'seconds < 60' check.
+    if (m > 0 || (d === 0 && h === 0)) {
+      parts.push(`${m} minuto${m !== 1 ? 's' : ''}`);
     }
 
-    result += `${minutes} minuto${minutes !== 1 ? 's' : ''}`;
-
-    return result;
+    return parts.join(' ');
   }
 
   /**
-   * Formatea el tamaño de memoria
-   * @param mb Tamaño en MB
-   * @returns Tamaño formateado
+   * Formats memory size from MB to MB or GB.
+   * @param mb Memory size in MB.
+   * @returns Formatted memory size string.
    */
   formatMemorySize(mb: number): string {
+    this.loggingService.debug(`[AppPerformanceComponent] Formatting memory size: ${mb} MB.`, undefined, 'AppPerformance');
     if (mb < 1024) {
       return `${mb.toFixed(2)} MB`;
     } else {
@@ -69,9 +78,9 @@ export class AppPerformanceComponent implements OnChanges {
   }
 
   /**
-   * Obtiene la clase CSS para el estado de un endpoint
-   * @param status Estado del endpoint
-   * @returns Clase CSS
+   * Gets the CSS class for an endpoint's status.
+   * @param status Endpoint status.
+   * @returns CSS class string.
    */
   getEndpointStatusClass(status: string): string {
     switch (status) {
@@ -87,9 +96,9 @@ export class AppPerformanceComponent implements OnChanges {
   }
 
   /**
-   * Obtiene la etiqueta para el estado de un endpoint
-   * @param status Estado del endpoint
-   * @returns Etiqueta
+   * Gets the label for an endpoint's status.
+   * @param status Endpoint status.
+   * @returns Label string.
    */
   getEndpointStatusLabel(status: string): string {
     switch (status) {
@@ -105,9 +114,9 @@ export class AppPerformanceComponent implements OnChanges {
   }
 
   /**
-   * Obtiene el icono para el estado de un endpoint
-   * @param status Estado del endpoint
-   * @returns Icono emoji
+   * Gets the emoji icon for an endpoint's status.
+   * @param status Endpoint status.
+   * @returns Emoji icon.
    */
   getEndpointStatusIcon(status: string): string {
     switch (status) {
@@ -123,12 +132,19 @@ export class AppPerformanceComponent implements OnChanges {
   }
 
   /**
-   * Formatea una fecha
-   * @param dateString Fecha en formato ISO
-   * @returns Fecha formateada
+   * Formats a date string into a localized string.
+   * @param dateString Date in ISO format.
+   * @returns Formatted date string.
    */
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleString();
+    this.loggingService.debug(`[AppPerformanceComponent] Formatting date: ${dateString}.`, undefined, 'AppPerformance');
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch (e) {
+      this.loggingService.error(`[AppPerformanceComponent] Error formatting date string: ${dateString}`, e, 'AppPerformance');
+      return 'Fecha inválida';
+    }
   }
 }

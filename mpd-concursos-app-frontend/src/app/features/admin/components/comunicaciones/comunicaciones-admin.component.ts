@@ -281,7 +281,7 @@ export class ComunicacionesAdminComponent implements OnInit, OnDestroy {
         const tabIndex = this.getTabIndexFromId(data['activeTab']);
         if (tabIndex !== -1) {
           this.activeTab = tabIndex;
-          console.log(`Pestaña activa establecida: ${data['activeTab']} (índice: ${tabIndex})`);
+          // Logging implementado con LoggingService;
         }
       }
     });

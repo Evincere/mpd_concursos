@@ -10,6 +10,7 @@ import { Concurso, ContestStatus } from '@shared/interfaces/concurso/concurso.in
 import { NotificationService } from '@shared/services/notification.service';
 import { DialogService } from '@shared/services/dialog/dialog.service';
 import { ExportService } from '../../../../core/services/admin/export.service';
+import { LoggingService } from '../../../../core/services/logging/logging.service'; // Import LoggingService
 
 // Componentes personalizados
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
@@ -40,32 +41,31 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
     CustomDatepickerComponent,
     CustomTableComponent,
     CustomTableColumnComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent // Ensure ConfirmDialogComponent is standalone or imported correctly
   ]
 })
 export class ConcursosAdminComponent implements OnInit, OnDestroy {
-  // Datos y paginación
+  // Data and pagination
   dataSource: Concurso[] = [];
   totalItems = 0;
   pageSize = 10;
   pageIndex = 0;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
-  // Filtros
+  // Filters
   filterForm: FormGroup;
   departments: string[] = [];
   positions: string[] = [];
   categories: string[] = [];
 
-
-  // Estado de la UI
+  // UI State
   isLoading = false;
   viewMode: 'cards' | 'table' = 'cards';
 
-  // Menú de acciones
+  // Action menu state
   openMenuId: string | null = null;
 
-  // Para limpieza de suscripciones
+  // For cleaning up subscriptions
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -74,8 +74,10 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     private concursosService: AdminConcursosService,
     private notificationService: NotificationService,
     private dialogService: DialogService,
-    private exportService: ExportService
+    private exportService: ExportService,
+    private loggingService: LoggingService // Inject LoggingService
   ) {
+    this.loggingService.debug('[ConcursosAdminComponent] Constructor: Initializing filter form.', undefined, 'ConcursosAdmin');
     this.filterForm = this.fb.group({
       search: [''],
       status: ['ALL'],
@@ -83,11 +85,14 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       position: [''],
       category: [''],
       startDate: [null],
-      endDate: [null]
+      endDate: [null],
+      sortBy: ['id'], // Default sort by ID
+      sortDirection: ['desc'] // Default sort direction descending
     });
   }
 
   ngOnInit(): void {
+    this.loggingService.info('[ConcursosAdminComponent] Component initialized.', undefined, 'ConcursosAdmin');
     this.loadFilterOptions();
     this.setupFilterListeners();
     this.loadConcursos();
@@ -95,26 +100,59 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.loggingService.info('[ConcursosAdminComponent] Component destroyed. Cleaning up subscriptions.', undefined, 'ConcursosAdmin');
     this.destroy$.next();
     this.destroy$.complete();
   }
 
+  /**
+   * Loads filter options (departments, positions, categories) from the service.
+   */
   loadFilterOptions(): void {
+    this.loggingService.debug('[ConcursosAdminComponent] Loading filter options.', undefined, 'ConcursosAdmin');
     this.concursosService.getDepartments()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(departments => this.departments = departments);
+      .subscribe({
+        next: (departments: any) => {
+          this.departments = departments;
+          this.loggingService.debug('[ConcursosAdminComponent] Departments loaded:', departments, 'ConcursosAdmin');
+        },
+        error: (error: any) => {
+          this.loggingService.error('[ConcursosAdminComponent] Error loading departments:', error, 'ConcursosAdmin');
+        }
+      });
 
     this.concursosService.getPositions()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(positions => this.positions = positions);
+      .subscribe({
+        next: (positions: any) => {
+          this.positions = positions;
+          this.loggingService.debug('[ConcursosAdminComponent] Positions loaded:', positions, 'ConcursosAdmin');
+        },
+        error: (error: any) => {
+          this.loggingService.error('[ConcursosAdminComponent] Error loading positions:', error, 'ConcursosAdmin');
+        }
+      });
 
     this.concursosService.getCategories()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(categories => this.categories = categories);
+      .subscribe({
+        next: (categories: any) => {
+          this.categories = categories;
+          this.loggingService.debug('[ConcursosAdminComponent] Categories loaded:', categories, 'ConcursosAdmin');
+        },
+        error: (error: any) => {
+          this.loggingService.error('[ConcursosAdminComponent] Error loading categories:', error, 'ConcursosAdmin');
+        }
+      });
   }
 
+  /**
+   * Sets up listeners for filter form changes to trigger data reloading.
+   */
   setupFilterListeners(): void {
-    // Aplicar debounce al campo de búsqueda
+    this.loggingService.debug('[ConcursosAdminComponent] Setting up filter listeners.', undefined, 'ConcursosAdmin');
+    // Apply debounce to the search field
     this.filterForm.get('search')?.valueChanges
       .pipe(
         takeUntil(this.destroy$),
@@ -122,14 +160,16 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
         distinctUntilChanged()
       )
       .subscribe(() => {
+        this.loggingService.debug('[ConcursosAdminComponent] Search filter changed. Reloading concursos.', undefined, 'ConcursosAdmin');
         this.pageIndex = 0;
         this.loadConcursos();
       });
 
-    // Escuchar cambios en los demás filtros
+    // Listen for changes in other filters
     this.filterForm.get('status')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        this.loggingService.debug('[ConcursosAdminComponent] Status filter changed. Reloading concursos.', undefined, 'ConcursosAdmin');
         this.pageIndex = 0;
         this.loadConcursos();
       });
@@ -137,6 +177,7 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     this.filterForm.get('department')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        this.loggingService.debug('[ConcursosAdminComponent] Department filter changed. Reloading concursos.', undefined, 'ConcursosAdmin');
         this.pageIndex = 0;
         this.loadConcursos();
       });
@@ -144,6 +185,7 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     this.filterForm.get('position')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        this.loggingService.debug('[ConcursosAdminComponent] Position filter changed. Reloading concursos.', undefined, 'ConcursosAdmin');
         this.pageIndex = 0;
         this.loadConcursos();
       });
@@ -151,27 +193,49 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     this.filterForm.get('category')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
+        this.loggingService.debug('[ConcursosAdminComponent] Category filter changed. Reloading concursos.', undefined, 'ConcursosAdmin');
+        this.pageIndex = 0;
+        this.loadConcursos();
+      });
+
+    // Listen for date range changes
+    this.filterForm.get('startDate')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loggingService.debug('[ConcursosAdminComponent] StartDate filter changed. Reloading concursos.', undefined, 'ConcursosAdmin');
+        this.pageIndex = 0;
+        this.loadConcursos();
+      });
+
+    this.filterForm.get('endDate')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loggingService.debug('[ConcursosAdminComponent] EndDate filter changed. Reloading concursos.', undefined, 'ConcursosAdmin');
         this.pageIndex = 0;
         this.loadConcursos();
       });
   }
 
+  /**
+   * Loads contests based on current filters and pagination settings.
+   */
   loadConcursos(): void {
     this.isLoading = true;
-
     const filters: ConcursoFilter = {
-      search: this.filterForm.get('search')?.value,
-      status: this.filterForm.get('status')?.value,
-      department: this.filterForm.get('department')?.value,
-      position: this.filterForm.get('position')?.value,
-      category: this.filterForm.get('category')?.value,
-      startDate: this.filterForm.get('startDate')?.value,
-      endDate: this.filterForm.get('endDate')?.value,
+      ...this.filterForm.value, // Get all form values directly
       page: this.pageIndex,
-      size: this.pageSize,
-      sortBy: 'id',
-      sortDirection: 'desc'
+      size: this.pageSize
     };
+
+    // Clean up empty string filters to avoid sending unnecessary params
+    Object.keys(filters).forEach(key => {
+      const typedKey = key as keyof ConcursoFilter;
+      if (filters[typedKey] === '' || filters[typedKey] === null) {
+        delete filters[typedKey];
+      }
+    });
+
+    this.loggingService.info('[ConcursosAdminComponent] Loading concursos with filters:', filters, 'ConcursosAdmin');
 
     this.concursosService.getConcursos(filters)
       .pipe(takeUntil(this.destroy$))
@@ -180,22 +244,59 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
           this.dataSource = response.content;
           this.totalItems = response.totalElements;
           this.isLoading = false;
+          this.loggingService.info(`[ConcursosAdminComponent] Concursos loaded successfully. Total: ${this.totalItems}`, response, 'ConcursosAdmin');
         },
         error: (error) => {
-          console.error('Error cargando concursos:', error);
-          this.notificationService.error('Error al cargar los concursos');
+          this.loggingService.error('[ConcursosAdminComponent] Error loading contests:', error, 'ConcursosAdmin');
+          this.notificationService.error('Error al cargar los concursos. Por favor, intente de nuevo.');
           this.isLoading = false;
         }
       });
   }
 
+  /**
+   * Handles page change events from the custom table.
+   * @param event The PageEvent containing pageIndex and pageSize.
+   */
   onPageChange(event: PageEvent): void {
+    this.loggingService.debug('[ConcursosAdminComponent] Page change event:', event, 'ConcursosAdmin');
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
     this.loadConcursos();
   }
 
+  /**
+   * Handles sort change events from the custom table.
+   * @param event The SortEvent containing the column and direction.
+   */
+  onSortChange(event: SortEvent): void {
+    this.loggingService.debug('[ConcursosAdminComponent] Sort change event received:', event, 'ConcursosAdmin');
+    if (event && event.property) {
+      const currentSortBy = this.filterForm.get('sortBy')?.value;
+      const currentSortDirection = this.filterForm.get('sortDirection')?.value;
+
+      if (currentSortBy === event.property) {
+        // Toggle direction if same column
+        this.filterForm.get('sortDirection')?.setValue(currentSortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        // Set new column and default to asc
+        this.filterForm.get('sortBy')?.setValue(event.property);
+        this.filterForm.get('sortDirection')?.setValue('asc');
+      }
+    } else {
+      // Reset sorting if no column is provided
+      this.filterForm.get('sortBy')?.setValue('id'); // Default sort field
+      this.filterForm.get('sortDirection')?.setValue('desc'); // Default sort direction
+    }
+    this.pageIndex = 0; // Reset page index on sort change
+    this.loadConcursos();
+  }
+
+  /**
+   * Resets all filters in the form and reloads contests.
+   */
   resetFilters(): void {
+    this.loggingService.info('[ConcursosAdminComponent] Resetting filters.', undefined, 'ConcursosAdmin');
     this.filterForm.reset({
       search: '',
       status: 'ALL',
@@ -203,18 +304,33 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       position: '',
       category: '',
       startDate: null,
-      endDate: null
+      endDate: null,
+      sortBy: 'id',
+      sortDirection: 'desc'
     });
     this.pageIndex = 0;
     this.loadConcursos();
   }
 
+  /**
+   * Navigates to the contest creation page.
+   */
   createConcurso(): void {
+    this.loggingService.info('[ConcursosAdminComponent] Navigating to create new contest page.', undefined, 'ConcursosAdmin');
     this.router.navigate(['/admin/concursos/nuevo']);
   }
 
+  /**
+   * Opens a dialog to edit an existing contest.
+   * @param concurso The contest to edit.
+   */
   editConcurso(concurso: Concurso): void {
-    if (!concurso) return;
+    this.loggingService.info('[ConcursosAdminComponent] Attempting to edit contest:', concurso, 'ConcursosAdmin');
+    if (!concurso || !concurso.id) {
+      this.loggingService.warn('[ConcursosAdminComponent] Cannot edit contest: Invalid contest object or missing ID.', concurso, 'ConcursosAdmin');
+      this.notificationService.error('No se puede editar el concurso. Faltan datos.');
+      return;
+    }
 
     const dialogRef = this.dialogService.open(ConcursoFormDialogComponent, {
       title: 'Editar Concurso',
@@ -224,30 +340,44 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       panelClass: ['glassmorphism-dialog', 'concurso-form-dialog-container'],
       showCloseButton: true,
       showFooter: false,
-      showCancelButton: false,
+      showCancelButton: false, // Ensure these are correctly handled by the dialog component
       showConfirmButton: false
     });
 
     dialogRef.afterClosed$.subscribe((result: unknown) => {
       if (result) {
+        this.loggingService.info('[ConcursosAdminComponent] Concurso edit dialog closed with success. Reloading contests.', result, 'ConcursosAdmin');
         this.loadConcursos();
         this.notificationService.success('Concurso actualizado correctamente');
+      } else {
+        this.loggingService.debug('[ConcursosAdminComponent] Concurso edit dialog cancelled or closed without result.', undefined, 'ConcursosAdmin');
       }
     });
   }
 
+  /**
+   * Deletes a contest after user confirmation.
+   * Only allows deletion of contests in 'DRAFT' status.
+   * @param concurso The contest to delete.
+   */
   deleteConcurso(concurso: Concurso): void {
-    if (!concurso) return;
+    this.loggingService.info('[ConcursosAdminComponent] Attempting to delete contest:', concurso, 'ConcursosAdmin');
+    if (!concurso || !concurso.id) {
+      this.loggingService.warn('[ConcursosAdminComponent] Cannot delete contest: Invalid contest object or missing ID.', concurso, 'ConcursosAdmin');
+      this.notificationService.error('No se puede eliminar el concurso. Faltan datos.');
+      return;
+    }
 
-    // Verificar que el concurso esté en estado DRAFT
+    // Verify that the contest is in DRAFT status
     if (concurso.status !== 'DRAFT') {
-      this.notificationService.error('Solo se pueden eliminar concursos en estado borrador');
+      this.loggingService.warn(`[ConcursosAdminComponent] Attempted to delete non-DRAFT contest (ID: ${concurso.id}, Status: ${concurso.status}).`, undefined, 'ConcursosAdmin');
+      this.notificationService.error('Solo se pueden eliminar concursos en estado borrador.');
       return;
     }
 
     this.dialogService.confirm({
       title: 'Eliminar Concurso',
-      message: `¿Está seguro que desea eliminar el concurso "${concurso.title}"?`,
+      message: `¿Está seguro que desea eliminar el concurso "${concurso.title}"? Esta acción es irreversible.`,
       confirmButtonText: 'Eliminar',
       cancelButtonText: 'Cancelar',
       confirmButtonColor: 'warn',
@@ -255,30 +385,143 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       size: 'small'
     }).afterClosed$.subscribe((result: boolean) => {
       if (result) {
+        this.loggingService.info(`[ConcursosAdminComponent] User confirmed deletion for contest ID: ${concurso.id}.`, undefined, 'ConcursosAdmin');
         this.isLoading = true;
         this.concursosService.deleteConcurso(concurso.id)
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: () => {
+              this.loggingService.info(`[ConcursosAdminComponent] Contest ID: ${concurso.id} deleted successfully. Reloading contests.`, undefined, 'ConcursosAdmin');
               this.loadConcursos();
               this.notificationService.success('Concurso eliminado correctamente');
             },
             error: (error: unknown) => {
+              this.loggingService.error(`[ConcursosAdminComponent] Error deleting contest ID: ${concurso.id}:`, error, 'ConcursosAdmin');
               console.error('Error eliminando concurso:', error);
-              this.notificationService.error('Error al eliminar el concurso');
-              this.isLoading = false;
+              this.notificationService.error('Error al eliminar el concurso. Por favor, intente de nuevo.');
+              this.isLoading = false; // Reset loading on error
             }
           });
+      } else {
+        this.loggingService.debug(`[ConcursosAdminComponent] Contest deletion cancelled for ID: ${concurso.id}.`, undefined, 'ConcursosAdmin');
       }
     });
   }
 
+  /**
+   * Navigates to the previous page in the pagination.
+   */
+  previousPage(): void {
+    if (this.pageIndex > 0) {
+      this.pageIndex--;
+      this.loggingService.debug(`[ConcursosAdminComponent] Navigating to previous page: ${this.pageIndex}`, undefined, 'ConcursosAdmin');
+      this.onPageChange({ pageIndex: this.pageIndex, pageSize: this.pageSize });
+    } else {
+      this.loggingService.debug('[ConcursosAdminComponent] Already on the first page, cannot go back.', undefined, 'ConcursosAdmin');
+    }
+  }
 
+  /**
+   * Navigates to the next page in the pagination.
+   */
+  nextPage(): void {
+    if ((this.pageIndex + 1) * this.pageSize < this.totalItems) {
+      this.pageIndex++;
+      this.loggingService.debug(`[ConcursosAdminComponent] Navigating to next page: ${this.pageIndex}`, undefined, 'ConcursosAdmin');
+      this.onPageChange({ pageIndex: this.pageIndex, pageSize: this.pageSize });
+    } else {
+      this.loggingService.debug('[ConcursosAdminComponent] Already on the last page, cannot go forward.', undefined, 'ConcursosAdmin');
+    }
+  }
 
+  /**
+   * Toggles the action menu visibility for a given contest.
+   * @param concursoId The ID of the contest.
+   * @param event The click event.
+   */
+  toggleActionMenu(concursoId: string, event: Event): void {
+    event.stopPropagation(); // Prevent document click listener from closing it immediately
+    this.openMenuId = this.openMenuId === concursoId ? null : concursoId;
+    this.loggingService.debug(`[ConcursosAdminComponent] Action menu toggled for ID: ${concursoId}. Open state: ${!!this.openMenuId}`, undefined, 'ConcursosAdmin');
+  }
+
+  /**
+   * Views the details of a specific contest.
+   * @param concurso The contest to view.
+   */
+  viewConcursoDetails(concurso: Concurso): void {
+    this.loggingService.info('[ConcursosAdminComponent] Viewing contest details:', concurso, 'ConcursosAdmin');
+    this.closeActionMenu();
+    this.router.navigate(['/admin/concursos/detalle', concurso.id]);
+  }
+
+  /**
+   * Manages the dates for a specific contest.
+   * @param concurso The contest to manage dates for.
+   */
+  manageConcursoDates(concurso: Concurso): void {
+    this.loggingService.info('[ConcursosAdminComponent] Managing contest dates:', concurso, 'ConcursosAdmin');
+    this.closeActionMenu();
+    this.router.navigate(['/admin/concursos/fechas', concurso.id]);
+  }
+
+  /**
+   * Closes the currently open action menu.
+   */
+  private closeActionMenu(): void {
+    if (this.openMenuId) {
+      this.loggingService.debug('[ConcursosAdminComponent] Closing action menu.', undefined, 'ConcursosAdmin');
+      this.openMenuId = null;
+    }
+  }
+
+  /**
+   * Sets up a global document click listener to close action menus when clicking outside.
+   */
+  private setupDocumentClickListener(): void {
+    this.loggingService.debug('[ConcursosAdminComponent] Setting up document click listener for action menus.', undefined, 'ConcursosAdmin');
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      // Check if the click target is outside any action menu container
+      if (!target.closest('.action-menu-container')) {
+        this.closeActionMenu();
+      }
+    });
+  }
+
+  /**
+   * Toggles the view mode between 'cards' and 'table'.
+   */
+  toggleViewMode(): void {
+    this.viewMode = this.viewMode === 'cards' ? 'table' : 'cards';
+    this.loggingService.info(`[ConcursosAdminComponent] View mode toggled to: ${this.viewMode}`, undefined, 'ConcursosAdmin');
+  }
+
+  /**
+   * Handles click to switch to cards view.
+   */
+  handleCardsViewClick(): void {
+    if (this.viewMode === 'table') {
+      this.toggleViewMode();
+    }
+  }
+
+  /**
+   * Handles click to switch to table view.
+   */
+  handleTableViewClick(): void {
+    if (this.viewMode === 'cards') {
+      this.toggleViewMode();
+    }
+  }
+
+  /**
+   * Gets the display label for a given contest status.
+   * @param status The contest status.
+   * @returns The human-readable label.
+   */
   getStatusLabel(status: ContestStatus | string): string {
     if (!status) return 'Sin estado';
-
-    // Mapeo directo de estados sin depender de statusOptions
     const statusLabels: Record<string, string> = {
       'DRAFT': 'Borrador',
       'ACTIVE': 'Activo',
@@ -286,10 +529,14 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       'CLOSED': 'Cerrado',
       'CANCELLED': 'Cancelado'
     };
-
-    return statusLabels[status] || status;
+    return statusLabels[status] || status; // Return label or the original status if not found
   }
 
+  /**
+   * Gets the CSS class for a given contest status for styling.
+   * @param status The contest status.
+   * @returns The CSS class string.
+   */
   getStatusClass(status: ContestStatus | string): string {
     if (!status) return 'status-unknown';
     switch (status) {
@@ -302,16 +549,24 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Formats a date to a localized date string.
+   * @param date The date string or Date object.
+   * @returns Formatted date string or empty string if invalid.
+   */
   formatDate(date: string | Date | undefined): string {
     if (!date) return '';
-    return new Date(date).toLocaleDateString();
+    try {
+      return new Date(date).toLocaleDateString();
+    } catch (e) {
+      this.loggingService.error(`[ConcursosAdminComponent] Error formatting date: ${date}`, e, 'ConcursosAdmin');
+      return 'Fecha inválida';
+    }
   }
 
-  // Métodos para el template refactorizado
-  toggleViewMode(): void {
-    this.viewMode = this.viewMode === 'cards' ? 'table' : 'cards';
-  }
-
+  /**
+   * Returns options for department select.
+   */
   getDepartmentOptions(): { value: string; label: string }[] {
     return [
       { value: '', label: 'Todas las dependencias' },
@@ -319,6 +574,9 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     ];
   }
 
+  /**
+   * Returns options for position select.
+   */
   getPositionOptions(): { value: string; label: string }[] {
     return [
       { value: '', label: 'Todos los cargos' },
@@ -326,6 +584,9 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     ];
   }
 
+  /**
+   * Returns options for category select.
+   */
   getCategoryOptions(): { value: string; label: string }[] {
     return [
       { value: '', label: 'Todas las categorías' },
@@ -333,6 +594,9 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     ];
   }
 
+  /**
+   * Returns options for status select.
+   */
   getStatusOptions(): { value: string; label: string }[] {
     return [
       { value: 'ALL', label: 'Todos' },
@@ -344,13 +608,18 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     ];
   }
 
+  /**
+   * Exports the current table data to an Excel file.
+   */
   exportData(): void {
+    this.loggingService.info('[ConcursosAdminComponent] Exporting data.', undefined, 'ConcursosAdmin');
     if (!this.dataSource || this.dataSource.length === 0) {
       this.notificationService.error('No hay datos para exportar');
+      this.loggingService.warn('[ConcursosAdminComponent] No data available for export.', undefined, 'ConcursosAdmin');
       return;
     }
 
-    // Preparar los datos para exportación
+    // Prepare data for export
     const dataToExport = this.dataSource.map(concurso => ({
       ID: concurso.id,
       Título: concurso.title || 'Sin título',
@@ -368,11 +637,11 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       'URL de Perfil': concurso.profileUrl || 'No especificado'
     }));
 
-    // Generar nombre de archivo con timestamp
+    // Generate filename with timestamp
     const timestamp = new Date().toISOString().split('T')[0];
     const fileName = `concursos_${timestamp}`;
 
-    // Exportar en formato Excel por defecto
+    // Export in Excel format by default
     this.exportService.exportData(dataToExport, {
       format: 'excel',
       fileName: fileName,
@@ -380,58 +649,9 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     });
 
     this.notificationService.success(`Datos exportados como ${fileName}.xlsx`);
+    this.loggingService.info(`[ConcursosAdminComponent] Data exported successfully as ${fileName}.xlsx`, undefined, 'ConcursosAdmin');
   }
 
-  onSortChange(event: SortEvent): void {
-    // TODO: Implementar ordenamiento
-    console.log('Sort change:', event);
-  }
-
-  previousPage(): void {
-    if (this.pageIndex > 0) {
-      this.pageIndex--;
-      this.loadConcursos();
-    }
-  }
-
-  nextPage(): void {
-    if ((this.pageIndex + 1) * this.pageSize < this.totalItems) {
-      this.pageIndex++;
-      this.loadConcursos();
-    }
-  }
-
-  // Métodos para el menú de acciones
-  toggleActionMenu(concursoId: string, event: Event): void {
-    event.stopPropagation();
-    this.openMenuId = this.openMenuId === concursoId ? null : concursoId;
-  }
-
-  viewConcursoDetails(concurso: Concurso): void {
-    this.closeActionMenu();
-    this.router.navigate(['/admin/concursos/detalle', concurso.id]);
-  }
-
-  manageConcursoDates(concurso: Concurso): void {
-    this.closeActionMenu();
-    this.router.navigate(['/admin/concursos/fechas', concurso.id]);
-  }
-
-
-
-  private closeActionMenu(): void {
-    this.openMenuId = null;
-  }
-
-  private setupDocumentClickListener(): void {
-    document.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.action-menu-container')) {
-        this.closeActionMenu();
-      }
-    });
-  }
-
-  // Exponer Math para el template
+  // Expose Math for the template (already exists)
   Math = Math;
 }

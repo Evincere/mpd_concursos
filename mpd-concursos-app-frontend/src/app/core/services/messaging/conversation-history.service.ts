@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 
 import { Conversation, Message } from './messaging.service';
 
@@ -153,7 +154,10 @@ export class ConversationHistoryService {
     )
   );
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {}
 
   /**
    * Carga el historial de conversaciones

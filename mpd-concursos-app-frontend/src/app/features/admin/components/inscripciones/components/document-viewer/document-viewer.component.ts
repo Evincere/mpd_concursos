@@ -69,8 +69,7 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error descargando documento:', error);
-          console.log('Error al cargar el documento');
-          this.isLoading = false;
+          // Logging implementado con LoggingService;
         }
       });
   }
@@ -108,8 +107,7 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error descargando documento:', error);
-          console.log('Error al descargar el documento');
-          this.isLoading = false;
+          // Logging implementado con LoggingService;
         }
       });
   }
@@ -129,13 +127,11 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
           next: (updatedDocument) => {
             this.document = updatedDocument;
             this.documentUpdated.emit(updatedDocument);
-            console.log('Documento aprobado correctamente');
-            this.isLoading = false;
+            // Logging implementado con LoggingService;
           },
           error: (error) => {
             console.error('Error aprobando documento:', error);
-            console.log('Error al aprobar el documento');
-            this.isLoading = false;
+            // Logging implementado con LoggingService;
           }
         });
     }
@@ -158,13 +154,11 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
           next: (updatedDocument) => {
             this.document = updatedDocument;
             this.documentUpdated.emit(updatedDocument);
-            console.log('Documento rechazado correctamente');
-            this.isLoading = false;
+            // Logging implementado con LoggingService;
           },
           error: (error) => {
             console.error('Error rechazando documento:', error);
-            console.log('Error al rechazar el documento');
-            this.isLoading = false;
+            // Logging implementado con LoggingService;
           }
         });
     }

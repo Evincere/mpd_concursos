@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { 
@@ -55,8 +55,8 @@ export class NotificationTriggersComponent implements OnInit, OnDestroy {
   executing = false;
 
   // Formularios
-  filtersForm: FormGroup;
-  triggerForm: FormGroup;
+  filtersForm!: FormGroup;
+  triggerForm!: FormGroup;
 
   // Configuración
   currentFilters: TriggerFilters = {};
@@ -389,13 +389,14 @@ export class NotificationTriggersComponent implements OnInit, OnDestroy {
    * Elimina trigger
    */
   async deleteTrigger(trigger: NotificationTrigger): Promise<void> {
-    const confirmed = await this.dialogService.showConfirmDialog({
+    const dialogRef = this.dialogService.showConfirmDialog({
       title: 'Eliminar Trigger',
       message: `¿Estás seguro de que deseas eliminar el trigger "${trigger.name}"?`,
       confirmText: 'Eliminar',
-      cancelText: 'Cancelar',
-      type: 'danger'
-    }).toPromise();
+      cancelText: 'Cancelar'
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
 
     if (!confirmed) return;
 
@@ -434,13 +435,14 @@ export class NotificationTriggersComponent implements OnInit, OnDestroy {
    * Ejecuta trigger manualmente
    */
   async executeTrigger(trigger: NotificationTrigger): Promise<void> {
-    const confirmed = await this.dialogService.showConfirmDialog({
+    const dialogRef = this.dialogService.showConfirmDialog({
       title: 'Ejecutar Trigger',
       message: `¿Deseas ejecutar manualmente el trigger "${trigger.name}"?`,
       confirmText: 'Ejecutar',
-      cancelText: 'Cancelar',
-      type: 'info'
-    }).toPromise();
+      cancelText: 'Cancelar'
+    });
+
+    const confirmed = await firstValueFrom(dialogRef.afterClosed());
 
     if (!confirmed) return;
 
@@ -702,4 +704,42 @@ export class NotificationTriggersComponent implements OnInit, OnDestroy {
     this.setActiveView('list');
     this.selectedTrigger = null;
   }
+
+  /**
+   * Obtiene el estilo para el item de tipo
+   */
+  getTypeItemStyle(type: any): any {
+    if (!this.triggerStats) return {};
+
+    const percentage = (this.triggerStats.byType[type.value as keyof typeof this.triggerStats.byType] || 0) / this.triggerStats.totalTriggers * 100;
+    return {
+      '--percentage': `${percentage}%`
+    };
+  }
+
+  /**
+   * Obtiene el color según la tasa de éxito
+   */
+  getSuccessRateColor(successRate: number): string {
+    if (successRate >= 90) return '#10b981';
+    if (successRate >= 70) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  /**
+   * Obtiene label del tipo de trigger
+   */
+  getTypeLabel(type: TriggerType): string {
+    const typeConfig = this.triggerTypes.find(t => t.value === type);
+    return typeConfig?.label || type;
+  }
+
+  /**
+   * Obtiene FormArray de acciones
+   */
+  getActionsFormArray(): FormArray {
+    return this.triggerForm.get('actions') as FormArray;
+  }
+
+
 }

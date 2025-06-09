@@ -357,4 +357,11 @@ export class ProfilesAdminComponent implements OnInit, OnDestroy {
   trackByProfileId(index: number, profile: UserProfile): string {
     return profile.id;
   }
+
+  /**
+   * Establece el tab activo
+   */
+  setActiveTab(tabIndex: number): void {
+    this.activeTab = tabIndex;
+  }
 }

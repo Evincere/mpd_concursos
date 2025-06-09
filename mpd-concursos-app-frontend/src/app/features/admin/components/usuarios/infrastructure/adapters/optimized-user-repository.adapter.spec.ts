@@ -2,7 +2,24 @@ import { TestBed } from '@angular/core/testing';
 import { OptimizedUserRepositoryAdapter } from './optimized-user-repository.adapter';
 import { ApiService } from '@core/services/api/api.service';
 import { of, throwError } from 'rxjs';
-import { UserStatus } from '../../domain/models/user.model';
+import { UserStatus, User, CreateUserRequest, UpdateUserRequest, UserAuditLog, UserStats } from '../../domain/models/user.model';
+
+// Helper function to create mock users
+function createMockUser(overrides: Partial<User> = {}): User {
+  return {
+    id: '1',
+    username: 'testuser',
+    email: 'test@example.com',
+    firstName: 'Test',
+    lastName: 'User',
+    dni: '12345678',
+    roles: ['ROLE_USER'],
+    status: UserStatus.ACTIVE,
+    createdAt: new Date(),
+    enabled: true,
+    ...overrides
+  };
+}
 
 describe('OptimizedUserRepositoryAdapter', () => {
   let adapter: OptimizedUserRepositoryAdapter;
@@ -37,9 +54,7 @@ describe('OptimizedUserRepositoryAdapter', () => {
     it('should call apiService.get with correct endpoint and parameters', () => {
       // Configurar respuesta del servicio
       const mockResponse = {
-        users: [
-          { id: '1', firstName: 'Test', lastName: 'User' }
-        ],
+        users: [createMockUser()],
         total: 1
       };
       apiService.get.and.returnValue(of(mockResponse));
@@ -52,7 +67,7 @@ describe('OptimizedUserRepositoryAdapter', () => {
         role: 'ADMIN',
         status: 'ACTIVE',
         sort: 'firstName',
-        direction: 'asc'
+        direction: 'asc' as 'asc' | 'desc'
       };
       
       // Llamar al método
@@ -87,9 +102,9 @@ describe('OptimizedUserRepositoryAdapter', () => {
   describe('getUserById', () => {
     it('should call apiService.get with correct endpoint', () => {
       // Configurar respuesta del servicio
-      const mockUser = { id: '1', firstName: 'Test', lastName: 'User' };
+      const mockUser = createMockUser();
       apiService.get.and.returnValue(of(mockUser));
-      
+
       // Llamar al método
       adapter.getUserById('1').subscribe(user => {
         expect(user).toEqual(mockUser);
@@ -119,16 +134,19 @@ describe('OptimizedUserRepositoryAdapter', () => {
   describe('createUser', () => {
     it('should call apiService.post with correct endpoint and data', () => {
       // Configurar respuesta del servicio
-      const mockUser = { id: '1', firstName: 'Test', lastName: 'User' };
+      const mockUser = createMockUser();
       apiService.post.and.returnValue(of(mockUser));
-      
+
       // Datos para crear usuario
-      const userData = {
+      const userData: CreateUserRequest = {
+        username: 'testuser',
         firstName: 'Test',
         lastName: 'User',
-        email: 'test@example.com'
+        email: 'test@example.com',
+        dni: '12345678',
+        roles: ['ROLE_USER']
       };
-      
+
       // Llamar al método
       adapter.createUser(userData).subscribe(user => {
         expect(user).toEqual(mockUser);
@@ -145,15 +163,15 @@ describe('OptimizedUserRepositoryAdapter', () => {
   describe('updateUser', () => {
     it('should call apiService.put with correct endpoint and data', () => {
       // Configurar respuesta del servicio
-      const mockUser = { id: '1', firstName: 'Updated', lastName: 'User' };
+      const mockUser = createMockUser({ firstName: 'Updated' });
       apiService.put.and.returnValue(of(mockUser));
-      
+
       // Datos para actualizar usuario
-      const userData = {
+      const userData: UpdateUserRequest = {
         id: '1',
         firstName: 'Updated'
       };
-      
+
       // Llamar al método
       adapter.updateUser(userData).subscribe(user => {
         expect(user).toEqual(mockUser);
@@ -185,15 +203,15 @@ describe('OptimizedUserRepositoryAdapter', () => {
   describe('changeUserStatus', () => {
     it('should call apiService.patch with correct endpoint and data', () => {
       // Configurar respuesta del servicio
-      const mockUser = { id: '1', status: UserStatus.INACTIVE };
+      const mockUser = createMockUser({ status: UserStatus.INACTIVE });
       apiService.patch.and.returnValue(of(mockUser));
-      
+
       // Datos para cambiar estado
       const statusChange = {
         userId: '1',
         status: UserStatus.INACTIVE
       };
-      
+
       // Llamar al método
       adapter.changeUserStatus(statusChange).subscribe(user => {
         expect(user).toEqual(mockUser);
@@ -210,15 +228,15 @@ describe('OptimizedUserRepositoryAdapter', () => {
   describe('changeUserRoles', () => {
     it('should call apiService.patch with correct endpoint and data', () => {
       // Configurar respuesta del servicio
-      const mockUser = { id: '1', roles: ['ADMIN', 'USER'] };
+      const mockUser = createMockUser({ roles: ['ADMIN', 'USER'] });
       apiService.patch.and.returnValue(of(mockUser));
-      
+
       // Datos para cambiar roles
       const rolesChange = {
         userId: '1',
         roles: ['ADMIN', 'USER']
       };
-      
+
       // Llamar al método
       adapter.changeUserRoles(rolesChange).subscribe(user => {
         expect(user).toEqual(mockUser);
@@ -257,8 +275,15 @@ describe('OptimizedUserRepositoryAdapter', () => {
   describe('getUserAuditLogs', () => {
     it('should call apiService.get with correct endpoint', () => {
       // Configurar respuesta del servicio
-      const mockLogs = [
-        { id: '1', action: 'LOGIN' }
+      const mockLogs: UserAuditLog[] = [
+        {
+          id: '1',
+          userId: '1',
+          username: 'testuser',
+          action: 'LOGIN',
+          details: 'User logged in',
+          timestamp: new Date()
+        }
       ];
       apiService.get.and.returnValue(of(mockLogs));
       
@@ -278,7 +303,16 @@ describe('OptimizedUserRepositoryAdapter', () => {
   describe('getUserStats', () => {
     it('should call apiService.get with correct endpoint', () => {
       // Configurar respuesta del servicio
-      const mockStats = { totalUsers: 10 };
+      const mockStats: UserStats = {
+        totalUsers: 10,
+        activeUsers: 8,
+        inactiveUsers: 2,
+        blockedUsers: 0,
+        adminUsers: 1,
+        regularUsers: 9,
+        newUsersLastMonth: 3,
+        activeUsersLastMonth: 7
+      };
       apiService.get.and.returnValue(of(mockStats));
       
       // Llamar al método
@@ -298,7 +332,7 @@ describe('OptimizedUserRepositoryAdapter', () => {
     it('should call apiService.get with correct endpoint', () => {
       // Configurar respuesta del servicio
       const mockRoles = [
-        { id: 'ADMIN', name: 'Administrador' }
+        { id: 'ADMIN', name: 'Administrador', description: 'Administrador del sistema' }
       ];
       apiService.get.and.returnValue(of(mockRoles));
       

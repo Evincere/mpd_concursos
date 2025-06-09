@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import ar.gov.mpd.concursobackend.filter.application.dto.ContestFilterCommand;
-import ar.gov.mpd.concursobackend.filter.application.dto.ContestResponse;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
 import ar.gov.mpd.concursobackend.filter.application.port.in.SearchContestUseCase;
 
 import java.time.LocalDate;

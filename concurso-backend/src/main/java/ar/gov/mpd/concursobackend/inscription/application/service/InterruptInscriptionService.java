@@ -2,7 +2,7 @@ package ar.gov.mpd.concursobackend.inscription.application.service;
 
 import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.InterruptInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
@@ -58,7 +58,7 @@ public class InterruptInscriptionService implements InterruptInscriptionUseCase 
                                     "Tu inscripción está en estado 'En Proceso'. Puedes retomar la inscripción " +
                                     "desde la sección 'Mis Postulaciones' o desde la tarjeta del concurso.",
                             contest.getTitle(),
-                            contest.getPosition(),
+                            contest.getLocation() != null ? contest.getLocation() : "No especificado",
                             contest.getDependency()))
                     .type(NotificationType.INSCRIPTION)
                     .acknowledgementLevel(AcknowledgementLevel.NONE)

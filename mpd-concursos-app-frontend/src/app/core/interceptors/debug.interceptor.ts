@@ -22,9 +22,9 @@ export const debugInterceptor: HttpInterceptorFn = (
   if (!environment.production) {
     // Mostrar información de la petición
     console.group(`🔍 [DebugInterceptor] Petición HTTP: ${request.method} ${request.url}`);
-    console.log('Headers:', formatHeaders(request.headers.keys().map(key => [key, request.headers.get(key)])));
-    console.log('Body:', request.body);
-    console.log('Params:', formatParams(request.params));
+    // TODO: Implement proper logging - console.debug('Headers:', formatHeaders(request.headers.keys();.map(key => [key, request.headers.get(key)])));
+    // TODO: Implement proper logging - console.debug('Body:', request.body);
+    // TODO: Implement proper logging - console.debug('Params:', formatParams(request.params););
     console.groupEnd();
 
     // Procesar la petición y mostrar información de la respuesta
@@ -32,17 +32,17 @@ export const debugInterceptor: HttpInterceptorFn = (
       tap(event => {
         if (event instanceof HttpResponse) {
           console.group(`✅ [DebugInterceptor] Respuesta HTTP: ${request.method} ${request.url}`);
-          console.log('Status:', event.status);
-          console.log('Headers:', formatHeaders(event.headers.keys().map(key => [key, event.headers.get(key)])));
-          console.log('Body:', event.body);
+          // TODO: Implement proper logging - console.debug('Status:', event.status);
+          // TODO: Implement proper logging - console.debug('Headers:', formatHeaders(event.headers.keys();.map(key => [key, event.headers.get(key)])));
+          // TODO: Implement proper logging - console.debug('Body:', event.body);
           console.groupEnd();
         }
       }),
       catchError((error: HttpErrorResponse) => {
         console.group(`❌ [DebugInterceptor] Error HTTP: ${request.method} ${request.url}`);
-        console.log('Status:', error.status);
-        console.log('Message:', error.message);
-        console.log('Error:', error.error);
+        // TODO: Implement proper logging - console.debug('Status:', error.status);
+        // TODO: Implement proper logging - console.debug('Message:', error.message);
+        // TODO: Implement proper logging - console.error('Error:', error.error);
         console.groupEnd();
         return throwError(() => error);
       })

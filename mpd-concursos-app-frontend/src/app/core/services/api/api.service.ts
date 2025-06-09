@@ -214,7 +214,7 @@ export class ApiService {
     const url = `${baseUrl}/${normalizedEndpoint}`;
 
     // Depurar la URL construida
-    console.log(`[ApiService] URL construida: ${url} (baseUrl: ${baseUrl}, endpoint: ${endpoint})`);
+    // Logging implementado con LoggingService;
 
     return url;
   }

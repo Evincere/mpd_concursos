@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpHeaders, HttpParams } from  '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { TokenService } from '@core/services/auth/token.service';
@@ -169,7 +170,10 @@ export interface ProfileStats {
 export class AdminProfilesService {
   private apiUrl = `${environment.apiUrl}/admin/profiles`;
 
-  constructor(private tokenService: TokenService) {}
+  constructor(
+    private tokenService: TokenService,
+    private loggingService: LoggingService
+  ) {}
 
   // Mock data for development
   private mockProfiles: UserProfile[] = [

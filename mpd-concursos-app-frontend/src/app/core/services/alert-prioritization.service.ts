@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 import { SystemAlert } from './admin-notifications.service';
@@ -83,7 +84,9 @@ export class AlertPrioritizationService {
     distinctUntilChanged()
   );
 
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     this.initializeDefaultRules();
   }
 

@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, ReactiveFormsModule } from '@angular/forms';
-import { TipoExamen } from '@shared/interfaces/examen/examen.interface';
+import { TipoExamen } from '../../../../../shared/interfaces/examen/examen.interface';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -51,15 +51,12 @@ export class ExamenFormComponent implements OnInit {
 
     // Si hay datos de examen para editar, poblar el formulario
     if (this.mode === 'edit' && this.examenData) {
-      console.log('Inicializando formulario con datos de examen:', this.examenData);
       this.populateForm(this.examenData);
-    } else {
-      console.log('Inicializando formulario para nuevo examen');
     }
   }
 
-  populateForm(examen: Record<string, unknown>): void {
-    // Resetear los FormArrays
+  private populateForm(examenData: Record<string, unknown>): void {
+    // Limpiar arrays existentes
     while (this.requisitos.length > 0) {
       this.requisitos.removeAt(0);
     }
@@ -71,24 +68,24 @@ export class ExamenFormComponent implements OnInit {
     }
 
     // Añadir los elementos de los arrays
-    if (examen['requisitos'] && Array.isArray(examen['requisitos']) && examen['requisitos'].length > 0) {
-      (examen['requisitos'] as string[]).forEach((requisito: string) => {
+    if (examenData['requisitos'] && Array.isArray(examenData['requisitos']) && examenData['requisitos'].length > 0) {
+      (examenData['requisitos'] as string[]).forEach((requisito: string) => {
         this.requisitos.push(this.fb.control(requisito, Validators.required));
       });
     } else {
       this.requisitos.push(this.createRequisito());
     }
 
-    if (examen['reglasExamen'] && Array.isArray(examen['reglasExamen']) && examen['reglasExamen'].length > 0) {
-      (examen['reglasExamen'] as string[]).forEach((regla: string) => {
+    if (examenData['reglasExamen'] && Array.isArray(examenData['reglasExamen']) && examenData['reglasExamen'].length > 0) {
+      (examenData['reglasExamen'] as string[]).forEach((regla: string) => {
         this.reglasExamen.push(this.fb.control(regla, Validators.required));
       });
     } else {
       this.reglasExamen.push(this.createRegla());
     }
 
-    if (examen['materialesPermitidos'] && Array.isArray(examen['materialesPermitidos']) && examen['materialesPermitidos'].length > 0) {
-      (examen['materialesPermitidos'] as string[]).forEach((material: string) => {
+    if (examenData['materialesPermitidos'] && Array.isArray(examenData['materialesPermitidos']) && examenData['materialesPermitidos'].length > 0) {
+      (examenData['materialesPermitidos'] as string[]).forEach((material: string) => {
         this.materialesPermitidos.push(this.fb.control(material, Validators.required));
       });
     } else {
@@ -97,13 +94,13 @@ export class ExamenFormComponent implements OnInit {
 
     // Establecer los valores del formulario
     this.examenForm.patchValue({
-      titulo: examen['titulo'],
-      descripcion: examen['descripcion'],
-      tipo: examen['tipo'],
-      duracion: examen['duracion'],
-      puntajeMaximo: examen['puntajeMaximo'],
-      fechaInicio: examen['fechaInicio'],
-      intentosPermitidos: examen['intentosPermitidos']
+      titulo: examenData['titulo'],
+      descripcion: examenData['descripcion'],
+      tipo: examenData['tipo'],
+      duracion: examenData['duracion'],
+      puntajeMaximo: examenData['puntajeMaximo'],
+      fechaInicio: examenData['fechaInicio'],
+      intentosPermitidos: examenData['intentosPermitidos']
     });
   }
 

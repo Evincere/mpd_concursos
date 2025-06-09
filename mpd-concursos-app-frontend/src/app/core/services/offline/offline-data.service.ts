@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
@@ -93,7 +94,10 @@ export class OfflineDataService {
     }
   ];
 
-  constructor(private offlineManagerService: OfflineManagerService) {
+  constructor(
+    private offlineManagerService: OfflineManagerService,
+    private loggingService: LoggingService
+  ) {
     this.initializeCategories();
     this.updateCategoriesInfo();
   }

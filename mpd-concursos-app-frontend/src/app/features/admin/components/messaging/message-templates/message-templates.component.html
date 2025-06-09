@@ -182,16 +182,16 @@
           <div class="template-meta">
             <div class="meta-item">
               <span class="meta-label">Tipo:</span>
-              <span class="meta-value">{{ templateTypes.find(t => t.value === template.type)?.label }}</span>
+              <span class="meta-value">{{ getTemplateTypeLabel(template.type) }}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Categoría:</span>
-              <span class="meta-value">{{ templateCategories.find(c => c.value === template.category)?.label }}</span>
+              <span class="meta-value">{{ getTemplateCategoryLabel(template.category) }}</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Prioridad:</span>
               <span class="meta-value priority" [style.color]="getPriorityColor(template.priority)">
-                {{ priorityOptions.find(p => p.value === template.priority)?.label }}
+                {{ getPriorityLabel(template.priority) }}
               </span>
             </div>
           </div>
@@ -366,7 +366,7 @@
                   formControlName="content"
                   [placeholder]="'Contenido del mensaje. Usa {{variable}} para insertar variables dinámicas.'"
                   [allowedContexts]="getAllowedContextsForCurrentCategory()"
-                  [mode]="templateForm.get('settings.allowHtml')?.value ? 'html' : 'text'"
+                  [mode]="getEditorMode()"
                   [showToolbar]="true"
                   [showVariableSelector]="true"
                   [showPreview]="true"
@@ -381,7 +381,7 @@
                 </div>
                 <div class="field-help">
                   <p>Editor avanzado con soporte para variables dinámicas y vista previa en tiempo real.</p>
-                  <p *ngIf="templateForm.get('settings.allowHtml')?.value">
+                  <p *ngIf="isHtmlModeEnabled()">
                     Modo HTML activado: puedes usar etiquetas HTML para formatear el contenido.
                   </p>
                 </div>
@@ -393,20 +393,20 @@
               <h3>Variables Disponibles</h3>
               <div class="variables-preview">
                 <p class="variables-info">
-                  Variables disponibles para la categoría "{{ templateCategories.find(c => c.value === templateForm.get('category')?.value)?.label }}":
+                  Variables disponibles para la categoría seleccionada:
                 </p>
                 <div class="variables-grid">
                   <div class="variable-preview"
-                       *ngFor="let variable of getVariablesByTemplateCategory(templateForm.get('category')?.value).slice(0, 6)">
-                    <code class="variable-key">{{{{ variable.key }}}}</code>
+                       *ngFor="let variable of getVariablesByCurrentCategory().slice(0, 6)">
+                    <code class="variable-key">{{ '{{' + variable.key + '}}' }}</code>
                     <span class="variable-label">{{ variable.label }}</span>
                   </div>
                 </div>
                 <button type="button"
                         class="show-all-variables-btn"
-                        (click)="openVariableSelector(contentTextarea)">
+                        (click)="openVariableSelector(currentTextarea)">
                   <i class="fas fa-code"></i>
-                  <span>Ver todas las variables ({{ getVariablesByTemplateCategory(templateForm.get('category')?.value).length }})</span>
+                  <span>Ver todas las variables ({{ getVariablesByCurrentCategory().length }})</span>
                 </button>
               </div>
             </div>
@@ -563,7 +563,7 @@
     [insertAtCursor]="true"
     mode="single"
     view="grid"
-    (openChanged)="showVariableSelector = $event"
+    (openChanged)="handleVariableSelectorToggle($event)"
     (variableSelected)="onVariableSelected($event)">
   </app-template-variable-selector>
 </div>

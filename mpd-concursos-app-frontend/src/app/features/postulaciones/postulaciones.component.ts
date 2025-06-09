@@ -15,6 +15,9 @@ import { InscriptionService } from '@core/services/inscripcion/inscription.servi
 import { DashboardService } from '@core/services/dashboard/dashboard.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 
+// Utils
+import { getInscriptionStatusMessage } from '@shared/utils/state-translations.util';
+
 // Components
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
@@ -210,6 +213,12 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.postulacionSeleccionada = null;
   }
 
+  completarDocumentacion(postulacion: Postulacion): void {
+    if (postulacion.contestId) {
+      this.router.navigate(['/concursos', postulacion.contestId, 'inscripcion', 'documentos']);
+    }
+  }
+
   retryLoad(): void {
     this.cargarPostulaciones();
   }
@@ -296,10 +305,10 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   puedesCancelarPostulacion(postulacion: Postulacion): boolean {
     // Permitir cancelar postulaciones en proceso (interrumpidas) y completadas
     return postulacion.estado === PostulationStatus.PENDING ||
-           postulacion.estado === PostulationStatus.ACCEPTED ||
+           postulacion.estado === PostulationStatus.APPROVED ||
            postulacion.estado === PostulationStatus.ACTIVE ||
-           postulacion.estado === PostulationStatus.IN_PROCESS ||
-           postulacion.estado === PostulationStatus.NO_INSCRIPTO;
+           postulacion.estado === PostulationStatus.COMPLETED_WITH_DOCS ||
+           postulacion.estado === PostulationStatus.COMPLETED_PENDING_DOCS;
   }
 
   cancelarPostulacion(postulacion: Postulacion): void {
@@ -324,8 +333,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
     // CORRECCIÓN: Determinar si es cancelación de proceso basado en el estado
     const isProcessCancellation = this.postulacionACancelar.estado === PostulationStatus.ACTIVE ||
-                                  this.postulacionACancelar.estado === PostulationStatus.IN_PROCESS ||
-                                  this.postulacionACancelar.estado === PostulationStatus.NO_INSCRIPTO;
+                                  this.postulacionACancelar.estado === PostulationStatus.COMPLETED_PENDING_DOCS;
 
     this.inscriptionService.cancelInscription(postulacionId, isProcessCancellation)
       .subscribe({
@@ -360,5 +368,35 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.mostrarDialogoCancelacion = false;
     this.postulacionACancelar = null;
     this.cancelandoPostulacion = false; // Reset loading state
+  }
+
+  /**
+   * Obtiene un mensaje descriptivo para el estado de una postulación
+   * @param postulacion La postulación para la cual obtener el mensaje
+   * @returns Mensaje descriptivo para el usuario
+   */
+  getStatusMessage(postulacion: Postulacion): string {
+    return getInscriptionStatusMessage(postulacion.estado);
+  }
+
+  /**
+   * Determina si una postulación requiere acción urgente del usuario
+   * @param postulacion La postulación a evaluar
+   * @returns true si requiere acción urgente
+   */
+  requiresUrgentAction(postulacion: Postulacion): boolean {
+    return postulacion.estado === PostulationStatus.COMPLETED_PENDING_DOCS;
+  }
+
+  /**
+   * Obtiene la clase CSS para el indicador de urgencia
+   * @param postulacion La postulación a evaluar
+   * @returns Clase CSS apropiada
+   */
+  getUrgencyClass(postulacion: Postulacion): string {
+    if (this.requiresUrgentAction(postulacion)) {
+      return 'urgent-action';
+    }
+    return '';
   }
 }

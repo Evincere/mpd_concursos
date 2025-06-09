@@ -38,7 +38,7 @@
           type="button"
           class="tab-button"
           [class.active]="activeTab === 0"
-          (click)="activeTab = 0">
+          (click)="setActiveTab(0)">
           <i class="fas fa-user"></i>
           Información Personal
         </button>
@@ -46,7 +46,7 @@
           type="button"
           class="tab-button"
           [class.active]="activeTab === 1"
-          (click)="activeTab = 1">
+          (click)="setActiveTab(1)">
           <i class="fas fa-map-marker-alt"></i>
           Dirección
         </button>
@@ -54,7 +54,7 @@
           type="button"
           class="tab-button"
           [class.active]="activeTab === 2"
-          (click)="activeTab = 2">
+          (click)="setActiveTab(2)">
           <i class="fas fa-briefcase"></i>
           Información Profesional
         </button>
@@ -62,7 +62,7 @@
           type="button"
           class="tab-button"
           [class.active]="activeTab === 3"
-          (click)="activeTab = 3">
+          (click)="setActiveTab(3)">
           <i class="fas fa-cog"></i>
           Preferencias
         </button>

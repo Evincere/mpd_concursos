@@ -147,3 +147,93 @@
     opacity: 0.8;
   }
 }
+
+// Container principal
+.inscription-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  // Botón con acción urgente
+  .inscription-button.urgent-action {
+    animation: urgentPulse 2s infinite;
+    box-shadow:
+      0 4px 16px rgba(255, 152, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+// Indicador de urgencia
+.urgency-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  animation: urgentGlow 2s infinite alternate;
+
+  i {
+    color: #f59e0b;
+    font-size: 0.875rem;
+  }
+
+  span {
+    color: #d97706;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+}
+
+// Animaciones de urgencia
+@keyframes urgentPulse {
+  0%, 100% {
+    box-shadow:
+      0 4px 16px rgba(255, 152, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 6px 20px rgba(255, 152, 0, 0.4),
+      0 4px 12px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+}
+
+@keyframes urgentGlow {
+  0% {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: rgba(255, 152, 0, 0.3);
+  }
+  100% {
+    background: rgba(255, 152, 0, 0.15);
+    border-color: rgba(255, 152, 0, 0.4);
+  }
+}
+
+// Mensaje de inscripción bloqueada
+.inscription-blocked-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+
+  i {
+    color: #9CA3AF;
+    margin-right: 8px;
+  }
+
+  span {
+    font-size: 0.875rem;
+    color: #6B7280;
+    font-weight: 500;
+  }
+}

@@ -280,8 +280,7 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
     const selectedDocs = this.getSelectedDocuments();
 
     if (selectedDocs.length === 0) {
-      console.log('No hay documentos seleccionados');
-      return;
+      // Logging implementado con LoggingService;
     }
 
     this.isLoading = true;
@@ -302,7 +301,7 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
 
       this.resetSelection();
       this.isLoading = false;
-      console.log(`${selectedDocs.length} documento(s) aprobado(s) correctamente`);
+      // Logging implementado con LoggingService;
     }, 1000);
   }
 
@@ -310,8 +309,7 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
     const selectedDocs = this.getSelectedDocuments();
 
     if (selectedDocs.length === 0) {
-      console.log('No hay documentos seleccionados');
-      return;
+      // Logging implementado con LoggingService;
     }
 
     this.isLoading = true;
@@ -333,7 +331,7 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
 
       this.resetSelection();
       this.isLoading = false;
-      console.log(`${selectedDocs.length} documento(s) rechazado(s) correctamente`);
+      // Logging implementado con LoggingService;
     }, 1000);
   }
 
@@ -370,5 +368,12 @@ export class DocumentsManagerComponent implements OnInit, OnDestroy {
     // Si ya tienes rejectSelectedDocuments, reutiliza la lógica para uno solo
     this.selectedDocuments = { [document.id]: true };
     this.rejectSelectedDocuments();
+  }
+
+  /**
+   * Establece el tab activo
+   */
+  setActiveTab(tabIndex: number): void {
+    this.activeTab = tabIndex;
   }
 }

@@ -175,16 +175,37 @@
         <div class="content-section">
           <h3>Documentación Requerida</h3>
 
-          <div class="info-box">
-            <i class="fas fa-info-circle"></i>
-            <strong>Para completar su inscripción, debe cargar todos los documentos requeridos.</strong>
-          </div>
-
           <!-- Componente de documentos embebidos -->
           <app-documentos-embebidos
             [concursoId]="getContestId()"
             (documentosCompletados)="onDocumentosCompletados($event)">
           </app-documentos-embebidos>
+
+          <!-- UNIFICADO: Checkbox para inscripción provisional cuando hay documentos pendientes -->
+          <div class="provisional-inscription-section" *ngIf="documentationState && !documentationState.completenessResult.allDocumentsComplete">
+            <div class="provisional-alert">
+              <div class="alert-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Inscripción Provisional</span>
+              </div>
+              <p>
+                Si no puede completar toda la documentación ahora, puede proceder con una
+                <strong>inscripción provisional</strong>. Tendrá <strong>3 días hábiles</strong>
+                después del cierre de inscripciones para completar la documentación pendiente.
+              </p>
+              <div class="warning-note">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>La falta de documentación completa dentro del plazo resultará en la descalificación automática.</span>
+              </div>
+            </div>
+
+            <div class="provisional-checkbox">
+              <app-custom-checkbox
+                formControlName="documentosCompletos"
+                label="Acepto proceder con inscripción provisional y comprometerme a completar la documentación dentro del plazo establecido">
+              </app-custom-checkbox>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -278,16 +299,16 @@
                 </div>
               </div>
 
-              <!-- Alerta de inscripción provisional -->
-              <div class="provisional-alert" *ngIf="!allRequiredDocumentsUploaded()">
-                <div class="alert-header">
-                  <i class="fas fa-exclamation-triangle"></i>
+              <!-- Información de inscripción provisional (solo informativa en el resumen) -->
+              <div class="provisional-info" *ngIf="documentationState && !documentationState.completenessResult.allDocumentsComplete">
+                <div class="info-header">
+                  <i class="fas fa-info-circle"></i>
                   <span>Inscripción Provisional</span>
                 </div>
                 <p>
-                  Tu inscripción será registrada como <strong>provisional</strong> debido a documentación pendiente.
-                  Tienes <strong>3 días hábiles</strong> después del cierre de inscripciones para completar la documentación
-                  y evitar la descalificación automática.
+                  Su inscripción será registrada como <strong>provisional</strong> debido a documentación pendiente.
+                  Recuerde que tiene <strong>3 días hábiles</strong> después del cierre de inscripciones para completar
+                  la documentación y evitar la descalificación automática.
                 </p>
               </div>
             </div>

@@ -81,22 +81,24 @@ public interface InscriptionEntityMapper {
             return InscriptionStatus.ACTIVE;
         }
 
+        // REFACTORING: Solo estados estándar después de eliminar legacy
         switch (state) {
             case ACTIVE:
                 return InscriptionStatus.ACTIVE;
             case PENDING:
-            case PENDIENTE:
-            case CONFIRMADA:
                 return InscriptionStatus.PENDING;
+            case COMPLETED_WITH_DOCS:
+                return InscriptionStatus.COMPLETED_WITH_DOCS;
+            case COMPLETED_PENDING_DOCS:
+                return InscriptionStatus.COMPLETED_PENDING_DOCS;
+            case FROZEN:
+                return InscriptionStatus.FROZEN;
             case APPROVED:
-            case INSCRIPTO:
                 return InscriptionStatus.APPROVED;
             case REJECTED:
                 return InscriptionStatus.REJECTED;
             case CANCELLED:
                 return InscriptionStatus.CANCELLED;
-            case NO_INSCRIPTO:
-            case IN_PROCESS:
             default:
                 return InscriptionStatus.ACTIVE;
         }
@@ -113,6 +115,12 @@ public interface InscriptionEntityMapper {
                 return InscriptionState.ACTIVE;
             case PENDING:
                 return InscriptionState.PENDING;
+            case COMPLETED_WITH_DOCS:
+                return InscriptionState.COMPLETED_WITH_DOCS;
+            case COMPLETED_PENDING_DOCS:
+                return InscriptionState.COMPLETED_PENDING_DOCS;
+            case FROZEN:
+                return InscriptionState.FROZEN;
             case APPROVED:
                 return InscriptionState.APPROVED;
             case REJECTED:

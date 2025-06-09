@@ -277,6 +277,158 @@
   }
 }
 
+// Estilos para la sección de inscripción provisional
+.provisional-inscription-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+    pointer-events: none;
+    border-radius: 8px;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .provisional-alert {
+    margin-bottom: 1.5rem;
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+
+      i {
+        font-size: 1.25rem;
+        color: #f59e0b;
+        margin-right: 0.75rem;
+      }
+
+      span {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #f59e0b;
+      }
+    }
+
+    p {
+      color: #f9fafb;
+      line-height: 1.6;
+      margin: 0 0 1rem 0;
+      font-size: 0.95rem;
+
+      strong {
+        color: #fbbf24;
+        font-weight: 700;
+      }
+    }
+
+    .warning-note {
+      display: flex;
+      align-items: flex-start;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 1rem;
+
+      i {
+        font-size: 1rem;
+        color: #ef4444;
+        margin-right: 0.75rem;
+        margin-top: 0.125rem;
+        flex-shrink: 0;
+      }
+
+      span {
+        color: #fecaca;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .provisional-checkbox {
+    margin-top: 1.5rem;
+    // CustomCheckboxComponent will handle glassmorphism styling
+  }
+}
+
+// Estilos para la información provisional (solo informativa, sin checkbox)
+.provisional-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+    pointer-events: none;
+    border-radius: 6px;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .info-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+
+    i {
+      font-size: 1rem;
+      color: #3b82f6;
+      margin-right: 0.5rem;
+    }
+
+    span {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #3b82f6;
+    }
+  }
+
+  p {
+    color: #e5e7eb;
+    line-height: 1.5;
+    margin: 0;
+    font-size: 0.8rem;
+
+    strong {
+      color: #93c5fd;
+      font-weight: 600;
+    }
+  }
+}
+
 // Estilos para los términos y condiciones
 .terms-container {
   background: rgba(255, 255, 255, 0.05);

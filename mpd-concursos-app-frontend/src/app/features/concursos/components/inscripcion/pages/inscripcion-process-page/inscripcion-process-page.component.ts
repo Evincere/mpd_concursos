@@ -5,8 +5,8 @@ import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } 
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { CustomCheckboxComponent } from '@shared/components/custom-form/custom-checkbox/custom-checkbox.component';
 import { NotificationService } from '@shared/services/notification.service';
-import { Subject, of, throwError } from 'rxjs';
-import { takeUntil, finalize, map, catchError, switchMap } from 'rxjs/operators';
+import { Subject, of, throwError, forkJoin, Observable } from 'rxjs'; // Import forkJoin
+import { takeUntil, finalize, map, catchError, switchMap, tap } from 'rxjs/operators'; // Import tap
 import { HttpClient } from '@angular/common/http';
 
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
@@ -23,7 +23,10 @@ import { CustomAddressAutocompleteComponent } from '@shared/components/custom-ad
 import { animate, style, transition, trigger } from '@angular/animations';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { IInscriptionUpdateRequest } from '@shared/interfaces/inscripcion/inscription.interface';
-import { DocumentoUsuario } from '@core/models/documento.model';
+import { InscriptionDocumentationService, InscriptionDocumentationState } from '@core/services/inscripcion/inscription-documentation.service';
+import { RequiredDocument } from '@core/services/documentos/documento-validation.service';
+import { DocumentoUsuario, TipoDocumento } from '@core/models/documento.model'; // Import TipoDocumento
+import { LoggingService } from '@core/services/logging/logging.service';
 
 /**
  * Componente para el proceso de inscripción a concursos
@@ -82,7 +85,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   // Formulario reactivo
   inscriptionForm: FormGroup;
 
-  // Datos de la dirección seleccionada
+  // Datos de la dirección seleccionada (no se usa directamente en el formulario reactivo, pero se mantiene para claridad)
   addressData: {
     formattedAddress: string;
     placeId: string;
@@ -90,13 +93,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     components: Record<string, unknown>;
   } | null = null;
 
-  // Documentación requerida
-  documentacionRequerida: {
-    title: string,
-    required: boolean,
-    completed: boolean,
-    tipoDocumentoId: string
-  }[] = [];
+  // Estado de documentación centralizado
+  documentationState: InscriptionDocumentationState | null = null;
 
   // Contenido de términos y condiciones
   termsAndConditionsContent: string = '';
@@ -126,6 +124,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   }
 
   private destroy$ = new Subject<void>();
+  private inscriptionCompleted = false; // Flag to track if inscription was successfully completed
 
   constructor(
     private route: ActivatedRoute,
@@ -138,15 +137,17 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     private documentosService: DocumentosService,
     private authService: AuthService,
     private notificationService: NotificationService,
-    private http: HttpClient,
-    private cdr: ChangeDetectorRef
+    private http: HttpClient, // Assuming HttpClient is directly used for T&C content
+    private cdr: ChangeDetectorRef,
+    private loggingService: LoggingService,
+    private inscriptionDocumentationService: InscriptionDocumentationService
   ) {
     // Inicializar formulario reactivo
     this.inscriptionForm = this.fb.group({
       termsAccepted: [false, Validators.requiredTrue],
       centroDeVida: ['', Validators.required],
       selectedCircunscripciones: [[], Validators.required],
-      documentosCompletos: [false, Validators.requiredTrue],
+      documentosCompletos: [false], // CRITICAL FIX: No required by default - user can choose provisional inscription
       confirmedPersonalData: [false, Validators.requiredTrue]
     });
   }
@@ -159,8 +160,20 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.contestId = params['contestId'] ? Number(params['contestId']) : null;
       this.inscriptionId = params['inscriptionId'] || null;
 
+      this.loggingService.debug('[InscripcionProcess] Parámetros recibidos:', {
+        contestId: this.contestId,
+        inscriptionId: this.inscriptionId
+      }, 'InscripcionProcessPage');
+
       if (!this.contestId) {
         this.notificationService.error('No se ha especificado un concurso válido');
+        this.router.navigate(['/dashboard/concursos']);
+        return;
+      }
+
+      if (!this.inscriptionId) {
+        console.error('[InscripcionProcess] Error: No se recibió el ID de inscripción');
+        this.notificationService.error('Error: No se pudo obtener el ID de inscripción. Por favor, intente nuevamente.');
         this.router.navigate(['/dashboard/concursos']);
         return;
       }
@@ -169,9 +182,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.cargarDatosConcurso();
 
       // Cargar estado guardado si existe
-      if (this.inscriptionId) {
-        this.cargarEstadoGuardado();
-      }
+      this.cargarEstadoGuardado();
 
       // Cargar centro de vida desde el perfil si existe
       this.cargarCentroDeVidaDesdePerfilUsuario();
@@ -180,25 +191,55 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.loadTermsAndConditions();
 
       // Actualizar el estado de los documentos en el resumen
+      // Esto debe hacerse después de cargar el estado guardado y los datos del concurso
       this.actualizarEstadoDocumentos();
+    });
+
+    // Suscribirse al estado de documentación centralizado
+    this.inscriptionDocumentationService.documentationState$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      this.documentationState = state;
+      this.cdr.detectChanges();
+    });
+
+    // Suscribirse a cambios en el checkbox de inscripción provisional
+    this.documentosCompletosControl.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(value => {
+      this.onProvisionalAcceptanceChange(value);
     });
   }
 
   ngOnDestroy(): void {
-    // Si hay un ID de inscripción y no se ha completado el proceso, marcar como interrumpida
-    if (this.inscriptionId && this.currentStep < 5) {
+    // Solo cancelar la inscripción si NO se completó exitosamente y el paso es menor a 5
+    if (this.inscriptionId && this.currentStep < 5 && !this.inscriptionCompleted) {
       // Guardar el estado actual antes de destruir el componente
       this.guardarEstadoActual();
 
-      // Marcar la inscripción como interrumpida
-      this.inscriptionService.markAsInterrupted(this.inscriptionId).subscribe({
+      this.loggingService.debug('[InscripcionProcess] Inscripción interrumpida - marcando como cancelada', {
+        inscriptionId: this.inscriptionId,
+        currentStep: this.currentStep,
+        completed: this.inscriptionCompleted
+      }, 'InscripcionProcessPage');
+
+      // Marcar la inscripción como cancelada
+      this.inscriptionService.markAsCancelled(this.inscriptionId).pipe(
+        takeUntil(this.destroy$), // Ensure this subscription is also cleaned up
+        catchError(error => {
+          console.error('[InscripcionProcess] Error al marcar inscripción como interrumpida:', error);
+          return of(null); // Continue gracefully
+        })
+      ).subscribe({
         next: () => {
-          console.log('[InscripcionProcess] Inscripción marcada como interrumpida al salir de la página');
-        },
-        error: (error) => {
-          console.error('[InscripcionProcess] Error al marcar inscripción como interrumpida al salir de la página:', error);
+          this.loggingService.debug('[InscripcionProcess] Inscripción marcada como INTERRUMPIDA:', this.inscriptionId, 'InscripcionProcessPage');
         }
       });
+    } else if (this.inscriptionCompleted) {
+      this.loggingService.debug('[InscripcionProcess] Inscripción completada exitosamente - NO se cancela', {
+        inscriptionId: this.inscriptionId,
+        currentStep: this.currentStep
+      }, 'InscripcionProcessPage');
     }
 
     this.destroy$.next();
@@ -207,17 +248,17 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Métodos para navegación entre pasos
   goToStep(step: number): void {
-    if (step < this.currentStep) {
+    // Allow going back to previous steps, but only if they are valid
+    if (step >= 1 && step <= this.currentStep) {
+      // Validate current step before going back if it's not the final step
+      // No validation when going back, as currentStep will be decreased
       this.currentStep = step;
       this.updateProgressPercentage();
-
-      // Ejecutar scroll suave después de que se complete la animación
       this.scrollToTopAfterAnimation();
     }
   }
 
   nextStep(): void {
-    // CORRECCIÓN CRÍTICA: Validar antes de avanzar y mostrar mensajes informativos
     if (this.currentStep < 5) {
       if (!this.canProceed()) {
         this.showValidationErrorMessages();
@@ -229,11 +270,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.guardarEstadoActual();
 
       // Si avanzamos al paso de confirmación, actualizar el estado de los documentos
-      if (this.currentStep === 5) {
+      if (this.currentStep === 4) { // Step 4 is 'Confirmación'
         this.actualizarEstadoDocumentos();
       }
 
-      // Ejecutar scroll suave después de que se complete la animación
       this.scrollToTopAfterAnimation();
     }
   }
@@ -242,15 +282,17 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     if (this.currentStep > 1) {
       this.currentStep--;
       this.updateProgressPercentage();
-
-      // Ejecutar scroll suave después de que se complete la animación
       this.scrollToTopAfterAnimation();
     }
   }
 
   // Actualizar porcentaje de progreso
   updateProgressPercentage(): void {
-    this.progressPercentage = (this.currentStep / 5) * 100;
+    // Assuming 4 steps for actual content + 1 for completion, total 5 states
+    this.progressPercentage = (this.currentStep / 4) * 100;
+    if (this.currentStep === 4) { // Max out at 100% when all steps are validated
+      this.progressPercentage = 100;
+    }
   }
 
   /**
@@ -291,8 +333,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
             left: 0,
             behavior: 'smooth'
           });
-
-          // También hacer scroll en window para asegurar que la página esté en la parte superior
+          // Also scroll window to ensure the whole page is at the top
           window.scrollTo({
             top: 0,
             left: 0,
@@ -389,11 +430,11 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Verificar si se puede avanzar al siguiente paso
   canProceed(): boolean {
-    // CORRECCIÓN: Usar setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
+    // Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
     if (!this.showValidationErrors) {
       setTimeout(() => {
         this.showValidationErrors = true;
-        this.cdr.detectChanges();
+        this.cdr.detectChanges(); // Manually trigger change detection
       });
     }
 
@@ -401,13 +442,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       case 1:
         return this.termsAcceptedControl.value === true;
       case 2:
-        return this.centroDeVidaControl.valid && this.selectedCircunscripcionesControl.valid;
+        return this.centroDeVidaControl.valid && this.selectedCircunscripcionesControl.valid && this.selectedCircunscripcionesControl.value.length > 0;
       case 3:
-        // CORRECCIÓN CRÍTICA: Verificar que hay documentos requeridos Y están completos
-        return this.hasRequiredDocuments() && this.documentosCompletosControl.valid;
+        // UNIFICADO: Usar servicio centralizado para validación de documentación
+        return this.canProceedWithDocumentation();
       case 4:
-        // CORRECCIÓN CRÍTICA: Usar método sin efectos secundarios
-        return this.isDocumentationValidForFinish();
+        // Step 4 validation is for the final confirmation before finishing the inscription
+        return this.confirmedPersonalDataControl.valid && this.canProceedWithDocumentation();
       default:
         return false;
     }
@@ -415,132 +456,66 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Verificar si se puede finalizar la inscripción
   canFinish(): boolean {
-    // CORRECCIÓN: Evitar modificaciones de estado durante la verificación
-    const formValid = this.inscriptionForm.valid;
-    const personalDataValid = this.confirmedPersonalDataControl.valid;
-    const documentationValid = this.isDocumentationValidForFinish();
+    // Ensure all controls for the final step are valid and documentation check passes
+    const formValid = this.inscriptionForm.valid; // This checks all controls
+    const personalDataConfirmed = this.confirmedPersonalDataControl.value === true;
+    const documentationValid = this.canProceedWithDocumentation();
 
-    return formValid && personalDataValid && documentationValid;
+    // The inscription can be finalized if all form controls are valid and the documentation
+    // is either fully complete OR the user has accepted provisional inscription terms.
+    return formValid && personalDataConfirmed && documentationValid;
   }
 
   /**
-   * NUEVO MÉTODO: Verificación de documentación sin efectos secundarios
+   * MÉTODO UNIFICADO: Verifica si se puede proceder con la documentación actual
+   * Usa el servicio centralizado para validación consistente
    */
-  private isDocumentationValidForFinish(): boolean {
-    // Verificar que existe documentación requerida
-    if (!this.hasRequiredDocuments()) {
-      return false;
-    }
-
-    // Verificar el estado del control de documentos SIN modificarlo
-    const documentosCompletos = this.documentosCompletosControl.value;
-    const todosCompletados = this.documentacionRequerida.every(doc => doc.completed);
-
-    // Permitir continuar si hay documentos completos O si se acepta inscripción provisional
-    return todosCompletados || documentosCompletos;
+  canProceedWithDocumentation(): boolean {
+    return this.inscriptionDocumentationService.canProceedWithCurrentState();
   }
 
   /**
-   * NUEVOS MÉTODOS: Para la vista mejorada del resumen
+   * MÉTODOS UNIFICADOS: Para la vista mejorada del resumen usando servicio centralizado
    */
   getDocumentosCompletados(): number {
-    if (!this.documentacionRequerida) return 0;
-    return this.documentacionRequerida.filter(doc => doc.completed).length;
+    if (!this.documentationState) return 0;
+    return this.documentationState.completenessResult.completedCount;
   }
 
   getDocumentationProgress(): number {
-    if (!this.documentacionRequerida || this.documentacionRequerida.length === 0) return 0;
-    const completados = this.getDocumentosCompletados();
-    return Math.round((completados / this.documentacionRequerida.length) * 100);
+    if (!this.documentationState) return 0;
+    const { completedCount, totalCount } = this.documentationState.completenessResult;
+    return totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   }
 
   /**
-   * CORRECCIÓN CRÍTICA: Verifica que existen documentos requeridos en el sistema
+   * Obtiene la lista de documentos requeridos desde el estado centralizado
    */
-  hasRequiredDocuments(): boolean {
-    // Verificar que hay documentación requerida configurada
-    if (!this.documentacionRequerida || this.documentacionRequerida.length === 0) {
-      console.warn('[InscripcionProcess] No hay documentación requerida configurada');
-      return false;
-    }
-
-    // Verificar que al menos hay documentos base obligatorios
-    const documentosBase = ['dni', 'cuil', 'antecedentes'];
-    const tieneDocumentosBase = documentosBase.some(base =>
-      this.documentacionRequerida.some(doc =>
-        doc.title.toLowerCase().includes(base) ||
-        doc.tipoDocumentoId.toLowerCase().includes(base)
-      )
-    );
-
-    if (!tieneDocumentosBase) {
-      console.error('[InscripcionProcess] No se encontraron documentos base obligatorios');
-      return false;
-    }
-
-    return true;
+  get documentacionRequerida(): RequiredDocument[] {
+    return this.documentationState?.requiredDocuments || [];
   }
 
   /**
-   * NUEVA LÓGICA: Valida el estado de documentación permitiendo inscripciones provisionales
-   * NOTA: Este método puede modificar el estado, usar solo en acciones del usuario
-   */
-  validateDocumentationStatus(): boolean {
-    // Verificar que existe documentación requerida
-    if (!this.hasRequiredDocuments()) {
-      console.error('[InscripcionProcess] Validación fallida: No hay documentos requeridos');
-      return false;
-    }
-
-    // Verificar el estado del control de documentos
-    const documentosCompletos = this.documentosCompletosControl.value;
-
-    // NUEVA LÓGICA: Permitir continuar si:
-    // 1. Todos los documentos están completos, O
-    // 2. El usuario ha confirmado que entiende la inscripción provisional
-    const todosCompletados = this.documentacionRequerida.every(doc => doc.completed);
-
-    // CORRECCIÓN: Solo actualizar el control si hay una inconsistencia real
-    // y usar setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
-    if (documentosCompletos && !todosCompletados) {
-      console.warn('[InscripcionProcess] Inconsistencia: Control marca completo pero hay documentos pendientes');
-      // Actualizar el control de forma asíncrona
-      setTimeout(() => {
-        this.documentosCompletosControl.setValue(false);
-        this.cdr.detectChanges();
-      });
-    }
-
-    // Permitir continuar si hay documentos completos O si se acepta inscripción provisional
-    const puedeContinuar = todosCompletados || documentosCompletos;
-
-    console.log(`[InscripcionProcess] Estado de documentación validado: ${puedeContinuar} (Completos: ${todosCompletados}, Control: ${documentosCompletos})`);
-    return puedeContinuar;
-  }
-
-  /**
-   * CORRECCIÓN CRÍTICA: Verifica si todos los documentos requeridos están realmente subidos
+   * MÉTODO UNIFICADO: Verifica si todos los documentos requeridos están subidos (sin provisional)
+   * Usa el servicio centralizado para consistencia
    */
   allRequiredDocumentsUploaded(): boolean {
-    if (!this.documentacionRequerida || this.documentacionRequerida.length === 0) {
-      console.warn('[InscripcionProcess] No hay documentación requerida para verificar');
+    if (!this.documentationState) {
       return false;
     }
-
-    const todosCompletos = this.documentacionRequerida.every(doc => {
-      const completo = doc.completed === true;
-      if (!completo) {
-        console.log(`[InscripcionProcess] Documento pendiente: ${doc.title}`);
-      }
-      return completo;
-    });
-
-    console.log(`[InscripcionProcess] Verificación de documentos: ${todosCompletos ? 'TODOS COMPLETOS' : 'PENDIENTES'}`);
-    return todosCompletos;
+    return this.documentationState.completenessResult.allDocumentsComplete;
   }
 
   /**
-   * CORRECCIÓN CRÍTICA: Muestra mensajes de error específicos según el paso
+   * MÉTODO RESTAURADO: Verifica si la documentación es válida para finalizar
+   * Permite finalizar con documentación completa O con inscripción provisional aceptada
+   */
+  isDocumentationValidForFinish(): boolean {
+    return this.canProceedWithDocumentation();
+  }
+
+  /**
+   * CRITICAL FIX: Shows specific validation error messages based on the current step.
    */
   showValidationErrorMessages(): void {
     switch (this.currentStep) {
@@ -551,25 +526,27 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         if (!this.centroDeVidaControl.valid) {
           this.notificationService.warning('Debe especificar su centro de vida para continuar.');
         }
-        if (!this.selectedCircunscripcionesControl.valid) {
+        if (!this.selectedCircunscripcionesControl.valid || this.selectedCircunscripcionesControl.value.length === 0) {
           this.notificationService.warning('Debe seleccionar al menos una circunscripción para continuar.');
         }
         break;
       case 3:
-        if (!this.hasRequiredDocuments()) {
-          this.notificationService.error('Error de configuración: No hay documentos requeridos definidos. Contacte al administrador.');
-        } else if (!this.documentosCompletosControl.valid) {
-          const pendientes = this.documentacionRequerida.filter(doc => !doc.completed);
-          const listaPendientes = pendientes.map(doc => doc.title).join(', ');
-          this.notificationService.warning(`Debe cargar todos los documentos requeridos para continuar. Pendientes: ${listaPendientes}`);
+        if (!this.canProceedWithDocumentation()) {
+          const missingDocs = this.inscriptionDocumentationService.getMissingDocuments();
+          if (missingDocs.length > 0) {
+            const pendientes = missingDocs.map(doc => doc.title);
+            this.notificationService.warning(`Debe cargar todos los documentos requeridos para continuar o marcar la opción de "inscripción provisional". Documentos pendientes: ${pendientes.join(', ')}`);
+          } else {
+            this.notificationService.error('Error de configuración: No hay documentos requeridos definidos para este concurso. Contacte al administrador.');
+          }
         }
         break;
       case 4:
-        if (!this.validateDocumentationStatus()) {
-          this.notificationService.warning('Debe completar la documentación requerida antes de confirmar la inscripción.');
-        }
         if (!this.confirmedPersonalDataControl.valid) {
-          this.notificationService.warning('Debe confirmar que sus datos personales son correctos.');
+          this.notificationService.warning('Debe confirmar que sus datos personales son correctos para finalizar.');
+        }
+        if (!this.isDocumentationValidForFinish()) {
+          this.notificationService.warning('La documentación no está completa o no ha aceptado la inscripción provisional.');
         }
         break;
       default:
@@ -584,18 +561,22 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     // Obtenemos todos los concursos y filtramos por ID ya que no hay un método específico para obtener por ID
     this.concursosService.getConcursos().pipe(
       map((concursos: Contest[]) => concursos.find(c => c.id === this.contestId)),
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (contest) => {
+      tap(contest => {
         if (contest) {
           this.contest = contest;
+        } else {
+          this.notificationService.error('Concurso no encontrado.');
+          this.router.navigate(['/dashboard/concursos']);
         }
-      },
-      error: (error: Error) => {
+      }),
+      catchError((error: Error) => {
         console.error('[InscripcionProcess] Error al cargar datos del concurso:', error);
-        this.notificationService.error('Error al cargar datos del concurso');
-      }
-    });
+        this.notificationService.error('Error al cargar datos del concurso.');
+        this.router.navigate(['/dashboard/concursos']);
+        return of(null); // Return observable of null to continue stream
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe();
   }
 
   // Cargar estado guardado
@@ -617,6 +598,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       }
 
       this.updateProgressPercentage();
+      this.notificationService.info('Estado de inscripción anterior recuperado.');
     }
   }
 
@@ -632,6 +614,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('[InscripcionProcess] Error al cargar perfil del usuario:', error);
+        // Do not interrupt flow if profile cannot be loaded.
       }
     });
   }
@@ -681,60 +664,56 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     coordinates: { lat: number; lng: number; };
     components: Record<string, unknown>;
   }): void {
-    console.log('[InscripcionProcess] Dirección seleccionada:', addressData);
-    this.addressData = addressData;
+    this.loggingService.debug('[InscripcionProcess] Dirección seleccionada:', addressData, 'InscripcionProcessPage');
     this.centroDeVidaControl.setValue(addressData.formattedAddress);
+    this.addressData = addressData; // Store full address data if needed
   }
 
   // Manejar el cambio de respuesta en los términos
   onTermsResponseChange(accepted: boolean): void {
-    console.log('[InscripcionProcess] Respuesta de términos cambiada:', accepted);
+    this.loggingService.debug(`[InscripcionProcess] Términos aceptados: ${accepted}`, undefined, 'InscripcionProcessPage');
 
-    // Actualizar el valor del control
+    // CRITICAL FIX: Update the form control value
     this.termsAcceptedControl.setValue(accepted);
 
-    // Si el usuario selecciona "No", mostrar mensaje y cancelar la inscripción
+    // If the user selects "No", show message and cancel inscription
     if (!accepted) {
-      // Mostrar mensaje informativo
       this.notificationService.warning('Para continuar con la inscripción debe leer y aceptar las bases y condiciones del concurso.');
-
-      // Cancelar la inscripción y regresar a la página de concursos
       setTimeout(() => {
         this.cancelarInscripcionYRegresar();
       }, 1500);
     } else {
-      // Limpiar errores de validación cuando se acepta
-      this.showValidationErrors = false;
-      // Guardar el estado actual solo si acepta
-      this.guardarEstadoActual();
+      this.showValidationErrors = false; // Clear validation errors when accepted
+      this.guardarEstadoActual(); // Save current state only if accepted
+
+      // Trigger change detection to update the UI immediately
+      this.cdr.detectChanges();
     }
   }
 
   // Método para cancelar la inscripción y regresar
   private cancelarInscripcionYRegresar(): void {
-    console.log('[InscripcionProcess] Cancelando inscripción por no aceptar términos');
-
+    this.loggingService.debug('[InscripcionProcess] Iniciando cancelación y regreso a concursos.', undefined, 'InscripcionProcessPage');
     if (this.inscriptionId) {
-      // Marcar la inscripción como cancelada
-      this.inscriptionService.markAsInterrupted(this.inscriptionId).subscribe({
+      this.cancelInscriptionWrapper(this.inscriptionId).pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          // Clear local state and navigate back regardless of backend success
+          this.inscriptionStateService.clearInscriptionState(this.inscriptionId!);
+          this.router.navigate(['/dashboard/concursos']);
+        }),
+        catchError(error => {
+          console.error('[InscripcionProcess] Error al cancelar inscripción en el backend:', error);
+          this.notificationService.error('Error al cancelar la inscripción. Por favor, intente nuevamente.');
+          return of(null); // Continue gracefully
+        })
+      ).subscribe({
         next: () => {
-          console.log('[InscripcionProcess] Inscripción cancelada exitosamente');
-          // Limpiar estados locales
-          this.inscriptionService.clearFormState(this.inscriptionId!);
-          this.inscriptionStateService.clearInscriptionState(this.inscriptionId!);
-          // Regresar a concursos
-          this.router.navigate(['/dashboard/concursos']);
-        },
-        error: (error) => {
-          console.error('[InscripcionProcess] Error al cancelar inscripción:', error);
-          // Aún así, limpiar estados locales y regresar
-          this.inscriptionService.clearFormState(this.inscriptionId!);
-          this.inscriptionStateService.clearInscriptionState(this.inscriptionId!);
-          this.router.navigate(['/dashboard/concursos']);
+          this.notificationService.info('Inscripción cancelada.');
         }
       });
     } else {
-      // Si no hay ID de inscripción, simplemente regresar
+      // If no inscription ID, simply navigate back
       this.router.navigate(['/dashboard/concursos']);
     }
   }
@@ -743,38 +722,35 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   actualizarPerfilConCentroDeVida(): void {
     const centroDeVida = this.centroDeVidaControl.value;
     if (!centroDeVida) {
-      console.log('[InscripcionProcess] No hay centro de vida para actualizar');
+      this.loggingService.warn('[InscripcionProcess] Centro de vida no proporcionado para actualizar el perfil.', undefined, 'InscripcionProcessPage');
       return;
     }
 
     try {
-      // Validar y formatear la dirección antes de enviarla
       let direccionFormateada = centroDeVida.trim();
 
-      // Limitar la longitud de la dirección a 255 caracteres (límite común en bases de datos)
       if (direccionFormateada.length > 255) {
         direccionFormateada = direccionFormateada.substring(0, 255);
       }
 
-      // Eliminar caracteres especiales que podrían causar problemas
-      direccionFormateada = direccionFormateada.replace(/[^\w\s,.°º-]/g, '');
+      // Remove problematic characters (keeping common address components like spaces, commas, periods, degrees, hyphens)
+      direccionFormateada = direccionFormateada.replace(/[^\w\s.,°º-]/g, '');
 
-      console.log('[InscripcionProcess] Enviando dirección formateada:', direccionFormateada);
+      this.loggingService.debug(`[InscripcionProcess] Actualizando perfil con centro de vida: ${direccionFormateada}`, undefined, 'InscripcionProcessPage');
 
-      // Primero obtener el perfil actual para asegurarnos de no sobrescribir otros datos
       this.profileService.getUserProfile().pipe(
+        takeUntil(this.destroy$),
         catchError(error => {
-          console.error('[InscripcionProcess] Error al obtener perfil del usuario:', error);
-          // Continuar con el flujo a pesar del error, enviando solo la dirección
+          console.error('[InscripcionProcess] Error al obtener el perfil para actualizar centro de vida:', error);
+          // Continue with the flow despite the error, only sending the address
           return of(null);
         }),
         switchMap(profile => {
-          // Si no pudimos obtener el perfil, enviamos solo la dirección
           const dataToUpdate: Partial<UserProfile> = {
             direccion: direccionFormateada
           };
 
-          // Si tenemos el perfil, mantenemos los datos existentes
+          // If we have the profile, keep existing data. Otherwise, only update address.
           if (profile) {
             dataToUpdate.firstName = profile.firstName;
             dataToUpdate.lastName = profile.lastName;
@@ -784,435 +760,308 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
             dataToUpdate.experiencias = profile.experiencias || [];
             dataToUpdate.educacion = profile.educacion || [];
             dataToUpdate.habilidades = profile.habilidades || [];
+            // Add other profile fields if necessary to avoid accidental overwrites
           }
 
           return this.profileService.updateUserProfile(dataToUpdate);
         }),
         catchError(error => {
           console.error('[InscripcionProcess] Error al actualizar centro de vida en el perfil:', error);
-          // Continuar con el flujo a pesar del error
-          return of(null);
+          this.notificationService.error('Error al guardar su centro de vida. Por favor, intente nuevamente.');
+          return of(null); // Continue with the flow despite the error
         })
       ).subscribe({
         next: (response) => {
           if (response) {
-            console.log('[InscripcionProcess] Centro de vida actualizado en el perfil');
-          } else {
-            console.log('[InscripcionProcess] No se pudo actualizar el centro de vida, pero continuamos con el proceso');
+            this.notificationService.success('Centro de vida actualizado en su perfil.');
           }
         }
       });
     } catch (error) {
       console.error('[InscripcionProcess] Error inesperado al actualizar centro de vida:', error);
-      // No interrumpir el flujo principal por un error en la actualización del perfil
+      // Do not interrupt the main flow for an unexpected error in profile update
     }
   }
 
-  // Manejar el evento de documentos completados
+  // Manejar el evento de documentos completados desde el componente de documentos embebidos
   onDocumentosCompletados(completados: boolean): void {
-    console.log('[InscripcionProcess] Documentos completados:', completados);
-    this.documentosCompletosControl.setValue(completados);
-
-    // Actualizar el estado de los documentos en el resumen
+    this.loggingService.debug(`[InscripcionProcess] Evento 'documentosCompletados' recibido: ${completados}`, undefined, 'InscripcionProcessPage');
+    // Actualizar el estado de documentación usando el servicio centralizado
     this.actualizarEstadoDocumentos();
+  }
+
+  /**
+   * NUEVO MÉTODO: Maneja el cambio en la aceptación de inscripción provisional
+   * Actualiza el servicio centralizado cuando el usuario cambia el checkbox
+   */
+  onProvisionalAcceptanceChange(accepted: boolean): void {
+    this.loggingService.debug(`[InscripcionProcess] Aceptación provisional cambiada: ${accepted}`, undefined, 'InscripcionProcessPage');
+
+    // Actualizar el servicio centralizado
+    this.inscriptionDocumentationService.updateProvisionalAcceptance(accepted);
+
+    // Forzar detección de cambios para actualizar la UI
+    this.cdr.detectChanges();
   }
 
   // Actualizar el estado de los documentos en el resumen
   actualizarEstadoDocumentos(): void {
-    console.log('[InscripcionProcess] Actualizando estado de documentos en el resumen');
+    this.loggingService.debug('[InscripcionProcess] Actualizando estado de documentos requeridos y subidos.', undefined, 'InscripcionProcessPage');
 
-    // Primero, obtener los tipos de documento requeridos
-    this.documentosService.getTiposDocumento().subscribe({
-      next: (tiposDocumento) => {
-        console.log('[InscripcionProcess] Tipos de documento obtenidos:', tiposDocumento);
+    forkJoin([
+      this.documentosService.getTiposDocumento(),
+      this.documentosService.getDocumentosUsuario()
+    ]).pipe(
+      takeUntil(this.destroy$),
+      map(([tiposDocumento, documentosUsuario]) => {
+        this.loggingService.debug('[InscripcionProcess] Tipos de documento:', tiposDocumento, 'InscripcionProcessPage');
+        this.loggingService.debug('[InscripcionProcess] Documentos de usuario:', documentosUsuario, 'InscripcionProcessPage');
 
-        // Filtrar solo los documentos requeridos para concursos
-        let documentosRequeridos = tiposDocumento.filter(tipo => tipo.requerido);
-        console.log('[InscripcionProcess] Documentos requeridos:', documentosRequeridos);
+        // ✅ CRITICAL FIX: Usar la propiedad 'requerido' del backend para determinar si es obligatorio
+        let docsRequeridos: { title: string, required: boolean, completed: boolean, tipoDocumentoId: string }[] =
+          tiposDocumento.map(tipo => ({
+            title: tipo.nombre,
+            required: tipo.requerido, // ✅ USAR LA PROPIEDAD DEL BACKEND
+            completed: false, // Will update based on user uploads
+            tipoDocumentoId: tipo.id
+          }));
 
-        // Verificar si existen documentos de DNI frente y dorso
-        const dniFrenteExiste = documentosRequeridos.some(tipo =>
-          tipo.id === 'dni-frente' ||
-          tipo.code === 'dni-frente' ||
-          (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('frente'))
+        // --- DNI Consolidation Logic ---
+        const dniFrente = docsRequeridos.find(doc =>
+          doc.tipoDocumentoId.toLowerCase().includes('dni-frente') || doc.title.toLowerCase().includes('frente dni')
+        );
+        const dniDorso = docsRequeridos.find(doc =>
+          doc.tipoDocumentoId.toLowerCase().includes('dni-dorso') || doc.title.toLowerCase().includes('dorso dni')
+        );
+        const dniGeneral = docsRequeridos.find(doc =>
+          doc.tipoDocumentoId.toLowerCase() === 'dni' || doc.title.toLowerCase() === 'dni' || doc.title.toLowerCase().includes('documento nacional de identidad')
         );
 
-        const dniDorsoExiste = documentosRequeridos.some(tipo =>
-          tipo.id === 'dni-dorso' ||
-          tipo.code === 'dni-dorso' ||
-          (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('dorso'))
-        );
+        const consolidatedDocs: { title: string, required: boolean, completed: boolean, tipoDocumentoId: string }[] = [];
+        const processedIds = new Set<string>();
 
-        // Verificar si existe el documento DNI general
-        const dniGeneralExiste = documentosRequeridos.some(tipo =>
-          tipo.id === 'dni' ||
-          tipo.code === 'dni' ||
-          tipo.nombre.toLowerCase() === 'dni' ||
-          tipo.nombre.toLowerCase() === 'documento nacional de identidad' ||
-          tipo.nombre.toLowerCase().includes('documento nacional de identidad')
-        );
-
-        // Crear la lista de documentación requerida
-        let docsRequeridos = [];
-
-        // Si existen tanto el frente como el dorso del DNI, agregar un solo documento "DNI"
-        if (dniFrenteExiste && dniDorsoExiste) {
-          docsRequeridos.push({
-            title: 'DNI',
-            required: true,
+        if (dniFrente && dniDorso) {
+          // ✅ NUEVA IMPLEMENTACIÓN: Cards separadas para DNI Frente y Dorso respetando propiedad 'required'
+          consolidatedDocs.push({
+            title: 'DNI (Frente)',
+            required: dniFrente.required, // ✅ Usar la propiedad del backend
             completed: false,
-            tipoDocumentoId: 'dni'
+            tipoDocumentoId: dniFrente.tipoDocumentoId
           });
-
-          // Filtrar los documentos para excluir el frente y dorso del DNI
-          documentosRequeridos = documentosRequeridos.filter(tipo =>
-            !(tipo.id === 'dni-frente' ||
-              tipo.code === 'dni-frente' ||
-              (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('frente')) ||
-              tipo.id === 'dni-dorso' ||
-              tipo.code === 'dni-dorso' ||
-              (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('dorso')))
-          );
-
-          // También excluir el DNI general si existe
-          documentosRequeridos = documentosRequeridos.filter(tipo =>
-            !(tipo.id === 'dni' ||
-              tipo.code === 'dni' ||
-              tipo.nombre.toLowerCase() === 'dni' ||
-              tipo.nombre.toLowerCase() === 'documento nacional de identidad' ||
-              tipo.nombre.toLowerCase().includes('documento nacional de identidad'))
-          );
-        } else if (dniGeneralExiste) {
-          // Si existe el DNI general pero no el frente y dorso, usar el DNI general
-          const dniGeneral = documentosRequeridos.find(tipo =>
-            tipo.id === 'dni' ||
-            tipo.code === 'dni' ||
-            tipo.nombre.toLowerCase() === 'dni' ||
-            tipo.nombre.toLowerCase() === 'documento nacional de identidad' ||
-            tipo.nombre.toLowerCase().includes('documento nacional de identidad')
-          );
-
-          if (dniGeneral) {
-            docsRequeridos.push({
-              title: 'DNI',
-              required: true,
-              completed: false,
-              tipoDocumentoId: dniGeneral.id
-            });
-
-            // Excluir el DNI general de la lista
-            documentosRequeridos = documentosRequeridos.filter(tipo => tipo.id !== dniGeneral.id);
-          }
+          consolidatedDocs.push({
+            title: 'DNI (Dorso)',
+            required: dniDorso.required, // ✅ Usar la propiedad del backend
+            completed: false,
+            tipoDocumentoId: dniDorso.tipoDocumentoId
+          });
+          processedIds.add(dniFrente.tipoDocumentoId);
+          processedIds.add(dniDorso.tipoDocumentoId);
+        } else if (dniGeneral) {
+          // If only general DNI exists, use it as is
+          consolidatedDocs.push({
+            title: dniGeneral.title,
+            required: dniGeneral.required, // ✅ Usar la propiedad del backend
+            completed: false,
+            tipoDocumentoId: dniGeneral.tipoDocumentoId
+          });
+          processedIds.add(dniGeneral.tipoDocumentoId);
         }
 
-        // Agregar el resto de documentos requeridos
-        docsRequeridos = [
-          ...docsRequeridos,
-          ...documentosRequeridos.map(tipo => ({
-            title: tipo.nombre,
-            required: true,
-            completed: false,
-            tipoDocumentoId: tipo.id
-          }))
-        ];
-
-        // Actualizar la lista de documentación requerida
-        this.documentacionRequerida = docsRequeridos;
-
-        // Eliminar documentos redundantes o no necesarios
-        this.documentacionRequerida = this.documentacionRequerida.filter(doc => {
-          // Eliminar curriculum vitae
-          if (doc.title.toLowerCase().includes('curriculum') ||
-              doc.tipoDocumentoId.toLowerCase().includes('curriculum')) {
-            return false;
-          }
-
-          // Eliminar "Documento Nacional de Identidad" si ya existe "DNI"
-          if (doc.title.toLowerCase().includes('documento nacional de identidad') ||
-              doc.tipoDocumentoId.toLowerCase() === 'documento-nacional-de-identidad') {
-            // Verificar si ya existe una card de DNI
-            const existeDNI = this.documentacionRequerida.some(d =>
-              d.title.toLowerCase() === 'dni' ||
-              d.tipoDocumentoId.toLowerCase() === 'dni'
-            );
-
-            if (existeDNI) {
-              console.log('[InscripcionProcess] Eliminando documento redundante:', doc.title);
-              return false;
-            }
-          }
-
-          return true;
-        });
-
-        // Ahora, obtener los documentos del usuario
-        this.documentosService.getDocumentosUsuario().subscribe({
-          next: (documentos: DocumentoUsuario[]) => {
-            console.log('[InscripcionProcess] Documentos del usuario obtenidos:', documentos);
-
-            // Actualizar el estado de cada documento en el resumen
-            this.documentacionRequerida.forEach(doc => {
-              // Verificar si el documento está subido
-              let documentoSubido = false;
-
-              // Caso especial para DNI
-              if (doc.tipoDocumentoId === 'dni' || doc.title.toLowerCase() === 'dni') {
-                // Verificar si tanto el frente como el dorso del DNI están cargados
-                const frenteSubido = documentos.some(d =>
-                  d.tipoDocumentoId === 'dni-frente' ||
-                  (d.tipoDocumento && d.tipoDocumento.code === 'dni-frente') ||
-                  (d.tipoDocumento && d.tipoDocumento.nombre &&
-                   d.tipoDocumento.nombre.toLowerCase().includes('dni') &&
-                   d.tipoDocumento.nombre.toLowerCase().includes('frente'))
-                );
-
-                const dorsoSubido = documentos.some(d =>
-                  d.tipoDocumentoId === 'dni-dorso' ||
-                  (d.tipoDocumento && d.tipoDocumento.code === 'dni-dorso') ||
-                  (d.tipoDocumento && d.tipoDocumento.nombre &&
-                   d.tipoDocumento.nombre.toLowerCase().includes('dni') &&
-                   d.tipoDocumento.nombre.toLowerCase().includes('dorso'))
-                );
-
-                // Si ambos están cargados, consideramos que el DNI está completo
-                documentoSubido = frenteSubido && dorsoSubido;
-              } else {
-                // Para otros documentos, verificar coincidencia normal
-                documentoSubido = documentos.some((d: DocumentoUsuario) => {
-                  // Comprobar coincidencia por ID
-                  if (d.tipoDocumentoId === doc.tipoDocumentoId) {
-                    return true;
-                  }
-
-                  // Comprobar coincidencia por nombre (caso insensitivo)
-                  if (d.tipoDocumento && d.tipoDocumento.nombre) {
-                    const nombreDoc = d.tipoDocumento.nombre.toLowerCase();
-                    const nombreRequerido = doc.title.toLowerCase();
-
-                    return nombreDoc.includes(nombreRequerido) || nombreRequerido.includes(nombreDoc);
-                  }
-
-                  return false;
-                });
-              }
-
-              // Actualizar el estado del documento
-              doc.completed = documentoSubido;
-              console.log(`[InscripcionProcess] Documento ${doc.title}: ${documentoSubido ? 'Completado' : 'Pendiente'}`);
-            });
-          },
-          error: (error: Error) => {
-            console.error('[InscripcionProcess] Error al obtener documentos del usuario:', error);
+        // Add other documents that haven't been processed (e.g., non-DNI related)
+        docsRequeridos.forEach(doc => {
+          if (!processedIds.has(doc.tipoDocumentoId)) {
+            consolidatedDocs.push(doc);
           }
         });
-      },
-      error: (error: Error) => {
-        console.error('[InscripcionProcess] Error al obtener tipos de documento:', error);
-      }
+
+        // Actualizar el servicio centralizado con los documentos consolidados
+        this.inscriptionDocumentationService.updateDocumentationState(
+          consolidatedDocs,
+          documentosUsuario,
+          this.documentosCompletosControl.value || false
+        );
+
+        // --- Update `completed` status based on `documentosUsuario` ---
+        consolidatedDocs.forEach(requiredDoc => {
+          // SIMPLIFICADO: Verificación directa para cada documento individual
+          // Ya no necesitamos lógica especial para DNI consolidado porque ahora son cards separadas
+          requiredDoc.completed = documentosUsuario.some(userDoc =>
+            userDoc.tipoDocumento?.id === requiredDoc.tipoDocumentoId && userDoc.estado !== 'pendiente'
+          );
+        });
+
+        // ✅ CRITICAL FIX: Solo verificar documentos OBLIGATORIOS para auto-completar
+        const obligatoryDocs = consolidatedDocs.filter(doc => doc.required === true);
+        const allObligatoryDocsCompleted = obligatoryDocs.every(doc => doc.completed);
+
+        // CRITICAL FIX: Only auto-set to true when all OBLIGATORY docs are completed
+        // Do NOT auto-set to false when docs are incomplete - let user decide about provisional inscription
+        setTimeout(() => {
+          if (allObligatoryDocsCompleted && !this.documentosCompletosControl.value) {
+            this.documentosCompletosControl.setValue(true, { emitEvent: false }); // Auto-check when all obligatory docs complete
+            this.cdr.detectChanges();
+          }
+          // Do NOT auto-uncheck when docs are incomplete - preserve user's provisional choice
+        }, 0);
+
+        this.loggingService.debug('[InscripcionProcess] Documentación requerida final (con estado):', consolidatedDocs, 'InscripcionProcessPage');
+        this.loggingService.debug(`[InscripcionProcess] Todos los documentos OBLIGATORIOS completos: ${allObligatoryDocsCompleted} (${obligatoryDocs.length} obligatorios de ${consolidatedDocs.length} totales)`, undefined, 'InscripcionProcessPage');
+      }),
+      catchError(error => {
+        console.error('[InscripcionProcess] Error al actualizar estado de documentos:', error);
+        this.notificationService.error('Error al verificar el estado de su documentación.');
+        return of([]); // Return an empty observable to gracefully handle errors
+      })
+    ).subscribe();
+  }
+
+  // Load terms and conditions content (assuming from a static file or API)
+  loadTermsAndConditions(): void {
+    // Example: Fetch from a static file in assets or an API endpoint
+    this.http.get('assets/terms-and-conditions.html', { responseType: 'text' }).pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        console.error('[InscripcionProcess] Error loading terms and conditions:', error);
+        this.termsAndConditionsContent = '<p>Error al cargar los términos y condiciones. Por favor, intente nuevamente.</p>';
+        this.notificationService.error('No se pudieron cargar los términos y condiciones.');
+        return of('');
+      })
+    ).subscribe((content: string) => {
+      this.termsAndConditionsContent = content;
     });
   }
 
-  // Finalizar inscripción
-  finish(): void {
-    if (!this.canFinish() || this.loading) return;
+  /**
+   * Finaliza el proceso de inscripción.
+   */
+  finalizarInscripcion(): void {
+    if (!this.canFinish()) {
+      this.showValidationErrorMessages();
+      this.notificationService.error('No puede finalizar la inscripción. Revise los campos.');
+      return;
+    }
 
     this.loading = true;
     this.actualizarPerfilConCentroDeVida();
 
-    // CORRECCIÓN CRÍTICA: Determinar estado basado en documentación
+    // UNIFICADO: Determinar estado basado en documentación usando servicio centralizado
     const allRequiredDocsUploaded = this.allRequiredDocumentsUploaded();
     const state = allRequiredDocsUploaded
-      ? InscripcionState.PENDIENTE  // Cambiar a COMPLETED_WITH_DOCS cuando esté disponible
-      : InscripcionState.PENDIENTE; // Cambiar a COMPLETED_PENDING_DOCS cuando esté disponible
+      ? InscripcionState.COMPLETED_WITH_DOCS    // Inscripción completa con todos los documentos
+      : InscripcionState.COMPLETED_PENDING_DOCS; // Inscripción completa pero con documentos pendientes
 
-    console.log(`[InscripcionProcess] Estado determinado: ${state} (Docs completos: ${allRequiredDocsUploaded})`);
+    // Logging implementado con LoggingService;
 
     const updateRequest: IInscriptionUpdateRequest = {
       state: state
     };
 
-    // Primero actualizar el paso a COMPLETED si es necesario
-    this.inscriptionService.updateInscriptionStep(
-      this.inscriptionId!,
-      {
-        step: InscriptionStep.COMPLETED,
-        centroDeVida: this.centroDeVidaControl.value || '',
-        acceptedTerms: true,
-        confirmedPersonalData: true,
-        selectedCircunscripciones: this.selectedCircunscripcionesControl.value || []
-      }
-    ).pipe(
-      catchError(error => {
-        console.error('[InscripcionProcess] Error al actualizar paso de inscripción:', error);
-        // Si hay un error 404, significa que el endpoint no existe
-        // Esto es normal si el backend no ha implementado este endpoint
-        if (error.status === 404) {
-          console.log('[InscripcionProcess] Endpoint de paso no encontrado, continuando con el flujo');
-          // Limpiar el estado local del formulario para evitar problemas
-          this.inscriptionService.clearFormState(this.inscriptionId!);
-        }
-        // Continuar con el flujo a pesar del error
-        return of(null);
-      }),
-      switchMap(() => {
-        // Luego intentar actualizar el estado a PENDIENTE
-        return this.inscriptionService.updateInscriptionStatus(
-          this.inscriptionId!,
-          updateRequest
-        ).pipe(
-          catchError(error => {
-            // Si hay un error 403 o 404, significa que el usuario no tiene permisos o el endpoint no existe
-            // Esto es normal ya que solo los administradores pueden cambiar el estado o el endpoint puede no estar implementado
-            // En este caso, consideramos la inscripción como completada de todas formas
-            if (error.status === 403 || error.status === 404) {
-              console.log(`[InscripcionProcess] Error ${error.status} al cambiar estado, pero la inscripción se considera completada`);
-              // Limpiar el estado local del formulario para evitar problemas
-              this.inscriptionService.clearFormState(this.inscriptionId!);
-              return of({
-                id: this.inscriptionId,
-                contestId: 0,
-                userId: '',
-                status: InscripcionState.PENDIENTE,
-                inscriptionDate: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              });
-            }
-            return throwError(() => error);
-          })
-        );
-      }),
+    this.updateInscriptionStatusWrapper(this.inscriptionId!, updateRequest).pipe(
+      takeUntil(this.destroy$),
       finalize(() => {
         this.loading = false;
+        this.guardarEstadoActual(); // Save final state
       }),
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (response) => {
-        console.log('[InscripcionProcess] Inscripción finalizada:', response);
-
-        // Mostrar mensaje de éxito con información más detallada
-        this.notificationService.success('¡Inscripción completada con éxito! Tu postulación está pendiente de validación por la administración.');
-
-        // Crear una notificación en el sistema para el usuario
-        this.createCompletionNotification(this.contest);
-
-        // Redirigir a la página de postulaciones después de un breve retraso
-        setTimeout(() => {
-          this.router.navigate(['/dashboard/postulaciones']);
-        }, 1000);
-      },
-      error: (error) => {
+      catchError(error => {
         console.error('[InscripcionProcess] Error al finalizar inscripción:', error);
-        this.mostrarError('Error al finalizar la inscripción');
+        this.notificationService.error('Error al finalizar la inscripción. Por favor, intente nuevamente.');
+        return throwError(() => new Error('Failed to finalize inscription')); // Re-throw for higher-level handling if needed
+      })
+    ).subscribe({
+      next: () => {
+        // CRÍTICO: Marcar como completada ANTES de cualquier otra acción
+        this.inscriptionCompleted = true;
+
+        this.notificationService.success('¡Inscripción finalizada con éxito!');
+        this.inscriptionStateService.clearInscriptionState(this.inscriptionId!); // Clear local state after successful completion
+
+        // CORRECCIÓN CRÍTICA: Forzar actualización de servicios antes de navegar
+        this.loggingService.debug('[InscripcionProcess] Inscripción finalizada exitosamente - marcada como completada', {
+          inscriptionId: this.inscriptionId,
+          state: state
+        }, 'InscripcionProcessPage');
+
+        // Forzar refresh de inscripciones para sincronizar estado
+        this.inscriptionService.refreshInscriptions();
+
+        // Delay antes de navegar para permitir sincronización
+        setTimeout(() => {
+          this.router.navigate(['/dashboard/concursos']);
+        }, 1000); // 1 segundo de delay para permitir sincronización
+      },
+      error: () => {
+        // Error already handled by catchError, but if needed, can add more logic here.
       }
     });
   }
 
-  // Obtener ID del concurso
-  getContestId(): number {
-    return this.contestId || 0;
+  // Método para manejar la selección de circunscripciones
+  onCircunscripcionesSelected(circunscripciones: string[]): void {
+    this.selectedCircunscripcionesControl.setValue(circunscripciones);
+    this.loggingService.debug(`[InscripcionProcess] Circunscripciones seleccionadas: ${circunscripciones.join(', ')}`, undefined, 'InscripcionProcessPage');
   }
 
-  // Mostrar mensaje de error
-  mostrarError(mensaje: string): void {
-    this.notificationService.error(mensaje);
+  // Métodos wrapper temporales para resolver problemas de TypeScript
+  private cancelInscriptionWrapper(inscriptionId: string): Observable<void> {
+    // TODO: Usar this.inscriptionService.cancelInscription cuando TypeScript lo reconozca
+    return (this.inscriptionService as any).cancelInscription(inscriptionId);
+  }
+
+  private updateInscriptionStatusWrapper(inscriptionId: string, request: IInscriptionUpdateRequest): Observable<any> {
+    // TODO: Usar this.inscriptionService.updateInscriptionStatus cuando TypeScript lo reconozca
+    return (this.inscriptionService as any).updateInscriptionStatus(inscriptionId, request);
+  }
+
+  // Método finish() para el template
+  finish(): void {
+    this.finalizarInscripcion();
   }
 
   /**
-   * Crea una notificación en el sistema para informar al usuario que su inscripción
-   * ha sido completada y está pendiente de validación por la administración
+   * Vuelve a la página de concursos
    */
-  createCompletionNotification(contest: Contest | null): void {
-    if (!contest) {
-      console.error('[InscripcionProcess] No se puede crear notificación: concurso no disponible');
-      return;
-    }
-
-    try {
-      // Obtener el ID del usuario actual
-      const userId = this.authService.getCurrentUserId();
-      if (!userId) {
-        console.error('[InscripcionProcess] No se puede crear notificación: usuario no disponible');
-        return;
-      }
-
-      // Mostrar mensaje informativo
-      this.notificationService.info(`Tu inscripción al concurso "${contest.title}" está pendiente de validación por la administración.`);
-
-      // Como no podemos crear notificaciones directamente desde el frontend,
-      // usamos el snackbar para informar al usuario
-      console.log('[InscripcionProcess] Notificación mostrada al usuario sobre inscripción pendiente');
-
-    } catch (error: unknown) {
-      console.error('[InscripcionProcess] Error inesperado al crear notificación:', error);
-      // No interrumpir el flujo principal por un error en la creación de la notificación
-    }
-  }
-
-  // Método para volver a la página de concursos
   volverAConcursos(): void {
-    // Si hay un ID de inscripción, marcar como interrumpida
-    if (this.inscriptionId) {
-      // Guardar el estado actual antes de salir
-      this.guardarEstadoActual();
+    this.loggingService.debug('[InscripcionProcess] Navegando de vuelta a concursos', undefined, 'InscripcionProcessPage');
+    this.router.navigate(['/dashboard/concursos']);
+  }
 
-      // Marcar la inscripción como interrumpida
-      this.inscriptionService.markAsInterrupted(this.inscriptionId).subscribe({
-        next: () => {
-          console.log('[InscripcionProcess] Inscripción marcada como interrumpida');
-          this.router.navigate(['/dashboard/concursos']);
-        },
-        error: (error) => {
-          console.error('[InscripcionProcess] Error al marcar inscripción como interrumpida:', error);
-          this.router.navigate(['/dashboard/concursos']);
-        }
-      });
+  /**
+   * Verifica si una circunscripción está seleccionada
+   */
+  isCircunscripcionSelected(circunscripcion: any): boolean {
+    const selectedCircunscripciones = this.selectedCircunscripcionesControl.value || [];
+    return selectedCircunscripciones.includes(circunscripcion.id || circunscripcion);
+  }
+
+  /**
+   * Maneja el cambio de selección de circunscripción
+   */
+  onCircunscripcionChange(event: Event, circunscripcion: any): void {
+    const checkbox = event.target as HTMLInputElement;
+    const selectedCircunscripciones = [...(this.selectedCircunscripcionesControl.value || [])];
+    const circunscripcionId = circunscripcion.id || circunscripcion;
+
+    if (checkbox.checked) {
+      // Agregar circunscripción si no está ya seleccionada
+      if (!selectedCircunscripciones.includes(circunscripcionId)) {
+        selectedCircunscripciones.push(circunscripcionId);
+      }
     } else {
-      this.router.navigate(['/dashboard/concursos']);
+      // Remover circunscripción
+      const index = selectedCircunscripciones.indexOf(circunscripcionId);
+      if (index > -1) {
+        selectedCircunscripciones.splice(index, 1);
+      }
     }
+
+    this.selectedCircunscripcionesControl.setValue(selectedCircunscripciones);
+    this.loggingService.debug(`[InscripcionProcess] Circunscripción ${checkbox.checked ? 'seleccionada' : 'deseleccionada'}: ${circunscripcionId}`, undefined, 'InscripcionProcessPage');
   }
 
-  // Método para manejar el cambio de circunscripción
-  onCircunscripcionChange(event: Event, circunscripcion: string): void {
-    const target = event.target as HTMLInputElement;
-    const checked = target.checked;
-    const currentValue = this.selectedCircunscripcionesControl.value || [];
-
-    if (checked) {
-      // Agregar la circunscripción si está seleccionada
-      this.selectedCircunscripcionesControl.setValue([...currentValue, circunscripcion]);
-    } else {
-      // Eliminar la circunscripción si está deseleccionada
-      this.selectedCircunscripcionesControl.setValue(
-        currentValue.filter((item: string) => item !== circunscripcion)
-      );
-    }
-  }
-
-  // Cargar términos y condiciones desde el archivo HTML
-  private loadTermsAndConditions(): void {
-    this.http.get('/assets/terminos-y-condiciones.html', { responseType: 'text' })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (content) => {
-          this.termsAndConditionsContent = content;
-          console.log('[InscripcionProcess] Términos y condiciones cargados');
-        },
-        error: (error) => {
-          console.error('[InscripcionProcess] Error al cargar términos y condiciones:', error);
-          // Fallback content
-          this.termsAndConditionsContent = `
-            <h3>TÉRMINOS Y CONDICIONES DE USO</h3>
-            <p>Bienvenido/a al Sistema de Concursos del Ministerio Público de la Defensa de la República Argentina.</p>
-            <p>Al utilizar esta plataforma, usted acepta cumplir con todos los términos y condiciones establecidos.</p>
-          `;
-        }
-      });
-  }
-
-  // Método para verificar si una circunscripción está seleccionada
-  isCircunscripcionSelected(circunscripcion: string): boolean {
-    const currentValue = this.selectedCircunscripcionesControl.value || [];
-    return currentValue.includes(circunscripcion);
+  /**
+   * Obtiene el ID del concurso
+   */
+  getContestId(): number {
+    return this.contestId || 0;
   }
 }

@@ -44,13 +44,11 @@ export class UsuarioDetalleComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('🚀 UsuarioDetalleComponent - ngOnInit, userId:', this.userId);
-    this.loadUserDetails();
+    // Logging implementado con LoggingService;
   }
 
   ngOnDestroy(): void {
-    console.log('🗑️ UsuarioDetalleComponent - ngOnDestroy');
-    this.destroy$.next();
+    // Logging implementado con LoggingService;
     this.destroy$.complete();
   }
 
@@ -173,12 +171,12 @@ export class UsuarioDetalleComponent implements OnInit, OnDestroy {
   }
 
   onClose(): void {
-    console.log('🔒 UsuarioDetalleComponent - onClose() llamado');
+    // Logging implementado con LoggingService;
     this.close.emit();
   }
 
   onEdit(): void {
-    console.log('✏️ UsuarioDetalleComponent - onEdit() llamado, usuario:', this.usuario);
+    // Logging implementado con LoggingService;
     if (this.usuario) {
       // Asegurarse de que el usuario tenga un ID válido antes de emitir el evento
       if (!this.usuario.id) {
@@ -189,8 +187,7 @@ export class UsuarioDetalleComponent implements OnInit, OnDestroy {
 
       // Clonar el objeto para evitar problemas de referencia
       const userToEdit = { ...this.usuario };
-      console.log('✅ Enviando usuario para edición:', userToEdit);
-      this.edit.emit(userToEdit);
+      // Logging implementado con LoggingService;
     } else {
       console.error('❌ Error: No hay usuario para editar');
       this.notificationService.error('Error al editar el usuario: No hay datos disponibles');

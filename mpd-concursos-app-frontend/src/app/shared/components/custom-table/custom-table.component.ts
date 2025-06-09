@@ -7,8 +7,9 @@ export interface TableColumn {
   key: string;
   label: string;
   sortable?: boolean;
-  type?: 'text' | 'date' | 'badge' | 'actions' | 'button';
+  type?: 'text' | 'date' | 'badge' | 'actions' | 'button' | 'custom';
   width?: string;
+  render?: (row: any) => any; // Para columnas custom
 }
 
 export interface TableAction {
@@ -92,7 +93,10 @@ export interface TableAction {
                       (buttonClick)="onAction(action.action, row)">
                     </app-custom-button>
                   </div>
-                  
+
+                  <!-- Custom Type -->
+                  <div *ngSwitchCase="'custom'" [innerHTML]="renderCustomColumn(column, row)"></div>
+
                   <!-- Default Text Type -->
                   <span *ngSwitchDefault>
                     {{ getColumnValue(row, column.key) }}
@@ -395,6 +399,14 @@ export class CustomTableComponent implements OnInit, OnChanges {
 
   onAction(action: string, row: any): void {
     this.actionClick.emit({ action, row });
+  }
+
+  renderCustomColumn(column: TableColumn, row: any): string {
+    if (column.render) {
+      const result = column.render(row);
+      return typeof result === 'string' ? result : String(result);
+    }
+    return this.getColumnValue(row, column.key);
   }
 
   trackByFn(index: number, item: any): any {

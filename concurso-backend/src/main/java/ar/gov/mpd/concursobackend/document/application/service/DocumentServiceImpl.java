@@ -90,12 +90,18 @@ public class DocumentServiceImpl implements DocumentService {
     private DocumentType findDocumentType(String documentTypeIdOrCode) {
         log.debug("Finding document type with ID or code: {}", documentTypeIdOrCode);
 
+        // CRITICAL FIX: Validar que el parámetro no sea nulo o vacío
+        if (documentTypeIdOrCode == null || documentTypeIdOrCode.trim().isEmpty()) {
+            log.warn("Document type ID or code is null or empty, using default document type");
+            return getOrCreateDefaultDocumentType();
+        }
+
         // First try to find by ID
         try {
             UUID id = UUID.fromString(documentTypeIdOrCode);
             return documentTypeRepository.findById(new DocumentTypeId(id))
                     .orElseThrow(() -> {
-                        log.warn("Document type not found with ID: {}", documentTypeIdOrCode);
+                        log.warn("Document type not found with ID: {}, trying fallback", documentTypeIdOrCode);
                         return new DocumentException("Document type not found with ID: " + documentTypeIdOrCode);
                     });
         } catch (IllegalArgumentException e) {
@@ -105,9 +111,28 @@ public class DocumentServiceImpl implements DocumentService {
 
         // Try to find by code
         return documentTypeRepository.findByCode(documentTypeIdOrCode)
-                .orElseThrow(() -> {
-                    log.warn("Document type not found with code: {}", documentTypeIdOrCode);
-                    return new DocumentException("Document type not found with code: " + documentTypeIdOrCode);
+                .orElseGet(() -> {
+                    log.warn("Document type not found with code: {}, using default document type", documentTypeIdOrCode);
+                    return getOrCreateDefaultDocumentType();
+                });
+    }
+
+    /**
+     * Obtiene o crea un tipo de documento por defecto para casos donde no se encuentra el tipo especificado
+     */
+    private DocumentType getOrCreateDefaultDocumentType() {
+        // Intentar encontrar un tipo de documento genérico
+        return documentTypeRepository.findByCode("documento-generico")
+                .orElseGet(() -> {
+                    log.info("Creating default document type 'documento-generico'");
+                    DocumentType defaultType = DocumentType.create(
+                            "documento-generico",
+                            "Documento Genérico",
+                            "Tipo de documento genérico para casos no especificados",
+                            false,
+                            999
+                    );
+                    return documentTypeRepository.save(defaultType);
                 });
     }
 

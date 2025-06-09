@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable, combineLatest, timer } from 'rxjs';
 import { map, distinctUntilChanged, shareReplay } from 'rxjs/operators';
 import { ConcursosService } from './concursos/concursos.service';
@@ -70,8 +71,11 @@ export class AdminNotificationsService {
   );
 
   constructor(
+    
     private concursosService: ConcursosService,
     private inscriptionService: InscriptionService
+  ,
+    private loggingService: LoggingService
   ) {
     this.initializeIndicators();
     this.startPeriodicUpdates();

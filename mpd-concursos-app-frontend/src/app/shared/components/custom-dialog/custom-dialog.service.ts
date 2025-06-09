@@ -1,4 +1,5 @@
 import { Injectable, ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Type, TemplateRef, Injector, createEnvironmentInjector } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { CustomDialogRef, CustomDialogConfig } from './custom-dialog-ref';
 import { CUSTOM_DIALOG_DATA, CUSTOM_DIALOG_REF } from './custom-dialog-tokens';
 import { CustomDialogComponent } from './custom-dialog.component';
@@ -10,8 +11,11 @@ export class CustomDialogService {
   private activeDialogs: ComponentRef<any>[] = [];
 
   constructor(
+    
     private appRef: ApplicationRef,
     private environmentInjector: EnvironmentInjector
+  ,
+    private loggingService: LoggingService
   ) {}
 
   /**
@@ -199,5 +203,61 @@ export class CustomDialogService {
         dialogInstance.closed.emit(result);
       }
     }
+  }
+
+  /**
+   * Muestra un diálogo de confirmación con configuración personalizada
+   * @param config Configuración del diálogo de confirmación
+   * @returns Referencia al diálogo
+   */
+  showConfirmDialog(config: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: 'info' | 'warning' | 'danger';
+  }): CustomDialogRef<any, boolean> {
+    return this.confirm(config.title, config.message, {
+      width: '400px',
+      position: 'center'
+    });
+  }
+
+  /**
+   * Muestra un diálogo de entrada de texto
+   * @param config Configuración del diálogo de entrada
+   * @returns Referencia al diálogo
+   */
+  showInputDialog(config: {
+    title: string;
+    message: string;
+    placeholder?: string;
+    confirmText?: string;
+    cancelText?: string;
+    inputType?: 'text' | 'textarea' | 'number' | 'select';
+    options?: Array<{ value: string; label: string }>;
+    defaultValue?: string;
+    required?: boolean;
+  }): CustomDialogRef<any, string | null> {
+    // Para simplificar, retornamos un diálogo de confirmación
+    // En una implementación completa, se crearía un componente específico para entrada de texto
+    const dialogRef = new CustomDialogRef<any, string | null>();
+
+    // Simular entrada de texto con prompt (temporal)
+    setTimeout(() => {
+      let result: string | null = null;
+
+      if (config.inputType === 'select' && config.options) {
+        // Para select, mostrar las opciones
+        const optionsText = config.options.map(opt => `${opt.value}: ${opt.label}`).join('\n');
+        result = prompt(`${config.message}\n\nOpciones:\n${optionsText}\n\nIngresa el valor:`, config.defaultValue || '');
+      } else {
+        result = prompt(config.message, config.placeholder || config.defaultValue || '');
+      }
+
+      dialogRef.close(result);
+    }, 100);
+
+    return dialogRef;
   }
 }

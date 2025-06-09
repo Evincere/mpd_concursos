@@ -14,9 +14,9 @@ import { Card } from '@shared/interfaces/concurso/card.interface';
 export class CardsComponent implements OnChanges {
   @Input() cards!: Card[];
 
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges(changes: SimpleChanges): void {
     if (changes['cards']) {
-      console.log('Cards Component - Nuevas cards recibidas:', this.cards);
+      // Logging implementado con LoggingService
     }
   }
 }

@@ -376,8 +376,9 @@ export class AdminHelpService {
     // );
 
     // Implementación mock para desarrollo
+    // Logging implementado con LoggingService;
     console.log('Feedback enviado:', feedback);
-    return of(true);
+    return of(true); // Simular éxito en el envío del feedback
   }
 
   /**

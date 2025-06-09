@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.contest.application.validator;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.contest.domain.service.ContestStateMachine;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestCreateRequest;

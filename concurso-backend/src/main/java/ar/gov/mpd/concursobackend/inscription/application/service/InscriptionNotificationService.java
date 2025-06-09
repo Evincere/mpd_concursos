@@ -3,7 +3,7 @@ package ar.gov.mpd.concursobackend.inscription.application.service;
 import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;

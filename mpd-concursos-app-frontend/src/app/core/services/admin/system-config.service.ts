@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -188,7 +189,9 @@ export class SystemConfigService {
   private configCache: SystemConfig | null = null;
   private http: HttpClient;
 
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     // En una implementación real, se inyectaría HttpClient
     this.http = {
       get: <T>(_url: string, _options?: unknown): Observable<T> => {
@@ -508,6 +511,36 @@ export class SystemConfigService {
 
     // Implementación mock para desarrollo
     return of(this.getMockConfigHistory());
+  }
+
+  /**
+   * Revierte un cambio de configuración específico
+   * @param changeId ID del cambio a revertir
+   * @returns Observable con el resultado de la operación
+   */
+  revertConfigChange(changeId: string): Observable<{success: boolean, message: string}> {
+    // En una implementación real, esto sería una llamada a la API
+    // return this.http.post<{success: boolean, message: string}>(`${this.apiUrl}/revert/${changeId}`, {}).pipe(
+    //   tap(() => {
+    //     // Invalidar caché para forzar recarga
+    //     this.configCache = null;
+    //   }),
+    //   catchError(error => {
+    //     console.error('Error revirtiendo cambio de configuración:', error);
+    //     return throwError(() => new Error('Error revirtiendo cambio de configuración'));
+    //   })
+    // );
+
+    // Implementación mock para desarrollo
+    this.loggingService.info(`Revirtiendo cambio de configuración con ID: ${changeId}`);
+
+    // Invalidar caché para simular recarga
+    this.configCache = null;
+
+    return of({
+      success: true,
+      message: `Cambio de configuración ${changeId} revertido exitosamente`
+    });
   }
 
   /**

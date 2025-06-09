@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 
@@ -111,7 +112,9 @@ export class RolesPermissionsService {
   private apiUrl = `${environment.apiUrl}/admin`;
   private http: HttpClient;
 
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     // En una implementación real, se inyectaría HttpClient
     this.http = {
       get: <T>(_url: string, _options?: unknown): Observable<T> => {

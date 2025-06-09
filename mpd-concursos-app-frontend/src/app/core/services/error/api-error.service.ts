@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormGroup } from '@angular/forms';
 import { Observable, throwError } from 'rxjs';
@@ -27,8 +28,11 @@ export interface ApiValidationError {
 })
 export class ApiErrorService {
   constructor(
+    
     private notificationService: CustomNotificationService,
     private errorDialogService: ErrorDialogService
+  ,
+    private loggingService: LoggingService
   ) {}
 
   /**

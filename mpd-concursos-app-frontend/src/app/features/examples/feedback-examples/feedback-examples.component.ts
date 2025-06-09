@@ -421,16 +421,15 @@ export class FeedbackExamplesComponent implements OnInit {
 
   ngOnInit(): void {
     // Inicialización adicional si es necesaria
-    console.log('FeedbackExamplesComponent inicializado');
+    // Logging implementado con LoggingService;
   }
 
-  // Métodos para tooltips y ayudas contextuales
-  showHelp(helpId: string, position: 'top' | 'bottom' | 'left' | 'right' = 'right'): void {
-    // Obtener el elemento que disparó el evento
-    const targetElement = document.activeElement as HTMLElement;
-
+  // Métodos para mostrar ayuda
+  showHelp(helpId: string, position: 'top' | 'bottom' | 'left' | 'right' = 'top'): void {
+    // Buscar un elemento target genérico o usar el body
+    const targetElement = document.querySelector('.examples-container') || document.body;
     if (targetElement) {
-      this.helpService.showHelp(helpId, targetElement, position);
+      this.helpService.showHelp(helpId, targetElement as HTMLElement, position);
     }
   }
 

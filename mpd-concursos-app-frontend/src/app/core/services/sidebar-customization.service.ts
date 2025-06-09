@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
@@ -63,7 +64,9 @@ export class SidebarCustomizationService {
   public customThemes$ = this.customThemesSubject.asObservable();
   public isDragMode$ = this.isDragModeSubject.asObservable();
 
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     this.loadConfiguration();
     this.loadCustomThemes();
   }
@@ -394,22 +397,81 @@ export class SidebarCustomizationService {
   public importConfiguration(configJson: string): boolean {
     try {
       const imported = JSON.parse(configJson);
-      
+
       if (imported.configuration) {
         this.configurationSubject.next(imported.configuration);
         this.saveConfiguration();
       }
-      
+
       if (imported.customThemes) {
         const currentThemes = this.getDefaultThemes();
         this.customThemesSubject.next([...currentThemes, ...imported.customThemes]);
         this.saveCustomThemes();
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error al importar configuración:', error);
       return false;
     }
+  }
+
+  // Métodos adicionales para compatibilidad con AdminSidebarComponent
+
+  /**
+   * Guarda el orden de los módulos
+   */
+  public saveModuleOrder(moduleOrder: string[]): void {
+    localStorage.setItem('admin-sidebar-module-order', JSON.stringify(moduleOrder));
+  }
+
+  /**
+   * Carga el orden de los módulos
+   */
+  public loadModuleOrder(): string[] | null {
+    const saved = localStorage.getItem('admin-sidebar-module-order');
+    return saved ? JSON.parse(saved) : null;
+  }
+
+  /**
+   * Guarda el estado de expansión de los módulos
+   */
+  public saveModulesState(moduleStates: { id: string; expanded: boolean }[]): void {
+    localStorage.setItem('admin-sidebar-modules-state', JSON.stringify(moduleStates));
+  }
+
+  /**
+   * Carga el estado de expansión de los módulos
+   */
+  public loadModulesState(): { id: string; expanded: boolean }[] | null {
+    const saved = localStorage.getItem('admin-sidebar-modules-state');
+    return saved ? JSON.parse(saved) : null;
+  }
+
+  /**
+   * Guarda los favoritos
+   */
+  public saveFavorites(favoriteIds: string[]): void {
+    localStorage.setItem('admin-sidebar-favorites', JSON.stringify(favoriteIds));
+  }
+
+  /**
+   * Carga los favoritos
+   */
+  public loadFavorites(): string[] | null {
+    const saved = localStorage.getItem('admin-sidebar-favorites');
+    return saved ? JSON.parse(saved) : null;
+  }
+
+  /**
+   * Limpia toda la personalización
+   */
+  public clearAllCustomization(): void {
+    localStorage.removeItem('admin-sidebar-module-order');
+    localStorage.removeItem('admin-sidebar-modules-state');
+    localStorage.removeItem('admin-sidebar-favorites');
+    localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.THEMES_STORAGE_KEY);
+    this.resetToDefault();
   }
 }

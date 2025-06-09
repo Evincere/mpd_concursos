@@ -12,7 +12,8 @@ import java.util.List;
 
 /**
  * Domain model for contests - MODELO PRINCIPAL
- * Migrado para usar Long ID para compatibilidad con APIs existentes
+ * FASE 4: Modelo principal unificado con Long ID para compatibilidad total
+ * Este es ahora el único modelo de Contest en el sistema
  */
 @Getter
 @Setter

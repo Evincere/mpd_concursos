@@ -1,13 +1,18 @@
-import { Component, OnInit, Optional } from '@angular/core';
+import { Component, OnInit, Optional, ViewChild } from '@angular/core'; // Import ViewChild
 import { CommonModule } from '@angular/common';
+import { finalize } from 'rxjs/operators'; // Import finalize operator
 
 // Componentes personalizados
 import { UsuarioFormComponent } from '../usuario-form/usuario-form.component';
 import { CustomDialogRef } from '@shared/components/custom-form/custom-dialog/custom-dialog-ref';
 
 // Servicios
-import { AdminUsersService, CreateUserRequest } from '@core/services/admin/admin-users.service';
-import { NotificationService } from '@shared/services/notification.service';
+import { UserService } from '../application/services/user.service'; // Corrected service name to UserService
+import { NotificationService } from '@shared/services/notification.service'; // Assuming NotificationService path
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
+
+// Modelos
+import { CreateUserRequest } from '../domain/models/user.model'; // Import CreateUserRequest model
 
 @Component({
   selector: 'app-crear-usuario-dialog',
@@ -27,80 +32,107 @@ import { NotificationService } from '@shared/services/notification.service';
   styleUrls: ['./crear-usuario-dialog.component.scss']
 })
 export class CrearUsuarioDialogComponent implements OnInit {
-  isLoading = false;
+  @ViewChild(UsuarioFormComponent) userFormComponent!: UsuarioFormComponent; // Get reference to the child form component
+
+  isLoading = false; // Component-level loading state
 
   constructor(
-    private usersService: AdminUsersService,
+    private userService: UserService, // Corrected service name
     private notificationService: NotificationService,
-    @Optional() private dialogRef: CustomDialogRef
+    @Optional() private dialogRef: CustomDialogRef<any>, // Use any for dialog result type
+    private loggingService: LoggingService // Inject LoggingService
   ) {}
 
   ngOnInit(): void {
-    console.log('CrearUsuarioDialogComponent inicializado');
+    this.loggingService.debug('[CrearUsuarioDialogComponent] Dialog initialized.', undefined, 'CreateUserDialog');
   }
 
+  /**
+   * Handles the formCancel event emitted by UsuarioFormComponent.
+   * Closes the dialog, indicating cancellation.
+   */
   onClose(): void {
-    console.log('Cerrando diálogo de creación de usuario');
-
-    // Simplemente delegar al dialogRef si está disponible
+    this.loggingService.info('[CrearUsuarioDialogComponent] Form cancelled. Closing dialog.', undefined, 'CreateUserDialog');
     if (this.dialogRef) {
-      this.dialogRef.close(null);
+      this.dialogRef.close(false); // Close dialog and pass false for cancellation
     }
-    // No hacemos nada más aquí, ya que el botón Cancelar en el formulario
-    // ahora tiene su propia lógica para cerrar el diálogo
   }
 
-  onConfirm(): void {
-    // Este método no se usa directamente, pero es necesario para el diálogo
-  }
+  /**
+   * Handles the saveUser event emitted by UsuarioFormComponent.
+   * Sends the new user data to the UserService.
+   * @param userData The user data emitted by the form (already an object matching CreateUserRequest structure).
+   */
+  onSaveUser(userData: any): void { // Changed type to any to accept form data with password
+    this.isLoading = true; // Activate component-level loading state
+    this.userFormComponent.isLoading = true; // Also activate loading state on the form component for visual feedback
 
-  onSaveUser(userData: Record<string, unknown>): void {
-    this.isLoading = true;
-
-    // Construir el objeto de creación de usuario
+    // Construct the create user request (data is already mostly in correct format from form)
     const createUserRequest: CreateUserRequest = {
-      username: userData['dni'] as string, // Usar DNI como nombre de usuario
-      email: userData['email'] as string,
-      firstName: userData['nombre'] as string,
-      lastName: userData['apellido'] as string,
-      dni: userData['dni'] as string,
-      cuit: userData['cuit'] as string || '',
-      birthDate: userData['birthDate'] as Date,
-      country: userData['country'] as string,
-      province: userData['province'] as string,
-      municipality: userData['municipality'] as string,
-      legalAddress: userData['legalAddress'] as string,
-      residentialAddress: userData['residentialAddress'] as string,
-      password: userData['password'] as string,
-      roles: userData['roles'] as string[],
-      enabled: true,
-      sendWelcomeEmail: true,
-      telefono: userData['telefono'] as string || '',
-      direccion: userData['direccion'] as string || ''
+      username: userData.dni, // Using DNI as username as per logic
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      dni: userData.dni,
+      cuit: userData.cuit || undefined, // Use undefined for empty string or null
+      birthDate: userData.birthDate, // Already ISO string from form
+      country: userData.country,
+      province: userData.province,
+      municipality: userData.municipality,
+      legalAddress: userData.legalAddress,
+      residentialAddress: userData.residentialAddress,
+      password: userData.password!, // Password should be required in create mode, assert non-null
+      roles: userData.roles,
+      enabled: true, // Assuming new users are enabled by default
+      sendWelcomeEmail: true, // Assuming this is a default behavior for new users
+      telefono: userData.telefono || undefined, // Use undefined for empty string or null
+      direccion: userData.direccion || undefined // Use direccion instead of address
     };
 
-    // Llamar al servicio para crear el usuario
-    this.usersService.createUser(createUserRequest).subscribe({
-      next: (newUser) => {
-        this.isLoading = false;
-        this.notificationService.success(`Usuario ${newUser.firstName} ${newUser.lastName} creado correctamente`);
+    this.loggingService.info('[CrearUsuarioDialogComponent] Sending create user request.', createUserRequest, 'CreateUserDialog');
 
-        // Emitir un evento personalizado para notificar que se ha creado un usuario
-        const event = new CustomEvent('userCreated', { detail: newUser });
-        document.dispatchEvent(event);
+    // Call the service to create the user
+    this.userService.createUser(createUserRequest)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false; // Always reset component-level loading state
+          this.userFormComponent.isLoading = false; // Always reset form component's loading state
+          this.loggingService.debug('[CrearUsuarioDialogComponent] Create user request finalized.', undefined, 'CreateUserDialog');
+        })
+      )
+      .subscribe({
+        next: (newUser) => {
+          this.loggingService.info('[CrearUsuarioDialogComponent] User created successfully.', newUser, 'CreateUserDialog');
+          this.notificationService.success(`Usuario ${newUser.firstName} ${newUser.lastName} creado correctamente`);
 
-        // Cerrar el diálogo con el resultado
-        if (this.dialogRef) {
-          this.dialogRef.close(newUser);
-        } else {
-          this.onClose();
+          // Emit a custom event to notify other parts of the application (e.g., table refresh)
+          const event = new CustomEvent('userCreated', { detail: newUser });
+          document.dispatchEvent(event);
+          this.loggingService.debug('[CrearUsuarioDialogComponent] "userCreated" event dispatched.', event.detail, 'CreateUserDialog');
+
+          // Close the dialog with the result
+          if (this.dialogRef) {
+            this.dialogRef.close(newUser); // Pass the new user object as result
+          }
+        },
+        error: (error) => {
+          this.loggingService.error('[CrearUsuarioDialogComponent] Error creating user:', error, 'CreateUserDialog');
+          console.error('Error creando usuario:', error);
+
+          // Delegate API error handling to the form component to display field-specific errors
+          if (this.userFormComponent) {
+            this.userFormComponent.handleApiError(error);
+          }
+
+          // Show a general error notification (without closing the dialog)
+          let errorMessage = 'Error al crear el usuario. Por favor, revise los datos.';
+          if (error.error && error.error.message) {
+            errorMessage = error.error.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          this.notificationService.error(errorMessage);
         }
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Error creando usuario:', error);
-        this.notificationService.error('Error al crear el usuario');
-      }
-    });
+      });
   }
 }

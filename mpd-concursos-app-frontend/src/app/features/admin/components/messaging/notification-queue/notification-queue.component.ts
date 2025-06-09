@@ -53,9 +53,9 @@ export class NotificationQueueComponent implements OnInit, OnDestroy {
   realTimeEnabled = false;
 
   // Formularios
-  filtersForm: FormGroup;
-  configForm: FormGroup;
-  enqueueForm: FormGroup;
+  filtersForm!: FormGroup;
+  configForm!: FormGroup;
+  enqueueForm!: FormGroup;
 
   // Configuración
   currentFilters: QueueFilters = {};
@@ -637,5 +637,12 @@ export class NotificationQueueComponent implements OnInit, OnDestroy {
    */
   clearFilters(): void {
     this.filtersForm.reset();
+  }
+
+  /**
+   * Establece la notificación seleccionada
+   */
+  setSelectedNotification(notification: any): void {
+    this.selectedNotification = notification;
   }
 }

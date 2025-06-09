@@ -31,11 +31,9 @@ export class AdminContestDatesService {
    * @param contestId ID del concurso
    */
   getContestDates(contestId: number | string): Observable<ContestDate[]> {
-    console.log(`[AdminContestDatesService] Obteniendo fechas para concurso ID: ${contestId}`);
-
     return this.http.get<ContestDate[]>(`${this.apiUrl}/${contestId}/dates`).pipe(
       catchError(error => {
-        console.error(`Error obteniendo fechas del concurso con ID ${contestId}:`, error);
+        console.error(`Error obteniendo fechas del concurso ${contestId}:`, error);
         throw error;
       })
     );

@@ -9,11 +9,11 @@
           <span class="stat-label">Total</span>
         </div>
         <div class="stat-item">
-          <span class="stat-number">{{ getInscripcionesByState(InscripcionState.PENDIENTE).length }}</span>
+          <span class="stat-number">{{ getInscripcionesByState(InscripcionState.PENDING).length }}</span>
           <span class="stat-label">Pendientes</span>
         </div>
         <div class="stat-item">
-          <span class="stat-number">{{ getInscripcionesByState(InscripcionState.INSCRIPTO).length }}</span>
+          <span class="stat-number">{{ getInscripcionesByState(InscripcionState.APPROVED).length }}</span>
           <span class="stat-label">Aprobadas</span>
         </div>
         <div class="stat-item">
@@ -155,16 +155,16 @@
               </app-custom-button>
 
               <app-custom-button
-                *ngIf="inscripcion.state === InscripcionState.PENDIENTE"
+                *ngIf="inscripcion.state === InscripcionState.PENDING"
                 [icon]="'check'"
                 [variant]="'icon'"
                 [color]="'success'"
                 [tooltip]="'Aprobar inscripción'"
-                (buttonClick)="changeState(inscripcion, InscripcionState.INSCRIPTO)">
+                (buttonClick)="changeState(inscripcion, InscripcionState.APPROVED)">
               </app-custom-button>
 
               <app-custom-button
-                *ngIf="inscripcion.state === InscripcionState.PENDIENTE"
+                *ngIf="inscripcion.state === InscripcionState.PENDING"
                 [icon]="'times'"
                 [variant]="'icon'"
                 [color]="'danger'"
@@ -173,7 +173,7 @@
               </app-custom-button>
 
               <app-custom-button
-                *ngIf="inscripcion.state === InscripcionState.INSCRIPTO || inscripcion.state === InscripcionState.REJECTED"
+                *ngIf="inscripcion.state === InscripcionState.APPROVED || inscripcion.state === InscripcionState.REJECTED"
                 [icon]="'edit'"
                 [variant]="'icon'"
                 [color]="'warn'"

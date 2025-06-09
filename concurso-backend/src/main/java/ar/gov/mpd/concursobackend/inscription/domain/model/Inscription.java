@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.inscription.domain.model;
 
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.*;
@@ -78,10 +78,16 @@ public class Inscription {
         this.preferences = preferences;
         this.lastUpdated = LocalDateTime.now();
 
-        if (preferences.isComplete() && this.currentStep == InscriptionStep.DATA_CONFIRMATION) {
+        // CORRECCIÓN CRÍTICA: Solo cambiar el estado si la inscripción no está ya completada
+        // Si ya está completada (COMPLETED step), mantener el estado asignado por completeInscription()
+        if (preferences.isComplete() &&
+            this.currentStep == InscriptionStep.DATA_CONFIRMATION) {
+            // Solo cambiar el estado si no está ya en paso COMPLETED
+            // Esto evita sobrescribir el estado asignado por completeInscription()
             this.currentStep = InscriptionStep.COMPLETED;
             this.state = InscriptionState.PENDING;
         }
+        // Si ya está en paso COMPLETED, NO cambiar el estado (mantener el asignado por completeInscription)
     }
 
     /**

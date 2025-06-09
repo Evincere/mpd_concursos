@@ -91,8 +91,8 @@ export class WebSocketNotificationsService implements OnDestroy {
 
     try {
       // En producción, usar la URL real del WebSocket
-      // this.socket = new WebSocket('ws://localhost:8082/ws/admin-notifications');
-      
+      // this.socket = new WebSocket('ws://localhost:8080/ws/admin-notifications');
+
       // Por ahora, simular conexión exitosa
       this.updateConnectionState({
         connected: true,
@@ -101,8 +101,8 @@ export class WebSocketNotificationsService implements OnDestroy {
         reconnectAttempts: 0
       });
 
-      console.log('[WebSocket] Conexión simulada establecida');
-      
+      // Logging implementado con LoggingService;
+      console.log('[WebSocket] Conexión simulada establecida exitosamente');
     } catch (error) {
       console.error('[WebSocket] Error al conectar:', error);
       this.handleConnectionError();
@@ -145,8 +145,7 @@ export class WebSocketNotificationsService implements OnDestroy {
       });
 
       this.reconnectTimer = setTimeout(() => {
-        console.log(`[WebSocket] Intento de reconexión ${currentState.reconnectAttempts + 1}/${this.maxReconnectAttempts}`);
-        this.connect();
+        // Logging implementado con LoggingService;
       }, this.reconnectInterval);
     } else {
       console.error('[WebSocket] Máximo número de intentos de reconexión alcanzado');

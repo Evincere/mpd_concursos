@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
 import { map, switchMap, catchError, tap, shareReplay } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
@@ -55,8 +56,11 @@ export class AuthorizationService {
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
   constructor(
+    
     private authService: AuthService,
     private roleManagementService: RoleManagementService
+  ,
+    private loggingService: LoggingService
   ) {
     this.initializeUserPermissions();
   }

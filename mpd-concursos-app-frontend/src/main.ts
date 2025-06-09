@@ -5,15 +5,14 @@ import { environment } from './environments/environment';
 
 // Configuración de depuración
 if (environment.logLevel === 'debug') {
-  console.log('Iniciando aplicación en modo de depuración');
-  console.log('Entorno:', environment);
+  console.log('Aplicación iniciando en modo debug');
 }
 
-// Inicializar la aplicación
+// Bootstrap de la aplicación
 bootstrapApplication(AppComponent, appConfig)
   .then(() => {
-    console.log(`Aplicación iniciada correctamente (v${environment.version})`);
+    console.log('Aplicación iniciada correctamente');
   })
-  .catch((err) => {
+  .catch((err: any) => {
     console.error('Error al iniciar la aplicación:', err);
   });

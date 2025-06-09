@@ -328,4 +328,11 @@ export class AdminHelpCenterComponent implements OnInit, OnDestroy {
         return '';
     }
   }
+
+  /**
+   * Establece el tab activo
+   */
+  setActiveTab(tabIndex: number): void {
+    this.activeTab = tabIndex;
+  }
 }

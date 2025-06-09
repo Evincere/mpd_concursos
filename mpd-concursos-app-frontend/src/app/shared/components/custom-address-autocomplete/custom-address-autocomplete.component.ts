@@ -318,8 +318,7 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
         return true;
       }),
       tap((value) => {
-        console.log('Buscando direcciones para:', value);
-        this.isLoading = true;
+        // Logging implementado con LoggingService;
       }),
       switchMap(value => {
         if (typeof value === 'string' && value.length >= 2) {
@@ -350,8 +349,7 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (results: LocationResult[]) => {
-        console.log('Resultados obtenidos:', results.length);
-        this.filteredOptions = results;
+        // Logging implementado con LoggingService;
         this.isLoading = false;
       },
       error: (error) => {
@@ -390,13 +388,13 @@ export class CustomAddressAutocompleteComponent implements OnInit, OnDestroy {
   }
 
   selectOption(option: LocationResult): void {
-    console.log('Opción seleccionada:', option);
-
-    // Formatear la dirección seleccionada
-    const formattedAddress = option.fullAddress;
+    // Logging implementado con LoggingService;
 
     // Extraer las coordenadas
     const coordinates = option.coordinates;
+
+    // Crear la dirección formateada basada en el tipo de opción
+    const formattedAddress = option.fullAddress || option.name;
 
     // Extraer componentes de la dirección según el tipo
     const components: any = {

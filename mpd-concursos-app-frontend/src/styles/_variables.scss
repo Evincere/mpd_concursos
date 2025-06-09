@@ -1,4 +1,13 @@
 // Variables SCSS para MPD Concursos
+@import 'glassmorphism-variables';
+
+// Variables SCSS que mapean a CSS custom properties
+$text-primary: var(--text-primary);
+$text-secondary: var(--text-secondary);
+$glass-background-primary: var(--glass-background-primary);
+$glass-background-secondary: var(--glass-background-secondary);
+$glass-hover-primary: var(--glass-hover-primary);
+$transition-smooth: var(--transition-normal);
 
 // Paleta de colores MPD
 $color-primary: #1976D2;

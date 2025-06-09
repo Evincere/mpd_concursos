@@ -1,0 +1,139 @@
+<div class="postulacion-detalle-overlay" (click)="onCerrar()">
+  <div class="postulacion-detalle-panel glassmorphism"
+       [@slidePanel]
+       (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="panel-header">
+      <div class="header-content">
+        <h2>{{ postulacion.concurso?.title || 'Detalle de Postulación' }}</h2>
+        <app-contest-status-badge
+          [status]="postulacion.estado"
+          [statusType]="'inscription'"
+          [showIcon]="true">
+        </app-contest-status-badge>
+      </div>
+      <app-custom-button
+        [variant]="'icon'"
+        [icon]="'times'"
+        [tooltip]="'Cerrar'"
+        [ariaLabel]="'Cerrar detalle'"
+        (buttonClick)="onCerrar()">
+      </app-custom-button>
+    </div>
+
+    <!-- Content -->
+    <div class="panel-content">
+      <!-- Información del Concurso -->
+      <div class="info-section">
+        <h3><i class="fas fa-trophy"></i> Información del Concurso</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Cargo:</label>
+            <span>{{ postulacion.concurso?.position || 'No especificado' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Dependencia:</label>
+            <span>{{ postulacion.concurso?.department || 'No especificada' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Categoría:</label>
+            <span>{{ postulacion.concurso?.category || 'No especificada' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Clase:</label>
+            <span>{{ postulacion.concurso?.class || 'No especificada' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Fecha de Postulación:</label>
+            <span>{{ postulacion.fechaPostulacion | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="info-item">
+            <label>Estado del Concurso:</label>
+            <span>{{ getEstadoConcursoLabel(postulacion.concurso?.status) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerta para documentación pendiente -->
+      <div class="alert-section" *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'">
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div class="alert-content">
+            <h4>Documentación Pendiente</h4>
+            <p>Tu inscripción está completa pero faltan documentos por subir. Tienes <strong>3 días hábiles</strong> después del cierre de inscripciones para completar tu documentación.</p>
+            <div class="alert-actions">
+              <app-custom-button
+                [label]="'Completar Documentación'"
+                [variant]="'primary'"
+                [icon]="'file-upload'"
+                [ariaLabel]="'Ir a completar documentación'"
+                (buttonClick)="navegarADocumentacion()">
+              </app-custom-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentos Adjuntos -->
+      <div class="info-section" *ngIf="postulacion.attachedDocuments && postulacion.attachedDocuments.length > 0">
+        <h3><i class="fas fa-paperclip"></i> Documentos Adjuntos</h3>
+        <div class="documents-list">
+          <div class="document-item" *ngFor="let doc of postulacion.attachedDocuments">
+            <div class="doc-info">
+              <i class="fas fa-file-pdf"></i>
+              <div class="doc-details">
+                <span class="doc-name">{{ doc.name }}</span>
+                <span class="doc-type">{{ doc.type }}</span>
+              </div>
+            </div>
+            <div class="doc-actions">
+              <app-custom-button
+                [variant]="'icon'"
+                [icon]="'download'"
+                [tooltip]="'Descargar'"
+                [ariaLabel]="'Descargar ' + doc.name"
+                (buttonClick)="descargarDocumento(doc)">
+              </app-custom-button>
+              <app-custom-button
+                [variant]="'icon'"
+                [icon]="'trash'"
+                [tooltip]="'Eliminar'"
+                [ariaLabel]="'Eliminar ' + doc.name"
+                (buttonClick)="eliminarDocumento(doc)">
+              </app-custom-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado sin documentos -->
+      <div class="info-section" *ngIf="!postulacion.attachedDocuments || postulacion.attachedDocuments.length === 0">
+        <h3><i class="fas fa-paperclip"></i> Documentos Adjuntos</h3>
+        <div class="empty-documents">
+          <i class="fas fa-file-alt fa-2x"></i>
+          <p>No hay documentos adjuntos a esta postulación.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="panel-footer">
+      <app-custom-button
+        [label]="'Cerrar'"
+        [variant]="'stroked'"
+        [icon]="'times'"
+        [ariaLabel]="'Cerrar detalle'"
+        (buttonClick)="onCerrar()">
+      </app-custom-button>
+
+      <app-custom-button
+        *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'"
+        [label]="'Completar Documentación'"
+        [variant]="'primary'"
+        [icon]="'file-upload'"
+        [ariaLabel]="'Ir a completar documentación'"
+        (buttonClick)="navegarADocumentacion()">
+      </app-custom-button>
+    </div>
+  </div>
+</div>

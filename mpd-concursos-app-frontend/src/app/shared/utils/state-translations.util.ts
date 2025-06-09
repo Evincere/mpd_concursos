@@ -36,19 +36,22 @@ export function translateInscriptionStatus(status: string | undefined | null): s
   if (!status) return 'Desconocido';
 
   const estados: Record<string, string> = {
+    // Estados estándar (únicos válidos)
     'ACTIVE': 'En Proceso',
-    'IN_PROCESS': 'En Proceso',
-    'PENDING': 'Pendiente',
-    'PENDIENTE': 'Pendiente',
-    'CONFIRMADA': 'Pendiente',
-    'COMPLETED_WITH_DOCS': 'Pendiente',
-    'COMPLETED_PENDING_DOCS': 'Pendiente',
+    'PENDING': 'Pendiente Validación',
+    'COMPLETED_WITH_DOCS': 'Pendiente Validación',
+    'COMPLETED_PENDING_DOCS': 'Documentación Pendiente',
     'FROZEN': 'Congelada',
     'APPROVED': 'Aprobada',
-    'INSCRIPTO': 'Aprobada',
     'REJECTED': 'Rechazada',
     'CANCELLED': 'Cancelada',
-    'NO_INSCRIPTO': 'No Inscripto'
+
+    // Mapeos de compatibilidad temporal (para datos legacy existentes)
+    'IN_PROCESS': 'En Proceso',        // → ACTIVE
+    'PENDIENTE': 'Pendiente Validación', // → PENDING
+    'CONFIRMADA': 'Pendiente Validación', // → PENDING
+    'INSCRIPTO': 'Aprobada',           // → APPROVED
+    'NO_INSCRIPTO': 'No Inscripto'     // → Eliminar gradualmente
   };
 
   return estados[status] || 'Desconocido';
@@ -83,20 +86,43 @@ export function getContestStatusClass(status: string): string {
  */
 export function getInscriptionStatusClass(status: string): string {
   const clases: Record<string, string> = {
+    // Estados estándar (únicos válidos)
     'ACTIVE': 'status-in-process',
-    'IN_PROCESS': 'status-in-process',
     'PENDING': 'status-pending',
-    'PENDIENTE': 'status-pending',
-    'CONFIRMADA': 'status-pending',
-    'COMPLETED_WITH_DOCS': 'status-pending',
-    'COMPLETED_PENDING_DOCS': 'status-pending',
+    'COMPLETED_WITH_DOCS': 'status-completed-with-docs',
+    'COMPLETED_PENDING_DOCS': 'status-pending-docs',
     'FROZEN': 'status-frozen',
     'APPROVED': 'status-approved',
-    'INSCRIPTO': 'status-approved',
     'REJECTED': 'status-rejected',
     'CANCELLED': 'status-cancelled',
-    'NO_INSCRIPTO': 'status-no-inscripto'
+
+    // Mapeos de compatibilidad temporal (para datos legacy existentes)
+    'IN_PROCESS': 'status-in-process',     // → ACTIVE
+    'PENDIENTE': 'status-pending',         // → PENDING
+    'CONFIRMADA': 'status-pending',        // → PENDING
+    'INSCRIPTO': 'status-approved',        // → APPROVED
+    'NO_INSCRIPTO': 'status-no-inscripto' // → Eliminar gradualmente
   };
   
   return clases[status] || 'status-unknown';
+}
+
+/**
+ * Obtiene un mensaje descriptivo para el estado de una inscripción
+ * @param status Estado de la inscripción
+ * @returns Mensaje descriptivo para el usuario
+ */
+export function getInscriptionStatusMessage(status: string): string {
+  const mensajes: Record<string, string> = {
+    'ACTIVE': 'Tu inscripción está en proceso. Puedes continuar completando los pasos pendientes.',
+    'PENDING': 'Tu inscripción está completa y pendiente de validación administrativa.',
+    'COMPLETED_WITH_DOCS': 'Tu inscripción está completa con toda la documentación. Pendiente de validación administrativa.',
+    'COMPLETED_PENDING_DOCS': 'Tu inscripción está completa pero faltan documentos. Tienes 3 días hábiles para completar la documentación.',
+    'FROZEN': 'Tu inscripción ha sido congelada por vencimiento del plazo de documentación.',
+    'APPROVED': 'Tu inscripción ha sido aprobada. ¡Felicitaciones!',
+    'REJECTED': 'Tu inscripción ha sido rechazada. Revisa los comentarios del administrador.',
+    'CANCELLED': 'Tu inscripción ha sido cancelada.'
+  };
+
+  return mensajes[status] || 'Estado de inscripción desconocido.';
 }

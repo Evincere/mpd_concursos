@@ -1,0 +1,329 @@
+<div class="ticket-detail" *ngIf="ticket">
+  <!-- Header -->
+  <div class="detail-header">
+    <div class="header-content">
+      <div class="title-section">
+        <button class="back-btn" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          Volver
+        </button>
+        <h1 class="ticket-title">
+          <span class="ticket-number">#{{ ticket.ticketNumber }}</span>
+          {{ ticket.title }}
+        </h1>
+        <div class="ticket-meta">
+          <span class="ticket-status" [class]="'status-' + getStatusColor(ticket.status)">
+            {{ getStatusLabel(ticket.status) }}
+          </span>
+          <span class="ticket-priority" [class]="'priority-' + getPriorityColor(ticket.priority)">
+            {{ getPriorityLabel(ticket.priority) }}
+          </span>
+          <span class="ticket-category">{{ getCategoryLabel(ticket.category) }}</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button class="action-btn secondary" (click)="refreshTicket()">
+          <i class="fas fa-sync-alt"></i>
+          Actualizar
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="view-navigation">
+      <div class="nav-tabs">
+        <button 
+          *ngFor="let option of viewOptions"
+          class="nav-tab"
+          [class.active]="activeView === option.value"
+          (click)="setActiveView(option.value)">
+          <i [class]="option.icon"></i>
+          <span>{{ option.label }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Area -->
+  <div class="detail-content">
+    
+    <!-- Vista: Resumen -->
+    <div class="overview-view" *ngIf="activeView === 'overview'">
+      <div class="overview-grid">
+        
+        <!-- Información del Ticket -->
+        <div class="info-card">
+          <h3 class="card-title">
+            <i class="fas fa-info-circle"></i>
+            Información del Ticket
+          </h3>
+          <div class="info-list">
+            <div class="info-item">
+              <label>Reportado por:</label>
+              <span>{{ ticket.reporterName }} ({{ ticket.reporterEmail }})</span>
+            </div>
+            <div class="info-item">
+              <label>Asignado a:</label>
+              <span>{{ ticket.assignedToName || 'Sin asignar' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Creado:</label>
+              <span>{{ ticket.createdAt | date:'medium' }}</span>
+            </div>
+            <div class="info-item">
+              <label>Última actualización:</label>
+              <span>{{ ticket.updatedAt | date:'medium' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="description-card">
+          <h3 class="card-title">
+            <i class="fas fa-file-alt"></i>
+            Descripción
+          </h3>
+          <div class="description-content">
+            {{ ticket.description }}
+          </div>
+        </div>
+
+        <!-- SLA y Métricas -->
+        <div class="sla-card">
+          <h3 class="card-title">
+            <i class="fas fa-clock"></i>
+            SLA y Métricas
+          </h3>
+          <div class="sla-info">
+            <div class="sla-item">
+              <label>Tiempo de respuesta:</label>
+              <span>{{ formatTime(ticket.sla.responseTime) }}</span>
+            </div>
+            <div class="sla-item">
+              <label>Tiempo de resolución:</label>
+              <span>{{ formatTime(ticket.sla.resolutionTime) }}</span>
+            </div>
+            <div class="sla-item" *ngIf="ticket.sla.isResponseOverdue">
+              <label class="overdue">Respuesta vencida:</label>
+              <span class="overdue">{{ ticket.sla.responseDeadline | date:'medium' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div class="actions-card">
+          <h3 class="card-title">
+            <i class="fas fa-bolt"></i>
+            Acciones Rápidas
+          </h3>
+          
+          <!-- Cambiar Estado -->
+          <form [formGroup]="statusForm" (ngSubmit)="changeStatus()">
+            <div class="form-group">
+              <label>Cambiar Estado:</label>
+              <select formControlName="status">
+                <option *ngFor="let status of statusOptions" [value]="status.value">
+                  {{ status.label }}
+                </option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Comentario (opcional):</label>
+              <textarea formControlName="comment" placeholder="Agregar comentario sobre el cambio..."></textarea>
+            </div>
+            <button type="submit" class="btn primary" [disabled]="saving">
+              <i class="fas fa-save"></i>
+              Cambiar Estado
+            </button>
+          </form>
+
+          <!-- Asignar Ticket -->
+          <form [formGroup]="assignmentForm" (ngSubmit)="assignTicket()">
+            <div class="form-group">
+              <label>Asignar a:</label>
+              <select formControlName="assignedToId">
+                <option value="">Sin asignar</option>
+                <!-- Aquí irían las opciones de agentes -->
+              </select>
+            </div>
+            <button type="submit" class="btn secondary" [disabled]="saving">
+              <i class="fas fa-user-check"></i>
+              Asignar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Comentarios -->
+    <div class="comments-view" *ngIf="activeView === 'comments'">
+      
+      <!-- Agregar Comentario -->
+      <div class="add-comment-section">
+        <h3>
+          <i class="fas fa-plus"></i>
+          Agregar Comentario
+        </h3>
+        
+        <form [formGroup]="commentForm" (ngSubmit)="addComment()">
+          <div class="form-group">
+            <label>Plantilla de respuesta:</label>
+            <select formControlName="templateId">
+              <option value="">Seleccionar plantilla...</option>
+              <option *ngFor="let template of quickTemplates" [value]="template.id">
+                {{ template.name }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Tipo de comentario:</label>
+            <select formControlName="type">
+              <option [value]="CommentType.PUBLIC">Público</option>
+              <option [value]="CommentType.INTERNAL">Interno</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Contenido:</label>
+            <textarea 
+              formControlName="content" 
+              rows="6"
+              placeholder="Escribir comentario..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Archivos adjuntos:</label>
+            <input type="file" multiple (change)="onFileSelected($event)">
+          </div>
+          
+          <button type="submit" class="btn primary" [disabled]="saving || commentForm.invalid">
+            <i class="fas fa-comment"></i>
+            Agregar Comentario
+          </button>
+        </form>
+      </div>
+
+      <!-- Lista de Comentarios -->
+      <div class="comments-list">
+        <h3>
+          <i class="fas fa-comments"></i>
+          Comentarios ({{ comments.length }})
+        </h3>
+        
+        <div class="comment-item" *ngFor="let comment of comments">
+          <div class="comment-header">
+            <div class="comment-author">
+              <strong>{{ comment.authorName }}</strong>
+              <span class="author-role">({{ comment.authorRole }})</span>
+            </div>
+            <div class="comment-meta">
+              <span class="comment-type" [class]="'type-' + comment.type.toLowerCase()">
+                {{ comment.type }}
+              </span>
+              <span class="comment-date">{{ comment.createdAt | date:'medium' }}</span>
+            </div>
+          </div>
+          
+          <div class="comment-content">
+            {{ comment.content }}
+          </div>
+          
+          <div class="comment-attachments" *ngIf="comment.attachments?.length">
+            <h4>Archivos adjuntos:</h4>
+            <div class="attachment-list">
+              <a *ngFor="let attachment of comment.attachments" 
+                 [href]="attachment.downloadUrl" 
+                 class="attachment-link">
+                <i class="fas fa-paperclip"></i>
+                {{ attachment.originalName }}
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="empty-state" *ngIf="comments.length === 0">
+          <i class="fas fa-comment-slash"></i>
+          <span>No hay comentarios aún</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Historial -->
+    <div class="history-view" *ngIf="activeView === 'history'">
+      <h3>
+        <i class="fas fa-history"></i>
+        Historial de Cambios
+      </h3>
+      
+      <div class="history-list">
+        <div class="history-item" *ngFor="let entry of history">
+          <div class="history-icon">
+            <i class="fas fa-circle"></i>
+          </div>
+          <div class="history-content">
+            <div class="history-header">
+              <strong>{{ entry.changedByName }}</strong>
+              <span class="history-action">{{ entry.action }}</span>
+              <span class="history-date">{{ entry.timestamp | date:'medium' }}</span>
+            </div>
+            <div class="history-description">
+              {{ entry.description }}
+            </div>
+            <div class="history-changes" *ngIf="entry.oldValue || entry.newValue">
+              <span class="old-value">{{ entry.oldValue }}</span>
+              <i class="fas fa-arrow-right"></i>
+              <span class="new-value">{{ entry.newValue }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="empty-state" *ngIf="history.length === 0">
+          <i class="fas fa-history"></i>
+          <span>No hay historial disponible</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista: Archivos -->
+    <div class="attachments-view" *ngIf="activeView === 'attachments'">
+      <h3>
+        <i class="fas fa-paperclip"></i>
+        Archivos Adjuntos
+      </h3>
+      
+      <div class="attachments-grid">
+        <div class="attachment-card" *ngFor="let attachment of ticket.attachments">
+          <div class="attachment-icon">
+            <i class="fas fa-file"></i>
+          </div>
+          <div class="attachment-info">
+            <div class="attachment-name">{{ attachment.originalName }}</div>
+            <div class="attachment-meta">
+              <span>{{ attachment.fileSize | number }} bytes</span>
+              <span>{{ attachment.uploadedAt | date:'short' }}</span>
+            </div>
+          </div>
+          <div class="attachment-actions">
+            <a [href]="attachment.downloadUrl" class="btn small">
+              <i class="fas fa-download"></i>
+              Descargar
+            </a>
+          </div>
+        </div>
+        
+        <div class="empty-state" *ngIf="ticket.attachments.length === 0">
+          <i class="fas fa-paperclip"></i>
+          <span>No hay archivos adjuntos</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-state" *ngIf="loading">
+  <i class="fas fa-spinner fa-spin"></i>
+  <span>Cargando ticket...</span>
+</div>

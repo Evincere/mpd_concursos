@@ -1,20 +1,20 @@
-import { Component, OnInit, OnDestroy, Injector } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router'; // Import Router
+import { Observable, Subject, takeUntil } from 'rxjs';
 
 import { Examen, ESTADO_EXAMEN } from '@shared/interfaces/examen/examen.interface';
 import { SearchHeaderComponent } from '@shared/components/search-header/search-header.component';
 import { LoaderComponent } from '@shared/components/loader/loader.component';
 import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
-import { Subject, takeUntil, Observable } from 'rxjs';
 
-import { ExamenesService } from '@core/services/examenes/examenes.service';
-import { ExamenSecurityService } from '@core/services/examenes/security/examen-security.service';
+import { ExamenesService } from '@core/services/examenes/examenes.service'; // Import ExamenesService
+import { ExamenSecurityService } from '@core/services/examenes/security/examen-security.service'; // Import ExamenSecurityService
 import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
-import { ExamenesStateService } from '@core/services/examenes/examenes-state.service';
-
+import { ExamenesStateService } from '@core/services/examenes/examenes-state.service'; // Import ExamenesStateService
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
 @Component({
   selector: 'app-examenes',
@@ -37,69 +37,15 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   error: string | null = null;
   private destroy$ = new Subject<void>();
   readonly ESTADO_EXAMEN = ESTADO_EXAMEN;
-  private injector: { get: <T>(service: any) => T };
-  private router: { navigate: (commands: string[]) => void };
-  private examenSecurity: { deactivateSecureMode: () => void; reset: () => void };
-  private notificationService: UnifiedNotificationService;
-  private examenesState: {
-    getExamenes: () => Observable<Examen[]>;
-    getLoading: () => Observable<boolean>;
-    getError: () => Observable<string | null>;
-    loadExamenes: () => void;
-    filterExamenes: (termino: string) => void;
-  };
 
   constructor(
-    private unifiedNotificationService: UnifiedNotificationService
-  ) {
-    // En una implementación real, se inyectarían los servicios necesarios
-    this.injector = {
-      get: <T>(service: any): T => {
-        if (service === ExamenesService) {
-          return {
-            verificarExamenRealizado: (id: string) => {
-              return new Observable<boolean>(observer => {
-                observer.next(false);
-                observer.complete();
-              });
-            }
-          } as unknown as T;
-        }
-        return {} as T;
-      }
-    };
-
-    this.router = {
-      navigate: (commands: string[]) => {
-        console.log(`Navegando a: ${commands.join('/')}`);
-      }
-    };
-
-    this.examenSecurity = {
-      deactivateSecureMode: () => console.log('Modo seguro desactivado'),
-      reset: () => console.log('Seguridad reiniciada')
-    };
-
-    this.notificationService = this.unifiedNotificationService;
-
-    this.examenesState = {
-      getExamenes: () => new Observable<Examen[]>(observer => {
-        observer.next([]);
-        observer.complete();
-      }),
-      getLoading: () => new Observable<boolean>(observer => {
-        observer.next(false);
-        observer.complete();
-      }),
-      getError: () => new Observable<string | null>(observer => {
-        observer.next(null);
-        observer.complete();
-      }),
-      loadExamenes: () => console.log('Cargando exámenes'),
-      filterExamenes: (termino: string) => console.log(`Filtrando exámenes por: ${termino}`)
-    };
-  }
-
+    private router: Router, // Inyectar Router
+    private examenesService: ExamenesService, // Inyectar ExamenesService
+    private examenSecurity: ExamenSecurityService, // Inyectar ExamenSecurityService
+    private unifiedNotificationService: UnifiedNotificationService, // Inyectar UnifiedNotificationService
+    private examenesState: ExamenesStateService, // Inyectar ExamenesStateService
+    private loggingService: LoggingService // Inyectar LoggingService
+  ) {}
 
   ngOnInit(): void {
     // Nos aseguramos de que todas las estrategias de seguridad estén desactivadas
@@ -108,22 +54,24 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     this.examenSecurity.reset();
 
     // Limpiamos todas las notificaciones y diálogos abiertos
-    this.notificationService.dismissAll();
+    this.unifiedNotificationService.dismissAll();
 
-    console.log('Estrategias de seguridad y notificaciones desactivadas en el listado de exámenes');
+    this.loggingService.debug('Initializing ExamenesComponent', undefined, 'Examenes');
 
-    // Suscribirse a los cambios de estado
-    this.examenesState.getExamenes()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((examenes: Examen[]) => this.examenes = examenes);
-
+    // Suscribirse a los cambios de estado de carga
     this.examenesState.getLoading()
       .pipe(takeUntil(this.destroy$))
       .subscribe((loading: boolean) => this.loading = loading);
 
+    // Suscribirse a los cambios de error
     this.examenesState.getError()
       .pipe(takeUntil(this.destroy$))
       .subscribe((error: string | null) => this.error = error);
+
+    // Suscribirse a los cambios en la lista de exámenes
+    this.examenesState.getExamenes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((examenes: Examen[]) => this.examenes = examenes);
 
     // Cargar exámenes iniciales
     this.examenesState.loadExamenes();
@@ -137,65 +85,57 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   onSearch(event: any): void {
     // Extraer el término de búsqueda del evento
     const termino = typeof event === 'string' ? event :
-                  (event && event.target && event.target.value ? event.target.value : '');
+      (event && event.target && event.target.value ? event.target.value : '');
 
     this.examenesState.filterExamenes(termino);
   }
 
   onFilter(): void {
     // Implementar filtros
+    this.loggingService.debug('Filter action triggered', undefined, 'Examenes');
   }
 
   async iniciarExamen(examenId: string): Promise<void> {
-    console.log('Verificando si el examen ya fue realizado...');
-
-    // Verificar si el examen ya fue realizado por el usuario actual
     this.loading = true;
+    this.loggingService.debug(`Attempting to start exam: ${examenId}`, undefined, 'Examenes');
 
     try {
-      const examenesService = this.injector.get(ExamenesService);
-      // Convertir el Observable a Promise de forma segura
+      // Verificar si el examen ya ha sido realizado
       const yaRealizado = await new Promise<boolean>((resolve, reject) => {
-        (examenesService as unknown as { verificarExamenRealizado: (id: string) => Observable<boolean> })
-          .verificarExamenRealizado(examenId).subscribe({
-            next: (result: boolean) => resolve(result),
-            error: (error: unknown) => reject(error)
-          });
+        this.examenesService.verificarExamenRealizado(examenId).subscribe({
+          next: (resultado: boolean) => resolve(resultado),
+          error: (error: unknown) => reject(error)
+        });
       });
 
       if (yaRealizado) {
-        this.notificationService.warning('Este examen ya ha sido realizado anteriormente.');
+        this.unifiedNotificationService.warning('Este examen ya ha sido realizado anteriormente.');
         this.loading = false;
         return;
       }
 
-      // Si no fue realizado, continuar con la inicialización
-      console.log('Iniciando examen:', examenId);
+      // Preguntar al usuario si desea iniciar el examen
+      const confirmacion = await this.mostrarDialogoConfirmacion(
+        'Confirmar inicio de examen',
+        'Una vez que inicie el examen, el tiempo comenzará a correr y no podrá pausarlo. ¿Está seguro de que desea comenzar?'
+      );
 
-      // Verificar si el navegador está en modo pantalla completa
-      if (!document.fullscreenElement) {
-        const confirmacion = await this.mostrarDialogoConfirmacion(
-          'Iniciar examen',
-          'El examen se abrirá en modo pantalla completa. ¿Desea continuar?'
-        );
-
-        if (!confirmacion) {
-          this.loading = false;
-          return;
-        }
+      if (!confirmacion) {
+        this.loading = false;
+        return;
       }
 
       // Navegar a la página de rendición
       this.router.navigate(['/dashboard/examenes', examenId, 'rendir']);
     } catch (error) {
       console.error('Error al verificar o iniciar el examen:', error);
-      this.notificationService.error('Error al iniciar el examen. Intente nuevamente.');
+      this.unifiedNotificationService.error('Error al iniciar el examen. Intente nuevamente.');
       this.loading = false;
     }
   }
 
   getMensajeDisponibilidad(examen: Examen): string {
-    const _ahora = new Date();
+    const _ahora = new Date(); // Using _ahora for consistency, though not used in all cases here
     const fechaInicio = new Date(examen.fechaInicio);
 
     // Mensajes según el estado del examen
@@ -230,7 +170,7 @@ export class ExamenesComponent implements OnInit, OnDestroy {
   getEstadoClass(estado: ESTADO_EXAMEN): string {
     const clases: Record<ESTADO_EXAMEN, string> = {
       [ESTADO_EXAMEN.BORRADOR]: 'pendiente',
-      [ESTADO_EXAMEN.ACTIVO]: 'en_curso',
+      [ESTADO_EXAMEN.ACTIVO]: 'en_curso', // Typically active would mean available or in progress
       [ESTADO_EXAMEN.ANULADO]: 'vencido',
       [ESTADO_EXAMEN.FINALIZADO]: 'completado',
       [ESTADO_EXAMEN.DISPONIBLE]: 'en_curso',
@@ -273,9 +213,14 @@ export class ExamenesComponent implements OnInit, OnDestroy {
     return tipos[tipo.toLowerCase()] || tipo;
   }
 
-  async mostrarDialogoConfirmacion(_titulo: string, _mensaje: string): Promise<boolean> {
-    // Implementa la lógica para mostrar un diálogo de confirmación y devolver el resultado
-    // Esto puede ser una promesa que espera la respuesta del usuario
-    return true; // Simulación, deberías implementar la lógica real
+  async mostrarDialogoConfirmacion(titulo: string, mensaje: string): Promise<boolean> {
+    // Implementa la lógica para mostrar un diálogo de confirmación y devolver el resultado.
+    // Esto es una simulación. En una aplicación real, usarías un servicio de diálogo (ej. MatDialog)
+    // que retorna un Observable que se puede convertir a Promise.
+    return new Promise((resolve) => {
+      // Simular un diálogo con un confirm nativo (NO usar en producción)
+      const resultado = confirm(`${titulo}\n\n${mensaje}`);
+      resolve(resultado);
+    });
   }
 }

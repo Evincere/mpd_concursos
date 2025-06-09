@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from  'rxjs/operators';
@@ -70,7 +71,10 @@ export interface UserFilterParams {
 })
 export class UserService {
   private apiUrl = `${environment.apiUrl}/users`;
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {}
 
   getUsers(filterParams: number | UserFilterParams): Observable<UserResponse> {
     let params = new HttpParams();

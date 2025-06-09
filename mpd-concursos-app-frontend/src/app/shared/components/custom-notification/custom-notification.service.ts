@@ -1,4 +1,5 @@
 import { Injectable, ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Injector } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { CustomNotificationComponent, CustomNotificationConfig, NotificationType } from './custom-notification.component';
 
 @Injectable({
@@ -9,9 +10,12 @@ export class CustomNotificationService {
   private readonly maxNotifications = 5;
 
   constructor(
+    
     private appRef: ApplicationRef,
     private injector: Injector,
     private environmentInjector: EnvironmentInjector
+  ,
+    private loggingService: LoggingService
   ) {}
 
   /**
@@ -151,6 +155,24 @@ export class CustomNotificationService {
       action: 'Reintentar',
       data: { retryCallback }
     });
+  }
+
+  /**
+   * Alias para el método success
+   * @param message Mensaje de la notificación
+   * @param title Título opcional
+   */
+  showSuccess(message: string, title = 'Éxito'): void {
+    this.success(message, title);
+  }
+
+  /**
+   * Alias para el método error
+   * @param message Mensaje de la notificación
+   * @param title Título opcional
+   */
+  showError(message: string, title = 'Error'): void {
+    this.error(message, title);
   }
 
   /**

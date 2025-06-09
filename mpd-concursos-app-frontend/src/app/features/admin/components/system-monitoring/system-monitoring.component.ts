@@ -1,12 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // Import Validators
 import { ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, forkJoin } from 'rxjs'; // Import forkJoin
+import { takeUntil, tap } from 'rxjs/operators'; // Import tap
 
-// Servicios custom
-import { NotificationService } from '@core/services/notification/notification.service';
+// Custom Services
+import { NotificationService } from '@shared/services/notification.service';
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
 import {
   SystemMonitoringService,
@@ -37,24 +38,24 @@ import { AlertConfigurationComponent } from './components/alert-configuration/al
   ]
 })
 export class SystemMonitoringComponent implements OnInit, OnDestroy {
-  // Datos de monitoreo
+  // Monitoring Data
   appPerformanceMetrics: AppPerformanceMetrics | null = null;
   databaseMetrics: DatabaseMetrics | null = null;
   systemAlerts: SystemAlert[] = [];
   alertThresholds: AlertThreshold[] = [];
 
-  // Estado de la UI
+  // UI State
   isLoading = false;
-  activeTab: string = 'performance';
+  activeTab: string = 'performance'; // Default active tab
 
-  // Modo del componente (monitoreo, auditoría, backups)
+  // Component mode (monitoring, audit, backup)
   mode: 'monitoring' | 'audit' | 'backup' = 'monitoring';
-  filter: string | null = null;
+  filter: string | null = null; // Specific filter based on route data (e.g., 'users' for audit)
 
-  // Formulario de filtros
+  // Filter Form
   filterForm: FormGroup;
 
-  // Intervalos de tiempo predefinidos
+  // Predefined time intervals
   timeIntervals = [
     { value: 'last-hour', label: 'Última hora' },
     { value: 'last-day', label: 'Último día' },
@@ -63,7 +64,7 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
     { value: 'custom', label: 'Personalizado' }
   ];
 
-  // Configuración de tabs por modo
+  // Tab configuration per mode
   tabsConfig = {
     monitoring: [
       { id: 'performance', label: 'Rendimiento', icon: '📊' },
@@ -85,10 +86,10 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
     ]
   };
 
-  // Tabs activos según el modo
+  // Active tabs based on the current mode
   activeTabs: any[] = [];
 
-  // Títulos por modo
+  // Titles per mode
   modeConfig = {
     monitoring: {
       title: 'Monitoreo del Sistema',
@@ -104,19 +105,21 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
     }
   };
 
-  // Para limpieza de suscripciones
+  // For cleaning up subscriptions
   private destroy$ = new Subject<void>();
 
-  // Intervalo de actualización automática
+  // Automatic refresh interval
   private refreshInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private monitoringService: SystemMonitoringService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private loggingService: LoggingService // Inject LoggingService
   ) {
-    // Inicializar formulario de filtros
+    this.loggingService.debug('[SystemMonitoringComponent] Constructor: Initializing filter form.', undefined, 'SystemMonitoring');
+    // Initialize filter form
     this.filterForm = this.fb.group({
       timeInterval: ['last-hour'],
       dateRange: this.fb.group({
@@ -127,152 +130,159 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
       severity: ['']
     });
 
-    // Deshabilitar campos de fecha personalizada por defecto
+    // Disable custom date fields by default
     this.filterForm.get('dateRange')?.disable();
 
-    // Escuchar cambios en el intervalo de tiempo
-    this.filterForm.get('timeInterval')?.valueChanges.subscribe(value => {
+    // Listen for changes in time interval
+    this.filterForm.get('timeInterval')?.valueChanges.pipe(
+      takeUntil(this.destroy$) // Ensure subscription is unsubscribed on destroy
+    ).subscribe(value => {
+      this.loggingService.debug(`[SystemMonitoringComponent] Time interval changed to: ${value}`, undefined, 'SystemMonitoring');
       if (value === 'custom') {
         this.filterForm.get('dateRange')?.enable();
+        // Add validators for custom date range if needed, e.g., Validators.required
+        this.filterForm.get('dateRange.startDate')?.setValidators(Validators.required);
+        this.filterForm.get('dateRange.endDate')?.setValidators(Validators.required);
       } else {
         this.filterForm.get('dateRange')?.disable();
+        // Clear validators if not in custom mode
+        this.filterForm.get('dateRange.startDate')?.clearValidators();
+        this.filterForm.get('dateRange.endDate')?.clearValidators();
+        // Reset values to null when switching from custom
+        this.filterForm.get('dateRange.startDate')?.setValue(null);
+        this.filterForm.get('dateRange.endDate')?.setValue(null);
       }
+      this.filterForm.get('dateRange.startDate')?.updateValueAndValidity();
+      this.filterForm.get('dateRange.endDate')?.updateValueAndValidity();
     });
   }
 
   ngOnInit(): void {
+    this.loggingService.info('[SystemMonitoringComponent] Component initialized.', undefined, 'SystemMonitoring');
     try {
-      // Detectar modo basándose en los datos de la ruta
+      // Detect mode based on route data
       this.route.data.pipe(takeUntil(this.destroy$)).subscribe(data => {
+        this.loggingService.debug('[SystemMonitoringComponent] Route data received:', data, 'SystemMonitoring');
         if (data['mode']) {
           this.mode = data['mode'];
           this.filter = data['filter'] || null;
+          this.loggingService.info(`[SystemMonitoringComponent] Mode set to: ${this.mode}, Filter: ${this.filter}`, undefined, 'SystemMonitoring');
         }
 
-        // Configurar tabs según el modo
+        // Configure tabs based on mode
         this.configureTabsForMode();
       });
 
-      this.loadData();
+      this.loadData(); // Initial data load
 
-      // Configurar actualización automática cada 30 segundos
+      // Configure automatic refresh every 30 seconds
       this.refreshInterval = setInterval(() => {
-        this.loadData(false);
+        this.loggingService.debug('[SystemMonitoringComponent] Auto-refresh triggered.', undefined, 'SystemMonitoring');
+        this.loadData(false); // Load without showing full loading indicator
       }, 30000);
     } catch (error) {
-      console.error('Error initializing SystemMonitoringComponent:', error);
-      this.notificationService.showError('Error al inicializar el componente de monitoreo');
+      this.loggingService.error('[SystemMonitoringComponent] Error during ngOnInit:', error, 'SystemMonitoring');
+      this.notificationService.error('Error al inicializar el componente de monitoreo');
     }
   }
 
   ngOnDestroy(): void {
+    this.loggingService.info('[SystemMonitoringComponent] Component destroyed. Cleaning up resources.', undefined, 'SystemMonitoring');
     this.destroy$.next();
     this.destroy$.complete();
 
-    // Limpiar intervalo de actualización
+    // Clear refresh interval
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+      this.loggingService.debug('[SystemMonitoringComponent] Auto-refresh interval cleared.', undefined, 'SystemMonitoring');
     }
   }
 
   /**
-   * Configura las tabs según el modo actual
+   * Configures the tabs based on the current mode.
    */
   configureTabsForMode(): void {
     this.activeTabs = this.tabsConfig[this.mode] || this.tabsConfig.monitoring;
+    this.loggingService.debug(`[SystemMonitoringComponent] Active tabs configured for mode "${this.mode}".`, this.activeTabs, 'SystemMonitoring');
 
-    // Establecer la primera tab como activa si no hay una seleccionada
+    // Set the first tab as active if none is selected
     if (this.activeTabs.length > 0 && !this.activeTab) {
       this.activeTab = this.activeTabs[0].id;
+      this.loggingService.debug(`[SystemMonitoringComponent] Default active tab set to: ${this.activeTab}`, undefined, 'SystemMonitoring');
     }
   }
 
   /**
-   * Obtiene la configuración del modo actual
+   * Gets the configuration for the current mode (title and description).
    */
   getCurrentModeConfig() {
     return this.modeConfig[this.mode] || this.modeConfig.monitoring;
   }
 
   /**
-   * Cambia la pestaña activa
+   * Changes the active tab.
+   * @param tab The ID of the tab to activate.
    */
   setActiveTab(tab: string): void {
     this.activeTab = tab;
+    this.loggingService.debug(`[SystemMonitoringComponent] Active tab changed to: ${tab}`, undefined, 'SystemMonitoring');
   }
 
-
-
   /**
-   * Carga los datos de monitoreo
-   * @param showLoading Indica si se debe mostrar el indicador de carga
+   * Loads monitoring data from various services.
+   * Uses forkJoin to manage simultaneous API calls and update loading state consistently.
+   * @param showLoading Indicates whether to show the loading indicator (defaults to true).
    */
   loadData(showLoading = true): void {
+    this.loggingService.info(`[SystemMonitoringComponent] Loading data (showLoading: ${showLoading}).`, undefined, 'SystemMonitoring');
     try {
       if (showLoading) {
         this.isLoading = true;
       }
 
-      // Obtener filtros
+      // Get current filters
       const filter = this.getMonitoringFilter();
+      this.loggingService.debug('[SystemMonitoringComponent] Current monitoring filters:', filter, 'SystemMonitoring');
 
-    // Cargar métricas de rendimiento de la aplicación
-    this.monitoringService.getAppPerformanceMetrics(filter)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.appPerformanceMetrics = data;
-          if (showLoading) {
-            this.isLoading = false;
-          }
+      // Create an array of observables for all data fetching calls
+      forkJoin([
+        this.monitoringService.getAppPerformanceMetrics(filter).pipe(
+          tap(data => this.appPerformanceMetrics = data),
+          tap(() => this.loggingService.debug('[SystemMonitoringComponent] App performance metrics loaded.', undefined, 'SystemMonitoring')),
+          // Catch individual errors without failing the whole forkJoin, returning null/empty for that observable
+          // This allows other data to still load even if one fails
+          // If you want forkJoin to fail on first error, remove this catchError here.
+          // The outer catchError of the forkJoin below will handle it.
+        ),
+        this.monitoringService.getDatabaseMetrics(filter).pipe(
+          tap(data => this.databaseMetrics = data),
+          tap(() => this.loggingService.debug('[SystemMonitoringComponent] Database metrics loaded.', undefined, 'SystemMonitoring'))
+        ),
+        this.monitoringService.getSystemAlerts(filter).pipe(
+          tap(data => this.systemAlerts = data),
+          tap(() => this.loggingService.debug('[SystemMonitoringComponent] System alerts loaded.', undefined, 'SystemMonitoring'))
+        ),
+        this.monitoringService.getAlertThresholds().pipe(
+          tap(data => this.alertThresholds = data),
+          tap(() => this.loggingService.debug('[SystemMonitoringComponent] Alert thresholds loaded.', undefined, 'SystemMonitoring'))
+        )
+      ]).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.loggingService.info('[SystemMonitoringComponent] All monitoring data loaded successfully.', undefined, 'SystemMonitoring');
+          this.isLoading = false; // Reset loading state once all data is fetched
         },
         error: (error) => {
-          console.error('Error cargando métricas de rendimiento:', error);
-          this.notificationService.showError('Error al cargar métricas de rendimiento');
-          if (showLoading) {
-            this.isLoading = false;
-          }
-        }
-      });
-
-    // Cargar métricas de base de datos
-    this.monitoringService.getDatabaseMetrics(filter)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.databaseMetrics = data;
-        },
-        error: (error) => {
-          console.error('Error cargando métricas de base de datos:', error);
-        }
-      });
-
-    // Cargar alertas del sistema
-    this.monitoringService.getSystemAlerts(filter)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.systemAlerts = data;
-        },
-        error: (error) => {
-          console.error('Error cargando alertas del sistema:', error);
-        }
-      });
-
-    // Cargar umbrales de alerta
-    this.monitoringService.getAlertThresholds()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data) => {
-          this.alertThresholds = data;
-        },
-        error: (error) => {
-          console.error('Error cargando umbrales de alerta:', error);
+          this.loggingService.error('[SystemMonitoringComponent] Error loading one or more monitoring data sources:', error, 'SystemMonitoring');
+          this.notificationService.error('Error al cargar algunos datos de monitoreo. Verifique la consola para más detalles.');
+          this.isLoading = false; // Reset loading state on error
         }
       });
     } catch (error) {
-      console.error('Error in loadData method:', error);
-      this.notificationService.showError('Error al cargar los datos de monitoreo');
+      this.loggingService.error('[SystemMonitoringComponent] Error in loadData method:', error, 'SystemMonitoring');
+      this.notificationService.error('Error al iniciar la carga de datos de monitoreo.');
       if (showLoading) {
         this.isLoading = false;
       }
@@ -280,20 +290,28 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene los filtros de monitoreo a partir del formulario
+   * Constructs the monitoring filter object from the form values.
    */
   getMonitoringFilter(): MonitoringFilter {
     const filter: MonitoringFilter = {};
 
     const timeInterval = this.filterForm.get('timeInterval')?.value;
+    const now = new Date();
 
     if (timeInterval === 'custom') {
-      filter.startDate = this.filterForm.get('dateRange.startDate')?.value;
-      filter.endDate = this.filterForm.get('dateRange.endDate')?.value;
-    } else {
-      // Calcular fechas basadas en el intervalo seleccionado
-      const now = new Date();
+      const startDate = this.filterForm.get('dateRange.startDate')?.value;
+      const endDate = this.filterForm.get('dateRange.endDate')?.value;
 
+      // Basic validation for custom dates
+      if (startDate && endDate && new Date(startDate) <= new Date(endDate)) {
+        filter.startDate = new Date(startDate);
+        filter.endDate = new Date(endDate);
+      } else if (startDate || endDate) {
+        this.notificationService.warning('Las fechas personalizadas son inválidas. Se ignorarán los filtros de fecha.');
+        this.loggingService.warn('[SystemMonitoringComponent] Invalid custom date range, ignoring date filters.', { startDate, endDate }, 'SystemMonitoring');
+      }
+    } else {
+      // Calculate dates based on selected interval
       switch (timeInterval) {
         case 'last-hour':
           filter.startDate = new Date(now.getTime() - 60 * 60 * 1000);
@@ -316,25 +334,35 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
           filter.interval = 'day';
           break;
       }
+      this.loggingService.debug(`[SystemMonitoringComponent] Calculated date range for "${timeInterval}":`, { startDate: filter.startDate, endDate: filter.endDate }, 'SystemMonitoring');
     }
 
-    filter.category = this.filterForm.get('category')?.value;
-    filter.severity = this.filterForm.get('severity')?.value;
+    // Add category and severity filters if they have values
+    const category = this.filterForm.get('category')?.value;
+    if (category) {
+      filter.category = category;
+    }
+    const severity = this.filterForm.get('severity')?.value;
+    if (severity) {
+      filter.severity = severity;
+    }
 
     return filter;
   }
 
   /**
-   * Aplica los filtros seleccionados
+   * Applies the selected filters and reloads data.
    */
   applyFilters(): void {
+    this.loggingService.info('[SystemMonitoringComponent] Applying filters. Reloading data.', undefined, 'SystemMonitoring');
     this.loadData();
   }
 
   /**
-   * Reinicia los filtros
+   * Resets all filters to their default values and reloads data.
    */
   resetFilters(): void {
+    this.loggingService.info('[SystemMonitoringComponent] Resetting filters. Reloading data.', undefined, 'SystemMonitoring');
     this.filterForm.reset({
       timeInterval: 'last-hour',
       dateRange: {
@@ -345,156 +373,99 @@ export class SystemMonitoringComponent implements OnInit, OnDestroy {
       severity: ''
     });
 
+    // Manually trigger valueChanges for timeInterval to ensure dateRange is disabled
+    this.filterForm.get('timeInterval')?.setValue('last-hour', { emitEvent: true });
+
     this.loadData();
   }
 
   /**
-   * Maneja el cambio de pestaña
-   * @param index Índice de la pestaña seleccionada
+   * Handles tab change.
+   * @param tabId The ID of the selected tab.
    */
-  onTabChange(index: number): void {
-    // Convertir índice numérico a string para compatibilidad
-    const tabs = ['performance', 'database', 'alerts', 'config'];
-    this.activeTab = tabs[index] || 'performance';
+  onTabChange(tabId: string): void {
+    this.activeTab = tabId;
+    this.loggingService.debug(`[SystemMonitoringComponent] Tab changed to: ${tabId}`, undefined, 'SystemMonitoring');
   }
 
   /**
-   * Acusa recibo de una alerta
-   * @param event Evento que contiene el ID de la alerta o el ID directamente
+   * Acknowledges a system alert.
+   * @param alertId The ID of the alert to acknowledge.
    */
-  acknowledgeAlert(event: Event | string): void {
-    let alertId = '';
-
-    if (typeof event === 'string') {
-      alertId = event;
-    } else if (event instanceof Event) {
-      // Si es un evento del DOM, intentamos obtener el ID de un atributo data-alert-id
-      const target = event.target as HTMLElement;
-      if (target && target.getAttribute) {
-        alertId = target.getAttribute('data-alert-id') || '';
-      }
-    } else if (event && typeof event === 'object' && 'alertId' in event) {
-      alertId = (event as { alertId: string }).alertId;
-    }
-
+  acknowledgeAlert(alertId: string): void { // Expecting only string ID now
+    this.loggingService.info(`[SystemMonitoringComponent] Acknowledging alert with ID: ${alertId}`, undefined, 'SystemMonitoring');
     if (!alertId) {
-      console.error('ID de alerta no válido');
-      this.notificationService.showError('Error: ID de alerta no válido');
+      this.loggingService.error('[SystemMonitoringComponent] Invalid alert ID for acknowledgment.', undefined, 'SystemMonitoring');
+      this.notificationService.error('Error: ID de alerta no válido para acusar recibo.');
       return;
     }
 
-    console.log('Acusando recibo de alerta:', alertId);
-
-    this.monitoringService.acknowledgeAlert(alertId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (_alert) => {
-          this.notificationService.showSuccess('Alerta acusada correctamente');
-          this.loadData(false);
-        },
-        error: (error) => {
-          console.error('Error acusando alerta:', error);
-          this.notificationService.showError('Error al acusar alerta');
-        }
-      });
+    this.monitoringService.acknowledgeAlert(alertId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.loggingService.info(`[SystemMonitoringComponent] Alert ${alertId} acknowledged successfully. Refreshing data.`, undefined, 'SystemMonitoring');
+        this.notificationService.success('Alerta acusada correctamente');
+        this.loadData(false); // Refresh data without showing full loading
+      },
+      error: (error) => {
+        this.loggingService.error(`[SystemMonitoringComponent] Error acknowledging alert ${alertId}:`, error, 'SystemMonitoring');
+        this.notificationService.error('Error al acusar alerta. Intente de nuevo.');
+      }
+    });
   }
 
   /**
-   * Marca una alerta como resuelta
-   * @param event Evento que contiene el ID de la alerta o el ID directamente
+   * Marks a system alert as resolved.
+   * @param alertId The ID of the alert to resolve.
    */
-  resolveAlert(event: Event | string): void {
-    let alertId = '';
-
-    if (typeof event === 'string') {
-      alertId = event;
-    } else if (event instanceof Event) {
-      // Si es un evento del DOM, intentamos obtener el ID de un atributo data-alert-id
-      const target = event.target as HTMLElement;
-      if (target && target.getAttribute) {
-        alertId = target.getAttribute('data-alert-id') || '';
-      }
-    } else if (event && typeof event === 'object' && 'alertId' in event) {
-      alertId = (event as { alertId: string }).alertId;
-    }
-
+  resolveAlert(alertId: string): void { // Expecting only string ID now
+    this.loggingService.info(`[SystemMonitoringComponent] Resolving alert with ID: ${alertId}`, undefined, 'SystemMonitoring');
     if (!alertId) {
-      console.error('ID de alerta no válido');
-      this.notificationService.showError('Error: ID de alerta no válido');
+      this.loggingService.error('[SystemMonitoringComponent] Invalid alert ID for resolution.', undefined, 'SystemMonitoring');
+      this.notificationService.error('Error: ID de alerta no válido para resolver.');
       return;
     }
 
-    console.log('Resolviendo alerta:', alertId);
-
-    this.monitoringService.resolveAlert(alertId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (_alert) => {
-          this.notificationService.showSuccess('Alerta resuelta correctamente');
-          this.loadData(false);
-        },
-        error: (error) => {
-          console.error('Error resolviendo alerta:', error);
-          this.notificationService.showError('Error al resolver alerta');
-        }
-      });
+    this.monitoringService.resolveAlert(alertId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.loggingService.info(`[SystemMonitoringComponent] Alert ${alertId} resolved successfully. Refreshing data.`, undefined, 'SystemMonitoring');
+        this.notificationService.success('Alerta resuelta correctamente');
+        this.loadData(false); // Refresh data without showing full loading
+      },
+      error: (error) => {
+        this.loggingService.error(`[SystemMonitoringComponent] Error resolving alert ${alertId}:`, error, 'SystemMonitoring');
+        this.notificationService.error('Error al resolver alerta. Intente de nuevo.');
+      }
+    });
   }
 
   /**
-   * Actualiza un umbral de alerta
-   * @param event Evento que contiene el umbral de alerta o el umbral directamente
+   * Updates an alert threshold configuration.
+   * @param threshold The AlertThreshold object to update.
    */
-  updateAlertThreshold(event: Event | AlertThreshold): void {
-    let threshold: AlertThreshold | null = null;
-
-    if (event instanceof Event) {
-      // Si es un evento del DOM, intentamos obtener el umbral de un atributo data
-      const target = event.target as HTMLElement;
-      if (target && target.getAttribute) {
-        const thresholdId = target.getAttribute('data-threshold-id');
-        const thresholdValue = target.getAttribute('data-threshold-value');
-        if (thresholdId && thresholdValue) {
-          threshold = {
-            id: thresholdId,
-            name: target.getAttribute('data-threshold-name') || '',
-            description: target.getAttribute('data-threshold-description') || '',
-            metricName: '',
-            operator: '>' as const,
-            threshold: parseFloat(thresholdValue),
-            severity: 'warning' as const,
-            enabled: true,
-            notificationChannels: ['system'],
-            cooldownMinutes: 15
-          };
-        }
-      }
-    } else if (event && typeof event === 'object') {
-      if ('id' in event) {
-        threshold = event as AlertThreshold;
-      } else if ('threshold' in event) {
-        threshold = (event as { threshold: AlertThreshold }).threshold;
-      }
-    }
-
+  updateAlertThreshold(threshold: AlertThreshold): void { // Expecting AlertThreshold object directly
+    this.loggingService.info(`[SystemMonitoringComponent] Updating alert threshold for ID: ${threshold?.id}`, threshold, 'SystemMonitoring');
     if (!threshold || !threshold.id) {
-      console.error('Umbral de alerta no válido');
-      this.notificationService.showError('Error: Umbral de alerta no válido');
+      this.loggingService.error('[SystemMonitoringComponent] Invalid alert threshold object for update.', threshold, 'SystemMonitoring');
+      this.notificationService.error('Error: Umbral de alerta no válido para actualizar.');
       return;
     }
 
-    console.log('Actualizando umbral de alerta:', threshold.id, threshold.threshold || 'N/A');
-
-    this.monitoringService.updateAlertThreshold(threshold)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (_updatedThreshold) => {
-          this.notificationService.showSuccess('Umbral de alerta actualizado correctamente');
-          this.loadData(false);
-        },
-        error: (error) => {
-          console.error('Error actualizando umbral de alerta:', error);
-          this.notificationService.showError('Error al actualizar umbral de alerta');
-        }
-      });
+    this.monitoringService.updateAlertThreshold(threshold).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.loggingService.info(`[SystemMonitoringComponent] Alert threshold ${threshold.id} updated successfully. Refreshing data.`, undefined, 'SystemMonitoring');
+        this.notificationService.success('Umbral de alerta actualizado correctamente');
+        this.loadData(false); // Refresh data without showing full loading
+      },
+      error: (error) => {
+        this.loggingService.error(`[SystemMonitoringComponent] Error updating alert threshold ${threshold.id}:`, error, 'SystemMonitoring');
+        this.notificationService.error('Error al actualizar umbral de alerta. Intente de nuevo.');
+      }
+    });
   }
 }

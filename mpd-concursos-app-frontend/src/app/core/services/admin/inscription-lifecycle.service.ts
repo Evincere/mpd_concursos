@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from  '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -87,7 +88,10 @@ export interface InternalNote {
 export class InscriptionLifecycleService {
   private apiUrl = `${environment.apiUrl}/admin/inscriptions`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {}
 
   // Definición de transiciones de estado permitidas
   private allowedTransitions: StateTransition[] = [

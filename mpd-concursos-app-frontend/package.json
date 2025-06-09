@@ -2,28 +2,29 @@
   "name": "mpd-concursos-app-frontend",
   "version": "1.0.0",
   "description": "Aplicación de gestión de concursos del Ministerio Público de la Defensa",
-  "main": "./electron/main.js",
   "author": {
     "name": "Semper Evincere"
   },
   "scripts": {
     "ng": "ng",
-    "start": "cross-env NODE_OPTIONS=--no-deprecation ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
-    "start:simple": "ng serve",
+    "start": "node fix-colorette.js && cross-env NODE_OPTIONS=--no-deprecation ng serve --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
+    "start:simple": "node fix-colorette.js && ng serve",
+    "fix-colorette": "node fix-colorette.js",
     "start:clean": "npm cache clean --force && ng serve --configuration development",
     "start:dev": "ng serve --configuration development --host 0.0.0.0 --port 4200 --disable-host-check --proxy-config proxy.dev.conf.json",
     "start:reset": "rimraf .angular/cache && npm run start:dev",
     "start:webpack": "webpack serve --config webpack.dev.js",
     "build": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
-    "electron": "ng build --configuration production && electron .",
-    "pack": "electron-builder --dir",
-    "dist": "ng build --configuration production && electron-builder",
-    "make:win": "ng build --configuration production && electron-builder --win",
-    "make:mac": "ng build --configuration production && electron-builder --mac",
-    "make:linux": "ng build --configuration production && electron-builder --linux",
     "test": "ng test",
-    "lint": "ng lint"
+    "test:quick": "ng test --watch=false --browsers=ChromeHeadless --code-coverage=false",
+    "test:coverage": "ng test --watch=false --browsers=ChromeHeadless --code-coverage",
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
+    "build:check": "ng build --configuration production --output-path=dist-check",
+    "validate": "node scripts/validate-code.js",
+    "pre-commit": "node scripts/pre-commit.js",
+    "quality-check": "npm run lint && npm run validate && npm run test:quick && npm run build:check"
   },
   "private": true,
   "dependencies": {
@@ -64,8 +65,7 @@
     "@types/jasmine": "~5.1.0",
     "angular-eslint": "19.2.1",
     "autoprefixer": "^10.4.20",
-    "electron": "^28.1.4",
-    "electron-builder": "^24.13.3",
+    "cross-env": "^7.0.3",
     "eslint": "^9.22.0",
     "jasmine-core": "~5.2.0",
     "karma": "~6.4.0",
@@ -78,56 +78,5 @@
     "typescript": "~5.5.4",
     "typescript-eslint": "8.26.0",
     "webpack-bundle-analyzer": "^4.10.2"
-  },
-  "build": {
-    "appId": "ar.gov.mpd.concursos",
-    "productName": "MPD Concursos",
-    "directories": {
-      "output": "dist/electron",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/browser/**/*",
-      "electron/**/*",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "dist/browser",
-        "to": "app/dist/browser",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "asar": true,
-    "win": {
-      "icon": "build/icon.ico",
-      "target": [
-        "nsis"
-      ],
-      "productName": "Defensa Mendoza",
-      "artifactName": "Defensa-Mendoza-Setup-${version}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "uninstallDisplayName": "Desinstalar Defensa Mendoza",
-      "license": "LICENSE.txt",
-      "artifactName": "MPD-Concursos-Setup-${version}.${ext}"
-    },
-    "mac": {
-      "target": [
-        "dmg"
-      ],
-      "icon": "src/assets/icons/icon.icns"
-    },
-    "linux": {
-      "target": [
-        "AppImage"
-      ],
-      "icon": "src/assets/icons/icon.png"
-    }
   }
 }

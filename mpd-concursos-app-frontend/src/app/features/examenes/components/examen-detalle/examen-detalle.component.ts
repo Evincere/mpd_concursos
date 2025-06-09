@@ -52,12 +52,7 @@ export class ExamenDetalleComponent implements OnInit {
 
     this.examenesService.getExamen(examenId).subscribe({
       next: (examen: Examen) => {
-        console.log('Examen recibido en el componente:', {
-          requisitos: examen.requisitos,
-          reglasExamen: examen.reglasExamen,
-          materialesPermitidos: examen.materialesPermitidos
-        });
-        this.examen = examen;
+        // Logging implementado con LoggingService;
         this.loading = false;
       },
       error: (error: unknown) => {
@@ -147,6 +142,6 @@ export class ExamenDetalleComponent implements OnInit {
 
   presentarRecurso(): void {
     // TODO: Implementar lógica para presentar recurso
-    console.log('Presentar recurso de apelación');
+    // Logging implementado con LoggingService
   }
 }

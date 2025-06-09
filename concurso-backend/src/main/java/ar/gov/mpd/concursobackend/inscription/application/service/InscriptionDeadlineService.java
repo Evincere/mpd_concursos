@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.inscription.application.service;
 
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
@@ -180,7 +180,7 @@ public class InscriptionDeadlineService {
                                 .orElse(null);
                         if (contest != null && contest.getEndDate() != null) {
                             // Convertir LocalDate a LocalDateTime al final del día
-                            inscriptionEndDate = contest.getEndDate().atTime(23, 59, 59);
+                            inscriptionEndDate = contest.getEndDate() != null ? contest.getEndDate() : null;
                         }
                     } catch (Exception e) {
                         log.warn("Error al obtener fecha de fin de inscripción del concurso {}: {}",

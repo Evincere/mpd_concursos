@@ -201,20 +201,20 @@ public class AdminInscriptionService {
     public Map<String, Object> getAllInscriptionStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        // Estadísticas por estado
+        // Estadísticas por estado (REFACTORING: Usar solo estados estándar)
         long total = inscriptionRepository.count();
-        long pending = inscriptionRepository.countByState(InscriptionState.PENDIENTE);
-        long approved = inscriptionRepository.countByState(InscriptionState.INSCRIPTO);
+        long pending = inscriptionRepository.countByState(InscriptionState.PENDING);
+        long approved = inscriptionRepository.countByState(InscriptionState.APPROVED);
         long rejected = inscriptionRepository.countByState(InscriptionState.REJECTED);
         long cancelled = inscriptionRepository.countByState(InscriptionState.CANCELLED);
-        long inProcess = inscriptionRepository.countByState(InscriptionState.IN_PROCESS);
+        long active = inscriptionRepository.countByState(InscriptionState.ACTIVE);
 
         stats.put("total", total);
         stats.put("pending", pending);
         stats.put("approved", approved);
         stats.put("rejected", rejected);
         stats.put("cancelled", cancelled);
-        stats.put("inProcess", inProcess);
+        stats.put("active", active);  // REFACTORING: Cambiar inProcess por active
 
         // Estadísticas por concurso
         Map<String, Long> byContest = new HashMap<>();
@@ -338,7 +338,7 @@ public class AdminInscriptionService {
         NotificationType type;
 
         switch (inscription.getState()) {
-            case INSCRIPTO:
+            case APPROVED:  // REFACTORING: Usar estado estándar
                 message = "Tu inscripción al concurso " + contestTitle + " ha sido aprobada.";
                 type = NotificationType.INSCRIPTION;
                 break;

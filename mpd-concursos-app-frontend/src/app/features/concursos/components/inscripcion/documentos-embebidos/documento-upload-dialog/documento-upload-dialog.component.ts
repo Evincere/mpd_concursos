@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // Import Validators
 
 // Custom Components
 import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
@@ -11,13 +11,21 @@ import { CustomSpinnerComponent } from '@shared/components/custom-spinner/custom
 import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { DocumentoValidationService, DocumentoValidationError } from '@core/services/documentos/documento-validation.service';
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
 // RxJS
 import { finalize, switchMap, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs'; // Import throwError
 
 // Utils
 import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/safe-access.utils';
+
+// Definir el tipo de respuesta del diálogo
+export interface DocumentoUploadDialogResult {
+  success?: boolean;
+  cancelled?: boolean;
+  document?: any;
+}
 
 @Component({
   selector: 'app-documento-upload-dialog',
@@ -46,11 +54,11 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
 
         <form [formGroup]="uploadForm" class="upload-form">
           <div class="file-upload-container"
-               [class.has-file]="selectedFile"
-               [class.drag-over]="isDragging"
-               (dragover)="onDragOver($event)"
-               (dragleave)="onDragLeave($event)"
-               (drop)="onDrop($event)">
+                [class.has-file]="selectedFile"
+                [class.drag-over]="isDragging"
+                (dragover)="onDragOver($event)"
+                (dragleave)="onDragLeave($event)"
+                (drop)="onDrop($event)">
 
             <div class="upload-icon">
               <i class="fas"
@@ -68,7 +76,7 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
                   label="Seleccionar archivo"
                   (buttonClick)="fileInput.click()">
                 </app-custom-button>
-                <p class="upload-hint">Formatos permitidos: PDF, JPG, PNG (Máx. 10MB)</p>
+                <p class="upload-hint">Formatos permitidos: PDF (Máx. 10MB)</p>
               </ng-container>
 
               <ng-container *ngIf="selectedFile">
@@ -102,7 +110,7 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
             <input type="file"
                    #fileInput
                    style="display: none"
-                   accept=".pdf,.jpg,.jpeg,.png"
+                   accept=".pdf"
                    (change)="onFileSelected($event)">
           </div>
 
@@ -135,7 +143,7 @@ import { isArray, safeGet, safeArrayMethod, safeLength } from '@shared/utils/saf
           variant="primary"
           icon="cloud-upload-alt"
           label="Subir documento"
-          [disabled]="!selectedFile || uploading || uploadForm.invalid"
+          [disabled]="!selectedFile || uploading || uploadForm.invalid || validationErrors.length > 0"
           [loading]="uploading"
           (buttonClick)="uploadDocument()">
         </app-custom-button>
@@ -449,191 +457,245 @@ export class DocumentoUploadDialogComponent implements OnInit {
     private documentosService: DocumentosService,
     private documentoValidationService: DocumentoValidationService,
     private notificationService: UnifiedNotificationService,
-    public dialogRef: CustomDialogRef<DocumentoUploadDialogComponent>,
+    public dialogRef: CustomDialogRef<DocumentoUploadDialogResult>,
+    private loggingService: LoggingService,
     @Inject(CUSTOM_DIALOG_DATA) public data: { tipoDocumentoId: string, tipoDocumentoNombre: string }
   ) {
-    console.log('[DocumentoUploadDialog] Constructor - datos recibidos:', data);
+    this.loggingService.debug('[DocumentoUploadDialog] Constructor: Initializing form and injecting data.', { data: this.data }, 'DocumentoUploadDialog');
     this.uploadForm = this.fb.group({
-      comentarios: ['']
+      comentarios: [''] // No validation needed for optional comments
     });
   }
 
   ngOnInit(): void {
-    console.log('[DocumentoUploadDialog] Inicializado con datos:', this.data);
+    this.loggingService.debug('[DocumentoUploadDialog] ngOnInit: Component initialized.', undefined, 'DocumentoUploadDialog');
   }
 
+  /**
+   * Handles the file selection event from the hidden input.
+   * @param event The change event from the file input.
+   */
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
+    this.loggingService.debug('[DocumentoUploadDialog] File selected event triggered.', { files: input.files }, 'DocumentoUploadDialog');
     if (input.files && input.files.length > 0) {
       this.processFile(input.files[0]);
     }
   }
 
+  /**
+   * Prevents default dragover behavior and sets dragging state.
+   * @param event The DragEvent.
+   */
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging = true;
+    this.loggingService.debug('[DocumentoUploadDialog] Drag over event.', undefined, 'DocumentoUploadDialog');
   }
 
+  /**
+   * Prevents default dragleave behavior and resets dragging state.
+   * @param event The DragEvent.
+   */
   onDragLeave(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging = false;
+    this.loggingService.debug('[DocumentoUploadDialog] Drag leave event.', undefined, 'DocumentoUploadDialog');
   }
 
+  /**
+   * Handles the file drop event, processing the dropped file.
+   * @param event The DragEvent.
+   */
   onDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging = false;
+    this.loggingService.debug('[DocumentoUploadDialog] Drop event triggered.', { files: event.dataTransfer?.files }, 'DocumentoUploadDialog');
 
     if (event.dataTransfer && event.dataTransfer.files.length > 0) {
       this.processFile(event.dataTransfer.files[0]);
     }
   }
 
+  /**
+   * Processes the selected or dropped file, performing frontend and backend validations.
+   * @param file The file to process.
+   */
   processFile(file: File): void {
-    // Limpiar errores y advertencias anteriores
+    this.loggingService.debug('[DocumentoUploadDialog] Processing file:', { fileName: file.name, fileSize: file.size, fileType: file.type }, 'DocumentoUploadDialog');
+
+    // Clear previous errors and warnings
     this.validationErrors = [];
     this.validationWarnings = [];
+    this.selectedFile = null; // Clear selected file until all validations pass
 
-    // Primero validamos en el frontend para una respuesta inmediata
+    // First, perform frontend validation for immediate feedback
     const frontendValidationResult = this.documentoValidationService.validateFile(file);
 
     if (!frontendValidationResult.isValid) {
-      // Guardar errores de validación
+      this.loggingService.warn('[DocumentoUploadDialog] Frontend validation failed:', frontendValidationResult.errors, 'DocumentoUploadDialog');
       this.validationErrors = frontendValidationResult.errors;
-      // Mostrar el primer error encontrado
       this.mostrarErrorValidacion(frontendValidationResult.errors[0]);
       return;
     }
 
-    // Si pasa la validación básica, validamos en el backend
+    // If frontend validation passes, proceed with backend validation
     this.documentosService.validateDocument(file)
       .pipe(
         catchError(error => {
-          console.error('Error al validar documento en el backend:', error);
-          // En caso de error, continuamos con la validación local
-          return of({ valid: true, errors: [] });
-        })
-      )
-      .subscribe(backendResult => {
-        // Si hay errores en el backend, los mostramos
-        if (backendResult && !safeGet(backendResult, 'valid', true) &&
-            safeGet(backendResult, 'errors') &&
-            safeLength(safeGet(backendResult, 'errors', [])) > 0) {
+          console.error('[DocumentoUploadDialog] Error during backend document validation:', error);
+          this.notificationService.error('Error al validar el documento con el servidor. Se procederá con validación local.', 'Error de Conexión');
+          // In case of a backend error, gracefully continue assuming local validation passed for now.
+          // This should ideally return a specific error result from backend.
+          return of({ valid: true, errors: [] }); // Return a dummy success to continue observable chain
+        }),
+        switchMap(backendResult => {
+          if (backendResult && !safeGet(backendResult, 'valid', true) &&
+              safeGet(backendResult, 'errors') &&
+              safeLength(safeGet(backendResult, 'errors', [])) > 0) {
 
-          const errors = safeGet(backendResult, 'errors', []) as any[];
+            const errors = safeGet(backendResult, 'errors', []) as any[];
+            this.validationErrors = isArray(errors)
+              ? safeArrayMethod(errors, 'map', [(error: any) => ({
+                    code: safeGet(error, 'code', ''),
+                    message: safeGet(error, 'message', 'Error de validación'),
+                    details: safeGet(error, 'details', {})
+                  })], []) as DocumentoValidationError[]
+              : [];
 
-          this.validationErrors = isArray(errors)
-            ? safeArrayMethod(errors, 'map', [(error: any) => ({
-                code: safeGet(error, 'code', ''),
-                message: safeGet(error, 'message', 'Error de validación'),
-                details: safeGet(error, 'details', {})
-              })], []) as DocumentoValidationError[]
-            : [];
-
-          if (this.validationErrors.length > 0) {
-            this.mostrarErrorValidacion(this.validationErrors[0]);
+            if (this.validationErrors.length > 0) {
+              this.mostrarErrorValidacion(this.validationErrors[0]);
+            }
+            return of(null); // Stop further processing if backend validation fails
           }
-          return;
-        }
 
-        // Si es una imagen, validar resolución y calidad
-        if (file.type.startsWith('image/')) {
-          this.documentoValidationService.validateImageResolution(file)
-            .pipe(
+          // If it's an image, validate resolution and quality
+          if (file.type.startsWith('image/')) {
+            return this.documentoValidationService.validateImageResolution(file).pipe(
               switchMap(resolutionResult => {
-                if (!resolutionResult.isValid) {
-                  this.validationErrors = resolutionResult.errors;
-                  this.mostrarErrorValidacion(resolutionResult.errors[0]);
+                if (!(resolutionResult as any).isValid) {
+                  this.validationErrors = (resolutionResult as any).errors;
+                  this.mostrarErrorValidacion((resolutionResult as any).errors[0]);
                   return of(null);
                 }
                 return this.documentoValidationService.detectBlurryImage(file);
               })
-            )
-            .subscribe(blurResult => {
-              if (blurResult && !blurResult.isValid) {
-                // Guardar advertencias pero permitir continuar
-                this.validationWarnings = blurResult.errors;
-
-                // Mostrar advertencia
-                this.notificationService.warning(
-                  'Advertencia: ' + blurResult.errors[0].message + '. Considera subir una imagen de mejor calidad.',
-                  'Calidad de Imagen',
-                  { duration: 7000 }
-                );
-              }
-
-              // Aceptar el archivo
-              this.selectedFile = file;
-            });
-        } else {
-          // Si es PDF u otro tipo, aceptar directamente
-          this.selectedFile = file;
+            );
+          } else {
+            // If it's a PDF or other type, accept directly after basic validation
+            return of({ isValid: true, errors: [] }); // Return a valid result
+          }
+        })
+      )
+      .subscribe(validationResult => {
+        if (validationResult === null) {
+          // A previous step in the pipeline (backend or image validation) failed
+          this.loggingService.debug('[DocumentoUploadDialog] File processing stopped due to validation error.', undefined, 'DocumentoUploadDialog');
+          return;
         }
+
+        if (!validationResult.isValid && validationResult.errors.length > 0) {
+          // This would typically be from the blurry image detection, which is a warning
+          this.validationWarnings = validationResult.errors;
+          this.notificationService.warning(
+            `Advertencia: ${validationResult.errors[0].message}. Considera subir una imagen de mejor calidad.`,
+            'Calidad de Imagen',
+            { duration: 7000 }
+          );
+        }
+
+        // If all validations pass (or only warnings are present), accept the file
+        this.selectedFile = file;
+        this.loggingService.debug('[DocumentoUploadDialog] File accepted after all validations.', { fileName: file.name }, 'DocumentoUploadDialog');
       });
   }
 
   /**
-   * Muestra un mensaje de error basado en el error de validación
+   * Displays an error message based on a DocumentoValidationError.
+   * @param error The validation error to display.
    */
   private mostrarErrorValidacion(error: DocumentoValidationError): void {
     this.notificationService.error(error.message, 'Error de Validación');
+    this.loggingService.error('[DocumentoUploadDialog] Validation Error:', error, 'DocumentoUploadDialog');
   }
 
+  /**
+   * Removes the currently selected file and clears validation messages.
+   */
   removeFile(): void {
     this.selectedFile = null;
     this.validationErrors = [];
     this.validationWarnings = [];
-    console.log('[DocumentoUploadDialog] Archivo eliminado');
+    this.loggingService.debug('[DocumentoUploadDialog] File removed.', undefined, 'DocumentoUploadDialog');
   }
 
-  cancelar(): void {
-    console.log('[DocumentoUploadDialog] Cancelando diálogo');
-    this.dialogRef.close();
-  }
-
+  /**
+   * Uploads the selected document to the server.
+   */
   uploadDocument(): void {
     if (!this.selectedFile) {
-      console.warn('[DocumentoUploadDialog] No hay archivo seleccionado');
+      this.notificationService.error('No hay archivo seleccionado para subir.', 'Error de Subida');
+      this.loggingService.warn('[DocumentoUploadDialog] Attempted upload without selected file.', undefined, 'DocumentoUploadDialog');
       return;
     }
 
-    console.log('[DocumentoUploadDialog] Iniciando subida de documento:', this.selectedFile.name);
-    this.uploading = true;
+    if (this.validationErrors.length > 0) {
+      this.notificationService.error('No se puede subir el documento debido a errores de validación.', 'Error de Validación');
+      this.loggingService.warn('[DocumentoUploadDialog] Upload blocked due to validation errors.', { errors: this.validationErrors }, 'DocumentoUploadDialog');
+      return;
+    }
 
-    // Crear FormData para enviar el archivo
+    this.uploading = true;
+    this.loggingService.info(`[DocumentoUploadDialog] Starting upload for file: ${this.selectedFile.name}`, undefined, 'DocumentoUploadDialog');
+
+    // Create FormData to send the file and metadata
     const formData = new FormData();
     formData.append('file', this.selectedFile);
     formData.append('tipoDocumentoId', this.data.tipoDocumentoId);
     formData.append('comentarios', this.uploadForm.get('comentarios')?.value || '');
 
     this.documentosService.uploadDocumento(formData)
-      .pipe(finalize(() => {
-        this.uploading = false;
-        console.log('[DocumentoUploadDialog] Finalizando proceso de subida');
-      }))
+      .pipe(
+        finalize(() => {
+          this.uploading = false;
+          this.loggingService.debug('[DocumentoUploadDialog] Upload process finalized.', undefined, 'DocumentoUploadDialog');
+        }),
+        catchError(error => {
+          console.error('[DocumentoUploadDialog] Error during document upload:', error);
+          this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
+          return throwError(() => new Error('Failed to upload document')); // Re-throw for higher-level handling if needed
+        })
+      )
       .subscribe({
         next: (response) => {
-          console.log('[DocumentoUploadDialog] Documento subido correctamente:', response);
-          this.notificationService.success('Documento subido correctamente', 'Éxito');
-          this.documentosService.notificarDocumentoActualizado();
-
-          console.log('[DocumentoUploadDialog] Intentando cerrar diálogo...');
-          try {
-            this.dialogRef.close(true as any);
-            console.log('[DocumentoUploadDialog] Diálogo cerrado exitosamente');
-          } catch (error) {
-            console.error('[DocumentoUploadDialog] Error al cerrar diálogo:', error);
-          }
+          this.loggingService.info('[DocumentoUploadDialog] Document uploaded successfully.', { response }, 'DocumentoUploadDialog');
+          this.notificationService.success('Documento cargado exitosamente.', 'Subida Exitosa');
+          this.documentosService.notificarDocumentoActualizado(); // Notify other components that a document was updated
+          this.dialogRef.close({ success: true, document: response }); // Close dialog with success result
         },
-        error: (error) => {
-          console.error('[DocumentoUploadDialog] Error al subir documento:', error);
-          this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
+        error: (err) => {
+          // Error already handled by catchError, this block would only be for side effects after re-throwing
+          this.loggingService.error('[DocumentoUploadDialog] Subscription error handler: This should not be reached if catchError re-throws.', err, 'DocumentoUploadDialog');
         }
       });
   }
 
+  /**
+   * Closes the dialog, indicating cancellation.
+   */
+  cancelar(): void {
+    this.loggingService.debug('[DocumentoUploadDialog] Dialog cancelled by user.', undefined, 'DocumentoUploadDialog');
+    this.dialogRef.close({ cancelled: true });
+  }
+
+  /**
+   * Formats file size into a human-readable string (e.g., KB, MB).
+   * @param bytes The size in bytes.
+   * @returns Formatted size string.
+   */
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;

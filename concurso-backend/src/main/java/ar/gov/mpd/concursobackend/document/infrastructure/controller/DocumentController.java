@@ -32,6 +32,7 @@ import ar.gov.mpd.concursobackend.document.application.dto.DocumentValidationRes
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentTypeService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentValidationService;
+import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,8 +73,24 @@ public class DocumentController {
             @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia) {
 
         try {
+            log.info("=== INICIO UPLOAD DOCUMENTO ===");
+            log.info("Archivo: {}, Tamaño: {} bytes", file.getOriginalFilename(), file.getSize());
+            log.info("Tipo documento ID: {}", documentTypeId);
+            log.info("Comentarios: {}", comments);
+            log.info("Referencia ID: {}", referenciaId);
+            log.info("Tipo referencia: {}", tipoReferencia);
             log.debug("Recibiendo solicitud para subir documento. Type: {}, Ref: {}, RefType: {}",
                     documentTypeId, referenciaId, tipoReferencia);
+
+            // CRITICAL FIX: Validar que el archivo no esté vacío
+            if (file.isEmpty()) {
+                log.error("El archivo está vacío");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(DocumentResponse.builder()
+                                .id("")
+                                .mensaje("El archivo está vacío")
+                                .build());
+            }
 
             // Si es un documento de experiencia laboral
             if (tipoReferencia != null && tipoReferencia.equals("EXPERIENCIA") && referenciaId != null) {
@@ -128,11 +145,26 @@ public class DocumentController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IOException e) {
-            log.error("Error uploading document", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Error uploading document - IOException", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(DocumentResponse.builder()
+                            .id("")
+                            .mensaje("Error de E/O al procesar el archivo: " + e.getMessage())
+                            .build());
+        } catch (DocumentException e) {
+            log.error("Error uploading document - DocumentException", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(DocumentResponse.builder()
+                            .id("")
+                            .mensaje("Error en el documento: " + e.getMessage())
+                            .build());
         } catch (Exception e) {
             log.error("Error inesperado al subir documento", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(DocumentResponse.builder()
+                            .id("")
+                            .mensaje("Error interno del servidor: " + e.getMessage())
+                            .build());
         }
     }
 

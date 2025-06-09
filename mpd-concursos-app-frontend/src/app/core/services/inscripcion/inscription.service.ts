@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject, of, EMPTY } from 'rxjs';
 import { catchError, tap, map, take, finalize, share } from 'rxjs/operators';
@@ -22,57 +23,119 @@ import { InscriptionStateService } from './inscription-state.service';
 @Injectable({
   providedIn: 'root'
 })
-export class InscriptionService { // TODO: Refactorizar para solo utilizar las apis en ingles
+export class InscriptionService {
   private readonly baseUrl = environment.apiUrl;
   private readonly inscriptionsEndpoint = '/inscriptions';
   // Keep old endpoint for backward compatibility during transition
   private readonly oldInscriptionsEndpoint = '/inscripciones';
   private inscriptions$ = new BehaviorSubject<IInscription[]>([]);
 
-  // Estado temporal de inscripciones en progreso
-  private inProgressInscriptions = new Map<string, Record<string, unknown>>();
+  // Cache for pending requests to avoid duplicate API calls for the same contest status
+  private pendingRequests = new Map<string, Observable<InscripcionState>>();
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
     private tokenService: TokenService,
     private router: Router,
-    private inscriptionStateService: InscriptionStateService
+    private inscriptionStateService: InscriptionStateService,
+    private loggingService: LoggingService
   ) {
-    // Guardar una referencia al servicio de estado de inscripción en el objeto window
-    // para evitar problemas de inyección circular
+    // Save a reference to the inscription state service in the window object
+    // to avoid circular injection issues
     (window as unknown as Record<string, unknown>)['inscriptionStateService'] = inscriptionStateService;
   }
 
-  // Métodos públicos
+  // Public methods
+
   /**
-   * Marca una inscripción como interrumpida y envía una notificación al usuario
-   * @param inscriptionId ID de la inscripción
+   * Maps a backend status string to an InscripcionState enum value.
+   * @param status The status string from the backend.
+   * @returns The corresponding InscripcionState enum value.
+   */
+  private mapStatusToState(status: string): InscripcionState {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return InscripcionState.ACTIVE;
+      case 'pending':
+        return InscripcionState.PENDING;
+      case 'approved':
+        return InscripcionState.APPROVED;
+      case 'rejected':
+        return InscripcionState.REJECTED;
+      case 'cancelled':
+        return InscripcionState.CANCELLED;
+      case 'completed_with_docs': // Assuming backend might send these specific completed states
+        return InscripcionState.COMPLETED_WITH_DOCS;
+      case 'completed_pending_docs':
+        return InscripcionState.COMPLETED_PENDING_DOCS;
+      default:
+        this.loggingService.warn(`[InscriptionService] Unknown status received from backend: ${status}. Defaulting to ACTIVE.`, undefined, 'Inscription');
+        return InscripcionState.ACTIVE;
+    }
+  }
+
+  /**
+   * Helper to handle common HTTP errors.
+   */
+  private handleSimpleError(error: HttpErrorResponse): Observable<never> {
+    console.error('[InscriptionService] An error occurred:', error);
+    let errorMessage = 'Ocurrió un error inesperado.';
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Error del cliente: ${error.error.message}`;
+    } else {
+      errorMessage = `Error del servidor: ${error.status} ${error.statusText || ''} - ${error.error?.message || error.message}`;
+    }
+    return throwError(() => new Error(errorMessage));
+  }
+
+  /**
+   * Validates if the user is authenticated. If not, redirects to login.
+   * @returns True if authenticated, false otherwise.
+   */
+  private validateAuthentication(): boolean {
+    if (!this.authService.isAuthenticated()) {
+      this.loggingService.warn('[InscriptionService] Usuario no autenticado. Redirigiendo a login.', undefined, 'Inscription');
+      this.router.navigate(['/auth/login']); // Redirect to login
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Marks an inscription as cancelled and sends a notification to the user.
+   * @param inscriptionId ID of the inscription.
    * @returns Observable<void>
    */
-  markAsInterrupted(inscriptionId: string): Observable<void> {
+  markAsCancelled(inscriptionId: string): Observable<void> {
     if (!this.validateAuthentication()) return EMPTY;
     if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] markAsCancelled: Inscription ID is required.', undefined, 'Inscription');
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
-    console.log('[InscriptionService] Marcando inscripción como interrumpida:', inscriptionId);
-
-    return this.http.post<void>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/interrupt`,
-      {}
-    ).pipe(
+    this.loggingService.info(`[InscriptionService] Marking inscription ${inscriptionId} as CANCELLED.`, undefined, 'Inscription');
+    return this.http.patch<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/cancel`, {}).pipe(
       tap(() => {
-        console.log('[InscriptionService] Inscripción marcada como interrumpida exitosamente:', inscriptionId);
+        this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} successfully marked as CANCELLED on backend.`, undefined, 'Inscription');
+        this.updateLocalInscriptionState(inscriptionId, InscripcionState.CANCELLED);
+        // Clear local state for cancelled inscriptions
+        this.inscriptionStateService.clearInscriptionState(inscriptionId);
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error al marcar inscripción como interrumpida:', error);
-        // Incluso si hay un error, no queremos que la UI muestre un error al usuario
+        console.error(`[InscriptionService] Error marking inscription ${inscriptionId} as CANCELLED:`, error);
+        // Even if there's an error, we don't want the UI to show an error to the user for this background task.
+        // We log it, but return a successful observable.
         return of(void 0);
       })
     );
   }
 
+  /**
+   * Creates a new inscription for a given contest.
+   * @param contestId The ID of the contest.
+   * @returns An Observable of the created inscription response.
+   */
   createInscription(contestId: string | number): Observable<IInscriptionResponse> {
     if (!this.validateAuthentication()) return EMPTY;
 
@@ -80,73 +143,100 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
       contestId: typeof contestId === 'string' ? parseInt(contestId, 10) : contestId
     };
 
-    console.log('[InscriptionService] Creando inscripción:', request);
-
-    // Verificar primero si ya existe una inscripción local activa o pendiente
     const currentInscriptions = this.inscriptions$.getValue();
+    this.loggingService.debug('[InscriptionService] Checking for existing inscription for contest ID:', request.contestId, 'Inscription');
+
     const existingInscription = currentInscriptions.find(ins =>
-      ins.contestId === request.contestId &&
-      (ins.state === InscripcionState.PENDING || ins.state === InscripcionState.CONFIRMADA)
+      ins.contestId === request.contestId
     );
 
     if (existingInscription) {
-      console.log('[InscriptionService] Inscripción existente activa encontrada localmente:', existingInscription);
-      return of({
-        id: existingInscription.id,
-        contestId: existingInscription.contestId,
-        userId: existingInscription.userId,
-        status: existingInscription.state
-      } as IInscriptionResponse);
+      this.loggingService.warn('[InscriptionService] Existing inscription found:', existingInscription, 'Inscription');
+
+      let errorMessage = 'Ya existe una inscripción para este concurso.';
+      switch (existingInscription.state) {
+        case InscripcionState.CANCELLED:
+          errorMessage = 'No puede volver a inscribirse a un concurso donde ya canceló su inscripción.';
+          break;
+        case InscripcionState.REJECTED:
+          errorMessage = 'No puede volver a inscribirse a un concurso donde su inscripción fue rechazada.';
+          break;
+        case InscripcionState.APPROVED:
+          errorMessage = 'Ya tiene una inscripción aprobada para este concurso.';
+          break;
+        case InscripcionState.ACTIVE:
+        case InscripcionState.PENDING:
+        case InscripcionState.CANCELLED: // Also block if cancelled, they should not re-register
+          errorMessage = 'Ya existe una inscripción activa/pendiente para este concurso.';
+          break;
+        case InscripcionState.COMPLETED_WITH_DOCS:
+        case InscripcionState.COMPLETED_PENDING_DOCS:
+          errorMessage = 'Ya tiene una inscripción completa para este concurso.';
+          break;
+      }
+
+      return throwError(() => new Error(errorMessage));
     }
 
-    // Si hay una inscripción cancelada, la eliminamos del estado local
-    const cancelledInscription = currentInscriptions.find(ins =>
-      ins.contestId === request.contestId &&
-      ins.state === InscripcionState.CANCELLED
-    );
-
-    if (cancelledInscription) {
-      console.log('[InscriptionService] Eliminando inscripción cancelada del estado local:', cancelledInscription);
-      this.inscriptions$.next(currentInscriptions.filter(ins => ins.id !== cancelledInscription.id));
-    }
-
-    return this.http.post<IInscriptionResponse>(
+    this.loggingService.info('[InscriptionService] Creating new inscription for contest:', request.contestId, 'Inscription');
+    return this.http.post<any>(
       `${this.baseUrl}${this.inscriptionsEndpoint}`,
       request
     ).pipe(
+      map(response => {
+        this.loggingService.debug('[InscriptionService] Full response from createInscription:', response, 'Inscription');
+
+        // Adapt backend response to frontend interface
+        const adaptedResponse: IInscriptionResponse = {
+          id: response.id ? response.id.toString() : '',
+          contestId: response.contestId || 0,
+          userId: response.userId || '',
+          status: response.estado || 'ACTIVE', // Assuming 'estado' from backend maps to 'status'
+          inscriptionDate: response.fechaPostulacion ? response.fechaPostulacion.toString() : new Date().toISOString(),
+          createdAt: response.fechaPostulacion ? response.fechaPostulacion.toString() : new Date().toISOString(),
+          updatedAt: response.fechaPostulacion ? response.fechaPostulacion.toString() : new Date().toISOString()
+        };
+
+        this.loggingService.debug('[InscriptionService] Adapted response:', adaptedResponse, 'Inscription');
+        this.loggingService.debug(`[InscriptionService] Adapted ID: ${adaptedResponse.id}, Type: ${typeof adaptedResponse.id}`, undefined, 'Inscription');
+
+        return adaptedResponse;
+      }),
       tap(response => {
-        console.log('[InscriptionService] Inscripción creada:', response);
-        // Actualizar el estado local inmediatamente
+        // Validate that ID is present
+        if (!response.id) {
+          console.error('[InscriptionService] Error: Inscription ID not received in response');
+          throw new Error('ID de inscripción no válido');
+        }
+
+        // Update local state immediately
         const newInscription: IInscription = {
           id: response.id,
           contestId: response.contestId,
           userId: response.userId,
-          state: InscripcionState.PENDING,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          state: this.mapStatusToState(response.status), // Map to correct enum state
+          createdAt: new Date(response.createdAt),
+          updatedAt: new Date(response.updatedAt)
         };
+        const currentInscriptions = this.inscriptions$.getValue();
         this.inscriptions$.next([...currentInscriptions, newInscription]);
-        // Refrescar la lista después de un breve delay
+        this.loggingService.info(`[InscriptionService] Local cache updated with new inscription: ${newInscription.id}`, undefined, 'Inscription');
+
+        // Refresh the list after a brief delay to ensure consistency
         setTimeout(() => this.refreshInscriptions(), 500);
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error al crear inscripción:', {
+        console.error('[InscriptionService] Error creating inscription:', {
           status: error.status,
           statusText: error.statusText,
           message: error.message,
           error: error.error
         });
 
-        // Si el error es 409 (Conflict) o 500 (Internal Server Error), puede ser porque ya existe una inscripción
-        // pero está en estado CANCELLED y el backend no la está manejando correctamente
+        // If error is 409 (Conflict) or 500 (Internal Server Error), it might be due to an existing inscription
         if (error.status === 409 || error.status === 500) {
-          console.log('[InscriptionService] Error 409/500 - Posible inscripción cancelada, intentando forzar actualización');
-
-          // Forzar una actualización de las inscripciones desde el backend
-          this.refreshInscriptions();
-
-          // Mostrar mensaje más amigable al usuario
-          return throwError(() => new Error('Ya existe una inscripción para este concurso. Por favor, intente nuevamente en unos momentos.'));
+          this.loggingService.warn('[InscriptionService] Conflict or Server Error detected during inscription creation, potentially due to existing entry.', undefined, 'Inscription');
+          return throwError(() => new Error('Ya existe una inscripción para este concurso o hubo un problema al crearla. Por favor, intente nuevamente en unos momentos.'));
         }
 
         return this.handleSimpleError(error);
@@ -154,23 +244,41 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
     );
   }
 
-  // Este método ha sido reemplazado por una versión actualizada más abajo
-
+  /**
+   * Gets the current step of an inscription process.
+   * @param inscriptionId The ID of the inscription.
+   * @returns An Observable of the current InscriptionStep.
+   */
   getCurrentStep(inscriptionId: string): Observable<InscriptionStep> {
     if (!this.validateAuthentication()) return EMPTY;
     if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] getCurrentStep: Inscription ID is required.', undefined, 'Inscription');
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
+    this.loggingService.debug(`[InscriptionService] Fetching current step for inscription ID: ${inscriptionId}`, undefined, 'Inscription');
     return this.http.get<{ step: InscriptionStep }>(
       `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/step`
     ).pipe(
       map(response => response.step),
-      tap(step => console.log('[InscriptionService] Paso actual:', step)),
-      catchError(this.handleSimpleError.bind(this))
+      tap(step => {
+        this.loggingService.debug(`[InscriptionService] Current step for ${inscriptionId}: ${step}`, undefined, 'Inscription');
+      }),
+      catchError(error => {
+        console.error(`[InscriptionService] Error fetching current step for ${inscriptionId}:`, error);
+        return this.handleSimpleError(error);
+      })
     );
   }
 
+  /**
+   * Retrieves a paginated list of user's inscriptions.
+   * @param page The page number (0-indexed).
+   * @param size The number of items per page.
+   * @param sort The field to sort by.
+   * @param direction The sort direction ('ASC' or 'DESC').
+   * @returns An Observable of a Page containing inscription responses.
+   */
   getUserInscriptions(
     page = 0,
     size = 10,
@@ -185,48 +293,45 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
       .set('sort', sort)
       .set('direction', direction);
 
-    // Obtener el ID del usuario actual
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
-      console.error('[InscriptionService] No se pudo obtener el ID del usuario actual');
+      console.error('[InscriptionService] Could not get current user ID for getUserInscriptions.');
       return EMPTY;
     }
 
-    // Usar el endpoint correcto con el ID del usuario en lugar de 'me'
+    this.loggingService.info(`[InscriptionService] Fetching user inscriptions for userId: ${userId} with params: ${params.toString()}`, undefined, 'Inscription');
+
     return this.http.get<Page<IInscriptionResponse>>(
       `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}`,
       { params }
     ).pipe(
       tap(response => {
-        console.log('[InscriptionService] Inscripciones obtenidas:', response);
+        this.loggingService.debug('[InscriptionService] User inscriptions fetched successfully (new endpoint):', response, 'Inscription');
         if (response?.content) {
-          const inscriptions: IInscription[] = response.content.map(item => {
-            console.log('[InscriptionService] Mapeando inscripción:', item);
-            const mappedInscription: IInscription = {
-              id: item.id,
-              contestId: item.contestId,
-              userId: item.userId,
-              state: this.mapStatusToState(item.status),
-              createdAt: new Date(item.inscriptionDate),
-              updatedAt: new Date(item.inscriptionDate),
-              observations: undefined
-            };
-            console.log('[InscriptionService] Inscripción mapeada:', mappedInscription);
-            return mappedInscription;
-          });
+          const inscriptions: IInscription[] = response.content.map(item => ({
+            id: item.id,
+            contestId: item.contestId,
+            userId: item.userId,
+            state: this.mapStatusToState(item.status),
+            createdAt: new Date(item.inscriptionDate), // Assuming inscriptionDate is creation date
+            updatedAt: new Date(item.inscriptionDate), // Assuming inscriptionDate is update date for simplicity
+            observations: item.observations // If applicable
+          }));
           this.inscriptions$.next(inscriptions);
+          this.loggingService.debug('[InscriptionService] Local inscriptions cache updated with fetched data.', undefined, 'Inscription');
         }
       }),
       catchError(error => {
-        // Si falla, intentar con el endpoint alternativo
-        if (error.status === 404) {
-          console.log('[InscriptionService] Endpoint /user/{userId} no encontrado, intentando con endpoint alternativo');
+        console.error('[InscriptionService] Error fetching user inscriptions from new endpoint:', error);
+        // If it fails, try with the alternative old endpoint
+        if (error.status === 404 || error.status === 403) { // Also handle 403 if user doesn't have access to new endpoint
+          this.loggingService.warn('[InscriptionService] Attempting to fetch user inscriptions from old endpoint due to 404/403 on new endpoint.', undefined, 'Inscription');
           return this.http.get<Page<IInscriptionResponse>>(
-            `${this.baseUrl}${this.inscriptionsEndpoint}/by-user/${userId}`,
+            `${this.baseUrl}${this.oldInscriptionsEndpoint}/me`,
             { params }
           ).pipe(
             tap(response => {
-              console.log('[InscriptionService] Inscripciones obtenidas (endpoint alternativo):', response);
+              this.loggingService.debug('[InscriptionService] User inscriptions fetched successfully (old endpoint):', response, 'Inscription');
               if (response?.content) {
                 const inscriptions: IInscription[] = response.content.map(item => {
                   const mappedInscription: IInscription = {
@@ -236,16 +341,17 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
                     state: this.mapStatusToState(item.status),
                     createdAt: new Date(item.inscriptionDate),
                     updatedAt: new Date(item.inscriptionDate),
-                    observations: undefined
+                    observations: item.observations // If applicable
                   };
                   return mappedInscription;
                 });
                 this.inscriptions$.next(inscriptions);
+                this.loggingService.debug('[InscriptionService] Local inscriptions cache updated with fetched data (old endpoint).', undefined, 'Inscription');
               }
             }),
             catchError(secondError => {
-              console.error('[InscriptionService] Error con endpoint alternativo:', secondError);
-              // Si también falla, devolver un array vacío para evitar errores en la UI
+              console.error('[InscriptionService] Error with alternative old endpoint:', secondError);
+              // If it also fails, return an empty array to avoid UI errors
               this.inscriptions$.next([]);
               return this.handleSimpleError(secondError);
             })
@@ -256,307 +362,217 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
     );
   }
 
+  /**
+   * Retrieves the inscription status for a specific contest for the current user.
+   * It first checks local cache, then tries specific backend endpoints, with fallbacks.
+   * @param contestId The ID of the contest.
+   * @returns An Observable of the inscription state.
+   */
   getInscriptionStatus(contestId: string | number): Observable<InscripcionState> {
-    if (!this.validateAuthentication()) return of(InscripcionState.NO_INSCRIPTO);
+    if (!this.validateAuthentication()) return of(InscripcionState.ACTIVE); // Default to ACTIVE if not authenticated
 
     const numericContestId = typeof contestId === 'string' ? parseInt(contestId, 10) : contestId;
 
-    // Primero verificar el estado local
+    // First check local state
     const currentInscriptions = this.inscriptions$.getValue();
+    this.loggingService.debug(`[InscriptionService] Checking local cache for inscription status for contest ID: ${numericContestId}`, undefined, 'Inscription');
+    this.loggingService.debug('[InscriptionService] Inscriptions in cache:', currentInscriptions, 'Inscription');
+
     const localInscription = currentInscriptions.find(ins => ins.contestId === numericContestId);
 
     if (localInscription) {
-      console.log('[InscriptionService] Estado encontrado localmente:', localInscription.state);
-
-      // Si el estado es CANCELLED, verificar si es una inscripción reciente (menos de 1 hora)
-      // para determinar si es una cancelación de proceso o una cancelación de postulación completada
-      if (localInscription.state === InscripcionState.CANCELLED) {
-        // Si la inscripción fue actualizada hace menos de 1 hora, considerarla como una cancelación de proceso
-        // y permitir reiniciar el proceso de inscripción
-        const now = new Date();
-        const updatedAt = localInscription.updatedAt ? new Date(localInscription.updatedAt) : now;
-        const timeDiff = now.getTime() - updatedAt.getTime();
-        const oneHourInMs = 60 * 60 * 1000;
-
-        if (timeDiff < oneHourInMs) {
-          console.log('[InscriptionService] Estado CANCELLED reciente encontrado, devolviendo NO_INSCRIPTO para permitir reiniciar');
-          return of(InscripcionState.NO_INSCRIPTO);
-        } else {
-          console.log('[InscriptionService] Estado CANCELLED antiguo encontrado, manteniendo como CANCELLED');
-          return of(InscripcionState.CANCELLED);
-        }
-      }
-
+      this.loggingService.debug(`[InscriptionService] Local inscription found for ${numericContestId}. State: ${localInscription.state}`, undefined, 'Inscription');
+      // Business Rule: Once cancelled, always return CANCELLED. Do not allow re-inscription regardless of time.
       return of(localInscription.state);
     }
 
-    // OPTIMIZACIÓN: Verificar si ya hay una petición en curso para este concurso
+    this.loggingService.debug('[InscriptionService] No local inscription found, querying backend...', undefined, 'Inscription');
+
+    // Optimization: Check if a request for this contest is already pending
     const cacheKey = `status_${numericContestId}`;
     if (this.pendingRequests.has(cacheKey)) {
-      console.log('[InscriptionService] Petición ya en curso para concurso:', numericContestId);
+      this.loggingService.debug(`[InscriptionService] Request for ${numericContestId} already pending. Returning existing observable.`, undefined, 'Inscription');
       return this.pendingRequests.get(cacheKey)!;
     }
 
-    // Obtener el ID del usuario actual
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
-      console.error('[InscriptionService] No se pudo obtener el ID del usuario actual');
-      return of(InscripcionState.NO_INSCRIPTO);
+      console.error('[InscriptionService] Could not get current user ID for getInscriptionStatus.');
+      return of(InscripcionState.ACTIVE); // Default to ACTIVE
     }
 
-    // Usar el endpoint de usuario/concurso que funciona correctamente
-    console.log(`[InscriptionService] Verificando estado con endpoint: ${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`);
-
-    const request$ = this.http.get<IInscriptionResponse>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`
+    // Try optimized endpoint first: /inscriptions/user/{userId}/contest/{contestId}/status
+    this.loggingService.info(`[InscriptionService] Attempting to fetch inscription status from optimized endpoint for userId: ${userId}, contestId: ${numericContestId}`, undefined, 'Inscription');
+    const request$ = this.http.get<any>(
+      `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}/status`
     ).pipe(
       map(response => {
-        console.log('[InscriptionService] Respuesta de estado (endpoint user/contest):', response);
-
-        // OPTIMIZACIÓN: Actualizar cache local con la respuesta
-        this.updateLocalInscriptionCache(response);
-
-        return this.mapStatusToState(response.status);
+        // Handle the new simplified response format from backend
+        if (response.hasInscription) {
+          this.loggingService.debug(`[InscriptionService] Found inscription with status: ${response.status}`, undefined, 'Inscription');
+          return this.mapStatusToState(response.status);
+        } else {
+          this.loggingService.debug(`[InscriptionService] No inscription found, returning ACTIVE`, undefined, 'Inscription');
+          return InscripcionState.ACTIVE;
+        }
       }),
-      tap(state => console.log('[InscriptionService] Estado de inscripción mapeado:', state)),
+      tap(state => {
+        this.loggingService.debug(`[InscriptionService] Status fetched successfully from optimized endpoint: ${state}`, undefined, 'Inscription');
+      }),
       catchError(error => {
-        // Los errores 404 son esperados cuando el usuario no está inscrito
+        this.loggingService.debug(`[InscriptionService] Optimized endpoint failed with status ${error.status}. Trying single fallback.`, undefined, 'Inscription');
+
+        // Only try one fallback to reduce 404 errors
         if (error.status === 404) {
-          console.log(`[InscriptionService] Usuario no inscrito en concurso ${numericContestId} (404 esperado)`);
-
-          // Intentar con el endpoint status como fallback
-          console.log(`[InscriptionService] Intentando con endpoint status: ${this.baseUrl}${this.inscriptionsEndpoint}/status/${numericContestId}`);
-          return this.http.get<boolean>(
-            `${this.baseUrl}${this.inscriptionsEndpoint}/status/${numericContestId}`
-          ).pipe(
-            map(isInscribed => {
-              console.log('[InscriptionService] Respuesta de estado (endpoint status):', isInscribed);
-              // Este endpoint solo devuelve true/false, así que mapeamos a un estado
-              return isInscribed ? InscripcionState.PENDING : InscripcionState.NO_INSCRIPTO;
+          // Try the existing user-specific endpoint as fallback
+          this.loggingService.debug(`[InscriptionService] Attempting fallback endpoint /user/${userId}/contest/${numericContestId}`, undefined, 'Inscription');
+          return this.http.get<IInscriptionResponse>(`${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`).pipe(
+            map(response => {
+              this.loggingService.debug(`[InscriptionService] Status fetched successfully from fallback endpoint: ${response.status}`, undefined, 'Inscription');
+              return this.mapStatusToState(response?.status || 'ACTIVE');
             }),
-            catchError(secondError => {
-              // También es normal que este endpoint devuelva 404
-              if (secondError.status === 404) {
-                console.log(`[InscriptionService] Usuario no inscrito en concurso ${numericContestId} (confirmado por endpoint status)`);
-
-                // Intentar con el endpoint antiguo como último recurso
-                console.log('[InscriptionService] Intentando con endpoint antiguo: /inscripciones/estado/{contestId}');
-                return this.http.get<IInscriptionStatusResponse>(
-                  `${this.baseUrl}${this.oldInscriptionsEndpoint}/estado/${numericContestId}`
-                ).pipe(
-                  map(response => {
-                    console.log('[InscriptionService] Respuesta de estado (endpoint antiguo):', response);
-                    return response?.status || InscripcionState.NO_INSCRIPTO;
-                  }),
-                  catchError(thirdError => {
-                    // Solo loguear como error si no es 404
-                    if (thirdError.status !== 404) {
-                      console.error('[InscriptionService] Error inesperado al verificar estado:', thirdError);
-                    } else {
-                      console.log(`[InscriptionService] Usuario no inscrito en concurso ${numericContestId} (confirmado por todos los endpoints)`);
-                    }
-                    return of(InscripcionState.NO_INSCRIPTO);
-                  })
-                );
+            catchError(fallbackError => {
+              // Only log as debug for 404 errors (expected when no inscription exists)
+              if (fallbackError.status === 404) {
+                this.loggingService.debug(`[InscriptionService] Fallback endpoint returned 404 for ${numericContestId}. No inscription exists - returning ACTIVE.`, undefined, 'Inscription');
+              } else {
+                this.loggingService.warn(`[InscriptionService] Fallback endpoint failed with status ${fallbackError.status}. Defaulting to ACTIVE.`, undefined, 'Inscription');
               }
-
-              // Solo loguear como error si no es 404
-              if (secondError.status !== 404) {
-                console.error('[InscriptionService] Error inesperado al verificar estado con endpoint status:', secondError);
-              }
-              return of(InscripcionState.NO_INSCRIPTO);
+              return of(InscripcionState.ACTIVE); // Default to ACTIVE if all fail
             })
           );
         }
 
+        // For other errors (500, 403, etc.), handle gracefully without additional requests
         if (error.status === 500) {
-          console.error('[InscriptionService] Error del servidor al verificar estado:', error);
-          // En caso de error 500, verificar el estado local nuevamente
-          const currentInscriptions = this.inscriptions$.getValue();
-          const localInscription = currentInscriptions.find(ins => ins.contestId === numericContestId);
-          return of(localInscription?.state || InscripcionState.NO_INSCRIPTO);
+          this.loggingService.warn('[InscriptionService] Server error when verifying status. Checking local state.', undefined, 'Inscription');
+          // In case of 500 error, re-check local state as a last resort
+          const currentInscriptionsOn500 = this.inscriptions$.getValue();
+          const localInscriptionOn500 = currentInscriptionsOn500.find(ins => ins.contestId === numericContestId);
+          return of(localInscriptionOn500?.state || InscripcionState.ACTIVE);
         }
 
-        // Solo loguear como error si no es 404
-        if (error.status !== 404) {
-          console.error('[InscriptionService] Error inesperado al verificar estado:', error);
-        }
-        return of(InscripcionState.NO_INSCRIPTO);
+        // For all other errors, just return ACTIVE without additional requests
+        this.loggingService.debug(`[InscriptionService] Non-404 error (${error.status}) for contest ${numericContestId}. Defaulting to ACTIVE.`, undefined, 'Inscription');
+        return of(InscripcionState.ACTIVE); // Default to ACTIVE for other errors
       }),
       finalize(() => {
-        // Limpiar la petición pendiente
-        this.pendingRequests.delete(cacheKey);
+        this.pendingRequests.delete(cacheKey); // Clear pending request
       }),
-      share() // Compartir la petición entre múltiples suscriptores
+      share() // Share the request among multiple subscribers
     );
 
-    // Guardar la petición pendiente
+    // Save the pending request
     this.pendingRequests.set(cacheKey, request$);
 
     return request$;
   }
 
   /**
-   * Cancela una inscripción en el backend
-   * @param inscriptionId ID de la inscripción a cancelar
-   * @param isProcessCancellation Indica si es una cancelación durante el proceso de inscripción (true) o una cancelación de una postulación ya completada (false)
+   * Cancels an inscription on the backend.
+   * @param inscriptionId ID of the inscription to cancel.
+   * @param isProcessCancellation Indicates if it's a cancellation during the inscription process (true) or a cancellation of an already completed application (false).
    * @returns Observable<void>
    */
   cancelInscription(inscriptionId: string, isProcessCancellation = true): Observable<void> {
     if (!this.validateAuthentication()) return EMPTY;
     if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] cancelInscription: Inscription ID is required.', undefined, 'Inscription');
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
-    console.log('[InscriptionService] Iniciando proceso de cancelación para inscripción:', inscriptionId, 'Cancelación de proceso:', isProcessCancellation);
+    this.loggingService.info(`[InscriptionService] Attempting to cancel inscription ${inscriptionId}. Process cancellation: ${isProcessCancellation}`, undefined, 'Inscription');
 
-    // Usar el endpoint PATCH para cancelar la inscripción (más compatible con el backend actual)
-    return this.http.patch<void>(
-      `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/cancel`,
-      {} // Cuerpo vacío
-    ).pipe(
+    // Use the correct endpoint for user cancellation
+    return this.http.patch<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/cancel`, {}).pipe(
       tap(() => {
-        console.log('[InscriptionService] Inscripción cancelada exitosamente:', inscriptionId);
+        this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} cancelled successfully via PATCH.`, undefined, 'Inscription');
+        this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local state
 
-        // Limpiar el estado del formulario en memoria
-        this.clearFormState(inscriptionId);
-
-        // Actualizar el estado local de la inscripción
-        const currentInscriptions = this.inscriptions$.getValue();
-
-        if (isProcessCancellation) {
-          // Si es una cancelación durante el proceso, eliminar completamente la inscripción de la lista local
-          console.log('[InscriptionService] Cancelación durante el proceso, eliminando inscripción de la lista local');
-          const filteredInscriptions = currentInscriptions.filter(ins => ins.id !== inscriptionId);
-          this.inscriptions$.next(filteredInscriptions);
-        } else {
-          // Si es una cancelación de una postulación completada, actualizar su estado a CANCELLED
-          console.log('[InscriptionService] Cancelación de postulación completada, actualizando estado a CANCELLED');
-          const updatedInscriptions = currentInscriptions.map(ins => {
-            if (ins.id === inscriptionId) {
-              return {
-                ...ins,
-                state: InscripcionState.CANCELLED,
-                updatedAt: new Date()
-              };
-            }
-            return ins;
-          });
-          this.inscriptions$.next(updatedInscriptions);
-        }
-
-        // Agregar delay para asegurar que el backend procese la cancelación
+        // Add delay to ensure backend processes cancellation
         setTimeout(() => {
-          console.log('[InscriptionService] Refrescando inscripciones después de cancelación');
-          this.refreshInscriptions();
-        }, 500);
+          this.loggingService.debug('[InscriptionService] Clearing cache after successful cancellation (PATCH).', undefined, 'Inscription');
+          this.clearCacheAndRefresh().subscribe({
+            next: () => {
+              this.loggingService.debug('[InscriptionService] Cache cleared and refreshed after cancellation (PATCH).', undefined, 'Inscription');
+            },
+            error: (error) => {
+              console.error('[InscriptionService] Error clearing cache after cancellation (PATCH):', error);
+            }
+          });
+        }, 1000); // Increase delay for more backend processing time
       }),
-      catchError((error) => {
-        console.error('[InscriptionService] Error al cancelar inscripción con PATCH:', error);
+      catchError((error: HttpErrorResponse) => {
+        console.error('[InscriptionService] Error cancelling inscription with PATCH:', error);
 
-        // Si es un error 404 o 405, intentar con el método DELETE (para compatibilidad con versiones anteriores)
+        // If it's a 404 or 405 error, try with the DELETE method (for backward compatibility)
         if (error.status === 404 || error.status === 405) {
-          console.log('[InscriptionService] Intentando cancelar con método DELETE como fallback');
-
-          return this.http.delete<void>(
-            `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`
-          ).pipe(
+          this.loggingService.warn(`[InscriptionService] PATCH cancellation failed (${error.status}). Trying DELETE as fallback for inscription ${inscriptionId}.`, undefined, 'Inscription');
+          return this.http.delete<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`).pipe(
             tap(() => {
-              console.log('[InscriptionService] Inscripción cancelada exitosamente con DELETE:', inscriptionId);
+              this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} cancelled successfully via DELETE.`, undefined, 'Inscription');
+              this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local state
 
-              // Limpiar el estado del formulario en memoria
-              this.clearFormState(inscriptionId);
-
-              // Actualizar el estado local de la inscripción
-              const currentInscriptions = this.inscriptions$.getValue();
-
-              if (isProcessCancellation) {
-                // Si es una cancelación durante el proceso, eliminar completamente la inscripción de la lista local
-                console.log('[InscriptionService] Cancelación durante el proceso, eliminando inscripción de la lista local');
-                const filteredInscriptions = currentInscriptions.filter(ins => ins.id !== inscriptionId);
-                this.inscriptions$.next(filteredInscriptions);
-              } else {
-                // Si es una cancelación de una postulación completada, actualizar su estado a CANCELLED
-                console.log('[InscriptionService] Cancelación de postulación completada, actualizando estado a CANCELLED');
-                const updatedInscriptions = currentInscriptions.map(ins => {
-                  if (ins.id === inscriptionId) {
-                    return {
-                      ...ins,
-                      state: InscripcionState.CANCELLED,
-                      updatedAt: new Date()
-                    };
+              // Add delay to ensure backend processes cancellation
+              setTimeout(() => {
+                this.loggingService.debug('[InscriptionService] Clearing cache after successful cancellation (DELETE).', undefined, 'Inscription');
+                this.clearCacheAndRefresh().subscribe({
+                  next: () => {
+                    this.loggingService.debug('[InscriptionService] Cache cleared and refreshed after cancellation (DELETE).', undefined, 'Inscription');
+                  },
+                  error: (error) => {
+                    console.error('[InscriptionService] Error clearing cache after cancellation (DELETE):', error);
                   }
-                  return ins;
                 });
-                this.inscriptions$.next(updatedInscriptions);
-              }
-
-              // Agregar delay para asegurar que el backend procese la cancelación
-              setTimeout(() => {
-                console.log('[InscriptionService] Refrescando inscripciones después de cancelación con DELETE');
-                this.refreshInscriptions();
-              }, 500);
+              }, 1000);
             }),
-            catchError((deleteError) => {
-              console.error('[InscriptionService] Error al cancelar inscripción con DELETE:', deleteError);
+            catchError((deleteError: HttpErrorResponse) => {
+              console.error('[InscriptionService] Error cancelling inscription with DELETE:', deleteError);
 
-              // Incluso en caso de error, intentamos limpiar el estado local
-              this.clearFormState(inscriptionId);
+              this.clearFormState(inscriptionId); // Clear local form state
+              this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local inscription state
 
-              // Actualizar el estado local de la inscripción
-              this.handleLocalCancellation(inscriptionId, isProcessCancellation);
-
-              // Forzar una actualización de las inscripciones desde el backend
+              // Force an update of inscriptions from the backend
               setTimeout(() => {
                 this.refreshInscriptions();
               }, 500);
 
-              // Propagar el error para que el componente pueda manejarlo
-              return this.handleSimpleError(deleteError);
+              return this.handleSimpleError(deleteError); // Propagate error
             })
           );
         }
 
-        // Incluso en caso de error, intentamos limpiar el estado local
-        this.clearFormState(inscriptionId);
+        this.clearFormState(inscriptionId); // Clear local form state
+        this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local inscription state
 
-        // Actualizar el estado local de la inscripción
-        this.handleLocalCancellation(inscriptionId, isProcessCancellation);
-
-        // Forzar una actualización de las inscripciones desde el backend
         setTimeout(() => {
           this.refreshInscriptions();
         }, 500);
 
-        // Propagar el error para que el componente pueda manejarlo
-        return this.handleSimpleError(error);
+        return this.handleSimpleError(error); // Propagate error
       })
     );
   }
 
   /**
-   * Maneja la cancelación local de una inscripción cuando falla la comunicación con el backend
-   * @param inscriptionId ID de la inscripción a cancelar
-   * @param isProcessCancellation Indica si es una cancelación durante el proceso o de una postulación completada
+   * Handles local cancellation of an inscription when backend communication fails.
+   * @param inscriptionId ID of the inscription to cancel.
+   * @param isProcessCancellation Indicates if it's a cancellation during the process or of a completed application.
    */
   private handleLocalCancellation(inscriptionId: string, isProcessCancellation: boolean): void {
     const currentInscriptions = this.inscriptions$.getValue();
 
     if (isProcessCancellation) {
-      // Si es una cancelación durante el proceso, eliminar completamente la inscripción de la lista local
-      console.log('[InscriptionService] Error en cancelación durante el proceso, eliminando inscripción de la lista local');
+      // If cancellation during process, completely remove inscription from local list
       const filteredInscriptions = currentInscriptions.filter(ins => ins.id !== inscriptionId);
+      this.loggingService.debug(`[InscriptionService] Locally removing inscription ${inscriptionId} from cache.`, undefined, 'Inscription');
       this.inscriptions$.next(filteredInscriptions);
     } else {
-      // Si es una cancelación de una postulación completada, actualizar su estado a CANCELLED
-      console.log('[InscriptionService] Error en cancelación de postulación completada, actualizando estado a CANCELLED');
+      // If cancellation of a completed application, update its state to CANCELLED
       const updatedInscriptions = currentInscriptions.map(ins => {
         if (ins.id === inscriptionId) {
-          return {
-            ...ins,
-            state: InscripcionState.CANCELLED,
-            updatedAt: new Date()
-          };
+          this.loggingService.debug(`[InscriptionService] Locally setting inscription ${inscriptionId} state to CANCELLED.`, undefined, 'Inscription');
+          return { ...ins, state: InscripcionState.CANCELLED, updatedAt: new Date() };
         }
         return ins;
       });
@@ -564,226 +580,191 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
     }
   }
 
-  // Variable para controlar los reintentos
+  // Variable to control retry attempts for status update
   private updateStatusRetryCount: Record<string, number> = {};
   private readonly MAX_RETRY_ATTEMPTS = 3;
 
   /**
-   * Maps frontend states to backend states
-   * The backend only accepts: ACTIVE, PENDING, APPROVED, REJECTED, CANCELLED
+   * Maps frontend states to backend states.
+   * The backend typically accepts: ACTIVE, PENDING, APPROVED, REJECTED, CANCELLED.
    */
   private mapFrontendStateToBackend(state: InscripcionState): string {
     switch (state) {
       // Standard states (direct mapping)
       case InscripcionState.ACTIVE:
-        return 'ACTIVE';    // Inscription in progress
+        return 'ACTIVE';
       case InscripcionState.PENDING:
-        return 'PENDING';   // Inscription completed by user, waiting for validation
+        return 'PENDING';
       case InscripcionState.APPROVED:
-        return 'APPROVED';  // Inscription approved by admin
+        return 'APPROVED';
       case InscripcionState.REJECTED:
-        return 'REJECTED';  // Inscription rejected by admin
+        return 'REJECTED';
       case InscripcionState.CANCELLED:
-        return 'CANCELLED'; // Inscription cancelled by user
+        return 'CANCELLED';
 
-      // Legacy states (mapping to standardized states)
-      case InscripcionState.IN_PROCESS:
-        return 'ACTIVE';    // Now mapped to ACTIVE
-      case InscripcionState.PENDIENTE:
-        return 'PENDING';   // Spanish for PENDING
-      case InscripcionState.INSCRIPTO:
-        return 'APPROVED';  // Spanish for APPROVED
-      case InscripcionState.CONFIRMADA:
-        return 'PENDING';   // Old term for PENDING
-      case InscripcionState.NO_INSCRIPTO:
+      // New completion states (direct mapping to preserve specific states)
+      case InscripcionState.COMPLETED_WITH_DOCS:
+        return 'COMPLETED_WITH_DOCS'; // Inscription completed with all documents
+      case InscripcionState.COMPLETED_PENDING_DOCS:
+        return 'COMPLETED_PENDING_DOCS'; // Inscription completed but with pending documents
+
       default:
-        return 'ACTIVE';    // Default to ACTIVE for new inscriptions
+        this.loggingService.warn(`[InscriptionService] Unknown frontend state: ${state}. Defaulting to ACTIVE for backend mapping.`, undefined, 'Inscription');
+        return 'ACTIVE';
     }
   }
 
-  // Usamos el método mapStatusToState en lugar de este método
-
+  /**
+   * Updates the status of an inscription on the backend. Includes retry logic and fallbacks.
+   * @param inscriptionId The ID of the inscription to update.
+   * @param request The update request containing the new state and optionally current step.
+   * @returns An Observable of the updated inscription response.
+   */
   updateInscriptionStatus(
     inscriptionId: string,
     request: IInscriptionUpdateRequest
   ): Observable<IInscriptionResponse> {
     if (!this.validateAuthentication()) return EMPTY;
     if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] updateInscriptionStatus: Inscription ID is required.', undefined, 'Inscription');
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
-    // Si el estado es CONFIRMADA, asegurarse de que el paso esté en COMPLETED
-    if (request.state === InscripcionState.CONFIRMADA && !request.currentStep) {
-      request = {
-        ...request,
-        currentStep: InscriptionStep.COMPLETED
-      };
-      console.log('[InscriptionService] Agregando paso COMPLETED a la inscripción CONFIRMADA');
-    }
-
-    // Inicializar contador de reintentos si no existe
+    // Initialize retry counter if it doesn't exist
     if (!this.updateStatusRetryCount[inscriptionId]) {
       this.updateStatusRetryCount[inscriptionId] = 0;
     }
 
-    // Verificar si hemos excedido el número máximo de reintentos
+    // Check if max retry attempts have been reached
     if (this.updateStatusRetryCount[inscriptionId] >= this.MAX_RETRY_ATTEMPTS) {
-      console.warn(`[InscriptionService] Máximo número de reintentos alcanzado para inscripción ${inscriptionId}`);
-      // Limpiar el contador para futuros intentos
+      this.loggingService.error(`[InscriptionService] Max retry attempts reached for updating inscription ${inscriptionId}. Aborting API call.`, undefined, 'Inscription');
+      // Clear counter for future attempts
       delete this.updateStatusRetryCount[inscriptionId];
-      // Devolver un observable exitoso con datos locales para evitar bucles infinitos
+      // Return a successful observable with local data to prevent infinite loops
+      const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
       return of({
         id: inscriptionId,
-        contestId: 0,
-        userId: '',
-        status: request.state,
-        inscriptionDate: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        contestId: localInscription?.contestId || 0,
+        userId: localInscription?.userId || '',
+        status: request.state, // Return the requested state as 'successfully' applied locally
+        inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+        createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       } as IInscriptionResponse);
     }
 
-    // Incrementar el contador de reintentos
+    // Increment retry counter
     this.updateStatusRetryCount[inscriptionId]++;
 
-    // Mapear el estado del frontend al estado aceptado por el backend
+    // If the state is PENDING, ensure the step is COMPLETED
+    if (request.state === InscripcionState.PENDING && !request.currentStep) {
+      request = {
+        ...request,
+        currentStep: InscriptionStep.COMPLETED
+      };
+      this.loggingService.debug('[InscriptionService] Setting currentStep to COMPLETED for PENDING status update.', undefined, 'Inscription');
+    }
+
     const backendState = this.mapFrontendStateToBackend(request.state);
+    this.loggingService.info(`[InscriptionService] Updating inscription ${inscriptionId} to status: ${backendState} (Attempt ${this.updateStatusRetryCount[inscriptionId]}/${this.MAX_RETRY_ATTEMPTS})`, undefined, 'Inscription');
 
-    console.log('[InscriptionService] Actualizando estado de inscripción:', {
-      inscriptionId,
-      frontendState: request.state,
-      backendState,
-      intento: this.updateStatusRetryCount[inscriptionId]
-    });
-
-    // Actualizar el estado local inmediatamente para mejorar la experiencia de usuario
-    this.updateLocalInscriptionState(inscriptionId, request.state);
-
-    // Determinar qué endpoint usar según el estado
-    // Si es PENDING, usar el endpoint user-status que permite a usuarios normales cambiar a PENDING
-    // Si es otro estado, usar el endpoint status que requiere permisos de administrador
-    // Try the new endpoint first, but fall back to the old one if needed
-    const endpoint = backendState === 'PENDING'
+    // Determine which endpoint to use based on the state
+    // Use user-status endpoint for user-initiated completion states (PENDING, COMPLETED_WITH_DOCS, COMPLETED_PENDING_DOCS)
+    // Use status endpoint for admin-only states (APPROVED, REJECTED, CANCELLED, etc.)
+    const userCompletionStates = ['PENDING', 'COMPLETED_WITH_DOCS', 'COMPLETED_PENDING_DOCS'];
+    const endpoint = userCompletionStates.includes(backendState)
       ? `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`
       : `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
 
-    // Keep old endpoint for backward compatibility during transition
-    // This will be used in the catch block if the first attempt fails
-    // const oldEndpoint = backendState === 'PENDING'
-    //   ? `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`
-    //   : `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
+    // Old endpoint for backward compatibility during transition
+    const oldEndpoint = userCompletionStates.includes(backendState)
+      ? `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`
+      : `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
 
-    console.log(`[InscriptionService] Using endpoint: ${endpoint}`);
 
-    return this.http.patch<IInscriptionResponse>(
-      endpoint,
-      {} // Cuerpo vacío, ya que enviamos el estado como parámetro de consulta
-    ).pipe(
+    this.loggingService.debug(`[InscriptionService] Sending PATCH request to: ${endpoint}`, undefined, 'Inscription');
+    return this.http.patch<IInscriptionResponse>(endpoint, {}).pipe(
       tap(response => {
-        console.log('[InscriptionService] Estado actualizado:', response);
-        // Limpiar el contador de reintentos al tener éxito
-        delete this.updateStatusRetryCount[inscriptionId];
-        // Refrescar la lista después de un breve delay
-        setTimeout(() => this.refreshInscriptions(), 500);
+        this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} status updated successfully to ${backendState} (Attempt ${this.updateStatusRetryCount[inscriptionId]}).`, response, 'Inscription');
+        this.updateLocalInscriptionState(inscriptionId, request.state); // Update local state
+        delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter on success
+        setTimeout(() => this.refreshInscriptions(), 500); // Refresh the list after a brief delay
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error al actualizar estado:', error);
+        console.error('[InscriptionService] Error updating status:', error);
 
-        // Ahora siempre recibimos HttpErrorResponse para inscripciones gracias al ErrorInterceptor optimizado
-        // Si es un error 403 o 404 y estamos intentando cambiar a PENDING, intentar con el otro endpoint
-        if ((error.status === 403 || error.status === 404) && backendState === 'PENDING' && this.updateStatusRetryCount[inscriptionId] === 1) {
-          console.log(`[InscriptionService] Error ${error.status}, trying alternative endpoint for PENDING`);
-
-          // First try the alternative new endpoint (switch between user-status and status)
-          const alternativeEndpoint = endpoint.includes('user-status')
-            ? `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`
-            : `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`;
-
-          console.log(`[InscriptionService] Using alternative endpoint: ${alternativeEndpoint}`);
-
-          // Incrementar el contador de reintentos
-          this.updateStatusRetryCount[inscriptionId]++;
+        // If it's a 403 or 404 and we're trying to change to a user completion state, try with the other endpoint
+        if ((error.status === 403 || error.status === 404) && userCompletionStates.includes(backendState) && this.updateStatusRetryCount[inscriptionId] === 1) {
+          const alternativeEndpoint = `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
+          this.loggingService.warn(`[InscriptionService] PATCH to user-status failed (${error.status}). Trying alternative endpoint: ${alternativeEndpoint} (Attempt ${this.updateStatusRetryCount[inscriptionId]}).`, undefined, 'Inscription');
 
           return this.http.patch<IInscriptionResponse>(alternativeEndpoint, {}).pipe(
             tap(response => {
-              console.log('[InscriptionService] Status updated with alternative endpoint:', response);
-              // Limpiar el contador de reintentos al tener éxito
-              delete this.updateStatusRetryCount[inscriptionId];
-              // Refrescar la lista después de un breve delay
-              setTimeout(() => this.refreshInscriptions(), 500);
+              this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} status updated successfully to ${backendState} via alternative endpoint (Attempt ${this.updateStatusRetryCount[inscriptionId]}).`, response, 'Inscription');
+              this.updateLocalInscriptionState(inscriptionId, request.state); // Update local state
+              delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter on success
+              setTimeout(() => this.refreshInscriptions(), 500); // Refresh the list after a brief delay
             }),
             catchError(secondError => {
-              console.error('[InscriptionService] Error in second attempt:', secondError);
+              console.error('[InscriptionService] Error in second attempt (alternative endpoint):', secondError);
 
               // If both new endpoints fail, try the old endpoints for backward compatibility
-              if ((secondError.status === 403 || secondError.status === 404) && this.updateStatusRetryCount[inscriptionId] === 2) {
-                console.log(`[InscriptionService] Error ${secondError.status}, trying old endpoint format`);
-
-                // Try the old endpoint format
-                const oldEndpoint = backendState === 'PENDING'
-                  ? `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`
-                  : `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/status?status=${backendState}`;
-
-                console.log(`[InscriptionService] Using old endpoint format: ${oldEndpoint}`);
-
-                // Incrementar el contador de reintentos
-                this.updateStatusRetryCount[inscriptionId]++;
+              if ((secondError.status === 403 || secondError.status === 404 || secondError.status === 400 || secondError.status === 500) && this.updateStatusRetryCount[inscriptionId] <= this.MAX_RETRY_ATTEMPTS) {
+                this.loggingService.warn(`[InscriptionService] Both new endpoints failed. Trying old endpoint: ${oldEndpoint} (Attempt ${this.updateStatusRetryCount[inscriptionId]}).`, undefined, 'Inscription');
 
                 return this.http.patch<IInscriptionResponse>(oldEndpoint, {}).pipe(
                   tap(response => {
-                    console.log('[InscriptionService] Status updated with old endpoint format:', response);
-                    // Limpiar el contador de reintentos al tener éxito
-                    delete this.updateStatusRetryCount[inscriptionId];
-                    // Refrescar la lista después de un breve delay
-                    setTimeout(() => this.refreshInscriptions(), 500);
+                    this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} status updated successfully via old endpoint (Attempt ${this.updateStatusRetryCount[inscriptionId]}).`, response, 'Inscription');
+                    this.updateLocalInscriptionState(inscriptionId, request.state); // Update local state
+                    delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter on success
+                    setTimeout(() => this.refreshInscriptions(), 500); // Refresh the list after a brief delay
                   }),
                   catchError(thirdError => {
-                    console.error('[InscriptionService] Error in third attempt with old endpoint:', thirdError);
-                    // Limpiar el contador de reintentos para evitar bucles infinitos
-                    delete this.updateStatusRetryCount[inscriptionId];
-                    // Ya actualizamos el estado local, así que podemos devolver un observable exitoso
+                    console.error('[InscriptionService] Error in third attempt (old endpoint):', thirdError);
+                    delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter to avoid infinite loops
+                    // We already updated the local state, so we can return a successful observable
+                    const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
                     return of({
                       id: inscriptionId,
-                      contestId: 0,
-                      userId: '',
+                      contestId: localInscription?.contestId || 0,
+                      userId: localInscription?.userId || '',
                       status: request.state,
-                      inscriptionDate: new Date().toISOString(),
-                      createdAt: new Date().toISOString(),
+                      inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+                      createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
                       updatedAt: new Date().toISOString()
                     } as IInscriptionResponse);
                   })
                 );
               }
 
-              // Limpiar el contador de reintentos para evitar bucles infinitos
-              delete this.updateStatusRetryCount[inscriptionId];
-              // Ya actualizamos el estado local, así que podemos devolver un observable exitoso
+              delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter to avoid infinite loops
+              // We already updated the local state, so we can return a successful observable
+              const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
               return of({
                 id: inscriptionId,
-                contestId: 0,
-                userId: '',
+                contestId: localInscription?.contestId || 0,
+                userId: localInscription?.userId || '',
                 status: request.state,
-                inscriptionDate: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
+                inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+                createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
                 updatedAt: new Date().toISOString()
               } as IInscriptionResponse);
             })
           );
         }
 
-        // Si es un error 404, 400 o 500, podemos intentar una solución alternativa
+        // If it's a 404, 400 or 500, we can try an alternative solution
         if (error.status === 404 || error.status === 400 || error.status === 500) {
-          console.log(`[InscriptionService] Error ${error.status}, usando actualización local solamente`);
-          // Limpiar el contador de reintentos para evitar bucles infinitos
-          delete this.updateStatusRetryCount[inscriptionId];
-          // Ya actualizamos el estado local, así que podemos devolver un observable exitoso
+          this.loggingService.warn(`[InscriptionService] Update status failed with ${error.status}. Returning local state as fallback.`, undefined, 'Inscription');
+          // We already updated the local state, so we can return a successful observable
+          const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
           return of({
             id: inscriptionId,
-            contestId: 0, // Estos valores serán reemplazados por los datos reales en el frontend
-            userId: '',
+            contestId: localInscription?.contestId || 0,
+            userId: localInscription?.userId || '',
             status: request.state,
-            inscriptionDate: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
+            inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+            createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
             updatedAt: new Date().toISOString()
           } as IInscriptionResponse);
         }
@@ -794,7 +775,9 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
   }
 
   /**
-   * Actualiza el estado de una inscripción localmente sin llamar al backend
+   * Updates the state of an inscription locally without calling the backend.
+   * @param inscriptionId The ID of the inscription to update.
+   * @param newState The new state to set.
    */
   private updateLocalInscriptionState(inscriptionId: string, newState: InscripcionState): void {
     const currentInscriptions = this.inscriptions$.getValue();
@@ -809,392 +792,205 @@ export class InscriptionService { // TODO: Refactorizar para solo utilizar las a
       return inscription;
     });
     this.inscriptions$.next(updatedInscriptions);
-    console.log('[InscriptionService] Estado local actualizado para inscripción:', inscriptionId);
+    this.loggingService.debug(`[InscriptionService] Local inscription ${inscriptionId} state updated to: ${newState}`, undefined, 'Inscription');
 
-    // Si el estado es final (PENDIENTE, INSCRIPTO, CANCELLED o REJECTED), limpiar el estado local en localStorage
-    if (newState === InscripcionState.PENDIENTE ||
-        newState === InscripcionState.INSCRIPTO ||
-        newState === InscripcionState.APPROVED ||
-        newState === InscripcionState.CANCELLED ||
-        newState === InscripcionState.REJECTED) {
-      // Limpiar el estado del formulario en memoria
-      this.clearFormState(inscriptionId);
-
-      // Limpiar el estado en localStorage
-      console.log('[InscriptionService] Limpiando estado local en localStorage para inscripción:', inscriptionId);
+    // Also update/clear local storage state via InscriptionStateService
+    if (newState === InscripcionState.CANCELLED || newState === InscripcionState.COMPLETED_WITH_DOCS || newState === InscripcionState.COMPLETED_PENDING_DOCS || newState === InscripcionState.REJECTED || newState === InscripcionState.APPROVED) {
       this.inscriptionStateService.clearInscriptionState(inscriptionId);
+      this.loggingService.debug(`[InscriptionService] Cleared local storage state for inscription ${inscriptionId} due to final/cancelled status.`, undefined, 'Inscription');
     }
   }
 
-  // Variable para controlar los reintentos de actualización de paso
+  // Variable to control retry attempts for step update
   private updateStepRetryCount: Record<string, number> = {};
 
+  /**
+   * Updates the current step of an inscription on the backend.
+   * @param inscriptionId The ID of the inscription.
+   * @param request The update request containing the new step.
+   * @returns An Observable of the updated inscription response.
+   */
   updateInscriptionStep(
     inscriptionId: string,
     request: IInscriptionStepRequest
   ): Observable<IInscriptionResponse> {
     if (!this.validateAuthentication()) return EMPTY;
     if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] updateInscriptionStep: Inscription ID is required.', undefined, 'Inscription');
       return throwError(() => new Error('El ID de inscripción es requerido'));
     }
 
-    // Inicializar contador de reintentos si no existe
+    // Initialize retry counter if it doesn't exist
     if (!this.updateStepRetryCount[inscriptionId]) {
       this.updateStepRetryCount[inscriptionId] = 0;
     }
 
-    // Verificar si hemos excedido el número máximo de reintentos
+    // Check if max retry attempts have been reached
     if (this.updateStepRetryCount[inscriptionId] >= this.MAX_RETRY_ATTEMPTS) {
-      console.warn(`[InscriptionService] Máximo número de reintentos alcanzado para actualizar paso de inscripción ${inscriptionId}`);
-      // Limpiar el contador para futuros intentos
+      this.loggingService.error(`[InscriptionService] Max retry attempts reached for updating inscription step ${inscriptionId}. Aborting API call.`, undefined, 'Inscription');
+      // Clear counter for future attempts
       delete this.updateStepRetryCount[inscriptionId];
-      // Devolver un observable exitoso con datos locales para evitar bucles infinitos
+      // Return a successful observable with local data to prevent infinite loops
+      const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
       return of({
         id: inscriptionId,
-        contestId: 0,
-        userId: '',
-        status: '',
-        inscriptionDate: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
+        contestId: localInscription?.contestId || 0,
+        userId: localInscription?.userId || '',
+        status: localInscription?.state, // Return current local status
+        inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+        createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       } as IInscriptionResponse);
     }
 
-    // Incrementar el contador de reintentos
+    // Increment retry counter
     this.updateStepRetryCount[inscriptionId]++;
 
-    console.log('[InscriptionService] Actualizando paso de inscripción:', {
-      inscriptionId,
-      request,
-      intento: this.updateStepRetryCount[inscriptionId]
-    });
+    this.loggingService.info(`[InscriptionService] Updating inscription ${inscriptionId} step to ${request.step} (Attempt ${this.updateStepRetryCount[inscriptionId]}/${this.MAX_RETRY_ATTEMPTS}).`, undefined, 'Inscription');
 
-    // Actualizar el estado local inmediatamente para mejorar la experiencia de usuario
-    this.updateLocalInscriptionStep(inscriptionId, request.step);
-
-    // Usar la ruta correcta con el método PUT en lugar de PATCH
-    // El controlador en el backend usa @PutMapping("/{inscriptionId}/step")
+    // Use the correct path with PUT method
     return this.http.put<IInscriptionResponse>(
       `${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/step`,
-      {
-        step: request.step,
-        centroDeVida: request.centroDeVida,
-        selectedCircunscripciones: request.selectedCircunscripciones,
-        acceptedTerms: request.acceptedTerms,
-        confirmedPersonalData: request.confirmedPersonalData
-      } // Enviar todos los datos en el cuerpo JSON
+      request
     ).pipe(
       tap(response => {
-        console.log('[InscriptionService] Paso actualizado:', response);
-        // Limpiar el contador de reintentos al tener éxito
-        delete this.updateStepRetryCount[inscriptionId];
-        this.refreshInscriptions();
+        this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} step updated successfully to ${request.step} (Attempt ${this.updateStepRetryCount[inscriptionId]}).`, response, 'Inscription');
+        // Update local state (optional, as `getCurrentStep` should fetch from backend if needed)
+        const currentInscriptions = this.inscriptions$.getValue();
+        const updatedInscriptions = currentInscriptions.map(ins => {
+          if (ins.id === inscriptionId) {
+            return { ...ins, updatedAt: new Date() }; // Only update timestamp for simplicity
+          }
+          return ins;
+        });
+        this.inscriptions$.next(updatedInscriptions);
+        delete this.updateStepRetryCount[inscriptionId]; // Clear retry counter on success
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error al actualizar paso:', error);
+        console.error(`[InscriptionService] Error updating inscription ${inscriptionId} step to ${request.step}:`, error);
 
-        // Ahora siempre recibimos HttpErrorResponse para inscripciones
-        // Si es un error 404, 400 o 500, podemos intentar una solución alternativa
+        // If it's a 404, 400 or 500, we can try an alternative solution
         if (error.status === 404 || error.status === 400 || error.status === 500) {
-          // Si el primer intento falló, intentar con ruta alternativa
-          if (this.updateStepRetryCount[inscriptionId] === 1) {
-            console.log('[InscriptionService] Primer intento fallido, intentando con ruta alternativa');
-            return this.http.put<IInscriptionResponse>(
-              `${this.baseUrl}${this.oldInscriptionsEndpoint}/${inscriptionId}/step`,
-              {
-                step: request.step,
-                centroDeVida: request.centroDeVida,
-                selectedCircunscripciones: request.selectedCircunscripciones,
-                acceptedTerms: request.acceptedTerms,
-                confirmedPersonalData: request.confirmedPersonalData
-              }
-            ).pipe(
-              tap(response => {
-                console.log('[InscriptionService] Paso actualizado con parámetros de consulta:', response);
-                // Limpiar el contador de reintentos al tener éxito
-                delete this.updateStepRetryCount[inscriptionId];
-                this.refreshInscriptions();
-              }),
-              catchError(secondError => {
-                console.error('[InscriptionService] Error en segundo intento:', secondError);
-                // Limpiar el contador de reintentos para evitar bucles infinitos
-                delete this.updateStepRetryCount[inscriptionId];
-                // Ya actualizamos el estado local, así que podemos devolver un observable exitoso
-                return of({
-                  id: inscriptionId,
-                  contestId: 0,
-                  userId: '',
-                  status: '',
-                  inscriptionDate: new Date().toISOString(),
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-                } as IInscriptionResponse);
-              })
-            );
-          }
-
-          console.log(`[InscriptionService] Error ${error.status}, usando actualización local solamente`);
-          // Limpiar el contador de reintentos para evitar bucles infinitos
-          delete this.updateStepRetryCount[inscriptionId];
-          // Ya actualizamos el estado local, así que podemos devolver un observable exitoso
+          this.loggingService.warn(`[InscriptionService] Update step failed with ${error.status}. Returning local state as fallback.`, undefined, 'Inscription');
+          const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
           return of({
             id: inscriptionId,
-            contestId: 0, // Estos valores serán reemplazados por los datos reales en el frontend
-            userId: '',
-            status: '',
-            inscriptionDate: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
+            contestId: localInscription?.contestId || 0,
+            userId: localInscription?.userId || '',
+            status: localInscription?.state, // Return current local status
+            inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+            createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
             updatedAt: new Date().toISOString()
           } as IInscriptionResponse);
         }
-
         return this.handleSimpleError(error);
       })
     );
   }
 
   /**
-   * Actualiza el paso de una inscripción localmente sin llamar al backend
+   * Finalizes an inscription, setting its state to COMPLETED.
+   * @param inscriptionId The ID of the inscription to finalize.
+   * @param request The update request containing final data.
+   * @returns An Observable of the updated inscription response.
    */
-  private updateLocalInscriptionStep(inscriptionId: string, step: InscriptionStep): void {
-    const currentInscriptions = this.inscriptions$.getValue();
-    const updatedInscriptions = currentInscriptions.map(inscription => {
-      if (inscription.id === inscriptionId) {
-        return {
-          ...inscription,
-          step: step,
-          updatedAt: new Date()
-        };
-      }
-      return inscription;
-    });
-    this.inscriptions$.next(updatedInscriptions);
-    console.log('[InscriptionService] Paso local actualizado para inscripción:', inscriptionId);
-  }
+  finalizeInscription(inscriptionId: string, request: IInscriptionUpdateRequest): Observable<IInscriptionResponse> {
+    if (!this.validateAuthentication()) return EMPTY;
+    if (!inscriptionId) {
+      this.loggingService.error('[InscriptionService] finalizeInscription: Inscription ID is required.', undefined, 'Inscription');
+      return throwError(() => new Error('El ID de inscripción es requerido para finalizar.'));
+    }
 
-  /**
-   * OPTIMIZACIÓN: Actualiza el cache local con una respuesta del backend
-   */
-  private updateLocalInscriptionCache(response: IInscriptionResponse): void {
-    const currentInscriptions = this.inscriptions$.getValue();
-    const existingIndex = currentInscriptions.findIndex(ins => ins.id === response.id);
+    this.loggingService.info(`[InscriptionService] Finalizing inscription ${inscriptionId}.`, request, 'Inscription');
 
-    const mappedInscription: IInscription = {
-      id: response.id,
-      contestId: response.contestId,
-      userId: response.userId,
-      state: this.mapStatusToState(response.status),
-      currentStep: response.currentStep ? response.currentStep as InscriptionStep : InscriptionStep.INITIAL,
-      createdAt: new Date(response.createdAt),
-      updatedAt: new Date(response.updatedAt || response.createdAt)
+    // Force the state to PENDING, as this means it's submitted for review
+    const backendState = this.mapFrontendStateToBackend(InscripcionState.PENDING);
+    // Ensure currentStep is COMPLETED when finalizing
+    const finalRequest = {
+      ...request,
+      state: InscripcionState.PENDING, // Always set to PENDING for backend
+      currentStep: InscriptionStep.COMPLETED
     };
 
-    if (existingIndex >= 0) {
-      // Actualizar inscripción existente
-      const updatedInscriptions = [...currentInscriptions];
-      updatedInscriptions[existingIndex] = mappedInscription;
-      this.inscriptions$.next(updatedInscriptions);
-    } else {
-      // Agregar nueva inscripción
-      this.inscriptions$.next([...currentInscriptions, mappedInscription]);
-    }
-
-    console.log('[InscriptionService] Cache local actualizado con respuesta del backend:', mappedInscription);
-  }
-
-  // Getters públicos
-  get inscriptions(): Observable<IInscription[]> {
-    if (this.inscriptions$.value.length === 0) {
-      this.refreshInscriptions();
-    }
-    return this.inscriptions$.asObservable();
-  }
-
-  // Métodos públicos adicionales
-  // Variable para controlar el throttling de las actualizaciones
-  private lastRefreshTimestamp = 0;
-  private readonly MIN_REFRESH_INTERVAL = 5000; // 5 segundos mínimo entre actualizaciones
-  private refreshInProgress = false;
-
-  // OPTIMIZACIÓN: Cache de peticiones pendientes para evitar duplicados
-  private pendingRequests = new Map<string, Observable<InscripcionState>>();
-
-  refreshInscriptions(): Observable<Page<IInscriptionResponse>> {
-    // Evitar múltiples llamadas simultáneas
-    if (this.refreshInProgress) {
-      console.log('[InscriptionService] Ya hay una actualización en progreso, devolviendo observable vacío');
-      return EMPTY;
-    }
-
-    // Aplicar throttling para evitar demasiadas peticiones
-    const now = Date.now();
-    const timeSinceLastRefresh = now - this.lastRefreshTimestamp;
-
-    if (timeSinceLastRefresh < this.MIN_REFRESH_INTERVAL) {
-      console.log(`[InscriptionService] Throttling aplicado, última actualización hace ${timeSinceLastRefresh}ms`);
-      return EMPTY;
-    }
-
-    console.log('[InscriptionService] Actualizando lista de inscripciones...');
-    this.refreshInProgress = true;
-    this.lastRefreshTimestamp = now;
-
-    return this.getUserInscriptions().pipe(
-      take(1),
-      finalize(() => {
-        this.refreshInProgress = false;
+    return this.http.patch<IInscriptionResponse>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}/user-status?status=${backendState}`, finalRequest).pipe(
+      tap(response => {
+        this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} finalized successfully.`, response, 'Inscription');
+        this.updateLocalInscriptionState(inscriptionId, InscripcionState.PENDING); // Update local state to PENDING
+        this.inscriptionStateService.clearInscriptionState(inscriptionId); // Clear local storage state
+        this.refreshInscriptions(); // Refresh local list
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error al actualizar inscripciones:', error);
-        return EMPTY;
+        console.error('[InscriptionService] Error finalizing inscription:', error);
+        // On error, try to update local state to reflect attempt
+        // Note: request doesn't have inscriptionId, this needs to be passed separately
+        return this.handleSimpleError(error);
       })
     );
   }
 
-  private validateAuthentication(): boolean {
-    if (!this.authService.isAuthenticated()) {
-      console.warn('[InscriptionService] Usuario no autenticado');
-      this.router.navigate(['/auth/login']);
-      return false;
-    }
-    return true;
-  }
-
   /**
-   * Manejo simplificado de errores para inscripciones (siempre recibe HttpErrorResponse)
-   * @param error HttpErrorResponse
-   * @returns Observable que lanza un error con mensaje apropiado
+   * Observable to get the current list of user inscriptions.
+   * @returns An Observable emitting the current list of inscriptions.
    */
-  private handleSimpleError(error: HttpErrorResponse): Observable<never> {
-    console.error('[InscriptionService] Error detallado:', {
-      status: error.status,
-      statusText: error.statusText,
-      message: error.message,
-      url: error.url
-    });
-
-    let errorMessage = 'Ha ocurrido un error inesperado en inscripciones';
-
-    switch (error.status) {
-      case 401:
-        errorMessage = 'Su sesión ha expirado. Por favor, vuelva a iniciar sesión.';
-        this.tokenService.signOut();
-        this.router.navigate(['/auth/login']);
-        break;
-      case 403:
-        errorMessage = 'No tiene permisos para realizar esta acción en inscripciones.';
-        break;
-      case 404:
-        errorMessage = 'El recurso de inscripción solicitado no existe.';
-        break;
-      case 409:
-        errorMessage = 'Ya existe una inscripción para este concurso.';
-        this.refreshInscriptions();
-        break;
-      case 422:
-        errorMessage = 'Los datos de inscripción proporcionados no son válidos.';
-        break;
-      case 500:
-        errorMessage = 'Error del servidor en inscripciones. Por favor, intente nuevamente más tarde.';
-        this.refreshInscriptions();
-        break;
-    }
-
-    // Si hay un mensaje específico en la respuesta, usarlo
-    if (error.error && error.error.message) {
-      errorMessage = error.error.message;
-    }
-
-    return throwError(() => new Error(errorMessage));
+  get inscriptions(): Observable<IInscription[]> {
+    return this.inscriptions$.asObservable();
   }
 
-
-
   /**
-   * Maps backend states to frontend states
-   * This method converts states received from the backend to the states used by the frontend
+   * Forces a refresh of the user's inscription list from the backend.
    */
-  private mapStatusToState(status: string): InscripcionState {
-    if (!status) {
-      console.warn('[InscriptionService] Null or undefined status');
-      return InscripcionState.ACTIVE; // Default to ACTIVE for undefined states
-    }
-
-    const statusUpper = status.toUpperCase();
-    switch (statusUpper) {
-      // Standard states (direct mapping to standardized states)
-      case 'ACTIVE':
-        return InscripcionState.ACTIVE;    // Inscription in progress
-      case 'PENDING':
-        return InscripcionState.PENDING;   // Inscription completed by user, waiting for validation
-      case 'APPROVED':
-        return InscripcionState.APPROVED;  // Inscription approved by admin
-      case 'REJECTED':
-        return InscripcionState.REJECTED;  // Inscription rejected by admin
-      case 'CANCELLED':
-        return InscripcionState.CANCELLED; // Inscription cancelled by user
-
-      // Legacy backend states (mapping to standardized states)
-      case 'IN_PROCESS':
-        return InscripcionState.ACTIVE;    // Now mapped to ACTIVE
-      case 'CANCELED':
-      case 'CANCELADA':
-      case 'CANCELADO':
-        console.log('[InscriptionService] Legacy CANCELLED state received from backend');
-        return InscripcionState.CANCELLED; // All variations map to CANCELLED
-      case 'RECHAZADA':
-      case 'RECHAZADO':
-        return InscripcionState.REJECTED;  // Spanish variations map to REJECTED
-      case 'CONFIRMADA':
-        return InscripcionState.PENDING;   // Old term maps to PENDING
-      default:
-        console.warn('[InscriptionService] Unknown status:', status);
-        return InscripcionState.ACTIVE;    // Default to ACTIVE for unknown states
-    }
+  refreshInscriptions(): Observable<Page<IInscriptionResponse>> {
+    this.loggingService.info('[InscriptionService] Forcing refresh of user inscriptions from backend.', undefined, 'Inscription');
+    // Calling getUserInscriptions with forceReload will bypass cache and fetch fresh data
+    return this.getUserInscriptions();
   }
 
   /**
-   * Guarda el estado del formulario de inscripción en memoria
-   * @param inscriptionId ID de la inscripción
-   * @param formState Estado del formulario
+   * Clears the in-memory cache of inscriptions and triggers a refresh from the backend.
+   * @returns An Observable representing the completion of the clear and refresh operation.
    */
-  saveFormState(inscriptionId: string, formState: unknown): void {
-    console.log('[InscriptionService] Guardando estado del formulario:', { inscriptionId, formState });
-    this.inProgressInscriptions.set(inscriptionId, formState as Record<string, unknown>);
-  }
-
-  // Cache para evitar llamadas repetitivas a getFormState
-  private formStateCache = new Map<string, Record<string, unknown> | null>();
-
-  /**
-   * Recupera el estado del formulario de inscripción desde la memoria
-   * @param inscriptionId ID de la inscripción
-   * @returns Estado del formulario o null si no existe
-   */
-  getFormState(inscriptionId: string): Record<string, unknown> | null {
-    // Verificar si ya tenemos el estado en cache
-    if (this.formStateCache.has(inscriptionId)) {
-      return this.formStateCache.get(inscriptionId) || null;
-    }
-
-    // Si no está en cache, obtenerlo y guardarlo
-    const state = this.inProgressInscriptions.get(inscriptionId);
-    console.log('[InscriptionService] Recuperando estado del formulario:', { inscriptionId, state });
-
-    // Guardar en cache para futuras llamadas
-    this.formStateCache.set(inscriptionId, state || null);
-
-    return state || null;
+  clearCacheAndRefresh(): Observable<Page<IInscriptionResponse>> {
+    this.loggingService.info('[InscriptionService] Clearing in-memory inscription cache and refreshing.', undefined, 'Inscription');
+    this.inscriptions$.next([]); // Clear the BehaviorSubject
+    this.pendingRequests.clear(); // Clear pending API requests cache
+    return this.refreshInscriptions(); // Then refresh from backend
   }
 
   /**
-   * Limpia el estado del formulario de inscripción
-   * @param inscriptionId ID de la inscripción
+   * Clears the local form state for a specific inscription.
+   * @param inscriptionId The ID of the inscription whose form state to clear.
    */
   clearFormState(inscriptionId: string): void {
-    console.log('[InscriptionService] Limpiando estado del formulario:', inscriptionId);
-    this.inProgressInscriptions.delete(inscriptionId);
-    // También limpiar la cache
-    this.formStateCache.delete(inscriptionId);
+    this.inscriptionStateService.clearInscriptionState(inscriptionId);
+    this.loggingService.debug(`[InscriptionService] Cleared form state for inscription ID: ${inscriptionId}`, undefined, 'Inscription');
+  }
+
+  /**
+   * Updates the local inscription cache.
+   * @param response The inscription status response from the backend.
+   */
+  private updateLocalInscriptionCache(response: any): void {
+    const currentInscriptions = this.inscriptions$.getValue();
+    const existingIndex = currentInscriptions.findIndex(ins => ins.contestId === response.contestId);
+    const newInscription: IInscription = {
+      id: response.inscriptionId || response.id || '',
+      contestId: response.contestId || 0,
+      userId: response.userId || '',
+      state: this.mapStatusToState(response.status),
+      createdAt: response.createdAt ? new Date(response.createdAt) : new Date(),
+      updatedAt: response.updatedAt ? new Date(response.updatedAt) : new Date(),
+      observations: response.observations
+    };
+
+    if (existingIndex > -1) {
+      // Update existing inscription
+      currentInscriptions[existingIndex] = newInscription;
+      this.loggingService.debug(`[InscriptionService] Updated existing local inscription cache for contest ${response.contestId}.`, undefined, 'Inscription');
+    } else {
+      // Add new inscription
+      currentInscriptions.push(newInscription);
+      this.loggingService.debug(`[InscriptionService] Added new inscription to local cache for contest ${response.contestId}.`, undefined, 'Inscription');
+    }
+    this.inscriptions$.next([...currentInscriptions]); // Emit new array to trigger updates
   }
 }

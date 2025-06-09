@@ -250,4 +250,11 @@ export class ProfileDetailDialogComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  /**
+   * Establece el tab activo
+   */
+  setActiveTab(tabIndex: number): void {
+    this.activeTab = tabIndex;
+  }
 }

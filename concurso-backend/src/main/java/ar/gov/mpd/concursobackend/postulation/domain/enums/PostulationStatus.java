@@ -3,10 +3,14 @@ package ar.gov.mpd.concursobackend.postulation.domain.enums;
 /**
  * Postulation status enum
  * Represents all possible states of a postulation throughout its lifecycle
+ * Updated to include documentation-specific states for better UX
  */
 public enum PostulationStatus {
     ACTIVE("Active", "En Proceso"),
-    PENDING("Pending", "Pendiente"),
+    PENDING("Pending", "Pendiente Validación"),
+    COMPLETED_WITH_DOCS("Completed with Docs", "Pendiente Validación"),
+    COMPLETED_PENDING_DOCS("Completed Pending Docs", "Documentación Pendiente"),
+    FROZEN("Frozen", "Congelada"),
     APPROVED("Approved", "Aprobada"),
     REJECTED("Rejected", "Rechazada"),
     CANCELLED("Cancelled", "Cancelada");
@@ -53,7 +57,7 @@ public enum PostulationStatus {
      * Check if this status represents a final state
      */
     public boolean isFinalState() {
-        return this == APPROVED || this == REJECTED || this == CANCELLED;
+        return this == APPROVED || this == REJECTED || this == CANCELLED || this == FROZEN;
     }
 
     /**

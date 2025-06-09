@@ -1,9 +1,8 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnDestroy, ViewChild, TemplateRef } from '@angular/core';
-import { finalize } from 'rxjs/operators';
+import { finalize, catchError, tap } from 'rxjs/operators'; // Import tap and catchError
 import { Concurso, Contest } from '@shared/interfaces/concurso/concurso.interface';
-import { CommonModule } from '@angular/common';
-import { DatePipe } from '@angular/common';
-import { Subject, BehaviorSubject } from 'rxjs';
+import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
+import { Subject, BehaviorSubject, of } from 'rxjs'; // Import of
 import { takeUntil } from 'rxjs/operators';
 import { InscripcionButtonComponent } from '../inscripcion/inscripcion-button/inscripcion-button.component';
 import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
@@ -16,6 +15,7 @@ import { CustomButtonComponent } from '@shared/components/custom-button/custom-b
 
 import { NotificationService } from '@core/services/notification/notification.service';
 import { translateContestStatus } from '@shared/utils/state-translations.util';
+import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
 
 @Component({
   selector: 'app-concurso-detalle',
@@ -43,8 +43,8 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
 
   closing = false;
   inscripcionLoading = false;
-  inscripcionState$ = new BehaviorSubject<InscripcionState>(InscripcionState.NO_INSCRIPTO);
-  InscripcionState = InscripcionState;
+  inscripcionState$ = new BehaviorSubject<InscripcionState>(InscripcionState.ACTIVE); // Default state
+  InscripcionState = InscripcionState; // Expose enum to template
   private destroy$ = new Subject<void>();
 
   // Tab management
@@ -53,30 +53,38 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
 
   constructor(
     private notificationService: NotificationService,
-    private inscriptionService: InscriptionService
+    private inscriptionService: InscriptionService,
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
+    this.loggingService.debug('[ConcursoDetalleComponent] Componente inicializado con concurso:', this.concurso, 'ConcursoDetalle');
     if (this.concurso) {
       this.verificarInscripcion();
-      // Inicializar URLs temporales para los documentos
+      // Initialize temporary URLs for documents if they don't exist
       if (!this.concurso.basesUrl) {
-        this.concurso.basesUrl = '#'; // URL temporal
+        this.concurso.basesUrl = '#'; // Temporary URL
+        this.loggingService.debug('[ConcursoDetalleComponent] basesUrl no definida. Estableciendo URL temporal.', undefined, 'ConcursoDetalle');
       }
       if (!this.concurso.descriptionUrl) {
-        this.concurso.descriptionUrl = '#'; // URL temporal
+        this.concurso.descriptionUrl = '#'; // Temporary URL
+        this.loggingService.debug('[ConcursoDetalleComponent] descriptionUrl no definida. Estableciendo URL temporal.', undefined, 'ConcursoDetalle');
       }
 
-      // Inicializar fechas si no existen
-      if (!this.concurso.dates) {
+      // Initialize dates if they don't exist
+      if (!this.concurso.dates || this.concurso.dates.length === 0) {
         this.concurso.dates = this.getDefaultDates();
+        this.loggingService.debug('[ConcursoDetalleComponent] Fechas no definidas. Estableciendo fechas predeterminadas.', undefined, 'ConcursoDetalle');
       }
 
-      // Inicializar tabs
+      // Initialize tabs
       this.initializeTabs();
     }
   }
 
+  /**
+   * Initializes the tab items with their labels, icons, and corresponding templates.
+   */
   private initializeTabs(): void {
     this.tabItems = [
       {
@@ -98,77 +106,119 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
         template: this.fechasTemplate
       }
     ];
+    this.loggingService.debug('[ConcursoDetalleComponent] Pestañas inicializadas.', undefined, 'ConcursoDetalle');
   }
 
+  /**
+   * Handles the tab change event, updating the active tab index.
+   * @param index The index of the newly selected tab.
+   */
   onTabChange(index: number): void {
     this.activeTabIndex = index;
+    this.loggingService.debug(`[ConcursoDetalleComponent] Pestaña cambiada a índice: ${index}`, undefined, 'ConcursoDetalle');
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.loggingService.debug('[ConcursoDetalleComponent] Componente destruido. Suscripciones limpiadas.', undefined, 'ConcursoDetalle');
   }
 
+  /**
+   * Verifies the inscription status for the current contest.
+   * Updates `inscripcionState$` and `inscripcionLoading`.
+   */
   verificarInscripcion(): void {
     if (!this.concurso) {
-      console.warn('[ConcursoDetalleComponent] No hay concurso para verificar inscripción');
+      this.loggingService.warn('[ConcursoDetalleComponent] No hay concurso para verificar inscripción.', undefined, 'ConcursoDetalle');
       return;
     }
 
     this.inscripcionLoading = true;
-    // Convertir el ID a número
+    // Ensure contest ID is a number
     const concursoId = typeof this.concurso.id === 'string' ? parseInt(this.concurso.id, 10) : this.concurso.id;
+
+    this.loggingService.debug(`[ConcursoDetalleComponent] Verificando estado de inscripción para concurso ID: ${concursoId}`, undefined, 'ConcursoDetalle');
 
     this.inscriptionService.getInscriptionStatus(concursoId)
       .pipe(
         takeUntil(this.destroy$),
+        tap((status: InscripcionState) => {
+          this.loggingService.debug(`[ConcursoDetalleComponent] Estado de inscripción recibido: ${status}`, undefined, 'ConcursoDetalle');
+          this.inscripcionState$.next(status);
+        }),
         finalize(() => {
           this.inscripcionLoading = false;
-          console.log('Finalizada verificación de inscripción');
+          this.loggingService.debug('[ConcursoDetalleComponent] Verificación de inscripción finalizada.', undefined, 'ConcursoDetalle');
+        }),
+        catchError((error: Error) => {
+          console.error('[ConcursoDetalleComponent] Error al verificar inscripción:', error);
+          this.inscripcionState$.next(InscripcionState.ACTIVE); // Fallback to 'ACTIVE' state on error
+          this.notificationService.showError('No se pudo verificar el estado de su inscripción. Por favor, intente nuevamente.');
+          return of(InscripcionState.ACTIVE); // Return an observable of a default state to continue the stream
         })
-      )
-      .subscribe({
-        next: (estado: InscripcionState) => {
-          console.log('Estado de inscripción actualizado:', estado);
-          this.inscripcionState$.next(estado);
-        },
-        error: (error: Error) => {
-          console.error('Error al verificar inscripción:', error);
-          this.inscripcionState$.next(InscripcionState.NO_INSCRIPTO);
-          this.notificationService.showError(
-            'No se pudo verificar el estado de la inscripción'
-          );
-        }
-      });
+      ).subscribe(); // Subscribe to trigger the observable
   }
 
+  /**
+   * Translates the contest status for display.
+   * @param status The raw status string.
+   * @returns The translated status string.
+   */
   getEstadoConcursoLabel(status: string): string {
     return translateContestStatus(status);
   }
 
+  /**
+   * Emits the `cerrarDetalle` event after a short delay for animation.
+   */
   onCerrar(): void {
+    this.loggingService.debug('[ConcursoDetalleComponent] Solicitando cierre del detalle del concurso.', undefined, 'ConcursoDetalle');
     this.closing = true;
     setTimeout(() => {
       this.cerrarDetalle.emit();
-    }, 300);
+      this.loggingService.debug('[ConcursoDetalleComponent] Detalle del concurso cerrado.', undefined, 'ConcursoDetalle');
+    }, 300); // Match this with any CSS animation duration for closing
   }
 
+  /**
+   * Handles the `inscriptionComplete` event from the inscription button.
+   * Re-verifies inscription status and emits to parent.
+   * @param concurso The contest data returned after successful inscription.
+   */
   onInscriptionComplete(concurso: Concurso): void {
-    this.verificarInscripcion();
-    this.inscriptionComplete.emit(concurso);
+    this.loggingService.debug('[ConcursoDetalleComponent] Evento inscriptionComplete recibido. Re-verificando inscripción...', concurso, 'ConcursoDetalle');
+    this.verificarInscripcion(); // Re-check status after inscription
+    this.inscriptionComplete.emit(concurso); // Emit to parent component
   }
 
+  /**
+   * Provides default dates for a contest if none are available.
+   * @returns An array of default ContestDate objects.
+   */
   private getDefaultDates(): ContestDate[] {
     const today = new Date();
     const endDate = new Date();
-    endDate.setDate(today.getDate() + 15);
+    endDate.setDate(today.getDate() + 15); // Example: 15 days from now
+
+    const resultsStartDate = new Date(endDate);
+    resultsStartDate.setDate(endDate.getDate() + 10);
+
+    const resultsEndDate = new Date(resultsStartDate);
+    resultsEndDate.setDate(resultsStartDate.getDate() + 5);
 
     return [
       {
         label: 'Fecha de Inscripción',
-        startDate: today,
-        endDate: endDate,
+        startDate: today, // Use Date objects directly
+        endDate: endDate, // Use Date objects directly
         type: 'inscription'
+      },
+      {
+        label: 'Publicación de Resultados',
+        startDate: resultsStartDate,
+        endDate: resultsEndDate,
+        type: 'results'
       }
     ];
   }

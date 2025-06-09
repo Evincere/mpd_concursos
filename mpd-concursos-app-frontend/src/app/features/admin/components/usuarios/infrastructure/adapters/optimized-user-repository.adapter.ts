@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { LoggingService } from '@core/services/logging/logging.service';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs'; // Import throwError
 import { catchError, finalize, map, tap } from 'rxjs/operators';
 import { ApiService } from '@core/services/api/api.service';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -20,133 +21,184 @@ import {
 } from '../../domain/models/user.model';
 
 /**
- * Adaptador optimizado para el repositorio de usuarios
- * Implementa el puerto UserRepositoryPort
- * Utiliza el servicio ApiService para comunicarse con el backend
- * Implementa caché y optimizaciones para mejorar el rendimiento
+ * Interface for Spring Page response structure
+ */
+interface SpringPageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  last: boolean;
+  first: boolean;
+  empty: boolean;
+}
+
+/**
+ * Optimized adapter for the user repository.
+ * Implements the UserRepositoryPort.
+ * Uses the ApiService to communicate with the backend.
+ * Implements caching and optimizations to improve performance.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
-  // Ruta base de la API
+  // Base API path
   private readonly API_BASE_PATH = 'users';
-  // Ruta para roles
+  // Path for roles
   private readonly ROLES_PATH = 'users/roles';
 
-  // Observable para indicar si hay una operación en curso
+  // Observable to indicate if an operation is in progress
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
-  // Caché de usuarios
+  // User cache
   private usersCache: PaginatedUsersResponse | null = null;
 
   constructor(
-    @Inject(ApiService) private apiService: ApiService
-  ) {}
-
-  // La implementación de invalidateCache se encuentra al final de la clase
+    @Inject(ApiService) private apiService: ApiService,
+    private loggingService: LoggingService // Inject LoggingService
+  ) {
+    this.loggingService.debug('[OptimizedUserRepositoryAdapter] Initializing OptimizedUserRepositoryAdapter.', undefined, 'UserRepository');
+  }
 
   /**
-   * Obtiene usuarios con filtros y paginación
-   * @param filters Filtros a aplicar
+   * Invalidates the user cache.
+   * Clears in-memory cache and attempts to clear browser cache for relevant endpoints.
+   */
+  invalidateCache(): void {
+    this.loggingService.info('[OptimizedUserRepositoryAdapter] Invalidating user cache.', undefined, 'UserRepository');
+    // Clear in-memory user cache
+    this.usersCache = null;
+
+    // Attempt to clear browser cache for relevant user endpoints
+    if (window.caches) {
+      caches.keys().then(cacheNames => {
+        cacheNames.forEach(cacheName => {
+          caches.open(cacheName).then(cache => {
+            cache.keys().then(requests => {
+              requests.forEach(request => {
+                const url = request.url;
+                // List of user-related URL patterns to invalidate
+                const userEndpoints = [
+                  `${environment.apiUrl}/${this.API_BASE_PATH}`,
+                  `${environment.apiUrl}/${this.API_BASE_PATH}/`,
+                  `${environment.apiUrl}/${this.API_BASE_PATH}/user/`, // For /users/user/{userId}
+                  `${environment.apiUrl}/${this.API_BASE_PATH}/roles`,
+                  `${environment.apiUrl}/${this.API_BASE_PATH}/stats`,
+                  `${environment.apiUrl}/${this.API_BASE_PATH}/check-` // For check-username, check-email, check-dni
+                ];
+
+                if (userEndpoints.some(ep => url.startsWith(ep))) {
+                  cache.delete(request).then(deleted => {
+                    if (deleted) {
+                      this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Cache entry deleted for: ${url}`, undefined, 'UserRepository');
+                    }
+                  }).catch(err => {
+                    this.loggingService.warn(`[OptimizedUserRepositoryAdapter] Error deleting cache entry for ${url}:`, err, 'UserRepository');
+                  });
+                }
+              });
+            });
+          });
+        });
+      }).catch(err => {
+        this.loggingService.error('[OptimizedUserRepositoryAdapter] Error accessing browser caches:', err, 'UserRepository');
+      });
+    }
+
+    // Note: ApiService internally invalidates related cache when POST, PUT, PATCH, or DELETE requests are made.
+  }
+
+  /**
+   * Retrieves users with filters and pagination.
+   * @param filters Filters to apply.
    */
   getUsers(filters?: UserFilter): Observable<PaginatedUsersResponse> {
+    this.loggingService.info('[OptimizedUserRepositoryAdapter] Fetching users with filters.', filters, 'UserRepository');
     this.loadingSubject.next(true);
 
-    // Invalidar la caché antes de obtener usuarios
+    // Invalidar la caché antes de obtener usuarios para asegurar datos frescos
     this.invalidateCache();
 
-    // Convertir UserFilter a Record<string, string | number | boolean>
+    // Convert UserFilter to Record<string, string | number | boolean> for API parameters
     const params: Record<string, string | number | boolean> = {};
 
-    // Añadir un parámetro timestamp para evitar caché
+    // Add a timestamp parameter to prevent browser caching issues
     params['_t'] = new Date().getTime();
 
     if (filters) {
-      // Procesar el término de búsqueda
+      // Process search term
       if (filters.search) {
-        // Asegurarse de que el término de búsqueda sea una cadena
         params['query'] = filters.search.toString().trim();
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding search query param: ${params['query']}`, undefined, 'UserRepository');
       }
 
-      // Procesar el filtro de rol
+      // Process role filter
       if (filters.role && filters.role !== '') {
         params['role'] = filters.role;
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding role filter param: ${params['role']}`, undefined, 'UserRepository');
       }
 
-      // Procesar el filtro de estado
+      // Process status filter
       if ('status' in filters && filters.status && filters.status !== '') {
-        // Solo incluir el parámetro status si tiene un valor no vacío
         params['status'] = filters.status;
-        console.log(`[OptimizedUserRepositoryAdapter] Aplicando filtro de estado: ${filters.status}`);
-      } else {
-        // Si el filtro de estado no está presente o está vacío, no incluir el parámetro
-        // para que el backend muestre todos los estados
-        console.log('[OptimizedUserRepositoryAdapter] No se aplica filtro de estado, mostrando todos los estados');
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding status filter param: ${params['status']}`, undefined, 'UserRepository');
       }
 
-      // Procesar fechas
+      // Process date filters
       if (filters.startDate) {
-        // Convertir a formato ISO para asegurar compatibilidad
         if (filters.startDate instanceof Date) {
           params['startDate'] = filters.startDate.toISOString().split('T')[0];
         } else if (typeof filters.startDate === 'string') {
           params['startDate'] = filters.startDate;
         } else {
-          console.warn('startDate tiene un tipo no esperado:', typeof filters.startDate);
+          this.loggingService.warn(`[OptimizedUserRepositoryAdapter] Unexpected type for startDate: ${typeof filters.startDate}`, undefined, 'UserRepository');
         }
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding startDate param: ${params['startDate']}`, undefined, 'UserRepository');
       }
 
       if (filters.endDate) {
-        // Convertir a formato ISO para asegurar compatibilidad
         if (filters.endDate instanceof Date) {
           params['endDate'] = filters.endDate.toISOString().split('T')[0];
         } else if (typeof filters.endDate === 'string') {
           params['endDate'] = filters.endDate;
         } else {
-          console.warn('endDate tiene un tipo no esperado:', typeof filters.endDate);
+          this.loggingService.warn(`[OptimizedUserRepositoryAdapter] Unexpected type for endDate: ${typeof filters.endDate}`, undefined, 'UserRepository');
         }
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding endDate param: ${params['endDate']}`, undefined, 'UserRepository');
       }
 
-      // Procesar paginación
+      // Process pagination
       if (filters.page !== undefined) {
         params['page'] = filters.page;
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding page param: ${params['page']}`, undefined, 'UserRepository');
       }
 
       if (filters.size !== undefined) {
         params['size'] = filters.size;
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding size param: ${params['size']}`, undefined, 'UserRepository');
       }
 
-      // Procesar ordenamiento
+      // Process sorting
       if (filters.sort) {
         params['sort'] = filters.sort;
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding sort param: ${params['sort']}`, undefined, 'UserRepository');
       }
 
       if (filters.direction) {
         params['direction'] = filters.direction;
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding direction param: ${params['direction']}`, undefined, 'UserRepository');
       }
     }
 
-    console.log('Enviando solicitud con parámetros:', params);
-
-    // Tipo para la respuesta del backend (Spring Page)
-    interface SpringPageResponse<T> {
-      content: T[];
-      totalElements: number;
-      totalPages: number;
-      size: number;
-      number: number;
-      last: boolean;
-      first: boolean;
-      empty: boolean;
-    }
-
+    this.loggingService.debug('[OptimizedUserRepositoryAdapter] Sending GET request for users with params:', params, 'UserRepository');
     return this.apiService.get<SpringPageResponse<User>>(this.API_BASE_PATH, {
       params,
       cache: {
-        ttl: 0, // Sin caché
-        forceRefresh: true // Forzar recarga
+        ttl: 0, // No cache for this request
+        forceRefresh: true // Force reload from network
       },
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -156,64 +208,74 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
       maxRetries: 2,
       retryDelay: 1000
     }).pipe(
-      // Mapear la respuesta del backend a la estructura esperada por el frontend
+      // Map backend response to the expected frontend structure
       map(response => {
-        console.log('Respuesta original del backend:', response);
-
-        // Si la respuesta ya tiene la estructura esperada
-        if ('users' in response && 'total' in response) {
-          return response as PaginatedUsersResponse;
-        }
-
-        // Si la respuesta tiene la estructura de Spring Page
-        if ('content' in response && 'totalElements' in response) {
+        this.loggingService.debug('[OptimizedUserRepositoryAdapter] Received response for getUsers:', response, 'UserRepository');
+        // If the response has the Spring Page structure
+        if (response && typeof response === 'object' && 'content' in response && 'totalElements' in response) {
+          const springPageResponse = response as {
+            content: User[];
+            totalElements: number;
+            number: number;
+            size: number;
+            last: boolean;
+            totalPages: number;
+          };
           const paginatedResponse = {
-            users: response.content,
-            total: response.totalElements,
-            page: response.number,
-            size: response.size,
-            last: response.last,
-            totalPages: response.totalPages
+            users: springPageResponse.content,
+            total: springPageResponse.totalElements,
+            page: springPageResponse.number,
+            size: springPageResponse.size,
+            last: springPageResponse.last,
+            totalPages: springPageResponse.totalPages
           } as PaginatedUsersResponse;
 
-          // Guardar en caché
+          // Save to cache
           this.usersCache = paginatedResponse;
-
+          this.loggingService.debug('[OptimizedUserRepositoryAdapter] Users data cached:', this.usersCache, 'UserRepository');
           return paginatedResponse;
         }
 
-        // Si la respuesta es un array (caso poco probable pero posible)
+        // If the response is an array (less common but possible for unfiltered lists)
         if (Array.isArray(response)) {
-          const responseArray = response as unknown[];
-          return {
-            users: responseArray as User[],
-            total: responseArray.length
+          const responseArray = response as User[]; // Cast directly to User[]
+          const paginatedResponse = {
+            users: responseArray,
+            total: responseArray.length,
+            page: 0, // Default to first page
+            size: responseArray.length, // Default size to array length
+            last: true, // If it's a simple array, assume it's the last page
+            totalPages: 1 // Assume one page
           } as PaginatedUsersResponse;
+          this.usersCache = paginatedResponse;
+          this.loggingService.debug('[OptimizedUserRepositoryAdapter] Users data (array response) cached:', this.usersCache, 'UserRepository');
+          return paginatedResponse;
         }
 
-        // Si no podemos determinar la estructura, devolver un objeto vacío
-        console.error('Estructura de respuesta no reconocida:', response);
-        return { users: [], total: 0 };
+        // If we cannot determine the structure, return an empty object and log an error
+        this.loggingService.error('[OptimizedUserRepositoryAdapter] Unrecognized response structure for getUsers:', response, 'UserRepository');
+        return { users: [], total: 0, page: 0, size: 0, last: true, totalPages: 0 };
       }),
       catchError(error => {
-        console.error('Error fetching users:', error);
-        return of({ users: [], total: 0 });
+        this.loggingService.error('[OptimizedUserRepositoryAdapter] Error fetching users:', error, 'UserRepository');
+        return of({ users: [], total: 0, page: 0, size: 0, last: true, totalPages: 0 }); // Return empty data on error
       }),
       finalize(() => this.loadingSubject.next(false))
     );
   }
 
   /**
-   * Obtiene un usuario por su ID
-   * @param userId ID del usuario
+   * Retrieves a user by their ID.
+   * @param userId User ID.
    */
   getUserById(userId: string): Observable<User> {
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Fetching user by ID: ${userId}`, undefined, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.get<User>(`${this.API_BASE_PATH}/${userId}`, {
       cache: {
-        ttl: 0, // Sin caché
-        forceRefresh: true // Forzar recarga
+        ttl: 0, // No cache
+        forceRefresh: true // Force reload
       },
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -221,51 +283,48 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
         'Expires': '0'
       },
       params: {
-        '_t': new Date().getTime() // Añadir timestamp para evitar caché
+        '_t': new Date().getTime() // Add timestamp to prevent caching
       }
     }).pipe(
       catchError(error => {
-        console.error(`Error fetching user with ID ${userId}:`, error);
-        throw error;
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error fetching user with ID ${userId}:`, error, 'UserRepository');
+        return throwError(() => new Error(`Error fetching user with ID ${userId}: ${error.message}`));
       }),
       finalize(() => this.loadingSubject.next(false))
     );
   }
 
   /**
-   * Crea un nuevo usuario
-   * @param user Datos del usuario a crear
+   * Creates a new user.
+   * @param user User data to create.
    */
   createUser(user: CreateUserRequest): Observable<User> {
+    this.loggingService.info('[OptimizedUserRepositoryAdapter] Creating new user.', user, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.post<User>(this.API_BASE_PATH, user).pipe(
       tap(() => {
-        // Invalidar caché manualmente
-        this.invalidateCache();
+        this.loggingService.debug('[OptimizedUserRepositoryAdapter] User created successfully. Invalidating cache.', undefined, 'UserRepository');
+        this.invalidateCache(); // Invalidate cache manually after creation
       }),
       catchError(error => {
-        console.error('Error creating user:', error);
-        throw error;
+        this.loggingService.error('[OptimizedUserRepositoryAdapter] Error creating user:', error, 'UserRepository');
+        return throwError(() => error); // Re-throw the HttpErrorResponse for specific handling in components
       }),
       finalize(() => this.loadingSubject.next(false))
     );
   }
 
   /**
-   * Actualiza un usuario existente
-   * @param user Datos del usuario a actualizar
+   * Updates an existing user.
+   * @param user User data to update.
    */
   updateUser(user: UpdateUserRequest): Observable<User> {
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Updating user with ID: ${user.id}`, user, 'UserRepository');
     this.loadingSubject.next(true);
 
-    console.log(`[OptimizedUserRepositoryAdapter] Actualizando usuario con ID ${user.id}:`, user);
-    console.log(`[OptimizedUserRepositoryAdapter] URL de la petición: ${this.API_BASE_PATH}/${user.id}`);
-
-    // Crear una copia del objeto para evitar modificar el original
-    const userToUpdate = { ...user };
-
-    // Eliminar propiedades undefined o null
+    // Create a mutable copy and clean undefined/null properties
+    const userToUpdate: Partial<UpdateUserRequest> = { ...user };
     Object.keys(userToUpdate).forEach(key => {
       const typedKey = key as keyof UpdateUserRequest;
       if (userToUpdate[typedKey] === undefined || userToUpdate[typedKey] === null) {
@@ -273,310 +332,268 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
       }
     });
 
-    // Asegurarse de que los roles sean un array
+    // Ensure roles is an array
     if (userToUpdate.roles && !Array.isArray(userToUpdate.roles)) {
       userToUpdate.roles = [userToUpdate.roles as unknown as string];
+      this.loggingService.debug('[OptimizedUserRepositoryAdapter] Converted roles to array.', userToUpdate.roles, 'UserRepository');
     }
 
-    console.log(`[OptimizedUserRepositoryAdapter] Objeto de usuario limpio para enviar:`, userToUpdate);
-
-    // Opciones para la solicitud HTTP con reintentos
     const requestOptions = {
-      maxRetries: 2,
-      retryDelay: 1000,
-      shouldRetry: (error: any) => {
-        // Reintentar solo para errores de red o errores 500
-        return error.status === 0 || error.status === 500;
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     };
 
+    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Sending PUT request to: ${this.API_BASE_PATH}/${user.id}`, userToUpdate, 'UserRepository');
     return this.apiService.put<User>(`${this.API_BASE_PATH}/${user.id}`, userToUpdate, requestOptions).pipe(
       tap(response => {
-        console.log(`[OptimizedUserRepositoryAdapter] Usuario actualizado correctamente:`, response);
-        // Invalidar caché manualmente
-        this.invalidateCache();
+        this.loggingService.info(`[OptimizedUserRepositoryAdapter] User with ID ${user.id} updated successfully.`, response, 'UserRepository');
+        this.invalidateCache(); // Invalidate cache after update
       }),
       catchError(error => {
-        console.error(`[OptimizedUserRepositoryAdapter] Error updating user with ID ${user.id}:`, error);
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error updating user with ID ${user.id}:`, error, 'UserRepository');
 
-        // Mostrar más detalles del error
+        // Provide more error details
         if (error.status) {
-          console.error(`[OptimizedUserRepositoryAdapter] Status: ${error.status}, Mensaje: ${error.message}`);
+          console.error(`[OptimizedUserRepositoryAdapter] Status: ${error.status}, Message: ${error.message}`);
         }
 
         if (error.error) {
-          console.error('[OptimizedUserRepositoryAdapter] Error detallado:', error.error);
+          console.error('[OptimizedUserRepositoryAdapter] Detailed error:', error.error);
         }
 
-        // Verificar si es un error de validación
+        // Check for validation errors (e.g., 400 Bad Request)
         if (error.status === 400) {
-          console.warn('[OptimizedUserRepositoryAdapter] Error de validación. Verificando campos problemáticos...');
-
-          // Intentar identificar campos problemáticos
+          this.loggingService.warn('[OptimizedUserRepositoryAdapter] Validation error detected. Checking problematic fields...', undefined, 'UserRepository');
+          // Try to identify problematic fields
           if (error.error && error.error.detail) {
-            console.warn(`[OptimizedUserRepositoryAdapter] Detalle del error: ${error.error.detail}`);
+            console.warn(`[OptimizedUserRepositoryAdapter] Error detail: ${error.error.detail}`);
           }
         }
 
-        // Verificar si es un error de servidor
+        // Check for server errors (e.g., 500 Internal Server Error)
         if (error.status === 500) {
-          console.error('[OptimizedUserRepositoryAdapter] Error interno del servidor. Posible problema con el formato de datos o conflicto en la base de datos.');
+          this.loggingService.error('[OptimizedUserRepositoryAdapter] Internal server error. Possible data format issue or database conflict.', undefined, 'UserRepository');
 
-          // Intentar identificar la causa del error
+          // Try to identify the cause of the error
           if (error.error && error.error.detail) {
-            console.error(`[OptimizedUserRepositoryAdapter] Detalle del error: ${error.error.detail}`);
+            console.error(`[OptimizedUserRepositoryAdapter] Error detail: ${error.error.detail}`);
           }
 
-          // Verificar si el error está relacionado con el CUIT
+          // Check if the error is related to CUIT (specific backend validation)
           const errorString = JSON.stringify(error).toLowerCase();
           if (errorString.includes('cuit')) {
-            console.error('[OptimizedUserRepositoryAdapter] Error relacionado con el CUIT detectado. Posible formato inválido.');
-
-            // Crear un error personalizado con un mensaje más descriptivo
+            this.loggingService.error('[OptimizedUserRepositoryAdapter] CUIT-related error detected. Possible invalid format.', undefined, 'UserRepository');
+            // Create a custom error with a more descriptive message
             error = new HttpErrorResponse({
               error: {
                 message: 'Error al validar el CUIT. Asegúrese de que el CUIT tenga 11 dígitos numéricos y un formato válido, o déjelo en blanco.',
                 detail: 'El CUIT debe tener 11 dígitos numéricos y un formato válido, o dejarse en blanco.'
               },
-              status: 400, // Cambiar a 400 para que se maneje como un error de validación
+              status: 400, // Change to 400 so it's handled as a validation error
               statusText: 'Bad Request',
               url: error.url
             });
           }
         }
 
-        throw error;
+        return throwError(() => error); // Re-throw the original or modified error
       }),
       finalize(() => {
-        console.log(`[OptimizedUserRepositoryAdapter] Finalizada petición de actualización para usuario ${user.id}`);
+        this.loggingService.debug('[OptimizedUserRepositoryAdapter] User update request finalized.', undefined, 'UserRepository');
         this.loadingSubject.next(false);
       })
     );
   }
 
   /**
-   * Cambia el estado de un usuario
-   * @param statusChange Datos del cambio de estado
+   * Changes the status of a user.
+   * @param statusChange Status change data.
    */
   changeUserStatus(statusChange: UserStatusChangeRequest): Observable<User> {
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Changing status for user ${statusChange.userId} to ${statusChange.status}.`, statusChange, 'UserRepository');
     this.loadingSubject.next(true);
 
-    console.log('Cambiando estado de usuario:', statusChange);
-
-    // Construir el cuerpo de la solicitud según lo que espera el backend
-    const requestBody = {
-      status: statusChange.status,
-      reason: statusChange.reason || 'Cambio de estado por administrador'
-    };
-
-    // Usar la URL correcta para el endpoint de cambio de estado
+    // Use the correct URL for the status change endpoint
     const endpoints = [
       `${this.API_BASE_PATH}/${statusChange.userId}/status`,
-      `/api/auth/users/${statusChange.userId}/status`
+      `/api/auth/users/${statusChange.userId}/status` // Example of an alternative or old endpoint
     ];
 
-    // Invalidar la caché antes de hacer la solicitud
+    // Request body for the PATCH call
+    const requestBody = { status: statusChange.status };
+
+    // Invalidate the cache before making the request
     this.invalidateCache();
 
-    // Forzar una limpieza de la caché del navegador para esta URL específica
-    if (window.caches) {
-      endpoints.forEach(endpoint => {
-        // Construir la URL completa manualmente
-        const baseUrl = environment.apiUrl.endsWith('/')
-          ? environment.apiUrl.slice(0, -1)
-          : environment.apiUrl;
-        const normalizedEndpoint = endpoint.startsWith('/')
-          ? endpoint.slice(1)
-          : endpoint;
-        const fullUrl = `${baseUrl}/${normalizedEndpoint}`;
-
-        console.log(`Intentando eliminar caché para URL específica: ${fullUrl}`);
-        window.caches.keys().then(cacheNames => {
-          cacheNames.forEach(cacheName => {
-            window.caches.open(cacheName).then(cache => {
-              cache.delete(fullUrl).then(deleted => {
-                if (deleted) console.log(`Caché eliminada para URL: ${fullUrl}`);
-              });
-            });
-          });
-        });
-      });
-    }
-
-    // Intentar con el primer endpoint
+    // Attempt with the first endpoint
+    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Attempting PATCH to ${endpoints[0]}`, requestBody, 'UserRepository');
     return this.apiService.patch<any>(endpoints[0], requestBody, {
-      // Deshabilitar la caché para esta solicitud
       cache: {
         ttl: 0,
         forceRefresh: true
       }
     }).pipe(
       map(response => {
-        console.log('Respuesta del cambio de estado:', response);
-
-        // Invalidar caché nuevamente después de recibir la respuesta
-        this.invalidateCache();
-
-        // Mapear la respuesta a un objeto User
+        this.loggingService.info(`[OptimizedUserRepositoryAdapter] Status change successful via ${endpoints[0]}.`, response, 'UserRepository');
+        // Map the response to a User object
         const updatedUser = this.mapStatusResponseToUser(response, statusChange.userId);
 
-        // Forzar una actualización del usuario en la caché
+        // Force update of the user in the cache
         if (this.usersCache && this.usersCache.users) {
           const index = this.usersCache.users.findIndex(u => u.id === statusChange.userId);
           if (index !== -1) {
-            // Actualizar el usuario en la caché
+            // Update the user in the cache
             this.usersCache.users[index] = {
               ...this.usersCache.users[index],
               status: statusChange.status
             };
-            console.log(`Usuario con ID ${statusChange.userId} actualizado en caché a estado ${statusChange.status}`);
+            this.loggingService.debug(`[OptimizedUserRepositoryAdapter] User ${statusChange.userId} status updated in cache to ${statusChange.status}.`, undefined, 'UserRepository');
           }
         }
-
-        // Forzar una recarga completa de los usuarios después de un breve retraso
-        // para asegurar que el backend haya procesado completamente el cambio
-        setTimeout(() => {
-          console.log('Forzando recarga completa de usuarios después del cambio de estado');
-          this.getUsers();
-        }, 500);
+        // Small delay to ensure any cache updates propagate before returning
+        setTimeout(() => this.invalidateCache(), 500); // Re-invalidate to ensure all related lists are fresh
 
         return updatedUser;
       }),
       catchError(error => {
-        console.error(`Error changing status for user with ID ${statusChange.userId} with first endpoint:`, error);
+        this.loggingService.warn(`[OptimizedUserRepositoryAdapter] Error changing status for user ${statusChange.userId} with first endpoint (${endpoints[0]}): ${error.status}. Trying fallback.`, error, 'UserRepository');
 
-        // Si el error es 404, intentar con el segundo endpoint
+        // If the error is 404, try with the second endpoint
         if (error.status === 404) {
-          console.log('Intentando con endpoint alternativo...');
+          this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Attempting PATCH to fallback endpoint ${endpoints[1]}`, requestBody, 'UserRepository');
           return this.apiService.patch<any>(endpoints[1], requestBody, {
-            // Deshabilitar la caché para esta solicitud
             cache: {
               ttl: 0,
               forceRefresh: true
             }
           }).pipe(
             map(response => {
-              console.log('Respuesta del endpoint alternativo:', response);
-
-              // Invalidar caché nuevamente después de recibir la respuesta
-              this.invalidateCache();
-
-              // Mapear la respuesta a un objeto User
+              this.loggingService.info(`[OptimizedUserRepositoryAdapter] Status change successful via fallback ${endpoints[1]}.`, response, 'UserRepository');
+              // Map the response to a User object
               const updatedUser = this.mapStatusResponseToUser(response, statusChange.userId);
 
-              // Forzar una actualización del usuario en la caché
+              // Force update of the user in the cache
               if (this.usersCache && this.usersCache.users) {
                 const index = this.usersCache.users.findIndex(u => u.id === statusChange.userId);
                 if (index !== -1) {
-                  // Actualizar el usuario en la caché
                   this.usersCache.users[index] = {
                     ...this.usersCache.users[index],
                     status: statusChange.status
                   };
-                  console.log(`Usuario con ID ${statusChange.userId} actualizado en caché a estado ${statusChange.status}`);
+                  this.loggingService.debug(`[OptimizedUserRepositoryAdapter] User ${statusChange.userId} status updated in cache via fallback to ${statusChange.status}.`, undefined, 'UserRepository');
                 }
               }
-
-              // Forzar una recarga completa de los usuarios después de un breve retraso
-              // para asegurar que el backend haya procesado completamente el cambio
-              setTimeout(() => {
-                console.log('Forzando recarga completa de usuarios después del cambio de estado (endpoint alternativo)');
-                this.getUsers();
-              }, 500);
+              setTimeout(() => this.invalidateCache(), 500); // Re-invalidate
 
               return updatedUser;
             }),
             catchError(altError => {
-              console.error(`Error with alternative endpoint for user ID ${statusChange.userId}:`, altError);
-              throw altError;
+              this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error with alternative endpoint for user ID ${statusChange.userId}:`, altError, 'UserRepository');
+              return throwError(() => altError); // Re-throw the error
             })
           );
         }
 
-        throw error;
+        return throwError(() => error); // Re-throw the original error if not 404
       }),
       finalize(() => this.loadingSubject.next(false))
     );
   }
 
   /**
-   * Mapea la respuesta del cambio de estado a un objeto User
-   * @param response Respuesta del backend
-   * @param userId ID del usuario
+   * Maps the status change response to a User object.
+   * This handles cases where the backend response might be a full User object or just a status update.
+   * @param response Backend response.
+   * @param userId User ID.
+   * @returns A User object with updated status.
    */
   private mapStatusResponseToUser(response: any, userId: string): User {
-    // Si la respuesta ya es un objeto User completo, devolverlo
-    if (response && response.id && response.username && response.email) {
+    this.loggingService.debug('[OptimizedUserRepositoryAdapter] Mapping status response to User object.', response, 'UserRepository');
+    // If the response is already a complete User object, return it
+    if (response && response.id && response.username && response.email && response.status) {
       return response as User;
     }
 
-    // Si la respuesta es un objeto UserStatusResponse, crear un objeto User parcial
-    if (response && response.id && response.status) {
-      // Obtener el usuario de la caché si existe
+    // If the response is a partial object with id and status (assuming it represents a UserStatusResponse)
+    if (response && response.id === userId && response.status) {
+      // Try to get the user from cache to return a more complete object
       const cachedUser = this.getUserFromCache(userId);
       if (cachedUser) {
-        // Actualizar el estado del usuario en caché
-        cachedUser.status = response.status as UserStatus;
+        cachedUser.status = response.status as UserStatus; // Update user status in cache
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Updated cached user ${userId} status to ${response.status}.`, cachedUser, 'UserRepository');
         return cachedUser;
       }
 
-      // Si no hay usuario en caché, crear uno parcial con la información disponible
+      // If no user in cache, create a partial User object with available info
+      this.loggingService.warn(`[OptimizedUserRepositoryAdapter] No cached user found for ${userId}. Creating partial user from status response.`, response, 'UserRepository');
       return {
         id: response.id,
-        username: response.username || 'unknown',
-        email: 'unknown@example.com',
-        firstName: '',
-        lastName: '',
-        dni: '',
-        roles: [],
+        username: response.username || `user_${userId}`, // Default username
+        email: response.email || `user_${userId}@example.com`, // Default email
+        firstName: '', // Placeholder
+        lastName: '', // Placeholder
+        dni: '', // Placeholder
+        roles: [], // Placeholder
         status: response.status as UserStatus,
-        createdAt: new Date(),
-        enabled: true
+        createdAt: new Date(), // Current date as placeholder
+        enabled: true // Assuming enabled by default for status changes
       };
     }
 
-    // Si la respuesta no tiene la estructura esperada, lanzar un error
-    throw new Error('Respuesta inesperada del servidor');
+    // If the response does not have the expected structure, throw an error
+    this.loggingService.error('[OptimizedUserRepositoryAdapter] Unexpected server response structure during status mapping.', response, 'UserRepository');
+    throw new Error('Respuesta inesperada del servidor al cambiar el estado del usuario.');
   }
 
   /**
-   * Obtiene un usuario de la caché
-   * @param userId ID del usuario
+   * Retrieves a user from the cache.
+   * @param userId User ID.
    */
   private getUserFromCache(userId: string): User | null {
-    if (!this.usersCache) {
+    if (!this.usersCache || !this.usersCache.users) {
+      this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Users cache is empty or null when searching for ${userId}.`, undefined, 'UserRepository');
       return null;
     }
 
-    const cachedUsers = this.usersCache.users;
-    return cachedUsers.find((user: User) => user.id === userId) || null;
+    const cachedUser = this.usersCache.users.find((user: User) => user.id === userId);
+    if (cachedUser) {
+      this.loggingService.debug(`[OptimizedUserRepositoryAdapter] User ${userId} found in cache.`, cachedUser, 'UserRepository');
+    } else {
+      this.loggingService.debug(`[OptimizedUserRepositoryAdapter] User ${userId} not found in cache.`, undefined, 'UserRepository');
+    }
+    return cachedUser || null;
   }
 
   /**
-   * Cambia los roles de un usuario
-   * @param roleChange Datos del cambio de roles
+   * Changes the roles of a user.
+   * @param roleChange Role change data.
    */
   changeUserRoles(roleChange: UserRoleChangeRequest): Observable<User> {
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Changing roles for user ${roleChange.userId}.`, roleChange, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.patch<User>(`${this.API_BASE_PATH}/${roleChange.userId}/roles`, roleChange).pipe(
       tap(() => {
-        // Invalidar caché manualmente
-        this.invalidateCache();
+        this.loggingService.debug('[OptimizedUserRepositoryAdapter] User roles changed successfully. Invalidating cache.', undefined, 'UserRepository');
+        this.invalidateCache(); // Invalidate cache manually
       }),
       catchError(error => {
-        console.error(`Error changing roles for user with ID ${roleChange.userId}:`, error);
-        throw error;
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error changing roles for user with ID ${roleChange.userId}:`, error, 'UserRepository');
+        return throwError(() => error);
       }),
       finalize(() => this.loadingSubject.next(false))
     );
   }
 
   /**
-   * Restablece la contraseña de un usuario
-   * @param resetRequest Datos de la solicitud de restablecimiento
+   * Resets a user's password.
+   * @param resetRequest Password reset request data.
    */
   resetPassword(resetRequest: ResetPasswordRequest): Observable<{ success: boolean, message: string }> {
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Resetting password for user ${resetRequest.userId}.`, undefined, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.post<{ success: boolean, message: string }>(
@@ -584,7 +601,7 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
       resetRequest
     ).pipe(
       catchError(error => {
-        console.error(`Error resetting password for user with ID ${resetRequest.userId}:`, error);
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error resetting password for user with ID ${resetRequest.userId}:`, error, 'UserRepository');
         return of({ success: false, message: 'Error al restablecer la contraseña' });
       }),
       finalize(() => this.loadingSubject.next(false))
@@ -592,20 +609,23 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   /**
-   * Elimina un usuario
-   * @param userId ID del usuario a eliminar
+   * Deletes a user.
+   * @param userId ID of the user to delete.
    */
   deleteUser(userId: string): Observable<{ success: boolean, message: string }> {
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Deleting user with ID: ${userId}`, undefined, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.delete<void>(`${this.API_BASE_PATH}/${userId}`).pipe(
-      map(() => ({ success: true, message: 'Usuario eliminado correctamente' })),
+      map(() => {
+        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] User ${userId} deleted successfully.`, undefined, 'UserRepository');
+        return { success: true, message: 'Usuario eliminado correctamente' };
+      }),
       tap(() => {
-        // Invalidar caché manualmente
-        this.invalidateCache();
+        this.invalidateCache(); // Invalidate cache manually after deletion
       }),
       catchError(error => {
-        console.error(`Error deleting user with ID ${userId}:`, error);
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error deleting user with ID ${userId}:`, error, 'UserRepository');
         return of({ success: false, message: 'Error al eliminar el usuario' });
       }),
       finalize(() => this.loadingSubject.next(false))
@@ -613,19 +633,20 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   /**
-   * Obtiene el historial de auditoría de un usuario
-   * @param userId ID del usuario
+   * Retrieves a user's audit logs.
+   * @param userId User ID.
    */
   getUserAuditLogs(userId: string): Observable<UserAuditLog[]> {
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Fetching audit logs for user ID: ${userId}`, undefined, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.get<UserAuditLog[]>(`${this.API_BASE_PATH}/${userId}/audit-logs`, {
       cache: {
-        ttl: 60000 // 1 minuto
+        ttl: 60000 // 1 minute cache
       }
     }).pipe(
       catchError(error => {
-        console.error(`Error fetching audit logs for user with ID ${userId}:`, error);
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error fetching audit logs for user with ID ${userId}:`, error, 'UserRepository');
         return of([]);
       }),
       finalize(() => this.loadingSubject.next(false))
@@ -633,18 +654,19 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   /**
-   * Obtiene los roles disponibles
+   * Retrieves available roles.
    */
   getAvailableRoles(): Observable<{ id: string, name: string, description: string }[]> {
+    this.loggingService.info('[OptimizedUserRepositoryAdapter] Fetching available roles.', undefined, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.get<{ id: string, name: string, description: string }[]>(this.ROLES_PATH, {
       cache: {
-        ttl: 3600000 // 1 hora
+        ttl: 3600000 // 1 hour cache
       }
     }).pipe(
       catchError(error => {
-        console.error('Error fetching available roles:', error);
+        this.loggingService.error('[OptimizedUserRepositoryAdapter] Error fetching available roles:', error, 'UserRepository');
         return of([]);
       }),
       finalize(() => this.loadingSubject.next(false))
@@ -652,18 +674,19 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   /**
-   * Obtiene estadísticas de usuarios
+   * Retrieves user statistics.
    */
   getUserStats(): Observable<UserStats> {
+    this.loggingService.info('[OptimizedUserRepositoryAdapter] Fetching user statistics.', undefined, 'UserRepository');
     this.loadingSubject.next(true);
 
     return this.apiService.get<UserStats>(`${this.API_BASE_PATH}/stats`, {
       cache: {
-        ttl: 300000 // 5 minutos
+        ttl: 300000 // 5 minutes cache
       }
     }).pipe(
       catchError(error => {
-        console.error('Error fetching user stats:', error);
+        this.loggingService.error('[OptimizedUserRepositoryAdapter] Error fetching user stats:', error, 'UserRepository');
         return of({
           totalUsers: 0,
           activeUsers: 0,
@@ -680,78 +703,53 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
   }
 
   /**
-   * Verifica si un nombre de usuario ya existe
-   * @param username Nombre de usuario a verificar
+   * Checks if a username already exists.
+   * @param username Username to check.
    */
   checkUsernameExists(username: string): Observable<boolean> {
+    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Checking if username exists: ${username}`, undefined, 'UserRepository');
     return this.apiService.get<{ exists: boolean }>(`${this.API_BASE_PATH}/check-username`, {
       params: { username }
     }).pipe(
-      map(response => response.exists),
+      map(response => (response as { exists: boolean }).exists),
       catchError(error => {
-        console.error(`Error checking if username ${username} exists:`, error);
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error checking if username ${username} exists:`, error, 'UserRepository');
         return of(false);
       })
     );
   }
 
   /**
-   * Verifica si un correo electrónico ya existe
-   * @param email Correo electrónico a verificar
+   * Checks if an email already exists.
+   * @param email Email to check.
    */
   checkEmailExists(email: string): Observable<boolean> {
+    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Checking if email exists: ${email}`, undefined, 'UserRepository');
     return this.apiService.get<{ exists: boolean }>(`${this.API_BASE_PATH}/check-email`, {
       params: { email }
     }).pipe(
-      map(response => response.exists),
+      map(response => (response as { exists: boolean }).exists),
       catchError(error => {
-        console.error(`Error checking if email ${email} exists:`, error);
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error checking if email ${email} exists:`, error, 'UserRepository');
         return of(false);
       })
     );
   }
 
   /**
-   * Verifica si un DNI ya existe
-   * @param dni DNI a verificar
+   * Checks if a DNI already exists.
+   * @param dni DNI to check.
    */
   checkDniExists(dni: string): Observable<boolean> {
+    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Checking if DNI exists: ${dni}`, undefined, 'UserRepository');
     return this.apiService.get<{ exists: boolean }>(`${this.API_BASE_PATH}/check-dni`, {
       params: { dni }
     }).pipe(
-      map(response => response.exists),
+      map(response => (response as { exists: boolean }).exists),
       catchError(error => {
-        console.error(`Error checking if DNI ${dni} exists:`, error);
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error checking if DNI ${dni} exists:`, error, 'UserRepository');
         return of(false);
       })
     );
-  }
-
-  /**
-   * Invalida la caché del repositorio
-   */
-  invalidateCache(): void {
-    // Limpiar la caché de usuarios
-    this.usersCache = null;
-    console.log('Caché invalidada manualmente');
-
-    // Forzar una limpieza más agresiva de la caché
-    if (window.caches) {
-      // Intentar limpiar la caché del navegador para las solicitudes de API
-      window.caches.keys().then(cacheNames => {
-        cacheNames.forEach(cacheName => {
-          if (cacheName.includes('api') || cacheName.includes('users')) {
-            console.log(`Intentando eliminar caché del navegador: ${cacheName}`);
-            window.caches.delete(cacheName);
-          }
-        });
-      }).catch(err => {
-        console.warn('Error al intentar limpiar la caché del navegador:', err);
-      });
-    }
-
-    // Nota: El ApiService no tiene un método invalidateCache directo,
-    // pero internamente invalida la caché relacionada cuando se hacen
-    // solicitudes POST, PUT, PATCH o DELETE
   }
 }

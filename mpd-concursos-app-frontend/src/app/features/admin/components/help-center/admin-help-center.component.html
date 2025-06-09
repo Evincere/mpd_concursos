@@ -161,21 +161,21 @@
           <button
             class="tab-button"
             [class.active]="activeTab === 0"
-            (click)="activeTab = 0">
+            (click)="setActiveTab(0)">
             <span class="tab-icon">🏠</span>
             <span class="tab-label">Inicio</span>
           </button>
           <button
             class="tab-button"
             [class.active]="activeTab === 1"
-            (click)="activeTab = 1">
+            (click)="setActiveTab(1)">
             <span class="tab-icon">📚</span>
             <span class="tab-label">Base de Conocimientos</span>
           </button>
           <button
             class="tab-button"
             [class.active]="activeTab === 2"
-            (click)="activeTab = 2">
+            (click)="setActiveTab(2)">
             <span class="tab-icon">🎓</span>
             <span class="tab-label">Tutoriales Guiados</span>
           </button>

@@ -8,14 +8,15 @@ import { ReportesAdminComponent } from './components/reportes/reportes-admin.com
 
 @NgModule({
   declarations: [
-    ReportesAdminComponent
+    // ReportesAdminComponent is standalone, so it should not be declared here
   ],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     RouterModule.forChild(ADMIN_ROUTES),
-    AdminLayoutModule
+    AdminLayoutModule,
+    ReportesAdminComponent // Import standalone component instead
   ],
   exports: [
     RouterModule

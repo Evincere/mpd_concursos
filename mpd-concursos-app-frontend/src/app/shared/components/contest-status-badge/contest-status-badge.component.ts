@@ -176,7 +176,7 @@ export class ContestStatusBadgeComponent {
     },
     'PENDING': {
       value: 'PENDING',
-      label: 'Pendiente',
+      label: 'Pendiente Validación',
       color: '#fefce8',
       backgroundColor: 'rgba(245, 158, 11, 0.15)',
       borderColor: 'rgba(245, 158, 11, 0.3)',
@@ -184,20 +184,29 @@ export class ContestStatusBadgeComponent {
     },
     'COMPLETED_WITH_DOCS': {
       value: 'COMPLETED_WITH_DOCS',
-      label: 'Pendiente',
-      color: '#fefce8',
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
-      borderColor: 'rgba(245, 158, 11, 0.3)',
-      icon: 'fas fa-clock'
+      label: 'Pendiente Validación',
+      color: '#f0fdf4',
+      backgroundColor: 'rgba(34, 197, 94, 0.15)',
+      borderColor: 'rgba(34, 197, 94, 0.3)',
+      icon: 'fas fa-check-circle'
     },
     'COMPLETED_PENDING_DOCS': {
       value: 'COMPLETED_PENDING_DOCS',
-      label: 'Documentos Pendientes',
+      label: 'Documentación Pendiente',
       color: '#fef3c7',
-      backgroundColor: 'rgba(217, 119, 6, 0.15)',
-      borderColor: 'rgba(217, 119, 6, 0.3)',
+      backgroundColor: 'rgba(245, 158, 11, 0.15)',
+      borderColor: 'rgba(245, 158, 11, 0.3)',
       icon: 'fas fa-file-upload'
     },
+    'FROZEN': {
+      value: 'FROZEN',
+      label: 'Congelada',
+      color: '#f3f4f6',
+      backgroundColor: 'rgba(107, 114, 128, 0.15)',
+      borderColor: 'rgba(107, 114, 128, 0.3)',
+      icon: 'fas fa-snowflake'
+    },
+
     'APPROVED': {
       value: 'APPROVED',
       label: 'Aprobada',
@@ -222,15 +231,8 @@ export class ContestStatusBadgeComponent {
       borderColor: 'rgba(107, 114, 128, 0.3)',
       icon: 'fas fa-ban'
     },
-    'FROZEN': {
-      value: 'FROZEN',
-      label: 'Congelada',
-      color: '#f9fafb',
-      backgroundColor: 'rgba(75, 85, 99, 0.15)',
-      borderColor: 'rgba(75, 85, 99, 0.3)',
-      icon: 'fas fa-snowflake'
-    },
-    // Estados legacy para compatibilidad
+
+    // Estados legacy para compatibilidad temporal
     'IN_PROCESS': {
       value: 'IN_PROCESS',
       label: 'En Proceso',
@@ -239,14 +241,6 @@ export class ContestStatusBadgeComponent {
       borderColor: 'rgba(59, 130, 246, 0.3)',
       icon: 'fas fa-spinner'
     },
-    'PENDIENTE': {
-      value: 'PENDIENTE',
-      label: 'Pendiente',
-      color: '#fefce8',
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
-      borderColor: 'rgba(245, 158, 11, 0.3)',
-      icon: 'fas fa-clock'
-    },
     'INSCRIPTO': {
       value: 'INSCRIPTO',
       label: 'Aprobada',
@@ -254,14 +248,6 @@ export class ContestStatusBadgeComponent {
       backgroundColor: 'rgba(16, 185, 129, 0.15)',
       borderColor: 'rgba(16, 185, 129, 0.3)',
       icon: 'fas fa-check-circle'
-    },
-    'CONFIRMADA': {
-      value: 'CONFIRMADA',
-      label: 'Pendiente',
-      color: '#fefce8',
-      backgroundColor: 'rgba(245, 158, 11, 0.15)',
-      borderColor: 'rgba(245, 158, 11, 0.3)',
-      icon: 'fas fa-clock'
     }
   };
 
@@ -280,16 +266,7 @@ export class ContestStatusBadgeComponent {
 
   getStatusLabel(): string {
     const config = this.statusConfig;
-    const label = config?.label || this.status || 'Desconocido';
-
-    // Debug logging para identificar el problema
-    console.log(`[ContestStatusBadge] Estado: "${this.status}", Tipo: "${this.statusType}", Config encontrada:`, config, 'Label final:', label);
-
-    if (!config) {
-      console.warn(`[ContestStatusBadge] No se encontró configuración para estado: "${this.status}" con tipo: "${this.statusType}"`);
-    }
-
-    return label;
+    return config?.label || this.status || 'Desconocido';
   }
 
   getStatusClass(): string {

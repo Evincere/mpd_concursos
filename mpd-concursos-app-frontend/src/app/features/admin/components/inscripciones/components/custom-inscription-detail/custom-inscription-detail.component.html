@@ -65,7 +65,7 @@
                  inscriptionDetail.inscription.state === 'APPROVED' ? 'Aprobada' :
                  inscriptionDetail.inscription.state === 'REJECTED' ? 'Rechazada' :
                  inscriptionDetail.inscription.state === 'CANCELLED' ? 'Cancelada' :
-                 inscriptionDetail.inscription.state === 'IN_PROCESS' ? 'En Proceso' : 'Desconocido' }}
+                 inscriptionDetail.inscription.state === 'ACTIVE' ? 'Activa' : 'Desconocido' }}
             </span>
           </div>
           <div class="info-row">
@@ -202,7 +202,7 @@
                   item.newState === 'REJECTED' ? 'fa-times-circle' :
                   item.newState === 'PENDING' ? 'fa-clock' :
                   item.newState === 'CANCELLED' ? 'fa-ban' :
-                  item.newState === 'IN_PROCESS' ? 'fa-spinner' : 'fa-info-circle'
+                  item.newState === 'ACTIVE' ? 'fa-spinner' : 'fa-info-circle'
                 "></i>
               </div>
 
@@ -221,7 +221,7 @@
                          item.previousState === 'APPROVED' ? 'Aprobada' :
                          item.previousState === 'REJECTED' ? 'Rechazada' :
                          item.previousState === 'CANCELLED' ? 'Cancelada' :
-                         item.previousState === 'IN_PROCESS' ? 'En Proceso' : 'Desconocido' }}
+                         item.previousState === 'ACTIVE' ? 'Activa' : 'Desconocido' }}
                     </span>
                     <span class="state-arrow">→</span>
                     <span class="state-to status-badge" [ngClass]="'status-' + item.newState.toLowerCase()">
@@ -229,7 +229,7 @@
                          item.newState === 'APPROVED' ? 'Aprobada' :
                          item.newState === 'REJECTED' ? 'Rechazada' :
                          item.newState === 'CANCELLED' ? 'Cancelada' :
-                         item.newState === 'IN_PROCESS' ? 'En Proceso' : 'Desconocido' }}
+                         item.newState === 'ACTIVE' ? 'Activa' : 'Desconocido' }}
                     </span>
                   </div>
 

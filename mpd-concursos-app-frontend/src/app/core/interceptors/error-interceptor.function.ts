@@ -28,6 +28,17 @@ export const ErrorInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, n
       const preserveOriginalErrorEndpoints = ['/inscriptions/', '/inscripciones/'];
       const shouldPreserveOriginal = preserveOriginalErrorEndpoints.some(endpoint => req.url.includes(endpoint));
 
+      // CRITICAL FIX: Endpoints de documentos que no deben mostrar notificaciones automáticas
+      const documentEndpoints = ['/documentos/queue/', '/documents/queue/'];
+      const isDocumentEndpoint = documentEndpoints.some(endpoint => req.url.includes(endpoint));
+
+      if (isDocumentEndpoint) {
+        // Para endpoints de documentos en cola, no mostrar notificaciones automáticas
+        // El componente maneja los errores específicamente
+        console.warn(`[ErrorInterceptor] Error en endpoint de documentos: ${error.status} - ${req.url}`);
+        return throwError(() => error);
+      }
+
       if (shouldPreserveOriginal) {
         // Para endpoints de inscripciones, mantener el error original y manejar notificaciones selectivamente
         if (error.status >= 500) {
@@ -35,7 +46,7 @@ export const ErrorInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, n
           notificationService.error('Error del servidor en inscripciones. Por favor, intente nuevamente.');
         } else if (error.status === 404) {
           // Log informativo para errores 404 esperados
-          console.log(`ℹ️ [ErrorInterceptor] Recurso no encontrado (esperado): ${req.method} ${req.url}`);
+          // TODO: Implement proper logging - console.error('ℹ️ [ErrorInterceptor] Recurso no encontrado (esperado): ${req.method} ${req.url}', );
         } else if (error.status === 403) {
           // Notificación específica para errores de autorización en inscripciones
           notificationService.error('No tiene permisos para realizar esta acción en inscripciones.');

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -11,7 +12,10 @@ import { Pregunta, PreguntaDTO, TipoPregunta } from '@shared/interfaces/examen/p
 export class PreguntasService {
   private apiUrl = `${environment.apiUrl}/preguntas`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {}
 
 
   /**

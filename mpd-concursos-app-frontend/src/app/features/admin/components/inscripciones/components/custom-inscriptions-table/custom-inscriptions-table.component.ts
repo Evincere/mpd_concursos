@@ -75,7 +75,7 @@ export class CustomInscriptionsTableComponent implements OnInit, OnChanges {
     { value: InscripcionState.APPROVED, label: 'Aprobada' },
     { value: InscripcionState.REJECTED, label: 'Rechazada' },
     { value: InscripcionState.CANCELLED, label: 'Cancelada' },
-    { value: InscripcionState.IN_PROCESS, label: 'En Proceso (Legacy)' }
+    { value: InscripcionState.ACTIVE, label: 'Activa' }  // REFACTORING: Estado estándar
   ];
 
   documentStatusOptions = [
@@ -192,7 +192,7 @@ export class CustomInscriptionsTableComponent implements OnInit, OnChanges {
         return 'status-rejected';
       case InscripcionState.CANCELLED:
         return 'status-cancelled';
-      case InscripcionState.IN_PROCESS:
+      case InscripcionState.ACTIVE:  // REFACTORING: Estado estándar
         return 'status-in-process';
       default:
         return '';

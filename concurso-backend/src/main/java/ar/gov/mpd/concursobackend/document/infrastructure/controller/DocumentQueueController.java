@@ -13,7 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -161,13 +163,45 @@ public class DocumentQueueController {
     @PostMapping("/status-multiple")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<QueuedDocumentStatus>> getMultipleDocumentStatus(@RequestBody List<String> queueIds) {
-        List<QueuedDocumentStatus> statuses = new ArrayList<>();
-        for (String queueId : queueIds) {
-            QueuedDocumentStatus status = documentQueueService.getDocumentStatus(queueId);
-            if (status != null) {
-                statuses.add(status);
+        try {
+            log.debug("Consultando estado de {} documentos en cola", queueIds.size());
+
+            List<QueuedDocumentStatus> statuses = new ArrayList<>();
+            for (String queueId : queueIds) {
+                QueuedDocumentStatus status = documentQueueService.getDocumentStatus(queueId);
+                if (status != null) {
+                    statuses.add(status);
+                    log.debug("Estado encontrado para queueId {}: {}", queueId, status.getStatus());
+                } else {
+                    log.warn("No se encontró estado para queueId: {}", queueId);
+                }
             }
+
+            log.debug("Retornando {} estados de documentos", statuses.size());
+            return ResponseEntity.ok(statuses);
+        } catch (Exception e) {
+            log.error("Error al obtener estados múltiples de documentos", e);
+            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.ok(statuses);
+    }
+
+    /**
+     * Endpoint de prueba para verificar conectividad del sistema de cola
+     */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> getQueueHealth() {
+        try {
+            Map<String, Object> health = new HashMap<>();
+            health.put("status", "UP");
+            health.put("timestamp", System.currentTimeMillis());
+            health.put("queueSize", documentQueueService.getQueueSize());
+            return ResponseEntity.ok(health);
+        } catch (Exception e) {
+            log.error("Error en health check de cola de documentos", e);
+            Map<String, Object> health = new HashMap<>();
+            health.put("status", "DOWN");
+            health.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(health);
+        }
     }
 }

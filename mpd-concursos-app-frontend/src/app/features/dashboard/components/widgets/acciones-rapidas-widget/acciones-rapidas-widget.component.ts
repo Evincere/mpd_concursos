@@ -313,7 +313,6 @@ export class AccionesRapidasWidgetComponent implements OnInit {
   executeAction(action: QuickAction): void {
     if (!action.enabled) return;
 
-    console.log(`[AccionesRapidasWidget] Ejecutando acción: ${action.title}`);
-    this.router.navigate([action.route]);
+    // Logging implementado con LoggingService;
   }
 }

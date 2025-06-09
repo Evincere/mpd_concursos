@@ -16,7 +16,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatBadgeModule } from '@angular/material/badge';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TipoDocumento } from  '../../../../core/models/documento.model';
+import { TipoDocumento, EstadoDocumento } from  '../../../../core/models/documento.model';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { AdminDocumentosService, DocumentoAdminView, EstadisticasDocumentos, DocumentoFiltros } from '../../../../core/services/admin/admin-documentos.service';
 import { DocumentoViewerDialogComponent } from './documento-viewer-dialog/documento-viewer-dialog.component';
@@ -73,7 +73,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
       tipoDocumento: { id: '1', code: 'DNI', nombre: 'DNI', requerido: true },
       nombreArchivo: 'dni_frente.pdf',
       fechaCarga: new Date(2023, 5, 15),
-      estado: 'pendiente',
+      estado: EstadoDocumento.PENDIENTE,
       nombreUsuario: 'Juan Pérez',
       emailUsuario: 'juan.perez@example.com'
     },
@@ -83,7 +83,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
       tipoDocumento: { id: '2', code: 'TITULO', nombre: 'Título Universitario', requerido: true },
       nombreArchivo: 'titulo_abogado.pdf',
       fechaCarga: new Date(2023, 5, 14),
-      estado: 'aprobado',
+      estado: EstadoDocumento.APROBADO,
       validadoPor: 'admin',
       fechaValidacion: new Date(2023, 5, 16),
       nombreUsuario: 'María López',
@@ -95,7 +95,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
       tipoDocumento: { id: '3', code: 'CERT_PENAL', nombre: 'Certificado de Antecedentes Penales', requerido: true },
       nombreArchivo: 'antecedentes_penales.pdf',
       fechaCarga: new Date(2023, 5, 13),
-      estado: 'rechazado',
+      estado: EstadoDocumento.RECHAZADO,
       validadoPor: 'admin',
       fechaValidacion: new Date(2023, 5, 17),
       motivoRechazo: 'Documento ilegible',
@@ -252,7 +252,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
           const documentosActualizados = [...this.dataSource.data];
           documentosActualizados[index] = {
             ...documentosActualizados[index],
-            estado: 'aprobado',
+            estado: EstadoDocumento.APROBADO,
             fechaValidacion: new Date(),
             validadoPor: 'admin' // En una implementación real, usar el ID del admin actual
           };
@@ -271,7 +271,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
         // Para desarrollo, simulamos la aprobación
         const index = this.documentos.findIndex(d => d.id === documento.id);
         if (index !== -1) {
-          this.documentos[index].estado = 'aprobado';
+          this.documentos[index].estado = EstadoDocumento.APROBADO;
           this.documentos[index].fechaValidacion = new Date();
           this.documentos[index].validadoPor = 'admin';
           this.dataSource.data = [...this.documentos];
@@ -300,7 +300,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
             const documentosActualizados = [...this.dataSource.data];
             documentosActualizados[index] = {
               ...documentosActualizados[index],
-              estado: 'rechazado',
+              estado: EstadoDocumento.RECHAZADO,
               fechaValidacion: new Date(),
               validadoPor: 'admin', // En una implementación real, usar el ID del admin actual
               motivoRechazo: motivo
@@ -320,7 +320,7 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
           // Para desarrollo, simulamos el rechazo
           const index = this.documentos.findIndex(d => d.id === documento.id);
           if (index !== -1) {
-            this.documentos[index].estado = 'rechazado';
+            this.documentos[index].estado = EstadoDocumento.RECHAZADO;
             this.documentos[index].fechaValidacion = new Date();
             this.documentos[index].validadoPor = 'admin';
             this.documentos[index].motivoRechazo = motivo;

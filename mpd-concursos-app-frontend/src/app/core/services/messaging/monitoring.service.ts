@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval, combineLatest } from 'rxjs';
 import { map, catchError, tap, switchMap, shareReplay } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Métricas del sistema
@@ -238,7 +239,10 @@ export class MonitoringService {
   private isAutoRefreshEnabled = true;
   private refreshSubscription?: any;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {
     this.startAutoRefresh();
     this.loadInitialData();
   }

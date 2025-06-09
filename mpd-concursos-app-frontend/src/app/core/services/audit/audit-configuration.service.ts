@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
@@ -51,7 +52,10 @@ export class AuditConfigurationService {
   public alertConfig$ = this.alertConfigSubject.asObservable();
   public loading$ = this.loadingSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {
     this.loadConfigurations();
   }
 

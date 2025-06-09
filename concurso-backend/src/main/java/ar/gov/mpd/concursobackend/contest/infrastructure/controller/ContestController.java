@@ -4,7 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import ar.gov.mpd.concursobackend.contest.application.ContestService;
-import ar.gov.mpd.concursobackend.contest.domain.Contest;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStateResponse;
 
@@ -46,6 +46,16 @@ public class ContestController {
     @GetMapping("/buscar")
     public ResponseEntity<List<Contest>> searchContests(@RequestParam String termino) {
         return ResponseEntity.ok(contestService.searchContests(termino));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Contest> getContestById(@PathVariable Long id) {
+        try {
+            Contest contest = contestService.getContestById(id);
+            return ResponseEntity.ok(contest);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     /**

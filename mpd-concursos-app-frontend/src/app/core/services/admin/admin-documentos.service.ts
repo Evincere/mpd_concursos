@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
@@ -52,7 +53,9 @@ export class AdminDocumentosService {
     patch: <T>(url: string, body: Record<string, unknown>) => Observable<T>;
   };
 
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     // En una implementación real, se inyectaría HttpClient
     this.http = {
       get: <T>(_url: string, _options?: { params?: HttpParams }) => of({} as T),

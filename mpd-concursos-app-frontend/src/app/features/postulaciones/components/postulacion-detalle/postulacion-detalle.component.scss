@@ -1,0 +1,303 @@
+// ===== POSTULACION DETALLE COMPONENT STYLES =====
+// Panel deslizante para mostrar detalles de postulación
+
+// ===== VARIABLES CSS LOCALES =====
+// Definir variables CSS locales para este componente ya que está fuera del scope .dashboard-layout
+:host {
+  // Espaciado
+  --user-spacing-xs: 0.25rem;
+  --user-spacing-sm: 0.5rem;
+  --user-spacing-md: 1rem;
+  --user-spacing-lg: 1.5rem;
+  --user-spacing-xl: 2rem;
+
+  // Colores
+  --user-bg-primary: rgba(55, 65, 81, 0.9);
+  --user-bg-secondary: rgba(75, 85, 99, 0.85);
+  --user-text-primary: #f9fafb;
+  --user-text-secondary: #d1d5db;
+  --user-border-color: rgba(255, 255, 255, 0.15);
+  --user-border-radius: 8px;
+  --user-border-radius-lg: 12px;
+  --user-accent-color: #3b82f6;
+
+  // Sombras
+  --user-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --user-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  // Transiciones
+  --user-transition-normal: all 0.2s ease;
+
+  // Backdrop filter
+  --user-backdrop-blur: blur(12px);
+
+  // Layout heights
+  --user-header-height: 90px;
+
+  // Z-index
+  --user-z-modal: 2000;
+}
+
+// ===== OVERLAY =====
+.postulacion-detalle-overlay {
+  position: fixed;
+  top: var(--user-header-height); // Empezar justo debajo del navbar
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: var(--user-z-modal); // Usar z-index correcto para modales
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--user-spacing-md);
+}
+
+// ===== PANEL PRINCIPAL =====
+.postulacion-detalle-panel {
+  width: 100%;
+  max-width: 600px;
+  height: calc(100vh - var(--user-header-height) - 2 * var(--user-spacing-md)); // Ajustar altura considerando el navbar
+  background: var(--user-bg-primary);
+  border: 1px solid var(--user-border-color);
+  border-radius: var(--user-border-radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+// ===== HEADER =====
+.panel-header {
+  padding: var(--user-spacing-lg);
+  border-bottom: 1px solid var(--user-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--user-bg-secondary);
+
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--user-spacing-sm);
+    flex: 1;
+
+    h2 {
+      margin: 0;
+      color: var(--user-text-primary);
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+  }
+}
+
+// ===== CONTENT =====
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--user-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--user-spacing-xl);
+}
+
+// ===== SECCIONES DE INFORMACIÓN =====
+.info-section {
+  h3 {
+    margin: 0 0 var(--user-spacing-md) 0;
+    color: var(--user-text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--user-spacing-sm);
+
+    i {
+      color: var(--user-accent-color);
+    }
+  }
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--user-spacing-md);
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--user-spacing-xs);
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--user-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  span {
+    color: var(--user-text-primary);
+    font-weight: 500;
+  }
+}
+
+// ===== ALERTA =====
+.alert-section {
+  .alert {
+    padding: var(--user-spacing-lg);
+    border-radius: var(--user-border-radius);
+    display: flex;
+    gap: var(--user-spacing-md);
+    align-items: flex-start;
+
+    &.alert-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #92400e;
+
+      i {
+        color: #f59e0b;
+        font-size: 1.25rem;
+        margin-top: 2px;
+      }
+    }
+
+    .alert-content {
+      flex: 1;
+
+      h4 {
+        margin: 0 0 var(--user-spacing-sm) 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0 0 var(--user-spacing-md) 0;
+        line-height: 1.5;
+      }
+
+      .alert-actions {
+        display: flex;
+        gap: var(--user-spacing-sm);
+      }
+    }
+  }
+}
+
+// ===== DOCUMENTOS =====
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--user-spacing-sm);
+}
+
+.document-item {
+  padding: var(--user-spacing-md);
+  background: var(--user-bg-secondary);
+  border: 1px solid var(--user-border-color);
+  border-radius: var(--user-border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .doc-info {
+    display: flex;
+    align-items: center;
+    gap: var(--user-spacing-md);
+    flex: 1;
+
+    i {
+      color: #dc2626;
+      font-size: 1.25rem;
+    }
+
+    .doc-details {
+      display: flex;
+      flex-direction: column;
+      gap: var(--user-spacing-xs);
+
+      .doc-name {
+        font-weight: 500;
+        color: var(--user-text-primary);
+      }
+
+      .doc-type {
+        font-size: 0.875rem;
+        color: var(--user-text-secondary);
+      }
+    }
+  }
+
+  .doc-actions {
+    display: flex;
+    gap: var(--user-spacing-xs);
+  }
+}
+
+.empty-documents {
+  text-align: center;
+  padding: var(--user-spacing-xl);
+  color: var(--user-text-secondary);
+
+  i {
+    margin-bottom: var(--user-spacing-md);
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+// ===== FOOTER =====
+.panel-footer {
+  padding: var(--user-spacing-lg);
+  border-top: 1px solid var(--user-border-color);
+  background: var(--user-bg-secondary);
+  display: flex;
+  gap: var(--user-spacing-md);
+  justify-content: flex-end;
+}
+
+// ===== RESPONSIVE =====
+@media (max-width: 768px) {
+  .postulacion-detalle-overlay {
+    padding: 0;
+    top: var(--user-header-height); // Mantener posición debajo del navbar en móvil
+  }
+
+  .postulacion-detalle-panel {
+    max-width: 100%;
+    height: calc(100vh - var(--user-header-height)); // Ajustar altura para móvil
+    border-radius: 0;
+  }
+
+  .panel-header {
+    .header-content h2 {
+      font-size: 1.1rem;
+    }
+  }
+
+  .panel-footer {
+    flex-direction: column;
+
+    app-custom-button {
+      width: 100%;
+    }
+  }
+}

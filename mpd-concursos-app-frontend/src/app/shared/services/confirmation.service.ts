@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../components/confirmation-dialog/confirmation-dialog.component';
 import { Observable } from 'rxjs';
@@ -8,7 +9,10 @@ import { MatDialog } from '@angular/material/dialog';
   providedIn: 'root'
 })
 export class ConfirmationService {
-  constructor(private dialog: MatDialog) {}
+  constructor(
+    private dialog: MatDialog,
+    private loggingService: LoggingService
+  ) {}
 
 
   /**

@@ -78,9 +78,9 @@ During the inscription process, an inscription goes through several steps:
 - **URL**: `/api/inscripciones/{id}/user-status`
 - **Method**: `PATCH`
 - **Auth Required**: Yes (ROLE_USER)
-- **Description**: Allows a user to update the status of their own inscription (only to PENDING)
+- **Description**: Allows a user to update the status of their own inscription when completing the process
 - **Query Parameters**:
-  - `status`: New status (only "PENDING" is allowed)
+  - `status`: New status ("PENDING", "COMPLETED_WITH_DOCS", or "COMPLETED_PENDING_DOCS")
 - **Response**: 200 OK if successful
 
 #### Cancel Inscription

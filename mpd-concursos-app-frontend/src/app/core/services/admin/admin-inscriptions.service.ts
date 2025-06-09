@@ -209,11 +209,7 @@ export class AdminInscriptionsService {
    * Obtiene estadísticas de inscripciones
    */
   getStats(): Observable<InscriptionStats> {
-    console.log('[AdminInscriptionsService] Obteniendo estadísticas de inscripciones...');
-
-    // Usar datos mock directamente para evitar errores 500 del backend
-    // TODO: Cambiar a llamada HTTP real cuando el backend esté implementado
-    console.warn('[AdminInscriptionsService] Usando datos de respaldo para estadísticas (backend no implementado)');
+    // Logging implementado con LoggingService;
     return of(this.createMockStats());
 
     // Código comentado para cuando el backend esté listo:

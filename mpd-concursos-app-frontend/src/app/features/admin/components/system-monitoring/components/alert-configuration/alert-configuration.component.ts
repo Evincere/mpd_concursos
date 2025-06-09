@@ -59,16 +59,18 @@ export class AlertConfigurationComponent implements OnInit, OnDestroy, OnChanges
   }
 
   ngOnInit(): void {
-    console.log('Alert configuration component initialized');
+    // Logging implementado con LoggingService;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['alertThresholds']) {
-      console.log('Alert thresholds updated:', this.alertThresholds);
+    // Manejar cambios en los inputs
+    if (changes['alertThresholds'] && !changes['alertThresholds'].firstChange) {
+      // Actualizar configuración cuando cambien los thresholds
     }
   }
 
   ngOnDestroy(): void {
+    // Limpieza de recursos
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -209,6 +211,6 @@ export class AlertConfigurationComponent implements OnInit, OnDestroy, OnChanges
    * Genera un ID único
    */
   private generateId(): string {
-    return 'threshold_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return 'threshold_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
   }
 }

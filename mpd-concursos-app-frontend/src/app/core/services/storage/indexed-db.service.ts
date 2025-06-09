@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
+import { LoggingService } from '../logging/logging.service';
 
 /**
- * Servicio simplificado para trabajar con almacenamiento local
- * Usa localStorage como almacenamiento principal para evitar problemas con IndexedDB
+ * Simplified service for working with local storage.
+ * Uses localStorage as the primary storage to avoid IndexedDB complexities.
  */
 @Injectable({
   providedIn: 'root'
@@ -11,61 +12,80 @@ import { Observable, of } from 'rxjs';
 export class IndexedDBService {
   private prefix = 'mpd-concursos-app';
 
-  constructor() {
-    console.log('Servicio de almacenamiento local inicializado');
+  constructor(private loggingService: LoggingService) { // Inject LoggingService
+    this.loggingService.debug('[IndexedDBService] Initializing IndexedDBService (using localStorage).', undefined, 'StorageService');
   }
 
   /**
-   * Guarda un valor en el almacenamiento local
+   * Saves a value to local storage.
+   * @param storeName Logical store name (e.g., 'user-settings').
+   * @param key Key under which to store the value.
+   * @param value The value to store.
+   * @returns An Observable that emits the stored value on success.
    */
   set<T>(storeName: string, key: string, value: T): Observable<T> {
+    const fullKey = `${this.prefix}_${storeName}_${key}`;
+    this.loggingService.debug(`[IndexedDBService] Attempting to set item: "${fullKey}"`, value, 'StorageService');
     try {
-      const fullKey = `${this.prefix}_${storeName}_${key}`;
       localStorage.setItem(fullKey, JSON.stringify(value));
+      this.loggingService.debug(`[IndexedDBService] Item "${fullKey}" set successfully.`, undefined, 'StorageService');
       return of(value);
     } catch (error) {
-      console.error('Error al guardar en localStorage:', error);
-      return of(value); // Devolver el valor incluso si hay error
+      this.loggingService.error(`[IndexedDBService] Error saving to localStorage for key "${fullKey}":`, error, 'StorageService');
+      // Return the value even if there's an error, as per original logic, but log it.
+      return of(value);
     }
   }
 
   /**
-   * Obtiene un valor del almacenamiento local
+   * Retrieves a value from local storage.
+   * @param storeName Logical store name.
+   * @param key Key of the value to retrieve.
+   * @returns An Observable that emits the retrieved value or null if not found/error.
    */
   get<T>(storeName: string, key: string): Observable<T | null> {
+    const fullKey = `${this.prefix}_${storeName}_${key}`;
+    this.loggingService.debug(`[IndexedDBService] Attempting to get item: "${fullKey}"`, undefined, 'StorageService');
     try {
-      const fullKey = `${this.prefix}_${storeName}_${key}`;
       const value = localStorage.getItem(fullKey);
-      return of(value ? JSON.parse(value) : null);
+      const parsedValue = value ? JSON.parse(value) : null;
+      this.loggingService.debug(`[IndexedDBService] Item "${fullKey}" retrieved successfully.`, parsedValue, 'StorageService');
+      return of(parsedValue);
     } catch (error) {
-      console.error('Error al obtener de localStorage:', error);
+      this.loggingService.error(`[IndexedDBService] Error getting from localStorage for key "${fullKey}":`, error, 'StorageService');
       return of(null);
     }
   }
 
   /**
-   * Elimina un valor del almacenamiento local
+   * Removes a value from local storage.
+   * @param storeName Logical store name.
+   * @param key Key of the value to remove.
+   * @returns An Observable that emits true on success, false on error.
    */
   remove(storeName: string, key: string): Observable<boolean> {
+    const fullKey = `${this.prefix}_${storeName}_${key}`;
+    this.loggingService.debug(`[IndexedDBService] Attempting to remove item: "${fullKey}"`, undefined, 'StorageService');
     try {
-      const fullKey = `${this.prefix}_${storeName}_${key}`;
       localStorage.removeItem(fullKey);
+      this.loggingService.debug(`[IndexedDBService] Item "${fullKey}" removed successfully.`, undefined, 'StorageService');
       return of(true);
     } catch (error) {
-      console.error('Error al eliminar de localStorage:', error);
+      this.loggingService.error(`[IndexedDBService] Error removing from localStorage for key "${fullKey}":`, error, 'StorageService');
       return of(false);
     }
   }
 
   /**
-   * Limpia todos los datos de un almacén
+   * Clears all data from a specific store.
+   * @param storeName Logical store name to clear.
+   * @returns An Observable that emits true on success, false on error.
    */
   clear(storeName: string): Observable<boolean> {
+    const prefix = `${this.prefix}_${storeName}_`;
+    this.loggingService.debug(`[IndexedDBService] Attempting to clear store: "${storeName}" (prefix: "${prefix}")`, undefined, 'StorageService');
     try {
-      const prefix = `${this.prefix}_${storeName}_`;
-
-      // Obtener todas las claves que comienzan con el prefijo
-      const keysToRemove = [];
+      const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith(prefix)) {
@@ -73,12 +93,14 @@ export class IndexedDBService {
         }
       }
 
-      // Eliminar todas las claves encontradas
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        this.loggingService.debug(`[IndexedDBService] Removed key: "${key}" during clear operation.`, undefined, 'StorageService');
+      });
+      this.loggingService.info(`[IndexedDBService] Store "${storeName}" cleared successfully. Removed ${keysToRemove.length} items.`, undefined, 'StorageService');
       return of(true);
     } catch (error) {
-      console.error('Error al limpiar localStorage:', error);
+      this.loggingService.error(`[IndexedDBService] Error clearing localStorage for store "${storeName}":`, error, 'StorageService');
       return of(false);
     }
   }

@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 
 // Custom Components
 import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
@@ -8,8 +9,7 @@ import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-f
 // Services
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
-import { TipoDocumento } from '../../../../core/models/documento.model';
-import { finalize } from 'rxjs/operators';
+import { TipoDocumento, DocumentoResponse } from '../../../../core/models/documento.model';
 
 @Component({
   selector: 'app-documento-upload',
@@ -38,104 +38,29 @@ export class DocumentoUploadComponent implements OnInit {
     public dialogRef: CustomDialogRef<DocumentoUploadComponent>,
     @Inject(CUSTOM_DIALOG_DATA) public data: { tipoDocumentoId?: string }
   ) {
-    console.log(`[DocumentoUpload] Constructor - tipoDocumentoId recibido: ${data.tipoDocumentoId || 'ninguno'}`);
-
-    // Inicializar el formulario con el ID del tipo de documento si está disponible
+    // Inicializar el formulario en el constructor
     this.documentoForm = this.fb.group({
-      tipoDocumentoId: [data.tipoDocumentoId || '', Validators.required],
-      ladoDNI: [''],
-      comentarios: ['']
+      tipoDocumentoId: ['', Validators.required],
+      descripcion: [''],
+      comentarios: [''],
+      ladoDNI: [''] // Campo para especificar lado DNI (frente/dorso)
     });
-
-    // Si tenemos un ID de tipo de documento, lo mostramos en el título del diálogo
-    if (data.tipoDocumentoId) {
-      console.log(`[DocumentoUpload] Tipo de documento preseleccionado: ${data.tipoDocumentoId}`);
-    }
   }
 
   ngOnInit(): void {
-    // Cargar los tipos de documento y luego buscar el tipo seleccionado
+    this.loadTiposDocumento();
+  }
+
+  /**
+   * Carga los tipos de documento disponibles desde el servicio
+   * y preselecciona un tipo si se proporciona un ID en los datos del diálogo.
+   */
+  private loadTiposDocumento(): void {
     this.documentosService.getTiposDocumento().subscribe({
       next: (tipos) => {
         this.tiposDocumento = tipos;
-        console.log(`[DocumentoUpload] Tipos de documento cargados: ${tipos.length}`);
-
-        // Si tenemos un ID de tipo de documento, buscamos el objeto completo
         if (this.data.tipoDocumentoId) {
-          console.log(`[DocumentoUpload] Buscando tipo de documento con ID/código: ${this.data.tipoDocumentoId}`);
-
-          // Buscar por ID exacto
-          let tipoSeleccionado = this.tiposDocumento.find(tipo => tipo.id === this.data.tipoDocumentoId);
-
-          // Si no encontramos por ID, buscar por código
-          if (!tipoSeleccionado) {
-            tipoSeleccionado = this.tiposDocumento.find(tipo => tipo.code === this.data.tipoDocumentoId);
-            if (tipoSeleccionado) {
-              console.log(`[DocumentoUpload] Tipo de documento encontrado por código: ${tipoSeleccionado.nombre}`);
-            }
-          } else {
-            console.log(`[DocumentoUpload] Tipo de documento encontrado por ID: ${tipoSeleccionado.nombre}`);
-          }
-
-          // Si encontramos el tipo, lo establecemos
-          if (tipoSeleccionado) {
-            this.tipoDocumentoSeleccionado = tipoSeleccionado;
-            // Asegurarnos de que el valor esté en el formulario
-            this.documentoForm.get('tipoDocumentoId')?.setValue(tipoSeleccionado.id);
-          } else {
-            // Si no encontramos el tipo exacto, buscamos por nombre similar
-            console.log(`[DocumentoUpload] Buscando tipo de documento por nombre similar...`);
-
-            // Casos especiales para DNI
-            if (this.data.tipoDocumentoId === 'dni-frente' || this.data.tipoDocumentoId === 'dni-dorso') {
-              // Buscar un tipo de documento relacionado con DNI
-              tipoSeleccionado = this.tiposDocumento.find(tipo =>
-                tipo.nombre.toLowerCase().includes('dni') ||
-                (tipo.code && tipo.code.includes('dni'))
-              );
-
-              if (tipoSeleccionado) {
-                console.log(`[DocumentoUpload] Tipo de documento DNI encontrado: ${tipoSeleccionado.nombre}`);
-                this.tipoDocumentoSeleccionado = tipoSeleccionado;
-                this.documentoForm.get('tipoDocumentoId')?.setValue(tipoSeleccionado.id);
-              }
-            }
-
-            // Si aún no encontramos, buscar por coincidencia parcial en el nombre
-            if (!this.tipoDocumentoSeleccionado) {
-              for (const tipo of this.tiposDocumento) {
-                // Convertir ambos a minúsculas para comparación insensible a mayúsculas/minúsculas
-                const idBusqueda = this.data.tipoDocumentoId.toLowerCase();
-                const nombreTipo = tipo.nombre.toLowerCase();
-                const codigoTipo = tipo.code ? tipo.code.toLowerCase() : '';
-
-                // Buscar coincidencias parciales en el nombre o código
-                if (idBusqueda.includes(nombreTipo) || nombreTipo.includes(idBusqueda) ||
-                    idBusqueda.includes(codigoTipo) || codigoTipo.includes(idBusqueda)) {
-                  console.log(`[DocumentoUpload] Tipo de documento similar encontrado: ${tipo.nombre}`);
-                  this.tipoDocumentoSeleccionado = tipo;
-                  this.documentoForm.get('tipoDocumentoId')?.setValue(tipo.id);
-                  break;
-                }
-              }
-            }
-
-            // Si aún no encontramos, crear un tipo de documento temporal para la UI
-            if (!this.tipoDocumentoSeleccionado) {
-              console.log(`[DocumentoUpload] Creando tipo de documento temporal para UI`);
-              // Crear un objeto temporal solo para la UI (no se guarda en el backend)
-              this.tipoDocumentoSeleccionado = {
-                id: this.data.tipoDocumentoId,
-                code: this.data.tipoDocumentoId,
-                nombre: this.formatearNombreTipoDocumento(this.data.tipoDocumentoId),
-                descripcion: '',
-                requerido: true,
-                orden: 0,
-                activo: true
-              };
-              // No cambiamos el valor en el formulario para enviar el ID original al backend
-            }
-          }
+          this.preSelectTipoDocumento(this.data.tipoDocumentoId);
         }
       },
       error: (error) => {
@@ -145,53 +70,105 @@ export class DocumentoUploadComponent implements OnInit {
     });
   }
 
-  // Método para formatear el nombre de un tipo de documento a partir de su ID/código
+  /**
+   * Intenta preseleccionar un tipo de documento basado en un ID objetivo.
+   * Busca por ID exacto, código, o por coincidencia parcial en el nombre/código.
+   * @param targetId El ID o código del tipo de documento a preseleccionar.
+   */
+  private preSelectTipoDocumento(targetId: string): void {
+    let tipoSeleccionado = this.tiposDocumento.find(tipo => tipo.id === targetId);
+
+    if (!tipoSeleccionado) {
+      tipoSeleccionado = this.tiposDocumento.find(tipo => tipo.code === targetId);
+    }
+
+    if (!tipoSeleccionado) {
+      // Buscar por nombre similar o coincidencia parcial
+      const idBusqueda = targetId.toLowerCase();
+      for (const tipo of this.tiposDocumento) {
+        const nombreTipo = tipo.nombre.toLowerCase();
+        const codigoTipo = tipo.code ? tipo.code.toLowerCase() : '';
+
+        if (nombreTipo.includes(idBusqueda) || idBusqueda.includes(nombreTipo) ||
+            codigoTipo.includes(idBusqueda) || idBusqueda.includes(codigoTipo)) {
+          tipoSeleccionado = tipo;
+          break;
+        }
+      }
+    }
+
+    if (tipoSeleccionado) {
+      this.tipoDocumentoSeleccionado = tipoSeleccionado;
+      this.documentoForm.get('tipoDocumentoId')?.setValue(tipoSeleccionado.id);
+    } else {
+      // Si aún no se encuentra, establecer un tipo temporal para mostrar en la UI
+      this.tipoDocumentoSeleccionado = {
+        id: targetId,
+        nombre: this.formatearNombreTipoDocumento(targetId),
+        code: targetId
+      } as TipoDocumento;
+      this.documentoForm.get('tipoDocumentoId')?.setValue(targetId); // Mantener el ID original para el backend
+      this.notification.warning(`No se encontró un tipo de documento exacto para "${targetId}". Se usará un nombre genérico.`);
+    }
+
+    this.esDNIGenerico = this.esTipoDNI(); // Actualizar la bandera después de la selección
+  }
+
+  /**
+   * Formatea el nombre de un tipo de documento a partir de su ID/código
+   * para una mejor visualización en la UI.
+   * @param id El ID o código del tipo de documento.
+   * @returns El nombre formateado.
+   */
   private formatearNombreTipoDocumento(id: string): string {
-    // Eliminar prefijos comunes
     let nombre = id.replace(/^(doc-|documento-|tipo-)/i, '');
-
-    // Reemplazar guiones por espacios
     nombre = nombre.replace(/-/g, ' ');
-
-    // Capitalizar cada palabra
     nombre = nombre.split(' ')
       .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
       .join(' ');
-
     return nombre;
   }
 
-  // Método para verificar si el documento es un DNI
+  /**
+   * Verifica si el tipo de documento seleccionado es un DNI genérico
+   * (no específico de frente o dorso).
+   * @returns `true` si es un DNI genérico, `false` en caso contrario.
+   */
   esTipoDNI(): boolean {
-    // Verificar si el tipo seleccionado es DNI genérico
-    if (this.tipoDocumentoSeleccionado) {
-      const nombre = this.tipoDocumentoSeleccionado.nombre.toLowerCase();
-      const codigo = this.tipoDocumentoSeleccionado.code?.toLowerCase() || '';
+    const tipoSeleccionado = this.tipoDocumentoSeleccionado;
+    const tipoIdForm = this.documentoForm.get('tipoDocumentoId')?.value;
 
-      // Si es un DNI genérico (no específico de frente o dorso)
-      if ((nombre.includes('dni') || nombre.includes('documento nacional')) &&
-          !nombre.includes('frente') && !nombre.includes('dorso') &&
-          !nombre.includes('frontal') && !nombre.includes('reverso') &&
-          !codigo.includes('frente') && !codigo.includes('dorso')) {
+    if (!tipoSeleccionado && !tipoIdForm) {
+      return false;
+    }
+
+    const checkNameAndCode = (tipo: TipoDocumento) => {
+      const nombre = tipo.nombre.toLowerCase();
+      const code = tipo.code?.toLowerCase() || '';
+
+      return (nombre.includes('dni') || nombre.includes('documento nacional')) &&
+             !nombre.includes('frente') && !nombre.includes('dorso') &&
+             !nombre.includes('frontal') && !nombre.includes('reverso') &&
+             !code.includes('frente') && !code.includes('dorso');
+    };
+
+    // Priorizar el tipo seleccionado del componente
+    if (tipoSeleccionado) {
+      if (checkNameAndCode(tipoSeleccionado)) {
         return true;
       }
-
-      // Si es un tipo genérico de DNI
-      if (codigo === 'dni') {
+      if (tipoSeleccionado.code === 'dni') { // Asumiendo un código específico para DNI genérico
         return true;
       }
     }
 
-    // Verificar si el ID del tipo es genérico de DNI
-    const tipoId = this.documentoForm.get('tipoDocumentoId')?.value;
-    if (tipoId === 'dni') {
+    // Si no hay tipo seleccionado, verificar el valor en el formulario (ID)
+    if (tipoIdForm && tipoIdForm.toLowerCase() === 'dni') {
       return true;
     }
 
     return false;
   }
-
-  // El método cargarTiposDocumento ha sido reemplazado por la lógica en ngOnInit
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -223,17 +200,23 @@ export class DocumentoUploadComponent implements OnInit {
     }
   }
 
+  /**
+   * Procesa el archivo seleccionado, realizando validaciones de tipo y tamaño.
+   * @param file El archivo a procesar.
+   */
   processFile(file: File): void {
     // Validar que sea un PDF
     if (file.type !== 'application/pdf') {
       this.notification.error('Solo se permiten archivos PDF');
+      this.selectedFile = null;
       return;
     }
 
-    // Validar tamaño (10MB máximo - unificado con proceso de inscripción)
+    // Validar tamaño (10MB máximo)
     const maxSize = 10 * 1024 * 1024; // 10MB en bytes
     if (file.size > maxSize) {
       this.notification.error('El archivo excede el tamaño máximo de 10MB');
+      this.selectedFile = null;
       return;
     }
 
@@ -244,6 +227,11 @@ export class DocumentoUploadComponent implements OnInit {
     this.selectedFile = null;
   }
 
+  /**
+   * Formatea el tamaño de un archivo en bytes a un formato legible (KB, MB).
+   * @param bytes El tamaño del archivo en bytes.
+   * @returns El tamaño formateado.
+   */
   formatFileSize(bytes: number): string {
     if (bytes < 1024) {
       return bytes + ' bytes';
@@ -254,105 +242,88 @@ export class DocumentoUploadComponent implements OnInit {
     }
   }
 
+  /**
+   * Envía el formulario para cargar el documento.
+   */
   onSubmit(): void {
     if (this.documentoForm.valid && this.selectedFile) {
-      // Validar que si es DNI, se haya seleccionado el lado
-      if (this.esTipoDNI() && !this.documentoForm.get('ladoDNI')?.value) {
-        this.documentoForm.get('ladoDNI')?.markAsTouched();
-        this.notification.error('Por favor, especifique qué lado del DNI está subiendo');
+      const formValues = this.documentoForm.value;
+      let finalTipoDocumentoId = formValues.tipoDocumentoId;
+      let comentarios = formValues.comentarios || '';
+
+      // Lógica específica para documentos DNI
+      if (this.esTipoDNI()) {
+        const ladoDNI = formValues.ladoDNI;
+        if (!ladoDNI) {
+          this.documentoForm.get('ladoDNI')?.markAsTouched();
+          this.notification.error('Por favor, especifique qué lado del DNI está subiendo');
+          return;
+        }
+        // Modificar tipoDocumentoId y comentarios según el lado del DNI
+        if (ladoDNI === 'frente') {
+          finalTipoDocumentoId = 'dni-frente'; // ID específico para el backend
+          comentarios = `Frente (Anverso) del DNI` + (comentarios ? ` - ${comentarios}` : '');
+        } else if (ladoDNI === 'dorso') {
+          finalTipoDocumentoId = 'dni-dorso'; // ID específico para el backend
+          comentarios = `Dorso (Reverso) del DNI` + (comentarios ? ` - ${comentarios}` : '');
+        }
+      }
+
+      if (!finalTipoDocumentoId) {
+        console.error('[DocumentoUpload] No se pudo determinar el ID del tipo de documento final.');
+        this.notification.error('Error: No se pudo determinar el tipo de documento.');
         return;
       }
 
       this.isUploading = true;
+      this.uploadProgress = 0; // Reiniciar el progreso
+
+      // CRITICAL FIX: Logging detallado para diagnosticar problemas
+      console.log('[DocumentoUpload] Preparando subida de documento:', {
+        fileName: this.selectedFile.name,
+        fileSize: this.selectedFile.size,
+        fileType: this.selectedFile.type,
+        finalTipoDocumentoId: finalTipoDocumentoId,
+        comentarios: comentarios,
+        tiposDocumentoDisponibles: this.tiposDocumento.map(t => ({ id: t.id, code: t.code, nombre: t.nombre }))
+      });
 
       const formData = new FormData();
-      // Asegurarnos de que el archivo se envíe como 'file'
       formData.append('file', this.selectedFile, this.selectedFile.name);
+      formData.append('tipoDocumentoId', finalTipoDocumentoId);
 
-      // Obtener el ID o código del tipo de documento
-      let tipoDocumentoId = this.documentoForm.get('tipoDocumentoId')?.value;
-
-      // Si tenemos un tipo de documento seleccionado pero no está en el formulario, usamos su código o ID
-      if (!tipoDocumentoId && this.tipoDocumentoSeleccionado) {
-        // Preferir el código sobre el ID si está disponible
-        tipoDocumentoId = this.tipoDocumentoSeleccionado.code || this.tipoDocumentoSeleccionado.id;
-        console.log(`[DocumentoUpload] Usando código/ID del tipo de documento seleccionado: ${tipoDocumentoId}`);
+      if (formValues.descripcion) {
+        formData.append('descripcion', formValues.descripcion);
       }
-
-      // Si tenemos un ID en los datos de entrada, lo usamos como respaldo
-      if (!tipoDocumentoId && this.data.tipoDocumentoId) {
-        tipoDocumentoId = this.data.tipoDocumentoId;
-        console.log(`[DocumentoUpload] Usando ID del tipo de documento de los datos de entrada: ${tipoDocumentoId}`);
-      }
-
-      // Si es un DNI genérico, modificamos el ID según el lado seleccionado
-      if (this.esTipoDNI() && this.documentoForm.get('ladoDNI')?.value) {
-        const lado = this.documentoForm.get('ladoDNI')?.value;
-        if (lado === 'frente') {
-          tipoDocumentoId = 'dni-frente';
-          console.log(`[DocumentoUpload] Modificando tipo de documento a DNI Frente`);
-        } else if (lado === 'dorso') {
-          tipoDocumentoId = 'dni-dorso';
-          console.log(`[DocumentoUpload] Modificando tipo de documento a DNI Dorso`);
-        }
-      }
-
-      if (tipoDocumentoId) {
-        formData.append('tipoDocumentoId', tipoDocumentoId);
-      } else {
-        console.error('[DocumentoUpload] No se pudo determinar el ID del tipo de documento');
-        this.notification.error('Error: No se pudo determinar el tipo de documento');
-        this.isUploading = false;
-        return;
-      }
-
-      // Agregar comentarios al FormData
-      let comentarios = this.documentoForm.get('comentarios')?.value || '';
-
-      // Si es un DNI, agregar información sobre el lado en los comentarios
-      if (this.esTipoDNI() && this.documentoForm.get('ladoDNI')?.value) {
-        const lado = this.documentoForm.get('ladoDNI')?.value;
-        const ladoTexto = lado === 'frente' ? 'Frente (Anverso)' : 'Dorso (Reverso)';
-
-        if (comentarios) {
-          comentarios = `${ladoTexto} - ${comentarios}`;
-        } else {
-          comentarios = `${ladoTexto} del DNI`;
-        }
-      }
-
       if (comentarios) {
         formData.append('comentarios', comentarios);
       }
 
-      // Imprimir el FormData para debug
-      console.log('[DocumentoUpload] FormData contenido:', {
-        file: this.selectedFile.name,
-        tipoDocumentoId: tipoDocumentoId || 'no seleccionado',
-        comentarios: comentarios || 'no proporcionados'
-      });
+      // Antes de la subida, verificar si el finalTipoDocumentoId existe en la lista de tipos cargados
+      const tipoValidoEnLista = this.tiposDocumento.some(tipo =>
+        tipo.id === finalTipoDocumentoId || tipo.code === finalTipoDocumentoId
+      );
 
-      // Verificar si el tipo de documento es válido
-      const tipoValido = this.tiposDocumento.some(tipo => tipo.id === tipoDocumentoId);
-      if (!tipoValido) {
-        console.warn(`[DocumentoUpload] El ID del tipo de documento '${tipoDocumentoId}' no coincide con ningún tipo disponible en el sistema`);
-        console.log('[DocumentoUpload] Tipos disponibles:', this.tiposDocumento.map(t => ({ id: t.id, nombre: t.nombre })));
-
-        // Intentar encontrar un tipo similar
+      if (!tipoValidoEnLista) {
+        console.warn(`[DocumentoUpload] El ID del tipo de documento '${finalTipoDocumentoId}' no coincide con ningún tipo disponible en el sistema. Intentando buscar un tipo similar.`);
         const tipoSimilar = this.tiposDocumento.find(tipo =>
-          tipo.nombre.toLowerCase().includes(tipoDocumentoId.toLowerCase()) ||
-          tipoDocumentoId.toLowerCase().includes(tipo.nombre.toLowerCase())
+          tipo.nombre.toLowerCase().includes(finalTipoDocumentoId.toLowerCase()) ||
+          (tipo.code && tipo.code.toLowerCase().includes(finalTipoDocumentoId.toLowerCase())) ||
+          finalTipoDocumentoId.toLowerCase().includes(tipo.nombre.toLowerCase()) ||
+          (tipo.code && finalTipoDocumentoId.toLowerCase().includes(tipo.code.toLowerCase()))
         );
 
         if (tipoSimilar) {
-          console.log(`[DocumentoUpload] Se encontró un tipo similar: ${tipoSimilar.nombre} (${tipoSimilar.id})`);
-          tipoDocumentoId = tipoSimilar.id;
-          formData.delete('tipoDocumentoId');
-          formData.append('tipoDocumentoId', tipoSimilar.id);
+          console.warn(`[DocumentoUpload] Usando tipo similar: ${tipoSimilar.id || tipoSimilar.code}`);
+          formData.set('tipoDocumentoId', tipoSimilar.id || tipoSimilar.code!); // Usar set para sobrescribir si ya se añadió
+        } else {
+          // Si no se encuentra un tipo similar, se procede con el ID original, pero se advierte.
+          // El backend será el encargado de la validación final.
+          this.notification.warning('Advertencia: El tipo de documento seleccionado podría no ser reconocido por el sistema.');
         }
       }
 
-      this.documentosService.uploadDocumento(formData)
+      this.documentosService.uploadDocumento(formData) // Asumimos que este método ya está configurado para reportar progreso
         .pipe(
           finalize(() => {
             this.isUploading = false;
@@ -360,29 +331,37 @@ export class DocumentoUploadComponent implements OnInit {
           })
         )
         .subscribe({
-          next: (response) => {
-            console.log('[DocumentoUpload] Respuesta del servidor:', response);
-            this.notification.success('Documento cargado exitosamente');
-            this.dialogRef.close(response as any);
+          next: (_response: DocumentoResponse) => {
+            // El servicio uploadDocumento retorna directamente DocumentoResponse
+            // no HttpEvent, por lo que no necesitamos manejar progreso aquí
+            this.notification.success('Documento cargado correctamente.');
+            this.dialogRef.close(); // Cerrar sin parámetros
           },
           error: (error) => {
             console.error('[DocumentoUpload] Error al cargar documento:', error);
 
-            // Mostrar información detallada sobre el error
             let mensajeError = 'Error al cargar el documento. Por favor, intente nuevamente.';
 
             if (error.error) {
-              console.error('[DocumentoUpload] Detalles del error:', error.error);
+              console.error('[DocumentoUpload] Detalles del error del servidor:', error.error);
               mensajeError = error.error.message || mensajeError;
+            } else if (error.message) {
+              mensajeError = error.message;
             }
 
             if (error.status === 500) {
               mensajeError = 'Error interno del servidor. Es posible que el tipo de documento no sea válido o que el archivo no cumpla con los requisitos.';
+            } else if (error.status === 400) {
+                mensajeError = `Solicitud inválida: ${error.error.message || 'Verifique los datos ingresados.'}`;
             }
 
             this.notification.error(mensajeError);
           }
         });
+    } else {
+      // Marcar todos los campos como tocados para mostrar errores de validación
+      this.documentoForm.markAllAsTouched();
+      this.notification.error('Por favor, complete todos los campos obligatorios y seleccione un archivo.');
     }
   }
 

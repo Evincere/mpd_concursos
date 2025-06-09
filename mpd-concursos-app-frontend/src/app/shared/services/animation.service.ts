@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { AnimationFactory, AnimationPlayer, style, animate } from  '@angular/animations';
 import { AnimationBuilder } from '@angular/animations';
 
@@ -12,7 +13,10 @@ import { AnimationBuilder } from '@angular/animations';
 export class AnimationService {
 
   constructor(
+    
     private builder: AnimationBuilder
+  ,
+    private loggingService: LoggingService
   ) {}
 
 

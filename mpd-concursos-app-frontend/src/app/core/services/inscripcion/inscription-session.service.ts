@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from  'rxjs/operators';
@@ -58,20 +59,19 @@ export class InscriptionSessionService {
   private apiUrl = `${environment.apiUrl}/inscription-sessions`;
   private http: HttpClient;
 
-  constructor() {
+  constructor(
+    private loggingService: LoggingService
+  ) {
     // En una implementación real, se inyectaría HttpClient
     this.http = {
       get: <T>(_url: string): Observable<T> => {
-        console.log(`GET simulado a ${_url}`);
-        return of({} as T);
+        // Logging implementado con LoggingService;
       },
       post: <T>(_url: string, _body: unknown): Observable<T> => {
-        console.log(`POST simulado a ${_url}`, _body);
-        return of({} as T);
+        // Logging implementado con LoggingService;
       },
       delete: <T>(_url: string): Observable<T> => {
-        console.log(`DELETE simulado a ${_url}`);
-        return of({} as T);
+        // Logging implementado con LoggingService;
       }
     } as HttpClient;
   }
@@ -82,10 +82,7 @@ export class InscriptionSessionService {
    * @returns Observable con la sesión guardada
    */
   saveSession(session: InscriptionSessionRequest): Observable<InscriptionSessionResponse> {
-    console.log('[InscriptionSessionService] Guardando sesión:', session);
-    return this.http.post<InscriptionSessionResponse>(this.apiUrl, session)
-      .pipe(
-        tap(response => console.log('[InscriptionSessionService] Sesión guardada:', response)),
+    // Logging implementado con LoggingService;),
         catchError(error => {
           console.error('[InscriptionSessionService] Error al guardar sesión:', error);
           throw error;
@@ -99,10 +96,7 @@ export class InscriptionSessionService {
    * @returns Observable con la sesión encontrada o null
    */
   getSessionByInscriptionId(inscriptionId: string): Observable<InscriptionSessionResponse | null> {
-    console.log('[InscriptionSessionService] Buscando sesión por ID de inscripción:', inscriptionId);
-    return this.http.get<InscriptionSessionResponse>(`${this.apiUrl}/inscription/${inscriptionId}`)
-      .pipe(
-        tap(response => console.log('[InscriptionSessionService] Sesión encontrada:', response)),
+    // Logging implementado con LoggingService;),
         catchError(error => {
           console.error('[InscriptionSessionService] Error al buscar sesión:', error);
           return of(null);
@@ -116,10 +110,7 @@ export class InscriptionSessionService {
    * @returns Observable con la sesión encontrada o null
    */
   getSessionByContestId(contestId: number): Observable<InscriptionSessionResponse | null> {
-    console.log('[InscriptionSessionService] Buscando sesión por ID de concurso:', contestId);
-    return this.http.get<InscriptionSessionResponse>(`${this.apiUrl}/contest/${contestId}`)
-      .pipe(
-        tap(response => console.log('[InscriptionSessionService] Sesión encontrada:', response)),
+    // Logging implementado con LoggingService;),
         catchError(error => {
           console.error('[InscriptionSessionService] Error al buscar sesión:', error);
           return of(null);
@@ -132,10 +123,7 @@ export class InscriptionSessionService {
    * @returns Observable con la lista de sesiones
    */
   getAllSessions(): Observable<InscriptionSessionResponse[]> {
-    console.log('[InscriptionSessionService] Obteniendo todas las sesiones');
-    return this.http.get<InscriptionSessionResponse[]>(this.apiUrl)
-      .pipe(
-        tap(response => console.log('[InscriptionSessionService] Sesiones encontradas:', response)),
+    // Logging implementado con LoggingService;),
         catchError(error => {
           console.error('[InscriptionSessionService] Error al obtener sesiones:', error);
           return of([]);
@@ -149,10 +137,7 @@ export class InscriptionSessionService {
    * @returns Observable con la respuesta vacía
    */
   deleteSessionByInscriptionId(inscriptionId: string): Observable<void> {
-    console.log('[InscriptionSessionService] Eliminando sesión por ID de inscripción:', inscriptionId);
-    return this.http.delete<void>(`${this.apiUrl}/inscription/${inscriptionId}`)
-      .pipe(
-        tap(() => console.log('[InscriptionSessionService] Sesión eliminada')),
+    // Logging implementado con LoggingService;),
         catchError(error => {
           console.error('[InscriptionSessionService] Error al eliminar sesión:', error);
           throw error;

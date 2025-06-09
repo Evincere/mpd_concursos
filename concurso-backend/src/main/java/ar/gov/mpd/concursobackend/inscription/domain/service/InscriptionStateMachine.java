@@ -172,12 +172,7 @@ public class InscriptionStateMachine {
             case APPROVED -> "Inscripción aprobada. Estado final.";
             case REJECTED -> "Inscripción rechazada. Estado final.";
             case CANCELLED -> "Inscripción cancelada por el usuario. Estado final.";
-            // Legacy states
-            case NO_INSCRIPTO -> "Estado legacy: Usuario no inscripto.";
-            case IN_PROCESS -> "Estado legacy: Inscripción en proceso (usar ACTIVE).";
-            case PENDIENTE -> "Estado legacy: Pendiente (usar PENDING).";
-            case INSCRIPTO -> "Estado legacy: Inscripto (usar APPROVED).";
-            case CONFIRMADA -> "Estado legacy: Confirmada (usar PENDING).";
+            // REFACTORING: Estados legacy eliminados completamente
         };
     }
 

@@ -94,15 +94,15 @@ export class ConcursoFechasComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe({
-        next: (types) => {
+        next: (types: string[]) => {
           this.dateTypes = types;
-          this.dateTypeOptions = types.map(type => ({
+          this.dateTypeOptions = types.map((type: string) => ({
             label: this.getDateTypeLabel(type),
             value: type
           }));
           this.isLoading = false;
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error final cargando tipos de fechas:', error);
           // Configurar tipos por defecto
           this.dateTypes = ['INSCRIPCION_INICIO', 'INSCRIPCION_FIN', 'EVALUACION_INICIO', 'EVALUACION_FIN', 'ENTREVISTA', 'PUBLICACION_RESULTADOS', 'OTRO'];
@@ -152,7 +152,7 @@ export class ConcursoFechasComponent implements OnInit, OnDestroy {
           this.notificationService.mostrarExito('Fecha importante creada correctamente');
           this.isLoading = false;
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error creando fecha importante:', error);
           this.notificationService.mostrarError('Error al crear la fecha importante');
           this.isLoading = false;
@@ -184,7 +184,7 @@ export class ConcursoFechasComponent implements OnInit, OnDestroy {
           this.notificationService.mostrarExito('Fecha importante actualizada correctamente');
           this.isLoading = false;
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error actualizando fecha importante:', error);
           this.notificationService.mostrarError('Error al actualizar la fecha importante');
           this.isLoading = false;
@@ -224,7 +224,7 @@ export class ConcursoFechasComponent implements OnInit, OnDestroy {
               this.notificationService.mostrarExito('Fecha importante eliminada correctamente');
               this.isLoading = false;
             },
-            error: (error) => {
+            error: (error: any) => {
               console.error('Error eliminando fecha importante:', error);
               this.notificationService.mostrarError('Error al eliminar la fecha importante');
               this.isLoading = false;

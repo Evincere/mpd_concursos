@@ -1,9 +1,9 @@
--- Establece la codificación de caracteres para asegurar la correcta inserción de texto
+-- Establece la codificacion de caracteres para asegurar la correcta insercion de texto
 SET NAMES utf8;
 SET CHARACTER SET utf8;
 
 SET SQL_SAFE_UPDATES = 0;
--- Deshabilitar verificación de foreign keys temporalmente
+-- Deshabilitar verificacion de foreign keys temporalmente
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Limpiar datos existentes
@@ -19,18 +19,18 @@ DELETE FROM roles;
 DELETE FROM user_entity;
 DELETE FROM contests;
 
--- Habilitar verificación de foreign keys
+-- Habilitar verificacion de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Insertar roles de prueba
+-- Insertar roles de prueba usando UUIDs simples
 INSERT INTO roles (id, name) VALUES
-(UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 'ROLE_USER'),
-(UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 'ROLE_ADMIN');
+(0x11111111111111111111111111111111, 'ROLE_USER'),
+(0x22222222222222222222222222222222, 'ROLE_ADMIN');
 
 -- Insertar usuario administrador por defecto
 INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES (
-    UUID_TO_BIN('33333333-3333-3333-3333-333333333333'),
+    0x33333333333333333333333333333333,
     'admin',
     '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW', -- password: admin123
     'admin@mpd.gov.ar',
@@ -44,338 +44,77 @@ VALUES (
 -- Insertar usuarios de prueba con IDs fijos
 INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES
-(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'usuario1',
+(0x44444444444444444444444444444444, 'usuario1',
 '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
 'usuario1@test.com', '20111111', '20201111118', 'Usuario', 'Uno', CURRENT_TIMESTAMP),
-(UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 'usuario2',
+(0x55555555555555555555555555555555, 'usuario2',
 '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
 'usuario2@test.com', '20222222', '20202222229', 'Usuario', 'Dos', CURRENT_TIMESTAMP),
-(UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), 'semper',
+(0x66666666666666666666666666666666, 'semper',
 '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
 'semper@test.com', '26598410', '20265984107', 'Sebastian', 'Pereyra', CURRENT_TIMESTAMP);
-
--- Insertar exámenes de prueba con diferentes estados y fechas
-INSERT INTO examinations (id, title, description, duration_minutes, status, start_time, end_time, type)
-VALUES
--- Examen disponible ahora (PUBLISHED y dentro del rango de fechas)
-(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'),
-'Examen Tecnico-Juridico - Defensor Penal',
-'Evaluacion de conocimientos en derecho penal y procesal penal',
-120, 'PUBLISHED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 2 HOUR),
-'TECHNICAL_LEGAL'),
-
--- Examen programado para futuro (PUBLISHED pero fecha futura)
-(UUID_TO_BIN('88888888-8888-8888-8888-888888888888'),
-'Examen Tecnico-Administrativo - Defensoria Civil',
-'Evaluacion de procedimientos administrativos y gestion',
-90, 'PUBLISHED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY),
-'TECHNICAL_ADMINISTRATIVE'),
-
--- Examen en borrador
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'),
-'Examen Psicologico - En Preparacion',
-'Evaluacion de aptitudes psicologicas para el cargo',
-60, 'DRAFT',
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 10 DAY),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 11 DAY),
-'PSYCHOLOGICAL'),
-
--- Examen disponible para rendir ahora (corta duración)
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
-'Examen Rapido - Conocimientos Generales',
-'Evaluacion rapida de conocimientos generales sobre derecho',
-15, 'PUBLISHED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY),
-'TECHNICAL_LEGAL'),
-
--- Examen disponible para rendir ahora (duración media)
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
-'Examen Tecnico-Juridico - Defensoria Penal Juvenil',
-'Evaluacion de conocimientos en derecho penal juvenil',
-45, 'PUBLISHED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 5 DAY),
-'TECHNICAL_LEGAL'),
-
--- Examen disponible para rendir ahora (larga duración)
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'),
-'Examen Completo - Defensoria Civil y Comercial',
-'Evaluacion exhaustiva de conocimientos en derecho civil y comercial',
-120, 'PUBLISHED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 3 DAY),
-'TECHNICAL_LEGAL'),
-
--- Examen finalizado
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'),
-'Examen Tecnico-Juridico - Defensoria Penal 2024',
-'Evaluacion finalizada de conocimientos penales',
-120, 'COMPLETED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 48 HOUR),
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 46 HOUR),
-'TECHNICAL_LEGAL'),
-
--- Examen anulado
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'),
-'Examen Tecnico-Administrativo - Anulado',
-'Este examen fue anulado por irregularidades',
-90, 'CANCELLED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 HOUR),
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 22 HOUR),
-'TECHNICAL_ADMINISTRATIVE'),
-
--- Examen en curso (algunos usuarios ya lo están rindiendo)
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'),
-'Examen Tecnico-Juridico - Defensoria Civil Actual',
-'Evaluacion de conocimientos en derecho civil y procesal',
-120, 'IN_PROGRESS',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 90 MINUTE),
-'TECHNICAL_LEGAL'),
-
--- Otro examen disponible ahora (para tener más opciones)
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'),
-'Examen Tecnico-Administrativo - Secretaria',
-'Evaluacion de procedimientos y gestion administrativa',
-60, 'PUBLISHED',
-DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 15 MINUTE),
-DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 45 MINUTE),
-'TECHNICAL_ADMINISTRATIVE');
 
 -- Insertar concursos
 INSERT INTO contests (id, title, category, class_, functions, department, position, status, start_date, end_date, bases_url, description_url)
 VALUES
-(1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia técnica y representación legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_1_bases.pdf', '/api/files/contest-bases/contest_1_description.pdf'),
-(2, 'Concurso Defensor/a Civil', 'JURIDICO', 'B', 'Asistencia técnica y representación legal en causas civiles', 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_2_bases.pdf', '/api/files/contest-bases/contest_2_description.pdf'),
-(3, 'Concurso Asesor/a Legal', 'JURIDICO', 'C', 'Asesoramiento legal y técnico en materia administrativa', 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_3_bases.pdf', '/api/files/contest-bases/contest_3_description.pdf'),
-(4, 'Concurso Analista Programador/a', 'TECNICO', 'D', 'Desarrollo y mantenimiento de sistemas informáticos', 'DESARROLLO TECNOLOGICO', 'Analista Programador/a', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_4_bases.pdf', '/api/files/contest-bases/contest_4_description.pdf'),
-(5, 'Concurso Defensor/a de Familia', 'JURIDICO', 'A', 'Asistencia técnica y representación legal en causas de familia', 'CODEFENSORIAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_5_bases.pdf', '/api/files/contest-bases/contest_5_description.pdf');
-
--- Insertar documentos de concursos
--- NOTA: Comentado temporalmente para evitar errores de tabla no existente
--- Se agregará después de que la aplicación arranque correctamente
--- INSERT INTO contest_documents (id, contest_id, name, description, file_url, file_name, file_type, file_size, required, public, uploaded_by, uploaded_at)
--- VALUES
--- (UNHEX(REPLACE(UUID(), '-', '')), 1, 'Bases del Concurso', 'Bases oficiales del concurso para Defensor/a Penal', '/api/files/contest-bases/contest_1_bases.pdf', 'contest_1_bases.pdf', 'application/pdf', 1024000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 1, 'Descripción del Cargo', 'Descripción detallada del cargo y funciones', '/api/files/contest-bases/contest_1_description.pdf', 'contest_1_description.pdf', 'application/pdf', 512000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 2, 'Bases del Concurso', 'Bases oficiales del concurso para Defensor/a Civil', '/api/files/contest-bases/contest_2_bases.pdf', 'contest_2_bases.pdf', 'application/pdf', 1024000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 2, 'Descripción del Cargo', 'Descripción detallada del cargo y funciones', '/api/files/contest-bases/contest_2_description.pdf', 'contest_2_description.pdf', 'application/pdf', 512000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 3, 'Bases del Concurso', 'Bases oficiales del concurso para Asesor/a Legal', '/api/files/contest-bases/contest_3_bases.pdf', 'contest_3_bases.pdf', 'application/pdf', 1024000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 3, 'Descripción del Cargo', 'Descripción detallada del cargo y funciones', '/api/files/contest-bases/contest_3_description.pdf', 'contest_3_description.pdf', 'application/pdf', 512000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 4, 'Bases del Concurso', 'Bases oficiales del concurso para Analista Programador/a', '/api/files/contest-bases/contest_4_bases.pdf', 'contest_4_bases.pdf', 'application/pdf', 1024000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 4, 'Descripción del Cargo', 'Descripción detallada del cargo y funciones', '/api/files/contest-bases/contest_4_description.pdf', 'contest_4_description.pdf', 'application/pdf', 512000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 5, 'Bases del Concurso', 'Bases oficiales del concurso para Defensor/a de Familia', '/api/files/contest-bases/contest_5_bases.pdf', 'contest_5_bases.pdf', 'application/pdf', 1024000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW()),
--- (UNHEX(REPLACE(UUID(), '-', '')), 5, 'Descripción del Cargo', 'Descripción detallada del cargo y funciones', '/api/files/contest-bases/contest_5_description.pdf', 'contest_5_description.pdf', 'application/pdf', 512000, TRUE, TRUE, UNHEX(REPLACE('550e8400-e29b-41d4-a716-446655440000', '-', '')), NOW());
+(1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_1_bases.pdf', '/api/files/contest-bases/contest_1_description.pdf'),
+(2, 'Concurso Defensor/a Civil', 'JURIDICO', 'B', 'Asistencia tecnica y representacion legal en causas civiles', 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_2_bases.pdf', '/api/files/contest-bases/contest_2_description.pdf'),
+(3, 'Concurso Asesor/a Legal', 'JURIDICO', 'C', 'Asesoramiento legal y tecnico en materia administrativa', 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_3_bases.pdf', '/api/files/contest-bases/contest_3_description.pdf'),
+(4, 'Concurso Analista Programador/a', 'TECNICO', 'D', 'Desarrollo y mantenimiento de sistemas informaticos', 'DESARROLLO TECNOLOGICO', 'Analista Programador/a', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_4_bases.pdf', '/api/files/contest-bases/contest_4_description.pdf'),
+(5, 'Concurso Defensor/a de Familia', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas de familia', 'CODEFENSORIAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_5_bases.pdf', '/api/files/contest-bases/contest_5_description.pdf');
 
 -- Insertar fechas para los concursos
 INSERT INTO contest_dates (contest_id, label, type, start_date, end_date)
 VALUES
-(1, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(1, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
 (1, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (1, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
-(2, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(2, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
 (2, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (2, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
-(3, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(3, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
 (3, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (3, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
-(4, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
-(4, 'Examen Práctico', 'PRACTICAL_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
-(4, 'Entrevista Técnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
-(5, 'Inscripción', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(4, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(4, 'Examen Practico', 'PRACTICAL_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(4, 'Entrevista Tecnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
+(5, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
 (5, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (5, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
 
--- Insertar requisitos para los concursos
-INSERT INTO contest_requirements (contest_id, description, category, required, priority, document_type)
-VALUES
--- Requisitos para Concurso Defensor/a Penal (ID: 1)
-(1, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
-(1, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
-(1, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
-(1, 'Experiencia mínima de 3 años en litigación penal', 'EXPERIENCIA', TRUE, 4, NULL),
-(1, 'Conocimientos en derecho procesal penal y criminología', 'CONOCIMIENTOS', TRUE, 5, NULL),
-(1, 'Certificado de capacitación en Ley Micaela', 'CAPACITACION', FALSE, 6, 'certificado-ley-micaela'),
-
--- Requisitos para Concurso Defensor/a Civil (ID: 2)
-(2, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
-(2, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
-(2, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
-(2, 'Experiencia mínima de 2 años en litigación civil', 'EXPERIENCIA', TRUE, 4, NULL),
-(2, 'Conocimientos en derecho procesal civil y comercial', 'CONOCIMIENTOS', TRUE, 5, NULL),
-
--- Requisitos para Concurso Asesor/a Legal (ID: 3)
-(3, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
-(3, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
-(3, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
-(3, 'Experiencia en asesoramiento legal y técnico', 'EXPERIENCIA', TRUE, 4, NULL),
-(3, 'Conocimientos en derecho administrativo y procedimientos', 'CONOCIMIENTOS', TRUE, 5, NULL),
-
--- Requisitos para Concurso Analista Programador/a (ID: 4)
-(4, 'Título universitario en Sistemas, Informática o carreras afines', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
-(4, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 2, 'antecedentes-penales'),
-(4, 'Experiencia mínima de 2 años en desarrollo de software', 'EXPERIENCIA', TRUE, 3, NULL),
-(4, 'Conocimientos en lenguajes de programación modernos', 'CONOCIMIENTOS', TRUE, 4, NULL),
-(4, 'Conocimientos en bases de datos y metodologías ágiles', 'CONOCIMIENTOS', TRUE, 5, NULL),
-(4, 'Certificaciones técnicas en tecnologías específicas', 'CERTIFICACIONES', FALSE, 6, NULL),
-
--- Requisitos para Concurso Defensor/a de Familia (ID: 5)
-(5, 'Título de Abogado/a expedido por universidad nacional o privada reconocida', 'EDUCACION', TRUE, 1, 'titulo-universitario'),
-(5, 'Matrícula profesional vigente en el Colegio de Abogados correspondiente', 'PROFESIONAL', TRUE, 2, 'certificado-profesional'),
-(5, 'Certificado de antecedentes penales sin condenas', 'ANTECEDENTES', TRUE, 3, 'antecedentes-penales'),
-(5, 'Especialización o experiencia en derecho de familia', 'EXPERIENCIA', TRUE, 4, NULL),
-(5, 'Conocimientos en derechos del niño y violencia familiar', 'CONOCIMIENTOS', TRUE, 5, NULL),
-(5, 'Certificado de capacitación en perspectiva de género', 'CAPACITACION', TRUE, 6, NULL);
-
--- Insertar preguntas para el primer examen
-SET @examen1_id = UUID_TO_BIN('77777777-7777-7777-7777-777777777777');
-
-INSERT INTO questions (id, examination_id, text, type, score, order_number)
-VALUES
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), @examen1_id, '¿Cual es el principio fundamental del debido proceso?', 'SINGLE_CHOICE', 20, 1),
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), @examen1_id, 'Seleccione las garantias constitucionales aplicables al proceso penal', 'MULTIPLE_CHOICE', 30, 2),
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), @examen1_id, 'La prision preventiva es una medida cautelar', 'TRUE_FALSE', 10, 3),
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), @examen1_id, 'Desarrolle los fundamentos de la teoria del delito', 'TEXT', 15, 4);
-
 -- Asignar roles a usuarios
 INSERT INTO user_roles (user_id, role_id) VALUES
-(UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), UUID_TO_BIN('11111111-1111-1111-1111-111111111111')), -- admin ROLE_USER
-(UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), UUID_TO_BIN('22222222-2222-2222-2222-222222222222')), -- admin ROLE_ADMIN
-(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), UUID_TO_BIN('11111111-1111-1111-1111-111111111111')), -- usuario1 ROLE_USER
-(UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), UUID_TO_BIN('11111111-1111-1111-1111-111111111111')), -- usuario2 ROLE_USER
-(UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), UUID_TO_BIN('11111111-1111-1111-1111-111111111111')), -- semper ROLE_USER
-(UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), UUID_TO_BIN('22222222-2222-2222-2222-222222222222')); -- semper ROLE_ADMIN
-
--- Insertar requisitos para el examen psicologico
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Titulo de Psicologo/a'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Matricula profesional vigente'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'No tener antecedentes disciplinarios');
-
--- Insertar reglas para el examen psicologico
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Mantener la confidencialidad del proceso'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Seguir los protocolos de evaluacion establecidos'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Documentar todas las observaciones');
-
--- Insertar materiales permitidos para el examen psicologico
-INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Manuales de evaluacion psicologica'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Protocolos de pruebas estandarizadas'),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'Formularios de registro');
-
--- Insertar requisitos para el examen tecnico-juridico finalizado
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Titulo de Abogado/a con especializacion en derecho penal'),
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Experiencia minima de 5 anos en litigacion penal'),
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Conocimientos en derecho procesal penal');
-
--- Insertar reglas para el examen tecnico-juridico finalizado
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Responder todas las preguntas'),
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Citar normativa aplicable'),
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Fundamentar cada respuesta');
-
--- Insertar materiales permitidos para el examen tecnico-juridico finalizado
-INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Codigos actualizados'),
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Jurisprudencia relevante'),
-(UUID_TO_BIN('11111111-2222-3333-4444-555555555555'), 'Doctrina seleccionada');
-
--- Insertar requisitos para el examen tecnico-administrativo anulado
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Titulo en Administracion o afines'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Experiencia en gestion publica'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Conocimientos en procedimientos administrativos');
-
--- Insertar reglas para el examen tecnico-administrativo anulado
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Seguir el formato establecido'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Respetar los tiempos asignados'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Mantener el orden en las respuestas');
-
--- Insertar materiales permitidos para el examen tecnico-administrativo anulado
-INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Manual de procedimientos'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Normativa administrativa'),
-(UUID_TO_BIN('22222222-3333-4444-5555-666666666666'), 'Calculadora basica');
-
--- Insertar requisitos para el examen tecnico-juridico en curso
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Titulo de Abogado/a con orientacion en derecho civil'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Experiencia en litigacion civil'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Conocimientos en derecho procesal civil');
-
--- Insertar reglas para el examen tecnico-juridico en curso
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Mantener la camara encendida'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'No consultar material no autorizado'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Fundamentar respuestas con doctrina y jurisprudencia');
-
--- Insertar materiales permitidos para el examen tecnico-juridico en curso
-INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Codigo Civil y Comercial'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Codigo Procesal Civil'),
-(UUID_TO_BIN('dddddddd-dddd-dddd-dddd-dddddddddddd'), 'Constitucion Nacional');
-
--- Insertar requisitos para el examen tecnico-administrativo disponible
-INSERT INTO examination_requirements (examination_id, requirement) VALUES
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Titulo universitario en areas administrativas'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Experiencia en gestion documental'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Manejo de sistemas informaticos');
-
--- Insertar reglas para el examen tecnico-administrativo disponible
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Completar todas las secciones'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Seguir el orden establecido'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Respetar los tiempos maximos');
-
--- Insertar materiales permitidos para el examen tecnico-administrativo disponible
-INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Manual de procedimientos administrativos'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Guias de gestion documental'),
-(UUID_TO_BIN('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'), 'Normativa interna');
-
--- Reglas del examen completo
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Se debe mantener la camara encendida');
-
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'No se permite el uso de dispositivos electronicos adicionales');
-
-INSERT INTO examination_rules (examination_id, rule) VALUES
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Se permite un descanso de 10 minutos a la mitad del examen');
-
-INSERT INTO examination_allowed_materials (examination_id, material) VALUES
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Codigo Civil y Comercial'),
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Leyes complementarias de derecho civil'),
-(UUID_TO_BIN('cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Jurisprudencia relevante (sin anotaciones)');
+(0x33333333333333333333333333333333, 0x11111111111111111111111111111111), -- admin ROLE_USER
+(0x33333333333333333333333333333333, 0x22222222222222222222222222222222), -- admin ROLE_ADMIN
+(0x44444444444444444444444444444444, 0x11111111111111111111111111111111), -- usuario1 ROLE_USER
+(0x55555555555555555555555555555555, 0x11111111111111111111111111111111), -- usuario2 ROLE_USER
+(0x66666666666666666666666666666666, 0x11111111111111111111111111111111), -- semper ROLE_USER
+(0x66666666666666666666666666666666, 0x22222222222222222222222222222222); -- semper ROLE_ADMIN
 
 -- Datos iniciales para tipos de documento
 -- Primero, insertar el documento de identidad como documento padre
 INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
+(0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
 
 -- Insertar los tipos de documentos para DNI frente y dorso
 INSERT IGNORE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES
-(UUID_TO_BIN('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 'dni-frente', 'DNI (Frente)', 'Documento Nacional de Identidad - Lado frontal', UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), TRUE, 1, TRUE),
-(UUID_TO_BIN('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'), 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', UUID_TO_BIN('11111111-1111-1111-1111-111111111111'), TRUE, 2, TRUE);
+(0xAAAAAAAAAAAAAAAAAAAAAAAAAAAA, 'dni-frente', 'DNI (Frente)', 'Documento Nacional de Identidad - Lado frontal', 0x11111111111111111111111111111111, TRUE, 1, TRUE),
+(0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB, 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', 0x11111111111111111111111111111111, TRUE, 2, TRUE);
 
 -- Insertar otros tipos de documentos
 INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(UUID_TO_BIN('22222222-2222-2222-2222-222222222222'), 'titulo-universitario', 'Título Universitario', 'Título de grado universitario', TRUE, 3, TRUE),
-(UUID_TO_BIN('33333333-3333-3333-3333-333333333333'), 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 4, TRUE),
-(UUID_TO_BIN('44444444-4444-4444-4444-444444444444'), 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', FALSE, 5, TRUE);
+(0x22222222222222222222222222222222, 'titulo-universitario', 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 3, TRUE),
+(0x33333333333333333333333333333333, 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 4, TRUE),
+(0x44444444444444444444444444444444, 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', FALSE, 5, TRUE);
 
 -- Insertar nuevos tipos de documentos requeridos
 INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(UUID_TO_BIN('55555555-5555-5555-5555-555555555555'), 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', TRUE, 6, TRUE),
-(UUID_TO_BIN('66666666-6666-6666-6666-666666666666'), 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', TRUE, 7, TRUE),
-(UUID_TO_BIN('77777777-7777-7777-7777-777777777777'), 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', TRUE, 8, TRUE),
-(UUID_TO_BIN('88888888-8888-8888-8888-888888888888'), 'certificado-sanciones', 'Certificado de Sanciones Disciplinarias', 'Certificado que acredita la ausencia de sanciones disciplinarias', TRUE, 9, TRUE),
-(UUID_TO_BIN('99999999-9999-9999-9999-999999999999'), 'certificado-ley-micaela', 'Certificado Ley Micaela', 'Certificado de capacitación en Ley Micaela', FALSE, 10, TRUE);
+(0x55555555555555555555555555555555, 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', TRUE, 6, TRUE),
+(0x66666666666666666666666666666666, 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', TRUE, 7, TRUE),
+(0x77777777777777777777777777777777, 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', TRUE, 8, TRUE),
+(0x88888888888888888888888888888888, 'certificado-sanciones', 'Certificado de Sanciones Disciplinarias', 'Certificado que acredita la ausencia de sanciones disciplinarias', TRUE, 9, TRUE),
+(0x99999999999999999999999999999999, 'certificado-ley-micaela', 'Certificado Ley Micaela', 'Certificado de capacitacion en Ley Micaela', FALSE, 10, TRUE);
+
+-- CRITICAL FIX: Insertar tipo de documento genérico para casos de fallback
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+(0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1, 'documento-generico', 'Documento Genérico', 'Tipo de documento genérico para casos no especificados', FALSE, 999, TRUE);

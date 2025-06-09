@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
+import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, interval } from 'rxjs';
 import { map, catchError, switchMap, takeUntil } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Tipos de mensaje
@@ -192,7 +193,10 @@ export class MessagingService {
   // Control de polling
   private pollingSubscription?: any;
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private loggingService: LoggingService
+  ) {
     this.initializeMessaging();
   }
 

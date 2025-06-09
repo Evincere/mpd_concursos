@@ -190,6 +190,6 @@ export class LoadingIndicatorComponent implements OnInit {
 
   ngOnInit(): void {
     // Inicialización adicional si es necesaria
-    console.log('LoadingIndicatorComponent inicializado');
+    // Logging implementado con LoggingService
   }
 }

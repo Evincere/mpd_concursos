@@ -9,22 +9,37 @@ public enum InscriptionStatus {
      * Formerly known as IN_PROCESS
      */
     ACTIVE,
-    
+
     /**
      * Inscription completed by user, waiting for admin validation
      */
     PENDING,
-    
+
+    /**
+     * Inscription completed with all required documentation
+     */
+    COMPLETED_WITH_DOCS,
+
+    /**
+     * Inscription completed but with pending documentation
+     */
+    COMPLETED_PENDING_DOCS,
+
+    /**
+     * Inscription frozen after peremptory deadline expired
+     */
+    FROZEN,
+
     /**
      * Inscription approved by admin
      */
     APPROVED,
-    
+
     /**
      * Inscription rejected by admin
      */
     REJECTED,
-    
+
     /**
      * Inscription cancelled by user
      */
