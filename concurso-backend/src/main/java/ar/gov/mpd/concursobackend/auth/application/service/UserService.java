@@ -277,7 +277,9 @@ public class UserService implements IUserService, IUserRoleManager {
       String jwt = jwtProvider.generateToken(authentication, user);
       logger.info("Token generado exitosamente para el usuario: {}", userDetails.getUsername());
 
-      return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities(), user.getCuit().value());
+      // Manejar el caso cuando el CUIT es null
+      String cuitValue = user.getCuit() != null ? user.getCuit().value() : null;
+      return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities(), cuitValue);
     } catch (InvalidCredentialsException | BlockedAccountException | InactiveAccountException | ExpiredAccountException e) {
       throw e; // Re-lanzar excepciones específicas
     } catch (Exception e) {
