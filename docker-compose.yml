@@ -4,6 +4,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mpd-concursos-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root1234
       MYSQL_DATABASE: mpd_concursos
@@ -15,8 +16,14 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 60s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
     networks:
       - mpd-concursos-network
 
@@ -25,6 +32,7 @@ services:
       context: ./concurso-backend
       dockerfile: Dockerfile
     container_name: mpd-concursos-backend
+    restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
@@ -34,12 +42,19 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root1234
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-      SPRING_MVC_CORS_ALLOWED_ORIGINS: http://localhost:8000,http://localhost:4200,http://149.50.132.23:8000
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_MVC_CORS_ALLOWED_ORIGINS: http://localhost:8000,http://localhost:4200,http://149.50.132.23:8000,https://149.50.132.23:8000
+      JAVA_OPTS: "-Xmx1g -Xms512m"
     ports:
       - "8080:8080"
     volumes:
       - document_storage:/app/document-storage
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 512M
     networks:
       - mpd-concursos-network
 
@@ -48,10 +63,17 @@ services:
       context: ./mpd-concursos-app-frontend
       dockerfile: Dockerfile
     container_name: mpd-concursos-frontend
+    restart: unless-stopped
     depends_on:
       - backend
     ports:
       - "8000:80"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
     networks:
       - mpd-concursos-network
 

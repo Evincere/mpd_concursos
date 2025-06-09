@@ -5,6 +5,44 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-prod] - 2025-01-XX - PREPARACIÓN PARA PRODUCCIÓN
+
+### 🚀 Deployment en Servidor Donweb
+- **Configurado** deployment para servidor vps-4778464-x.dattaweb.com (149.50.132.23)
+- **Optimizado** Docker Compose para producción con límites de recursos
+- **Agregado** soporte para HTTPS y configuración CORS específica para IP del servidor
+- **Creado** docker-compose.prod.yml con configuraciones optimizadas para producción
+
+### 🔧 Scripts de Automatización
+- **Creado** deploy-production.sh - Script automático de deployment
+- **Creado** verify-production.sh - Script de verificación de funcionalidades críticas
+- **Creado** backup-production.sh - Script de backup automático
+- **Configurado** variables de entorno específicas para producción (.env.production)
+
+### 🌐 Configuración de Red y Seguridad
+- **Actualizado** CORS para incluir IP del servidor (149.50.132.23)
+- **Optimizado** nginx.conf con headers de seguridad y compresión mejorada
+- **Configurado** health checks para todos los servicios
+- **Agregado** logging estructurado para monitoreo
+
+### 📊 Optimizaciones de Rendimiento
+- **Configurado** límites de memoria y CPU para contenedores Docker
+- **Optimizado** configuración JVM para backend (1GB heap, G1GC)
+- **Mejorado** configuración de MySQL con health checks optimizados
+- **Agregado** compresión gzip y cache de archivos estáticos
+
+### 🔒 Configuración de Producción
+- **Deshabilitado** SQL logging en producción
+- **Configurado** perfiles de Spring Boot para producción
+- **Optimizado** timeouts y configuraciones de red
+- **Agregado** restart policies para alta disponibilidad
+
+### 📋 Documentación
+- **Actualizado** README.md con instrucciones de deployment
+- **Documentado** comandos de gestión para producción
+- **Creado** guías de troubleshooting y monitoreo
+- **Agregado** URLs de acceso y verificación
+
 ## [1.4.1] - 2024-12-08
 
 ### Fixed

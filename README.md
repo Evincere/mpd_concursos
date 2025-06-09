@@ -283,6 +283,58 @@ Los siguientes archivos están listos para futuras implementaciones:
 - Maven 3.8+
 - Docker y Docker Compose (para entorno de desarrollo y producción)
 
+## 🌐 Deployment en Producción (Servidor Donweb)
+
+### Especificaciones del Servidor
+- **Host**: vps-4778464-x.dattaweb.com
+- **IP**: 149.50.132.23
+- **Recursos**: 2 vCPUs, 4 GB RAM, 40 GB SSD
+- **SO**: Ubuntu 22.04 con Docker
+- **Puertos**: 80, 443, 5250, 8090
+
+### Deployment Automático
+
+1. **Clonar el repositorio en el servidor:**
+   ```bash
+   git clone https://github.com/tu-usuario/concursos-mpd.git
+   cd concursos-mpd
+   ```
+
+2. **Ejecutar el script de deployment:**
+   ```bash
+   ./deploy-production.sh
+   ```
+
+3. **Verificar el deployment:**
+   ```bash
+   ./verify-production.sh
+   ```
+
+### URLs de Acceso en Producción
+- **Frontend**: http://149.50.132.23:8000
+- **Backend API**: http://149.50.132.23:8080
+- **Health Check**: http://149.50.132.23:8080/actuator/health
+
+### Comandos de Gestión en Producción
+```bash
+# Ver estado de contenedores
+docker-compose -f docker-compose.prod.yml ps
+
+# Ver logs en tiempo real
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Reiniciar servicios
+docker-compose -f docker-compose.prod.yml restart
+
+# Detener todos los servicios
+docker-compose -f docker-compose.prod.yml down
+
+# Actualizar desde repositorio
+git pull origin main
+docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose -f docker-compose.prod.yml up -d
+```
+
 ### Backend
 1. Configurar variables de entorno:
    ```properties
