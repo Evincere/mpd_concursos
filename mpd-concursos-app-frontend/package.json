@@ -45,6 +45,7 @@
     "@ngrx/store": "^18.1.1",
     "@ngrx/store-devtools": "^18.1.1",
     "@types/file-saver": "^2.0.7",
+    "chart.js": "^4.4.9",
     "clean": "^4.0.2",
     "file-saver": "^2.0.5",
     "http-proxy-middleware": "^3.0.3",
