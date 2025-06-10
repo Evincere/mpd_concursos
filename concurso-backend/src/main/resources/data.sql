@@ -54,33 +54,73 @@ VALUES
 '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
 'semper@test.com', '26598410', '20265984107', 'Sebastian', 'Pereyra', CURRENT_TIMESTAMP);
 
--- Insertar concursos
+-- Insertar concursos con diferentes estados para testing completo
 INSERT INTO contests (id, title, category, class_, functions, department, position, status, start_date, end_date, bases_url, description_url)
 VALUES
-(1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_1_bases.pdf', '/api/files/contest-bases/contest_1_description.pdf'),
-(2, 'Concurso Defensor/a Civil', 'JURIDICO', 'B', 'Asistencia tecnica y representacion legal en causas civiles', 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_2_bases.pdf', '/api/files/contest-bases/contest_2_description.pdf'),
-(3, 'Concurso Asesor/a Legal', 'JURIDICO', 'C', 'Asesoramiento legal y tecnico en materia administrativa', 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_3_bases.pdf', '/api/files/contest-bases/contest_3_description.pdf'),
-(4, 'Concurso Analista Programador/a', 'TECNICO', 'D', 'Desarrollo y mantenimiento de sistemas informaticos', 'DESARROLLO TECNOLOGICO', 'Analista Programador/a', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_4_bases.pdf', '/api/files/contest-bases/contest_4_description.pdf'),
-(5, 'Concurso Defensor/a de Familia', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas de familia', 'CODEFENSORIAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_5_bases.pdf', '/api/files/contest-bases/contest_5_description.pdf');
+-- Concursos activos con inscripciones abiertas
+(1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'INSCRIPTION_OPEN', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_1_bases.pdf', '/api/files/contest-bases/contest_1_description.pdf'),
+(2, 'Concurso Defensor/a Civil', 'JURIDICO', 'B', 'Asistencia tecnica y representacion legal en causas civiles', 'DEFENSORIAS CIVILES', 'Defensor/a Civil - Segunda C.J.', 'INSCRIPTION_OPEN', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_2_bases.pdf', '/api/files/contest-bases/contest_2_description.pdf'),
 
--- Insertar fechas para los concursos
+-- Concursos en diferentes estados para testing
+(3, 'Concurso Asesor/a Legal', 'JURIDICO', 'C', 'Asesoramiento legal y tecnico en materia administrativa', 'SECRETARIA LEGAL Y TECNICA', 'Asesor/a Legal', 'PUBLISHED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_3_bases.pdf', '/api/files/contest-bases/contest_3_description.pdf'),
+(4, 'Concurso Analista Programador/a', 'TECNICO', 'D', 'Desarrollo y mantenimiento de sistemas informaticos', 'DESARROLLO TECNOLOGICO', 'Analista Programador/a', 'INSCRIPTION_PENDING', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 7 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 37 DAY), '/api/files/contest-bases/contest_4_bases.pdf', '/api/files/contest-bases/contest_4_description.pdf'),
+(5, 'Concurso Defensor/a de Familia', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas de familia', 'CODEFENSORIAS DE FAMILIA', 'Defensor/a de Familia - Primera C.J.', 'INSCRIPTION_CLOSED', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY), '/api/files/contest-bases/contest_5_bases.pdf', '/api/files/contest-bases/contest_5_description.pdf'),
+
+-- Concursos adicionales para casos de prueba
+(6, 'Concurso Secretario/a Judicial', 'ADMINISTRATIVO', 'B', 'Gestion administrativa y apoyo judicial', 'SECRETARIAS JUDICIALES', 'Secretario/a Judicial', 'IN_EVALUATION', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 5 DAY), '/api/files/contest-bases/contest_6_bases.pdf', '/api/files/contest-bases/contest_6_description.pdf'),
+(7, 'Concurso Psicólogo/a Forense', 'TECNICO', 'C', 'Evaluaciones psicologicas en el ambito judicial', 'GABINETE PSICOSOCIAL', 'Psicólogo/a Forense', 'RESULTS_PUBLISHED', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 60 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_7_bases.pdf', '/api/files/contest-bases/contest_7_description.pdf'),
+(8, 'Concurso Trabajador/a Social', 'TECNICO', 'D', 'Intervencion social en casos judiciales', 'GABINETE PSICOSOCIAL', 'Trabajador/a Social', 'FINISHED', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 90 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 60 DAY), '/api/files/contest-bases/contest_8_bases.pdf', '/api/files/contest-bases/contest_8_description.pdf'),
+(9, 'Concurso Contador/a Público', 'ADMINISTRATIVO', 'C', 'Gestion contable y financiera', 'ADMINISTRACION', 'Contador/a Público', 'DRAFT', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 60 DAY), '/api/files/contest-bases/contest_9_bases.pdf', '/api/files/contest-bases/contest_9_description.pdf'),
+(10, 'Concurso Informático/a', 'TECNICO', 'D', 'Soporte tecnico y mantenimiento de sistemas', 'INFORMATICA', 'Técnico/a Informático', 'PAUSED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_10_bases.pdf', '/api/files/contest-bases/contest_10_description.pdf');
+
+-- Insertar fechas para los concursos con cronogramas realistas
 INSERT INTO contest_dates (contest_id, label, type, start_date, end_date)
 VALUES
+-- Concurso 1: Defensor/a Penal (INSCRIPTION_OPEN)
 (1, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
 (1, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (1, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
+
+-- Concurso 2: Defensor/a Civil (INSCRIPTION_OPEN)
 (2, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
 (2, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (2, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
-(3, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
-(3, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
-(3, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
-(4, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
-(4, 'Examen Practico', 'PRACTICAL_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
-(4, 'Entrevista Tecnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
-(5, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
-(5, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
-(5, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
+
+-- Concurso 3: Asesor/a Legal (PUBLISHED)
+(3, 'Inscripcion', 'REGISTRATION', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 5 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(3, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY)),
+(3, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY)),
+
+-- Concurso 4: Analista Programador/a (INSCRIPTION_PENDING)
+(4, 'Inscripcion', 'REGISTRATION', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 7 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 22 DAY)),
+(4, 'Examen Practico', 'PRACTICAL_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 27 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 27 DAY)),
+(4, 'Entrevista Tecnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 32 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 32 DAY)),
+
+-- Concurso 5: Defensor/a de Familia (INSCRIPTION_CLOSED)
+(5, 'Inscripcion', 'REGISTRATION', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 1 DAY)),
+(5, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 5 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 5 DAY)),
+(5, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 10 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 10 DAY)),
+
+-- Concursos adicionales (6-10)
+(6, 'Inscripcion', 'REGISTRATION', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(6, 'Examen Escrito', 'WRITTEN_EXAM', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 10 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 10 DAY)),
+(6, 'Entrevista', 'INTERVIEW', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 5 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 5 DAY)),
+
+(7, 'Inscripcion', 'REGISTRATION', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 60 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 45 DAY)),
+(7, 'Examen Escrito', 'WRITTEN_EXAM', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 40 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 40 DAY)),
+(7, 'Entrevista', 'INTERVIEW', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 35 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 35 DAY)),
+
+(8, 'Inscripcion', 'REGISTRATION', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 90 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 75 DAY)),
+(8, 'Examen Escrito', 'WRITTEN_EXAM', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 70 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 70 DAY)),
+(8, 'Entrevista', 'INTERVIEW', DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 65 DAY), DATE_SUB(DATE(CURRENT_TIMESTAMP), INTERVAL 65 DAY)),
+
+(9, 'Inscripcion', 'REGISTRATION', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 45 DAY)),
+(9, 'Examen Escrito', 'WRITTEN_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 50 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 50 DAY)),
+(9, 'Entrevista', 'INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 55 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 55 DAY)),
+
+(10, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
+(10, 'Examen Practico', 'PRACTICAL_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
+(10, 'Entrevista Tecnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
 
 -- Asignar roles a usuarios
 INSERT INTO user_roles (user_id, role_id) VALUES
