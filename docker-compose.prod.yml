@@ -52,10 +52,10 @@ services:
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-mpd_user}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-mpd_password}
       # CORREGIDO: Cambiado de "validate" a "none" para evitar conflictos con schema.sql
-      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_JPA_SHOW_SQL: "false"
-      # AGREGADO: Para ejecutar scripts SQL en lugar de validar esquema existente
-      SPRING_SQL_INIT_MODE: always
+      # CORREGIDO: Deshabilitar inicialización de scripts SQL en producción
+      SPRING_SQL_INIT_MODE: never
       SPRING_MVC_CORS_ALLOWED_ORIGINS: http://149.50.132.23:8000,https://149.50.132.23:8000
       JAVA_OPTS: "-Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
       SERVER_PORT: 8080
