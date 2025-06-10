@@ -52,25 +52,12 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-mpd_concursos}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-mpd_user}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-mpd_password}
+      # CORREGIDO: Cambiado de "validate" a "none" para evitar conflictos con schema.sql
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_SHOW_SQL: "false"
-      SPRING_SQL_INIT_MODE: never
-      SPRING_JPA_HIBERNATE_NAMING_PHYSICAL_STRATEGY: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-      SPRING_BATCH_JDBC_INITIALIZE_SCHEMA: never
-      SPRING_DATASOURCE_INITIALIZATION_MODE: never
-      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "false"
-      SPRING_JPA_HIBERNATE_NAMING_PHYSICAL_STRATEGY: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-      SPRING_BATCH_JDBC_INITIALIZE_SCHEMA: never
-      SPRING_DATASOURCE_INITIALIZATION_MODE: never
-      SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "false"
-      SPRING_SQL_INIT_MODE: never
-      SPRING_JPA_HIBERNATE_NAMING_PHYSICAL_STRATEGY: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-      SPRING_BATCH_JDBC_INITIALIZE_SCHEMA: never
-      SPRING_MVC_CORS_ALLOWED_ORIGINS: "*"
-      SPRING_MVC_CORS_ALLOWED_METHODS: "*"
-      SPRING_MVC_CORS_ALLOWED_HEADERS: "*"
-      SPRING_MVC_CORS_ALLOW_CREDENTIALS: "true"
-      SPRING_SECURITY_CORS_DISABLED: "true"
-      SPRING_WEB_CORS_ALLOWED_ORIGIN_PATTERNS: "*"
+      # AGREGADO: Para ejecutar scripts SQL en lugar de validar esquema existente
+      SPRING_SQL_INIT_MODE: always
+      SPRING_MVC_CORS_ALLOWED_ORIGINS: http://149.50.132.23:8000,https://149.50.132.23:8000
       JAVA_OPTS: "-Xmx1g -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
       SERVER_PORT: 8080
       LOGGING_LEVEL_ROOT: WARN

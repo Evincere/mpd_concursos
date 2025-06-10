@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 // import org.springframework.stereotype.Component;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
+// import org.springframework.stereotype.Component; // DESHABILITADO
 
 import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
 import ar.gov.mpd.concursobackend.auth.application.service.RolService;
@@ -22,10 +22,13 @@ import java.util.UUID;
  * CLASE DESHABILITADA: Los datos de prueba ahora se manejan a través de
  * data.sql
  * para mantener la integridad referencial y evitar duplicación de datos.
- * 
+ *
  * Esta clase se mantiene como referencia pero no está activa en la aplicación.
+ *
+ * DESHABILITADA PARA PRODUCCIÓN: Comentada la anotación @Component
+ * para evitar conflictos con data.sql
  */
-@Component
+// @Component  // DESHABILITADO PARA EVITAR CONFLICTOS
 public class CreateTestData implements CommandLineRunner {
 
     @Autowired

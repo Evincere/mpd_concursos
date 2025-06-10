@@ -20,19 +20,38 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Entidad JPA para usuarios del sistema.
+ *
+ * CAMBIOS APLICADOS PARA RESOLVER PROBLEMAS DE PRODUCCIÓN:
+ * - @Table(name = "user_entity"): Especifica nombre exacto de tabla en schema.sql
+ * - @Column(columnDefinition = "BINARY(16)"): Compatibilidad UUID con MySQL
+ *
+ * @author MPD Development Team
+ * @version 1.0
+ * @since 2025-06
+ */
 @Entity
+@Table(name = "user_entity")
 @Getter
 @Setter
 @EntityListeners(UserRoleListener.class)
 public class UserEntity {
+
+    /**
+     * ID único del usuario.
+     * Configurado como BINARY(16) para compatibilidad con schema.sql de MySQL.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
     @NotNull

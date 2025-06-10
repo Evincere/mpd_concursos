@@ -52,6 +52,7 @@ CREATE TABLE user_entity (
     telefono VARCHAR(255),
     direccion VARCHAR(255),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('ACTIVE', 'INACTIVE', 'BLOCKED') NOT NULL DEFAULT 'ACTIVE',
     version BIGINT NOT NULL DEFAULT 0
 );
 
