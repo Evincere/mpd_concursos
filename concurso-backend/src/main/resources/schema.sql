@@ -107,6 +107,8 @@ CREATE TABLE contests (
     end_date DATE NOT NULL,
     bases_url VARCHAR(255),
     description_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT check_dates CHECK (end_date >= start_date)
 );
 
