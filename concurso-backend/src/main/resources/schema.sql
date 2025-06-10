@@ -41,17 +41,17 @@ CREATE TABLE user_entity (
     email VARCHAR(255) UNIQUE NOT NULL,
     dni VARCHAR(255) UNIQUE NOT NULL,
     cuit VARCHAR(255) UNIQUE,
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    birth_date DATE,
+    firstName VARCHAR(255) NOT NULL,
+    lastName VARCHAR(255) NOT NULL,
+    birthDate DATE,
     country VARCHAR(255),
     province VARCHAR(255),
     municipality VARCHAR(255),
-    legal_address VARCHAR(255),
-    residential_address VARCHAR(255),
+    legalAddress VARCHAR(255),
+    residentialAddress VARCHAR(255),
     telefono VARCHAR(255),
     direccion VARCHAR(255),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status ENUM('ACTIVE', 'INACTIVE', 'BLOCKED') NOT NULL DEFAULT 'ACTIVE',
     version BIGINT NOT NULL DEFAULT 0
 );
@@ -66,33 +66,33 @@ CREATE TABLE experiencia (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     empresa VARCHAR(255) NOT NULL,
     cargo VARCHAR(255) NOT NULL,
-    fecha_inicio DATE NOT NULL,
-    fecha_fin DATE,
+    fechaInicio DATE NOT NULL,
+    fechaFin DATE,
     descripcion TEXT,
     comentario TEXT,
-    user_id BINARY(16) NOT NULL,
-    CONSTRAINT fk_experiencia_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
+    userId BINARY(16) NOT NULL,
+    CONSTRAINT fk_experiencia_user FOREIGN KEY (userId) REFERENCES user_entity(id) ON DELETE CASCADE
 );
 
 -- Índice para búsqueda rápida por usuario en tabla antigua
-CREATE INDEX idx_experiencia_user_id ON experiencia(user_id);
+CREATE INDEX idx_experiencia_user_id ON experiencia(userId);
 
 -- Nueva tabla de experiencia con UUID como clave primaria
 CREATE TABLE experience (
     id BINARY(16) PRIMARY KEY,
-    user_id BINARY(16) NOT NULL,
+    userId BINARY(16) NOT NULL,
     company VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE,
+    startDate DATE NOT NULL,
+    endDate DATE,
     description TEXT,
     comments TEXT,
-    document_url VARCHAR(255),
-    CONSTRAINT fk_experience_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
+    documentUrl VARCHAR(255),
+    CONSTRAINT fk_experience_user FOREIGN KEY (userId) REFERENCES user_entity(id) ON DELETE CASCADE
 );
 
 -- Índice para búsqueda rápida por usuario en nueva tabla
-CREATE INDEX idx_experience_user_id ON experience(user_id);
+CREATE INDEX idx_experience_user_id ON experience(userId);
 
 CREATE TABLE contests (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -103,37 +103,37 @@ CREATE TABLE contests (
     department VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
     status ENUM('DRAFT', 'PUBLISHED', 'PAUSED', 'CANCELLED', 'FINISHED', 'ARCHIVED', 'INSCRIPTION_PENDING', 'INSCRIPTION_OPEN', 'INSCRIPTION_CLOSED', 'IN_EVALUATION', 'RESULTS_PUBLISHED') NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    bases_url VARCHAR(255),
-    description_url VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT check_dates CHECK (end_date >= start_date)
+    startDate DATE NOT NULL,
+    endDate DATE NOT NULL,
+    basesUrl VARCHAR(255),
+    descriptionUrl VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT check_dates CHECK (endDate >= startDate)
 );
 
 CREATE TABLE contest_dates (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    contest_id BIGINT NOT NULL,
+    contestId BIGINT NOT NULL,
     label VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL,
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE
+    startDate DATE NOT NULL,
+    endDate DATE NOT NULL,
+    FOREIGN KEY (contestId) REFERENCES contests(id) ON DELETE CASCADE
 );
 
 CREATE TABLE contest_requirements (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    contest_id BIGINT NOT NULL,
+    contestId BIGINT NOT NULL,
     description VARCHAR(500) NOT NULL,
     category VARCHAR(100) NOT NULL,
     required BOOLEAN NOT NULL DEFAULT TRUE,
     priority INTEGER NOT NULL DEFAULT 1,
-    document_type VARCHAR(100),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE,
-    INDEX idx_contest_requirements_contest_id (contest_id),
+    documentType VARCHAR(100),
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (contestId) REFERENCES contests(id) ON DELETE CASCADE,
+    INDEX idx_contest_requirements_contest_id (contestId),
     INDEX idx_contest_requirements_category (category),
     INDEX idx_contest_requirements_priority (priority)
 );
@@ -142,179 +142,179 @@ CREATE TABLE examinations (
     id BINARY(16) PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    duration_minutes BIGINT,
+    durationMinutes BIGINT,
     status ENUM('DRAFT', 'PUBLISHED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED') NOT NULL,
-    start_time DATETIME,
-    end_time DATETIME,
-    cancellation_date DATETIME,
-    cancellation_reason VARCHAR(255),
+    startTime DATETIME,
+    endTime DATETIME,
+    cancellationDate DATETIME,
+    cancellationReason VARCHAR(255),
     type ENUM('TECHNICAL_LEGAL', 'TECHNICAL_ADMINISTRATIVE', 'PSYCHOLOGICAL') NOT NULL,
     answers TEXT
 );
 
 CREATE TABLE examination_sessions (
     id BINARY(16) PRIMARY KEY,
-    examination_id BINARY(16) NOT NULL,
-    user_id BINARY(16) NOT NULL,
-    start_time DATETIME(6),
+    examinationId BINARY(16) NOT NULL,
+    userId BINARY(16) NOT NULL,
+    startTime DATETIME(6),
     deadline DATETIME(6),
     status ENUM('CREATED', 'IN_PROGRESS', 'PAUSED', 'FINISHED', 'INVALIDATED') NOT NULL,
-    current_question_index INTEGER,
-    FOREIGN KEY (examination_id) REFERENCES examinations(id),
-    FOREIGN KEY (user_id) REFERENCES user_entity(id)
+    currentQuestionIndex INTEGER,
+    FOREIGN KEY (examinationId) REFERENCES examinations(id),
+    FOREIGN KEY (userId) REFERENCES user_entity(id)
 );
 
 CREATE TABLE questions (
     id BINARY(16) PRIMARY KEY,
-    examination_id BINARY(16),
+    examinationId BINARY(16),
     text VARCHAR(255),
     type ENUM('MULTIPLE_CHOICE', 'SINGLE_CHOICE', 'TEXT', 'TRUE_FALSE') NOT NULL,
     score INTEGER,
-    order_number INTEGER,
-    correct_answer VARCHAR(255),
-    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+    orderNumber INTEGER,
+    correctAnswer VARCHAR(255),
+    FOREIGN KEY (examinationId) REFERENCES examinations(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE options (
     id BINARY(16) PRIMARY KEY,
     text TEXT,
-    order_number INTEGER,
-    question_id BINARY(16),
-    FOREIGN KEY (question_id) REFERENCES questions(id)
+    orderNumber INTEGER,
+    questionId BINARY(16),
+    FOREIGN KEY (questionId) REFERENCES questions(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE answers (
     id BINARY(16) PRIMARY KEY,
-    question_id BINARY(16),
+    questionId BINARY(16),
     response TEXT,
-    response_time_ms BIGINT,
+    responseTimeMs BIGINT,
     status ENUM('DRAFT', 'SUBMITTED', 'VALIDATED', 'INVALIDATED', 'SUSPICIOUS'),
     timestamp DATETIME(6),
-    session_id BINARY(16),
+    sessionId BINARY(16),
     attempts INTEGER,
     hash VARCHAR(255),
-    FOREIGN KEY (question_id) REFERENCES questions(id),
-    FOREIGN KEY (session_id) REFERENCES examination_sessions(id)
+    FOREIGN KEY (questionId) REFERENCES questions(id),
+    FOREIGN KEY (sessionId) REFERENCES examination_sessions(id)
 );
 
 CREATE TABLE user_roles (
-    user_id BINARY(16),
-    role_id BINARY(16),
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES user_entity(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
+    userId BINARY(16),
+    roleId BINARY(16),
+    PRIMARY KEY (userId, roleId),
+    FOREIGN KEY (userId) REFERENCES user_entity(id),
+    FOREIGN KEY (roleId) REFERENCES roles(id)
 );
 
 CREATE TABLE notifications (
     id BINARY(16) PRIMARY KEY,
-    recipient_id BINARY(16) NOT NULL,
+    recipientId BINARY(16) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     status ENUM('PENDING', 'SENT', 'READ', 'ACKNOWLEDGED') NOT NULL,
-    sent_at DATETIME(6) NOT NULL,
-    read_at DATETIME(6),
-    acknowledged_at DATETIME(6),
-    acknowledgement_level ENUM('NONE', 'SIMPLE', 'SIGNATURE_BASIC', 'SIGNATURE_ADVANCED') NOT NULL,
-    signature_type ENUM('PIN', 'BIOMETRIC', 'DIGITAL_CERT', 'DECLARATION'),
-    signature_value VARCHAR(255),
-    signature_metadata VARCHAR(255),
+    sentAt DATETIME(6) NOT NULL,
+    readAt DATETIME(6),
+    acknowledgedAt DATETIME(6),
+    acknowledgementLevel ENUM('NONE', 'SIMPLE', 'SIGNATURE_BASIC', 'SIGNATURE_ADVANCED') NOT NULL,
+    signatureType ENUM('PIN', 'BIOMETRIC', 'DIGITAL_CERT', 'DECLARATION'),
+    signatureValue VARCHAR(255),
+    signatureMetadata VARCHAR(255),
     version BIGINT,
     type ENUM('INSCRIPTION', 'SYSTEM', 'CONTEST', 'GENERAL') NOT NULL,
-    FOREIGN KEY (recipient_id) REFERENCES user_entity(id)
+    FOREIGN KEY (recipientId) REFERENCES user_entity(id)
 );
 
 CREATE TABLE inscriptions (
     id BINARY(16) NOT NULL,
-    contest_id BIGINT,
-    user_id BINARY(16),
-    created_at DATETIME(6),
-    updated_at DATETIME(6),
-    inscription_date DATETIME(6),
+    contestId BIGINT,
+    userId BINARY(16),
+    createdAt DATETIME(6),
+    updatedAt DATETIME(6),
+    inscriptionDate DATETIME(6),
     status ENUM('ACTIVE', 'PENDING', 'COMPLETED_WITH_DOCS', 'COMPLETED_PENDING_DOCS', 'FROZEN', 'APPROVED', 'REJECTED', 'CANCELLED'),
-    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED'),
-    accepted_terms BOOLEAN DEFAULT FALSE,
-    confirmed_personal_data BOOLEAN DEFAULT FALSE,
-    documentos_completos BOOLEAN DEFAULT FALSE,
-    centro_de_vida VARCHAR(500),
-    terms_acceptance_date DATETIME(6),
-    data_confirmation_date DATETIME(6),
-    documentation_deadline DATETIME(6),
-    frozen_date DATETIME(6),
+    currentStep ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED'),
+    acceptedTerms BOOLEAN DEFAULT FALSE,
+    confirmedPersonalData BOOLEAN DEFAULT FALSE,
+    documentosCompletos BOOLEAN DEFAULT FALSE,
+    centroDeVida VARCHAR(500),
+    termsAcceptanceDate DATETIME(6),
+    dataConfirmationDate DATETIME(6),
+    documentationDeadline DATETIME(6),
+    frozenDate DATETIME(6),
     PRIMARY KEY (id),
-    FOREIGN KEY (contest_id) REFERENCES contests(id),
-    FOREIGN KEY (user_id) REFERENCES user_entity(id)
+    FOREIGN KEY (contestId) REFERENCES contests(id),
+    FOREIGN KEY (userId) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 -- Tabla de documentos de concursos
 CREATE TABLE contest_documents (
     id BINARY(16) NOT NULL,
-    contest_id BIGINT,
+    contestId BIGINT,
     name VARCHAR(255),
     description TEXT,
-    file_url VARCHAR(500),
-    file_name VARCHAR(255),
-    file_type VARCHAR(100),
-    file_size BIGINT,
+    fileUrl VARCHAR(500),
+    fileName VARCHAR(255),
+    fileType VARCHAR(100),
+    fileSize BIGINT,
     required BOOLEAN DEFAULT FALSE,
     public BOOLEAN DEFAULT FALSE,
-    uploaded_by BINARY(16),
-    uploaded_at DATETIME(6),
+    uploadedBy BINARY(16),
+    uploadedAt DATETIME(6),
     PRIMARY KEY (id),
-    FOREIGN KEY (contest_id) REFERENCES contests(id),
-    FOREIGN KEY (uploaded_by) REFERENCES user_entity(id)
+    FOREIGN KEY (contestId) REFERENCES contests(id),
+    FOREIGN KEY (uploadedBy) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 -- Tabla de sesiones de inscripción
 CREATE TABLE inscription_sessions (
     id BINARY(16) PRIMARY KEY,
-    inscription_id BINARY(16) NOT NULL,
-    contest_id BIGINT NOT NULL,
-    user_id BINARY(16) NOT NULL,
-    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED') NOT NULL,
-    form_data LONGTEXT NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
-    expires_at DATETIME NOT NULL,
-    FOREIGN KEY (inscription_id) REFERENCES inscriptions(id) ON DELETE CASCADE,
-    FOREIGN KEY (contest_id) REFERENCES contests(id),
-    FOREIGN KEY (user_id) REFERENCES user_entity(id)
+    inscriptionId BINARY(16) NOT NULL,
+    contestId BIGINT NOT NULL,
+    userId BINARY(16) NOT NULL,
+    currentStep ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED') NOT NULL,
+    formData LONGTEXT NOT NULL,
+    createdAt DATETIME NOT NULL,
+    updatedAt DATETIME NOT NULL,
+    expiresAt DATETIME NOT NULL,
+    FOREIGN KEY (inscriptionId) REFERENCES inscriptions(id) ON DELETE CASCADE,
+    FOREIGN KEY (contestId) REFERENCES contests(id),
+    FOREIGN KEY (userId) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE inscription_circunscripciones (
-    inscription_id BINARY(16) NOT NULL,
+    inscriptionId BINARY(16) NOT NULL,
     circunscripcion VARCHAR(100) NOT NULL,
-    PRIMARY KEY (inscription_id, circunscripcion),
-    FOREIGN KEY (inscription_id) REFERENCES inscriptions(id)
+    PRIMARY KEY (inscriptionId, circunscripcion),
+    FOREIGN KEY (inscriptionId) REFERENCES inscriptions(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE question_correct_answers (
-    question_entity_id BINARY(16) NOT NULL,
-    correct_answers VARCHAR(255),
-    FOREIGN KEY (question_entity_id) REFERENCES questions(id)
+    questionEntityId BINARY(16) NOT NULL,
+    correctAnswers VARCHAR(255),
+    FOREIGN KEY (questionEntityId) REFERENCES questions(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE examination_requirements (
-    examination_id BINARY(16) NOT NULL,
+    examinationId BINARY(16) NOT NULL,
     requirement TEXT NOT NULL,
-    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+    FOREIGN KEY (examinationId) REFERENCES examinations(id)
 );
 
 CREATE TABLE examination_rules (
-    examination_id BINARY(16) NOT NULL,
+    examinationId BINARY(16) NOT NULL,
     rule TEXT NOT NULL,
-    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+    FOREIGN KEY (examinationId) REFERENCES examinations(id)
 );
 
 CREATE TABLE examination_allowed_materials (
-    examination_id BINARY(16) NOT NULL,
+    examinationId BINARY(16) NOT NULL,
     material TEXT NOT NULL,
-    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+    FOREIGN KEY (examinationId) REFERENCES examinations(id)
 );
 
 CREATE TABLE examination_security_violations (
-    examination_id BINARY(16) NOT NULL,
+    examinationId BINARY(16) NOT NULL,
     violation VARCHAR(255) NOT NULL,
-    FOREIGN KEY (examination_id) REFERENCES examinations(id)
+    FOREIGN KEY (examinationId) REFERENCES examinations(id)
 );
 
 -- Tabla de tipos de documento
@@ -325,60 +325,60 @@ CREATE TABLE document_types (
     description TEXT,
     required BOOLEAN NOT NULL DEFAULT FALSE,
     `order` INT,
-    parent_id BINARY(16),
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (parent_id) REFERENCES document_types(id)
+    parentId BINARY(16),
+    isActive BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (parentId) REFERENCES document_types(id)
 );
 
 -- Tabla de documentos
 CREATE TABLE documents (
     id BINARY(16) PRIMARY KEY,
-    user_id BINARY(16) NOT NULL,
-    document_type_id BINARY(16) NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    content_type VARCHAR(100) NOT NULL,
-    file_path VARCHAR(500) NOT NULL,
+    userId BINARY(16) NOT NULL,
+    documentTypeId BINARY(16) NOT NULL,
+    fileName VARCHAR(255) NOT NULL,
+    contentType VARCHAR(100) NOT NULL,
+    filePath VARCHAR(500) NOT NULL,
     status ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     comments TEXT,
-    upload_date DATETIME NOT NULL,
-    validated_by BINARY(16),
-    validated_at DATETIME,
-    rejection_reason TEXT,
-    FOREIGN KEY (user_id) REFERENCES user_entity(id),
-    FOREIGN KEY (document_type_id) REFERENCES document_types(id),
-    FOREIGN KEY (validated_by) REFERENCES user_entity(id)
+    uploadDate DATETIME NOT NULL,
+    validatedBy BINARY(16),
+    validatedAt DATETIME,
+    rejectionReason TEXT,
+    FOREIGN KEY (userId) REFERENCES user_entity(id),
+    FOREIGN KEY (documentTypeId) REFERENCES document_types(id),
+    FOREIGN KEY (validatedBy) REFERENCES user_entity(id)
 );
 
 -- Tabla de educación
 CREATE TABLE education (
     id BINARY(16) PRIMARY KEY,
-    user_id BINARY(16) NOT NULL,
+    userId BINARY(16) NOT NULL,
     type VARCHAR(255) NOT NULL,
     status VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     institution VARCHAR(255) NOT NULL,
-    issue_date DATE,
-    document_url VARCHAR(500),
+    issueDate DATE,
+    documentUrl VARCHAR(500),
 
     -- Campos para Carreras de Nivel Superior y Grado
-    duration_years INT,
+    durationYears INT,
     average DOUBLE,
 
     -- Campos para Posgrados
-    thesis_topic VARCHAR(255),
+    thesisTopic VARCHAR(255),
 
     -- Campos para Diplomaturas y Cursos de Capacitación
-    hourly_load INT,
-    had_final_evaluation BOOLEAN,
+    hourlyLoad INT,
+    hadFinalEvaluation BOOLEAN,
 
     -- Campos para Actividad Científica
-    activity_type VARCHAR(50),
+    activityType VARCHAR(50),
     topic VARCHAR(255),
-    activity_role VARCHAR(100),
-    exposition_place_date VARCHAR(255),
+    activityRole VARCHAR(100),
+    expositionPlaceDate VARCHAR(255),
     comments TEXT,
 
-    FOREIGN KEY (user_id) REFERENCES user_entity(id)
+    FOREIGN KEY (userId) REFERENCES user_entity(id)
 );
 
 
