@@ -28,7 +28,7 @@ INSERT INTO roles (id, name) VALUES
 (0x22222222222222222222222222222222, 'ROLE_ADMIN');
 
 -- Insertar usuario administrador por defecto
-INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
+INSERT INTO user_entity (id, username, password, email, dni, cuit, firstName, lastName, createdAt)
 VALUES (
     0x33333333333333333333333333333333,
     'admin',
@@ -42,7 +42,7 @@ VALUES (
 );
 
 -- Insertar usuarios de prueba con IDs fijos
-INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
+INSERT INTO user_entity (id, username, password, email, dni, cuit, firstName, lastName, createdAt)
 VALUES
 (0x44444444444444444444444444444444, 'usuario1',
 '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
@@ -55,7 +55,7 @@ VALUES
 'semper@test.com', '26598410', '20265984107', 'Sebastian', 'Pereyra', CURRENT_TIMESTAMP);
 
 -- Insertar concursos con diferentes estados para testing completo
-INSERT INTO contests (id, title, category, class_, functions, department, position, status, start_date, end_date, bases_url, description_url)
+INSERT INTO contests (id, title, category, class_, functions, department, position, status, startDate, endDate, basesUrl, descriptionUrl)
 VALUES
 -- Concursos activos con inscripciones abiertas
 (1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'INSCRIPTION_OPEN', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_1_bases.pdf', '/api/files/contest-bases/contest_1_description.pdf'),
@@ -74,7 +74,7 @@ VALUES
 (10, 'Concurso Informático/a', 'TECNICO', 'D', 'Soporte tecnico y mantenimiento de sistemas', 'INFORMATICA', 'Técnico/a Informático', 'PAUSED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_10_bases.pdf', '/api/files/contest-bases/contest_10_description.pdf');
 
 -- Insertar fechas para los concursos con cronogramas realistas
-INSERT INTO contest_dates (contest_id, label, type, start_date, end_date)
+INSERT INTO contest_dates (contestId, label, type, startDate, endDate)
 VALUES
 -- Concurso 1: Defensor/a Penal (INSCRIPTION_OPEN)
 (1, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
@@ -123,7 +123,7 @@ VALUES
 (10, 'Entrevista Tecnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
 
 -- Asignar roles a usuarios
-INSERT INTO user_roles (user_id, role_id) VALUES
+INSERT INTO user_roles (userId, roleId) VALUES
 (0x33333333333333333333333333333333, 0x11111111111111111111111111111111), -- admin ROLE_USER
 (0x33333333333333333333333333333333, 0x22222222222222222222222222222222), -- admin ROLE_ADMIN
 (0x44444444444444444444444444444444, 0x11111111111111111111111111111111), -- usuario1 ROLE_USER
@@ -137,18 +137,18 @@ INSERT IGNORE INTO document_types (id, code, name, description, required, `order
 (0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
 
 -- Insertar los tipos de documentos para DNI frente y dorso
-INSERT IGNORE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, parentId, required, `order`, isActive) VALUES
 (0xAAAAAAAAAAAAAAAAAAAAAAAAAAAA, 'dni-frente', 'DNI (Frente)', 'Documento Nacional de Identidad - Lado frontal', 0x11111111111111111111111111111111, TRUE, 1, TRUE),
 (0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB, 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', 0x11111111111111111111111111111111, TRUE, 2, TRUE);
 
 -- Insertar otros tipos de documentos
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
 (0x22222222222222222222222222222222, 'titulo-universitario', 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 3, TRUE),
 (0x33333333333333333333333333333333, 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 4, TRUE),
 (0x44444444444444444444444444444444, 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', FALSE, 5, TRUE);
 
 -- Insertar nuevos tipos de documentos requeridos
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
 (0x55555555555555555555555555555555, 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', TRUE, 6, TRUE),
 (0x66666666666666666666666666666666, 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', TRUE, 7, TRUE),
 (0x77777777777777777777777777777777, 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', TRUE, 8, TRUE),
@@ -156,5 +156,5 @@ INSERT IGNORE INTO document_types (id, code, name, description, required, `order
 (0x99999999999999999999999999999999, 'certificado-ley-micaela', 'Certificado Ley Micaela', 'Certificado de capacitacion en Ley Micaela', FALSE, 10, TRUE);
 
 -- CRITICAL FIX: Insertar tipo de documento genérico para casos de fallback
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
 (0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1, 'documento-generico', 'Documento Genérico', 'Tipo de documento genérico para casos no especificados', FALSE, 999, TRUE);
