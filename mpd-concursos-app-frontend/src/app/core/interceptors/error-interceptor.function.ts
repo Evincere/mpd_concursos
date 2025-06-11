@@ -85,6 +85,17 @@ export const ErrorInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, n
         return throwError(() => error);
       }
 
+      // CRITICAL FIX: Agregar endpoint de registro a endpoints silenciosos para evitar notificaciones automáticas
+      const authEndpoints = ['/auth/register', '/auth/login'];
+      const isAuthEndpoint = authEndpoints.some(endpoint => req.url.includes(endpoint));
+
+      if (isAuthEndpoint) {
+        // Para endpoints de autenticación, no mostrar notificaciones automáticas
+        // Los componentes manejan los errores específicamente con HttpErrorDisplayComponent
+        console.info(`[ErrorInterceptor] Error en endpoint de autenticación: ${error.status} - ${req.url} - Manejado por componente específico`);
+        return throwError(() => error);
+      }
+
       // Para otros endpoints, procesar errores normalmente con AppError
       const appError = errorHandler.handleHttpError(error);
 

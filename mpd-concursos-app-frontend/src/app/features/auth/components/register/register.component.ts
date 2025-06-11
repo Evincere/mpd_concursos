@@ -13,7 +13,7 @@ import { NewUser } from '../../../../shared/interfaces/auth/new-user.interface';
 import { UserRegisterDTO } from '../../../../shared/interfaces/user/base-user.interface';
 import { Subscription } from 'rxjs';
 import { TouchFriendlyDirective } from '../../../../shared/directives/touch-friendly.directive';
-import { ErrorMappingService, MappedError } from '../../../../shared/services/error-mapping';
+import { ErrorMappingService, MappedError, ErrorType, ErrorSeverity } from '../../../../shared/services/error-mapping';
 import { HttpErrorDisplayComponent } from '../../../../shared/components/http-error-display';
 
 @Component({
@@ -46,9 +46,8 @@ import { HttpErrorDisplayComponent } from '../../../../shared/components/http-er
 export class RegisterComponent implements OnInit, OnDestroy {
   registerForm: FormGroup;
   fieldErrors = new Map<string, string>();
-  activeErrors: { type: string; title: string; message: string }[] = [];
 
-  // Nuevas propiedades para manejo de errores HTTP
+  // Sistema unificado de manejo de errores HTTP con glassmorphism
   httpError: MappedError | null = null;
   showHttpError = false;
 
@@ -301,13 +300,19 @@ export class RegisterComponent implements OnInit, OnDestroy {
             this.handleFieldErrors(error.error.fieldErrors);
             this.responseMessage = 'Error en el registro, verifique los datos ingresados.';
           } else {
-            // Fallback para otros tipos de error
+            // Fallback para otros tipos de error - usar sistema unificado
             this.responseMessage = error.error?.message || 'Error en el servidor. Intente más tarde.';
-            this.activeErrors.push({
-              type: 'error',
-              title: 'Error',
-              message: this.responseMessage
-            });
+            // Crear error HTTP genérico para mostrar con glassmorphism
+            const genericError: MappedError = {
+              type: ErrorType.SERVER,
+              severity: ErrorSeverity.HIGH,
+              message: this.responseMessage,
+              title: 'Error del Servidor',
+              recoverable: true,
+              suggestions: ['Verifique su conexión a internet', 'Intente nuevamente en unos momentos']
+            };
+            this.httpError = genericError;
+            this.showHttpError = true;
           }
 
           setTimeout(() => {
@@ -338,12 +343,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
   handleFieldErrors(fieldErrors: { field: string; message: string }[]): void {
     fieldErrors.forEach(fieldError => {
       this.fieldErrors.set(fieldError.field, fieldError.message);
-
-      this.activeErrors.push({
-        type: 'error',
-        title: this.getErrorTitle(fieldError.field),
-        message: fieldError.message
-      });
+      // Los errores de campo se muestran inline en el formulario
+      // No necesitamos crear errores adicionales para el sistema glassmorphism
     });
   }
 

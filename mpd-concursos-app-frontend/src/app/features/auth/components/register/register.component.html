@@ -19,17 +19,7 @@
     (actionClicked)="onHttpErrorAction()">
   </app-http-error-display>
 
-  <!-- Mantener sistema de errores existente para compatibilidad -->
-  <div class="floating-messages" *ngIf="activeErrors.length > 0">
-    <div *ngFor="let error of activeErrors"
-         class="message"
-         [ngClass]="error.type">
-      <div class="message-content">
-        <strong>{{ error.title }}</strong>
-        <p>{{ error.message }}</p>
-      </div>
-    </div>
-  </div>
+  <!-- Sistema legacy de floating-messages eliminado - ahora se usa solo HttpErrorDisplayComponent -->
 
   <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" autocomplete="off">
     <!-- Sección: Datos de acceso -->
