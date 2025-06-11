@@ -1,6 +1,26 @@
 <div class="register-box">
   <h2>Registro de Usuario</h2>
-  <div class="floating-messages">
+
+  <!-- Nuevo componente de error HTTP con glassmorphism -->
+  <app-http-error-display
+    *ngIf="showHttpError && httpError"
+    [error]="httpError"
+    [config]="{
+      showIcon: true,
+      showSuggestions: true,
+      dismissible: true,
+      position: 'inline',
+      size: 'medium',
+      showActionButton: httpError.recoverable,
+      actionButtonText: 'Reintentar'
+    }"
+    [visible]="showHttpError"
+    (dismissed)="onHttpErrorDismissed()"
+    (actionClicked)="onHttpErrorAction()">
+  </app-http-error-display>
+
+  <!-- Mantener sistema de errores existente para compatibilidad -->
+  <div class="floating-messages" *ngIf="activeErrors.length > 0">
     <div *ngFor="let error of activeErrors"
          class="message"
          [ngClass]="error.type">
@@ -10,6 +30,7 @@
       </div>
     </div>
   </div>
+
   <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" autocomplete="off">
     <!-- Sección: Datos de acceso -->
     <div class="form-section">

@@ -7,11 +7,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RegisterService } from '../../../../core/services/auth/register.service';
 import { NewUser } from '../../../../shared/interfaces/auth/new-user.interface';
 import { UserRegisterDTO } from '../../../../shared/interfaces/user/base-user.interface';
 import { Subscription } from 'rxjs';
 import { TouchFriendlyDirective } from '../../../../shared/directives/touch-friendly.directive';
+import { ErrorMappingService, MappedError } from '../../../../shared/services/error-mapping';
+import { HttpErrorDisplayComponent } from '../../../../shared/components/http-error-display';
 
 @Component({
   selector: 'app-register',
@@ -25,7 +28,8 @@ import { TouchFriendlyDirective } from '../../../../shared/directives/touch-frie
     MatInputModule,
     MatButtonModule,
     MatSnackBarModule,
-    TouchFriendlyDirective
+    TouchFriendlyDirective,
+    HttpErrorDisplayComponent
   ],
   animations: [
     trigger('messageAnimation', [
@@ -43,6 +47,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
   registerForm: FormGroup;
   fieldErrors = new Map<string, string>();
   activeErrors: { type: string; title: string; message: string }[] = [];
+
+  // Nuevas propiedades para manejo de errores HTTP
+  httpError: MappedError | null = null;
+  showHttpError = false;
+
   isLoading = false;
   showMessage = false;
   isSuccess = false;
@@ -58,7 +67,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private registerService: RegisterService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private errorMappingService: ErrorMappingService
   ) {
     this.registerForm = fb.nonNullable.group({
       // Datos de acceso
@@ -180,6 +190,17 @@ export class RegisterComponent implements OnInit, OnDestroy {
     if (fieldName && this.fieldErrors.has(fieldName)) {
       this.fieldErrors.delete(fieldName);
     }
+
+    // Limpiar errores HTTP cuando el usuario empiece a escribir
+    this.clearHttpError();
+  }
+
+  /**
+   * Limpia los errores HTTP mostrados
+   */
+  clearHttpError(): void {
+    this.httpError = null;
+    this.showHttpError = false;
   }
 
   formatCuit(event: Event): void {
@@ -225,6 +246,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.fieldErrors.clear();
     this.activeErrors = [];
+    this.clearHttpError();
 
     const formValue = this.registerForm.value;
 
@@ -271,10 +293,15 @@ export class RegisterComponent implements OnInit, OnDestroy {
           this.showMessage = true;
           this.isSuccess = false;
 
-          if (error.error?.fieldErrors) {
+          // Verificar si es un HttpErrorResponse para usar el nuevo sistema
+          if (error instanceof HttpErrorResponse) {
+            this.handleHttpError(error);
+          } else if (error.error?.fieldErrors) {
+            // Mantener compatibilidad con errores de campo existentes
             this.handleFieldErrors(error.error.fieldErrors);
             this.responseMessage = 'Error en el registro, verifique los datos ingresados.';
           } else {
+            // Fallback para otros tipos de error
             this.responseMessage = error.error?.message || 'Error en el servidor. Intente más tarde.';
             this.activeErrors.push({
               type: 'error',
@@ -289,6 +316,23 @@ export class RegisterComponent implements OnInit, OnDestroy {
         }
       })
     );
+  }
+
+  /**
+   * Maneja errores HTTP usando el nuevo sistema de mapeo
+   */
+  handleHttpError(error: HttpErrorResponse): void {
+    // Mapear el error HTTP a información específica
+    this.httpError = this.errorMappingService.mapHttpError(error);
+    this.showHttpError = true;
+
+    // Si el error tiene un campo específico, también agregarlo a fieldErrors para compatibilidad
+    if (this.httpError.field) {
+      this.fieldErrors.set(this.httpError.field, this.httpError.message);
+    }
+
+    // Configurar mensaje de respuesta para el sistema existente
+    this.responseMessage = this.httpError.message;
   }
 
   handleFieldErrors(fieldErrors: { field: string; message: string }[]): void {
@@ -335,6 +379,30 @@ export class RegisterComponent implements OnInit, OnDestroy {
   acceptTerms(): void {
     this.registerForm.get('termsAccepted')?.setValue(true);
     this.closeTermsModal();
+  }
+
+  /**
+   * Maneja el evento de cierre del componente de error HTTP
+   */
+  onHttpErrorDismissed(): void {
+    this.clearHttpError();
+  }
+
+  /**
+   * Maneja el evento de acción del componente de error HTTP (ej: reintentar)
+   */
+  onHttpErrorAction(): void {
+    // Limpiar el error y permitir al usuario intentar nuevamente
+    this.clearHttpError();
+
+    // Opcional: hacer scroll al primer campo con error
+    if (this.httpError?.field) {
+      const fieldElement = document.querySelector(`[formcontrolname="${this.httpError.field}"]`);
+      if (fieldElement) {
+        fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (fieldElement as HTMLElement).focus();
+      }
+    }
   }
 
   // Método para marcar los términos como tocados para mostrar error visual

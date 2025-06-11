@@ -1,0 +1,114 @@
+<!-- Contenedor principal del error HTTP con glassmorphism -->
+<div 
+  *ngIf="visible && error"
+  [ngClass]="getContainerClasses()"
+  [@errorSlideIn]="animationState"
+  [attr.id]="getErrorId()"
+  [attr.aria-label]="getAriaLabel()"
+  [attr.aria-live]="error.severity === 'critical' ? 'assertive' : 'polite'"
+  [attr.aria-atomic]="true"
+  role="alert"
+  tabindex="0"
+  (keydown)="onKeyDown($event)">
+
+  <!-- Borde izquierdo coloreado según tipo de error -->
+  <div 
+    class="error-border" 
+    [style.background-color]="getBorderColor()">
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="error-content">
+    
+    <!-- Header con icono y título -->
+    <div class="error-header">
+      
+      <!-- Icono del error -->
+      <div 
+        *ngIf="finalConfig.showIcon" 
+        class="error-icon"
+        [@iconPulse]="iconState">
+        <mat-icon 
+          [style.color]="getIconColor()"
+          [attr.aria-hidden]="true">
+          {{ getErrorIcon() }}
+        </mat-icon>
+      </div>
+
+      <!-- Título y botón de cerrar -->
+      <div class="error-header-content">
+        <h4 class="error-title" [ngClass]="getContrastLevel()">
+          {{ error.title }}
+        </h4>
+        
+        <!-- Botón de cerrar -->
+        <button 
+          *ngIf="finalConfig.dismissible"
+          type="button"
+          class="error-dismiss-btn"
+          (click)="onDismissClick($event)"
+          [attr.aria-label]="'Cerrar error: ' + error.title"
+          mat-icon-button>
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mensaje principal -->
+    <div class="error-message">
+      <p [ngClass]="getContrastLevel()">{{ error.message }}</p>
+      
+      <!-- Código de error (si existe) -->
+      <span *ngIf="error.code" class="error-code">
+        Código: {{ error.code }}
+      </span>
+    </div>
+
+    <!-- Sugerencias de resolución -->
+    <div 
+      *ngIf="finalConfig.showSuggestions && error.suggestions && error.suggestions.length > 0"
+      class="error-suggestions">
+      <h5 class="suggestions-title">¿Cómo resolver este problema?</h5>
+      <ul class="suggestions-list" role="list">
+        <li 
+          *ngFor="let suggestion of error.suggestions; trackBy: trackBySuggestion"
+          role="listitem">
+          <mat-icon class="suggestion-icon" aria-hidden="true">lightbulb</mat-icon>
+          <span>{{ suggestion }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Botón de acción personalizada -->
+    <div 
+      *ngIf="finalConfig.showActionButton && error.recoverable"
+      class="error-actions">
+      <button 
+        type="button"
+        class="error-action-btn"
+        (click)="onActionClick()"
+        [attr.aria-label]="finalConfig.actionButtonText + ' para resolver: ' + error.title"
+        mat-raised-button>
+        <mat-icon>refresh</mat-icon>
+        {{ finalConfig.actionButtonText }}
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Indicador de severidad visual -->
+  <div 
+    class="severity-indicator"
+    [ngClass]="'severity-' + error.severity"
+    [attr.aria-hidden]="true">
+  </div>
+
+</div>
+
+<!-- Overlay de fondo para errores críticos -->
+<div 
+  *ngIf="visible && error && error.severity === 'critical' && finalConfig.position !== 'inline'"
+  class="error-backdrop"
+  [@errorSlideIn]="animationState"
+  (click)="finalConfig.dismissible && dismiss()">
+</div>
