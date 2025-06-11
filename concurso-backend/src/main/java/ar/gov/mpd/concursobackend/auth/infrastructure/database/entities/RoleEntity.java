@@ -43,13 +43,13 @@ public class RoleEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "name")
-    private RoleEnum role;
+    private RoleEnum name;
 
     public RoleEntity() {
     }
 
-    public RoleEntity(RoleEnum role) {
-        this.role = role;
+    public RoleEntity(RoleEnum name) {
+        this.name = name;
     }
 
 }

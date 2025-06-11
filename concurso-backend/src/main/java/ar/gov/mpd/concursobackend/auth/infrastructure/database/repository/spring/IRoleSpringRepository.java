@@ -11,6 +11,6 @@ import java.util.UUID;
 @Repository
 public interface IRoleSpringRepository extends JpaRepository<RoleEntity, UUID> {
     
-    Optional<RoleEntity> findByRole(RoleEnum name);
-    boolean existsByRole(RoleEnum role);
+    Optional<RoleEntity> findByName(RoleEnum name);
+    boolean existsByName(RoleEnum role);
 }

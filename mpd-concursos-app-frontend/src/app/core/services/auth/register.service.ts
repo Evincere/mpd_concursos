@@ -81,7 +81,7 @@ export class RegisterService {
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
-    console.error('Error en registro:', error);
+    // Log silently for registration errors
 
     const errorResponse = error.error;
 

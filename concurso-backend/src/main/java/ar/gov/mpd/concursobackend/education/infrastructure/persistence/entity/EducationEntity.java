@@ -27,64 +27,64 @@ public class EducationEntity {
     @Column(name = "id")
     private UUID id;
     
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "userId", nullable = false)
     private UUID userId;
-    
+
     // Common fields for all education types
-    
+
     @Column(name = "type", nullable = false)
     private String type;
-    
+
     @Column(name = "status", nullable = false)
     private String status;
-    
+
     @Column(name = "title", nullable = false)
     private String title;
-    
+
     @Column(name = "institution", nullable = false)
     private String institution;
-    
-    @Column(name = "issue_date")
+
+    @Column(name = "issueDate")
     private LocalDate issueDate;
-    
-    @Column(name = "document_url")
+
+    @Column(name = "documentUrl")
     private String documentUrl;
     
     // Fields for higher education and undergraduate degrees
-    
-    @Column(name = "duration_years")
+
+    @Column(name = "durationYears")
     private Integer durationYears;
-    
+
     @Column(name = "average")
     private Double average;
-    
+
     // Fields for postgraduate studies
-    
-    @Column(name = "thesis_topic")
+
+    @Column(name = "thesisTopic")
     private String thesisTopic;
-    
+
     // Fields for diplomas and training courses
-    
-    @Column(name = "hourly_load")
+
+    @Column(name = "hourlyLoad")
     private Integer hourlyLoad;
-    
-    @Column(name = "had_final_evaluation")
+
+    @Column(name = "hadFinalEvaluation")
     private Boolean hadFinalEvaluation;
-    
+
     // Fields for scientific activities
-    
-    @Column(name = "activity_type")
+
+    @Column(name = "activityType")
     private String activityType;
-    
+
     @Column(name = "topic")
     private String topic;
-    
-    @Column(name = "activity_role")
+
+    @Column(name = "activityRole")
     private String activityRole;
-    
-    @Column(name = "exposition_place_date")
+
+    @Column(name = "expositionPlaceDate")
     private String expositionPlaceDate;
-    
+
     @Column(name = "comments")
     private String comments;
 } 

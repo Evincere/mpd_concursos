@@ -68,7 +68,7 @@ export class AuthService {
       .pipe(
         tap(response => this.handleAuthResponse(response)),
         catchError(error => {
-          console.error('Error en registro:', error);
+          // Log silently for registration errors
           return throwError(() => new Error(error.error?.message || 'Error en el registro'));
         })
       );

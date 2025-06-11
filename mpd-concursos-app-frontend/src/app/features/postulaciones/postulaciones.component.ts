@@ -128,7 +128,18 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
         this.aplicarFiltros();
       },
       error: (error: Error) => {
-        this.error = error.message === 'Network error' ? 'connection' : 'server';
+        // Solo mostrar errores reales, no cuando simplemente no hay datos
+        if (error.message.includes('Network error') || error.message.includes('Error de conexión')) {
+          this.error = 'connection';
+        } else if (error.message.includes('No autorizado') || error.message.includes('401') || error.message.includes('403')) {
+          this.error = 'server';
+        } else {
+          // Para otros errores, verificar si realmente es un error del servidor
+          // y no simplemente una respuesta vacía
+          console.warn('[PostulacionesComponent] Error al cargar postulaciones:', error.message);
+          // No establecer error para permitir que se muestre el estado vacío normal
+          this.error = null;
+        }
         this.postulaciones = [];
         this.postulacionesFiltradas = [];
         this.totalItems = 0;

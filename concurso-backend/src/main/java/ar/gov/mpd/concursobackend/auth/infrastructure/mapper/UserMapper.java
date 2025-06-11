@@ -99,7 +99,7 @@ public class UserMapper {
                 Set<RoleEntity> roleEntities = user.getRoles().stream()
                         .map(rol -> {
                             logger.debug("Buscando rol {} en la base de datos", rol.getRole());
-                            return roleSpringRepository.findByRole(rol.getRole())
+                            return roleSpringRepository.findByName(rol.getRole())
                                     .orElseThrow(() -> {
                                         logger.error("Rol {} no encontrado en la base de datos", rol.getRole());
                                         return new RuntimeException("Error: Rol no encontrado: " + rol.getRole());
@@ -196,7 +196,7 @@ public class UserMapper {
                     .map(roleEntity -> {
                         Rol rol = new Rol();
                         rol.setId(roleEntity.getId());
-                        rol.setRole(roleEntity.getRole());
+                        rol.setRole(roleEntity.getName());
                         return rol;
                     })
                     .collect(Collectors.toSet());

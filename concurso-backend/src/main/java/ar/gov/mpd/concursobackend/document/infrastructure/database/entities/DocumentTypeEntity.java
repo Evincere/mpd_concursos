@@ -40,9 +40,9 @@ public class DocumentTypeEntity {
     private Integer order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
+    @JoinColumn(name = "parentId")
     private DocumentTypeEntity parent;
 
-    @Column(name = "is_active")
+    @Column(name = "isActive")
     private boolean isActive = true;
 }

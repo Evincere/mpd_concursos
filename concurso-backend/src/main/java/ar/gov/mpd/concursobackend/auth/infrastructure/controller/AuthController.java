@@ -19,6 +19,7 @@ import ar.gov.mpd.concursobackend.auth.domain.exception.ExpiredAccountException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.InactiveAccountException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCredentialsException;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
@@ -75,6 +76,18 @@ public class AuthController {
             logger.error("Error inesperado en el login para usuario {}: {}", userLogin.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Error de autenticación", "Ha ocurrido un error inesperado. Por favor, inténtelo de nuevo más tarde."));
+        }
+    }
+
+    @GetMapping("/debug/users")
+    public ResponseEntity<?> debugUsers() {
+        try {
+            // Este endpoint es solo para debugging - remover en producción
+            return ResponseEntity.ok(userService.getAllUsersDebug());
+        } catch (Exception e) {
+            logger.error("Error al obtener usuarios para debug", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Error interno del servidor", e.getMessage()));
         }
     }
 

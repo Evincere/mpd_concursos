@@ -142,7 +142,12 @@ export class DashboardService {
             return updatedCards;
           }),
           catchError(error => {
-            this.loggingService.error(`[${this.LOG_TAG}] Error fetching user inscriptions for dashboard cards:`, error, this.LOG_TAG);
+            // Para usuarios nuevos sin postulaciones, un 404 es esperado y no es un error real
+            if (error.status === 404) {
+              this.loggingService.debug(`[${this.LOG_TAG}] No inscriptions found for user (expected for new users).`, undefined, this.LOG_TAG);
+            } else {
+              this.loggingService.error(`[${this.LOG_TAG}] Error fetching user inscriptions for dashboard cards:`, error, this.LOG_TAG);
+            }
             // Return original cards if inscription fetching fails, to not block the display
             return of(cards);
           })

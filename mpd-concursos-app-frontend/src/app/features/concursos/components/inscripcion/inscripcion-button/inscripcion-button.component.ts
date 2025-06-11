@@ -59,6 +59,7 @@ export class InscripcionButtonComponent {
   }
 
   get buttonText(): string {
+    // Si hay postulación del usuario, mostrar estado de la postulación
     if (this.userPostulation) {
       switch (this.userPostulation.estado) {
         case 'COMPLETED_PENDING_DOCS':
@@ -83,7 +84,35 @@ export class InscripcionButtonComponent {
           return 'Ver Postulación';
       }
     }
-    return 'Inscribirse';
+
+    // Si no hay postulación, mostrar según estado del concurso
+    return this.getContestButtonText();
+  }
+
+  /**
+   * Determina el texto del botón según el estado del concurso
+   */
+  private getContestButtonText(): string {
+    const status = this.currentContest?.status?.toUpperCase();
+
+    switch (status) {
+      case 'INSCRIPTION_OPEN':
+        return 'Inscribirse';
+      case 'PUBLISHED':
+        // Verificar fechas para determinar si está abierto
+        return this.isContestOpenForInscription() ? 'Inscribirse' : 'Próximamente';
+      case 'INSCRIPTION_PENDING':
+        return 'Próximamente';
+      case 'CLOSED':
+      case 'INSCRIPTION_CLOSED':
+        return 'Inscripciones Cerradas';
+      case 'CANCELLED':
+        return 'Cancelado';
+      case 'FINISHED':
+        return 'Finalizado';
+      default:
+        return 'Ver Detalles';
+    }
   }
 
   get buttonTooltip(): string {
@@ -101,18 +130,42 @@ export class InscripcionButtonComponent {
           return 'Su inscripción fue rechazada. Puede ver los motivos y detalles';
         case 'ACTIVE':
           return 'Su inscripción está en proceso. Puede continuar completando los datos requeridos';
-        // Estados legacy para compatibilidad temporal
-        case 'APPROVED':
-          return 'Su inscripción ha sido aprobada. Puede ver los detalles y próximos pasos';
-        case 'ACTIVE':
-          return 'Su inscripción está en proceso. Puede continuar completando los datos requeridos';
         case 'FROZEN':
           return 'Su inscripción fue congelada por vencimiento del plazo de documentación';
         default:
           return 'Ver el estado actual de su postulación';
       }
     }
-    return 'Iniciar proceso de inscripción al concurso';
+
+    // Si no hay postulación, mostrar tooltip según estado del concurso
+    return this.getContestButtonTooltip();
+  }
+
+  /**
+   * Determina el tooltip del botón según el estado del concurso
+   */
+  private getContestButtonTooltip(): string {
+    const status = this.currentContest?.status?.toUpperCase();
+
+    switch (status) {
+      case 'INSCRIPTION_OPEN':
+        return 'Iniciar proceso de inscripción al concurso';
+      case 'PUBLISHED':
+        return this.isContestOpenForInscription()
+          ? 'Iniciar proceso de inscripción al concurso'
+          : 'Las inscripciones aún no han comenzado';
+      case 'INSCRIPTION_PENDING':
+        return 'Las inscripciones aún no han comenzado';
+      case 'CLOSED':
+      case 'INSCRIPTION_CLOSED':
+        return 'Las inscripciones para este concurso han finalizado';
+      case 'CANCELLED':
+        return 'Este concurso ha sido cancelado';
+      case 'FINISHED':
+        return 'Este concurso ha finalizado';
+      default:
+        return 'Ver detalles del concurso';
+    }
   }
 
   get buttonVariant(): 'primary' | 'secondary' | 'success' | 'warning' | 'danger' {
@@ -129,18 +182,40 @@ export class InscripcionButtonComponent {
           return 'danger';     // 🔴 Rojo - Rechazado
         case 'ACTIVE':
           return 'primary';    // 🔵 Azul primario - Continuar
-        // Estados legacy para compatibilidad temporal
-        case 'APPROVED':
-          return 'success';    // Legacy: mapea a APPROVED
-        case 'ACTIVE':
-          return 'primary';    // Legacy: mapea a ACTIVE
         case 'FROZEN':
           return 'danger';     // 🔴 Rojo - Estado crítico
         default:
           return 'secondary';
       }
     }
-    return 'primary';
+
+    // Si no hay postulación, mostrar color según estado del concurso
+    return this.getContestButtonVariant();
+  }
+
+  /**
+   * Determina el color del botón según el estado del concurso
+   */
+  private getContestButtonVariant(): 'primary' | 'secondary' | 'success' | 'warning' | 'danger' {
+    const status = this.currentContest?.status?.toUpperCase();
+
+    switch (status) {
+      case 'INSCRIPTION_OPEN':
+        return 'success';    // 🟢 Verde - Inscripciones abiertas
+      case 'PUBLISHED':
+        return this.isContestOpenForInscription() ? 'success' : 'secondary';
+      case 'INSCRIPTION_PENDING':
+        return 'secondary';  // 🔵 Azul - Próximamente
+      case 'CLOSED':
+      case 'INSCRIPTION_CLOSED':
+        return 'secondary';  // 🔵 Azul gris - Cerrado
+      case 'CANCELLED':
+        return 'danger';     // 🔴 Rojo - Cancelado
+      case 'FINISHED':
+        return 'secondary';  // 🔵 Azul gris - Finalizado
+      default:
+        return 'secondary';  // 🔵 Azul - Por defecto
+    }
   }
 
   get buttonIcon(): string {
@@ -157,24 +232,74 @@ export class InscripcionButtonComponent {
           return 'fas fa-times-circle';   // ❌ Rechazado
         case 'ACTIVE':
           return 'fas fa-play';           // ▶️ Continuar
-        // Estados legacy para compatibilidad temporal
-        case 'APPROVED':
-          return 'fas fa-check-circle';   // Legacy: mapea a APPROVED
-        case 'ACTIVE':
-          return 'fas fa-play';           // Legacy: mapea a ACTIVE
         case 'FROZEN':
           return 'fas fa-snowflake';      // ❄️ Congelado
         default:
           return 'fas fa-eye';            // 👁️ Ver
       }
     }
-    return 'fas fa-user-plus';            // ➕ Inscribirse
+
+    // Si no hay postulación, mostrar icono según estado del concurso
+    return this.getContestButtonIcon();
+  }
+
+  /**
+   * Determina el icono del botón según el estado del concurso
+   */
+  private getContestButtonIcon(): string {
+    const status = this.currentContest?.status?.toUpperCase();
+
+    switch (status) {
+      case 'INSCRIPTION_OPEN':
+        return 'fas fa-user-plus';       // ➕ Inscribirse
+      case 'PUBLISHED':
+        return this.isContestOpenForInscription() ? 'fas fa-user-plus' : 'fas fa-clock';
+      case 'INSCRIPTION_PENDING':
+        return 'fas fa-clock';           // 🕐 Próximamente
+      case 'CLOSED':
+      case 'INSCRIPTION_CLOSED':
+        return 'fas fa-times-circle';    // ❌ Cerrado
+      case 'CANCELLED':
+        return 'fas fa-ban';             // 🚫 Cancelado
+      case 'FINISHED':
+        return 'fas fa-flag-checkered';  // 🏁 Finalizado
+      default:
+        return 'fas fa-eye';             // 👁️ Ver detalles
+    }
   }
 
   get isDisabled(): boolean {
-    // Estados que permiten nuevas inscripciones
-    const allowedStates = ['PUBLISHED', 'INSCRIPTION_OPEN'];
-    return !allowedStates.includes(this.currentContest.status);
+    // Si hay postulación del usuario, verificar si puede interactuar
+    if (this.userPostulation) {
+      const finalStates = ['CANCELLED', 'REJECTED', 'APPROVED'];
+      return finalStates.includes(this.userPostulation.estado);
+    }
+
+    // Si no hay postulación, verificar estado del concurso
+    return !this.isContestOpenForInscription();
+  }
+
+  /**
+   * Verifica si el concurso está abierto para inscripciones
+   */
+  private isContestOpenForInscription(): boolean {
+    const status = this.currentContest?.status?.toUpperCase();
+
+    // Estados que explícitamente permiten inscripciones
+    if (status === 'INSCRIPTION_OPEN') {
+      return true;
+    }
+
+    // Para PUBLISHED, verificar fechas
+    if (status === 'PUBLISHED') {
+      const now = new Date();
+      const startDate = new Date(this.currentContest.startDate);
+      const endDate = new Date(this.currentContest.endDate);
+
+      return now >= startDate && now <= endDate;
+    }
+
+    return false;
   }
 
   get shouldShowUrgencyIndicator(): boolean {

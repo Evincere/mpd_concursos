@@ -84,7 +84,7 @@ export class InscriptionSessionService {
   saveSession(session: InscriptionSessionRequest): Observable<InscriptionSessionResponse> {
     // Logging implementado con LoggingService;),
         catchError(error => {
-          console.error('[InscriptionSessionService] Error al guardar sesión:', error);
+          this.loggingService.debug('[InscriptionSessionService] Error al guardar sesión:', error.status, 'InscriptionSession');
           throw error;
         })
       );

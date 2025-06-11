@@ -106,7 +106,7 @@ public class ExaminationMapper {
                 .text(entity.getText())
                 .type(entity.getType())
                 .score(entity.getScore())
-                .order_number(entity.getOrder_number())
+                .order_number(entity.getOrderNumber())
                 .options(toDomainOptions(entity.getOptions()))
                 .build();
     }
@@ -120,7 +120,7 @@ public class ExaminationMapper {
         entity.setText(domain.getText());
         entity.setType(domain.getType());
         entity.setScore(domain.getScore());
-        entity.setOrder_number(domain.getOrder_number());
+        entity.setOrderNumber(domain.getOrder_number());
         return entity;
     }
 
@@ -218,7 +218,7 @@ public class ExaminationMapper {
                 .type(entity.getType())
                 .options(toOptionDTOList(entity.getOptions()))
                 .score(entity.getScore())
-                .order(entity.getOrder_number())
+                .order(entity.getOrderNumber())
                 .build();
     }
 
@@ -237,7 +237,7 @@ public class ExaminationMapper {
         return OptionDTO.builder()
                 .id(entity.getId())
                 .text(entity.getText())
-                .order(entity.getOrder_number())
+                .order(entity.getOrderNumber())
                 .build();
     }
 
@@ -392,7 +392,7 @@ public class ExaminationMapper {
         return Option.builder()
                 .id(entity.getId())
                 .text(entity.getText())
-                .order_number(entity.getOrder_number())
+                .order_number(entity.getOrderNumber())
                 .build();
     }
 

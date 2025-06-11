@@ -25,6 +25,12 @@ Preparar versión funcional para deployment en servidor Donweb con Docker
 - [ ] Optimizar configuración para producción
 - [ ] Validar variables de entorno
 
+### 🚨 TAREA ACTUAL: Manejo de Errores en Formulario de Registro (Iniciado: 2024-12-19)
+- [ ] **Auditoría del sistema actual** - Verificar manejo de errores existente
+- [ ] **Componente de error glassmorphism** - Crear componente reutilizable
+- [ ] **Integración en formulario** - Mapeo específico de errores backend
+- [ ] **Testing de casos de error** - Validar todos los escenarios identificados
+
 ### 📋 FASE 2: CONFIGURACIÓN DE PRODUCCIÓN
 - [ ] Ajustar CORS para IP del servidor (149.50.132.23)
 - [ ] Configurar variables de entorno de producción

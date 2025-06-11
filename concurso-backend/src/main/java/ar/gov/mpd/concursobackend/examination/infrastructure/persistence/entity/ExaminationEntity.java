@@ -13,6 +13,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -32,13 +34,15 @@ import jakarta.persistence.JoinColumn;
 @AllArgsConstructor
 public class ExaminationEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
     private String title;
 
     private String description;
 
-    @Column(name = "duration_minutes")
+    @Column(name = "durationMinutes")
     private Long durationMinutes;
 
     @OneToMany(mappedBy = "examination", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -48,41 +52,41 @@ public class ExaminationEntity {
     @Enumerated(EnumType.STRING)
     private ExaminationStatus status;
 
-    @Column(name = "start_time")
+    @Column(name = "startTime")
     private LocalDateTime startTime;
 
-    @Column(name = "end_time")
+    @Column(name = "endTime")
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
     private ExaminationType type;
 
-    @Column(name = "cancellation_date")
+    @Column(name = "cancellationDate")
     private LocalDateTime cancellationDate;
 
-    @Column(name = "cancellation_reason")
+    @Column(name = "cancellationReason")
     private String cancellationReason;
 
     @ElementCollection
-    @CollectionTable(name = "examination_security_violations", joinColumns = @JoinColumn(name = "examination_id"))
+    @CollectionTable(name = "examination_security_violations", joinColumns = @JoinColumn(name = "examinationId"))
     @Column(name = "violation")
     @Builder.Default
     private List<String> securityViolations = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "examination_requirements", joinColumns = @JoinColumn(name = "examination_id"))
+    @CollectionTable(name = "examination_requirements", joinColumns = @JoinColumn(name = "examinationId"))
     @Column(name = "requirement")
     @Builder.Default
     private List<String> requirements = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "examination_rules", joinColumns = @JoinColumn(name = "examination_id"))
+    @CollectionTable(name = "examination_rules", joinColumns = @JoinColumn(name = "examinationId"))
     @Column(name = "rule")
     @Builder.Default
     private List<String> rules = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "examination_allowed_materials", joinColumns = @JoinColumn(name = "examination_id"))
+    @CollectionTable(name = "examination_allowed_materials", joinColumns = @JoinColumn(name = "examinationId"))
     @Column(name = "material")
     @Builder.Default
     private List<String> allowedMaterials = new ArrayList<>();

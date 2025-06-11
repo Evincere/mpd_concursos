@@ -7,7 +7,7 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
+// import org.springframework.scheduling.annotation.Scheduled; // TEMPORAL: Deshabilitado durante migración
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +29,9 @@ public class InscriptionDeadlineService {
     /**
      * Congela las inscripciones que han superado el plazo perentorio de documentación
      * Se ejecuta cada hora
+     * TEMPORAL: Deshabilitado durante la migración de base de datos
      */
-    @Scheduled(fixedRate = 3600000) // Cada hora
+    // @Scheduled(fixedRate = 3600000) // Cada hora - TEMPORAL: Deshabilitado
     @Transactional
     public void freezeExpiredInscriptions() {
         log.info("Iniciando proceso de congelación de inscripciones con plazo vencido");

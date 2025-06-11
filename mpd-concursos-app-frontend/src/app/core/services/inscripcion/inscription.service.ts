@@ -79,7 +79,13 @@ export class InscriptionService {
    * Helper to handle common HTTP errors.
    */
   private handleSimpleError(error: HttpErrorResponse): Observable<never> {
-    console.error('[InscriptionService] An error occurred:', error);
+    // Log silently for expected errors (404, 500) to avoid console spam
+    if (error.status === 404 || error.status === 500) {
+      this.loggingService.debug('[InscriptionService] Expected error occurred:', error.status, 'Inscription');
+    } else {
+      this.loggingService.error('[InscriptionService] Unexpected error occurred:', error, 'Inscription');
+    }
+
     let errorMessage = 'Ocurrió un error inesperado.';
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Error del cliente: ${error.error.message}`;
@@ -226,12 +232,11 @@ export class InscriptionService {
         setTimeout(() => this.refreshInscriptions(), 500);
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error creating inscription:', {
+        this.loggingService.debug('[InscriptionService] Error creating inscription:', {
           status: error.status,
           statusText: error.statusText,
-          message: error.message,
-          error: error.error
-        });
+          message: error.message
+        }, 'Inscription');
 
         // If error is 409 (Conflict) or 500 (Internal Server Error), it might be due to an existing inscription
         if (error.status === 409 || error.status === 500) {
@@ -322,10 +327,11 @@ export class InscriptionService {
         }
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error fetching user inscriptions from new endpoint:', error);
+        // Log silently for expected errors to avoid console spam
+        this.loggingService.debug('[InscriptionService] Error fetching user inscriptions from new endpoint:', error.status, 'Inscription');
         // If it fails, try with the alternative old endpoint
         if (error.status === 404 || error.status === 403) { // Also handle 403 if user doesn't have access to new endpoint
-          this.loggingService.warn('[InscriptionService] Attempting to fetch user inscriptions from old endpoint due to 404/403 on new endpoint.', undefined, 'Inscription');
+          this.loggingService.debug('[InscriptionService] Attempting to fetch user inscriptions from old endpoint due to 404/403 on new endpoint.', undefined, 'Inscription');
           return this.http.get<Page<IInscriptionResponse>>(
             `${this.baseUrl}${this.oldInscriptionsEndpoint}/me`,
             { params }
@@ -350,10 +356,30 @@ export class InscriptionService {
               }
             }),
             catchError(secondError => {
-              console.error('[InscriptionService] Error with alternative old endpoint:', secondError);
+              this.loggingService.debug('[InscriptionService] Error with alternative old endpoint:', secondError.status, 'Inscription');
               // If it also fails, return an empty array to avoid UI errors
               this.inscriptions$.next([]);
-              return this.handleSimpleError(secondError);
+              const emptyPage: Page<IInscriptionResponse> = {
+                content: [],
+                totalElements: 0,
+                totalPages: 0,
+                number: 0,
+                size: 10,
+                pageable: {
+                  sort: { sorted: false, unsorted: true, empty: true },
+                  pageNumber: 0,
+                  pageSize: 10,
+                  offset: 0,
+                  paged: true,
+                  unpaged: false
+                },
+                last: true,
+                sort: { sorted: false, unsorted: true, empty: true },
+                first: true,
+                numberOfElements: 0,
+                empty: true
+              };
+              return of(emptyPage);
             })
           );
         }
@@ -527,7 +553,7 @@ export class InscriptionService {
               }, 1000);
             }),
             catchError((deleteError: HttpErrorResponse) => {
-              console.error('[InscriptionService] Error cancelling inscription with DELETE:', deleteError);
+              this.loggingService.debug('[InscriptionService] Error cancelling inscription with DELETE:', deleteError.status, 'Inscription');
 
               this.clearFormState(inscriptionId); // Clear local form state
               this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local inscription state
@@ -691,7 +717,7 @@ export class InscriptionService {
         setTimeout(() => this.refreshInscriptions(), 500); // Refresh the list after a brief delay
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error updating status:', error);
+        this.loggingService.debug('[InscriptionService] Error updating status:', error.status, 'Inscription');
 
         // If it's a 403 or 404 and we're trying to change to a user completion state, try with the other endpoint
         if ((error.status === 403 || error.status === 404) && userCompletionStates.includes(backendState) && this.updateStatusRetryCount[inscriptionId] === 1) {
@@ -706,7 +732,7 @@ export class InscriptionService {
               setTimeout(() => this.refreshInscriptions(), 500); // Refresh the list after a brief delay
             }),
             catchError(secondError => {
-              console.error('[InscriptionService] Error in second attempt (alternative endpoint):', secondError);
+              this.loggingService.debug('[InscriptionService] Error in second attempt (alternative endpoint):', secondError.status, 'Inscription');
 
               // If both new endpoints fail, try the old endpoints for backward compatibility
               if ((secondError.status === 403 || secondError.status === 404 || secondError.status === 400 || secondError.status === 500) && this.updateStatusRetryCount[inscriptionId] <= this.MAX_RETRY_ATTEMPTS) {
@@ -720,7 +746,7 @@ export class InscriptionService {
                     setTimeout(() => this.refreshInscriptions(), 500); // Refresh the list after a brief delay
                   }),
                   catchError(thirdError => {
-                    console.error('[InscriptionService] Error in third attempt (old endpoint):', thirdError);
+                    this.loggingService.debug('[InscriptionService] Error in third attempt (old endpoint):', thirdError.status, 'Inscription');
                     delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter to avoid infinite loops
                     // We already updated the local state, so we can return a successful observable
                     const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
@@ -920,7 +946,7 @@ export class InscriptionService {
         this.refreshInscriptions(); // Refresh local list
       }),
       catchError(error => {
-        console.error('[InscriptionService] Error finalizing inscription:', error);
+        this.loggingService.debug('[InscriptionService] Error finalizing inscription:', error.status, 'Inscription');
         // On error, try to update local state to reflect attempt
         // Note: request doesn't have inscriptionId, this needs to be passed separately
         return this.handleSimpleError(error);

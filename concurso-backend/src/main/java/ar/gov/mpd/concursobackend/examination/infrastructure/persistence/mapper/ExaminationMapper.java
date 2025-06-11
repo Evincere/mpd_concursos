@@ -47,16 +47,20 @@ public interface ExaminationMapper {
     @Mapping(target = "options", ignore = true)
     @Mapping(target = "correctAnswer", ignore = true)
     @Mapping(target = "correctAnswers", ignore = true)
+    @Mapping(source = "order_number", target = "orderNumber")
     QuestionEntity toEntity(Question domain);
 
     @Mapping(target = "options", ignore = true)
+    @Mapping(source = "orderNumber", target = "order_number")
     Question toDomain(QuestionEntity entity);
 
     List<Question> toDomainQuestions(List<QuestionEntity> entities);
 
     @Mapping(target = "question", ignore = true)
+    @Mapping(source = "order_number", target = "orderNumber")
     OptionEntity toEntity(Option domain);
 
+    @Mapping(source = "orderNumber", target = "order_number")
     Option toDomain(OptionEntity entity);
 
     @AfterMapping

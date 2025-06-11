@@ -28,7 +28,7 @@ public class QuestionEntity {
 
     private Integer score;
 
-    private Integer order_number;
+    private Integer orderNumber;
 
     private String correctAnswer;
 
@@ -40,6 +40,6 @@ public class QuestionEntity {
     private List<OptionEntity> options;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "examination_id")
+    @JoinColumn(name = "examinationId")
     private ExaminationEntity examination;
 }

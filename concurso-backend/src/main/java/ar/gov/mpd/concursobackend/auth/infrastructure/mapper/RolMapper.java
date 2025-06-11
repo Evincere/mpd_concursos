@@ -10,10 +10,10 @@ public class RolMapper {
 
     public Rol toDomain(RoleEntity entity) {
         Rol rol = new Rol(
-            entity.getRole()
+            entity.getName()
         );
         rol.setId(entity.getId());
-        rol.setRole(entity.getRole());
+        rol.setRole(entity.getName());
         return rol;
     }
 

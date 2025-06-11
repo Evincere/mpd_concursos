@@ -16,7 +16,6 @@ import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.nio.ByteBuffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,12 +32,7 @@ public class JpaInscriptionRepository implements InscriptionRepository {
     private final InscriptionEntityMapper mapper;
     private static final Logger log = LoggerFactory.getLogger(JpaInscriptionRepository.class);
 
-    private byte[] uuidToBytes(UUID uuid) {
-        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
-        bb.putLong(uuid.getMostSignificantBits());
-        bb.putLong(uuid.getLeastSignificantBits());
-        return bb.array();
-    }
+
 
     @Override
     public Inscription save(Inscription inscription) {
@@ -49,19 +43,19 @@ public class JpaInscriptionRepository implements InscriptionRepository {
 
     @Override
     public Optional<Inscription> findById(UUID id) {
-        return repository.findById(uuidToBytes(id)).map(mapper::toDomain);
+        return repository.findById(id).map(mapper::toDomain);
     }
 
     @Override
     public List<Inscription> findByUserId(UUID userId) {
-        return repository.findByUserId(uuidToBytes(userId)).stream()
+        return repository.findByUserId(userId).stream()
                 .map(mapper::toDomain)
                 .toList();
     }
 
     @Override
     public boolean existsByUserIdAndContestId(UUID userId, Long contestId) {
-        return repository.existsByUserIdAndContestId(uuidToBytes(userId), contestId);
+        return repository.existsByUserIdAndContestId(userId, contestId);
     }
 
     @Override
@@ -83,17 +77,17 @@ public class JpaInscriptionRepository implements InscriptionRepository {
 
     @Override
     public Page<Inscription> findAllByUserId(UUID userId, PageRequest pageRequest) {
-        return repository.findAllByUserId(uuidToBytes(userId), pageRequest).map(mapper::toDomain);
+        return repository.findAllByUserId(userId, pageRequest).map(mapper::toDomain);
     }
 
     @Override
     public void deleteById(UUID id) {
-        repository.deleteById(uuidToBytes(id));
+        repository.deleteById(id);
     }
 
     @Override
     public boolean existsById(UUID id) {
-        return repository.existsById(uuidToBytes(id));
+        return repository.existsById(id);
     }
 
     @Override
@@ -162,14 +156,14 @@ public class JpaInscriptionRepository implements InscriptionRepository {
     }
 }
 
-interface SpringJpaInscriptionRepository extends JpaRepository<InscriptionEntity, byte[]>, JpaSpecificationExecutor<InscriptionEntity> {
-    List<InscriptionEntity> findByUserId(byte[] userId);
+interface SpringJpaInscriptionRepository extends JpaRepository<InscriptionEntity, UUID>, JpaSpecificationExecutor<InscriptionEntity> {
+    List<InscriptionEntity> findByUserId(UUID userId);
 
-    boolean existsByUserIdAndContestId(byte[] userId, Long contestId);
+    boolean existsByUserIdAndContestId(UUID userId, Long contestId);
 
     List<InscriptionEntity> findByContestId(Long contestId);
 
-    Page<InscriptionEntity> findAllByUserId(byte[] userId, PageRequest pageRequest);
+    Page<InscriptionEntity> findAllByUserId(UUID userId, PageRequest pageRequest);
 
     @Query(value = "SELECT c.title, COUNT(*) FROM inscriptions i " +
            "JOIN contests c ON i.contest_id = c.id " +

@@ -9,7 +9,6 @@ import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper.
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,16 +18,11 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
     private final InscriptionJpaRepository repository;
     private final InscriptionEntityMapper mapper;
 
-    private byte[] uuidToBytes(UUID uuid) {
-        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
-        bb.putLong(uuid.getMostSignificantBits());
-        bb.putLong(uuid.getLeastSignificantBits());
-        return bb.array();
-    }
+
 
     @Override
     public Page<Inscription> findAllByUserId(UUID userId, org.springframework.data.domain.PageRequest pageRequest) {
-        var page = repository.findAllByUserId(uuidToBytes(userId), pageRequest);
+        var page = repository.findAllByUserId(userId, pageRequest);
         return page.map(mapper::toDomain);
     }
 
@@ -47,7 +41,7 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
 
     @Override
     public Optional<Inscription> findById(UUID id) {
-        return repository.findById(uuidToBytes(id))
+        return repository.findById(id)
                 .map(mapper::toDomain);
     }
 
@@ -55,7 +49,7 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
     public Optional<Inscription> findByContestIdAndUserId(Long contestId, UUID userId) {
         // Usamos el método que excluye las inscripciones canceladas
         return repository
-                .findByContestIdAndUserIdAndStatusNot(contestId, uuidToBytes(userId), InscriptionStatus.CANCELLED)
+                .findByContestIdAndUserIdAndStatusNot(contestId, userId, InscriptionStatus.CANCELLED)
                 .map(mapper::toDomain);
     }
 
@@ -63,7 +57,7 @@ public class InscriptionPersistenceAdapter implements LoadInscriptionPort, SaveI
     public Optional<Inscription> findByContestIdAndUserIdIncludingCancelled(Long contestId, UUID userId) {
         // Este método incluye TODAS las inscripciones, incluyendo las canceladas
         return repository
-                .findByContestIdAndUserId(contestId, uuidToBytes(userId))
+                .findByContestIdAndUserId(contestId, userId)
                 .map(mapper::toDomain);
     }
 }

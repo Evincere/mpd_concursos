@@ -11,10 +11,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Mapper para convertir entre entidades y modelos de dominio de sesiones de inscripción
@@ -27,29 +25,7 @@ public class InscriptionSessionEntityMapper {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Convierte un UUID a un array de bytes
-     * @param uuid UUID a convertir
-     * @return Array de bytes
-     */
-    private byte[] uuidToBytes(UUID uuid) {
-        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
-        bb.putLong(uuid.getMostSignificantBits());
-        bb.putLong(uuid.getLeastSignificantBits());
-        return bb.array();
-    }
 
-    /**
-     * Convierte un array de bytes a un UUID
-     * @param bytes Array de bytes a convertir
-     * @return UUID
-     */
-    private UUID bytesToUuid(byte[] bytes) {
-        ByteBuffer bb = ByteBuffer.wrap(bytes);
-        long high = bb.getLong();
-        long low = bb.getLong();
-        return new UUID(high, low);
-    }
 
     /**
      * Convierte un modelo de dominio a una entidad JPA
@@ -58,10 +34,10 @@ public class InscriptionSessionEntityMapper {
      */
     public InscriptionSessionEntity toEntity(InscriptionSession session) {
         InscriptionSessionEntity entity = new InscriptionSessionEntity();
-        entity.setId(uuidToBytes(session.getId().getValue()));
-        entity.setInscriptionId(uuidToBytes(session.getInscriptionId().getValue()));
+        entity.setId(session.getId().getValue());
+        entity.setInscriptionId(session.getInscriptionId().getValue());
         entity.setContestId(session.getContestId().getValue());
-        entity.setUserId(uuidToBytes(session.getUserId().getValue()));
+        entity.setUserId(session.getUserId().getValue());
         entity.setCurrentStep(session.getCurrentStep());
         entity.setCreatedAt(session.getCreatedAt());
         entity.setUpdatedAt(session.getUpdatedAt());
@@ -90,10 +66,10 @@ public class InscriptionSessionEntityMapper {
         }
 
         return InscriptionSession.builder()
-                .id(new InscriptionSessionId(bytesToUuid(entity.getId())))
-                .inscriptionId(new InscriptionId(bytesToUuid(entity.getInscriptionId())))
+                .id(new InscriptionSessionId(entity.getId()))
+                .inscriptionId(new InscriptionId(entity.getInscriptionId()))
                 .contestId(new ContestId(entity.getContestId()))
-                .userId(new UserId(bytesToUuid(entity.getUserId())))
+                .userId(new UserId(entity.getUserId()))
                 .currentStep(entity.getCurrentStep())
                 .formData(formData)
                 .createdAt(entity.getCreatedAt())

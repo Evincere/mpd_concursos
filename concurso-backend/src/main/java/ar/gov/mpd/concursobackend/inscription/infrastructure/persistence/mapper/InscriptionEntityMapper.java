@@ -10,7 +10,6 @@ import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import java.util.UUID;
-import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 
 @Mapper(componentModel = "spring", imports = {
@@ -22,9 +21,9 @@ import java.time.LocalDateTime;
 })
 public interface InscriptionEntityMapper {
 
-    @Mapping(target = "id", expression = "java(uuidToBytes(domain.getId().getValue()))")
+    @Mapping(target = "id", expression = "java(domain.getId().getValue())")
     @Mapping(target = "contestId", source = "contestId")
-    @Mapping(target = "userId", expression = "java(uuidToBytes(domain.getUserId().getValue()))")
+    @Mapping(target = "userId", expression = "java(domain.getUserId().getValue())")
     @Mapping(target = "status", source = "state")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "lastUpdated")
@@ -38,9 +37,9 @@ public interface InscriptionEntityMapper {
             return null;
         }
 
-        InscriptionId id = new InscriptionId(bytesToUuid(entity.getId()));
+        InscriptionId id = new InscriptionId(entity.getId());
         ContestId contestId = new ContestId(entity.getContestId());
-        UserId userId = new UserId(bytesToUuid(entity.getUserId()));
+        UserId userId = new UserId(entity.getUserId());
         InscriptionState state = map(entity.getStatus());
 
         return createInscription(
@@ -54,21 +53,7 @@ public interface InscriptionEntityMapper {
         );
     }
 
-    // Método para convertir UUID a byte[]
-    default byte[] uuidToBytes(UUID uuid) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[16]);
-        byteBuffer.putLong(uuid.getMostSignificantBits());
-        byteBuffer.putLong(uuid.getLeastSignificantBits());
-        return byteBuffer.array();
-    }
 
-    // Método para convertir byte[] a UUID
-    default UUID bytesToUuid(byte[] bytes) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-        long mostSigBits = byteBuffer.getLong();
-        long leastSigBits = byteBuffer.getLong();
-        return new UUID(mostSigBits, leastSigBits);
-    }
 
     // Método para convertir ContestId a Long
     default Long map(ContestId value) {

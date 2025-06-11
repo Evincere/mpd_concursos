@@ -102,6 +102,7 @@ export class DashboardWidgetsService {
         return estadoPerfil;
       }),
       catchError(error => {
+        // Solo loggear el error, no mostrar notificaciones automáticas para errores de perfil
         this.loggingService.error(`[${this.LOG_TAG}] Error calculating profile status:`, error, this.LOG_TAG);
         return of(this.getDefaultEstadoPerfil());
       })
@@ -196,6 +197,7 @@ export class DashboardWidgetsService {
         return topVencimientos;
       }),
       catchError(error => {
+        // Solo loggear el error, no mostrar notificaciones automáticas para errores de vencimientos
         this.loggingService.error(`[${this.LOG_TAG}] Error getting upcoming expirations:`, error, this.LOG_TAG);
         return of([]);
       })

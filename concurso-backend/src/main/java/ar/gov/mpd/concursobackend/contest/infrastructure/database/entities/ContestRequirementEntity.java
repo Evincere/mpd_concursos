@@ -19,7 +19,7 @@ public class ContestRequirementEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contest_id", nullable = false)
+    @JoinColumn(name = "contestId", nullable = false)
     private ContestEntity contest;
 
     @Column(nullable = false, length = 500)
@@ -34,13 +34,13 @@ public class ContestRequirementEntity {
     @Column(nullable = false)
     private Integer priority = 1;
 
-    @Column(name = "document_type", length = 100)
+    @Column(name = "documentType", length = 100)
     private String documentType;
 
-    @Column(name = "created_at")
+    @Column(name = "createdAt")
     private java.time.LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updatedAt")
     private java.time.LocalDateTime updatedAt;
 
     @PrePersist

@@ -11,6 +11,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -23,15 +25,17 @@ import lombok.Setter;
 @Setter
 public class ExaminationSessionEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "examination_id")
+    @Column(name = "examinationId")
     private UUID examinationId;
 
-    @Column(name = "user_id")
+    @Column(name = "userId")
     private UUID userId;
 
-    @Column(name = "start_time")
+    @Column(name = "startTime")
     private LocalDateTime startTime;
 
     private LocalDateTime deadline;
@@ -39,7 +43,7 @@ public class ExaminationSessionEntity {
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     private List<AnswerEntity> answers = new ArrayList<>();
 
-    @Column(name = "current_question_index")
+    @Column(name = "currentQuestionIndex")
     private int currentQuestionIndex;
 
     @Enumerated(EnumType.STRING)

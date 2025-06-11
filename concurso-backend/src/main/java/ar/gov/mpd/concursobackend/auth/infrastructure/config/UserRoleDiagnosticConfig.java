@@ -5,14 +5,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+// import org.springframework.context.annotation.Configuration; // TEMPORAL: Deshabilitado durante migración
 import org.springframework.core.annotation.Order;
 
 /**
  * Configuración para ejecutar el diagnóstico y reparación de usuarios sin roles
  * durante el arranque de la aplicación.
+ * TEMPORAL: Deshabilitado durante la migración de base de datos
  */
-@Configuration
+// @Configuration // TEMPORAL: Deshabilitado durante migración
 public class UserRoleDiagnosticConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(UserRoleDiagnosticConfig.class);
