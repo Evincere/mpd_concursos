@@ -1,7 +1,7 @@
 -- Deshabilitar verificación de foreign keys
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Eliminar tablas en orden
+-- Eliminar tablas en orden (respetando dependencias de foreign keys)
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS experiencias;
@@ -14,18 +14,19 @@ DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS user_entity;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS inscription_circunscripciones;
+DROP TABLE IF EXISTS inscription_notes;
 DROP TABLE IF EXISTS inscription_sessions;
 DROP TABLE IF EXISTS inscriptions;
 DROP TABLE IF EXISTS options;
 DROP TABLE IF EXISTS answers;
 DROP TABLE IF EXISTS examination_sessions;
 DROP TABLE IF EXISTS questions;
-DROP TABLE IF EXISTS examinations;
 DROP TABLE IF EXISTS question_correct_answers;
 DROP TABLE IF EXISTS examination_requirements;
 DROP TABLE IF EXISTS examination_rules;
 DROP TABLE IF EXISTS examination_allowed_materials;
 DROP TABLE IF EXISTS examination_security_violations;
+DROP TABLE IF EXISTS examinations;
 DROP TABLE IF EXISTS documents;
 DROP TABLE IF EXISTS document_types;
 DROP TABLE IF EXISTS contest_requirements;
@@ -103,6 +104,23 @@ CREATE TABLE experience (
 -- Índice para búsqueda rápida por usuario en nueva tabla
 CREATE INDEX idx_experience_user_id ON experience(userId);
 
+-- Tabla experiencias (plural) - Requerida por la estructura de BD
+CREATE TABLE experiencias (
+    id BINARY(16) PRIMARY KEY,
+    userId BINARY(16) NOT NULL,
+    empresa VARCHAR(255) NOT NULL,
+    cargo VARCHAR(255) NOT NULL,
+    fechaInicio DATE NOT NULL,
+    fechaFin DATE,
+    descripcion TEXT,
+    comentario TEXT,
+    documentUrl VARCHAR(255),
+    CONSTRAINT fk_experiencias_user FOREIGN KEY (userId) REFERENCES user_entity(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Índice para búsqueda rápida por usuario en tabla experiencias
+CREATE INDEX idx_experiencias_user_id ON experiencias(userId);
+
 CREATE TABLE contests (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     title VARCHAR(255),
@@ -147,19 +165,20 @@ CREATE TABLE contest_requirements (
     INDEX idx_contest_requirements_priority (priority)
 );
 
+-- Tabla de exámenes (debe crearse antes que examination_sessions)
 CREATE TABLE examinations (
     id BINARY(16) PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
+    title VARCHAR(255),
     description TEXT,
     durationMinutes BIGINT,
     status ENUM('DRAFT', 'PUBLISHED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED') NOT NULL,
-    startTime DATETIME,
-    endTime DATETIME,
-    cancellationDate DATETIME,
-    cancellationReason VARCHAR(255),
     type ENUM('TECHNICAL_LEGAL', 'TECHNICAL_ADMINISTRATIVE', 'PSYCHOLOGICAL') NOT NULL,
-    answers TEXT
-);
+    startTime DATETIME(6),
+    endTime DATETIME(6),
+    answers TEXT,
+    cancellationDate DATETIME(6),
+    cancellationReason VARCHAR(255)
+) ENGINE=InnoDB;
 
 CREATE TABLE examination_sessions (
     id BINARY(16) PRIMARY KEY,
@@ -171,7 +190,7 @@ CREATE TABLE examination_sessions (
     currentQuestionIndex INTEGER,
     FOREIGN KEY (examinationId) REFERENCES examinations(id),
     FOREIGN KEY (userId) REFERENCES user_entity(id)
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE questions (
     id BINARY(16) PRIMARY KEY,
@@ -288,6 +307,18 @@ CREATE TABLE inscription_circunscripciones (
     circunscripcion VARCHAR(100) NOT NULL,
     PRIMARY KEY (inscriptionId, circunscripcion),
     FOREIGN KEY (inscriptionId) REFERENCES inscriptions(id)
+) ENGINE=InnoDB;
+
+-- Tabla de notas de inscripción
+CREATE TABLE inscription_notes (
+    id BINARY(16) PRIMARY KEY,
+    inscriptionId BINARY(16) NOT NULL,
+    text VARCHAR(1000) NOT NULL,
+    createdAt DATETIME(6) NOT NULL,
+    createdBy BINARY(16),
+    createdByUsername VARCHAR(255) NOT NULL,
+    FOREIGN KEY (inscriptionId) REFERENCES inscriptions(id),
+    FOREIGN KEY (createdBy) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE question_correct_answers (
