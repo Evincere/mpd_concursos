@@ -6,18 +6,9 @@ SET SQL_SAFE_UPDATES = 0;
 -- Deshabilitar verificacion de foreign keys temporalmente
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Limpiar datos existentes
-DELETE FROM inscription_circunscripciones;
-DELETE FROM answers;
-DELETE FROM options;
-DELETE FROM questions;
-DELETE FROM examination_sessions;
-DELETE FROM examinations;
-DELETE FROM inscriptions;
-DELETE FROM user_roles;
-DELETE FROM roles;
-DELETE FROM user_entity;
-DELETE FROM contests;
+-- CAMBIO PARA HIBERNATE AUTO-DDL: Eliminar limpieza de datos
+-- Las tablas se crean limpias automáticamente con create-drop
+-- No es necesario limpiar datos existentes
 
 -- Habilitar verificacion de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;

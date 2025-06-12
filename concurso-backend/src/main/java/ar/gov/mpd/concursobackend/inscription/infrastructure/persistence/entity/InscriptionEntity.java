@@ -19,27 +19,27 @@ public class InscriptionEntity {
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "contestId")
+    @Column(name = "contest_id")
     private Long contestId;
 
-    @Column(name = "userId", columnDefinition = "BINARY(16)")
+    @Column(name = "user_id", columnDefinition = "BINARY(16)")
     private UUID userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private InscriptionStatus status;
 
-    @Column(name = "createdAt")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "inscriptionDate")
+    @Column(name = "inscription_date")
     private LocalDateTime inscriptionDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "currentStep")
+    @Column(name = "current_step")
     private InscriptionStep currentStep;
 
     @ElementCollection
@@ -48,24 +48,24 @@ public class InscriptionEntity {
     @Column(name = "circunscripcion")
     private Set<String> selectedCircunscripciones;
 
-    @Column(name = "acceptedTerms")
+    @Column(name = "accepted_terms")
     private boolean acceptedTerms;
 
-    @Column(name = "confirmedPersonalData")
+    @Column(name = "confirmed_personal_data")
     private boolean confirmedPersonalData;
 
-    @Column(name = "centroDeVida")
+    @Column(name = "centro_de_vida")
     private String centroDeVida;
 
-    @Column(name = "termsAcceptanceDate")
+    @Column(name = "terms_acceptance_date")
     private LocalDateTime termsAcceptanceDate;
 
-    @Column(name = "dataConfirmationDate")
+    @Column(name = "data_confirmation_date")
     private LocalDateTime dataConfirmationDate;
 
-    @Column(name = "documentationDeadline")
+    @Column(name = "documentation_deadline")
     private LocalDateTime documentationDeadline;
 
-    @Column(name = "frozenDate")
+    @Column(name = "frozen_date")
     private LocalDateTime frozenDate;
 }
