@@ -189,6 +189,61 @@ export class ErrorMappingService {
       field: 'lastName',
       suggestions: ['Complete este campo para continuar'],
       recoverable: true
+    },
+
+    // Errores de validación específicos del backend
+    'La fecha de nacimiento debe ser pasada': {
+      type: ErrorType.VALIDATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Fecha de nacimiento inválida',
+      message: 'La fecha de nacimiento debe ser anterior a la fecha actual.',
+      field: 'birthDate',
+      suggestions: [
+        'Seleccione una fecha anterior a hoy',
+        'Verifique que el año sea correcto',
+        'Use el formato de fecha correcto'
+      ],
+      recoverable: true
+    },
+
+    'El DNI es obligatorio': {
+      type: ErrorType.VALIDATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'DNI requerido',
+      message: 'Debe ingresar su número de DNI.',
+      field: 'dni',
+      suggestions: ['Ingrese su DNI sin puntos ni espacios'],
+      recoverable: true
+    },
+
+    'El email es obligatorio': {
+      type: ErrorType.VALIDATION,
+      severity: ErrorSeverity.LOW,
+      title: 'Email requerido',
+      message: 'Debe ingresar su dirección de correo electrónico.',
+      field: 'email',
+      suggestions: ['Ingrese un email válido'],
+      recoverable: true
+    },
+
+    'La contraseña es obligatoria': {
+      type: ErrorType.VALIDATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Contraseña requerida',
+      message: 'Debe ingresar una contraseña.',
+      field: 'password',
+      suggestions: ['Ingrese una contraseña de al menos 8 caracteres'],
+      recoverable: true
+    },
+
+    'Las contraseñas no coinciden': {
+      type: ErrorType.VALIDATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Contraseñas no coinciden',
+      message: 'La confirmación de contraseña no coincide.',
+      field: 'confirmPassword',
+      suggestions: ['Verifique que ambas contraseñas sean idénticas'],
+      recoverable: true
     }
   };
 
@@ -229,7 +284,18 @@ export class ErrorMappingService {
   private extractFieldErrors(error: HttpErrorResponse): FieldError[] {
     const fieldErrors: FieldError[] = [];
 
-    // Verificar si hay fieldErrors en la respuesta
+    // Verificar si es un array de errores de validación del backend (BindingResult)
+    if (Array.isArray(error.error)) {
+      error.error.forEach((validationError: any) => {
+        if (validationError.field && validationError.defaultMessage) {
+          // Mapear el campo del backend al campo del frontend
+          const frontendField = this.mapBackendFieldToFrontend(validationError.field);
+          fieldErrors.push(this.createFieldError(frontendField, validationError.defaultMessage));
+        }
+      });
+    }
+
+    // Verificar si hay fieldErrors en la respuesta (formato alternativo)
     if (error.error?.fieldErrors && Array.isArray(error.error.fieldErrors)) {
       error.error.fieldErrors.forEach((fieldError: any) => {
         if (fieldError.field && fieldError.message) {
@@ -247,6 +313,32 @@ export class ErrorMappingService {
     }
 
     return fieldErrors;
+  }
+
+  /**
+   * Mapea nombres de campos del backend a nombres del frontend
+   */
+  private mapBackendFieldToFrontend(backendField: string): string {
+    const fieldMapping: Record<string, string> = {
+      'firstName': 'firstName',
+      'lastName': 'lastName',
+      'username': 'username',
+      'email': 'email',
+      'password': 'password',
+      'confirmPassword': 'confirmPassword',
+      'dni': 'dni',
+      'cuit': 'cuit',
+      'birthDate': 'birthDate',
+      'country': 'country',
+      'province': 'province',
+      'municipality': 'municipality',
+      'legalAddress': 'legalAddress',
+      'residentialAddress': 'residentialAddress',
+      'telefono': 'telefono',
+      'termsAccepted': 'termsAccepted'
+    };
+
+    return fieldMapping[backendField] || backendField;
   }
 
   /**
@@ -313,6 +405,31 @@ export class ErrorMappingService {
           'Verifique que no haya errores de tipeo'
         ],
         critical: false
+      },
+      birthDate: {
+        type: ErrorType.VALIDATION,
+        suggestions: [
+          'Seleccione una fecha anterior a hoy',
+          'Verifique que el año sea correcto',
+          'Use el formato de fecha correcto'
+        ],
+        critical: false
+      },
+      firstName: {
+        type: ErrorType.VALIDATION,
+        suggestions: [
+          'Ingrese su nombre completo',
+          'Use solo letras y espacios'
+        ],
+        critical: false
+      },
+      lastName: {
+        type: ErrorType.VALIDATION,
+        suggestions: [
+          'Ingrese su apellido completo',
+          'Use solo letras y espacios'
+        ],
+        critical: false
       }
     };
 
@@ -377,10 +494,21 @@ export class ErrorMappingService {
    * Extrae el mensaje de error del HttpErrorResponse
    */
   private extractErrorMessage(error: HttpErrorResponse): string {
+    // Verificar si es un array de errores de validación del backend (BindingResult)
+    if (Array.isArray(error.error)) {
+      const firstError = error.error[0];
+      if (firstError?.defaultMessage) {
+        return firstError.defaultMessage;
+      }
+      if (firstError?.message) {
+        return firstError.message;
+      }
+    }
+
     if (error.error?.message) {
       return error.error.message;
     }
-    
+
     if (typeof error.error === 'string') {
       return error.error;
     }

@@ -377,8 +377,57 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.fieldErrors.set(this.httpError.field, this.httpError.message);
     }
 
+    // Si hay errores de campo múltiples, agregar todos a fieldErrors
+    if (this.httpError.fieldErrors && this.httpError.fieldErrors.length > 0) {
+      this.httpError.fieldErrors.forEach(fieldError => {
+        this.fieldErrors.set(fieldError.field, fieldError.message);
+      });
+    }
+
     // Configurar mensaje de respuesta para el sistema existente
     this.responseMessage = this.httpError.message;
+
+    // Navegación automática al primer campo con error después de un breve delay
+    setTimeout(() => {
+      this.scrollToFirstErrorField();
+    }, 500);
+  }
+
+  /**
+   * Hace scroll automático al primer campo con error
+   */
+  private scrollToFirstErrorField(): void {
+    let firstErrorField: string | null = null;
+
+    // Buscar el primer campo con error
+    if (this.httpError?.fieldErrors && this.httpError.fieldErrors.length > 0) {
+      firstErrorField = this.httpError.fieldErrors[0].field;
+    } else if (this.httpError?.field) {
+      firstErrorField = this.httpError.field;
+    }
+
+    if (firstErrorField) {
+      const fieldElement = document.querySelector(`[formcontrolname="${firstErrorField}"]`) as HTMLElement;
+      if (fieldElement) {
+        // Scroll suave al campo
+        fieldElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+
+        // Focus en el campo después del scroll
+        setTimeout(() => {
+          fieldElement.focus();
+
+          // Agregar efecto visual temporal
+          fieldElement.classList.add('field-highlight');
+          setTimeout(() => {
+            fieldElement.classList.remove('field-highlight');
+          }, 2000);
+        }, 300);
+      }
+    }
   }
 
   handleFieldErrors(fieldErrors: { field: string; message: string }[]): void {
@@ -452,16 +501,35 @@ export class RegisterComponent implements OnInit, OnDestroy {
    */
   onFieldActionClicked(fieldError: FieldError): void {
     // Hacer scroll al campo específico
-    const fieldElement = document.querySelector(`[formcontrolname="${fieldError.field}"]`);
+    const fieldElement = document.querySelector(`[formcontrolname="${fieldError.field}"]`) as HTMLElement;
     if (fieldElement) {
-      fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      (fieldElement as HTMLElement).focus();
+      // Scroll suave al campo
+      fieldElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
 
-      // Agregar efecto visual temporal
-      fieldElement.classList.add('field-highlight');
+      // Focus y efectos visuales después del scroll
       setTimeout(() => {
-        fieldElement.classList.remove('field-highlight');
-      }, 2000);
+        fieldElement.focus();
+
+        // Agregar efecto visual temporal más prominente
+        fieldElement.classList.add('field-highlight');
+
+        // Opcional: hacer que el campo "pulse" para llamar la atención
+        const parentBox = fieldElement.closest('.user-box');
+        if (parentBox) {
+          parentBox.classList.add('field-highlight');
+          setTimeout(() => {
+            parentBox.classList.remove('field-highlight');
+          }, 2000);
+        }
+
+        setTimeout(() => {
+          fieldElement.classList.remove('field-highlight');
+        }, 2000);
+      }, 300);
     }
   }
 
