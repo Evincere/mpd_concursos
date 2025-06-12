@@ -28,7 +28,7 @@ INSERT INTO roles (id, name) VALUES
 (0x22222222222222222222222222222222, 'ROLE_ADMIN');
 
 -- Insertar usuario administrador por defecto
-INSERT INTO user_entity (id, username, password, email, dni, cuit, firstName, lastName, createdAt)
+INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES (
     0x33333333333333333333333333333333,
     'admin',
@@ -42,7 +42,7 @@ VALUES (
 );
 
 -- Insertar usuarios de prueba con IDs fijos
-INSERT INTO user_entity (id, username, password, email, dni, cuit, firstName, lastName, createdAt)
+INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES
 (0x44444444444444444444444444444444, 'usuario1',
 '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
