@@ -64,13 +64,88 @@
       </span>
     </div>
 
-    <!-- Sugerencias de resolución -->
-    <div 
-      *ngIf="finalConfig.showSuggestions && error.suggestions && error.suggestions.length > 0"
+    <!-- Lista de errores de campo específicos -->
+    <div
+      *ngIf="error.hasMultipleErrors && error.fieldErrors && error.fieldErrors.length > 0"
+      class="field-errors-list">
+      <h5 class="field-errors-title">Errores encontrados:</h5>
+      <ul class="field-errors-items" role="list">
+        <li
+          *ngFor="let fieldError of error.fieldErrors; trackBy: trackByFieldError"
+          class="field-error-item"
+          [ngClass]="getFieldErrorClasses(fieldError)"
+          role="listitem">
+
+          <!-- Icono de estado -->
+          <div class="field-error-status">
+            <mat-icon
+              [style.color]="getFieldErrorStatusColor(fieldError.status)"
+              [attr.aria-label]="getFieldErrorStatusLabel(fieldError.status)">
+              {{ getFieldErrorStatusIcon(fieldError.status) }}
+            </mat-icon>
+          </div>
+
+          <!-- Información del error -->
+          <div class="field-error-content">
+            <div class="field-error-header">
+              <span class="field-error-field">{{ getFieldDisplayName(fieldError.field) }}</span>
+              <span class="field-error-status-text">{{ getFieldErrorStatusText(fieldError.status) }}</span>
+            </div>
+            <p class="field-error-message">{{ fieldError.message }}</p>
+
+            <!-- Sugerencias específicas del campo -->
+            <div
+              *ngIf="fieldError.suggestions && fieldError.suggestions.length > 0"
+              class="field-error-suggestions">
+              <ul class="field-suggestions-list">
+                <li
+                  *ngFor="let suggestion of fieldError.suggestions"
+                  class="field-suggestion-item">
+                  <mat-icon class="field-suggestion-icon">lightbulb_outline</mat-icon>
+                  <span>{{ suggestion }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Botón de acción específica -->
+          <div
+            *ngIf="fieldError.status === 'pending' && getFieldActionText(fieldError.field)"
+            class="field-error-action">
+            <button
+              type="button"
+              class="field-action-btn"
+              (click)="onFieldActionClick(fieldError)"
+              [attr.aria-label]="'Ir a campo ' + getFieldDisplayName(fieldError.field)">
+              {{ getFieldActionText(fieldError.field) }}
+            </button>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Progreso de resolución -->
+      <div class="error-resolution-progress">
+        <div class="progress-info">
+          <span class="progress-text">
+            {{ getResolvedErrorsCount() }} de {{ getTotalErrorsCount() }} errores resueltos
+          </span>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              [style.width.%]="getResolutionProgress()">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sugerencias generales (solo si no hay errores de campo específicos) -->
+    <div
+      *ngIf="finalConfig.showSuggestions && error.suggestions && error.suggestions.length > 0 && !error.hasMultipleErrors"
       class="error-suggestions">
       <h5 class="suggestions-title">¿Cómo resolver este problema?</h5>
       <ul class="suggestions-list" role="list">
-        <li 
+        <li
           *ngFor="let suggestion of error.suggestions; trackBy: trackBySuggestion"
           role="listitem">
           <mat-icon class="suggestion-icon" aria-hidden="true">lightbulb</mat-icon>

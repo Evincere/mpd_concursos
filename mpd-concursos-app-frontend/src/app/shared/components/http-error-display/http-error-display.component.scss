@@ -402,19 +402,262 @@
   }
 }
 
+/* === LISTA DE ERRORES DE CAMPO === */
+.field-errors-list {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--border-radius-md);
+  backdrop-filter: blur(4px);
+}
+
+.field-errors-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.field-errors-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.field-error-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.3s ease;
+
+  &.status-resolved {
+    background: rgba(76, 175, 80, 0.1);
+    border-color: rgba(76, 175, 80, 0.3);
+  }
+
+  &.status-pending {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  &.critical {
+    border-left: 3px solid var(--color-danger);
+    background: rgba(239, 68, 68, 0.15);
+  }
+}
+
+.field-error-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+
+  mat-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.field-error-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-error-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.field-error-field {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.field-error-status-text {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.field-error-message {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.field-error-suggestions {
+  margin-top: 0.5rem;
+}
+
+.field-suggestions-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.field-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.field-suggestion-icon {
+  flex-shrink: 0;
+  font-size: 0.9rem !important;
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+  color: var(--color-info);
+  margin-top: 0.1rem;
+}
+
+.field-error-action {
+  flex-shrink: 0;
+}
+
+.field-action-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--glass-background-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: var(--glass-background-hover);
+    transform: translateY(-1px);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+/* === PROGRESO DE RESOLUCIÓN === */
+.error-resolution-progress {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success), var(--color-info));
+  border-radius: var(--border-radius-sm);
+  transition: width 0.5s ease;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: progressShimmer 2s infinite;
+  }
+}
+
+@keyframes progressShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* === RESPONSIVE PARA LISTA DE ERRORES === */
+@media (max-width: 768px) {
+  .field-error-item {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .field-error-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .field-error-action {
+    align-self: stretch;
+  }
+
+  .field-action-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 /* === MODO REDUCIDO DE MOVIMIENTO === */
 @media (prefers-reduced-motion: reduce) {
   .http-error-display,
   .error-dismiss-btn,
-  .error-action-btn {
+  .error-action-btn,
+  .field-error-item,
+  .field-action-btn,
+  .progress-fill {
     transition: none;
   }
-  
+
   .severity-critical {
     animation: none;
   }
-  
+
   .error-icon {
+    animation: none;
+  }
+
+  .progress-fill::after {
     animation: none;
   }
 }

@@ -12,8 +12,9 @@ import { RegisterService } from '../../../../core/services/auth/register.service
 import { NewUser } from '../../../../shared/interfaces/auth/new-user.interface';
 import { UserRegisterDTO } from '../../../../shared/interfaces/user/base-user.interface';
 import { Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { TouchFriendlyDirective } from '../../../../shared/directives/touch-friendly.directive';
-import { ErrorMappingService, MappedError, ErrorType, ErrorSeverity } from '../../../../shared/services/error-mapping';
+import { ErrorMappingService, MappedError, ErrorType, ErrorSeverity, FieldError, ValidationStatus } from '../../../../shared/services/error-mapping';
 import { HttpErrorDisplayComponent } from '../../../../shared/components/http-error-display';
 
 @Component({
@@ -183,15 +184,56 @@ export class RegisterComponent implements OnInit, OnDestroy {
     return this.fieldErrors.get(field) || '';
   }
 
+  /**
+   * Obtiene el estado de error de un campo específico
+   */
+  getFieldErrorStatus(field: string): ValidationStatus | null {
+    if (!this.httpError?.fieldErrors) {
+      return null;
+    }
+
+    const fieldError = this.httpError.fieldErrors.find(fe => fe.field === field);
+    return fieldError?.status || null;
+  }
+
   onInputFocus(event: Event): void {
     const inputElement = event.target as HTMLInputElement;
     const fieldName = inputElement.getAttribute('formcontrolname');
-    if (fieldName && this.fieldErrors.has(fieldName)) {
+
+    if (!fieldName) return;
+
+    // Limpiar error específico del campo cuando el usuario empiece a escribir
+    if (this.fieldErrors.has(fieldName)) {
       this.fieldErrors.delete(fieldName);
     }
 
-    // Limpiar errores HTTP cuando el usuario empiece a escribir
-    this.clearHttpError();
+    // Configurar validación en tiempo real para este campo
+    this.setupRealTimeValidation(fieldName);
+  }
+
+  /**
+   * Configura validación en tiempo real para un campo específico
+   */
+  private setupRealTimeValidation(fieldName: string): void {
+    const control = this.registerForm.get(fieldName);
+    if (!control) return;
+
+    // Remover suscripciones anteriores para evitar duplicados
+    const existingSubscription = (control as any)._realTimeValidationSub;
+    if (existingSubscription) {
+      existingSubscription.unsubscribe();
+    }
+
+    // Configurar nueva suscripción con debounce
+    const subscription = control.valueChanges.pipe(
+      debounceTime(500) // Esperar 500ms después del último cambio
+    ).subscribe(() => {
+      this.validateFieldRealTime(fieldName);
+    });
+
+    // Guardar referencia para poder limpiarla después
+    (control as any)._realTimeValidationSub = subscription;
+    this.subscription.add(subscription);
   }
 
   /**
@@ -244,7 +286,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
     this.fieldErrors.clear();
-    this.activeErrors = [];
     this.clearHttpError();
 
     const formValue = this.registerForm.value;
@@ -404,6 +445,110 @@ export class RegisterComponent implements OnInit, OnDestroy {
         (fieldElement as HTMLElement).focus();
       }
     }
+  }
+
+  /**
+   * Maneja el evento de acción específica de campo
+   */
+  onFieldActionClicked(fieldError: FieldError): void {
+    // Hacer scroll al campo específico
+    const fieldElement = document.querySelector(`[formcontrolname="${fieldError.field}"]`);
+    if (fieldElement) {
+      fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (fieldElement as HTMLElement).focus();
+
+      // Agregar efecto visual temporal
+      fieldElement.classList.add('field-highlight');
+      setTimeout(() => {
+        fieldElement.classList.remove('field-highlight');
+      }, 2000);
+    }
+  }
+
+  /**
+   * Valida un campo específico en tiempo real
+   */
+  validateFieldRealTime(fieldName: string): void {
+    if (!this.httpError?.fieldErrors) {
+      return;
+    }
+
+    const control = this.registerForm.get(fieldName);
+    if (!control) {
+      return;
+    }
+
+    // Buscar el error de campo correspondiente
+    const fieldErrorIndex = this.httpError.fieldErrors.findIndex(fe => fe.field === fieldName);
+    if (fieldErrorIndex === -1) {
+      return;
+    }
+
+    const fieldError = this.httpError.fieldErrors[fieldErrorIndex];
+
+    // Validar según el tipo de campo
+    let isValid = false;
+
+    switch (fieldName) {
+      case 'username':
+        isValid = this.validateUsername(control.value);
+        break;
+      case 'email':
+        isValid = this.validateEmail(control.value);
+        break;
+      case 'password':
+        isValid = this.validatePassword(control.value);
+        break;
+      case 'confirmPassword':
+        isValid = this.validateConfirmPassword(control.value);
+        break;
+      case 'dni':
+        isValid = this.validateDNI(control.value);
+        break;
+      default:
+        isValid = control.valid && control.value?.trim();
+    }
+
+    // Actualizar estado del error de campo
+    const newStatus = isValid ? ValidationStatus.RESOLVED : ValidationStatus.PENDING;
+
+    if (fieldError.status !== newStatus) {
+      this.httpError = this.errorMappingService.updateFieldErrorStatus(
+        this.httpError,
+        fieldName,
+        newStatus
+      );
+
+      // Limpiar error de campo si está resuelto
+      if (newStatus === ValidationStatus.RESOLVED) {
+        this.fieldErrors.delete(fieldName);
+      }
+    }
+  }
+
+  /**
+   * Validaciones específicas por campo
+   */
+  private validateUsername(value: string): boolean {
+    return !!(value && value.length >= 4 && /^[a-zA-Z0-9_]+$/.test(value));
+  }
+
+  private validateEmail(value: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return !!(value && emailRegex.test(value));
+  }
+
+  private validatePassword(value: string): boolean {
+    return !!(value && value.length >= 8);
+  }
+
+  private validateConfirmPassword(value: string): boolean {
+    const password = this.registerForm.get('password')?.value;
+    return !!(value && value === password);
+  }
+
+  private validateDNI(value: string): boolean {
+    return !!(value && /^\d{7,8}$/.test(value.replace(/\D/g, '')));
   }
 
   // Método para marcar los términos como tocados para mostrar error visual

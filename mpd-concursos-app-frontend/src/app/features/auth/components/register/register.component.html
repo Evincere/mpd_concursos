@@ -1,7 +1,7 @@
 <div class="register-box">
   <h2>Registro de Usuario</h2>
 
-  <!-- Nuevo componente de error HTTP con glassmorphism -->
+  <!-- Componente de error HTTP mejorado con lista de errores interactiva -->
   <app-http-error-display
     *ngIf="showHttpError && httpError"
     [error]="httpError"
@@ -16,7 +16,8 @@
     }"
     [visible]="showHttpError"
     (dismissed)="onHttpErrorDismissed()"
-    (actionClicked)="onHttpErrorAction()">
+    (actionClicked)="onHttpErrorAction()"
+    (fieldActionClicked)="onFieldActionClicked($event)">
   </app-http-error-display>
 
   <!-- Sistema legacy de floating-messages eliminado - ahora se usa solo HttpErrorDisplayComponent -->
@@ -37,7 +38,10 @@
         </mat-error>
       </div>
 
-      <div class="user-box" [class.error-field]="hasFieldError('email')">
+      <div class="user-box"
+           [class.error-field]="hasFieldError('email')"
+           [class.field-error-pending]="getFieldErrorStatus('email') === 'pending'"
+           [class.field-error-resolved]="getFieldErrorStatus('email') === 'resolved'">
         <input matInput
                type="email"
                formControlName="email"

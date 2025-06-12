@@ -4,5 +4,5 @@
  */
 
 export { ErrorMappingService } from './error-mapping.service';
-export { ErrorType, ErrorSeverity } from './error-mapping.service';
-export type { MappedError } from './error-mapping.service';
+export { ErrorType, ErrorSeverity, ValidationStatus } from './error-mapping.service';
+export type { MappedError, FieldError } from './error-mapping.service';
