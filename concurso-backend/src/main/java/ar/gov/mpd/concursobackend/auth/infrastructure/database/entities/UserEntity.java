@@ -83,13 +83,13 @@ public class UserEntity {
     @Column(name = "birthDate")
     private LocalDate birthDate;
 
-    @Column
+    @Column(name = "country")
     private String country;
 
-    @Column
+    @Column(name = "province")
     private String province;
 
-    @Column
+    @Column(name = "municipality")
     private String municipality;
 
     @Column(name = "legalAddress")
@@ -98,10 +98,10 @@ public class UserEntity {
     @Column(name = "residentialAddress")
     private String residentialAddress;
 
-    @Column
+    @Column(name = "telefono")
     private String telefono;
 
-    @Column
+    @Column(name = "direccion")
     private String direccion;
 
     @ManyToMany(fetch = FetchType.EAGER)
