@@ -1,0 +1,389 @@
+// Error Context Panel - Glassmorphism Design
+.error-context-panel {
+  position: fixed;
+  z-index: 9999;
+  width: 320px;
+  max-width: 90vw;
+  
+  // Glassmorphism base
+  background: rgba(55, 65, 81, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(156, 163, 175, 0.2);
+  border-radius: 12px;
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  // Animaciones
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  // Ajustes por posición
+  &[data-placement="top"] {
+    transform-origin: bottom center;
+    
+    &:not(.visible) {
+      transform: translateY(10px) scale(0.95);
+    }
+  }
+
+  &[data-placement="left"] {
+    transform-origin: right center;
+    
+    &:not(.visible) {
+      transform: translateX(10px) scale(0.95);
+    }
+  }
+
+  &[data-placement="right"] {
+    transform-origin: left center;
+    
+    &:not(.visible) {
+      transform: translateX(-10px) scale(0.95);
+    }
+  }
+}
+
+// Header del panel
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 16px 12px 16px;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.1);
+
+  .error-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+
+    .material-icons {
+      font-size: 18px;
+    }
+  }
+
+  .error-title {
+    flex: 1;
+    min-width: 0;
+
+    h4 {
+      margin: 0 0 4px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #f9fafb;
+      line-height: 1.3;
+    }
+
+    .field-name {
+      font-size: 12px;
+      color: #d1d5db;
+      font-weight: 400;
+    }
+  }
+
+  .close-btn {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: none;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(156, 163, 175, 0.1);
+      color: #f9fafb;
+    }
+
+    &:focus {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+
+    .material-icons {
+      font-size: 16px;
+    }
+  }
+}
+
+// Contenido del panel
+.panel-content {
+  padding: 12px 16px;
+
+  .error-message {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #e5e7eb;
+  }
+
+  .suggestions {
+    margin-bottom: 12px;
+
+    h5 {
+      margin: 0 0 8px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: #d1d5db;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+
+      li {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 6px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #d1d5db;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .suggestion-icon {
+          flex-shrink: 0;
+          font-size: 14px;
+          color: #fbbf24;
+          margin-top: 1px;
+        }
+      }
+    }
+  }
+
+  .error-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    .status-icon {
+      font-size: 14px;
+    }
+
+    &[data-status="pending"] {
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    &[data-status="resolved"] {
+      background: rgba(34, 197, 94, 0.1);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+  }
+}
+
+// Acciones del panel
+.panel-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 16px 16px;
+  border-top: 1px solid rgba(156, 163, 175, 0.1);
+
+  .action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    .material-icons {
+      font-size: 14px;
+    }
+
+    &.primary {
+      background: #3b82f6;
+      color: white;
+
+      &:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+      }
+
+      &:focus {
+        outline: 2px solid #60a5fa;
+        outline-offset: 2px;
+      }
+    }
+
+    &.secondary {
+      background: rgba(156, 163, 175, 0.1);
+      color: #d1d5db;
+      border: 1px solid rgba(156, 163, 175, 0.2);
+
+      &:hover {
+        background: rgba(156, 163, 175, 0.2);
+        color: #f9fafb;
+      }
+
+      &:focus {
+        outline: 2px solid #9ca3af;
+        outline-offset: 2px;
+      }
+    }
+  }
+}
+
+// Flecha indicadora
+.panel-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+
+  &[data-placement="bottom"] {
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: rgba(55, 65, 81, 0.95);
+    border-top: none;
+  }
+
+  &[data-placement="top"] {
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: rgba(55, 65, 81, 0.95);
+    border-bottom: none;
+  }
+
+  &[data-placement="right"] {
+    left: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right-color: rgba(55, 65, 81, 0.95);
+    border-left: none;
+  }
+
+  &[data-placement="left"] {
+    right: -16px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left-color: rgba(55, 65, 81, 0.95);
+    border-right: none;
+  }
+}
+
+// Overlay para cerrar
+.context-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9998;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+
+  &.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .error-context-panel {
+    width: calc(100vw - 32px);
+    left: 16px !important;
+    right: 16px;
+  }
+}
+
+// Animaciones adicionales
+@keyframes pulse-error {
+  0%, 100% {
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.3),
+      0 10px 10px -5px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.3),
+      0 10px 10px -5px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 0 4px rgba(239, 68, 68, 0.1);
+  }
+}
+
+.error-context-panel.pulse {
+  animation: pulse-error 2s ease-in-out;
+}
+
+// Estados de accesibilidad
+.error-context-panel:focus-within {
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 2px #3b82f6;
+}
+
+// Modo de alto contraste
+@media (prefers-contrast: high) {
+  .error-context-panel {
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid #ffffff;
+    
+    .panel-header .error-title h4,
+    .panel-content .error-message {
+      color: #ffffff;
+    }
+  }
+}
+
+// Reducir movimiento para usuarios sensibles
+@media (prefers-reduced-motion: reduce) {
+  .error-context-panel,
+  .context-overlay,
+  .action-btn {
+    transition: none;
+  }
+  
+  .error-context-panel.pulse {
+    animation: none;
+  }
+}

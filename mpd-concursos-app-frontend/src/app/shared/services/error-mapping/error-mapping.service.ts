@@ -41,8 +41,12 @@ export interface FieldError {
   field: string;
   /** Mensaje específico del error */
   message: string;
+  /** Título del error */
+  title?: string;
   /** Tipo de error */
   type: ErrorType;
+  /** Severidad del error */
+  severity?: ErrorSeverity;
   /** Estado actual de validación */
   status: ValidationStatus;
   /** Sugerencias específicas para este campo */
@@ -116,6 +120,34 @@ export class ErrorMappingService {
         'Intente con un nombre de usuario diferente',
         'Agregue números o caracteres especiales',
         'Use una combinación de su nombre y apellido'
+      ],
+      recoverable: true
+    },
+
+    'El CUIT ya está registrado en el sistema': {
+      type: ErrorType.CONFLICT,
+      severity: ErrorSeverity.HIGH,
+      title: 'CUIT ya registrado',
+      message: 'Este CUIT ya está registrado en el sistema.',
+      field: 'cuit',
+      suggestions: [
+        'Verifique que el CUIT ingresado sea correcto',
+        'Contacte al administrador si cree que es un error',
+        'Verifique si ya tiene una cuenta registrada'
+      ],
+      recoverable: true
+    },
+
+    'Ya existe un registro con este CUIT': {
+      type: ErrorType.CONFLICT,
+      severity: ErrorSeverity.HIGH,
+      title: 'CUIT ya registrado',
+      message: 'Este CUIT ya está registrado en el sistema.',
+      field: 'cuit',
+      suggestions: [
+        'Verifique que el CUIT ingresado sea correcto',
+        'Contacte al administrador si cree que es un error',
+        'Verifique si ya tiene una cuenta registrada'
       ],
       recoverable: true
     },
@@ -244,6 +276,196 @@ export class ErrorMappingService {
       field: 'confirmPassword',
       suggestions: ['Verifique que ambas contraseñas sean idénticas'],
       recoverable: true
+    },
+
+    // ========================================
+    // ERRORES DE AUTENTICACIÓN (LOGIN)
+    // ========================================
+
+    // Errores de credenciales (HTTP 401)
+    'Credenciales incorrectas': {
+      type: ErrorType.AUTHENTICATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Credenciales incorrectas',
+      message: 'El nombre de usuario o contraseña son incorrectos.',
+      field: 'credentials',
+      suggestions: [
+        'Verifique que el nombre de usuario sea correcto',
+        'Asegúrese de que la contraseña sea correcta',
+        'Verifique que no esté activado Caps Lock',
+        'Si olvidó su contraseña, contacte al administrador'
+      ],
+      recoverable: true
+    },
+
+    'Contraseña incorrecta': {
+      type: ErrorType.AUTHENTICATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Contraseña incorrecta',
+      message: 'La contraseña ingresada no es correcta.',
+      field: 'password',
+      suggestions: [
+        'Verifique que la contraseña sea correcta',
+        'Asegúrese de que no esté activado Caps Lock',
+        'Si olvidó su contraseña, contacte al administrador'
+      ],
+      recoverable: true
+    },
+
+    'Usuario no encontrado': {
+      type: ErrorType.AUTHENTICATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Usuario no encontrado',
+      message: 'No existe un usuario con ese nombre de usuario.',
+      field: 'username',
+      suggestions: [
+        'Verifique que el nombre de usuario sea correcto',
+        'Asegúrese de estar registrado en el sistema',
+        'Contacte al administrador si necesita crear una cuenta'
+      ],
+      recoverable: true
+    },
+
+    // Mapeos adicionales para mensajes reales del backend
+    'El usuario no existe': {
+      type: ErrorType.AUTHENTICATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Error de autenticación',
+      message: 'El usuario no existe',
+      field: 'username',
+      suggestions: [
+        'Verifique que el nombre de usuario sea correcto',
+        'Si no tiene cuenta, regístrese primero'
+      ],
+      recoverable: true
+    },
+
+    'La contraseña ingresada no es correcta': {
+      type: ErrorType.AUTHENTICATION,
+      severity: ErrorSeverity.MEDIUM,
+      title: 'Contraseña incorrecta',
+      message: 'La contraseña ingresada no es correcta',
+      field: 'password',
+      suggestions: [
+        'Verifique que la contraseña sea correcta',
+        'Asegúrese de que no esté activado Caps Lock',
+        'Si olvidó su contraseña, contacte al administrador'
+      ],
+      recoverable: true
+    },
+
+    // Errores de estado de cuenta (HTTP 403)
+    'Cuenta bloqueada': {
+      type: ErrorType.AUTHORIZATION,
+      severity: ErrorSeverity.HIGH,
+      title: 'Cuenta bloqueada',
+      message: 'Su cuenta ha sido bloqueada por el administrador.',
+      field: 'account',
+      suggestions: [
+        'Contacte al administrador para desbloquear su cuenta',
+        'Verifique si hay alguna notificación sobre el bloqueo',
+        'Envíe un correo a administracion@mdp.gov.ar'
+      ],
+      recoverable: false
+    },
+
+    'Su cuenta ha sido bloqueada. Por favor, contacte al administrador para más información.': {
+      type: ErrorType.AUTHORIZATION,
+      severity: ErrorSeverity.HIGH,
+      title: 'Cuenta bloqueada',
+      message: 'Su cuenta ha sido bloqueada por el administrador.',
+      field: 'account',
+      suggestions: [
+        'Contacte al administrador para desbloquear su cuenta',
+        'Verifique si hay alguna notificación sobre el bloqueo',
+        'Envíe un correo a administracion@mdp.gov.ar'
+      ],
+      recoverable: false
+    },
+
+    'Cuenta inactiva': {
+      type: ErrorType.AUTHORIZATION,
+      severity: ErrorSeverity.HIGH,
+      title: 'Cuenta inactiva',
+      message: 'Su cuenta está inactiva y necesita ser activada.',
+      field: 'account',
+      suggestions: [
+        'Contacte al administrador para activar su cuenta',
+        'Verifique si completó el proceso de registro',
+        'Envíe un correo a administracion@mdp.gov.ar'
+      ],
+      recoverable: false
+    },
+
+    'Su cuenta está inactiva. Por favor, contacte al administrador para activarla.': {
+      type: ErrorType.AUTHORIZATION,
+      severity: ErrorSeverity.HIGH,
+      title: 'Cuenta inactiva',
+      message: 'Su cuenta está inactiva y necesita ser activada.',
+      field: 'account',
+      suggestions: [
+        'Contacte al administrador para activar su cuenta',
+        'Verifique si completó el proceso de registro',
+        'Envíe un correo a administracion@mdp.gov.ar'
+      ],
+      recoverable: false
+    },
+
+    'Cuenta expirada': {
+      type: ErrorType.AUTHORIZATION,
+      severity: ErrorSeverity.HIGH,
+      title: 'Cuenta expirada',
+      message: 'Su cuenta ha expirado y necesita ser renovada.',
+      field: 'account',
+      suggestions: [
+        'Contacte al administrador para renovar su cuenta',
+        'Verifique la fecha de vencimiento de su cuenta',
+        'Envíe un correo a administracion@mdp.gov.ar'
+      ],
+      recoverable: false
+    },
+
+    'Su cuenta ha expirado. Por favor, contacte al administrador para renovarla.': {
+      type: ErrorType.AUTHORIZATION,
+      severity: ErrorSeverity.HIGH,
+      title: 'Cuenta expirada',
+      message: 'Su cuenta ha expirado y necesita ser renovada.',
+      field: 'account',
+      suggestions: [
+        'Contacte al administrador para renovar su cuenta',
+        'Verifique la fecha de vencimiento de su cuenta',
+        'Envíe un correo a administracion@mdp.gov.ar'
+      ],
+      recoverable: false
+    },
+
+    // Errores de conexión y servidor
+    'Error en el servidor. Intente nuevamente más tarde.': {
+      type: ErrorType.SERVER,
+      severity: ErrorSeverity.HIGH,
+      title: 'Error del servidor',
+      message: 'No se pudo conectar con el servidor. Intente nuevamente.',
+      field: 'connection',
+      suggestions: [
+        'Verifique su conexión a internet',
+        'Intente nuevamente en unos minutos',
+        'Si el problema persiste, contacte al soporte técnico'
+      ],
+      recoverable: true
+    },
+
+    'Error de conexión': {
+      type: ErrorType.NETWORK,
+      severity: ErrorSeverity.HIGH,
+      title: 'Error de conexión',
+      message: 'No se pudo establecer conexión con el servidor.',
+      field: 'connection',
+      suggestions: [
+        'Verifique su conexión a internet',
+        'Compruebe que el servidor esté disponible',
+        'Intente nuevamente en unos minutos'
+      ],
+      recoverable: true
     }
   };
 
@@ -253,19 +475,36 @@ export class ErrorMappingService {
    * @returns Información mapeada del error
    */
   mapHttpError(error: HttpErrorResponse): MappedError {
+    // DEBUG: Logging para diagnosticar problemas
+    console.log('🔍 ErrorMappingService - Procesando error:', {
+      status: error.status,
+      error: error.error,
+      message: error.message,
+      isArray: Array.isArray(error.error),
+      errorType: typeof error.error
+    });
+
     // Extraer información del error
     const errorMessage = this.extractErrorMessage(error);
     const statusCode = error.status;
 
+    console.log('🔍 ErrorMappingService - Mensaje extraído:', errorMessage);
+
     // Verificar si hay múltiples errores de campo
     const fieldErrors = this.extractFieldErrors(error);
 
+    console.log('🔍 ErrorMappingService - Errores de campo extraídos:', fieldErrors);
+
     if (fieldErrors.length > 0) {
-      return this.createMultiFieldError(fieldErrors, statusCode);
+      const multiFieldError = this.createMultiFieldError(fieldErrors, statusCode);
+      console.log('🔍 ErrorMappingService - Error multi-campo creado:', multiFieldError);
+      return multiFieldError;
     }
 
     // Buscar mapeo específico
     const mappedConfig = this.findErrorMapping(errorMessage);
+
+    console.log('🔍 ErrorMappingService - Configuración mapeada:', mappedConfig);
 
     if (mappedConfig) {
       return {
@@ -275,7 +514,9 @@ export class ErrorMappingService {
     }
 
     // Mapeo por código de estado HTTP
-    return this.mapByHttpStatus(statusCode, errorMessage);
+    const httpStatusError = this.mapByHttpStatus(statusCode, errorMessage);
+    console.log('🔍 ErrorMappingService - Error por estado HTTP:', httpStatusError);
+    return httpStatusError;
   }
 
   /**
@@ -284,19 +525,35 @@ export class ErrorMappingService {
   private extractFieldErrors(error: HttpErrorResponse): FieldError[] {
     const fieldErrors: FieldError[] = [];
 
+    console.log('🔍 extractFieldErrors - Iniciando extracción:', {
+      isArray: Array.isArray(error.error),
+      hasFieldErrors: !!error.error?.fieldErrors,
+      errorStructure: error.error
+    });
+
     // Verificar si es un array de errores de validación del backend (BindingResult)
     if (Array.isArray(error.error)) {
-      error.error.forEach((validationError: any) => {
+      console.log('🔍 extractFieldErrors - Procesando array de errores:', error.error);
+      error.error.forEach((validationError: any, index: number) => {
+        console.log(`🔍 extractFieldErrors - Error ${index}:`, validationError);
+
         if (validationError.field && validationError.defaultMessage) {
           // Mapear el campo del backend al campo del frontend
           const frontendField = this.mapBackendFieldToFrontend(validationError.field);
-          fieldErrors.push(this.createFieldError(frontendField, validationError.defaultMessage));
+          console.log(`🔍 extractFieldErrors - Mapeando campo: ${validationError.field} → ${frontendField}`);
+
+          const fieldError = this.createFieldError(frontendField, validationError.defaultMessage);
+          console.log('🔍 extractFieldErrors - FieldError creado:', fieldError);
+          fieldErrors.push(fieldError);
+        } else {
+          console.log('🔍 extractFieldErrors - Error sin field o defaultMessage:', validationError);
         }
       });
     }
 
     // Verificar si hay fieldErrors en la respuesta (formato alternativo)
     if (error.error?.fieldErrors && Array.isArray(error.error.fieldErrors)) {
+      console.log('🔍 extractFieldErrors - Procesando fieldErrors alternativos:', error.error.fieldErrors);
       error.error.fieldErrors.forEach((fieldError: any) => {
         if (fieldError.field && fieldError.message) {
           fieldErrors.push(this.createFieldError(fieldError.field, fieldError.message));
@@ -308,10 +565,17 @@ export class ErrorMappingService {
     const errorMessage = this.extractErrorMessage(error);
     const mappedConfig = this.findErrorMapping(errorMessage);
 
+    console.log('🔍 extractFieldErrors - Buscando mapeo específico:', {
+      errorMessage,
+      mappedConfig
+    });
+
     if (mappedConfig && mappedConfig.field) {
+      console.log('🔍 extractFieldErrors - Agregando error mapeado:', mappedConfig);
       fieldErrors.push(this.createFieldError(mappedConfig.field, mappedConfig.message, mappedConfig.type));
     }
 
+    console.log('🔍 extractFieldErrors - Resultado final:', fieldErrors);
     return fieldErrors;
   }
 
@@ -350,7 +614,9 @@ export class ErrorMappingService {
     return {
       field,
       message: fieldConfig.message || message,
+      title: fieldConfig.title,
       type: fieldConfig.type || type,
+      severity: fieldConfig.severity || ErrorSeverity.MEDIUM,
       status: ValidationStatus.PENDING,
       suggestions: fieldConfig.suggestions,
       critical: fieldConfig.critical || false
@@ -363,7 +629,9 @@ export class ErrorMappingService {
   private getFieldErrorConfig(field: string, message: string): Partial<FieldError> {
     const fieldConfigs: Record<string, Partial<FieldError>> = {
       username: {
+        title: 'Nombre de usuario no disponible',
         type: ErrorType.CONFLICT,
+        severity: ErrorSeverity.MEDIUM,
         suggestions: [
           'Intente con un nombre de usuario diferente',
           'Agregue números o caracteres especiales',
@@ -372,7 +640,9 @@ export class ErrorMappingService {
         critical: false
       },
       email: {
+        title: 'Correo electrónico en uso',
         type: ErrorType.CONFLICT,
+        severity: ErrorSeverity.MEDIUM,
         suggestions: [
           'Verifique si ya tiene una cuenta creada',
           'Use un correo electrónico diferente',
@@ -381,7 +651,9 @@ export class ErrorMappingService {
         critical: false
       },
       dni: {
+        title: 'DNI ya registrado',
         type: ErrorType.CONFLICT,
+        severity: ErrorSeverity.HIGH,
         suggestions: [
           'Verifique que el DNI ingresado sea correcto',
           'Contacte al administrador si cree que es un error',
@@ -390,7 +662,9 @@ export class ErrorMappingService {
         critical: true
       },
       password: {
+        title: 'Contraseña inválida',
         type: ErrorType.VALIDATION,
+        severity: ErrorSeverity.MEDIUM,
         suggestions: [
           'Use al menos 8 caracteres',
           'Incluya mayúsculas, minúsculas y números',
@@ -399,7 +673,9 @@ export class ErrorMappingService {
         critical: false
       },
       confirmPassword: {
+        title: 'Las contraseñas no coinciden',
         type: ErrorType.VALIDATION,
+        severity: ErrorSeverity.MEDIUM,
         suggestions: [
           'Asegúrese de que coincida con la contraseña',
           'Verifique que no haya errores de tipeo'
@@ -407,7 +683,9 @@ export class ErrorMappingService {
         critical: false
       },
       birthDate: {
+        title: 'Fecha de nacimiento inválida',
         type: ErrorType.VALIDATION,
+        severity: ErrorSeverity.MEDIUM,
         suggestions: [
           'Seleccione una fecha anterior a hoy',
           'Verifique que el año sea correcto',
@@ -416,7 +694,9 @@ export class ErrorMappingService {
         critical: false
       },
       firstName: {
+        title: 'Nombre inválido',
         type: ErrorType.VALIDATION,
+        severity: ErrorSeverity.LOW,
         suggestions: [
           'Ingrese su nombre completo',
           'Use solo letras y espacios'
@@ -424,7 +704,9 @@ export class ErrorMappingService {
         critical: false
       },
       lastName: {
+        title: 'Apellido inválido',
         type: ErrorType.VALIDATION,
+        severity: ErrorSeverity.LOW,
         suggestions: [
           'Ingrese su apellido completo',
           'Use solo letras y espacios'
@@ -494,29 +776,43 @@ export class ErrorMappingService {
    * Extrae el mensaje de error del HttpErrorResponse
    */
   private extractErrorMessage(error: HttpErrorResponse): string {
+    console.log('🔍 extractErrorMessage - Analizando estructura del error:');
+    console.log('  - error.error es array:', Array.isArray(error.error));
+    console.log('  - error.error:', error.error);
+    console.log('  - error.error.message:', error.error?.message);
+    console.log('  - error.message:', error.message);
+
     // Verificar si es un array de errores de validación del backend (BindingResult)
     if (Array.isArray(error.error)) {
+      console.log('🔍 extractErrorMessage - Procesando array de errores:', error.error);
       const firstError = error.error[0];
+      console.log('🔍 extractErrorMessage - Primer error:', firstError);
       if (firstError?.defaultMessage) {
+        console.log('🔍 extractErrorMessage - Mensaje extraído del defaultMessage:', firstError.defaultMessage);
         return firstError.defaultMessage;
       }
       if (firstError?.message) {
+        console.log('🔍 extractErrorMessage - Mensaje extraído del message:', firstError.message);
         return firstError.message;
       }
     }
 
     if (error.error?.message) {
+      console.log('🔍 extractErrorMessage - Mensaje extraído de error.error.message:', error.error.message);
       return error.error.message;
     }
 
     if (typeof error.error === 'string') {
+      console.log('🔍 extractErrorMessage - Mensaje extraído de error.error (string):', error.error);
       return error.error;
     }
 
     if (error.message) {
+      console.log('🔍 extractErrorMessage - Mensaje extraído de error.message:', error.message);
       return error.message;
     }
 
+    console.log('🔍 extractErrorMessage - Usando mensaje por defecto');
     return 'Error desconocido';
   }
 
@@ -524,18 +820,24 @@ export class ErrorMappingService {
    * Busca un mapeo específico para el mensaje de error
    */
   private findErrorMapping(errorMessage: string): ErrorMappingConfig[string] | null {
+    console.log('🔍 findErrorMapping - Buscando mapeo para:', errorMessage);
+    console.log('🔍 findErrorMapping - Mapeos disponibles:', Object.keys(this.errorMappings));
+
     // Búsqueda exacta
     if (this.errorMappings[errorMessage]) {
+      console.log('🔍 findErrorMapping - Mapeo exacto encontrado:', this.errorMappings[errorMessage]);
       return this.errorMappings[errorMessage];
     }
 
     // Búsqueda parcial para mensajes que contienen variables
     for (const [key, config] of Object.entries(this.errorMappings)) {
       if (errorMessage.includes(key)) {
+        console.log(`🔍 findErrorMapping - Mapeo parcial encontrado: "${key}" en "${errorMessage}"`, config);
         return config;
       }
     }
 
+    console.log('🔍 findErrorMapping - No se encontró mapeo para:', errorMessage);
     return null;
   }
 
@@ -569,10 +871,15 @@ export class ErrorMappingService {
       case 401: // Unauthorized
         return {
           type: ErrorType.AUTHENTICATION,
-          severity: ErrorSeverity.HIGH,
+          severity: ErrorSeverity.MEDIUM,
           title: 'Error de autenticación',
           message: message || 'Las credenciales proporcionadas no son válidas.',
-          suggestions: ['Verifique su usuario y contraseña', 'Intente iniciar sesión nuevamente'],
+          field: 'credentials',
+          suggestions: [
+            'Verifique que el nombre de usuario sea correcto',
+            'Asegúrese de que la contraseña sea correcta',
+            'Verifique que no esté activado Caps Lock'
+          ],
           recoverable: true,
           code: 'HTTP_401'
         };

@@ -12,6 +12,9 @@ import { HeaderComponent } from '../../../dashboard/components/header/header.com
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { LoginUser } from '../../../../core/models/login-user.model';
 import { LoggingService } from '../../../../core/services/logging/logging.service'; // Import LoggingService
+import { ErrorMappingService, MappedError, ErrorType, ErrorSeverity } from '../../../../shared/services/error-mapping';
+import { HttpErrorResponse } from '@angular/common/http';
+import { LoginNotificationComponent, LoginNotification } from './login-notification/login-notification.component';
 
 @Component({
   selector: 'app-login',
@@ -24,14 +27,22 @@ import { LoggingService } from '../../../../core/services/logging/logging.servic
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    HeaderComponent
+    HeaderComponent,
+    LoginNotificationComponent
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit, AfterViewInit {
   @ViewChild('loginFormContainer') loginFormContainer!: ElementRef;
+
   loginForm: FormGroup;
+
+  // Sistema de notificaciones externas para login
+  loginNotification: LoginNotification | null = null;
+  showLoginNotification = false;
+
+  // Propiedades legacy mantenidas para compatibilidad
   loginError: string | null = null;
   hide = true;
   isFlipped = false;
@@ -40,13 +51,14 @@ export class LoginComponent implements OnInit, AfterViewInit {
   isExpiredError = false;
   adminEmail = 'administracion@mdp.gov.ar';
   emailCopied = false;
-  private readonly fallbackLogoUrl = 'assets/images/mpd-logo.png'; // Make sure this path is correct
+  private readonly fallbackLogoUrl = 'assets/images/mpd-logo.png';
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private loggingService: LoggingService // Inject LoggingService
+    private loggingService: LoggingService,
+    private errorMappingService: ErrorMappingService
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
@@ -119,12 +131,20 @@ export class LoginComponent implements OnInit, AfterViewInit {
             this.loggingService.warn('[LoginComponent] Login failed, but no specific error from AuthService.', undefined, 'Login');
           }
         },
-        error: (error: Error) => {
+        error: (error: any) => {
           this.loggingService.error('[LoginComponent] Login error caught in component:', error.message, 'Login');
-          this.loginError = error.message || 'Error al intentar iniciar sesión. Por favor, intente de nuevo.';
 
-          // Determine error type for specific styling and messages
-          this.detectErrorType(error.message);
+          // Limpiar errores previos
+          this.clearErrors();
+
+          // Verificar si es un HttpErrorResponse para usar el nuevo sistema
+          if (error instanceof HttpErrorResponse) {
+            this.handleHttpError(error);
+          } else {
+            // Fallback al sistema legacy para errores no HTTP
+            this.loginError = error.message || 'Error al intentar iniciar sesión. Por favor, intente de nuevo.';
+            this.detectErrorType(error.message);
+          }
 
           // Show the error message and reset password field
           this.loginForm.get('password')?.reset();
@@ -194,6 +214,83 @@ export class LoginComponent implements OnInit, AfterViewInit {
     }
     return 'error';
   }
+
+  /**
+   * Maneja errores HTTP usando el sistema de notificaciones externas
+   */
+  private handleHttpError(error: HttpErrorResponse): void {
+    // Mapear el error usando el ErrorMappingService
+    const mappedError = this.errorMappingService.mapHttpError(error);
+
+    // SOLO usar el nuevo sistema de notificaciones externas
+    this.showLoginNotificationFromError(mappedError);
+
+    // NO activar el ErrorContextPanel - solo notificaciones externas
+  }
+
+
+
+  /**
+   * Crea y muestra una notificación externa basada en el error mapeado
+   */
+  private showLoginNotificationFromError(mappedError: MappedError): void {
+    // Determinar el tipo de notificación
+    let notificationType: 'error' | 'warning' | 'info' | 'success' = 'error';
+
+    if (mappedError.severity === 'low') {
+      notificationType = 'info';
+    } else if (mappedError.severity === 'medium') {
+      notificationType = 'warning';
+    } else {
+      notificationType = 'error';
+    }
+
+    // Crear la notificación sin detalles técnicos
+    this.loginNotification = {
+      type: notificationType,
+      title: mappedError.title,
+      message: mappedError.message,
+      suggestions: mappedError.suggestions?.filter(s => !s.includes('HTTP') && !s.includes('endpoint')) || [],
+      autoHide: true,
+      hideDelay: 8000
+    };
+
+    this.showLoginNotification = true;
+  }
+
+  /**
+   * Limpia todos los errores
+   */
+  private clearErrors(): void {
+    // Limpiar notificaciones externas
+    this.loginNotification = null;
+    this.showLoginNotification = false;
+
+    // Limpiar errores legacy
+    this.loginError = null;
+    this.isBlockedError = false;
+    this.isInactiveError = false;
+    this.isExpiredError = false;
+  }
+
+
+
+  /**
+   * Maneja el cierre de la notificación de login
+   */
+  onLoginNotificationClose(): void {
+    this.showLoginNotification = false;
+    this.loginNotification = null;
+  }
+
+  /**
+   * Maneja el dismiss automático de la notificación de login
+   */
+  onLoginNotificationDismiss(): void {
+    this.onLoginNotificationClose();
+  }
+
+
 
   /**
    * Copies the administrator's email to the clipboard.

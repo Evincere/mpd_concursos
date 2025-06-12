@@ -138,12 +138,30 @@
         </mat-error>
       </div>
 
-      <div class="user-box">
-        <input matInput type="date" formControlName="birthDate" placeholder=" " required (focus)="onInputFocus($event)" appTouchFriendly id="birthDate">
+      <div class="user-box"
+           [class.error-field]="hasFieldError('birthDate')"
+           [class.field-error-pending]="getFieldErrorStatus('birthDate') === 'pending'"
+           [class.field-error-resolved]="getFieldErrorStatus('birthDate') === 'resolved'">
+        <input matInput
+               type="date"
+               formControlName="birthDate"
+               placeholder=" "
+               required
+               (focus)="onInputFocus($event)"
+               [class.error-input]="hasFieldError('birthDate')"
+               appTouchFriendly
+               id="birthDate">
         <label for="birthDate" class="date-label">Fecha de nacimiento</label>
-        <mat-error *ngIf="registerForm.get('birthDate')?.touched && registerForm.get('birthDate')?.errors?.['required']">
-          La fecha de nacimiento es requerida
-        </mat-error>
+        <div class="error-message"
+             *ngIf="registerForm.get('birthDate')?.touched &&
+                    (registerForm.get('birthDate')?.errors || hasFieldError('birthDate'))">
+          <ng-container *ngIf="registerForm.get('birthDate')?.errors?.['required']">
+            La fecha de nacimiento es requerida
+          </ng-container>
+          <ng-container *ngIf="hasFieldError('birthDate')">
+            {{ getFieldError('birthDate') }}
+          </ng-container>
+        </div>
       </div>
 
       <div class="user-box">
@@ -471,3 +489,15 @@
     </div>
   </div>
 </div>
+
+<!-- Error Context Panel - Panel contextual flotante para errores -->
+<app-error-context-panel
+  [fieldError]="currentFieldError"
+  [targetElement]="currentTargetElement"
+  [visible]="showErrorContextPanel"
+  [autoHide]="true"
+  [hideDelay]="15000"
+  (close)="onErrorContextPanelClose()"
+  (dismiss)="onErrorContextPanelDismiss()"
+  (focusField)="onErrorContextPanelFocusField($event)">
+</app-error-context-panel>

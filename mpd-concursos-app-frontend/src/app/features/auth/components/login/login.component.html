@@ -47,7 +47,9 @@
             Ingresar
           </button>
         </form>
-        <div class="error-message" *ngIf="loginError" [ngClass]="{'error-blocked': isBlockedError, 'error-inactive': isInactiveError, 'error-expired': isExpiredError}">
+
+        <!-- Sistema legacy de errores (mantenido para compatibilidad) -->
+        <div class="error-message" *ngIf="loginError && !showLoginNotification" [ngClass]="{'error-blocked': isBlockedError, 'error-inactive': isInactiveError, 'error-expired': isExpiredError}">
           <div class="error-icon" *ngIf="isBlockedError || isInactiveError || isExpiredError">
             <i class="material-icons">{{ getErrorIcon() }}</i>
           </div>
@@ -80,3 +82,14 @@
     </div>
   </div>
 </div>
+
+<!-- Sistema de notificaciones externas para login -->
+<app-login-notification
+  *ngIf="showLoginNotification && loginNotification"
+  [notification]="loginNotification"
+  [visible]="showLoginNotification"
+  (close)="onLoginNotificationClose()"
+  (dismiss)="onLoginNotificationDismiss()">
+</app-login-notification>
+
+
