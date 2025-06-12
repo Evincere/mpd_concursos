@@ -25,6 +25,27 @@ Preparar versión funcional para deployment en servidor Donweb con Docker
 - [ ] Optimizar configuración para producción
 - [ ] Validar variables de entorno
 
+### ✅ TAREA COMPLETADA: AUDITORÍA JPA-SCHEMA CONSISTENCIA (2025-01-27)
+- [x] **Auditoría completa completada** - Análisis exhaustivo de 15 entidades JPA ✅
+- [x] **Identificación de inconsistencias** - 8 problemas críticos detectados ✅
+- [x] **Documentación de problemas** - AUDITORIA_JPA_SCHEMA_CONSISTENCIA.md creado ✅
+- [x] **Plan de corrección** - CORRECCION_CRITICA_JPA_NAMING.md creado ✅
+- [x] **Script de verificación** - verificar_consistencia_jpa_schema.sql creado ✅
+- [x] **FASE 1 - CORRECCIONES CRÍTICAS:** ExperienceEntity, InscriptionEntity ✅ COMPLETADO
+  - [x] ExperienceEntity: 4 correcciones aplicadas (userId→user_id, startDate→start_date, endDate→end_date, documentUrl→document_url) ✅
+  - [x] InscriptionEntity: 13 correcciones aplicadas (todas las columnas camelCase→snake_case) ✅
+  - [x] Configuración revertida a usar schema.sql (no Hibernate Auto-DDL) ✅
+  - [x] Eliminado UserRepository duplicado ✅
+  - [x] Corregido import en ExperienceServiceImpl ✅
+  - [x] Compilación exitosa verificada ✅
+  - [x] Backend iniciado exitosamente ✅
+  - [x] Commit final creado (7b68c73) ✅
+- [x] **PROBLEMA RESUELTO:** Eliminación de errores "Unknown column" en producción ✅
+- [ ] **FASE 2 - CORRECCIONES MENORES:** ContestEntity, QuestionEntity (OPCIONAL)
+- [ ] **FASE 3 - ENTIDADES FALTANTES:** ContestDocumentEntity, ContestDateEntity, etc. (OPCIONAL)
+- [ ] **Testing funcional** - Probar operaciones CRUD de experiencias e inscripciones
+- [ ] **Deployment a producción** - Aplicar correcciones en servidor
+
 ### 🚨 TAREA ACTUAL: Manejo de Errores en Formulario de Registro (Iniciado: 2024-12-19)
 - [x] **Auditoría del sistema actual** - Verificar manejo de errores existente ✅
 - [x] **FASE 1 - COMPLETADA:** ErrorMappingService y HttpErrorDisplayComponent ✅
