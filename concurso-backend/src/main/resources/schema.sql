@@ -90,19 +90,19 @@ CREATE INDEX idx_experiencia_user_id ON experiencia(user_id);
 -- Nueva tabla de experiencia con UUID como clave primaria
 CREATE TABLE experience (
     id BINARY(16) PRIMARY KEY,
-    userId BINARY(16) NOT NULL,
+    user_id BINARY(16) NOT NULL,
     company VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
-    startDate DATE NOT NULL,
-    endDate DATE,
+    start_date DATE NOT NULL,
+    end_date DATE,
     description TEXT,
     comments TEXT,
-    documentUrl VARCHAR(255),
-    CONSTRAINT fk_experience_user FOREIGN KEY (userId) REFERENCES user_entity(id) ON DELETE CASCADE
+    document_url VARCHAR(255),
+    CONSTRAINT fk_experience_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
 );
 
 -- Índice para búsqueda rápida por usuario en nueva tabla
-CREATE INDEX idx_experience_user_id ON experience(userId);
+CREATE INDEX idx_experience_user_id ON experience(user_id);
 
 -- Tabla experiencias (plural) - Requerida por la estructura de BD
 CREATE TABLE experiencias (
@@ -247,24 +247,24 @@ CREATE TABLE notifications (
 
 CREATE TABLE inscriptions (
     id BINARY(16) NOT NULL,
-    contestId BIGINT,
-    userId BINARY(16),
-    createdAt DATETIME(6),
-    updatedAt DATETIME(6),
-    inscriptionDate DATETIME(6),
+    contest_id BIGINT,
+    user_id BINARY(16),
+    created_at DATETIME(6),
+    updated_at DATETIME(6),
+    inscription_date DATETIME(6),
     status ENUM('ACTIVE', 'PENDING', 'COMPLETED_WITH_DOCS', 'COMPLETED_PENDING_DOCS', 'FROZEN', 'APPROVED', 'REJECTED', 'CANCELLED'),
-    currentStep ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED'),
-    acceptedTerms BOOLEAN DEFAULT FALSE,
-    confirmedPersonalData BOOLEAN DEFAULT FALSE,
-    documentosCompletos BOOLEAN DEFAULT FALSE,
-    centroDeVida VARCHAR(500),
-    termsAcceptanceDate DATETIME(6),
-    dataConfirmationDate DATETIME(6),
-    documentationDeadline DATETIME(6),
-    frozenDate DATETIME(6),
+    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED'),
+    accepted_terms BOOLEAN DEFAULT FALSE,
+    confirmed_personal_data BOOLEAN DEFAULT FALSE,
+    documentos_completos BOOLEAN DEFAULT FALSE,
+    centro_de_vida VARCHAR(500),
+    terms_acceptance_date DATETIME(6),
+    data_confirmation_date DATETIME(6),
+    documentation_deadline DATETIME(6),
+    frozen_date DATETIME(6),
     PRIMARY KEY (id),
-    FOREIGN KEY (contestId) REFERENCES contests(id),
-    FOREIGN KEY (userId) REFERENCES user_entity(id)
+    FOREIGN KEY (contest_id) REFERENCES contests(id),
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 -- Tabla de documentos de concursos
