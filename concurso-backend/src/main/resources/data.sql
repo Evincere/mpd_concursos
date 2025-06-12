@@ -55,7 +55,7 @@ VALUES
 'semper@test.com', '26598410', '20265984107', 'Sebastian', 'Pereyra', CURRENT_TIMESTAMP);
 
 -- Insertar concursos con diferentes estados para testing completo
-INSERT INTO contests (id, title, category, class_, functions, department, position, status, startDate, endDate, basesUrl, descriptionUrl)
+INSERT INTO contests (id, title, category, class_, functions, department, position, status, start_date, end_date, bases_url, description_url)
 VALUES
 -- Concursos activos con inscripciones abiertas
 (1, 'Concurso Defensor/a Penal', 'JURIDICO', 'A', 'Asistencia tecnica y representacion legal en causas penales', 'DEFENSORIAS PENALES', 'Defensor/a Penal - Primera C.J.', 'INSCRIPTION_OPEN', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_1_bases.pdf', '/api/files/contest-bases/contest_1_description.pdf'),
@@ -74,7 +74,7 @@ VALUES
 (10, 'Concurso Informático/a', 'TECNICO', 'D', 'Soporte tecnico y mantenimiento de sistemas', 'INFORMATICA', 'Técnico/a Informático', 'PAUSED', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 30 DAY), '/api/files/contest-bases/contest_10_bases.pdf', '/api/files/contest-bases/contest_10_description.pdf');
 
 -- Insertar fechas para los concursos con cronogramas realistas
-INSERT INTO contest_dates (contestId, label, type, startDate, endDate)
+INSERT INTO contest_dates (contest_id, label, type, start_date, end_date)
 VALUES
 -- Concurso 1: Defensor/a Penal (INSCRIPTION_OPEN)
 (1, 'Inscripcion', 'REGISTRATION', DATE(CURRENT_TIMESTAMP), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 15 DAY)),
@@ -123,7 +123,7 @@ VALUES
 (10, 'Entrevista Tecnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
 
 -- Asignar roles a usuarios
-INSERT INTO user_roles (userId, roleId) VALUES
+INSERT INTO user_roles (user_id, role_id) VALUES
 (0x33333333333333333333333333333333, 0x11111111111111111111111111111111), -- admin ROLE_USER
 (0x33333333333333333333333333333333, 0x22222222222222222222222222222222), -- admin ROLE_ADMIN
 (0x44444444444444444444444444444444, 0x11111111111111111111111111111111), -- usuario1 ROLE_USER

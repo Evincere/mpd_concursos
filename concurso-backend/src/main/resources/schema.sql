@@ -64,11 +64,11 @@ CREATE TABLE roles (
 
 -- Tabla de relación user_roles (CRÍTICA - FALTABA)
 CREATE TABLE user_roles (
-    userId BINARY(16) NOT NULL,
-    roleId BINARY(16) NOT NULL,
-    PRIMARY KEY (userId, roleId),
-    FOREIGN KEY (userId) REFERENCES user_entity(id) ON DELETE CASCADE,
-    FOREIGN KEY (roleId) REFERENCES roles(id) ON DELETE CASCADE
+    user_id BINARY(16) NOT NULL,
+    role_id BINARY(16) NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
 -- Tabla antigua de experiencia (por compatibilidad)
@@ -80,12 +80,12 @@ CREATE TABLE experiencia (
     fechaFin DATE,
     descripcion TEXT,
     comentario TEXT,
-    userId BINARY(16) NOT NULL,
-    CONSTRAINT fk_experiencia_user FOREIGN KEY (userId) REFERENCES user_entity(id) ON DELETE CASCADE
+    user_id BINARY(16) NOT NULL,
+    CONSTRAINT fk_experiencia_user FOREIGN KEY (user_id) REFERENCES user_entity(id) ON DELETE CASCADE
 );
 
 -- Índice para búsqueda rápida por usuario en tabla antigua
-CREATE INDEX idx_experiencia_user_id ON experiencia(userId);
+CREATE INDEX idx_experiencia_user_id ON experiencia(user_id);
 
 -- Nueva tabla de experiencia con UUID como clave primaria
 CREATE TABLE experience (
@@ -130,23 +130,23 @@ CREATE TABLE contests (
     department VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
     status ENUM('DRAFT', 'PUBLISHED', 'PAUSED', 'CANCELLED', 'FINISHED', 'ARCHIVED', 'INSCRIPTION_PENDING', 'INSCRIPTION_OPEN', 'INSCRIPTION_CLOSED', 'IN_EVALUATION', 'RESULTS_PUBLISHED') NOT NULL,
-    startDate DATE NOT NULL,
-    endDate DATE NOT NULL,
-    basesUrl VARCHAR(255),
-    descriptionUrl VARCHAR(255),
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT check_dates CHECK (endDate >= startDate)
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    bases_url VARCHAR(255),
+    description_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT check_dates CHECK (end_date >= start_date)
 );
 
 CREATE TABLE contest_dates (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    contestId BIGINT NOT NULL,
+    contest_id BIGINT NOT NULL,
     label VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL,
-    startDate DATE NOT NULL,
-    endDate DATE NOT NULL,
-    FOREIGN KEY (contestId) REFERENCES contests(id) ON DELETE CASCADE
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE
 );
 
 CREATE TABLE contest_requirements (
