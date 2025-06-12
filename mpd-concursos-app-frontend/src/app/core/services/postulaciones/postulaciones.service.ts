@@ -131,14 +131,24 @@ export class PostulacionesService {
           }, 'PostulacionesService');
 
           if (error.status === 0) {
-            errorMessage = 'Error de conexión con el servidor. Verifique su conexión a internet.';
+            errorMessage = 'Network error';
           } else if (error.status === 400) {
             errorMessage = 'Parámetros de búsqueda inválidos.';
           } else if (error.status === 401 || error.status === 403) {
             errorMessage = 'No autorizado. Por favor, inicie sesión nuevamente.';
             this.authService.logout(); // Force logout on auth issues
           } else if (error.status === 404) {
-             errorMessage = 'Recurso no encontrado.';
+            // 404 puede ser normal cuando no hay postulaciones - no es un error crítico
+            this.loggingService.info('[PostulacionesService] No se encontraron postulaciones (404) - esto es normal para usuarios sin postulaciones', undefined, 'PostulacionesService');
+            // Retornar respuesta vacía en lugar de error
+            return of({
+              content: [],
+              pageNumber: 0,
+              pageSize: 10,
+              totalElements: 0,
+              totalPages: 0,
+              last: true
+            } as PostulacionResponse);
           } else if (error.status >= 500) {
               errorMessage = 'Error interno del servidor. Intente nuevamente más tarde.';
           }

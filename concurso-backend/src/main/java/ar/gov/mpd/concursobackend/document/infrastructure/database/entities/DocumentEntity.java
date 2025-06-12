@@ -29,23 +29,23 @@ public class DocumentEntity {
     private UUID id;
 
     @NotNull
-    @Column(name = "user_id")
+    @Column(name = "userId")
     private UUID userId;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "document_type_id")
+    @JoinColumn(name = "documentTypeId")
     private DocumentTypeEntity documentType;
 
     @NotNull
-    @Column(name = "file_name")
+    @Column(name = "fileName")
     private String fileName;
 
     @NotNull
-    @Column(name = "content_type")
+    @Column(name = "contentType")
     private String contentType;
 
     @NotNull
-    @Column(name = "file_path")
+    @Column(name = "filePath")
     private String filePath;
 
     @NotNull
@@ -56,16 +56,16 @@ public class DocumentEntity {
     private String comments;
 
     @NotNull
-    @Column(name = "upload_date")
+    @Column(name = "uploadDate")
     private LocalDateTime uploadDate;
 
-    @Column(name = "validated_by")
+    @Column(name = "validatedBy")
     private UUID validatedBy;
 
-    @Column(name = "validated_at")
+    @Column(name = "validatedAt")
     private LocalDateTime validatedAt;
 
-    @Column(name = "rejection_reason")
+    @Column(name = "rejectionReason")
     private String rejectionReason;
 
     public enum DocumentStatusEnum {

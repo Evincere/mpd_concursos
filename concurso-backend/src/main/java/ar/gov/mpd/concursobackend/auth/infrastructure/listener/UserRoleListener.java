@@ -48,7 +48,7 @@ public class UserRoleListener {
             logger.info("El usuario {} no tiene roles asignados. Asignando ROLE_USER automáticamente.",
                     user.getUsername());
 
-            roleRepository.findByRole(RoleEnum.ROLE_USER).ifPresentOrElse(
+            roleRepository.findByName(RoleEnum.ROLE_USER).ifPresentOrElse(
                     roleEntity -> {
                         user.getRoles().add(roleEntity);
                         logger.info("Rol ROLE_USER asignado automáticamente al usuario {}", user.getUsername());

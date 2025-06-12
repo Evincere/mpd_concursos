@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "inscriptions")
@@ -14,56 +15,57 @@ import java.util.Set;
 @Setter
 public class InscriptionEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", columnDefinition = "BINARY(16)")
-    private byte[] id;
+    private UUID id;
 
-    @Column(name = "contest_id")
+    @Column(name = "contestId")
     private Long contestId;
 
-    @Column(name = "user_id", columnDefinition = "BINARY(16)")
-    private byte[] userId;
+    @Column(name = "userId", columnDefinition = "BINARY(16)")
+    private UUID userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private InscriptionStatus status;
 
-    @Column(name = "created_at")
+    @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
-    @Column(name = "inscription_date")
+    @Column(name = "inscriptionDate")
     private LocalDateTime inscriptionDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "current_step")
+    @Column(name = "currentStep")
     private InscriptionStep currentStep;
 
     @ElementCollection
     @CollectionTable(name = "inscription_circunscripciones",
-            joinColumns = @JoinColumn(name = "inscription_id"))
+            joinColumns = @JoinColumn(name = "inscriptionId"))
     @Column(name = "circunscripcion")
     private Set<String> selectedCircunscripciones;
 
-    @Column(name = "accepted_terms")
+    @Column(name = "acceptedTerms")
     private boolean acceptedTerms;
 
-    @Column(name = "confirmed_personal_data")
+    @Column(name = "confirmedPersonalData")
     private boolean confirmedPersonalData;
 
-    @Column(name = "centro_de_vida")
+    @Column(name = "centroDeVida")
     private String centroDeVida;
 
-    @Column(name = "terms_acceptance_date")
+    @Column(name = "termsAcceptanceDate")
     private LocalDateTime termsAcceptanceDate;
 
-    @Column(name = "data_confirmation_date")
+    @Column(name = "dataConfirmationDate")
     private LocalDateTime dataConfirmationDate;
 
-    @Column(name = "documentation_deadline")
+    @Column(name = "documentationDeadline")
     private LocalDateTime documentationDeadline;
 
-    @Column(name = "frozen_date")
+    @Column(name = "frozenDate")
     private LocalDateTime frozenDate;
 }

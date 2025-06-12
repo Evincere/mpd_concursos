@@ -8,33 +8,34 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Repositorio JPA para las sesiones de inscripción
  */
 @Repository
-public interface InscriptionSessionJpaRepository extends JpaRepository<InscriptionSessionEntity, byte[]> {
+public interface InscriptionSessionJpaRepository extends JpaRepository<InscriptionSessionEntity, UUID> {
     /**
      * Busca una sesión por su ID de inscripción
      * @param inscriptionId ID de la inscripción
      * @return Sesión encontrada o vacío
      */
-    Optional<InscriptionSessionEntity> findByInscriptionId(byte[] inscriptionId);
-    
+    Optional<InscriptionSessionEntity> findByInscriptionId(UUID inscriptionId);
+
     /**
      * Busca sesiones por ID de usuario
      * @param userId ID del usuario
      * @return Lista de sesiones del usuario
      */
-    List<InscriptionSessionEntity> findByUserId(byte[] userId);
-    
+    List<InscriptionSessionEntity> findByUserId(UUID userId);
+
     /**
      * Busca sesiones por ID de usuario y ID de concurso
      * @param userId ID del usuario
      * @param contestId ID del concurso
      * @return Sesión encontrada o vacío
      */
-    Optional<InscriptionSessionEntity> findByUserIdAndContestId(byte[] userId, Long contestId);
+    Optional<InscriptionSessionEntity> findByUserIdAndContestId(UUID userId, Long contestId);
     
     /**
      * Elimina sesiones expiradas

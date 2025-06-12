@@ -45,16 +45,16 @@ public class ContestEntity {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    @Column(name = "bases_url")
+    @Column(name = "basesUrl")
     private String basesUrl;
 
-    @Column(name = "description_url")
+    @Column(name = "descriptionUrl")
     private String descriptionUrl;
 
-    @Column(name = "created_at")
+    @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, orphanRemoval = true)

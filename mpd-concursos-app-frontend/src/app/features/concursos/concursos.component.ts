@@ -136,8 +136,10 @@ export class ConcursosComponent implements OnInit, OnDestroy {
   cargarConcursos(): void {
     this.loading = true;
     this.error = null; // Clear previous errors
+    console.log('[ConcursosComponent] Starting to load contests...');
     this.concursosService.getConcursos().subscribe({
       next: (concursos: Concurso[]) => {
+        console.log(`[ConcursosComponent] Concursos loaded: ${concursos.length}`, concursos);
         this.loggingService.debug(`[ConcursosComponent] Concursos loaded: ${concursos.length}`, undefined, 'Concursos');
         this.concursosSinFiltrar = concursos; // Store the original list
 
@@ -150,6 +152,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
 
         this.loading = false;
         this.primeraConsulta = false;
+        console.log(`[ConcursosComponent] Final state - loading: ${this.loading}, error: ${this.error}, concursos.length: ${this.concursos.length}`);
       },
       error: (error: HttpErrorResponse) => {
         console.error('[ConcursosComponent] Error al cargar los concursos:', error);
@@ -235,6 +238,7 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     });
 
     this.concursos = concursosFiltrados;
+    console.log(`[ConcursosComponent] Filtered contests: ${this.concursos.length}`, this.concursos);
     this.loggingService.debug(`[ConcursosComponent] Filtered contests: ${this.concursos.length}`, undefined, 'Concursos');
   }
 

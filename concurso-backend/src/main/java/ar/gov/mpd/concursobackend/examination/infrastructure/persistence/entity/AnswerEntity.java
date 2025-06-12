@@ -15,27 +15,29 @@ import ar.gov.mpd.concursobackend.examination.domain.enums.AnswerStatus;
 @Setter
 public class AnswerEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "BINARY(16)")
     private UUID id;
     
-    @Column(name = "question_id")
+    @Column(name = "questionId")
     private UUID questionId;
-    
+
     @Column(columnDefinition = "TEXT")
     private String response;
-    
+
     private LocalDateTime timestamp;
-    
-    @Column(name = "response_time_ms")
+
+    @Column(name = "responseTimeMs")
     private Long responseTimeInMillis;
-    
+
     private String hash;
-    
+
     private Integer attempts;
-    
+
     @Enumerated(EnumType.STRING)
     private AnswerStatus status;
-    
+
     @ManyToOne
-    @JoinColumn(name = "session_id")
+    @JoinColumn(name = "sessionId")
     private ExaminationSessionEntity session;
 } 

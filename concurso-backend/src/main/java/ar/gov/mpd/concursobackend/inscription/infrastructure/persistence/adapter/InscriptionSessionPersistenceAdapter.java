@@ -13,11 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -30,17 +28,7 @@ public class InscriptionSessionPersistenceAdapter implements InscriptionSessionR
     private final InscriptionSessionEntityMapper mapper;
     private static final Logger log = LoggerFactory.getLogger(InscriptionSessionPersistenceAdapter.class);
 
-    /**
-     * Convierte un UUID a un array de bytes
-     * @param uuid UUID a convertir
-     * @return Array de bytes
-     */
-    private byte[] uuidToBytes(UUID uuid) {
-        ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
-        bb.putLong(uuid.getMostSignificantBits());
-        bb.putLong(uuid.getLeastSignificantBits());
-        return bb.array();
-    }
+
 
     @Override
     public InscriptionSession save(InscriptionSession session) {
@@ -53,21 +41,21 @@ public class InscriptionSessionPersistenceAdapter implements InscriptionSessionR
     @Override
     public Optional<InscriptionSession> findById(InscriptionSessionId id) {
         log.debug("Buscando sesión de inscripción con ID: {}", id.getValue());
-        return repository.findById(uuidToBytes(id.getValue()))
+        return repository.findById(id.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public Optional<InscriptionSession> findByInscriptionId(InscriptionId inscriptionId) {
         log.debug("Buscando sesión por ID de inscripción: {}", inscriptionId.getValue());
-        return repository.findByInscriptionId(uuidToBytes(inscriptionId.getValue()))
+        return repository.findByInscriptionId(inscriptionId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public List<InscriptionSession> findByUserId(UserId userId) {
         log.debug("Buscando sesiones por ID de usuario: {}", userId.getValue());
-        return repository.findByUserId(uuidToBytes(userId.getValue()))
+        return repository.findByUserId(userId.getValue())
                 .stream()
                 .map(mapper::toDomain)
                 .collect(Collectors.toList());
@@ -76,14 +64,14 @@ public class InscriptionSessionPersistenceAdapter implements InscriptionSessionR
     @Override
     public Optional<InscriptionSession> findByUserIdAndContestId(UserId userId, ContestId contestId) {
         log.debug("Buscando sesión por ID de usuario: {} y ID de concurso: {}", userId.getValue(), contestId.getValue());
-        return repository.findByUserIdAndContestId(uuidToBytes(userId.getValue()), contestId.getValue())
+        return repository.findByUserIdAndContestId(userId.getValue(), contestId.getValue())
                 .map(mapper::toDomain);
     }
 
     @Override
     public void deleteById(InscriptionSessionId id) {
         log.debug("Eliminando sesión de inscripción con ID: {}", id.getValue());
-        repository.deleteById(uuidToBytes(id.getValue()));
+        repository.deleteById(id.getValue());
     }
 
     @Override

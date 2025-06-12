@@ -150,6 +150,52 @@
     }
   }
 
+  &.status-inscription_open {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+    border-color: rgba(76, 175, 80, 0.3);
+
+    &:hover {
+      background: rgba(76, 175, 80, 0.2);
+      border-color: rgba(76, 175, 80, 0.4);
+      box-shadow:
+        0 6px 20px rgba(76, 175, 80, 0.2),
+        0 3px 10px rgba(76, 175, 80, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &.status-inscription_pending {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.3);
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow:
+        0 6px 20px rgba(59, 130, 246, 0.2),
+        0 3px 10px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  &.status-inscription_closed,
+  &.status-closed {
+    background: rgba(107, 114, 128, 0.15);
+    color: #6b7280;
+    border-color: rgba(107, 114, 128, 0.3);
+
+    &:hover {
+      background: rgba(107, 114, 128, 0.2);
+      border-color: rgba(107, 114, 128, 0.4);
+      box-shadow:
+        0 6px 20px rgba(107, 114, 128, 0.2),
+        0 3px 10px rgba(107, 114, 128, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+  }
+
   &.status-finished {
     background: rgba(59, 130, 246, 0.15);
     color: #3b82f6;

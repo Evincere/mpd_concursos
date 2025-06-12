@@ -95,14 +95,24 @@ export class NotificationsService implements OnDestroy {
         }),
         switchMap(() => this.loadNotifications().pipe(
           catchError(error => {
-            this.loggingService.error('[NotificationsService] Error during notification polling (loadNotifications pipe):', error, 'NotificationsService');
-            if (error instanceof HttpErrorResponse && error.status === 401) {
-              this.loggingService.warn('[NotificationsService] Polling received 401. Stopping polling.', undefined, 'NotificationsService');
-              this.authService.logout(); // Force logout on auth failure
-              this.stopPolling();
-              return of([]); // Return empty array to avoid breaking the stream
+            if (error instanceof HttpErrorResponse) {
+              if (error.status === 401) {
+                this.loggingService.warn('[NotificationsService] Polling received 401. Stopping polling.', undefined, 'NotificationsService');
+                this.authService.logout(); // Force logout on auth failure
+                this.stopPolling();
+                return of([]); // Return empty array to avoid breaking the stream
+              } else if (error.status === 500) {
+                // Log silently for server errors - don't spam the console
+                this.loggingService.debug('[NotificationsService] Server error during polling (notifications endpoint may not be available):', error.status, 'NotificationsService');
+                return of(this.notificationsSubject.value); // Return current state
+              } else if (error.status === 404) {
+                // Notifications endpoint not implemented yet - log silently
+                this.loggingService.debug('[NotificationsService] Notifications endpoint not found (404) - feature may not be implemented yet', undefined, 'NotificationsService');
+                return of([]); // Return empty array
+              }
             }
-            // Return current state to maintain UI consistency on other errors
+            // For other errors, log but don't spam
+            this.loggingService.debug('[NotificationsService] Error during polling (non-critical):', error.status || 'unknown', 'NotificationsService');
             return of(this.notificationsSubject.value);
           })
         ))
@@ -156,17 +166,24 @@ export class NotificationsService implements OnDestroy {
         this.loggingService.debug('[NotificationsService] Notifications loaded successfully and sorted. Count:', notifications.length, 'NotificationsService');
       }),
       catchError(error => {
-        this.loggingService.error('[NotificationsService] Error loading notifications from API:', error, 'NotificationsService');
         if (error instanceof HttpErrorResponse) {
           if (error.status === 401) {
             this.loggingService.warn('[NotificationsService] 401 Unauthorized during loadNotifications. Session might be expired.', undefined, 'NotificationsService');
             this.authService.logout(); // Force logout
             return throwError(() => new Error('Su sesión ha expirado. Por favor, vuelva a iniciar sesión.'));
           } else if (error.status === 404) {
-            return throwError(() => new Error('Recurso de notificaciones no encontrado.'));
+            // Notifications endpoint not implemented - return empty array instead of error
+            this.loggingService.debug('[NotificationsService] Notifications endpoint not found (404) - returning empty array', undefined, 'NotificationsService');
+            return of([]); // Return empty array instead of throwing error
+          } else if (error.status === 500) {
+            // Server error - return empty array to avoid breaking the UI
+            this.loggingService.debug('[NotificationsService] Server error (500) during loadNotifications - returning empty array', undefined, 'NotificationsService');
+            return of([]); // Return empty array instead of throwing error
           }
         }
-        return throwError(() => new Error('Error al cargar notificaciones. Por favor, intente más tarde.'));
+        // For other errors, log silently and return empty array
+        this.loggingService.debug('[NotificationsService] Error loading notifications (non-critical):', error.status || 'unknown', 'NotificationsService');
+        return of([]); // Return empty array instead of throwing error
       })
     );
   }

@@ -22,7 +22,27 @@ export class ProfileService {
 
   getUserProfile(): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.apiUrl}/profile`)
-      .pipe(catchError(this.handleError));
+      .pipe(
+        catchError(error => {
+          // Solo loggear el error, no relanzarlo para evitar notificaciones automáticas
+          this.loggingService.error('[ProfileService] Error loading profile', error);
+          // Retornar un perfil vacío en lugar de lanzar el error
+          const emptyProfile: UserProfile = {
+            id: '',
+            username: '',
+            email: '',
+            firstName: '',
+            lastName: '',
+            dni: '',
+            telefono: '',
+            direccion: '',
+            fechaNacimiento: undefined,
+            experiencias: [],
+            educacion: []
+          };
+          return throwError(() => error); // Mantener el error para que el interceptor lo maneje
+        })
+      );
   }
 
   updateUserProfile(profile: Partial<UserProfile>): Observable<UserProfile> {

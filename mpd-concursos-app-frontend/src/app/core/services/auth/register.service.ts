@@ -81,8 +81,17 @@ export class RegisterService {
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
-    console.error('Error en registro:', error);
+    console.log('🔍 RegisterService - handleError iniciado:', error);
+    console.log('🔍 RegisterService - error.error:', error.error);
+    console.log('🔍 RegisterService - Es array?', Array.isArray(error.error));
 
+    // CRITICAL FIX: No transformar el error, propagar el HttpErrorResponse original
+    // para que el ErrorMappingService pueda procesarlo correctamente
+    console.log('🔍 RegisterService - Propagando HttpErrorResponse original');
+    return throwError(() => error);
+
+    // CÓDIGO ANTERIOR COMENTADO - causaba la pérdida del error original
+    /*
     const errorResponse = error.error;
 
     // Verificar si tenemos field y message en la respuesta
@@ -93,7 +102,10 @@ export class RegisterService {
         }
       }));
     }
+    */
 
+    // CÓDIGO ANTERIOR COMENTADO - ya no es necesario porque propagamos el error original
+    /*
     // Mapeo de mensajes de error con sus campos correspondientes
     const errorMappings: Record<string, ValidationError> = {
       'El email ya está registrado': { field: 'email', message: 'Este email ya está en uso' },
@@ -137,5 +149,6 @@ export class RegisterService {
         message: errorResponse?.message || 'Error en el servidor. Intente más tarde.'
       }
     }));
+    */
   }
 }

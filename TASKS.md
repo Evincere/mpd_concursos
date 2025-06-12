@@ -25,6 +25,22 @@ Preparar versión funcional para deployment en servidor Donweb con Docker
 - [ ] Optimizar configuración para producción
 - [ ] Validar variables de entorno
 
+### 🚨 TAREA ACTUAL: Manejo de Errores en Formulario de Registro (Iniciado: 2024-12-19)
+- [x] **Auditoría del sistema actual** - Verificar manejo de errores existente ✅
+- [x] **FASE 1 - COMPLETADA:** ErrorMappingService y HttpErrorDisplayComponent ✅
+  - [x] Crear ErrorMappingService centralizado ✅
+  - [x] Crear HttpErrorDisplayComponent con glassmorphism ✅
+  - [x] Implementar interfaces y tipos TypeScript ✅
+  - [x] Estilos SCSS con variables glassmorphism globales ✅
+  - [x] Animaciones y accesibilidad WCAG AA ✅
+- [x] **FASE 2 - COMPLETADA:** Integración en formulario de registro ✅
+  - [x] Actualizar importaciones y servicios en RegisterComponent ✅
+  - [x] Modificar template HTML para usar HttpErrorDisplayComponent ✅
+  - [x] Actualizar lógica de manejo de errores en onSubmit() ✅
+  - [x] Preservar compatibilidad con sistema existente ✅
+  - [x] Agregar métodos de manejo de eventos del componente ✅
+- [ ] **FASE 3:** Testing de casos de error
+
 ### 📋 FASE 2: CONFIGURACIÓN DE PRODUCCIÓN
 - [ ] Ajustar CORS para IP del servidor (149.50.132.23)
 - [ ] Configurar variables de entorno de producción

@@ -430,4 +430,48 @@ public class UserService implements IUserService, IUserRoleManager {
       return false;
     }
   }
+
+  /**
+   * Debug method to get all users with basic information
+   * @return List of user debug information
+   */
+  public List<UserDebugInfo> getAllUsersDebug() {
+    logger.debug("Getting all users for debug");
+    List<User> users = userRepository.findAll();
+    return users.stream()
+        .map(user -> new UserDebugInfo(
+            user.getId().value(),
+            user.getUsername().value(),
+            user.getEmail().value(),
+            user.getPassword().value().substring(0, Math.min(20, user.getPassword().value().length())) + "...",
+            user.getRoles().stream().map(role -> role.getRole().name()).collect(Collectors.joining(", ")),
+            user.getStatus().name()
+        ))
+        .collect(Collectors.toList());
+  }
+
+  public static class UserDebugInfo {
+    private final UUID id;
+    private final String username;
+    private final String email;
+    private final String passwordPreview;
+    private final String roles;
+    private final String status;
+
+    public UserDebugInfo(UUID id, String username, String email, String passwordPreview, String roles, String status) {
+      this.id = id;
+      this.username = username;
+      this.email = email;
+      this.passwordPreview = passwordPreview;
+      this.roles = roles;
+      this.status = status;
+    }
+
+    public UUID getId() { return id; }
+    public String getUsername() { return username; }
+    public String getEmail() { return email; }
+    public String getPasswordPreview() { return passwordPreview; }
+    public String getRoles() { return roles; }
+    public String getStatus() { return status; }
+  }
 }

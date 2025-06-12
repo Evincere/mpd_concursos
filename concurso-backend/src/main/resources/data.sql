@@ -133,7 +133,7 @@ INSERT INTO user_roles (userId, roleId) VALUES
 
 -- Datos iniciales para tipos de documento
 -- Primero, insertar el documento de identidad como documento padre
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
 (0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
 
 -- Insertar los tipos de documentos para DNI frente y dorso

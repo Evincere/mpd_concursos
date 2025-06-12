@@ -61,6 +61,15 @@ CREATE TABLE roles (
     name ENUM('ROLE_USER', 'ROLE_ADMIN') NOT NULL
 );
 
+-- Tabla de relación user_roles (CRÍTICA - FALTABA)
+CREATE TABLE user_roles (
+    userId BINARY(16) NOT NULL,
+    roleId BINARY(16) NOT NULL,
+    PRIMARY KEY (userId, roleId),
+    FOREIGN KEY (userId) REFERENCES user_entity(id) ON DELETE CASCADE,
+    FOREIGN KEY (roleId) REFERENCES roles(id) ON DELETE CASCADE
+);
+
 -- Tabla antigua de experiencia (por compatibilidad)
 CREATE TABLE experiencia (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -197,30 +206,24 @@ CREATE TABLE answers (
     FOREIGN KEY (sessionId) REFERENCES examination_sessions(id)
 );
 
-CREATE TABLE user_roles (
-    userId BINARY(16),
-    roleId BINARY(16),
-    PRIMARY KEY (userId, roleId),
-    FOREIGN KEY (userId) REFERENCES user_entity(id),
-    FOREIGN KEY (roleId) REFERENCES roles(id)
-);
+-- DUPLICACIÓN ELIMINADA: user_roles ya está definida en líneas 65-71
 
 CREATE TABLE notifications (
     id BINARY(16) PRIMARY KEY,
-    recipientId BINARY(16) NOT NULL,
+    recipient_id BINARY(16) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     status ENUM('PENDING', 'SENT', 'READ', 'ACKNOWLEDGED') NOT NULL,
-    sentAt DATETIME(6) NOT NULL,
-    readAt DATETIME(6),
-    acknowledgedAt DATETIME(6),
-    acknowledgementLevel ENUM('NONE', 'SIMPLE', 'SIGNATURE_BASIC', 'SIGNATURE_ADVANCED') NOT NULL,
-    signatureType ENUM('PIN', 'BIOMETRIC', 'DIGITAL_CERT', 'DECLARATION'),
-    signatureValue VARCHAR(255),
-    signatureMetadata VARCHAR(255),
+    sent_at DATETIME(6) NOT NULL,
+    read_at DATETIME(6),
+    acknowledged_at DATETIME(6),
+    acknowledgement_level ENUM('NONE', 'SIMPLE', 'SIGNATURE_BASIC', 'SIGNATURE_ADVANCED') NOT NULL,
+    signature_type ENUM('PIN', 'BIOMETRIC', 'DIGITAL_CERT', 'DECLARATION'),
+    signature_value VARCHAR(255),
+    signature_metadata VARCHAR(255),
     version BIGINT,
     type ENUM('INSCRIPTION', 'SYSTEM', 'CONTEST', 'GENERAL') NOT NULL,
-    FOREIGN KEY (recipientId) REFERENCES user_entity(id)
+    FOREIGN KEY (recipient_id) REFERENCES user_entity(id)
 );
 
 CREATE TABLE inscriptions (

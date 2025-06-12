@@ -36,7 +36,7 @@ public class ExperienceEntity {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "userId", nullable = false)
     private UserEntity user;
 
     @Column(name = "company", nullable = false)
@@ -45,10 +45,10 @@ public class ExperienceEntity {
     @Column(name = "position", nullable = false)
     private String position;
 
-    @Column(name = "start_date", nullable = false)
+    @Column(name = "startDate", nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "end_date")
+    @Column(name = "endDate")
     private LocalDate endDate;
 
     @Column(name = "description")
@@ -57,6 +57,6 @@ public class ExperienceEntity {
     @Column(name = "comments")
     private String comments;
 
-    @Column(name = "document_url")
+    @Column(name = "documentUrl")
     private String documentUrl;
 }

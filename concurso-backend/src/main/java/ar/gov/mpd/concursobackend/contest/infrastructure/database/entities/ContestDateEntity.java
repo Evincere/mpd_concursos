@@ -19,15 +19,15 @@ public class ContestDateEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contest_id")
+    @JoinColumn(name = "contestId")
     private ContestEntity contest;
 
     private String label;
     private String type;
-    
-    @Column(name = "start_date")
+
+    @Column(name = "startDate")
     private LocalDate startDate;
-    
-    @Column(name = "end_date")
+
+    @Column(name = "endDate")
     private LocalDate endDate;
 } 

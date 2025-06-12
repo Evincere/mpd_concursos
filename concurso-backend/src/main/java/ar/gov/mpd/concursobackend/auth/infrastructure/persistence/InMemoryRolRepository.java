@@ -22,7 +22,7 @@ public class InMemoryRolRepository implements IRoleRepository{
 
     @Override
     public Optional<Rol> findByRole(RoleEnum name) {
-        return roleSpringRepository.findByRole(name)
+        return roleSpringRepository.findByName(name)
             .map(rolMapper::toDomain);
     }
 
@@ -34,7 +34,7 @@ public class InMemoryRolRepository implements IRoleRepository{
 
     @Override
     public boolean existsByRole(RoleEnum role) {
-        return roleSpringRepository.existsByRole(role);
+        return roleSpringRepository.existsByName(role);
     }
 
 }

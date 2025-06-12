@@ -25,34 +25,74 @@ export const ErrorInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, n
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       // Endpoints que deben mantener HttpErrorResponse original para manejo específico
-      const preserveOriginalErrorEndpoints = ['/inscriptions/', '/inscripciones/'];
+      const preserveOriginalErrorEndpoints = ['/inscriptions/', '/inscripciones/', '/postulaciones/'];
       const shouldPreserveOriginal = preserveOriginalErrorEndpoints.some(endpoint => req.url.includes(endpoint));
 
-      // CRITICAL FIX: Endpoints de documentos que no deben mostrar notificaciones automáticas
-      const documentEndpoints = ['/documentos/queue/', '/documents/queue/'];
-      const isDocumentEndpoint = documentEndpoints.some(endpoint => req.url.includes(endpoint));
+      // CRITICAL FIX: Endpoints que no deben mostrar notificaciones automáticas para listas vacías
+      const silentEndpoints = ['/documentos/queue/', '/documents/queue/', '/postulaciones/', '/notifications/'];
+      const isSilentEndpoint = silentEndpoints.some(endpoint => req.url.includes(endpoint));
 
-      if (isDocumentEndpoint) {
-        // Para endpoints de documentos en cola, no mostrar notificaciones automáticas
-        // El componente maneja los errores específicamente
-        console.warn(`[ErrorInterceptor] Error en endpoint de documentos: ${error.status} - ${req.url}`);
+      if (isSilentEndpoint) {
+        // Para endpoints silenciosos, no mostrar notificaciones automáticas
+        // Los componentes manejan los errores específicamente
+        if (error.status === 404 && req.url.includes('/postulaciones/')) {
+          // 404 en postulaciones es normal para usuarios sin postulaciones
+          console.info(`[ErrorInterceptor] No hay postulaciones para el usuario (404) - comportamiento normal`);
+        } else {
+          console.warn(`[ErrorInterceptor] Error en endpoint silencioso: ${error.status} - ${req.url}`);
+        }
         return throwError(() => error);
       }
 
       if (shouldPreserveOriginal) {
-        // Para endpoints de inscripciones, mantener el error original y manejar notificaciones selectivamente
+        // Para endpoints específicos, mantener el error original y suprimir notificaciones automáticas
         if (error.status >= 500) {
-          // Solo mostrar notificación para errores críticos del servidor
-          notificationService.error('Error del servidor en inscripciones. Por favor, intente nuevamente.');
+          // Lista de endpoints que NO deben mostrar notificaciones automáticas
+          const silentEndpoints = [
+            '/api/users/profile',
+            '/api/v1/notifications',
+            '/api/inscriptions/user/'
+          ];
+
+          const shouldShowNotification = !silentEndpoints.some(endpoint => req.url.includes(endpoint));
+
+          if (shouldShowNotification) {
+            // Solo mostrar notificación para errores críticos del servidor, pero evitar spam
+            const errorKey = `${req.method}_${req.url}_${error.status}`;
+            const lastErrorTime = (window as any).lastErrorNotifications?.[errorKey] || 0;
+            const now = Date.now();
+
+            // Solo mostrar notificación si han pasado al menos 10 segundos desde la última notificación del mismo error
+            if (now - lastErrorTime > 10000) {
+              notificationService.error('Error del servidor. Por favor, intente nuevamente.');
+
+              // Guardar timestamp de la notificación
+              if (!(window as any).lastErrorNotifications) {
+                (window as any).lastErrorNotifications = {};
+              }
+              (window as any).lastErrorNotifications[errorKey] = now;
+            }
+          }
         } else if (error.status === 404) {
-          // Log informativo para errores 404 esperados
-          // TODO: Implement proper logging - console.error('ℹ️ [ErrorInterceptor] Recurso no encontrado (esperado): ${req.method} ${req.url}', );
+          // Log informativo para errores 404 esperados - no mostrar notificación para usuarios nuevos sin postulaciones
+          console.info(`ℹ️ [ErrorInterceptor] Recurso no encontrado (esperado para usuarios nuevos): ${req.method} ${req.url}`);
         } else if (error.status === 403) {
           // Notificación específica para errores de autorización en inscripciones
-          notificationService.error('No tiene permisos para realizar esta acción en inscripciones.');
+          notificationService.error('No tiene permisos para realizar esta acción.');
         }
 
         // Siempre propagar HttpErrorResponse original para inscripciones
+        return throwError(() => error);
+      }
+
+      // CRITICAL FIX: Agregar endpoint de registro a endpoints silenciosos para evitar notificaciones automáticas
+      const authEndpoints = ['/auth/register', '/auth/login'];
+      const isAuthEndpoint = authEndpoints.some(endpoint => req.url.includes(endpoint));
+
+      if (isAuthEndpoint) {
+        // Para endpoints de autenticación, no mostrar notificaciones automáticas
+        // Los componentes manejan los errores específicamente con HttpErrorDisplayComponent
+        console.info(`[ErrorInterceptor] Error en endpoint de autenticación: ${error.status} - ${req.url} - Manejado por componente específico`);
         return throwError(() => error);
       }
 
