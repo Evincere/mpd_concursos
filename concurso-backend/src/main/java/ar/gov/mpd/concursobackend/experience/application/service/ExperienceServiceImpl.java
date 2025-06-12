@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
-import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.UserRepository;
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceRequestDto;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ExperienceServiceImpl implements ExperienceService {
 
     private final ExperienceRepository experienceRepository;
-    private final UserRepository userRepository;
+    private final IUserSpringRepository userRepository;
     private final ExperienceMapper experienceMapper;
     private final ExperienceEntityMapper entityMapper;
     private final DocumentService documentService;
