@@ -73,14 +73,14 @@ public class UserEntity {
     private String cuit;
 
     @NotNull
-    @Column(name = "firstName")
+    @Column(name = "first_name")
     private String firstName;
 
     @NotNull
-    @Column(name = "lastName")
+    @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "birthDate")
+    @Column(name = "birth_date")
     private LocalDate birthDate;
 
     @Column(name = "country")
@@ -92,10 +92,10 @@ public class UserEntity {
     @Column(name = "municipality")
     private String municipality;
 
-    @Column(name = "legalAddress")
+    @Column(name = "legal_address")
     private String legalAddress;
 
-    @Column(name = "residentialAddress")
+    @Column(name = "residential_address")
     private String residentialAddress;
 
     @Column(name = "telefono")
@@ -110,7 +110,7 @@ public class UserEntity {
     private Set<RoleEntity> roles;
 
     @NotNull
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime createdAt;
 
