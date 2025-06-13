@@ -28,18 +28,21 @@ public class QuestionEntity {
 
     private Integer score;
 
+    @Column(name = "order_number")
     private Integer orderNumber;
 
+    @Column(name = "correct_answer")
     private String correctAnswer;
 
     @ElementCollection
-    @CollectionTable(name = "question_correct_answers")
+    @CollectionTable(name = "question_correct_answers", joinColumns = @JoinColumn(name = "question_entity_id"))
+    @Column(name = "correct_answers")
     private List<String> correctAnswers;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OptionEntity> options;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "examinationId")
+    @JoinColumn(name = "examination_id")
     private ExaminationEntity examination;
 }
