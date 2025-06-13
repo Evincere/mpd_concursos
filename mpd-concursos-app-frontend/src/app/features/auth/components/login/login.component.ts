@@ -12,6 +12,7 @@ import { HeaderComponent } from '../../../dashboard/components/header/header.com
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { LoginUser } from '../../../../core/models/login-user.model';
 import { LoggingService } from '../../../../core/services/logging/logging.service'; // Import LoggingService
+import { SectionNavigationService } from '../../../../core/services/navigation/section-navigation.service';
 import { ErrorMappingService, MappedError, ErrorType, ErrorSeverity } from '../../../../shared/services/error-mapping';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LoginNotificationComponent, LoginNotification } from './login-notification/login-notification.component';
@@ -58,6 +59,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     private authService: AuthService,
     private router: Router,
     private loggingService: LoggingService,
+    private sectionNavigationService: SectionNavigationService,
     private errorMappingService: ErrorMappingService
   ) {
     this.loginForm = this.fb.group({
@@ -122,8 +124,16 @@ export class LoginComponent implements OnInit, AfterViewInit {
       this.authService.handleLogin(loginData).subscribe({
         next: (jwtDto: any) => {
           if (jwtDto && jwtDto.token) {
-            this.loggingService.info('[LoginComponent] Login successful. Navigating to dashboard.', undefined, 'Login');
-            this.router.navigate(['/dashboard']);
+            this.loggingService.info('[LoginComponent] Login successful. Determining navigation based on user role.', undefined, 'Login');
+
+            // Verificar si el usuario es administrador y redirigir apropiadamente
+            if (this.authService.hasRole('ROLE_ADMIN')) {
+              this.loggingService.info('[LoginComponent] Admin user detected. Navigating to admin dashboard.', undefined, 'Login');
+              this.sectionNavigationService.navigateToAdminSection();
+            } else {
+              this.loggingService.info('[LoginComponent] Regular user detected. Navigating to user dashboard.', undefined, 'Login');
+              this.sectionNavigationService.navigateToUserSection();
+            }
           } else {
             // This case should ideally not be reached if AuthService handles errors by throwing them
             this.loginError = 'Credenciales incorrectas. Por favor, intente de nuevo.';

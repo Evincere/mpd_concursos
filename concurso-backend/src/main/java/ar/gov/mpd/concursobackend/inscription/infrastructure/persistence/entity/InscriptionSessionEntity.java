@@ -29,29 +29,29 @@ public class InscriptionSessionEntity {
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "inscriptionId", columnDefinition = "BINARY(16)")
+    @Column(name = "inscription_id", columnDefinition = "BINARY(16)")
     private UUID inscriptionId;
 
-    @Column(name = "contestId")
+    @Column(name = "contest_id")
     private Long contestId;
 
-    @Column(name = "userId", columnDefinition = "BINARY(16)")
+    @Column(name = "user_id", columnDefinition = "BINARY(16)")
     private UUID userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "currentStep")
+    @Column(name = "current_step")
     private InscriptionStep currentStep;
 
     @Lob
-    @Column(name = "formData", columnDefinition = "LONGTEXT")
+    @Column(name = "form_data", columnDefinition = "LONGTEXT")
     private String formData;
 
-    @Column(name = "createdAt")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "expiresAt")
+    @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 }

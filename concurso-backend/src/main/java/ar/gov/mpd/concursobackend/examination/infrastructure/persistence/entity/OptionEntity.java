@@ -21,9 +21,10 @@ public class OptionEntity {
 
     private String text;
 
+    @Column(name = "order_number")
     private Integer orderNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questionId")
+    @JoinColumn(name = "question_id")
     private QuestionEntity question;
 }

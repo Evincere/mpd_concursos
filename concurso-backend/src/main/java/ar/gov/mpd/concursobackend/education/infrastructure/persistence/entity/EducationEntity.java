@@ -27,7 +27,7 @@ public class EducationEntity {
     @Column(name = "id")
     private UUID id;
     
-    @Column(name = "userId", nullable = false)
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
     // Common fields for all education types
@@ -44,15 +44,15 @@ public class EducationEntity {
     @Column(name = "institution", nullable = false)
     private String institution;
 
-    @Column(name = "issueDate")
+    @Column(name = "issue_date")
     private LocalDate issueDate;
 
-    @Column(name = "documentUrl")
+    @Column(name = "document_url")
     private String documentUrl;
     
     // Fields for higher education and undergraduate degrees
 
-    @Column(name = "durationYears")
+    @Column(name = "duration_years")
     private Integer durationYears;
 
     @Column(name = "average")
@@ -60,29 +60,29 @@ public class EducationEntity {
 
     // Fields for postgraduate studies
 
-    @Column(name = "thesisTopic")
+    @Column(name = "thesis_topic")
     private String thesisTopic;
 
     // Fields for diplomas and training courses
 
-    @Column(name = "hourlyLoad")
+    @Column(name = "hourly_load")
     private Integer hourlyLoad;
 
-    @Column(name = "hadFinalEvaluation")
+    @Column(name = "had_final_evaluation")
     private Boolean hadFinalEvaluation;
 
     // Fields for scientific activities
 
-    @Column(name = "activityType")
+    @Column(name = "activity_type")
     private String activityType;
 
     @Column(name = "topic")
     private String topic;
 
-    @Column(name = "activityRole")
+    @Column(name = "activity_role")
     private String activityRole;
 
-    @Column(name = "expositionPlaceDate")
+    @Column(name = "exposition_place_date")
     private String expositionPlaceDate;
 
     @Column(name = "comments")

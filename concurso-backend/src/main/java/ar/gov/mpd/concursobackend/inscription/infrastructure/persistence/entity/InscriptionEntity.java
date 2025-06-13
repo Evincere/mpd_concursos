@@ -54,6 +54,9 @@ public class InscriptionEntity {
     @Column(name = "confirmed_personal_data")
     private boolean confirmedPersonalData;
 
+    @Column(name = "documentos_completos")
+    private boolean documentosCompletos;
+
     @Column(name = "centro_de_vida")
     private String centroDeVida;
 

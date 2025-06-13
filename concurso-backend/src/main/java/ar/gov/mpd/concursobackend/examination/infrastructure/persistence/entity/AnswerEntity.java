@@ -19,7 +19,7 @@ public class AnswerEntity {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
     
-    @Column(name = "questionId")
+    @Column(name = "question_id")
     private UUID questionId;
 
     @Column(columnDefinition = "TEXT")
@@ -27,7 +27,7 @@ public class AnswerEntity {
 
     private LocalDateTime timestamp;
 
-    @Column(name = "responseTimeMs")
+    @Column(name = "response_time_ms")
     private Long responseTimeInMillis;
 
     private String hash;
@@ -38,6 +38,6 @@ public class AnswerEntity {
     private AnswerStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "sessionId")
+    @JoinColumn(name = "session_id")
     private ExaminationSessionEntity session;
 } 

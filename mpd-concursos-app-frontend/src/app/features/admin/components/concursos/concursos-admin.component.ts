@@ -23,6 +23,7 @@ import { CustomTableColumnComponent } from '@shared/components/custom-form/custo
 
 import { ConcursoFormDialogComponent } from './components/concurso-form-dialog/concurso-form-dialog.component';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { ContestStatusBadgeComponent } from '@shared/components/contest-status-badge/contest-status-badge.component';
 
 @Component({
   selector: 'app-concursos-admin',
@@ -41,7 +42,8 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
     CustomDatepickerComponent,
     CustomTableComponent,
     CustomTableColumnComponent,
-    ConfirmDialogComponent // Ensure ConfirmDialogComponent is standalone or imported correctly
+    ConfirmDialogComponent, // Ensure ConfirmDialogComponent is standalone or imported correctly
+    ContestStatusBadgeComponent
   ]
 })
 export class ConcursosAdminComponent implements OnInit, OnDestroy {
@@ -515,39 +517,7 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Gets the display label for a given contest status.
-   * @param status The contest status.
-   * @returns The human-readable label.
-   */
-  getStatusLabel(status: ContestStatus | string): string {
-    if (!status) return 'Sin estado';
-    const statusLabels: Record<string, string> = {
-      'DRAFT': 'Borrador',
-      'ACTIVE': 'Activo',
-      'IN_PROGRESS': 'En Proceso',
-      'CLOSED': 'Cerrado',
-      'CANCELLED': 'Cancelado'
-    };
-    return statusLabels[status] || status; // Return label or the original status if not found
-  }
 
-  /**
-   * Gets the CSS class for a given contest status for styling.
-   * @param status The contest status.
-   * @returns The CSS class string.
-   */
-  getStatusClass(status: ContestStatus | string): string {
-    if (!status) return 'status-unknown';
-    switch (status) {
-      case 'DRAFT': return 'status-draft';
-      case 'ACTIVE': return 'status-active';
-      case 'IN_PROGRESS': return 'status-in-progress';
-      case 'CLOSED': return 'status-closed';
-      case 'CANCELLED': return 'status-cancelled';
-      default: return 'status-unknown';
-    }
-  }
 
   /**
    * Formats a date to a localized date string.
@@ -609,6 +579,33 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Gets the display label for a given contest status for export purposes.
+   * @param status The contest status.
+   * @returns The human-readable label.
+   */
+  private getStatusLabelForExport(status: ContestStatus | string): string {
+    if (!status) return 'Sin estado';
+
+    // Mapeo de estados basado en el componente contest-status-badge
+    const statusLabels: Record<string, string> = {
+      'DRAFT': 'Borrador',
+      'PUBLISHED': 'Publicado',
+      'CLOSED': 'Cerrado',
+      'CANCELLED': 'Cancelado',
+      'FINISHED': 'Finalizado',
+      'ARCHIVED': 'Archivado',
+      'PAUSED': 'Pausado',
+      'INSCRIPTION_PENDING': 'Próximamente',
+      'INSCRIPTION_OPEN': 'Inscripciones Abiertas',
+      'INSCRIPTION_CLOSED': 'Inscripciones Cerradas',
+      'IN_EVALUATION': 'En Evaluación',
+      'RESULTS_PUBLISHED': 'Resultados Publicados'
+    };
+
+    return statusLabels[status] || status; // Return label or the original status if not found
+  }
+
+  /**
    * Exports the current table data to an Excel file.
    */
   exportData(): void {
@@ -630,7 +627,7 @@ export class ConcursosAdminComponent implements OnInit, OnDestroy {
       Funciones: concurso.functions || 'No especificado',
       Dependencia: concurso.department || 'No especificado',
       Organismo: concurso.dependencia || 'No especificado',
-      Estado: this.getStatusLabel(concurso.status || ''),
+      Estado: this.getStatusLabelForExport(concurso.status || ''),
       'Fecha de Inicio': this.formatDate(concurso.startDate) || 'No definida',
       'Fecha de Fin': this.formatDate(concurso.endDate) || 'No definida',
       'URL de Términos': concurso.termsUrl || 'No especificado',

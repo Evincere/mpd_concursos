@@ -123,9 +123,10 @@
         <!-- Header de la tarjeta -->
         <div class="card-header">
           <div class="concurso-id">ID: {{concurso?.id || 'N/A'}}</div>
-          <div class="status-badge" [ngClass]="getStatusClass(concurso?.status || '')">
-            {{getStatusLabel(concurso?.status || '')}}
-          </div>
+          <app-contest-status-badge
+            [status]="concurso?.status || ''"
+            [showIcon]="true">
+          </app-contest-status-badge>
         </div>
 
         <!-- Contenido principal -->
@@ -248,9 +249,10 @@
         <!-- Columna Estado -->
         <app-custom-table-column property="status" header="Estado" [sortable]="true">
           <ng-template let-concurso>
-            <div class="status-badge" [ngClass]="getStatusClass(concurso?.status || '')">
-              {{getStatusLabel(concurso?.status || '')}}
-            </div>
+            <app-contest-status-badge
+              [status]="concurso?.status || ''"
+              [showIcon]="true">
+            </app-contest-status-badge>
           </ng-template>
         </app-custom-table-column>
 

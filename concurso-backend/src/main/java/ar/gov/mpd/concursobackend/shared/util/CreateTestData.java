@@ -1,10 +1,8 @@
 package ar.gov.mpd.concursobackend.shared.util;
 
 import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Component;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
-// import org.springframework.stereotype.Component; // DESHABILITADO
 
 import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
 import ar.gov.mpd.concursobackend.auth.application.service.RolService;
@@ -13,51 +11,39 @@ import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
-import ar.gov.mpd.concursobackend.inscription.application.service.CreateInscriptionService;
-
-import java.util.UUID;
 
 /**
- * CLASE DESHABILITADA: Los datos de prueba ahora se manejan a través de
- * data.sql
- * para mantener la integridad referencial y evitar duplicación de datos.
+ * CLASE HABILITADA: Crea usuarios esenciales para el sistema
  *
- * Esta clase se mantiene como referencia pero no está activa en la aplicación.
+ * Esta clase crea automáticamente al iniciar el backend:
+ * - Usuario administrador: admin/admin123
+ * - Usuario común: user_test/user123
  *
- * DESHABILITADA PARA PRODUCCIÓN: Comentada la anotación @Component
- * para evitar conflictos con data.sql
+ * HABILITADA PARA CREAR USUARIOS ESENCIALES
  */
-// @Component  // DESHABILITADO PARA EVITAR CONFLICTOS
+@Component
 public class CreateTestData implements CommandLineRunner {
 
     @Autowired
     private RolService rolService;
     @Autowired
     private UserService userService;
-    @Autowired
-    private CreateInscriptionService createInscriptionService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
         try {
-            // Imprimir el hash de la contraseña 123456
-            String testPassword = "123456";
-            String encodedPassword = passwordEncoder.encode(testPassword);
-            System.out.println("Hash BCrypt para '123456': " + encodedPassword);
+            System.out.println("=== INICIANDO CREACIÓN DE USUARIOS ESENCIALES ===");
 
             // Crear roles si no existen
             createRoles();
 
-            // Crear usuarios si no existen
+            // Crear usuarios esenciales
             createUsers();
 
-            // Crear inscripciones de prueba
-            // createInscriptions();
+            System.out.println("=== CREACIÓN DE USUARIOS ESENCIALES COMPLETADA ===");
 
         } catch (Exception e) {
+            System.err.println("Error creando usuarios esenciales: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -74,62 +60,29 @@ public class CreateTestData implements CommandLineRunner {
         }
     }
 
-    @SuppressWarnings("unused")
     private void createUsers() {
-        // Crear super admin por defecto
-        String superAdminDni = "00000000";
-        User superAdmin = createSuperAdmin("superadmin", "superadmin@mpd.gov.ar", "admin123", superAdminDni,
-                calculateCuit(superAdminDni), "Super", "Admin");
+        System.out.println("=== CREANDO USUARIOS ESENCIALES ===");
 
-        // Crear usuario semper (admin)
-        String semperDni = "26598410";
-        User semper = createUserIfNotExists("semper", "spereyra@gmail.com", "123456", semperDni,
-                calculateCuit(semperDni), "Admin", "Semper");
-
-        // Crear usuarios de prueba
-        String dni1 = "12345678";
-        String dni2 = "23456789";
-        String dni3 = "34567890";
-        String dni4 = "45678901";
-        String dni5 = "56789012";
-
-        User usuario1 = createUserIfNotExists("usuario1", "usuario1@example.com", "123456", dni1, calculateCuit(dni1),
-                "Juan", "Perez");
-        User usuario2 = createUserIfNotExists("usuario2", "usuario2@example.com", "123456", dni2, calculateCuit(dni2),
-                "Maria", "Gonzalez");
-        User usuario3 = createUserIfNotExists("usuario3", "usuario3@example.com", "123456", dni3, calculateCuit(dni3),
-                "Pedro", "Lopez");
-        User usuario4 = createUserIfNotExists("usuario4", "usuario4@example.com", "123456", dni4, calculateCuit(dni4),
-                "Ana", "Rodriguez");
-        User usuario5 = createUserIfNotExists("usuario5", "usuario5@example.com", "123456", dni5, calculateCuit(dni5),
-                "Luis", "Martinez");
-    }
-
-    private String calculateCuit(String dni) {
-        // Prefijo para persona física masculina
-        String prefix = "20";
-        String base = prefix + dni;
-
-        int[] multipliers = { 5, 4, 3, 2, 7, 6, 5, 4, 3, 2 };
-        int sum = 0;
-
-        for (int i = 0; i < 10; i++) {
-            sum += Character.getNumericValue(base.charAt(i)) * multipliers[i];
+        // 1. Crear usuario administrador
+        String adminDni = "12345678";
+        User admin = createSuperAdmin("admin", "admin@mpd.gov.ar", "admin123", adminDni,
+                null, "Admin", "MPD");
+        if (admin != null) {
+            System.out.println("✅ Usuario administrador 'admin' creado exitosamente");
         }
 
-        int remainder = sum % 11;
-        int verifier;
-
-        if (remainder == 0) {
-            verifier = 0;
-        } else if (remainder == 1) {
-            verifier = 9; // Para prefijo 20 (masculino)
-        } else {
-            verifier = 11 - remainder;
+        // 2. Crear usuario común de prueba
+        String userTestDni = "87654321";
+        User userTest = createUserIfNotExists("user_test", "user_test@example.com", "user123", userTestDni,
+                null, "Usuario", "Test");
+        if (userTest != null) {
+            System.out.println("✅ Usuario común 'user_test' creado exitosamente");
         }
 
-        return base + verifier;
+        System.out.println("=== USUARIOS ESENCIALES COMPLETADOS ===");
     }
+
+
 
     private User createUserIfNotExists(String username, String email, String password, String dni, String cuit,
             String firstName, String lastName) {
@@ -139,7 +92,10 @@ public class CreateTestData implements CommandLineRunner {
             user.setUsername(username);
             user.setPassword(password);
             user.setDni(dni);
-            user.setCuit(cuit);
+            // Solo asignar CUIT si no es null
+            if (cuit != null) {
+                user.setCuit(cuit);
+            }
             user.setNombre(firstName);
             user.setApellido(lastName);
             user.setConfirmPassword(password); // Required for validation
@@ -156,7 +112,10 @@ public class CreateTestData implements CommandLineRunner {
             user.setUsername(username);
             user.setPassword(password);
             user.setDni(dni);
-            user.setCuit(cuit);
+            // Solo asignar CUIT si no es null
+            if (cuit != null) {
+                user.setCuit(cuit);
+            }
             user.setNombre(firstName);
             user.setApellido(lastName);
             user.setConfirmPassword(password);
@@ -171,49 +130,5 @@ public class CreateTestData implements CommandLineRunner {
         return userService.getByUsername(new UserUsername(username)).orElse(null);
     }
 
-    @SuppressWarnings("unused")
-    private void createInscriptions() {
-        // Obtener IDs de usuarios
-        UUID usuario1Id = getUserId("usuario1");
-        UUID usuario2Id = getUserId("usuario2");
-        UUID usuario3Id = getUserId("usuario3");
-        UUID usuario4Id = getUserId("usuario4");
-        UUID usuario5Id = getUserId("usuario5");
 
-        if (usuario1Id != null) {
-            // Inscripciones para concursos activos
-            createInscription(1L, usuario1Id); // PENDING
-            createInscription(1L, usuario2Id); // ACCEPTED
-            createInscription(1L, usuario3Id); // REJECTED
-            createInscription(2L, usuario1Id); // PENDING
-            createInscription(2L, usuario4Id); // ACCEPTED
-            createInscription(3L, usuario2Id); // PENDING
-
-            // Inscripciones para concursos en progreso
-            createInscription(4L, usuario5Id); // ACCEPTED
-            createInscription(4L, usuario1Id); // REJECTED
-            createInscription(5L, usuario2Id); // ACCEPTED
-            createInscription(5L, usuario3Id); // PENDING
-        }
-    }
-
-    private UUID getUserId(String username) {
-        return userService.getByUsername(new UserUsername(username))
-                .map(user -> user.getId().value())
-                .orElse(null);
-    }
-
-    private void createInscription(Long contestId, UUID userId) {
-        try {
-            InscriptionRequest request = InscriptionRequest.builder()
-                    .contestId(contestId)
-                    .userId(userId)
-                    .build();
-            createInscriptionService.createInscription(request);
-        } catch (Exception e) {
-            // Si la inscripción ya existe, ignoramos el error
-            System.out.println(
-                    "Warning: No se pudo crear la inscripción para contestId=" + contestId + ", userId=" + userId);
-        }
-    }
 }

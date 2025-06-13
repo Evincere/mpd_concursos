@@ -42,7 +42,7 @@ public class ExaminationEntity {
 
     private String description;
 
-    @Column(name = "durationMinutes")
+    @Column(name = "duration_minutes")
     private Long durationMinutes;
 
     @OneToMany(mappedBy = "examination", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -52,41 +52,41 @@ public class ExaminationEntity {
     @Enumerated(EnumType.STRING)
     private ExaminationStatus status;
 
-    @Column(name = "startTime")
+    @Column(name = "start_time")
     private LocalDateTime startTime;
 
-    @Column(name = "endTime")
+    @Column(name = "end_time")
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
     private ExaminationType type;
 
-    @Column(name = "cancellationDate")
+    @Column(name = "cancellation_date")
     private LocalDateTime cancellationDate;
 
-    @Column(name = "cancellationReason")
+    @Column(name = "cancellation_reason")
     private String cancellationReason;
 
     @ElementCollection
-    @CollectionTable(name = "examination_security_violations", joinColumns = @JoinColumn(name = "examinationId"))
+    @CollectionTable(name = "examination_security_violations", joinColumns = @JoinColumn(name = "examination_id"))
     @Column(name = "violation")
     @Builder.Default
     private List<String> securityViolations = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "examination_requirements", joinColumns = @JoinColumn(name = "examinationId"))
+    @CollectionTable(name = "examination_requirements", joinColumns = @JoinColumn(name = "examination_id"))
     @Column(name = "requirement")
     @Builder.Default
     private List<String> requirements = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "examination_rules", joinColumns = @JoinColumn(name = "examinationId"))
+    @CollectionTable(name = "examination_rules", joinColumns = @JoinColumn(name = "examination_id"))
     @Column(name = "rule")
     @Builder.Default
     private List<String> rules = new ArrayList<>();
 
     @ElementCollection
-    @CollectionTable(name = "examination_allowed_materials", joinColumns = @JoinColumn(name = "examinationId"))
+    @CollectionTable(name = "examination_allowed_materials", joinColumns = @JoinColumn(name = "examination_id"))
     @Column(name = "material")
     @Builder.Default
     private List<String> allowedMaterials = new ArrayList<>();

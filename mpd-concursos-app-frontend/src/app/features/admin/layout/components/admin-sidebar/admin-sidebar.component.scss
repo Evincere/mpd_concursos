@@ -19,7 +19,7 @@ $transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 $transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
 /* Variables específicas del sidebar */
-$sidebar-width: 250px;
+$sidebar-width: 280px; // Increased from 250px to accommodate longer text
 $sidebar-collapsed-width: 64px;
 $sidebar-transition: all $transition-normal;
 $module-header-height: 48px;
@@ -647,8 +647,7 @@ $item-height: 40px;
     font-weight: 600; // Increased font weight for better visibility
     font-size: 0.95rem; // Slightly larger text
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    // Removed overflow and text-overflow to show full text
     letter-spacing: 0.03em; // Improved letter spacing for readability
     transition: all $transition-normal;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); // Better text shadow
@@ -926,8 +925,7 @@ $item-height: 40px;
     .nav-label {
       flex: 1;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      // Removed overflow and text-overflow to show full text
       font-size: 0.9rem; // Slightly larger text
       font-weight: 500; // Better font weight
       letter-spacing: 0.03em; // Improved letter spacing
