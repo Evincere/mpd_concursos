@@ -41,7 +41,7 @@ RUN npm cache clean --force && \
 # Copy source files and build with optimized settings for limited resources
 COPY . .
 RUN rm -rf /tmp/* && \
-    NODE_OPTIONS="--max_old_space_size=4096 --max-semi-space-size=512" npm run build -- --configuration production --progress=false --optimization=false --build-optimizer=false --source-map=false
+    NODE_OPTIONS="--max_old_space_size=1536 --max-semi-space-size=256" npm run build -- --configuration production --progress=false --optimization=false --build-optimizer=false --source-map=false
 
 # Production stage
 FROM nginx:stable-alpine
