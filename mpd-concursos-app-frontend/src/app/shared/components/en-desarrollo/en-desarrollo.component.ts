@@ -44,7 +44,7 @@ export interface DesarrolloConfig {
       </div>
 
       <!-- Mensaje con humor -->
-      <div class="mensaje-humor">
+      <div class="mensaje-humor" *ngIf="config.mensajeHumor && config.mensajeHumor.trim()">
         <div class="humor-bubble">
           <i class="fas fa-smile-wink humor-icon" aria-hidden="true"></i>
           <p class="humor-text">{{ config.mensajeHumor }}</p>
@@ -90,7 +90,7 @@ export interface DesarrolloConfig {
           color="primary"
           variant="primary"
           icon="fa-arrow-left"
-          label="Volver al Dashboard"
+          label="Principal"
           (buttonClick)="volverDashboard()">
         </app-custom-button>
       </div>
