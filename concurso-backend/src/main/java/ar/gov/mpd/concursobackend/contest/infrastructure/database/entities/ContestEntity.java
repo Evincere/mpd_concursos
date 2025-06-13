@@ -42,19 +42,23 @@ public class ContestEntity {
 
     private String department;
     private String position;
+
+    @Column(name = "start_date")
     private LocalDate startDate;
+
+    @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Column(name = "basesUrl")
+    @Column(name = "bases_url")
     private String basesUrl;
 
-    @Column(name = "descriptionUrl")
+    @Column(name = "description_url")
     private String descriptionUrl;
 
-    @Column(name = "createdAt")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updatedAt")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, orphanRemoval = true)
