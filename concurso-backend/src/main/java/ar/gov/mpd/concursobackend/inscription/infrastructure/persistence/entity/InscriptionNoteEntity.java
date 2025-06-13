@@ -26,18 +26,18 @@ public class InscriptionNoteEntity {
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
     
-    @Column(name = "inscriptionId", columnDefinition = "BINARY(16)", nullable = false)
+    @Column(name = "inscription_id", columnDefinition = "BINARY(16)", nullable = false)
     private UUID inscriptionId;
 
     @Column(name = "text", nullable = false, length = 1000)
     private String text;
 
-    @Column(name = "createdBy", columnDefinition = "BINARY(16)")
+    @Column(name = "created_by", columnDefinition = "BINARY(16)")
     private UUID createdBy;
 
-    @Column(name = "createdByUsername", nullable = false)
+    @Column(name = "created_by_username", nullable = false)
     private String createdByUsername;
 
-    @Column(name = "createdAt", nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

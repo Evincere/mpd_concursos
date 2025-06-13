@@ -213,16 +213,16 @@ CREATE TABLE options (
 
 CREATE TABLE answers (
     id BINARY(16) PRIMARY KEY,
-    questionId BINARY(16),
+    question_id BINARY(16),
     response TEXT,
-    responseTimeMs BIGINT,
+    response_time_ms BIGINT,
     status ENUM('DRAFT', 'SUBMITTED', 'VALIDATED', 'INVALIDATED', 'SUSPICIOUS'),
     timestamp DATETIME(6),
-    sessionId BINARY(16),
+    session_id BINARY(16),
     attempts INTEGER,
     hash VARCHAR(255),
-    FOREIGN KEY (questionId) REFERENCES questions(id),
-    FOREIGN KEY (sessionId) REFERENCES examination_sessions(id)
+    FOREIGN KEY (question_id) REFERENCES questions(id),
+    FOREIGN KEY (session_id) REFERENCES examination_sessions(id)
 );
 
 -- DUPLICACIÓN ELIMINADA: user_roles ya está definida en líneas 65-71
@@ -289,17 +289,17 @@ CREATE TABLE contest_documents (
 -- Tabla de sesiones de inscripción
 CREATE TABLE inscription_sessions (
     id BINARY(16) PRIMARY KEY,
-    inscriptionId BINARY(16) NOT NULL,
-    contestId BIGINT NOT NULL,
-    userId BINARY(16) NOT NULL,
-    currentStep ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED') NOT NULL,
-    formData LONGTEXT NOT NULL,
-    createdAt DATETIME NOT NULL,
-    updatedAt DATETIME NOT NULL,
-    expiresAt DATETIME NOT NULL,
-    FOREIGN KEY (inscriptionId) REFERENCES inscriptions(id) ON DELETE CASCADE,
-    FOREIGN KEY (contestId) REFERENCES contests(id),
-    FOREIGN KEY (userId) REFERENCES user_entity(id)
+    inscription_id BINARY(16) NOT NULL,
+    contest_id BIGINT NOT NULL,
+    user_id BINARY(16) NOT NULL,
+    current_step ENUM('INITIAL', 'TERMS_ACCEPTANCE', 'LOCATION_SELECTION', 'DOCUMENTATION', 'DATA_CONFIRMATION', 'COMPLETED') NOT NULL,
+    form_data LONGTEXT NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (inscription_id) REFERENCES inscriptions(id) ON DELETE CASCADE,
+    FOREIGN KEY (contest_id) REFERENCES contests(id),
+    FOREIGN KEY (user_id) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE inscription_circunscripciones (
@@ -312,13 +312,13 @@ CREATE TABLE inscription_circunscripciones (
 -- Tabla de notas de inscripción
 CREATE TABLE inscription_notes (
     id BINARY(16) PRIMARY KEY,
-    inscriptionId BINARY(16) NOT NULL,
+    inscription_id BINARY(16) NOT NULL,
     text VARCHAR(1000) NOT NULL,
-    createdAt DATETIME(6) NOT NULL,
-    createdBy BINARY(16),
-    createdByUsername VARCHAR(255) NOT NULL,
-    FOREIGN KEY (inscriptionId) REFERENCES inscriptions(id),
-    FOREIGN KEY (createdBy) REFERENCES user_entity(id)
+    created_at DATETIME(6) NOT NULL,
+    created_by BINARY(16),
+    created_by_username VARCHAR(255) NOT NULL,
+    FOREIGN KEY (inscription_id) REFERENCES inscriptions(id),
+    FOREIGN KEY (created_by) REFERENCES user_entity(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE question_correct_answers (
@@ -359,9 +359,9 @@ CREATE TABLE document_types (
     description TEXT,
     required BOOLEAN NOT NULL DEFAULT FALSE,
     `order` INT,
-    parentId BINARY(16),
-    isActive BOOLEAN NOT NULL DEFAULT TRUE,
-    FOREIGN KEY (parentId) REFERENCES document_types(id)
+    parent_id BINARY(16),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (parent_id) REFERENCES document_types(id)
 );
 
 -- Tabla de documentos

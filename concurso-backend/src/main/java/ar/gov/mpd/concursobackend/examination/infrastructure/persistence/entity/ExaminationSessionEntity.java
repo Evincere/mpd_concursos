@@ -29,13 +29,13 @@ public class ExaminationSessionEntity {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    @Column(name = "examinationId")
+    @Column(name = "examination_id")
     private UUID examinationId;
 
-    @Column(name = "userId")
+    @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "startTime")
+    @Column(name = "start_time")
     private LocalDateTime startTime;
 
     private LocalDateTime deadline;
@@ -43,7 +43,7 @@ public class ExaminationSessionEntity {
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL)
     private List<AnswerEntity> answers = new ArrayList<>();
 
-    @Column(name = "currentQuestionIndex")
+    @Column(name = "current_question_index")
     private int currentQuestionIndex;
 
     @Enumerated(EnumType.STRING)
