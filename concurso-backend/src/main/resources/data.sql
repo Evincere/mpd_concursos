@@ -23,7 +23,7 @@ INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, l
 VALUES (
     0x33333333333333333333333333333333,
     'admin',
-    '$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW', -- password: admin123
+    '$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi', -- password: admin123
     'admin@mpd.gov.ar',
     '20000000',
     '20200000007',
@@ -36,13 +36,13 @@ VALUES (
 INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
 VALUES
 (0x44444444444444444444444444444444, 'usuario1',
-'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
+'$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi',
 'usuario1@test.com', '20111111', '20201111118', 'Usuario', 'Uno', CURRENT_TIMESTAMP),
 (0x55555555555555555555555555555555, 'usuario2',
-'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
+'$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi',
 'usuario2@test.com', '20222222', '20202222229', 'Usuario', 'Dos', CURRENT_TIMESTAMP),
 (0x66666666666666666666666666666666, 'semper',
-'$2a$10$rPiEAgQNIT1TCoKi.XaJCeZv7nE9GM3lmcLtJBXGdnU5vtN0oJzNW',
+'$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi',
 'semper@test.com', '26598410', '20265984107', 'Sebastian', 'Pereyra', CURRENT_TIMESTAMP);
 
 -- Insertar concursos con diferentes estados para testing completo

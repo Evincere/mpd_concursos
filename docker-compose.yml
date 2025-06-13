@@ -60,9 +60,10 @@ services:
       - mpd-concursos-network
 
   frontend:
-    build:
-      context: ./mpd-concursos-app-frontend
-      dockerfile: Dockerfile
+    image: tu-usuario/concursos-mpd-frontend:latest
+    # build:
+    #   context: ./mpd-concursos-app-frontend
+    #   dockerfile: Dockerfile
     container_name: mpd-concursos-frontend
     restart: unless-stopped
     depends_on:

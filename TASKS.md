@@ -1,5 +1,17 @@
 # Plan de Implementación de Mejoras - MPD Concursos
 
+## ✅ COMPLETADAS RECIENTEMENTE
+
+### 🐳 Docker Build Optimización (2025-06-13)
+- ✅ **Frontend:** Agregada dependencia Chart.js faltante
+- ✅ **Backend:** Corregida configuración application-prod.properties
+- ✅ **Memoria:** Optimizados límites de memoria en docker-compose.yml
+- ✅ **Build exitoso:** Frontend (92.2MB) + Backend (393MB) construidos
+- ✅ **Deploy exitoso:** Sistema completamente funcional en producción
+- ✅ **Base de datos:** Schema y datos de prueba cargados correctamente
+- ✅ **Acceso web:** http://149.50.132.23:8000 funcionando
+- ⏳ **Pendiente:** Implementar Docker Hub para deploys más rápidos
+
 ## 🚀 PREPARACIÓN PARA PRODUCCIÓN - DEPLOYMENT DONWEB (Enero 2025)
 
 ### 🎯 OBJETIVO PRINCIPAL
