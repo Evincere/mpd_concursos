@@ -13,37 +13,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Habilitar verificacion de foreign keys
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Insertar roles de prueba usando UUIDs simples
-INSERT INTO roles (id, name) VALUES
-(0x11111111111111111111111111111111, 'ROLE_USER'),
-(0x22222222222222222222222222222222, 'ROLE_ADMIN');
-
--- Insertar usuario administrador por defecto
-INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
-VALUES (
-    0x33333333333333333333333333333333,
-    'admin',
-    '$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi', -- password: admin123
-    'admin@mpd.gov.ar',
-    '20000000',
-    '20200000007',
-    'Admin',
-    'MPD',
-    CURRENT_TIMESTAMP
-);
-
--- Insertar usuarios de prueba con IDs fijos
-INSERT INTO user_entity (id, username, password, email, dni, cuit, first_name, last_name, created_at)
-VALUES
-(0x44444444444444444444444444444444, 'usuario1',
-'$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi',
-'usuario1@test.com', '20111111', '20201111118', 'Usuario', 'Uno', CURRENT_TIMESTAMP),
-(0x55555555555555555555555555555555, 'usuario2',
-'$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi',
-'usuario2@test.com', '20222222', '20202222229', 'Usuario', 'Dos', CURRENT_TIMESTAMP),
-(0x66666666666666666666666666666666, 'semper',
-'$2a$10$N.zmdr9k7uOCQb07YxWe.OFVdnI5iJlpQq0uP7oOqRqrJbLdHWKwi',
-'semper@test.com', '26598410', '20265984107', 'Sebastian', 'Pereyra', CURRENT_TIMESTAMP);
+-- USUARIOS Y ROLES MANEJADOS POR CreateTestData.java
+-- No insertar usuarios ni roles aquí para evitar conflictos
 
 -- Insertar concursos con diferentes estados para testing completo
 INSERT INTO contests (id, title, category, class_, functions, department, position, status, start_date, end_date, bases_url, description_url)
@@ -113,14 +84,8 @@ VALUES
 (10, 'Examen Practico', 'PRACTICAL_EXAM', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 20 DAY)),
 (10, 'Entrevista Tecnica', 'TECHNICAL_INTERVIEW', DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY), DATE_ADD(DATE(CURRENT_TIMESTAMP), INTERVAL 25 DAY));
 
--- Asignar roles a usuarios
-INSERT INTO user_roles (user_id, role_id) VALUES
-(0x33333333333333333333333333333333, 0x11111111111111111111111111111111), -- admin ROLE_USER
-(0x33333333333333333333333333333333, 0x22222222222222222222222222222222), -- admin ROLE_ADMIN
-(0x44444444444444444444444444444444, 0x11111111111111111111111111111111), -- usuario1 ROLE_USER
-(0x55555555555555555555555555555555, 0x11111111111111111111111111111111), -- usuario2 ROLE_USER
-(0x66666666666666666666666666666666, 0x11111111111111111111111111111111), -- semper ROLE_USER
-(0x66666666666666666666666666666666, 0x22222222222222222222222222222222); -- semper ROLE_ADMIN
+-- ASIGNACIÓN DE ROLES MANEJADA POR CreateTestData.java
+-- No asignar roles aquí para evitar conflictos
 
 -- Datos iniciales para tipos de documento
 -- Primero, insertar el documento de identidad como documento padre
