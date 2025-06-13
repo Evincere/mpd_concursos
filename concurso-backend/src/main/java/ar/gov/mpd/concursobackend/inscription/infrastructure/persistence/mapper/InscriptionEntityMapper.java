@@ -31,7 +31,6 @@ public interface InscriptionEntityMapper {
     @Mapping(target = "centroDeVida", expression = "java(domain.getPreferences() != null ? domain.getPreferences().getCentroDeVida() : null)")
     InscriptionEntity toEntity(Inscription domain);
 
-    @Mapping(target = "preferences.centroDeVida", source = "centroDeVida")
     default Inscription toDomain(InscriptionEntity entity) {
         if (entity == null) {
             return null;
