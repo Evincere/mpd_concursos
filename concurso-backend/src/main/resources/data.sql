@@ -124,22 +124,22 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 
 -- Datos iniciales para tipos de documento
 -- Primero, insertar el documento de identidad como documento padre
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
 (0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
 
 -- Insertar los tipos de documentos para DNI frente y dorso
-INSERT IGNORE INTO document_types (id, code, name, description, parentId, required, `order`, isActive) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES
 (0xAAAAAAAAAAAAAAAAAAAAAAAAAAAA, 'dni-frente', 'DNI (Frente)', 'Documento Nacional de Identidad - Lado frontal', 0x11111111111111111111111111111111, TRUE, 1, TRUE),
 (0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB, 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', 0x11111111111111111111111111111111, TRUE, 2, TRUE);
 
 -- Insertar otros tipos de documentos
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
 (0x22222222222222222222222222222222, 'titulo-universitario', 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 3, TRUE),
 (0x33333333333333333333333333333333, 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 4, TRUE),
 (0x44444444444444444444444444444444, 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', FALSE, 5, TRUE);
 
 -- Insertar nuevos tipos de documentos requeridos
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
 (0x55555555555555555555555555555555, 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', TRUE, 6, TRUE),
 (0x66666666666666666666666666666666, 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', TRUE, 7, TRUE),
 (0x77777777777777777777777777777777, 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', TRUE, 8, TRUE),
@@ -147,5 +147,5 @@ INSERT IGNORE INTO document_types (id, code, name, description, required, `order
 (0x99999999999999999999999999999999, 'certificado-ley-micaela', 'Certificado Ley Micaela', 'Certificado de capacitacion en Ley Micaela', FALSE, 10, TRUE);
 
 -- CRITICAL FIX: Insertar tipo de documento genérico para casos de fallback
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, isActive) VALUES
+INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
 (0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1, 'documento-generico', 'Documento Genérico', 'Tipo de documento genérico para casos no especificados', FALSE, 999, TRUE);
