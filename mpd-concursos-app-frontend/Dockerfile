@@ -19,27 +19,29 @@ ENV NODE_TLS_REJECT_UNAUTHORIZED=0 \
     PYTHON=/usr/bin/python3 \
     NPM_CONFIG_PYTHON=/usr/bin/python3
 
-# Configure npm securely and install global packages (combined in one layer)
+# Configure npm for maximum reliability and timeout handling
 RUN npm config set strict-ssl false \
     && npm config set registry https://registry.npmjs.org/ \
-    && npm config set fetch-retries 5 \
-    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm config set fetch-retries 10 \
+    && npm config set fetch-retry-mintimeout 30000 \
+    && npm config set fetch-retry-maxtimeout 600000 \
+    && npm config set fetch-retry-factor 2 \
+    && npm config set maxsockets 1 \
     && npm install -g npm@latest \
     && npm install -g @angular/cli@latest
 
 # Copy package files for better layer caching
 COPY package*.json ./
 
-# Clean npm cache and install dependencies
+# Install dependencies with maximum reliability
 RUN npm cache clean --force && \
     rm -rf node_modules && \
-    npm install --legacy-peer-deps
+    npm install --legacy-peer-deps --no-audit --no-fund
 
-# Copy source files and build with optimized settings
+# Copy source files and build with optimized settings for limited resources
 COPY . .
-RUN npm cache clean --force && \
-    rm -rf /tmp/* && \
-    NODE_OPTIONS="--max_old_space_size=8192" npm run build -- --configuration production --progress=false --optimization=true --aot=true
+RUN rm -rf /tmp/* && \
+    NODE_OPTIONS="--max_old_space_size=4096 --max-semi-space-size=512" npm run build -- --configuration production --progress=false --optimization=false --build-optimizer=false --source-map=false
 
 # Production stage
 FROM nginx:stable-alpine
