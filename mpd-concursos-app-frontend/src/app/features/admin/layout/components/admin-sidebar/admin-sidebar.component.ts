@@ -275,7 +275,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 2: Contests
       {
         id: 'concursos',
-        label: 'Módulo de Concursos',
+        label: 'Concursos',
         icon: 'gavel',
         expanded: false,
         items: [
@@ -324,7 +324,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 3: Inscriptions
       {
         id: 'inscripciones',
-        label: 'Módulo de Inscripciones',
+        label: 'Inscripciones',
         icon: 'clipboard-check',
         expanded: false,
         items: [
@@ -410,7 +410,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 4: Evaluations
       {
         id: 'evaluaciones',
-        label: 'Módulo de Evaluaciones',
+        label: 'Evaluaciones',
         icon: 'tasks',
         expanded: false,
         items: [
@@ -441,7 +441,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 5: Users
       {
         id: 'usuarios',
-        label: 'Módulo de Usuarios',
+        label: 'Usuarios',
         icon: 'users',
         expanded: false,
         items: [
@@ -500,7 +500,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 6: Communications
       {
         id: 'comunicaciones',
-        label: 'Comunicaciones Masivas',
+        label: 'Comunicaciones',
         icon: 'comments',
         expanded: false,
         items: [
@@ -573,7 +573,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 7: Reports
       {
         id: 'reportes',
-        label: 'Módulo de Reportes',
+        label: 'Reportes',
         icon: 'chart-bar',
         expanded: false,
         items: [
@@ -604,7 +604,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 8: System Administration
       {
         id: 'sistema',
-        label: 'Administración del Sistema',
+        label: 'Sistema',
         icon: 'cogs',
         expanded: false,
         items: [
@@ -642,7 +642,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 9: Support System
       {
         id: 'soporte',
-        label: 'Sistema de Soporte',
+        label: 'Soporte',
         icon: 'headset',
         expanded: false,
         items: [
@@ -702,7 +702,7 @@ export class AdminSidebarComponent implements OnInit, OnDestroy {
       // Module 10: Help and Documentation
       {
         id: 'ayuda',
-        label: 'Ayuda y Documentación',
+        label: 'Ayuda',
         icon: 'question-circle',
         expanded: false,
         items: [
