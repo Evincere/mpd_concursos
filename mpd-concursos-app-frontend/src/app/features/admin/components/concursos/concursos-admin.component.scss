@@ -424,7 +424,7 @@ app-custom-card {
   &.table-view {
     app-custom-card {
       ::ng-deep .custom-card {
-        @include glass-contests-card;
+        @include glassmorphism-card('primary', 'normal');
         overflow: hidden;
         position: relative;
 
@@ -438,14 +438,15 @@ app-custom-card {
           height: 100%;
           background: linear-gradient(90deg,
             transparent,
-            rgba(76, 175, 80, 0.05),
+            var(--contests-theme-color),
             transparent);
+          opacity: 0.05;
           transition: left 0.8s ease;
           z-index: 1;
         }
 
         &:hover {
-          @include glass-contests-hover;
+          @include glassmorphism-hover;
 
           &::before {
             left: 100%;
@@ -465,7 +466,7 @@ app-custom-card {
       overflow-x: auto;
       max-height: 70vh;
       position: relative;
-      border-radius: 8px;
+      border-radius: var(--border-radius-md);
 
       // Scrollbar personalizado con tema de concursos
       &::-webkit-scrollbar {
@@ -474,16 +475,18 @@ app-custom-card {
       }
 
       &::-webkit-scrollbar-track {
-        background: rgba(55, 65, 81, 0.3);
-        border-radius: 4px;
+        background: var(--glass-background-secondary);
+        opacity: 0.3;
+        border-radius: var(--border-radius-sm);
       }
 
       &::-webkit-scrollbar-thumb {
-        background: rgba(76, 175, 80, 0.6);
-        border-radius: 4px;
+        background: var(--contests-theme-color);
+        opacity: 0.6;
+        border-radius: var(--border-radius-sm);
 
         &:hover {
-          background: rgba(76, 175, 80, 0.8);
+          opacity: 0.8;
         }
       }
 
@@ -494,25 +497,26 @@ app-custom-card {
 
         // Header con glassmorphism refinado
         thead {
+          @include glassmorphism-base('secondary');
           position: sticky;
           top: 0;
           z-index: 10;
-          background: rgba(55, 65, 81, 0.95);
-          backdrop-filter: blur(12px);
 
           th {
-            padding: 1.25rem 1rem;
+            padding: var(--spacing-lg) var(--spacing-lg);
             text-align: left;
             font-weight: 700;
-            color: $text-primary-contests;
-            border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--contests-theme-color);
+            opacity: 0.3;
             font-size: 0.75rem;
             letter-spacing: 0.1em;
             text-transform: uppercase;
             background: linear-gradient(135deg,
               rgba(255, 255, 255, 0.1) 0%,
-              rgba(76, 175, 80, 0.05) 50%,
+              var(--contests-theme-color) 50%,
               rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0.05;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
             position: relative;
 
@@ -531,30 +535,26 @@ app-custom-card {
             }
 
             &:first-child {
-              border-top-left-radius: 8px;
+              border-top-left-radius: var(--border-radius-md);
             }
 
             &:last-child {
-              border-top-right-radius: 8px;
+              border-top-right-radius: var(--border-radius-md);
             }
           }
         }
 
         tbody {
           tr {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition-normal);
+            border-bottom: 1px solid var(--border-primary);
             position: relative;
 
             &:hover {
-              background: rgba(76, 175, 80, 0.1);
-              background-image: linear-gradient(135deg,
-                rgba(255, 255, 255, 0.05) 0%,
-                rgba(76, 175, 80, 0.1) 100%);
+              background: var(--contests-theme-color);
+              opacity: 0.1;
               transform: translateY(-1px);
-              box-shadow:
-                0 4px 16px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+              box-shadow: var(--shadow-md);
             }
 
             &:last-child {
@@ -562,24 +562,25 @@ app-custom-card {
             }
 
             td {
-              padding: 1.25rem 1rem;
-              color: $text-primary-contests;
+              padding: var(--spacing-lg) var(--spacing-lg);
+              color: var(--text-primary);
               font-size: 0.875rem;
               vertical-align: middle;
-              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+              border-bottom: 1px solid var(--border-primary);
+              opacity: 0.05;
               position: relative;
 
               &:first-child {
                 font-weight: 600;
-                color: $text-primary-contests;
+                color: var(--text-primary);
                 border-left: 3px solid transparent;
-                transition: border-color 0.3s ease;
+                transition: border-color var(--transition-normal);
               }
 
               // Efecto en hover de la fila
               tr:hover & {
                 &:first-child {
-                  border-left-color: $contests-theme-color;
+                  border-left-color: var(--contests-theme-color);
                 }
               }
             }
@@ -592,52 +593,44 @@ app-custom-card {
 
 // ===== LOADING OVERLAY CON GLASSMORPHISM REFINADO =====
 .loading-overlay {
+  @include glassmorphism-overlay;
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(55, 65, 81, 0.95);
   background-image: linear-gradient(135deg,
     rgba(255, 255, 255, 0.1) 0%,
-    rgba(76, 175, 80, 0.05) 50%,
+    var(--contests-theme-color) 50%,
     rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  opacity: 0.05;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-md);
 
   .loading-content {
+    @include glassmorphism-base('secondary');
     text-align: center;
-    padding: 2rem;
-    background: rgba(55, 65, 81, 0.8);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-    box-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-2xl);
+    border-radius: var(--border-radius-xl);
 
     .spinner {
       width: 48px;
       height: 48px;
-      border: 3px solid rgba(76, 175, 80, 0.2);
-      border-top: 3px solid $contests-theme-color;
+      border: 3px solid var(--contests-theme-color);
+      opacity: 0.2;
+      border-top: 3px solid var(--contests-theme-color);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
-      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+      margin: 0 auto var(--spacing-lg);
+      box-shadow: 0 2px 8px var(--contests-theme-color);
+      opacity: 0.3;
     }
 
     .loading-text {
-      color: $text-primary-contests;
+      color: var(--text-primary);
       font-size: 0.875rem;
       margin: 0;
       font-weight: 500;
@@ -649,14 +642,17 @@ app-custom-card {
 @keyframes spin {
   0% {
     transform: rotate(0deg);
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 2px 8px var(--contests-theme-color);
+    opacity: 0.3;
   }
   50% {
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.5);
+    box-shadow: 0 4px 12px var(--contests-theme-color);
+    opacity: 0.5;
   }
   100% {
     transform: rotate(360deg);
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 2px 8px var(--contests-theme-color);
+    opacity: 0.3;
   }
 }
 
@@ -664,11 +660,11 @@ app-custom-card {
 .concursos-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-lg);
 
   .concurso-card {
-    @include glass-contests-card;
+    @include glassmorphism-card('primary', 'normal');
     overflow: hidden;
     position: relative;
 
@@ -682,15 +678,17 @@ app-custom-card {
       height: 100%;
       background: linear-gradient(90deg,
         transparent,
-        rgba(76, 175, 80, 0.1),
+        var(--contests-theme-color),
         transparent);
+      opacity: 0.1;
       transition: left 0.6s ease;
       z-index: 1;
     }
 
     &:hover {
-      @include glass-contests-hover;
-      border-color: rgba(76, 175, 80, 0.5);
+      @include glassmorphism-hover;
+      border-color: var(--contests-theme-color);
+      opacity: 0.5;
 
       &::before {
         left: 100%;
