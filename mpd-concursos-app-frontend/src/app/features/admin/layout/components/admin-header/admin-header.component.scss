@@ -436,9 +436,9 @@
   .user-button,
   .title-icon {
     &:focus {
-      outline: 2px solid $focus-color;
+      outline: 2px solid var(--color-primary);
       outline-offset: 2px;
-      border-color: $focus-color;
+      border-color: var(--color-primary);
     }
 
     &:focus:not(:focus-visible) {
@@ -446,7 +446,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid $focus-color;
+      outline: 2px solid var(--color-primary);
       outline-offset: 2px;
     }
   }
@@ -473,8 +473,8 @@
       /* Ensure text is visible in high contrast mode */
       animation: none !important;
       background: none !important;
-      -webkit-text-fill-color: $text-primary !important;
-      color: $text-primary !important;
+      -webkit-text-fill-color: var(--text-primary) !important;
+      color: var(--text-primary) !important;
       text-shadow: none !important;
     }
   }

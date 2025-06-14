@@ -239,7 +239,7 @@
     top: 100%;
     left: 0;
     right: 0;
-    background-color: $color-surface;
+    background-color: var(--glass-background-secondary);
     border: 1px solid $color-border;
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

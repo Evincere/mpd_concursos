@@ -555,7 +555,7 @@
         height: 100%;
         background: linear-gradient(90deg,
           transparent,
-          $theme-inscripciones-light,
+          var(--theme-inscripciones-light),
           transparent);
         transition: left 1s ease;
         z-index: 1;
