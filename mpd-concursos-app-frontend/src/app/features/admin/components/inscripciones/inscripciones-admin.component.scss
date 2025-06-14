@@ -113,25 +113,12 @@
 
   // Tarjeta de filtros con glassmorphism refinado
   .filters-card {
-    margin-bottom: 2rem;
+    margin-bottom: var(--spacing-2xl);
 
     .custom-card {
-      /* Premium glassmorphism base con tema de inscripciones */
-      background: linear-gradient(135deg,
-        $glass-background-primary 0%,
-        $glass-background-secondary 100%) !important;
-      background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-        radial-gradient(circle at 80% 20%, $theme-inscripciones-light 0%, transparent 50%) !important;
-      border: $border-glass-medium !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border-radius: $border-radius-lg !important;
-      box-shadow:
-        $card-shadow-base,
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1) !important;
-      transition: $transition-smooth !important;
+      @include glassmorphism-card('primary', 'normal');
+      background-image: radial-gradient(circle at 80% 20%, var(--contests-theme-color) 0%, transparent 50%) !important;
+      opacity: 0.1;
       position: relative;
       overflow: hidden;
 
@@ -145,16 +132,18 @@
         height: 100%;
         background: linear-gradient(90deg,
           transparent,
-          $theme-inscripciones-light,
+          var(--contests-theme-color),
           transparent);
+        opacity: 0.1;
         transition: left 0.8s ease;
         z-index: 1;
       }
 
       &:hover {
+        @include glassmorphism-hover;
         transform: translateY(-2px) !important;
-        box-shadow: $card-shadow-hover !important;
-        border-color: $theme-inscripciones-medium !important;
+        border-color: var(--contests-theme-color) !important;
+        opacity: 0.3;
 
         &::before {
           left: 100%;
@@ -162,7 +151,7 @@
       }
 
       .card-content {
-        padding: 2rem;
+        padding: var(--spacing-2xl);
         background: transparent !important;
         position: relative;
         z-index: 2;
@@ -172,10 +161,10 @@
     // Header de filtros
     .card-header {
       h3 {
-        color: $text-primary;
+        color: var(--text-primary);
         font-weight: 600;
         font-size: 1.125rem;
-        margin: 0 0 1.5rem 0;
+        margin: 0 0 var(--spacing-xl) 0;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
     }
@@ -185,12 +174,12 @@
       .filters-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
+        gap: var(--spacing-xl);
+        margin-bottom: var(--spacing-xl);
 
         @media (max-width: 768px) {
           grid-template-columns: 1fr;
-          gap: 1rem;
+          gap: var(--spacing-lg);
         }
 
         .filter-field {
@@ -203,22 +192,9 @@
   // Tarjeta de tabla con glassmorphism refinado
   .table-card {
     .custom-card {
-      /* Premium glassmorphism base con tema de inscripciones */
-      background: linear-gradient(135deg,
-        $glass-background-primary 0%,
-        $glass-background-secondary 100%) !important;
-      background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-        radial-gradient(circle at 90% 10%, $theme-inscripciones-light 0%, transparent 50%) !important;
-      border: $border-glass-medium !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border-radius: $border-radius-lg !important;
-      box-shadow:
-        $card-shadow-base,
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1) !important;
-      transition: $transition-smooth !important;
+      @include glassmorphism-card('primary', 'normal');
+      background-image: radial-gradient(circle at 90% 10%, var(--contests-theme-color) 0%, transparent 50%) !important;
+      opacity: 0.1;
       position: relative;
       overflow: hidden;
 
@@ -232,8 +208,9 @@
         height: 100%;
         background: linear-gradient(90deg,
           transparent,
-          rgba(76, 175, 80, 0.03),
+          var(--contests-theme-color),
           transparent);
+        opacity: 0.03;
         transition: left 1.2s ease;
         z-index: 1;
         pointer-events: none;
@@ -253,14 +230,15 @@
 
     // Header de tabla
     .card-header {
-      padding: 1.5rem 2rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: var(--spacing-xl) var(--spacing-2xl);
+      border-bottom: 1px solid var(--border-primary);
       background: linear-gradient(135deg,
-        rgba(76, 175, 80, 0.05) 0%,
+        var(--contests-theme-color) 0%,
         rgba(55, 65, 81, 0.1) 100%);
+      opacity: 0.05;
 
       h3 {
-        color: $text-primary;
+        color: var(--text-primary);
         font-weight: 600;
         font-size: 1.125rem;
         margin: 0;
@@ -268,47 +246,47 @@
       }
 
       .results-count {
-        background: linear-gradient(135deg,
-          $theme-inscripciones-light 0%,
-          rgba(76, 175, 80, 0.15) 100%);
-        color: $text-secondary;
-        padding: 0.375rem 0.875rem;
+        @include glassmorphism-badge('success');
+        color: var(--text-secondary);
+        padding: var(--spacing-sm) var(--spacing-md);
         border-radius: 20px;
         font-size: 0.8125rem;
         font-weight: 500;
-        border: 1px solid rgba(76, 175, 80, 0.2);
-        backdrop-filter: blur(4px);
       }
     }
 
     .table-container {
       overflow-x: auto;
-      border-radius: 0 0 $border-radius-lg $border-radius-lg;
+      border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
 
       // Scrollbar personalizado
       scrollbar-width: thin;
-      scrollbar-color: rgba(76, 175, 80, 0.6) rgba(55, 65, 81, 0.3);
+      scrollbar-color: var(--contests-theme-color) var(--glass-background-secondary);
+      opacity: 0.6;
 
       &::-webkit-scrollbar {
         height: 8px;
       }
 
       &::-webkit-scrollbar-track {
-        background: rgba(55, 65, 81, 0.3);
-        border-radius: 4px;
+        background: var(--glass-background-secondary);
+        opacity: 0.3;
+        border-radius: var(--border-radius-sm);
       }
 
       &::-webkit-scrollbar-thumb {
         background: linear-gradient(135deg,
-          rgba(76, 175, 80, 0.6) 0%,
-          rgba(76, 175, 80, 0.8) 100%);
-        border-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+          var(--contests-theme-color) 0%,
+          var(--contests-theme-color) 100%);
+        opacity: 0.6;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-primary);
 
         &:hover {
           background: linear-gradient(135deg,
-            rgba(76, 175, 80, 0.8) 0%,
-            $theme-inscripciones 100%);
+            var(--contests-theme-color) 0%,
+            var(--contests-theme-color) 100%);
+          opacity: 1;
         }
       }
     }
@@ -320,35 +298,31 @@
 
   // Estilos para celdas específicas
   .id-cell {
+    @include glassmorphism-badge('success');
     font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
     font-size: 0.75rem;
-    color: $text-tertiary;
-    background: linear-gradient(135deg,
-      rgba(76, 175, 80, 0.1) 0%,
-      rgba(76, 175, 80, 0.05) 100%);
-    padding: 0.25rem 0.5rem;
-    border-radius: $border-radius-sm;
-    border: 1px solid rgba(76, 175, 80, 0.2);
+    color: var(--text-muted);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
     font-weight: 500;
     text-align: center;
-    backdrop-filter: blur(4px);
   }
 
   .user-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--spacing-xs);
 
     .user-name {
       font-weight: 600;
-      color: $text-primary;
+      color: var(--text-primary);
       font-size: 0.875rem;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .user-email, .user-dni {
       font-size: 0.75rem;
-      color: $text-secondary;
+      color: var(--text-secondary);
       opacity: 0.9;
     }
   }
@@ -356,11 +330,11 @@
   .contest-info {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--spacing-xs);
 
     .contest-title {
       font-weight: 600;
-      color: $text-primary;
+      color: var(--text-primary);
       font-size: 0.875rem;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       line-height: 1.3;
@@ -368,7 +342,7 @@
 
     .contest-category, .contest-department {
       font-size: 0.75rem;
-      color: $text-secondary;
+      color: var(--text-secondary);
       opacity: 0.9;
     }
   }
@@ -419,105 +393,89 @@
 
   // Badges de estado con glassmorphism
   .status-badge {
+    @include glassmorphism-badge('primary');
     display: inline-flex;
     align-items: center;
-    padding: 0.375rem 0.875rem;
+    padding: var(--spacing-sm) var(--spacing-md);
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    backdrop-filter: blur(8px);
-    border: 1px solid;
-    transition: $transition-smooth;
 
     &.status-pending {
-      background: linear-gradient(135deg,
-        rgba(245, 158, 11, 0.15) 0%,
-        rgba(245, 158, 11, 0.1) 100%);
-      color: #f59e0b;
-      border-color: rgba(245, 158, 11, 0.3);
-      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+      @include glassmorphism-badge('warning');
+      color: var(--color-warning);
+      box-shadow: 0 2px 8px var(--color-warning);
+      opacity: 0.2;
     }
 
     &.status-approved {
-      background: linear-gradient(135deg,
-        rgba(34, 197, 94, 0.15) 0%,
-        rgba(34, 197, 94, 0.1) 100%);
-      color: #22c55e;
-      border-color: rgba(34, 197, 94, 0.3);
-      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+      @include glassmorphism-badge('success');
+      color: var(--color-success);
+      box-shadow: 0 2px 8px var(--color-success);
+      opacity: 0.2;
     }
 
     &.status-rejected {
-      background: linear-gradient(135deg,
-        rgba(239, 68, 68, 0.15) 0%,
-        rgba(239, 68, 68, 0.1) 100%);
-      color: #ef4444;
-      border-color: rgba(239, 68, 68, 0.3);
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+      @include glassmorphism-badge('danger');
+      color: var(--color-danger);
+      box-shadow: 0 2px 8px var(--color-danger);
+      opacity: 0.2;
     }
 
     &.status-cancelled {
-      background: linear-gradient(135deg,
-        rgba(107, 114, 128, 0.15) 0%,
-        rgba(107, 114, 128, 0.1) 100%);
-      color: $text-tertiary;
-      border-color: rgba(107, 114, 128, 0.3);
-      box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+      @include glassmorphism-badge('secondary');
+      color: var(--text-muted);
+      box-shadow: 0 2px 8px var(--text-muted);
+      opacity: 0.2;
     }
 
     &.status-in-process {
-      background: linear-gradient(135deg,
-        rgba(59, 130, 246, 0.15) 0%,
-        rgba(59, 130, 246, 0.1) 100%);
-      color: #3b82f6;
-      border-color: rgba(59, 130, 246, 0.3);
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+      @include glassmorphism-badge('primary');
+      color: var(--color-primary);
+      box-shadow: 0 2px 8px var(--color-primary);
+      opacity: 0.2;
     }
   }
 
   .date-cell {
     font-size: 0.75rem;
-    color: $text-secondary;
+    color: var(--text-secondary);
     font-weight: 500;
     opacity: 0.9;
   }
 
   .actions-cell {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
     justify-content: center;
     align-items: center;
   }
 
   // Estados de carga y vacío con glassmorphism
   .loading-container {
+    @include glassmorphism-card('tertiary', 'normal');
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 2rem;
-    background: linear-gradient(135deg,
-      $glass-background-primary 0%,
-      $glass-background-tertiary 100%);
-    border-radius: $border-radius-lg;
-    backdrop-filter: blur(8px);
-    border: $border-glass-light;
+    padding: var(--spacing-4xl) var(--spacing-2xl);
 
     .loading-spinner {
       width: 48px;
       height: 48px;
-      border: 3px solid rgba(76, 175, 80, 0.3);
+      border: 3px solid var(--contests-theme-color);
+      opacity: 0.3;
       border-radius: 50%;
-      border-top-color: $theme-inscripciones;
+      border-top-color: var(--contests-theme-color);
       animation: spin 1s ease-in-out infinite;
-      margin-bottom: 1.5rem;
+      margin-bottom: var(--spacing-xl);
     }
 
     p {
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-size: 0.875rem;
       font-weight: 500;
       text-align: center;
@@ -526,28 +484,23 @@
   }
 
   .empty-container {
+    @include glassmorphism-card('tertiary', 'normal');
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 2rem;
-    background: linear-gradient(135deg,
-      $glass-background-primary 0%,
-      $glass-background-tertiary 100%);
-    border-radius: $border-radius-lg;
-    backdrop-filter: blur(8px);
-    border: $border-glass-light;
+    padding: var(--spacing-4xl) var(--spacing-2xl);
 
     .empty-icon {
       font-size: 4rem;
-      color: $text-tertiary;
-      margin-bottom: 1.5rem;
+      color: var(--text-muted);
+      margin-bottom: var(--spacing-xl);
       opacity: 0.7;
     }
 
     h4 {
-      margin: 0 0 0.75rem;
-      color: $text-primary;
+      margin: 0 0 var(--spacing-md);
+      color: var(--text-primary);
       font-size: 1.125rem;
       font-weight: 600;
       text-align: center;
@@ -555,7 +508,7 @@
 
     p {
       margin: 0;
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-size: 0.875rem;
       text-align: center;
       opacity: 0.9;
