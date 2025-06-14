@@ -1,40 +1,7 @@
-@use 'src/styles/variables' as *;
-
-/* Enhanced Glassmorphism Design System Variables - Consistent with Sidebar */
-$glass-background-primary: rgba(55, 65, 81, 0.8);
-$glass-background-secondary: rgba(75, 85, 99, 0.9);
-$glass-background-tertiary: rgba(31, 41, 55, 0.85);
-$glass-hover-primary: rgba(75, 85, 99, 0.6);
-$glass-active-primary: rgba(55, 65, 81, 0.95);
-
-$text-primary: #f9fafb;
-$text-secondary: #d1d5db;
-$text-muted: #9ca3af;
-
-$focus-color: #3b82f6;
-$focus-color-secondary: rgba(59, 130, 246, 0.2);
-
-$border-radius-sm: 4px;
-$border-radius-md: 6px;
-$border-radius-lg: 8px;
-$border-radius-xl: 12px;
-
-$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-$transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-$transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-
-/* Card Enhancement Variables */
-$card-shadow-base: 0 4px 16px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
-$card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
-$card-shadow-active: 0 12px 32px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.25);
-
-/* Border Enhancement Variables */
-$border-glass-subtle: 1px solid rgba(255, 255, 255, 0.1);
-$border-glass-medium: 1px solid rgba(255, 255, 255, 0.15);
-$border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
+@import 'src/styles/glassmorphism-system';
 
 .dashboard-container {
-  padding: 1.5rem;
+  padding: var(--spacing-xl);
   max-width: 1400px;
   margin: 0 auto;
   /* Transparent background to inherit main layout background */
@@ -43,25 +10,12 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
 
 /* Enhanced Header - Premium Glassmorphism */
 .header {
+  @include glassmorphism-card('primary', 'normal');
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding: 1.5rem 2rem;
-  /* Premium glassmorphism background */
-  background: linear-gradient(135deg,
-    $glass-background-primary 0%,
-    $glass-background-secondary 100%);
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
-  border: $border-glass-medium;
-  backdrop-filter: blur(12px);
-  border-radius: $border-radius-xl;
-  box-shadow:
-    $card-shadow-base,
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--spacing-2xl);
+  padding: var(--spacing-xl) var(--spacing-2xl);
   position: relative;
   overflow: hidden;
 
@@ -74,17 +28,17 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
     right: 0;
     height: 2px;
     background: linear-gradient(90deg,
-      rgba(59, 130, 246, 0.6) 0%,
-      rgba(139, 92, 246, 0.4) 50%,
-      rgba(59, 130, 246, 0.6) 100%);
-    opacity: 0.8;
+      var(--color-primary) 0%,
+      var(--color-accent) 50%,
+      var(--color-primary) 100%);
+    opacity: 0.6;
   }
 
   h1 {
     margin: 0;
     font-size: 1.75rem;
     font-weight: 700;
-    color: $text-primary;
+    color: var(--text-primary);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     letter-spacing: 0.025em;
     position: relative;
@@ -98,56 +52,40 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
       left: 0;
       width: 60px;
       height: 3px;
-      background: linear-gradient(90deg,
-        rgba(59, 130, 246, 0.8) 0%,
-        rgba(59, 130, 246, 0.4) 100%);
+      background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary) 100%);
+      opacity: 0.8;
       border-radius: 2px;
     }
   }
 
   .header-actions {
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-lg);
     align-items: center;
     position: relative;
     z-index: 1;
 
     /* Enhanced button styling */
     ::ng-deep button {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: $text-primary;
-      border-radius: $border-radius-lg;
-      padding: 0.75rem 1.5rem;
+      @include glassmorphism-button('primary', 'normal');
+      padding: var(--spacing-md) var(--spacing-xl);
       font-weight: 500;
-      transition: all $transition-smooth;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 
       &:hover {
+        @include glassmorphism-hover;
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 1) 100%);
       }
 
       &:active {
         transform: translateY(0);
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
       }
 
       /* Button with accent color */
       &[color="accent"] {
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.8) 0%, rgba(124, 58, 237, 0.9) 100%);
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        @include glassmorphism-button('accent', 'normal');
 
         &:hover {
-          box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
-          background: linear-gradient(135deg, rgba(139, 92, 246, 0.9) 0%, rgba(124, 58, 237, 1) 100%);
-        }
-
-        &:active {
-          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+          @include glassmorphism-hover;
         }
       }
     }
@@ -160,11 +98,11 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 0;
+  padding: var(--spacing-3xl) 0;
 
   p {
-    margin-top: 1rem;
-    color: $text-secondary;
+    margin-top: var(--spacing-lg);
+    color: var(--text-secondary);
     font-size: 0.875rem;
   }
 }
@@ -173,27 +111,14 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 2rem;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
 
   /* Enhanced Premium Glassmorphism for Stat Cards */
   ::ng-deep app-stat-card {
     .stat-card {
-      /* Premium glassmorphism base */
-      background: linear-gradient(135deg,
-        $glass-background-primary 0%,
-        $glass-background-secondary 100%);
-      background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-        radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
-      border: $border-glass-medium;
-      backdrop-filter: blur(10px);
-      border-radius: $border-radius-lg;
-      box-shadow:
-        $card-shadow-base,
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-      transition: all $transition-smooth;
+      @include glassmorphism-card('primary', 'normal');
+      transition: var(--transition-normal);
       position: relative;
       overflow: hidden;
 
@@ -210,24 +135,12 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
           rgba(255, 255, 255, 0.3) 50%,
           transparent 100%);
         opacity: 0;
-        transition: opacity $transition-normal;
+        transition: opacity var(--transition-normal);
       }
 
       &:hover {
-        /* Enhanced hover state */
-        background: linear-gradient(135deg,
-          $glass-hover-primary 0%,
-          $glass-background-secondary 100%);
-        background-image:
-          linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%),
-          radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        @include glassmorphism-hover;
         transform: translateY(-3px) scale(1.02);
-        border: $border-glass-strong;
-        box-shadow:
-          $card-shadow-hover,
-          0 1px 6px rgba(59, 130, 246, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 
         &::before {
           opacity: 1;
@@ -236,12 +149,9 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
 
       /* Focus state for accessibility */
       &:focus-within {
-        outline: 2px solid $focus-color;
+        outline: 2px solid var(--color-primary);
         outline-offset: 2px;
-        box-shadow:
-          0 0 0 4px $focus-color-secondary,
-          $card-shadow-base,
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow-lg);
       }
 
       /* Enhanced content styling */
@@ -253,24 +163,19 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
 
       /* Icon container enhancement */
       .stat-icon {
-        background: linear-gradient(135deg,
-          rgba(255, 255, 255, 0.1) 0%,
-          rgba(255, 255, 255, 0.05) 100%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(4px);
-        transition: all $transition-normal;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        @include glassmorphism-base('light');
+        border: 1px solid var(--border-primary);
+        transition: var(--transition-normal);
 
         mat-icon {
           filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-          transition: all $transition-normal;
+          transition: var(--transition-normal);
         }
       }
 
       &:hover .stat-icon {
+        @include glassmorphism-hover;
         transform: scale(1.1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        border-color: rgba(255, 255, 255, 0.2);
 
         mat-icon {
           filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
@@ -279,30 +184,30 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
 
       /* Typography enhancements */
       .stat-title {
-        color: $text-primary !important;
+        color: var(--text-primary) !important;
         font-weight: 600 !important;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       }
 
       .stat-value {
-        color: $text-primary !important;
+        color: var(--text-primary) !important;
         font-weight: 700 !important;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
       }
 
       .stat-subtitle {
-        color: $text-secondary !important;
+        color: var(--text-secondary) !important;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
 
       .stat-trend {
         &.positive {
-          color: #10b981 !important;
+          color: var(--color-success) !important;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         &.negative {
-          color: #ef4444 !important;
+          color: var(--color-danger) !important;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
       }
@@ -312,39 +217,26 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
 
 // Widgets de acceso rápido
 .widgets-section {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
 
   .section-title {
-    font-size: $font-size-lg;
+    font-size: var(--font-size-lg);
     font-weight: 500;
-    margin-bottom: 1rem;
-    color: $color-text-primary;
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-primary);
   }
 
   .widgets-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem;
+    gap: var(--spacing-lg);
   }
 }
 
 /* Enhanced Tabs Card - Premium Glassmorphism */
 .tabs-card {
-  /* Premium glassmorphism base */
-  background: linear-gradient(135deg,
-    $glass-background-primary 0%,
-    $glass-background-tertiary 100%);
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-    radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
-  border: $border-glass-medium;
-  backdrop-filter: blur(12px);
-  border-radius: $border-radius-xl;
-  box-shadow:
-    $card-shadow-base,
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  @include glassmorphism-card('secondary', 'large');
+  margin-bottom: var(--spacing-2xl);
   position: relative;
   overflow: hidden;
 
@@ -357,9 +249,9 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
     right: 0;
     height: 2px;
     background: linear-gradient(90deg,
-      rgba(59, 130, 246, 0.6) 0%,
-      rgba(139, 92, 246, 0.4) 50%,
-      rgba(59, 130, 246, 0.6) 100%);
+      var(--color-primary) 0%,
+      var(--color-accent) 50%,
+      var(--color-primary) 100%);
     opacity: 0.7;
   }
 
@@ -371,20 +263,17 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
   }
 
   .tab-content {
-    padding: 2rem;
+    padding: var(--spacing-2xl);
     background: transparent;
     position: relative;
   }
 
   /* Custom Tabs Header - Premium Glassmorphism */
   .tabs-header {
+    @include glassmorphism-base('light');
     display: flex;
-    background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.08) 0%,
-      rgba(255, 255, 255, 0.04) 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(4px);
-    border-radius: $border-radius-xl $border-radius-xl 0 0;
+    border-bottom: 1px solid var(--border-primary);
+    border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
     position: relative;
     overflow: hidden;
 
@@ -407,15 +296,15 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      padding: 1rem 1.5rem;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-lg) var(--spacing-xl);
       background: transparent;
       border: none;
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-weight: 500;
       font-size: 0.875rem;
       cursor: pointer;
-      transition: all $transition-normal;
+      transition: var(--transition-normal);
       position: relative;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       border-radius: 0;
@@ -423,21 +312,22 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
       /* Tab button icon */
       i {
         font-size: 1rem;
-        transition: all $transition-normal;
+        transition: var(--transition-normal);
       }
 
       /* Tab hover effect */
       &:hover:not(.active) {
-        color: rgba(249, 250, 251, 0.8);
-        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        background: var(--glass-background-hover);
+        opacity: 0.8;
       }
 
       /* Active tab styling */
       &.active {
-        color: $text-primary;
+        color: var(--text-primary);
         font-weight: 600;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        background: rgba(255, 255, 255, 0.08);
+        background: var(--glass-background-active);
 
         /* Active tab indicator */
         &::after {
@@ -449,24 +339,25 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
           width: 60%;
           height: 3px;
           background: linear-gradient(90deg,
-            rgba(59, 130, 246, 0.8) 0%,
-            rgba(59, 130, 246, 1) 50%,
-            rgba(59, 130, 246, 0.8) 100%);
+            var(--color-primary) 0%,
+            var(--color-primary) 50%,
+            var(--color-primary) 100%);
           border-radius: 2px;
-          box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 0 8px var(--color-primary);
+          opacity: 0.8;
         }
 
         i {
-          color: $focus-color;
+          color: var(--color-primary);
           transform: scale(1.1);
         }
       }
 
       /* Focus state for accessibility */
       &:focus-visible {
-        outline: 2px solid $focus-color;
+        outline: 2px solid var(--color-primary);
         outline-offset: -2px;
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--glass-background-focus);
       }
     }
   }
@@ -481,12 +372,12 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
   /* Tab content animations and visibility */
   .tab-content {
     display: none;
-    padding: 2rem;
+    padding: var(--spacing-2xl);
     background: transparent;
     position: relative;
     opacity: 0;
     transform: translateY(20px);
-    transition: all 0.3s ease-out;
+    transition: var(--transition-normal);
 
     &.active {
       display: block;
@@ -512,7 +403,7 @@ $border-glass-strong: 1px solid rgba(255, 255, 255, 0.25);
 .dashboard-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  gap: var(--spacing-lg);
 }
 
 /* Enhanced Charts Section - Premium Glassmorphism */
