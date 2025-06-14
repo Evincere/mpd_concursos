@@ -1171,7 +1171,7 @@ app-custom-card {
 
         // Efecto en hover de la fila
         &:hover td:first-child {
-          border-left-color: $contests-theme-color;
+          border-left-color: var(--theme-contests-primary);
         }
       }
     }

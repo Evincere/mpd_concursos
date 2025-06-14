@@ -580,7 +580,7 @@
 
       // Estilos para controles de paginación
       .pagination-info {
-        color: $text-secondary !important;
+        color: var(--text-secondary) !important;
         font-weight: 500;
       }
 
