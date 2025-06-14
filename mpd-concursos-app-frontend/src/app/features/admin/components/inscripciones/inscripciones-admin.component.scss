@@ -564,8 +564,8 @@
 
       &:hover {
         transform: translateY(-1px) !important;
-        box-shadow: $card-shadow-hover !important;
-        border-color: $theme-inscripciones-medium !important;
+        box-shadow: var(--shadow-lg) !important;
+        border-color: var(--theme-inscripciones-medium) !important;
 
         &::before {
           left: 100%;

@@ -1108,16 +1108,9 @@
     padding: 1rem;
     margin-bottom: 0.75rem;
     /* Premium glassmorphism base */
-    background: linear-gradient(135deg,
-      $glass-background-primary 0%,
-      $glass-background-secondary 100%);
+    @include glassmorphism-card('primary', 'normal');
     background-image:
       linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-    border: $border-glass-medium;
-    backdrop-filter: blur(8px);
-    border-radius: $border-radius-lg;
-    box-shadow: $card-shadow-base;
-    transition: all $transition-smooth;
 
     &:hover {
       transform: translateY(-2px);
