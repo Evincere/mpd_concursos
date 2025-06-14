@@ -356,7 +356,7 @@
     .documents-count {
       font-weight: 600;
       font-size: 1rem;
-      color: $text-primary;
+      color: var(--text-primary);
       background: linear-gradient(135deg,
         rgba(59, 130, 246, 0.15) 0%,
         rgba(59, 130, 246, 0.1) 100%);

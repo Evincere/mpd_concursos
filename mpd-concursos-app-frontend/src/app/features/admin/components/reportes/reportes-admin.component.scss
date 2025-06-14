@@ -256,7 +256,7 @@
       cursor: pointer;
 
       &:hover:not(:disabled) {
-        @include glassmorphism-hover;
+        background: var(--glass-background-hover);
         transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
       }
@@ -281,12 +281,14 @@
 
 /* Indicador de carga */
 .loading-overlay {
-  @include glassmorphism-overlay;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -371,7 +373,7 @@
       rgba(255, 255, 255, 0.04) 100%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(4px);
-    border-radius: $border-radius-xl $border-radius-xl 0 0;
+    border-radius: var(--border-radius-xl) var(--border-radius-xl) 0 0;
     position: relative;
     overflow: hidden;
 
@@ -564,22 +566,11 @@
 }
 
 .stats-card {
-  /* Premium glassmorphism base con multicapa */
-  background: linear-gradient(135deg,
-    $glass-background-primary 0%,
-    $glass-background-secondary 100%);
+  @include glassmorphism-card('primary', 'normal');
   background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
-    radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
-  border: $border-glass-medium;
-  backdrop-filter: blur(12px);
-  border-radius: $border-radius-lg;
-  box-shadow:
-    $card-shadow-base,
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  transition: all $transition-smooth;
+    radial-gradient(circle at 70% 30%, var(--color-primary) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, var(--color-accent) 0%, transparent 50%);
+  opacity: 0.12;
   position: relative;
   overflow: hidden;
 
@@ -617,12 +608,14 @@
 
   &:hover {
     /* Enhanced hover state con efectos premium */
-    @include glassmorphism-hover;
+    background: var(--glass-background-hover);
     background-image:
       radial-gradient(circle at 70% 30%, var(--color-primary) 0%, transparent 50%),
       radial-gradient(circle at 20% 80%, var(--color-accent) 0%, transparent 50%);
     opacity: 0.18;
     transform: translateY(-4px) scale(1.03);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-hover);
 
     /* Activar efecto de brillo deslizante */
     &::before {
@@ -760,11 +753,7 @@
       linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%),
       radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
       radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
-    box-shadow:
-      $card-shadow-hover,
-      0 2px 8px rgba(59, 130, 246, 0.2),
-      0 8px 32px rgba(0, 0, 0, 0.12);
-    border: $border-glass-strong;
+    box-shadow: var(--shadow-lg);
 
     /* Activar efecto de brillo deslizante */
     &::before {
@@ -782,14 +771,14 @@
       margin: 0;
       font-size: 1.125rem;
       font-weight: 600;
-      color: $text-primary;
+      color: var(--text-primary);
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       display: flex;
       align-items: center;
       gap: 0.5rem;
 
       i {
-        color: $focus-color;
+        color: var(--color-primary);
         font-size: 1rem;
       }
     }
@@ -824,7 +813,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: $text-secondary;
+    color: var(--text-secondary);
     font-weight: 500;
   }
 
@@ -837,13 +826,13 @@
 
   .chart-value {
     height: 20px;
-    border-radius: $border-radius-sm;
+    border-radius: var(--border-radius-sm);
     display: flex;
     align-items: center;
     padding-left: 0.5rem;
     font-size: 0.75rem;
     font-weight: 500;
-    color: $text-primary;
+    color: var(--text-primary);
     transition: width 0.3s ease;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 

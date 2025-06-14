@@ -593,12 +593,14 @@ app-custom-card {
 
 // ===== LOADING OVERLAY CON GLASSMORPHISM REFINADO =====
 .loading-overlay {
-  @include glassmorphism-overlay;
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  background: rgba(55, 65, 81, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   background-image: linear-gradient(135deg,
     rgba(255, 255, 255, 0.1) 0%,
     var(--contests-theme-color) 50%,

@@ -387,12 +387,14 @@ app-usuario-filtros {
 
 /* ===== GLASSMORPHISM LOADING STATES ===== */
 .loading-overlay {
-  @include glassmorphism-overlay;
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  background: rgba(55, 65, 81, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
   align-items: center;
