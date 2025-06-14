@@ -1,5 +1,4 @@
-// Importar variables globales para consistencia visual
-@import '../../../../../styles/variables';
+@import 'src/styles/glassmorphism-system';
 
 // ===== VARIABLES CSS PARA SISTEMA FLEXIBLE DE TABLAS =====
 :root {
@@ -27,92 +26,28 @@
   --table-cell-padding-y: clamp(0.75rem, 1.5vh, 1.25rem);
 }
 
-// ===== GLASSMORPHISM DESIGN SYSTEM - CONTESTS MODULE =====
-// Variables refinadas específicas para el módulo de concursos
-// Siguiendo el sistema establecido en dashboard administrativo
-
-// Paleta de colores glassmorphism refinada
-$glass-contests-primary: rgba(55, 65, 81, 0.8);        // #374151 con 80% opacidad
-$glass-contests-secondary: rgba(75, 85, 99, 0.9);      // #4b5563 con 90% opacidad
-$glass-contests-accent: rgba(76, 175, 80, 0.15);       // Verde concursos con transparencia
-$contests-theme-color: #4CAF50;                        // Verde específico de concursos
-$contests-theme-light: #66BB6A;                        // Verde claro para hover
-$contests-theme-dark: #388E3C;                         // Verde oscuro para activos
-
-// Colores de texto WCAG AA compliant
-$text-primary-contests: #f9fafb;                       // Texto primario - 4.5:1 ratio
-$text-secondary-contests: #d1d5db;                     // Texto secundario - 4.5:1 ratio
-$text-tertiary-contests: #9ca3af;                      // Texto terciario
-$input-background-contests: #4b5563;                   // Backgrounds de inputs
-
-// Gradientes multicapa premium para concursos
-$gradient-contests-primary: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.1) 0%,
-  rgba(76, 175, 80, 0.05) 50%,
-  rgba(255, 255, 255, 0.05) 100%);
-
-$gradient-contests-hover: linear-gradient(135deg,
-  rgba(255, 255, 255, 0.15) 0%,
-  rgba(76, 175, 80, 0.1) 50%,
-  rgba(255, 255, 255, 0.08) 100%);
-
-$gradient-contests-active: linear-gradient(135deg,
-  rgba(76, 175, 80, 0.2) 0%,
-  rgba(255, 255, 255, 0.1) 50%,
-  rgba(76, 175, 80, 0.1) 100%);
-
-// Sombras premium en capas
-$shadow-contests-sm:
-  0 4px 16px rgba(0, 0, 0, 0.2),
-  0 2px 8px rgba(0, 0, 0, 0.1),
-  inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
-$shadow-contests-md:
-  0 8px 32px rgba(0, 0, 0, 0.3),
-  0 4px 16px rgba(0, 0, 0, 0.2),
-  inset 0 1px 0 rgba(255, 255, 255, 0.1),
-  inset 0 -1px 0 rgba(76, 175, 80, 0.1);
-
-$shadow-contests-lg:
-  0 12px 40px rgba(0, 0, 0, 0.4),
-  0 6px 20px rgba(0, 0, 0, 0.3),
-  inset 0 1px 0 rgba(255, 255, 255, 0.15),
-  inset 0 -1px 0 rgba(76, 175, 80, 0.15);
-
-// Mixin glassmorphism refinado para concursos
-@mixin glass-contests-card {
-  background: $glass-contests-primary;
-  background-image: $gradient-contests-primary;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 8px;
-  box-shadow: $shadow-contests-md;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@mixin glass-contests-hover {
-  background-image: $gradient-contests-hover;
-  transform: translateY(-2px);
-  box-shadow: $shadow-contests-lg;
-  border-color: rgba(76, 175, 80, 0.3);
+// Contest-specific theme color (maintaining brand identity)
+:root {
+  --contests-theme-color: #4CAF50;
+  --contests-theme-light: #66BB6A;
+  --contests-theme-dark: #388E3C;
 }
 
 // Contenedor principal con glassmorphism refinado
 .concursos-admin-container {
-  padding: 1.5rem;
+  padding: var(--spacing-xl);
   background: transparent; // Heredar el background del dashboard
   min-height: 100vh;
   position: relative;
 
   // Header principal con efectos glassmorphism premium
   .page-header {
-    @include glass-contests-card;
+    @include glassmorphism-card('primary', 'normal');
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding: 2rem;
+    margin-bottom: var(--spacing-2xl);
+    padding: var(--spacing-2xl);
     position: relative;
     overflow: hidden;
 
@@ -126,13 +61,14 @@ $shadow-contests-lg:
       height: 100%;
       background: linear-gradient(90deg,
         transparent,
-        rgba(76, 175, 80, 0.1),
+        var(--contests-theme-color),
         transparent);
+      opacity: 0.1;
       transition: left 0.5s ease;
     }
 
     &:hover {
-      @include glass-contests-hover;
+      @include glassmorphism-hover;
 
       &::before {
         left: 100%;
@@ -146,21 +82,21 @@ $shadow-contests-lg:
 
       h1 {
         margin: 0;
-        color: $text-primary-contests;
+        color: var(--text-primary);
         font-size: 1.875rem;
         font-weight: 700;
         letter-spacing: -0.025em;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        background: linear-gradient(135deg, $text-primary-contests 0%, $contests-theme-light 100%);
+        background: linear-gradient(135deg, var(--text-primary) 0%, var(--contests-theme-light) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
       }
 
       .header-subtitle {
-        color: $text-secondary-contests;
+        color: var(--text-secondary);
         font-size: 0.9375rem;
-        margin-top: 0.5rem;
+        margin-top: var(--spacing-sm);
         font-weight: 500;
         opacity: 0.9;
       }
@@ -168,7 +104,7 @@ $shadow-contests-lg:
 
     .header-actions {
       display: flex;
-      gap: 1rem;
+      gap: var(--spacing-lg);
       align-items: center;
       flex-wrap: wrap;
       z-index: 2;
@@ -176,55 +112,49 @@ $shadow-contests-lg:
 
       // Toggle de vista con glassmorphism refinado
       .view-toggle {
+        @include glassmorphism-base('secondary');
         display: flex;
         gap: 0;
-        background: rgba(55, 65, 81, 0.9);
-        background-image: linear-gradient(135deg,
-          rgba(255, 255, 255, 0.1) 0%,
-          rgba(255, 255, 255, 0.05) 100%);
-        border-radius: 8px;
+        border-radius: var(--border-radius-md);
         padding: 4px;
-        margin-right: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow:
-          0 4px 16px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(8px);
+        margin-right: var(--spacing-xl);
 
         app-custom-button {
           ::ng-deep .custom-button {
             min-width: 44px;
             height: 36px;
-            border-radius: 6px;
+            border-radius: var(--border-radius-sm);
             font-size: 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: var(--transition-normal);
             border: none;
             font-weight: 600;
             position: relative;
             overflow: hidden;
 
             &:disabled {
-              background: $contests-theme-color;
+              background: var(--contests-theme-color);
               background-image: linear-gradient(135deg,
                 rgba(255, 255, 255, 0.2) 0%,
                 rgba(255, 255, 255, 0.1) 100%);
               color: white;
               opacity: 1;
               cursor: default;
-              box-shadow:
-                0 2px 8px rgba(76, 175, 80, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+              box-shadow: 0 2px 8px var(--contests-theme-color);
+              opacity: 0.4;
             }
 
             &:not(:disabled) {
               background: transparent;
-              color: rgba($text-secondary-contests, 0.9);
+              color: var(--text-secondary);
+              opacity: 0.9;
 
               &:hover {
-                background: rgba(76, 175, 80, 0.2);
-                color: $contests-theme-light;
+                background: var(--contests-theme-color);
+                opacity: 0.2;
+                color: var(--contests-theme-light);
                 transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+                box-shadow: 0 4px 12px var(--contests-theme-color);
+                opacity: 0.3;
               }
             }
           }
