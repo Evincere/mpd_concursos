@@ -394,15 +394,15 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.75rem;
-      padding: 1.25rem 1.5rem;
+      gap: var(--spacing-md);
+      padding: var(--spacing-lg) var(--spacing-xl);
       background: transparent;
       border: none;
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-weight: 500;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: all $transition-smooth;
+      transition: var(--transition-smooth);
       position: relative;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       border-radius: 0;
@@ -428,16 +428,15 @@
       /* Tab button icon */
       i {
         font-size: 1.1rem;
-        transition: all $transition-smooth;
+        transition: var(--transition-smooth);
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
       }
 
       /* Tab hover effect */
       &:hover:not(.active) {
-        color: rgba(249, 250, 251, 0.9);
-        background: linear-gradient(135deg,
-          rgba(255, 255, 255, 0.08) 0%,
-          rgba(255, 255, 255, 0.04) 100%);
+        color: var(--text-primary);
+        opacity: 0.9;
+        background: var(--glass-background-hover);
         transform: translateY(-1px);
 
         &::before {
@@ -447,19 +446,17 @@
 
         i {
           transform: scale(1.05);
-          color: rgba(59, 130, 246, 0.8);
+          color: var(--color-primary);
+          opacity: 0.8;
         }
       }
 
       /* Active tab styling */
       &.active {
-        color: $text-primary;
+        color: var(--text-primary);
         font-weight: 600;
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-        background: linear-gradient(135deg,
-          rgba(255, 255, 255, 0.12) 0%,
-          rgba(255, 255, 255, 0.06) 100%);
-        backdrop-filter: blur(8px);
+        background: var(--glass-background-active);
 
         /* Active tab indicator premium */
         &::after {
@@ -471,40 +468,44 @@
           width: 70%;
           height: 4px;
           background: linear-gradient(90deg,
-            rgba(59, 130, 246, 0.9) 0%,
-            rgba(139, 92, 246, 0.7) 25%,
-            rgba(59, 130, 246, 1) 50%,
-            rgba(139, 92, 246, 0.7) 75%,
-            rgba(59, 130, 246, 0.9) 100%);
+            var(--color-primary) 0%,
+            var(--color-accent) 25%,
+            var(--color-primary) 50%,
+            var(--color-accent) 75%,
+            var(--color-primary) 100%);
+          opacity: 0.9;
           background-size: 200% 100%;
           animation: gradientShift 3s ease-in-out infinite;
           border-radius: 2px;
           box-shadow:
-            0 0 12px rgba(59, 130, 246, 0.5),
-            0 2px 8px rgba(59, 130, 246, 0.3);
+            0 0 12px var(--color-primary),
+            0 2px 8px var(--color-primary);
+          opacity: 0.5;
         }
 
         i {
           background: linear-gradient(135deg,
-            rgba(59, 130, 246, 1) 0%,
-            rgba(139, 92, 246, 0.8) 50%,
-            rgba(59, 130, 246, 1) 100%);
+            var(--color-primary) 0%,
+            var(--color-accent) 50%,
+            var(--color-primary) 100%);
           background-size: 200% 100%;
           background-clip: text;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           animation: iconShine 2.5s ease-in-out infinite;
           transform: scale(1.15);
-          filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.4));
+          filter: drop-shadow(0 2px 4px var(--color-primary));
+          opacity: 0.4;
         }
       }
 
       /* Focus state for accessibility */
       &:focus-visible {
-        outline: 2px solid $focus-color;
+        outline: 2px solid var(--color-primary);
         outline-offset: -2px;
-        background: rgba(255, 255, 255, 0.1);
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+        background: var(--glass-background-focus);
+        box-shadow: 0 0 0 4px var(--color-primary);
+        opacity: 0.2;
       }
     }
   }
@@ -519,12 +520,12 @@
   /* Tab content animations and visibility */
   .tab-content {
     display: block;
-    padding: 2rem;
+    padding: var(--spacing-2xl);
     background: transparent;
     position: relative;
     opacity: 1;
     transform: translateY(0);
-    transition: all 0.3s ease-out;
+    transition: var(--transition-normal);
   }
 
   .tab-panel {
@@ -616,21 +617,12 @@
 
   &:hover {
     /* Enhanced hover state con efectos premium */
-    background: linear-gradient(135deg,
-      $glass-hover-primary 0%,
-      $glass-background-secondary 100%);
+    @include glassmorphism-hover;
     background-image:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.12) 100%),
-      radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.18) 0%, transparent 50%),
-      radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%);
+      radial-gradient(circle at 70% 30%, var(--color-primary) 0%, transparent 50%),
+      radial-gradient(circle at 20% 80%, var(--color-accent) 0%, transparent 50%);
+    opacity: 0.18;
     transform: translateY(-4px) scale(1.03);
-    border: $border-glass-strong;
-    box-shadow:
-      $card-shadow-hover,
-      0 2px 8px rgba(59, 130, 246, 0.25),
-      0 8px 32px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.3),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 
     /* Activar efecto de brillo deslizante */
     &::before {
@@ -640,13 +632,9 @@
 
     .stat-icon {
       transform: scale(1.15) rotate(5deg);
-      box-shadow:
-        0 6px 16px rgba(0, 0, 0, 0.25),
-        0 2px 8px rgba(59, 130, 246, 0.3);
+      box-shadow: var(--shadow-lg);
       border-color: rgba(255, 255, 255, 0.25);
-      background: linear-gradient(135deg,
-        rgba(255, 255, 255, 0.15) 0%,
-        rgba(255, 255, 255, 0.08) 100%);
+      background: var(--glass-background-hover);
 
       i {
         filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
@@ -657,7 +645,8 @@
     .stat-value {
       text-shadow:
         0 2px 4px rgba(0, 0, 0, 0.4),
-        0 0 8px rgba(59, 130, 246, 0.3);
+        0 0 8px var(--color-primary);
+      opacity: 0.3;
     }
   }
 }
@@ -665,31 +654,26 @@
 .stat-item {
   display: flex;
   align-items: center;
-  padding: 1.5rem;
+  padding: var(--spacing-xl);
   position: relative;
   z-index: 1;
 
   .stat-icon {
+    @include glassmorphism-base('secondary');
     display: flex;
     align-items: center;
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    margin-right: 1rem;
-    background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0.05) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(4px);
-    border-radius: $border-radius-lg;
-    transition: all $transition-normal;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-right: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
 
     i {
       font-size: 1.5rem;
-      color: $focus-color;
+      color: var(--color-primary);
       filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-      transition: all $transition-normal;
+      transition: var(--transition-normal);
     }
   }
 
@@ -703,14 +687,14 @@
     font-size: 1.75rem;
     font-weight: 700;
     line-height: 1.2;
-    color: $text-primary;
+    color: var(--text-primary);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--spacing-xs);
   }
 
   .stat-label {
     font-size: 0.875rem;
-    color: $text-secondary;
+    color: var(--text-secondary);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     font-weight: 500;
   }
@@ -720,8 +704,8 @@
 .charts-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
 
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
@@ -729,22 +713,11 @@
 }
 
 .chart-card {
-  /* Premium glassmorphism base con multicapa */
-  background: linear-gradient(135deg,
-    $glass-background-primary 0%,
-    $glass-background-secondary 100%);
+  @include glassmorphism-card('primary', 'normal');
   background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
-    radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
-  border: $border-glass-medium;
-  backdrop-filter: blur(12px);
-  border-radius: $border-radius-lg;
-  box-shadow:
-    $card-shadow-base,
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  transition: all $transition-smooth;
+    radial-gradient(circle at 70% 30%, var(--color-primary) 0%, transparent 50%),
+    radial-gradient(circle at 20% 80%, var(--color-accent) 0%, transparent 50%);
+  opacity: 0.12;
   position: relative;
   overflow: hidden;
   height: 100%;
