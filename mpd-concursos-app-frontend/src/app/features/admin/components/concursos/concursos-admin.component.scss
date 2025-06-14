@@ -1009,7 +1009,7 @@ app-custom-card {
 
 // ===== TABLA MODERNA CON GLASSMORPHISM OPTIMIZADO =====
 .concursos-admin-container .table-container {
-  @include glass-contests-card;
+  @include glassmorphism-card('primary', 'normal');
   overflow: hidden;
   width: 100%;
   position: relative;
@@ -1380,7 +1380,7 @@ app-custom-card {
 
 // ===== PAGINACIÓN CON GLASSMORPHISM REFINADO =====
 .pagination-container {
-  @include glass-contests-card;
+  @include glassmorphism-card('primary', 'normal');
   display: flex;
   justify-content: space-between;
   align-items: center;

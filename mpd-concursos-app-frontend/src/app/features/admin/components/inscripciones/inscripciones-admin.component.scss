@@ -536,22 +536,14 @@
 ::ng-deep app-custom-inscriptions-table {
   app-custom-table {
     .pagination-container {
-      background: linear-gradient(135deg,
-        $glass-background-primary 0%,
-        $glass-background-secondary 100%) !important;
+      @include glassmorphism-card('primary', 'normal');
       background-image:
         linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-        radial-gradient(circle at 50% 50%, $theme-inscripciones-light 0%, transparent 50%) !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border: $border-glass-medium !important;
-      border-radius: $border-radius-lg !important;
-      box-shadow: $card-shadow-base !important;
+        radial-gradient(circle at 50% 50%, var(--theme-inscripciones-light) 0%, transparent 50%) !important;
       border-top: none !important;
       margin-top: 0 !important;
       position: relative;
       overflow: hidden;
-      transition: $transition-smooth !important;
 
       // Efecto de brillo sutil en hover
       &::before {
