@@ -1,89 +1,50 @@
-/* ===== GLASSMORPHISM DESIGN SYSTEM - USUARIOS ADMIN MODULE ===== */
-/* Siguiendo especificaciones del glassmorphism-design-system-guide.md */
-
-@use './styles/variables' as vars;
-@use 'src/styles/variables' as global;
+@import 'src/styles/glassmorphism-system';
 
 /* ===== GLASSMORPHISM BASE LAYOUT ===== */
 :host {
   display: block;
   min-height: 100vh;
-  background: linear-gradient(135deg,
-    rgba(55, 65, 81, 0.95) 0%,
-    rgba(75, 85, 99, 0.9) 50%,
-    rgba(55, 65, 81, 0.95) 100%);
-  padding: 1.5rem;
-  color: #f9fafb;
+  background: transparent; // Inherit from main layout
+  padding: var(--spacing-xl);
+  color: var(--text-primary);
   position: relative;
-
-  /* Glassmorphism Base Pattern */
-  &::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg,
-      rgba(55, 65, 81, 0.95) 0%,
-      rgba(75, 85, 99, 0.9) 50%,
-      rgba(55, 65, 81, 0.95) 100%);
-    z-index: -1;
-    pointer-events: none;
-  }
 }
 
 /* ===== GLASSMORPHISM HEADER COMPONENT ===== */
 .header {
-  background: rgba(55, 65, 81, 0.8);
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 8px;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
+  @include glassmorphism-card('primary', 'normal');
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+  margin-bottom: var(--spacing-2xl);
+  padding: var(--spacing-xl);
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: rgba(75, 85, 99, 0.9);
+    @include glassmorphism-hover;
     transform: translateY(-2px);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.3),
-      0 4px 12px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .header-title {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--spacing-md);
 
     h1 {
       margin: 0;
       font-size: 1.75rem;
       font-weight: 600;
-      color: #f9fafb;
+      color: var(--text-primary);
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: var(--spacing-md);
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       line-height: 1.3;
 
       &::before {
         content: '👥';
         font-size: 1.5rem;
-        margin-right: 0.5rem;
+        margin-right: var(--spacing-sm);
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
       }
     }
@@ -94,42 +55,38 @@
       gap: 0.75rem;
 
       .filter-badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 6px;
+        @include glassmorphism-badge('primary');
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--border-radius-sm);
         font-size: 0.6875rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        border: 1px solid transparent;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
         &.status-active {
-          background: rgba(34, 197, 94, 0.15);
-          color: #22c55e;
-          border-color: rgba(34, 197, 94, 0.3);
+          @include glassmorphism-badge('success');
+          color: var(--color-success);
         }
 
         &.status-inactive {
-          background: rgba(245, 158, 11, 0.15);
-          color: #f59e0b;
-          border-color: rgba(245, 158, 11, 0.3);
+          @include glassmorphism-badge('warning');
+          color: var(--color-warning);
         }
 
         &.status-blocked,
         &.status-locked {
-          background: rgba(239, 68, 68, 0.15);
-          color: #ef4444;
-          border-color: rgba(239, 68, 68, 0.3);
+          @include glassmorphism-badge('danger');
+          color: var(--color-danger);
         }
 
         &.status-expired {
-          background: rgba(156, 163, 175, 0.15);
-          color: #9ca3af;
-          border-color: rgba(156, 163, 175, 0.3);
+          @include glassmorphism-badge('secondary');
+          color: var(--text-muted);
         }
       }
 
       .clear-filter-btn {
+        @include glassmorphism-button('secondary', 'small');
         width: 32px;
         height: 32px;
         padding: 0;
@@ -137,18 +94,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(107, 114, 128, 0.8);
-        color: #f9fafb;
-        border: 1px solid rgba(107, 114, 128, 0.5);
+        color: var(--text-primary);
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
         &:hover {
-          background: rgba(239, 68, 68, 0.8);
-          border-color: rgba(239, 68, 68, 0.5);
-          color: #f9fafb;
+          background: var(--color-danger);
+          opacity: 0.8;
+          color: var(--text-primary);
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+          box-shadow: 0 4px 12px var(--color-danger);
+          opacity: 0.3;
         }
       }
     }
@@ -156,58 +111,55 @@
 
   .header-actions {
     display: flex;
-    gap: 1.5rem;
+    gap: var(--spacing-xl);
     align-items: flex-end;
 
     .status-filter {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: var(--spacing-sm);
 
       label {
         font-size: 0.875rem;
-        color: #d1d5db;
+        color: var(--text-secondary);
         font-weight: 500;
       }
 
       .status-select {
+        @include glassmorphism-form-field;
         min-width: 220px;
         height: 44px;
         font-size: 0.9rem;
-        background: rgba(75, 85, 99, 0.6);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
-        color: #f9fafb;
-        padding: 0.75rem 1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: var(--text-primary);
+        padding: var(--spacing-md) var(--spacing-lg);
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
         background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f9fafb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
         background-repeat: no-repeat;
-        background-position: right 0.75rem center;
+        background-position: right var(--spacing-md) center;
         background-size: 1rem;
         padding-right: 2.5rem;
 
         &:focus {
           outline: none;
-          border-color: rgba(59, 130, 246, 0.5);
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 2px var(--color-primary);
+          opacity: 0.2;
         }
 
         &.active-filter {
-          border-color: #3b82f6;
-          background: rgba(59, 130, 246, 0.1);
-          color: #3b82f6;
+          border-color: var(--color-primary);
+          background: var(--color-primary);
+          opacity: 0.1;
+          color: var(--color-primary);
           font-weight: 600;
         }
 
         option {
-          background: rgba(55, 65, 81, 0.95);
-          color: #f9fafb;
-          padding: 0.5rem;
+          background: var(--glass-background-secondary);
+          color: var(--text-primary);
+          padding: var(--spacing-sm);
         }
       }
     }
@@ -217,85 +169,51 @@
 /* ===== GLASSMORPHISM FILTERS COMPONENT ===== */
 app-usuario-filtros {
   display: block;
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
 
   .filtros-container,
   .filter-card,
   .filters-section {
-    background: rgba(55, 65, 81, 0.8);
-    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: 8px;
-    box-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.2),
-      0 2px 8px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    padding: 1.5rem;
+    @include glassmorphism-card('primary', 'normal');
+    padding: var(--spacing-xl);
     position: relative;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      background: rgba(75, 85, 99, 0.9);
+      @include glassmorphism-hover;
       transform: translateY(-1px);
-      box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.3),
-        0 4px 12px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      border-color: rgba(255, 255, 255, 0.2);
     }
   }
 
   input, select, .form-control {
-    background: #4b5563;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    color: #f9fafb;
-    padding: 0.75rem 1rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    @include glassmorphism-form-field;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    padding: var(--spacing-md) var(--spacing-lg);
 
     &:focus {
       outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary);
+      opacity: 0.2;
     }
 
     &::placeholder {
-      color: #9ca3af;
+      color: var(--text-muted);
     }
   }
 }
 
 /* ===== GLASSMORPHISM TABLE COMPONENT ===== */
 .table-card {
-  background: rgba(55, 65, 81, 0.8);
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 8px;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
-  margin-bottom: 2rem;
+  @include glassmorphism-card('primary', 'normal');
+  margin-bottom: var(--spacing-2xl);
   padding: 0;
   overflow: hidden;
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: rgba(75, 85, 99, 0.9);
+    @include glassmorphism-hover;
     transform: translateY(-2px);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.3),
-      0 4px 12px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .card-header {
