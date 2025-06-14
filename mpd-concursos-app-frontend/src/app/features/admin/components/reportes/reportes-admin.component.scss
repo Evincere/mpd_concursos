@@ -856,14 +856,14 @@
     display: flex;
     align-items: center;
     font-size: 0.75rem;
-    color: $text-secondary;
+    color: var(--text-secondary);
     font-weight: 500;
   }
 
   .legend-color {
     width: 16px;
     height: 16px;
-    border-radius: $border-radius-sm;
+    border-radius: var(--border-radius-sm);
     margin-right: 0.5rem;
 
     &.participants {
@@ -907,7 +907,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: $text-primary;
+  color: var(--text-primary);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -948,7 +948,7 @@
     transform: translateX(-50%);
     font-size: 0.75rem;
     font-weight: 600;
-    color: $text-primary;
+    color: var(--text-primary);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 }
@@ -962,7 +962,7 @@
 
 .line-label {
   font-size: 0.75rem;
-  color: $text-secondary;
+  color: var(--text-secondary);
   text-align: center;
   width: 40px;
   font-weight: 500;
@@ -976,14 +976,14 @@
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: $text-primary;
+    color: var(--text-primary);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
     gap: 0.5rem;
 
     i {
-      color: $focus-color;
+      color: var(--color-primary);
       font-size: 1.125rem;
     }
   }
@@ -998,43 +998,27 @@
 }
 
 .exam-card {
-  /* Premium glassmorphism base */
-  background: linear-gradient(135deg,
-    $glass-background-primary 0%,
-    $glass-background-secondary 100%);
+  @include glassmorphism-card('primary', 'normal');
   background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-    radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
-  border: $border-glass-medium;
-  backdrop-filter: blur(10px);
-  border-radius: $border-radius-lg;
-  box-shadow:
-    $card-shadow-base,
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  transition: all $transition-smooth;
+    radial-gradient(circle at 70% 30%, var(--color-primary) 0%, transparent 50%);
+  opacity: 0.1;
   cursor: pointer;
   position: relative;
   overflow: hidden;
 
   &:hover {
     transform: translateY(-3px) scale(1.02);
-    border: $border-glass-strong;
-    box-shadow:
-      $card-shadow-hover,
-      0 1px 6px rgba(59, 130, 246, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: var(--shadow-lg);
   }
 
   &.selected {
-    border: 2px solid $focus-color;
-    box-shadow:
-      0 0 0 4px rgba(59, 130, 246, 0.2),
-      $card-shadow-base;
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary);
+    opacity: 0.2;
   }
 
   &:focus-visible {
-    outline: 2px solid $focus-color;
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
 
@@ -1045,13 +1029,13 @@
       margin: 0 0 0.25rem;
       font-size: 1.125rem;
       font-weight: 600;
-      color: $text-primary;
+      color: var(--text-primary);
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .exam-subtitle {
       margin: 0;
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-size: 0.875rem;
       font-weight: 500;
     }
