@@ -1059,27 +1059,18 @@
   padding: 0.5rem 0;
 
   .stat-label {
-    color: $text-secondary;
+    color: var(--text-secondary);
     font-weight: 500;
   }
 
   .stat-value {
     font-weight: 600;
-    color: $text-primary;
+    color: var(--text-primary);
   }
 }
 
 .selected-exam-details {
-  /* Premium glassmorphism base */
-  background: linear-gradient(135deg,
-    $glass-background-primary 0%,
-    $glass-background-secondary 100%);
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-  border: $border-glass-medium;
-  backdrop-filter: blur(10px);
-  border-radius: $border-radius-lg;
-  box-shadow: $card-shadow-base;
+  @include glassmorphism-card('primary', 'normal');
   padding: 1.5rem;
   margin-top: 1.5rem;
 
