@@ -271,7 +271,7 @@
         transition: background-color 0.2s ease;
 
         &:hover, &.active {
-          background-color: rgba($color-primary, 0.1);
+          background-color: rgba(var(--color-primary-rgb), 0.1);
         }
 
         &.active {
