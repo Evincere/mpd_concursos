@@ -1,16 +1,16 @@
-@use 'src/styles/variables' as *;
+@import 'src/styles/glassmorphism-system';
 
 .admin-layout-content {
   width: 100%;
   height: 100%;
-  background-color: $color-background;
-  color: $color-text-primary;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
 }
 
 // Estilos para tema oscuro
 @media (prefers-color-scheme: dark) {
   .admin-layout-content {
-    background-color: $color-background-dark;
-    color: $color-text-primary-dark;
+    background-color: var(--background-dark);
+    color: var(--text-primary);
   }
 }
