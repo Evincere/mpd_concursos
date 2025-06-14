@@ -165,9 +165,9 @@
       app-custom-button {
         ::ng-deep .custom-button {
           font-weight: 600;
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          padding: var(--spacing-md) var(--spacing-xl);
+          border-radius: var(--border-radius-md);
+          transition: var(--transition-normal);
           position: relative;
           overflow: hidden;
 
@@ -188,7 +188,7 @@
 
           &:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            box-shadow: var(--shadow-lg);
 
             &::before {
               left: 100%;
@@ -202,10 +202,10 @@
 
 // ===== FORMULARIO DE FILTROS CON GLASSMORPHISM REFINADO =====
 app-custom-card {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
 
   ::ng-deep .custom-card {
-    @include glass-contests-card;
+    @include glassmorphism-card('primary', 'normal');
     overflow: hidden;
     position: relative;
 
@@ -219,14 +219,15 @@ app-custom-card {
       height: 100%;
       background: linear-gradient(90deg,
         transparent,
-        rgba(76, 175, 80, 0.05),
+        var(--contests-theme-color),
         transparent);
+      opacity: 0.05;
       transition: left 0.6s ease;
       z-index: 1;
     }
 
     &:hover {
-      @include glass-contests-hover;
+      @include glassmorphism-hover;
 
       &::before {
         left: 100%;
@@ -234,7 +235,7 @@ app-custom-card {
     }
 
     .card-content {
-      padding: 2rem;
+      padding: var(--spacing-2xl);
       background: transparent;
       position: relative;
       z-index: 2;
@@ -246,17 +247,17 @@ app-custom-card {
   .filter-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
 
     &:last-of-type {
-      margin-bottom: 1rem;
+      margin-bottom: var(--spacing-lg);
     }
 
     .date-range {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+      gap: var(--spacing-lg);
     }
 
     // Campos de filtro con glassmorphism refinado
@@ -270,120 +271,84 @@ app-custom-card {
 
         .form-field-label {
           font-weight: 600;
-          color: $text-primary-contests;
-          margin-bottom: 0.5rem;
+          color: var(--text-primary);
+          margin-bottom: var(--spacing-sm);
           font-size: 0.875rem;
           letter-spacing: 0.025em;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .form-control {
-          border-radius: 8px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          padding: 0.75rem 1rem;
+          @include glassmorphism-form-field;
+          border-radius: var(--border-radius-md);
+          padding: var(--spacing-md) var(--spacing-lg);
           font-size: 0.875rem;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          background: $input-background-contests;
-          background-image: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.05) 0%,
-            rgba(255, 255, 255, 0.02) 100%);
-          color: $text-primary-contests;
-          backdrop-filter: blur(4px);
-          box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          color: var(--text-primary);
 
           &:focus {
-            border-color: $contests-theme-color;
-            box-shadow:
-              0 0 0 2px rgba(76, 175, 80, 0.3),
-              0 4px 12px rgba(0, 0, 0, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            background: rgba(75, 85, 99, 0.95);
+            border-color: var(--contests-theme-color);
+            box-shadow: 0 0 0 2px var(--contests-theme-color), var(--shadow-md);
+            opacity: 0.3;
             outline: none;
             transform: translateY(-1px);
           }
 
           &:hover:not(:focus) {
-            border-color: rgba(255, 255, 255, 0.25);
-            background: rgba(75, 85, 99, 0.9);
+            @include glassmorphism-hover;
             transform: translateY(-1px);
-            box-shadow:
-              0 4px 12px rgba(0, 0, 0, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
           }
 
           &::placeholder {
-            color: $text-tertiary-contests;
+            color: var(--text-muted);
             opacity: 0.8;
           }
         }
 
         .select-trigger {
-          border-radius: 8px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          padding: 0.75rem 1rem;
-          background: $input-background-contests;
-          background-image: linear-gradient(135deg,
-            rgba(255, 255, 255, 0.05) 0%,
-            rgba(255, 255, 255, 0.02) 100%);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          color: $text-primary-contests;
-          backdrop-filter: blur(4px);
-          box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.1),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          @include glassmorphism-form-field;
+          border-radius: var(--border-radius-md);
+          padding: var(--spacing-md) var(--spacing-lg);
+          color: var(--text-primary);
 
           &:hover:not(.select-open) {
-            border-color: rgba(255, 255, 255, 0.25);
-            background: rgba(75, 85, 99, 0.9);
+            @include glassmorphism-hover;
             transform: translateY(-1px);
-            box-shadow:
-              0 4px 12px rgba(0, 0, 0, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
           }
 
           &.select-open {
-            border-color: $contests-theme-color;
-            box-shadow:
-              0 0 0 2px rgba(76, 175, 80, 0.3),
-              0 4px 12px rgba(0, 0, 0, 0.15),
-              inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            background: rgba(75, 85, 99, 0.95);
+            border-color: var(--contests-theme-color);
+            box-shadow: 0 0 0 2px var(--contests-theme-color), var(--shadow-md);
+            opacity: 0.3;
             transform: translateY(-1px);
           }
         }
 
         // Dropdown con glassmorphism refinado
         .select-dropdown {
-          @include glass-contests-card;
-          border-color: rgba(255, 255, 255, 0.2);
+          @include glassmorphism-card('primary', 'normal');
+          border-color: var(--border-hover);
           margin-top: 4px;
 
           .select-option {
-            color: $text-primary-contests;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 4px;
+            color: var(--text-primary);
+            padding: var(--spacing-md) var(--spacing-lg);
+            transition: var(--transition-normal);
+            border-radius: var(--border-radius-sm);
             margin: 2px;
 
             &:hover {
-              background: rgba(76, 175, 80, 0.2);
-              background-image: linear-gradient(135deg,
-                rgba(255, 255, 255, 0.1) 0%,
-                rgba(76, 175, 80, 0.1) 100%);
-              color: $text-primary-contests;
+              background: var(--contests-theme-color);
+              opacity: 0.2;
+              color: var(--text-primary);
               transform: translateX(2px);
             }
 
             &.selected {
-              background: rgba(76, 175, 80, 0.3);
-              background-image: linear-gradient(135deg,
-                rgba(255, 255, 255, 0.15) 0%,
-                rgba(76, 175, 80, 0.15) 100%);
-              color: $text-primary-contests;
+              background: var(--contests-theme-color);
+              opacity: 0.3;
+              color: var(--text-primary);
               font-weight: 600;
-              border-left: 3px solid $contests-theme-color;
+              border-left: 3px solid var(--contests-theme-color);
             }
           }
         }
@@ -395,8 +360,8 @@ app-custom-card {
   .filter-actions {
     display: flex;
     justify-content: flex-end;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--border-primary);
     position: relative;
 
     &::before {
@@ -408,16 +373,17 @@ app-custom-card {
       height: 1px;
       background: linear-gradient(90deg,
         transparent,
-        rgba(76, 175, 80, 0.3),
+        var(--contests-theme-color),
         transparent);
+      opacity: 0.3;
     }
 
     app-custom-button {
       ::ng-deep .custom-button {
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        padding: var(--spacing-md) var(--spacing-xl);
+        border-radius: var(--border-radius-md);
         font-weight: 600;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: var(--transition-normal);
         position: relative;
         overflow: hidden;
 
@@ -438,7 +404,7 @@ app-custom-card {
 
         &:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+          box-shadow: var(--shadow-lg);
 
           &::before {
             left: 100%;
