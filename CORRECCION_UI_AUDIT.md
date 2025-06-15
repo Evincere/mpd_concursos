@@ -46,9 +46,12 @@
   - **Cambios:** Eliminadas variables duplicadas, aplicados mixins unificados, mejorada accesibilidad
   - **Reducción:** ~150 líneas de CSS duplicado eliminadas
   
-- [ ] **1.1.6** Migrar componente postulaciones al sistema unificado
+- [x] **1.1.6** Migrar componente postulaciones al sistema unificado
   - Archivos: `postulaciones.component.scss`
   - Tiempo estimado: 2 horas
+  - ✅ **COMPLETADO:** Componente migrado al sistema unificado
+  - **Cambios:** Eliminadas variables duplicadas, aplicados mixins unificados, mejorada accesibilidad
+  - **Reducción:** ~200 líneas de CSS duplicado eliminadas, badges y cards unificados
   
 - [ ] **1.1.7** Migrar componente sidebar al sistema unificado
   - Archivos: `sidebar.component.scss`
@@ -268,6 +271,7 @@
 - ✅ **1.1.3 COMPLETADO:** Sistema unificado diseñado - 0 duplicaciones, WCAG AA integrado, -8.7KB bundle
 - ✅ **1.1.4 COMPLETADO:** Mixins unificados creados - 15 mixins consolidados, clases utilitarias, accesibilidad
 - ✅ **1.1.5 COMPLETADO:** Componente concursos migrado - ~150 líneas CSS eliminadas, sistema unificado aplicado
+- ✅ **1.1.6 COMPLETADO:** Componente postulaciones migrado - ~200 líneas CSS eliminadas, badges/cards unificados
 
 ---
 
