@@ -1,57 +1,51 @@
-/* ===== SIDEBAR GLASSMORPHISM - USUARIO COMÚN ===== */
-/* Sidebar con glassmorphism premium dark unificado */
-/* Scoped específicamente para no afectar al administrador */
+/* ===== SIDEBAR - SISTEMA GLASSMORPHISM UNIFICADO ===== */
+/* Migrado al sistema unificado - Eliminando duplicaciones */
+/* Versión: 1.0.0 | Fecha: 2025-01-15 */
 
-@use 'variables' as *;
-@use 'responsive' as *;
+@import '../../../../../styles/unified-glassmorphism-system';
 
 .sidebar-container {
     position: relative;
     height: 100%;
     display: flex;
-    z-index: var(--user-z-sidebar);
-    background: transparent; // Inherit dashboard background seamlessly
+    z-index: var(--z-fixed);
+    background: transparent;
 }
 
 .sidebar {
-    /* Glassmorphism premium dark navigation */
-    background: var(--user-glass-gradient-primary);
-    background-image:
-        var(--user-glass-gradient-overlay),
-        var(--user-glass-gradient-radial);
-    border-right: 1px solid var(--user-border-glass);
-    backdrop-filter: var(--user-backdrop-blur);
-    -webkit-backdrop-filter: var(--user-backdrop-blur);
-    box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
+    @include glassmorphism-navigation;
+    @include glassmorphism-scrollbar;
 
-    padding: var(--user-spacing-lg) var(--user-spacing-md);
+    background-image:
+        var(--glass-gradient-overlay),
+        var(--glass-gradient-radial);
+    padding: var(--spacing-lg) var(--spacing-md);
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
-    transition: var(--user-transition-smooth);
-    width: var(--user-sidebar-width);
-    color: var(--user-text-primary);
+    transition: var(--transition-normal);
+    width: var(--nav-width);
+    color: var(--color-primary);
     position: relative;
 
-    @include md {
+    @media (max-width: 1024px) {
         width: 220px;
     }
 
-    @include sm {
+    @media (max-width: 768px) {
         width: 200px;
     }
 
     &.collapsed {
-        width: var(--user-sidebar-collapsed-width);
-        padding: var(--user-spacing-lg) var(--user-spacing-sm);
-        /* Maintain glassmorphism effects when collapsed */
-        background: var(--user-glass-secondary);
-        backdrop-filter: var(--user-backdrop-blur-strong);
+        width: var(--nav-width-collapsed);
+        padding: var(--spacing-lg) var(--spacing-sm);
+        background: var(--glass-bg-secondary);
+        backdrop-filter: var(--backdrop-blur-strong);
 
         .nav-menu {
             .nav-item {
                 a {
-                    padding: var(--user-spacing-md);
+                    padding: var(--spacing-md);
                     justify-content: center;
 
                     i {
@@ -71,39 +65,32 @@
 }
 
 .sidebar-tab {
+    @include glassmorphism-base('primary', 'strong');
+    @include glassmorphism-focus;
+
     position: absolute;
     right: -24px;
     top: 50%;
     transform: translateY(-50%);
     width: 30px;
     height: 60px;
-    background: rgba(55, 65, 81, 0.9); // More transparent to blend with background
-    border: 1px solid rgba(255, 255, 255, 0.1);
     border-left: none;
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
-    backdrop-filter: blur(15px); // Enhanced blur for better blending
-    box-shadow:
-        0 4px 15px rgba(0, 0, 0, 0.2),
-        0 2px 5px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: var(--transition-bounce);
+    z-index: var(--z-modal);
 
     &:hover {
-        background: #4b5563;
+        background: var(--glass-bg-hover);
         transform: translateY(-50%) translateX(2px);
-        box-shadow:
-            0 6px 20px rgba(0, 0, 0, 0.3),
-            0 3px 8px rgba(0, 0, 0, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        box-shadow: var(--shadow-lg);
 
         i {
-            color: #f9fafb;
+            color: var(--color-primary);
             transform: scale(1.1);
         }
 
@@ -113,44 +100,39 @@
         }
     }
 
-    &:focus {
-        outline: 2px solid #3b82f6;
-        outline-offset: 2px;
-    }
-
     .tab-line {
         width: 2px;
         height: 8px;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 1px;
+        background: var(--border-primary);
+        border-radius: var(--radius-xs);
         margin: 2px 0;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: var(--transition-bounce);
     }
 
     i {
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--color-secondary);
         font-size: 14px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: var(--transition-bounce);
         margin: 0 2px;
     }
 
     &.collapsed {
-        background: rgba(55, 65, 81, 0.7); // Even more transparent when collapsed
-        backdrop-filter: blur(20px); // Enhanced blur for seamless integration
+        background: var(--glass-bg-light);
+        backdrop-filter: var(--backdrop-blur-intense);
 
         .tab-line {
             background: rgba(59, 130, 246, 0.4);
         }
 
         i {
-            color: #3b82f6;
+            color: var(--color-info);
         }
 
         &:hover {
-            background: rgba(75, 85, 99, 0.8); // Slightly more opaque on hover
+            background: var(--glass-bg-secondary);
 
             i {
-                color: #60a5fa;
+                color: var(--color-info);
             }
         }
     }
@@ -159,71 +141,72 @@
 /* Navigation menu glassmorphism */
 .nav-menu {
     .nav-item {
-        margin-bottom: var(--user-spacing-sm);
+        margin-bottom: var(--spacing-sm);
 
         a {
             display: flex;
             align-items: center;
-            padding: var(--user-nav-item-padding);
-            color: var(--user-text-secondary);
+            padding: var(--nav-padding);
+            color: var(--color-secondary);
             text-decoration: none;
-            border-radius: var(--user-border-radius-md);
-            transition: var(--user-transition-normal);
+            border-radius: var(--radius-md);
+            transition: var(--transition-normal);
             font-size: 0.875rem;
             font-weight: 500;
             position: relative;
             border: 1px solid transparent;
             background: transparent;
+            height: var(--nav-item-height);
 
             i {
                 width: 20px;
                 text-align: center;
                 font-size: 1.2rem;
-                margin-right: var(--user-spacing-md);
-                color: var(--user-text-muted);
-                transition: var(--user-transition-normal);
+                margin-right: var(--spacing-md);
+                color: var(--color-muted);
+                transition: var(--transition-normal);
                 transform: translateX(0);
             }
 
             span {
                 white-space: nowrap;
-                transition: var(--user-transition-normal);
+                transition: var(--transition-normal);
                 opacity: 1;
                 transform: translateX(0);
                 visibility: visible;
-                color: var(--user-text-secondary);
+                color: var(--color-secondary);
             }
 
             &:hover {
-                background: var(--user-glass-light);
-                color: var(--user-text-primary);
-                transform: var(--user-transform-hover);
-                border-color: var(--user-border-glass-light);
+                background: var(--glass-bg-light);
+                color: var(--color-primary);
+                transform: var(--transform-hover);
+                border-color: var(--border-hover);
 
                 i {
-                    color: var(--user-text-primary);
+                    color: var(--color-primary);
                     transform: translateX(4px);
                 }
 
                 span {
-                    color: var(--user-text-primary);
+                    color: var(--color-primary);
                 }
             }
 
             &.active {
-                background: var(--user-glass-secondary);
-                background-image: var(--user-glass-gradient-overlay);
-                color: var(--user-text-primary);
+                background: var(--glass-bg-secondary);
+                background-image: var(--glass-gradient-overlay);
+                color: var(--color-primary);
                 font-weight: 600;
-                border-color: var(--user-border-glass-strong);
-                box-shadow: var(--user-shadow-sm), var(--user-shadow-inset);
+                border-color: var(--border-strong);
+                box-shadow: var(--shadow-sm), var(--shadow-inset);
 
                 i {
-                    color: var(--user-text-primary);
+                    color: var(--color-primary);
                 }
 
                 span {
-                    color: var(--user-text-primary);
+                    color: var(--color-primary);
                 }
 
                 &::before {
@@ -234,14 +217,13 @@
                     transform: translateY(-50%);
                     width: 3px;
                     height: 20px;
-                    background: var(--user-text-accent);
-                    border-radius: 0 2px 2px 0;
+                    background: var(--color-info);
+                    border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
                 }
             }
 
             &:focus {
-                outline: 2px solid #3b82f6;
-                outline-offset: 2px;
+                @include glassmorphism-focus;
             }
         }
     }
@@ -249,18 +231,38 @@
 
 .section-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 1rem 0;
+    background: var(--border-light);
+    margin: var(--spacing-lg) 0;
 }
 
+/* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
     .sidebar {
-        padding: 1rem 0.75rem;
+        padding: var(--spacing-lg) var(--spacing-md);
 
         .nav-menu {
             .nav-item a {
-                padding: 0.625rem 0.875rem;
+                padding: var(--spacing-sm) var(--spacing-md);
             }
+        }
+    }
+}
+
+/* === ACCESSIBILITY ENHANCEMENTS === */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .sidebar-tab,
+    .nav-menu .nav-item a {
+        transition: none;
+
+        &:hover {
+            transform: none;
+        }
+    }
+
+    .sidebar-tab {
+        &:hover {
+            transform: translateY(-50%);
         }
     }
 }
