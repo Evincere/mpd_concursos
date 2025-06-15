@@ -224,6 +224,12 @@
   --header-height: 90px;
   --mobile-nav-height: 60px;
   --content-max-width: 1200px;
+
+  /* Navigation specific variables */
+  --nav-width: var(--sidebar-width);
+  --nav-width-collapsed: var(--sidebar-collapsed-width);
+  --nav-padding: var(--spacing-sm) var(--spacing-md);
+  --nav-item-height: 2.75rem;
 }
 
 /* === Z-INDEX SCALE === */
@@ -256,6 +262,38 @@
   --color-surface: var(--glass-background-secondary);
   --color-surface-light: var(--glass-background-light);
   --color-error: var(--color-danger);
+
+  /* Color aliases for component consistency */
+  --color-secondary: var(--text-secondary);
+  --color-muted: var(--text-muted);
+
+  /* Glassmorphism background aliases */
+  --glass-bg-primary: var(--glass-background-primary);
+  --glass-bg-secondary: var(--glass-background-secondary);
+  --glass-bg-tertiary: var(--glass-background-tertiary);
+  --glass-bg-light: var(--glass-background-light);
+  --glass-bg-dark: var(--glass-background-dark);
+  --glass-bg-hover: var(--glass-background-hover);
+
+  /* Backdrop filter aliases */
+  --backdrop-blur-light: var(--backdrop-filter-light);
+  --backdrop-blur-medium: var(--backdrop-filter-medium);
+  --backdrop-blur-strong: var(--backdrop-filter-strong);
+  --backdrop-blur-intense: var(--backdrop-filter-extra);
+
+  /* Border radius aliases */
+  --radius-xs: var(--border-radius-xs);
+  --radius-sm: var(--border-radius-sm);
+  --radius-md: var(--border-radius-md);
+  --radius-lg: var(--border-radius-lg);
+  --radius-xl: var(--border-radius-xl);
+
+  /* Additional border variants */
+  --border-light: rgba(249, 250, 251, 0.08);
+  --border-strong: rgba(249, 250, 251, 0.3);
+
+  /* Additional transitions */
+  --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
   /* Focus ring for accessibility */
   --focus-ring: rgba(59, 130, 246, 0.3);

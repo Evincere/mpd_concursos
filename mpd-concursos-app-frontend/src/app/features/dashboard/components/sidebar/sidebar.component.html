@@ -4,31 +4,40 @@
             <div class="nav-item">
                 <a routerLink="/dashboard"
                    routerLinkActive="active"
-                   [routerLinkActiveOptions]="{exact: true}">
+                   [routerLinkActiveOptions]="{exact: true}"
+                   [title]="isCollapsed ? 'Principal' : ''">
                     <i class="fas fa-home" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Principal</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/concursos" routerLinkActive="active">
+                <a routerLink="/dashboard/concursos"
+                   routerLinkActive="active"
+                   [title]="isCollapsed ? 'Concursos' : ''">
                     <i class="fas fa-gavel" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Concursos</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/postulaciones" routerLinkActive="active">
+                <a routerLink="/dashboard/postulaciones"
+                   routerLinkActive="active"
+                   [title]="isCollapsed ? 'Mis Postulaciones' : ''">
                     <i class="fas fa-file-alt" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Mis Postulaciones</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/perfil" routerLinkActive="active">
+                <a routerLink="/dashboard/perfil"
+                   routerLinkActive="active"
+                   [title]="isCollapsed ? 'Mi Perfil' : ''">
                     <i class="fas fa-user-circle" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Mi Perfil</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/examenes" routerLinkActive="active">
+                <a routerLink="/dashboard/examenes"
+                   routerLinkActive="active"
+                   [title]="isCollapsed ? 'Exámenes' : ''">
                     <i class="fas fa-file-alt" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Exámenes</span>
                 </a>
@@ -40,25 +49,37 @@
         <nav class="nav-menu">
             <!-- Enlace al Panel de Administración (solo visible para administradores) -->
             <div class="nav-item" *ngIf="isAdmin">
-                <a routerLink="/admin/dashboard" routerLinkActive="active">
+                <a routerLink="/admin/dashboard"
+                   routerLinkActive="active"
+                   [title]="isCollapsed ? 'Panel de Administración' : ''">
                     <i class="fas fa-user-shield" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Panel de Administración</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/configuracion" routerLinkActive="active">
+                <a routerLink="/dashboard/configuracion"
+                   routerLinkActive="active"
+                   [title]="isCollapsed ? 'Configuración' : ''">
                     <i class="fas fa-cog" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Configuración</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a routerLink="/dashboard/ayuda" routerLinkActive="active">
+                <a routerLink="/dashboard/ayuda"
+                   routerLinkActive="active"
+                   [title]="isCollapsed ? 'Ayuda' : ''">
                     <i class="fas fa-question-circle" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Ayuda</span>
                 </a>
             </div>
             <div class="nav-item">
-                <a href="#" (click)="logout($event)" (keydown.enter)="logout($event)" (keydown.space)="logout($event)" role="button" aria-label="Cerrar sesión">
+                <a href="#"
+                   (click)="logout($event)"
+                   (keydown.enter)="logout($event)"
+                   (keydown.space)="logout($event)"
+                   role="button"
+                   aria-label="Cerrar sesión"
+                   [title]="isCollapsed ? 'Cerrar Sesión' : ''">
                     <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Cerrar Sesión</span>
                 </a>

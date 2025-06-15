@@ -38,27 +38,100 @@
 
     &.collapsed {
         width: var(--nav-width-collapsed);
-        padding: var(--spacing-lg) var(--spacing-sm);
+        padding: var(--spacing-md) var(--spacing-xs);
         background: var(--glass-bg-secondary);
         backdrop-filter: var(--backdrop-blur-strong);
 
         .nav-menu {
             .nav-item {
+                margin-bottom: var(--spacing-xs);
+
                 a {
-                    padding: var(--spacing-md);
+                    padding: var(--spacing-sm);
                     justify-content: center;
+                    min-height: 40px;
+                    width: 100%;
+                    border-radius: var(--radius-lg);
 
                     i {
                         margin-right: 0;
                         transform: translateX(0);
+                        font-size: 1.1rem;
+                        color: var(--color-secondary);
+                        width: auto;
                     }
 
                     span {
                         opacity: 0;
                         transform: translateX(-10px);
                         visibility: hidden;
+                        position: absolute;
+                    }
+
+                    &:hover {
+                        background: var(--glass-bg-light);
+                        transform: var(--transform-hover);
+
+                        i {
+                            color: var(--color-primary);
+                            transform: scale(1.1);
+                        }
+                    }
+
+                    &.active {
+                        background: var(--glass-bg-secondary);
+                        background-image: var(--glass-gradient-overlay);
+                        border-color: var(--border-strong);
+
+                        i {
+                            color: var(--color-primary);
+                        }
+
+                        &::before {
+                            left: -2px;
+                            width: 2px;
+                            height: 16px;
+                        }
                     }
                 }
+            }
+        }
+
+        .section-divider {
+            margin: var(--spacing-md) var(--spacing-xs);
+        }
+
+        /* Tooltip personalizado para estado colapsado */
+        .nav-item a {
+            position: relative;
+
+            &::after {
+                content: attr(title);
+                position: absolute;
+                left: calc(100% + var(--spacing-md));
+                top: 50%;
+                transform: translateY(-50%);
+                background: var(--glass-bg-secondary);
+                backdrop-filter: var(--backdrop-blur-strong);
+                color: var(--color-primary);
+                padding: var(--spacing-xs) var(--spacing-sm);
+                border-radius: var(--radius-md);
+                font-size: 0.75rem;
+                font-weight: 500;
+                white-space: nowrap;
+                opacity: 0;
+                visibility: hidden;
+                transition: var(--transition-normal);
+                pointer-events: none;
+                z-index: var(--z-tooltip);
+                border: 1px solid var(--border-primary);
+                box-shadow: var(--shadow-md);
+            }
+
+            &:hover::after {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(-50%) translateX(4px);
             }
         }
     }
