@@ -1,15 +1,18 @@
-@use 'src/styles/variables' as *;
-@use 'src/styles/responsive' as *;
+/* ===== PROCESO INSCRIPCIÓN - SISTEMA GLASSMORPHISM UNIFICADO ===== */
+/* Migrado al sistema unificado - Eliminando duplicaciones */
+/* Versión: 1.0.0 | Fecha: 2025-01-15 */
+
+@import '../../../../../../../styles/unified-glassmorphism-system';
 
 .inscripcion-process-container {
-  display: flex;
-  flex-direction: column;
+  @extend .glass-layout;
+  @extend .glass-flex;
+  @extend .flex-col;
+
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
   position: relative;
 
-  // Subtle background pattern for consistency with dashboard and contests
   &::before {
     content: '';
     position: fixed;
@@ -26,19 +29,15 @@
 }
 
 .inscripcion-header {
-  background: #374151;
-  color: #f9fafb;
-  padding: 2rem;
+  @include glassmorphism-base('primary', 'medium');
+
+  color: var(--color-primary);
+  padding: var(--spacing-2xl);
   position: relative;
   z-index: 1;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-primary);
+  border-radius: 0;
 
-  // Glassmorphism gradient overlay
   &::before {
     content: '';
     position: absolute;
@@ -46,13 +45,13 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: var(--glass-gradient-overlay);
     pointer-events: none;
   }
 
   .header-content {
-    display: flex;
-    flex-direction: column;
+    @extend .glass-flex;
+    @extend .flex-col;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
@@ -64,54 +63,43 @@
     font-size: 2rem;
     margin: 0;
     font-weight: 700;
-    color: #f9fafb;
+    color: var(--color-primary);
   }
 
   .contest-title {
     font-size: 1.25rem;
-    margin: 0.75rem 0 0;
+    margin: var(--spacing-md) 0 0;
     font-weight: 500;
-    color: #d1d5db;
+    color: var(--color-secondary);
   }
 
   .btn-back {
     position: absolute;
     right: 0;
     top: 0;
-    // CustomButtonComponent will handle glassmorphism styling
   }
 }
 
 .inscripcion-content {
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 2rem;
+  @extend .glass-container;
+  @extend .glass-flex;
+  @extend .flex-col;
+
   flex: 1;
-  display: flex;
-  flex-direction: column;
   min-height: calc(100vh - 150px);
   position: relative;
   z-index: 1;
 }
 
-// Estilos para los pasos
+/* === ESTILOS PARA LOS PASOS === */
 .steps-container {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  position: relative;
-  padding: 2rem;
-  background: #374151;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  @include glassmorphism-card('primary', 'large');
+  @extend .glass-flex;
+  @extend .flex-between;
 
-  // Glassmorphism gradient overlay
+  margin-bottom: var(--spacing-2xl);
+  position: relative;
+
   &::before {
     content: '';
     position: absolute;
@@ -119,9 +107,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: var(--glass-gradient-overlay);
     pointer-events: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   .step-line {
@@ -130,8 +118,8 @@
     left: 4rem;
     right: 4rem;
     height: 3px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
+    background: var(--border-primary);
+    border-radius: var(--radius-xs);
     z-index: 1;
   }
 
@@ -140,17 +128,18 @@
     top: 3rem;
     left: 4rem;
     height: 3px;
-    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-    border-radius: 2px;
+    background: linear-gradient(90deg, var(--color-success) 0%, #059669 100%);
+    border-radius: var(--radius-xs);
     z-index: 2;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width var(--transition-slow);
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
   }
 
   .step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    @extend .glass-flex;
+    @extend .flex-col;
+    @extend .flex-center;
+
     position: relative;
     z-index: 3;
     width: 25%;
@@ -160,82 +149,75 @@
 
       &:hover .step-number {
         transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        box-shadow: var(--shadow-lg);
       }
     }
 
     .step-number {
       width: 3.5rem;
       height: 3.5rem;
-      border-radius: 50%;
-      background: #4b5563;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      background: var(--glass-bg-secondary);
+      border: 2px solid var(--border-primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 0.75rem;
+      margin-bottom: var(--spacing-md);
       font-weight: 700;
-      transition: all 0.3s ease;
-      color: #d1d5db;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(8px);
+      transition: var(--transition-normal);
+      color: var(--color-secondary);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: var(--backdrop-blur-light);
     }
 
     .step-label {
       font-size: 0.875rem;
-      color: #d1d5db;
+      color: var(--color-secondary);
       text-align: center;
-      transition: all 0.3s ease;
+      transition: var(--transition-normal);
       font-weight: 500;
     }
 
     &.active {
       .step-number {
-        border-color: #3b82f6;
-        background: #3b82f6;
-        color: #f9fafb;
+        border-color: var(--color-info);
+        background: var(--color-info);
+        color: var(--color-primary);
         box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
       }
 
       .step-label {
-        color: #3b82f6;
+        color: var(--color-info);
         font-weight: 600;
       }
     }
 
     &.completed {
       .step-number {
-        border-color: #10b981;
-        background: #10b981;
-        color: #f9fafb;
+        border-color: var(--color-success);
+        background: var(--color-success);
+        color: var(--color-primary);
         box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
       }
 
       .step-label {
-        color: #10b981;
+        color: var(--color-success);
         font-weight: 600;
       }
     }
   }
 }
 
-// Estilos para el contenido de los pasos
+/* === ESTILOS PARA EL CONTENIDO DE LOS PASOS === */
 .step-content-container {
-  background: #374151;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 2.5rem;
-  margin-bottom: 2rem;
+  @include glassmorphism-card('primary', 'large');
+  @include glassmorphism-scrollbar;
+
+  margin-bottom: var(--spacing-2xl);
   flex: 1;
   overflow-y: auto;
   position: relative;
 
-  // Glassmorphism gradient overlay
   &::before {
     content: '';
     position: absolute;
@@ -243,9 +225,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: var(--glass-gradient-overlay);
     pointer-events: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   > * {
@@ -259,34 +241,35 @@
 }
 
 .content-section {
-  margin-bottom: 2rem;
+  @extend .glass-spacing-2xl;
 
   h3 {
     font-size: 1.5rem;
     margin-top: 0;
-    margin-bottom: 1.25rem;
-    color: #3b82f6;
+    margin-bottom: var(--spacing-xl);
+    color: var(--color-info);
     font-weight: 700;
   }
 
   .section-description {
-    color: #d1d5db;
-    margin-bottom: 1.5rem;
+    color: var(--color-secondary);
+    margin-bottom: var(--spacing-xl);
     line-height: 1.6;
     font-size: 1rem;
   }
 }
 
-// Estilos para la sección de inscripción provisional
+/* === ESTILOS PARA LA SECCIÓN DE INSCRIPCIÓN PROVISIONAL === */
 .provisional-inscription-section {
-  margin-top: 2rem;
-  padding: 1.5rem;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 8px;
-  backdrop-filter: blur(8px);
+  @include glassmorphism-badge('warning');
+
+  margin-top: var(--spacing-2xl);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-md);
+  backdrop-filter: var(--backdrop-blur-light);
   box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
   position: relative;
+  width: 100%;
 
   &::before {
     content: '';
@@ -297,7 +280,7 @@
     bottom: 0;
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
     pointer-events: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   > * {
@@ -306,30 +289,30 @@
   }
 
   .provisional-alert {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--spacing-xl);
 
     .alert-header {
-      display: flex;
+      @extend .glass-flex;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: var(--spacing-lg);
 
       i {
         font-size: 1.25rem;
-        color: #f59e0b;
-        margin-right: 0.75rem;
+        color: var(--color-warning);
+        margin-right: var(--spacing-md);
       }
 
       span {
         font-size: 1.125rem;
         font-weight: 700;
-        color: #f59e0b;
+        color: var(--color-warning);
       }
     }
 
     p {
-      color: #f9fafb;
+      color: var(--color-primary);
       line-height: 1.6;
-      margin: 0 0 1rem 0;
+      margin: 0 0 var(--spacing-lg) 0;
       font-size: 0.95rem;
 
       strong {
@@ -339,18 +322,19 @@
     }
 
     .warning-note {
-      display: flex;
+      @include glassmorphism-badge('danger');
+      @extend .glass-flex;
+
       align-items: flex-start;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 6px;
-      padding: 1rem;
-      margin-top: 1rem;
+      border-radius: var(--radius-sm);
+      padding: var(--spacing-lg);
+      margin-top: var(--spacing-lg);
+      width: 100%;
 
       i {
         font-size: 1rem;
-        color: #ef4444;
-        margin-right: 0.75rem;
+        color: var(--color-danger);
+        margin-right: var(--spacing-md);
         margin-top: 0.125rem;
         flex-shrink: 0;
       }
@@ -365,8 +349,7 @@
   }
 
   .provisional-checkbox {
-    margin-top: 1.5rem;
-    // CustomCheckboxComponent will handle glassmorphism styling
+    margin-top: var(--spacing-xl);
   }
 }
 
@@ -429,50 +412,30 @@
   }
 }
 
-// Estilos para los términos y condiciones
+/* === ESTILOS PARA LOS TÉRMINOS Y CONDICIONES === */
 .terms-container {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 2rem;
-  margin-bottom: 2rem;
+  @include glassmorphism-base('light', 'light');
+  @include glassmorphism-scrollbar;
+
+  padding: var(--spacing-2xl);
+  margin-bottom: var(--spacing-2xl);
   max-height: 350px;
   overflow-y: auto;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-
-  // Custom scrollbar
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.4);
-    }
-  }
+  border-radius: var(--radius-md);
 
   p {
     margin-top: 0;
-    color: #f9fafb;
+    color: var(--color-primary);
     line-height: 1.6;
     font-size: 1rem;
   }
 
   ol {
-    padding-left: 1.5rem;
-    color: #f9fafb;
+    padding-left: var(--spacing-xl);
+    color: var(--color-primary);
 
     li {
-      margin-bottom: 1rem;
+      margin-bottom: var(--spacing-lg);
       line-height: 1.6;
       font-size: 0.95rem;
     }
@@ -480,26 +443,26 @@
 }
 
 .terms-acceptance {
-  margin-top: 2rem;
-  // CustomCheckboxComponent will handle glassmorphism styling
+  margin-top: var(--spacing-2xl);
 }
 
-// Estilos para la confirmación de lectura de bases
+/* === ESTILOS PARA LA CONFIRMACIÓN DE LECTURA DE BASES === */
 .confirmation-question-container {
-  margin-bottom: 2rem;
+  margin-bottom: var(--spacing-2xl);
 }
 
 .question-box {
-  display: flex;
+  @include glassmorphism-badge('info');
+  @extend .glass-flex;
+
   align-items: flex-start;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  border-radius: 8px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  backdrop-filter: blur(8px);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2xl);
+  margin-bottom: var(--spacing-2xl);
+  backdrop-filter: var(--backdrop-blur-light);
   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
   position: relative;
+  width: 100%;
 
   &::before {
     content: '';
@@ -510,7 +473,7 @@
     bottom: 0;
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
     pointer-events: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   > * {
@@ -519,12 +482,12 @@
   }
 
   .question-icon {
-    margin-right: 1.5rem;
+    margin-right: var(--spacing-xl);
     flex-shrink: 0;
 
     i {
       font-size: 32px;
-      color: #3b82f6;
+      color: var(--color-info);
     }
   }
 
@@ -532,15 +495,15 @@
     flex: 1;
 
     h4 {
-      margin: 0 0 1rem 0;
-      color: #3b82f6;
+      margin: 0 0 var(--spacing-lg) 0;
+      color: var(--color-info);
       font-size: 1.25rem;
       font-weight: 700;
     }
 
     .question-text {
       margin: 0;
-      color: #f9fafb;
+      color: var(--color-primary);
       line-height: 1.6;
       font-size: 1rem;
       font-weight: 500;
@@ -554,12 +517,12 @@
 }
 
 .response-options {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 2rem;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  @include glassmorphism-base('light', 'light');
+
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2xl);
+  backdrop-filter: var(--backdrop-blur-light);
+  box-shadow: var(--shadow-md);
   position: relative;
 
   &::before {
@@ -569,9 +532,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: var(--glass-gradient-overlay);
     pointer-events: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   > * {
@@ -581,10 +544,10 @@
 }
 
 .radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  @extend .glass-flex;
+  @extend .flex-col;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
 }
 
 .radio-option {
@@ -679,16 +642,16 @@
 
 .validation-message,
 .warning-message {
-  display: flex;
+  @extend .glass-flex;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  margin-top: 1rem;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-lg);
+  backdrop-filter: var(--backdrop-blur-light);
+  box-shadow: var(--shadow-md);
 
   i {
-    margin-right: 0.75rem;
+    margin-right: var(--spacing-md);
     font-size: 20px;
     flex-shrink: 0;
   }
@@ -701,22 +664,20 @@
 }
 
 .validation-message {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  @include glassmorphism-badge('danger');
   color: #fca5a5;
 
   i {
-    color: #ef4444;
+    color: var(--color-danger);
   }
 }
 
 .warning-message {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  @include glassmorphism-badge('warning');
   color: #fcd34d;
 
   i {
-    color: #f59e0b;
+    color: var(--color-warning);
   }
 }
 
