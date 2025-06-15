@@ -39,9 +39,12 @@
   - **Archivos:** `unified-glassmorphism-mixins.scss`, `unified-glassmorphism-system.scss`
   - **Beneficios:** 15 mixins consolidados, clases utilitarias, accesibilidad integrada
   
-- [ ] **1.1.5** Migrar componente concursos al sistema unificado
+- [x] **1.1.5** Migrar componente concursos al sistema unificado
   - Archivos: `concursos.component.scss`
   - Tiempo estimado: 2 horas
+  - ✅ **COMPLETADO:** Componente migrado al sistema unificado
+  - **Cambios:** Eliminadas variables duplicadas, aplicados mixins unificados, mejorada accesibilidad
+  - **Reducción:** ~150 líneas de CSS duplicado eliminadas
   
 - [ ] **1.1.6** Migrar componente postulaciones al sistema unificado
   - Archivos: `postulaciones.component.scss`
@@ -264,6 +267,7 @@
 - ✅ **1.1.2 COMPLETADO:** Inventario variables duplicadas - 39.6% duplicación total, 42 elementos duplicados
 - ✅ **1.1.3 COMPLETADO:** Sistema unificado diseñado - 0 duplicaciones, WCAG AA integrado, -8.7KB bundle
 - ✅ **1.1.4 COMPLETADO:** Mixins unificados creados - 15 mixins consolidados, clases utilitarias, accesibilidad
+- ✅ **1.1.5 COMPLETADO:** Componente concursos migrado - ~150 líneas CSS eliminadas, sistema unificado aplicado
 
 ---
 
