@@ -1,0 +1,502 @@
+/* ===== SISTEMA GLASSMORPHISM UNIFICADO - MIXINS ===== */
+/* Mixins consolidados que eliminan duplicaciones y unifican funcionalidad */
+/* Versión: 1.0.0 | Fecha: 2025-01-15 */
+
+@import './unified-glassmorphism-variables';
+
+/* === MIXIN BASE GLASSMORPHISM === */
+@mixin glassmorphism-base($variant: 'primary', $blur: 'medium') {
+  // Background según variante
+  @if $variant == 'primary' {
+    background: var(--glass-bg-primary);
+  } @else if $variant == 'secondary' {
+    background: var(--glass-bg-secondary);
+  } @else if $variant == 'light' {
+    background: var(--glass-bg-light);
+  } @else if $variant == 'dark' {
+    background: var(--glass-bg-dark);
+  }
+
+  // Gradiente overlay siempre presente
+  background-image: var(--glass-gradient-overlay);
+  
+  // Border glassmorphism
+  border: 1px solid var(--border-primary);
+  
+  // Backdrop filter según intensidad
+  @if $blur == 'light' {
+    backdrop-filter: var(--backdrop-blur-light);
+    -webkit-backdrop-filter: var(--backdrop-blur-light);
+  } @else if $blur == 'strong' {
+    backdrop-filter: var(--backdrop-blur-strong);
+    -webkit-backdrop-filter: var(--backdrop-blur-strong);
+  } @else {
+    backdrop-filter: var(--backdrop-blur-medium);
+    -webkit-backdrop-filter: var(--backdrop-blur-medium);
+  }
+  
+  // Propiedades base
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md), var(--shadow-inset);
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+/* === MIXIN GLASSMORPHISM HOVER === */
+@mixin glassmorphism-hover($transform: true, $glow: false) {
+  &:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-lg);
+    
+    @if $transform {
+      transform: var(--transform-hover);
+    }
+    
+    @if $glow {
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+    }
+  }
+
+  &:active {
+    background: var(--glass-bg-active);
+    transform: var(--transform-active);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM FOCUS === */
+@mixin glassmorphism-focus {
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM CARD === */
+@mixin glassmorphism-card($variant: 'primary', $padding: 'normal', $hover: true) {
+  @include glassmorphism-base($variant);
+  
+  @if $hover {
+    @include glassmorphism-hover;
+  }
+  
+  @include glassmorphism-focus;
+
+  // Padding según tamaño
+  @if $padding == 'small' {
+    padding: var(--card-padding-sm);
+  } @else if $padding == 'large' {
+    padding: var(--spacing-2xl);
+  } @else {
+    padding: var(--card-padding);
+  }
+
+  margin-bottom: var(--card-margin);
+  border-radius: var(--card-border-radius);
+}
+
+/* === MIXIN GLASSMORPHISM BUTTON === */
+@mixin glassmorphism-button($variant: 'primary', $size: 'normal') {
+  @include glassmorphism-base('light', 'light');
+  @include glassmorphism-hover(true, true);
+  @include glassmorphism-focus;
+
+  // Tamaño del botón
+  @if $size == 'small' {
+    padding: var(--button-padding-sm);
+    height: var(--button-height-sm);
+    font-size: 0.875rem;
+  } @else if $size == 'large' {
+    padding: var(--button-padding-lg);
+    height: var(--button-height-lg);
+    font-size: 1.125rem;
+  } @else {
+    padding: var(--button-padding);
+    height: var(--button-height);
+    font-size: 1rem;
+  }
+
+  // Estilo del botón
+  border-radius: var(--button-border-radius);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+
+  // Variantes de color
+  @if $variant == 'primary' {
+    background: rgba(59, 130, 246, 0.8);
+    color: var(--color-primary);
+    border-color: rgba(59, 130, 246, 0.5);
+    
+    &:hover {
+      background: rgba(59, 130, 246, 0.9);
+      transform: var(--transform-button-hover);
+      box-shadow: var(--shadow-lg), 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+  } @else if $variant == 'success' {
+    background: rgba(76, 175, 80, 0.8);
+    color: var(--color-primary);
+    border-color: rgba(76, 175, 80, 0.5);
+    
+    &:hover {
+      background: rgba(76, 175, 80, 0.9);
+      transform: var(--transform-button-hover);
+      box-shadow: var(--shadow-lg), 0 4px 12px rgba(76, 175, 80, 0.3);
+    }
+  } @else if $variant == 'warning' {
+    background: rgba(245, 158, 11, 0.8);
+    color: var(--color-primary);
+    border-color: rgba(245, 158, 11, 0.5);
+    
+    &:hover {
+      background: rgba(245, 158, 11, 0.9);
+      transform: var(--transform-button-hover);
+      box-shadow: var(--shadow-lg), 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+  } @else if $variant == 'danger' {
+    background: rgba(239, 68, 68, 0.8);
+    color: var(--color-primary);
+    border-color: rgba(239, 68, 68, 0.5);
+    
+    &:hover {
+      background: rgba(239, 68, 68, 0.9);
+      transform: var(--transform-button-hover);
+      box-shadow: var(--shadow-lg), 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+  } @else if $variant == 'stroked' {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: var(--border-primary);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-hover);
+      transform: var(--transform-button-hover);
+    }
+  }
+
+  // Estados especiales
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none !important;
+    
+    &:hover {
+      transform: none !important;
+      box-shadow: var(--shadow-md);
+    }
+  }
+}
+
+/* === MIXIN GLASSMORPHISM INPUT === */
+@mixin glassmorphism-input($size: 'normal') {
+  @include glassmorphism-base('light', 'light');
+  @include glassmorphism-focus;
+
+  // Tamaño del input
+  @if $size == 'small' {
+    padding: var(--spacing-sm) var(--spacing-md);
+    height: var(--button-height-sm);
+    font-size: 0.875rem;
+  } @else if $size == 'large' {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    height: var(--button-height-lg);
+    font-size: 1.125rem;
+  } @else {
+    padding: var(--input-padding);
+    height: var(--input-height);
+    font-size: 1rem;
+  }
+
+  background: var(--input-background);
+  color: var(--color-primary);
+  border-radius: var(--input-border-radius);
+  transition: var(--transition-fast);
+  width: 100%;
+
+  &::placeholder {
+    color: var(--color-muted);
+  }
+
+  &:hover {
+    border-color: var(--border-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--glass-bg-light);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM BADGE === */
+@mixin glassmorphism-badge($color: 'info') {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--badge-padding);
+  border-radius: var(--badge-border-radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  
+  @if $color == 'info' {
+    background: var(--badge-blue);
+    color: var(--color-info);
+    border-color: rgba(59, 130, 246, 0.3);
+  } @else if $color == 'success' {
+    background: var(--badge-green);
+    color: var(--color-success);
+    border-color: rgba(76, 175, 80, 0.3);
+  } @else if $color == 'warning' {
+    background: var(--badge-orange);
+    color: var(--color-warning);
+    border-color: rgba(245, 158, 11, 0.3);
+  } @else if $color == 'danger' {
+    background: var(--badge-red);
+    color: var(--color-danger);
+    border-color: rgba(239, 68, 68, 0.3);
+  } @else if $color == 'gray' {
+    background: var(--badge-gray);
+    color: var(--color-tertiary);
+    border-color: rgba(156, 163, 175, 0.3);
+  }
+  
+  &:hover {
+    transform: var(--transform-hover);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM TABLE === */
+@mixin glassmorphism-table {
+  @include glassmorphism-base;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  
+  thead {
+    background: var(--table-header-bg);
+    
+    th {
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: var(--color-primary);
+      border-bottom: 1px solid var(--border-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      padding: var(--spacing-md) var(--spacing-lg);
+      text-align: left;
+    }
+  }
+
+  tbody {
+    tr {
+      transition: var(--transition-fast);
+      border-bottom: 1px solid var(--table-border);
+      
+      &:hover {
+        background: var(--table-row-hover);
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      td {
+        color: var(--color-secondary);
+        font-size: 0.875rem;
+        padding: var(--spacing-md) var(--spacing-lg);
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+/* === MIXIN GLASSMORPHISM MODAL === */
+@mixin glassmorphism-modal {
+  @include glassmorphism-base('primary', 'strong');
+  border-radius: var(--modal-border-radius);
+  padding: var(--modal-padding);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  
+  // Backdrop
+  &::backdrop {
+    background: var(--modal-backdrop);
+    backdrop-filter: var(--backdrop-blur-light);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM NAVIGATION === */
+@mixin glassmorphism-navigation {
+  @include glassmorphism-base('primary', 'medium');
+  width: var(--nav-width);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-fixed);
+  padding: var(--nav-padding);
+  border-right: 1px solid var(--border-primary);
+  border-radius: 0;
+  
+  .nav-item {
+    display: flex;
+    align-items: center;
+    height: var(--nav-item-height);
+    padding: 0 var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    color: var(--color-secondary);
+    text-decoration: none;
+    transition: var(--transition-fast);
+    
+    &:hover {
+      background: var(--glass-bg-hover);
+      color: var(--color-primary);
+      transform: var(--transform-hover);
+    }
+    
+    &.active {
+      background: var(--glass-bg-secondary);
+      color: var(--color-primary);
+      border-left: 3px solid var(--color-info);
+    }
+  }
+}
+
+/* === MIXIN GLASSMORPHISM SCROLLBAR === */
+@mixin glassmorphism-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+/* === MIXIN GLASSMORPHISM LOADING === */
+@mixin glassmorphism-loading {
+  @include glassmorphism-base('light', 'light');
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+  text-align: center;
+  color: var(--color-secondary);
+  
+  .loading-spinner {
+    margin-right: var(--spacing-md);
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+}
+
+/* === MIXIN GLASSMORPHISM EMPTY STATE === */
+@mixin glassmorphism-empty-state {
+  @include glassmorphism-base('light');
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  color: var(--color-secondary);
+  
+  .empty-icon {
+    font-size: 3rem;
+    color: var(--color-tertiary);
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .empty-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+  }
+  
+  .empty-description {
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-xl);
+    max-width: 400px;
+  }
+}
+
+/* === MIXIN RESPONSIVE GLASSMORPHISM === */
+@mixin glassmorphism-responsive {
+  @media (max-width: 768px) {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+    border-radius: var(--radius-md);
+    backdrop-filter: var(--backdrop-blur-light);
+    
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* === MIXIN ACCESSIBILITY === */
+@mixin glassmorphism-accessibility {
+  /* High Contrast Support */
+  @media (prefers-contrast: high) {
+    border-width: 2px;
+    border-color: var(--border-strong);
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    transform: none !important;
+    
+    &:hover {
+      transform: none !important;
+    }
+  }
+  
+  /* Focus visible para navegación por teclado */
+  &:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}

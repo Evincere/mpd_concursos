@@ -13,7 +13,7 @@ import { takeUntil } from 'rxjs/operators';
 import { AdminInscriptionsService, InscriptionStats } from '../../../../../../core/services/admin/admin-inscriptions.service';
 import { AdminDashboardService, ActivityItem } from '../../../../../../core/services/admin/admin-dashboard.service';
 import { StatCardComponent } from '../../../admin-dashboard/components/stat-card/stat-card.component';
-import { StatsChartComponent, ChartData } from '../../../admin-dashboard/components/stats-chart/stats-chart.component';
+import { StatsChartComponent, ApexChartData } from '../../../admin-dashboard/components/stats-chart/stats-chart.component';
 import { ActivityFeedComponent } from '../../../admin-dashboard/components/activity-feed/activity-feed.component';
 
 @Component({
@@ -41,9 +41,9 @@ export class InscripcionesDashboardComponent implements OnInit, OnDestroy {
   recentActivities: ActivityItem[] = [];
 
   // Datos para gráficos
-  statusChartData!: ChartData;
-  contestChartData!: ChartData;
-  departmentChartData!: ChartData;
+  statusChartData!: ApexChartData;
+  contestChartData!: ApexChartData;
+  departmentChartData!: ApexChartData;
 
   // Pestaña activa
   activeTab = 0;
@@ -97,55 +97,43 @@ export class InscripcionesDashboardComponent implements OnInit, OnDestroy {
   }
 
   prepareChartData(stats: InscriptionStats): void {
-    // Gráfico de inscripciones por estado
+    // Gráfico de inscripciones por estado (donut chart)
     this.statusChartData = {
       labels: ['Pendientes', 'Aprobadas', 'Rechazadas', 'Canceladas', 'En Proceso'],
-      datasets: [{
-        label: 'Inscripciones por Estado',
-        data: [
-          stats.pending,
-          stats.approved,
-          stats.rejected,
-          stats.cancelled,
-          stats.inProcess
-        ],
-        backgroundColor: [
-          '#ff9800', // Naranja - Pendientes
-          '#4caf50', // Verde - Aprobadas
-          '#f44336', // Rojo - Rechazadas
-          '#9e9e9e', // Gris - Canceladas
-          '#2196f3'  // Azul - En Proceso
-        ],
-        borderWidth: 0
-      }]
+      series: [
+        stats.pending,
+        stats.approved,
+        stats.rejected,
+        stats.cancelled,
+        stats.inProcess
+      ],
+      colors: [
+        '#ff9800', // Naranja - Pendientes
+        '#4caf50', // Verde - Aprobadas
+        '#f44336', // Rojo - Rechazadas
+        '#9e9e9e', // Gris - Canceladas
+        '#2196f3'  // Azul - En Proceso
+      ]
     };
 
-    // Gráfico de inscripciones por concurso
+    // Gráfico de inscripciones por concurso (pie chart)
     const contestLabels = Object.keys(stats.byContest);
     const contestData = contestLabels.map(contest => stats.byContest[contest]);
 
     this.contestChartData = {
       labels: contestLabels,
-      datasets: [{
-        label: 'Inscripciones por Concurso',
-        data: contestData,
-        backgroundColor: this.generateColors(contestLabels.length),
-        borderWidth: 0
-      }]
+      series: contestData,
+      colors: this.generateColors(contestLabels.length)
     };
 
-    // Gráfico de inscripciones por departamento
+    // Gráfico de inscripciones por departamento (pie chart)
     const departmentLabels = Object.keys(stats.byDepartment);
     const departmentData = departmentLabels.map(dept => stats.byDepartment[dept]);
 
     this.departmentChartData = {
       labels: departmentLabels,
-      datasets: [{
-        label: 'Inscripciones por Departamento',
-        data: departmentData,
-        backgroundColor: this.generateColors(departmentLabels.length, true),
-        borderWidth: 0
-      }]
+      series: departmentData,
+      colors: this.generateColors(departmentLabels.length, true)
     };
   }
 

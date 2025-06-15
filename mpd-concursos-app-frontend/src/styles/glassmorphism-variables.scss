@@ -123,6 +123,7 @@
   --color-contest: #4CAF50;
   --color-contest-hover: #45a049;
   --color-contest-active: #3d8b40;
+  --contests-theme-color: #4CAF50;
   
   /* Semantic colors */
   --color-success: #4CAF50;
@@ -255,6 +256,10 @@
   --color-surface: var(--glass-background-secondary);
   --color-surface-light: var(--glass-background-light);
   --color-error: var(--color-danger);
+
+  /* Focus ring for accessibility */
+  --focus-ring: rgba(59, 130, 246, 0.3);
+  --focus-color-secondary: rgba(59, 130, 246, 0.2);
 
   /* RGB versions for rgba() usage */
   --color-primary-rgb: 59, 130, 246;

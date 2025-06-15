@@ -393,16 +393,25 @@
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   overflow: hidden;
 
-  /* ===== ENHANCED CALENDAR HEADER ===== */
+  /* ===== ENHANCED CALENDAR HEADER WITH INTEGRATED LEGEND ===== */
 
-  .calendar-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    /* Enhanced glassmorphism for header */
+  .calendar-header-container {
+    /* Container for header and integrated legend */
     background: linear-gradient(135deg,
       rgba(76, 175, 80, 0.15) 0%,
       rgba(255, 255, 255, 0.08) 100%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    /* Remove individual background since it's handled by container */
+    background: transparent;
 
     .weekday {
       padding: 1rem 0.75rem;
@@ -424,6 +433,73 @@
 
       &:hover {
         background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+      }
+    }
+  }
+
+  /* ===== INTEGRATED COMPACT LEGEND ===== */
+
+  .calendar-legend-integrated {
+    display: flex;
+    justify-content: center;
+    padding: 0 1rem;
+
+    .legend-compact-items {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      .legend-compact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.8rem;
+        font-weight: 500;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.08);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .legend-compact-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex-shrink: 0;
+          box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .legend-compact-text {
+          color: #f9fafb;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+          white-space: nowrap;
+        }
+
+        /* Priority-specific colors */
+        &.high-priority .legend-compact-dot {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+          box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+        }
+
+        &.medium-priority .legend-compact-dot {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+        }
+
+        &.low-priority .legend-compact-dot {
+          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+          box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+        }
       }
     }
   }
@@ -678,103 +754,7 @@
   }
 }
 
-/* ===== ENHANCED GLASSMORPHISM LEGEND ===== */
 
-.calendar-legend {
-  margin-top: 2rem;
-  /* Premium glassmorphism for legend */
-  background: linear-gradient(135deg,
-    rgba(55, 65, 81, 0.8) 0%,
-    rgba(75, 85, 99, 0.9) 100%);
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(76, 175, 80, 0.08) 50%, rgba(255, 255, 255, 0.06) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-
-  .legend-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-
-    .legend-title {
-      margin: 0;
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #f9fafb;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    }
-
-    .legend-icon {
-      font-size: 1.25rem;
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-    }
-  }
-
-  .legend-items {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem;
-      border-radius: 6px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &:hover {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(76, 175, 80, 0.05) 100%);
-      }
-
-      .legend-badge {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        .legend-dot {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-
-        .priority-icon {
-          font-size: 1rem;
-          filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-        }
-      }
-
-      .legend-text {
-        color: #d1d5db;
-        font-size: 0.875rem;
-        font-weight: 500;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      }
-
-      /* Priority-specific styling */
-      &.high-priority .legend-dot {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.8) 0%, rgba(239, 68, 68, 1) 100%);
-      }
-
-      &.medium-priority .legend-dot {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.8) 0%, rgba(245, 158, 11, 1) 100%);
-      }
-
-      &.low-priority .legend-dot {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.8) 0%, rgba(16, 185, 129, 1) 100%);
-      }
-    }
-  }
-}
 
 /* ===== RESPONSIVE DESIGN GLASSMORPHISM ===== */
 
@@ -887,6 +867,29 @@
   }
 
   .calendar {
+    .calendar-header-container {
+      gap: 0.5rem;
+      padding-bottom: 0.5rem;
+
+      .calendar-legend-integrated {
+        padding: 0 0.5rem;
+
+        .legend-compact-items {
+          gap: 1rem;
+
+          .legend-compact-item {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+
+            .legend-compact-dot {
+              width: 6px;
+              height: 6px;
+            }
+          }
+        }
+      }
+    }
+
     .calendar-header {
       .weekday {
         padding: 0.5rem 0.25rem;
@@ -943,27 +946,7 @@
     }
   }
 
-  .calendar-legend {
-    padding: 1rem;
 
-    .legend-header {
-      .legend-title {
-        font-size: 1rem;
-      }
-    }
-
-    .legend-items {
-      gap: 0.5rem;
-
-      .legend-item {
-        padding: 0.375rem;
-
-        .legend-text {
-          font-size: 0.8rem;
-        }
-      }
-    }
-  }
 }
 
 @media (max-width: 480px) {
@@ -972,6 +955,28 @@
   }
 
   .calendar {
+    .calendar-header-container {
+      .calendar-legend-integrated {
+        .legend-compact-items {
+          gap: 0.5rem;
+
+          .legend-compact-item {
+            padding: 0.125rem 0.25rem;
+            font-size: 0.6875rem;
+
+            .legend-compact-text {
+              display: none; /* Hide text on very small screens, show only dots */
+            }
+
+            .legend-compact-dot {
+              width: 8px;
+              height: 8px;
+            }
+          }
+        }
+      }
+    }
+
     .calendar-header {
       .weekday {
         .weekday-text {

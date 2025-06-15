@@ -1,56 +1,278 @@
-@use 'src/styles/variables' as *;
+/* Stats Chart Component - Sistema Glassmorphism */
+@import 'src/styles/glassmorphism-system';
+
+/* ApexCharts styling - NO animation issues */
+:host {
+  display: block;
+  height: 100%;
+}
 
 .chart-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  @include glassmorphism-card('primary', 'normal');
   height: 100%;
   display: flex;
   flex-direction: column;
-  
+  transition: opacity var(--transition-normal), box-shadow var(--transition-normal);
+  overflow: hidden;
+  position: relative;
+
+  /* === CRITICAL FIX: DISABLE PROBLEMATIC ANIMATIONS ONLY === */
+  animation: none !important;
+
+  /* Subtle glow effect */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 100%);
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+  }
+
+  &:hover {
+    @include glassmorphism-hover;
+    /* Safe hover effect - enhanced shadow only, no transform */
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      0 4px 20px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  /* Focus state for accessibility */
+  &:focus-within {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow-lg);
+  }
+
   mat-card-header {
-    padding: 1rem 1rem 0.5rem;
+    padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md);
     display: flex;
     justify-content: space-between;
-    
+    background: transparent;
+    position: relative;
+    z-index: 1;
+
     mat-card-title {
-      font-size: $font-size-lg;
-      font-weight: 500;
+      font-size: 1.125rem;
+      font-weight: 600;
       margin: 0;
+      color: var(--text-primary) !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
-    
+
     mat-card-subtitle {
-      font-size: $font-size-sm;
-      color: $color-text-secondary;
+      font-size: 0.875rem;
+      color: var(--text-secondary) !important;
       margin: 0.25rem 0 0 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
-    
+
     .chart-actions {
       margin-left: auto;
     }
   }
-  
+
   mat-card-content {
     flex: 1;
-    padding: 0.5rem 1rem 1rem;
+    padding: var(--spacing-md) var(--spacing-xl) var(--spacing-xl);
     position: relative;
-    
+    background: transparent;
+    z-index: 1;
+    min-height: 200px; /* Altura mínima para evitar gráficos cortados */
+
     .chart-container {
       width: 100%;
       height: 100%;
+      position: relative;
+      min-height: inherit; /* Heredar altura mínima */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      /* Chart wrapper for proper sizing */
+      .chart-wrapper {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+
+        /* ApexCharts specific styling */
+        apx-chart {
+          width: 100%;
+          height: 100%;
+          display: block;
+
+          /* Ensure ApexCharts respects glassmorphism theme */
+          ::ng-deep {
+            .apexcharts-canvas {
+              background: transparent !important;
+            }
+
+            .apexcharts-legend {
+              color: var(--text-primary) !important;
+            }
+
+            .apexcharts-title-text {
+              fill: var(--text-primary) !important;
+            }
+
+            .apexcharts-subtitle-text {
+              fill: var(--text-secondary) !important;
+            }
+
+            .apexcharts-tooltip {
+              background: var(--glass-background) !important;
+              border: 1px solid var(--border-color) !important;
+              backdrop-filter: blur(10px) !important;
+            }
+
+            /* Ensure SVG has proper dimensions */
+            svg {
+              width: 100% !important;
+              height: 100% !important;
+            }
+          }
+        }
+      }
+    }
+
+    /* Loading state styling */
+    .chart-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 200px;
+
+      .loading-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-md);
+
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid var(--border-color);
+          border-top: 3px solid var(--primary-color);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        p {
+          color: var(--text-secondary);
+          font-size: 0.9rem;
+          margin: 0;
+        }
+      }
+    }
+
+    /* Error state styling */
+    .chart-error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 200px;
+
+      .error-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--spacing-sm);
+        color: var(--text-secondary);
+
+        mat-icon {
+          font-size: 2rem;
+          width: 2rem;
+          height: 2rem;
+          opacity: 0.6;
+        }
+
+        p {
+          font-size: 0.9rem;
+          margin: 0;
+          text-align: center;
+        }
+      }
+    }
+
+    /* Spinner animation */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   }
 }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
+/* Enhanced Accessibility Support */
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
   .chart-card {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    
+    border-width: 2px;
+    border-color: var(--border-high-contrast);
+
+    &:hover,
+    &:focus-within {
+      border-color: var(--border-high-contrast-hover);
+      background: var(--glass-background-high-contrast);
+    }
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .chart-card {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    &:hover {
+      transform: none !important;
+    }
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .chart-card {
+    /* Reduce blur for better mobile performance */
+    backdrop-filter: blur(6px);
+
+    /* Simplify hover effects on mobile */
+    &:hover {
+      transform: translateY(-1px);
+    }
+
     mat-card-header {
-      mat-card-subtitle {
-        color: $color-text-secondary-dark;
+      padding: var(--spacing-lg);
+
+      mat-card-title {
+        font-size: 1rem;
       }
+
+      mat-card-subtitle {
+        font-size: 0.8rem;
+      }
+    }
+
+    mat-card-content {
+      padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
     }
   }
 }

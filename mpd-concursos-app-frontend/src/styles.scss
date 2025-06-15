@@ -2959,3 +2959,16 @@ app-custom-select .custom-select,
 app-custom-select .custom-select-container {
   overflow: visible !important;
 }
+
+/* ===== APEXCHARTS GLOBAL STYLING ===== */
+/* Global styling for ApexCharts components */
+
+/* ApexCharts glassmorphism integration */
+app-stats-chart {
+  display: block;
+  height: 100%;
+
+  apx-chart {
+    height: 100%;
+  }
+}

@@ -64,7 +64,7 @@
               <div class="chart-container">
                 <app-stats-chart
                   title="Concursos por Estado"
-                  [chartType]="'doughnut'"
+                  [chartType]="'donut'"
                   [chartData]="statusChartData"
                   height="300px"
                 ></app-stats-chart>
@@ -166,7 +166,7 @@
                         <ng-container *ngFor="let dept of departmentChartData.labels; let i = index">
                           <div *ngIf="i < 5" class="stats-detail-item">
                             <span class="detail-label">{{dept}}:</span>
-                            <span class="detail-value">{{departmentChartData.datasets[0].data[i]}}</span>
+                            <span class="detail-value">{{departmentChartData.series[i]}}</span>
                           </div>
                         </ng-container>
                       </div>

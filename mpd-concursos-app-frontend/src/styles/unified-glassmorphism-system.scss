@@ -1,0 +1,347 @@
+/* ===== SISTEMA GLASSMORPHISM UNIFICADO ===== */
+/* Sistema consolidado que reemplaza todos los sistemas anteriores */
+/* Versión: 1.0.0 | Fecha: 2025-01-15 */
+
+/* === IMPORTACIONES PRINCIPALES === */
+@import './unified-glassmorphism-variables';
+@import './unified-glassmorphism-mixins';
+
+/* === CLASES UTILITARIAS GLASSMORPHISM === */
+
+/* Clases base para aplicar glassmorphism */
+.glass-card {
+  @include glassmorphism-card;
+}
+
+.glass-card-light {
+  @include glassmorphism-card('light');
+}
+
+.glass-card-secondary {
+  @include glassmorphism-card('secondary');
+}
+
+.glass-card-no-hover {
+  @include glassmorphism-card('primary', 'normal', false);
+}
+
+/* Clases de botones glassmorphism */
+.glass-btn {
+  @include glassmorphism-button;
+}
+
+.glass-btn-primary {
+  @include glassmorphism-button('primary');
+}
+
+.glass-btn-success {
+  @include glassmorphism-button('success');
+}
+
+.glass-btn-warning {
+  @include glassmorphism-button('warning');
+}
+
+.glass-btn-danger {
+  @include glassmorphism-button('danger');
+}
+
+.glass-btn-stroked {
+  @include glassmorphism-button('stroked');
+}
+
+.glass-btn-sm {
+  @include glassmorphism-button('primary', 'small');
+}
+
+.glass-btn-lg {
+  @include glassmorphism-button('primary', 'large');
+}
+
+/* Clases de inputs glassmorphism */
+.glass-input {
+  @include glassmorphism-input;
+}
+
+.glass-input-sm {
+  @include glassmorphism-input('small');
+}
+
+.glass-input-lg {
+  @include glassmorphism-input('large');
+}
+
+/* Clases de badges glassmorphism */
+.glass-badge {
+  @include glassmorphism-badge;
+}
+
+.glass-badge-success {
+  @include glassmorphism-badge('success');
+}
+
+.glass-badge-warning {
+  @include glassmorphism-badge('warning');
+}
+
+.glass-badge-danger {
+  @include glassmorphism-badge('danger');
+}
+
+.glass-badge-gray {
+  @include glassmorphism-badge('gray');
+}
+
+/* Clases de tabla glassmorphism */
+.glass-table {
+  @include glassmorphism-table;
+}
+
+/* Clases de navegación glassmorphism */
+.glass-nav {
+  @include glassmorphism-navigation;
+}
+
+/* Clases de modal glassmorphism */
+.glass-modal {
+  @include glassmorphism-modal;
+}
+
+/* Clases de loading glassmorphism */
+.glass-loading {
+  @include glassmorphism-loading;
+}
+
+/* Clases de empty state glassmorphism */
+.glass-empty {
+  @include glassmorphism-empty-state;
+}
+
+/* Clases de scrollbar glassmorphism */
+.glass-scrollbar {
+  @include glassmorphism-scrollbar;
+}
+
+/* === CLASES DE LAYOUT === */
+
+/* Layout principal con glassmorphism */
+.glass-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  color: var(--color-primary);
+}
+
+/* Container principal */
+.glass-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--content-padding);
+}
+
+/* Grid glassmorphism */
+.glass-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+  
+  &.grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  &.grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  &.grid-4 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+/* Flex glassmorphism */
+.glass-flex {
+  display: flex;
+  gap: var(--spacing-lg);
+  
+  &.flex-col {
+    flex-direction: column;
+  }
+  
+  &.flex-center {
+    align-items: center;
+    justify-content: center;
+  }
+  
+  &.flex-between {
+    justify-content: space-between;
+  }
+  
+  &.flex-wrap {
+    flex-wrap: wrap;
+  }
+}
+
+/* === CLASES DE ESPACIADO === */
+
+.glass-spacing {
+  &-xs { margin-bottom: var(--spacing-xs); }
+  &-sm { margin-bottom: var(--spacing-sm); }
+  &-md { margin-bottom: var(--spacing-md); }
+  &-lg { margin-bottom: var(--spacing-lg); }
+  &-xl { margin-bottom: var(--spacing-xl); }
+  &-2xl { margin-bottom: var(--spacing-2xl); }
+  &-3xl { margin-bottom: var(--spacing-3xl); }
+}
+
+.glass-padding {
+  &-xs { padding: var(--spacing-xs); }
+  &-sm { padding: var(--spacing-sm); }
+  &-md { padding: var(--spacing-md); }
+  &-lg { padding: var(--spacing-lg); }
+  &-xl { padding: var(--spacing-xl); }
+  &-2xl { padding: var(--spacing-2xl); }
+  &-3xl { padding: var(--spacing-3xl); }
+}
+
+/* === CLASES DE TEXTO === */
+
+.glass-text {
+  &-primary { color: var(--color-primary); }
+  &-secondary { color: var(--color-secondary); }
+  &-tertiary { color: var(--color-tertiary); }
+  &-muted { color: var(--color-muted); }
+  &-success { color: var(--color-success); }
+  &-info { color: var(--color-info); }
+  &-warning { color: var(--color-warning); }
+  &-danger { color: var(--color-danger); }
+}
+
+/* === CLASES DE BORDER RADIUS === */
+
+.glass-rounded {
+  &-xs { border-radius: var(--radius-xs); }
+  &-sm { border-radius: var(--radius-sm); }
+  &-md { border-radius: var(--radius-md); }
+  &-lg { border-radius: var(--radius-lg); }
+  &-xl { border-radius: var(--radius-xl); }
+  &-2xl { border-radius: var(--radius-2xl); }
+  &-full { border-radius: var(--radius-full); }
+}
+
+/* === CLASES DE SHADOW === */
+
+.glass-shadow {
+  &-xs { box-shadow: var(--shadow-xs); }
+  &-sm { box-shadow: var(--shadow-sm); }
+  &-md { box-shadow: var(--shadow-md); }
+  &-lg { box-shadow: var(--shadow-lg); }
+  &-xl { box-shadow: var(--shadow-xl); }
+  &-glow { box-shadow: var(--shadow-glow); }
+}
+
+/* === RESPONSIVE UTILITIES === */
+
+@media (max-width: 768px) {
+  .glass-grid {
+    &.grid-2,
+    &.grid-3,
+    &.grid-4 {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .glass-flex {
+    &.flex-mobile-col {
+      flex-direction: column;
+    }
+  }
+  
+  .glass-container {
+    padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .glass-container {
+    padding: var(--spacing-md);
+  }
+  
+  .glass-grid {
+    gap: var(--spacing-md);
+  }
+  
+  .glass-flex {
+    gap: var(--spacing-md);
+  }
+}
+
+/* === ACCESSIBILITY ENHANCEMENTS === */
+
+/* Focus visible para todos los elementos interactivos */
+.glass-card,
+.glass-btn,
+.glass-input,
+.glass-nav .nav-item {
+  @include glassmorphism-accessibility;
+}
+
+/* Skip links para navegación por teclado */
+.glass-skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--glass-bg-primary);
+  color: var(--color-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  z-index: var(--z-tooltip);
+  transition: var(--transition-fast);
+  
+  &:focus {
+    top: 6px;
+  }
+}
+
+/* === PRINT STYLES === */
+
+@media print {
+  .glass-card,
+  .glass-btn,
+  .glass-input,
+  .glass-modal {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  
+  .glass-layout {
+    background: white !important;
+  }
+}
+
+/* === DARK MODE SUPPORT === */
+
+@media (prefers-color-scheme: light) {
+  /* Si en el futuro se implementa modo claro */
+  .glass-layout {
+    /* Variables para modo claro */
+  }
+}
+
+/* === PERFORMANCE OPTIMIZATIONS === */
+
+/* Will-change para elementos que se animan frecuentemente */
+.glass-card:hover,
+.glass-btn:hover {
+  will-change: transform, box-shadow;
+}
+
+/* Contain para mejorar rendering */
+.glass-container {
+  contain: layout style;
+}
+
+.glass-modal {
+  contain: layout style paint;
+}

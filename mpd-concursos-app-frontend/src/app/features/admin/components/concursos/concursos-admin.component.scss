@@ -82,23 +82,23 @@
 
       h1 {
         margin: 0;
-        color: var(--text-primary);
-        font-size: 1.875rem;
+        color: #f9fafb;
+        font-size: 2rem;
         font-weight: 700;
         letter-spacing: -0.025em;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        background: linear-gradient(135deg, var(--text-primary) 0%, var(--contests-theme-light) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        position: relative;
+        z-index: 2;
       }
 
       .header-subtitle {
-        color: var(--text-secondary);
-        font-size: 0.9375rem;
+        color: #d1d5db;
+        font-size: 1rem;
         margin-top: var(--spacing-sm);
         font-weight: 500;
-        opacity: 0.9;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        position: relative;
+        z-index: 2;
       }
     }
 
@@ -699,11 +699,10 @@ app-custom-card {
 
     .card-header {
       padding: var(--spacing-xl);
-      border-bottom: 1px solid var(--border-primary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
       background: linear-gradient(135deg,
-        var(--contests-theme-color) 0%,
-        rgba(255, 255, 255, 0.05) 100%);
-      opacity: 0.1;
+        rgba(76, 175, 80, 0.15) 0%,
+        rgba(255, 255, 255, 0.08) 100%);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -711,13 +710,16 @@ app-custom-card {
       z-index: 2;
 
       .concurso-id {
-        @include glassmorphism-badge('primary');
+        background: rgba(76, 175, 80, 0.2);
+        border: 1px solid rgba(76, 175, 80, 0.4);
+        backdrop-filter: blur(8px);
         font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--contests-theme-color);
+        font-weight: 700;
+        color: #4CAF50;
         padding: var(--spacing-sm) var(--spacing-md);
         border-radius: var(--border-radius-sm);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
       }
 
       .card-title {
@@ -739,51 +741,64 @@ app-custom-card {
     }
 
     .card-content {
-      padding: var(--spacing-lg);
+      padding: var(--spacing-xl);
+      position: relative;
+      z-index: 2;
 
       .concurso-title {
-        font-size: var(--font-size-lg);
+        font-size: 1.25rem;
         font-weight: 700;
-        color: var(--text-primary);
-        margin: 0 0 var(--spacing-sm) 0;
+        color: #f9fafb;
+        margin: 0 0 var(--spacing-md) 0;
         line-height: 1.3;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
       }
 
       .concurso-position {
-        font-size: var(--font-size-md);
+        font-size: 1rem;
         font-weight: 600;
-        color: var(--color-primary);
-        margin: 0 0 var(--spacing-xs) 0;
+        color: #4CAF50;
+        margin: 0 0 var(--spacing-sm) 0;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
       }
 
       .concurso-department {
-        font-size: var(--font-size-sm);
-        color: var(--text-secondary);
-        margin: 0 0 var(--spacing-md) 0;
+        font-size: 0.875rem;
+        color: #d1d5db;
+        margin: 0 0 var(--spacing-lg) 0;
         font-weight: 500;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
       }
 
       .concurso-meta {
         display: grid;
-        gap: var(--spacing-sm);
-        margin-top: var(--spacing-md);
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+        padding: var(--spacing-md);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: var(--border-radius-md);
+        border: 1px solid rgba(255, 255, 255, 0.1);
 
         .meta-item {
           display: flex;
           align-items: center;
-          gap: var(--spacing-sm);
-          font-size: var(--font-size-sm);
-          color: var(--text-secondary);
+          gap: var(--spacing-md);
+          font-size: 0.875rem;
+          color: #d1d5db;
+          padding: var(--spacing-sm) 0;
 
           i {
-            color: var(--color-primary);
-            font-size: 1rem;
-            width: 16px;
+            color: #4CAF50;
+            font-size: 1.1rem;
+            width: 20px;
             text-align: center;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
           }
 
           span {
             font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            line-height: 1.4;
           }
         }
       }
@@ -894,15 +909,14 @@ app-custom-card {
 
     // Acciones de tarjeta con glassmorphism refinado
     .card-actions {
-      @include glassmorphism-base('secondary');
-      padding: var(--spacing-md) var(--spacing-lg);
-      border-top: 1px solid var(--border-primary);
-      background-image: linear-gradient(135deg,
-        rgba(255, 255, 255, 0.05) 0%,
-        var(--contests-theme-color) 100%);
-      opacity: 0.05;
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(76, 175, 80, 0.12) 100%);
+      backdrop-filter: blur(8px);
       display: flex;
-      gap: var(--spacing-sm);
+      gap: var(--spacing-md);
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
@@ -925,50 +939,50 @@ app-custom-card {
 
           // Estilos específicos por color - usando las clases reales del CustomButton para variante icon
           &.primary.icon {
-            background: var(--color-primary) !important;
-            opacity: 0.15;
-            color: var(--color-primary) !important;
-            border-color: var(--color-primary) !important;
-            opacity: 0.3;
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: #3b82f6 !important;
+            border: 1px solid rgba(59, 130, 246, 0.4) !important;
+            backdrop-filter: blur(8px) !important;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
 
             &:hover:not(:disabled) {
-              background: var(--color-primary) !important;
+              background: #3b82f6 !important;
               color: white !important;
               transform: translateY(-2px);
-              box-shadow: 0 4px 12px var(--color-primary);
-              opacity: 0.4;
+              box-shadow: 0 4px 16px rgba(59, 130, 246, 0.5) !important;
+              border-color: #3b82f6 !important;
             }
           }
 
           &.accent.icon {
-            background: var(--color-accent) !important;
-            opacity: 0.15;
-            color: var(--color-accent) !important;
-            border-color: var(--color-accent) !important;
-            opacity: 0.3;
+            background: rgba(139, 92, 246, 0.2) !important;
+            color: #8b5cf6 !important;
+            border: 1px solid rgba(139, 92, 246, 0.4) !important;
+            backdrop-filter: blur(8px) !important;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3) !important;
 
             &:hover:not(:disabled) {
-              background: var(--color-accent) !important;
+              background: #8b5cf6 !important;
               color: white !important;
               transform: translateY(-2px);
-              box-shadow: 0 4px 12px var(--color-accent);
-              opacity: 0.4;
+              box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5) !important;
+              border-color: #8b5cf6 !important;
             }
           }
 
           &.danger.icon {
-            background: var(--color-danger) !important;
-            opacity: 0.15;
-            color: var(--color-danger) !important;
-            border-color: var(--color-danger) !important;
-            opacity: 0.3;
+            background: rgba(239, 68, 68, 0.2) !important;
+            color: #ef4444 !important;
+            border: 1px solid rgba(239, 68, 68, 0.4) !important;
+            backdrop-filter: blur(8px) !important;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
 
             &:hover:not(:disabled) {
-              background: var(--color-danger) !important;
+              background: #ef4444 !important;
               color: white !important;
               transform: translateY(-2px);
-              box-shadow: 0 4px 12px var(--color-danger);
-              opacity: 0.4;
+              box-shadow: 0 4px 16px rgba(239, 68, 68, 0.5) !important;
+              border-color: #ef4444 !important;
             }
           }
 
@@ -1182,7 +1196,7 @@ app-custom-card {
   // Celda de ID con diseño moderno
   .id-cell {
     font-weight: 600;
-    color: $contests-theme-color;
+    color: var(--contests-theme-color);
     font-size: 0.8125rem;
     padding: 0.5rem 0.75rem;
     background: rgba(76, 175, 80, 0.12);
@@ -1210,7 +1224,7 @@ app-custom-card {
 
     strong {
       font-weight: 600;
-      color: $text-primary-contests;
+      color: var(--text-primary);
       line-height: 1.4;
       font-size: 0.9375rem;
       overflow: hidden;
@@ -1219,7 +1233,7 @@ app-custom-card {
     }
 
     small {
-      color: $text-secondary-contests;
+      color: var(--text-secondary);
       font-size: 0.8125rem;
       line-height: 1.3;
       opacity: 0.9;
@@ -1246,7 +1260,7 @@ app-custom-card {
       .date-label {
         font-size: 0.75rem;
         font-weight: 500;
-        color: $text-secondary-contests;
+        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.03em;
         min-width: 40px;
@@ -1256,7 +1270,7 @@ app-custom-card {
       .date-value {
         font-size: 0.8125rem;
         font-weight: 500;
-        color: $text-primary-contests;
+        color: var(--text-primary);
         padding: 0.375rem 0.625rem;
         background: rgba(55, 65, 81, 0.4);
         border-radius: 6px;
@@ -1406,7 +1420,7 @@ app-custom-card {
   }
 
   &:hover {
-    @include glass-contests-hover;
+    @include glassmorphism-hover;
 
     &::before {
       left: 100%;
@@ -1414,14 +1428,14 @@ app-custom-card {
   }
 
   .pagination-info {
-    color: $text-secondary-contests;
+    color: var(--text-secondary);
     font-size: 0.875rem;
     font-weight: 500;
     position: relative;
     z-index: 2;
 
     .highlight {
-      color: $text-primary-contests;
+      color: var(--text-primary);
       font-weight: 700;
     }
   }
@@ -1434,7 +1448,7 @@ app-custom-card {
     z-index: 2;
 
     .page-info {
-      color: $text-primary-contests;
+      color: var(--text-primary);
       font-size: 0.875rem;
       font-weight: 600;
       margin: 0 1rem;
@@ -1495,7 +1509,7 @@ app-custom-card {
       gap: 0.75rem;
 
       label {
-        color: $text-secondary-contests;
+        color: var(--text-secondary);
         font-size: 0.875rem;
         font-weight: 500;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -1505,11 +1519,11 @@ app-custom-card {
         padding: 0.5rem 0.75rem;
         border-radius: 6px;
         border: 1px solid rgba(255, 255, 255, 0.15);
-        background: $input-background-contests;
+        background: var(--input-background);
         background-image: linear-gradient(135deg,
           rgba(255, 255, 255, 0.05) 0%,
           rgba(255, 255, 255, 0.02) 100%);
-        color: $text-primary-contests;
+        color: var(--text-primary);
         font-size: 0.875rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         backdrop-filter: blur(4px);
@@ -1518,7 +1532,7 @@ app-custom-card {
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
         &:focus {
-          border-color: $contests-theme-color;
+          border-color: var(--contests-theme-color);
           box-shadow:
             0 0 0 2px rgba(76, 175, 80, 0.3),
             0 4px 12px rgba(0, 0, 0, 0.15),
@@ -1543,42 +1557,61 @@ app-custom-card {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: $text-secondary-contests;
-  background: rgba(55, 65, 81, 0.3);
+  background: rgba(55, 65, 81, 0.8);
   background-image: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(76, 175, 80, 0.05) 50%,
-    rgba(255, 255, 255, 0.02) 100%);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(76, 175, 80, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
   box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(76, 175, 80, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
 
   .empty-icon {
     font-size: 4rem;
     margin-bottom: 1.5rem;
-    opacity: 0.6;
-    color: $contests-theme-color;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: #4CAF50;
+    text-shadow: 0 2px 8px rgba(76, 175, 80, 0.5);
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   }
 
   .empty-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: $text-primary-contests;
-    margin-bottom: 0.75rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f9fafb;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
   }
 
   .empty-message {
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    max-width: 400px;
-    margin: 0 auto 1.5rem;
-    opacity: 0.9;
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 450px;
+    margin: 0 auto 2rem;
+    color: #d1d5db;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
   }
 
   app-custom-button {
@@ -1685,7 +1718,7 @@ app-custom-card {
     .title-cell {
       strong {
         font-weight: 600;
-        color: $text-primary-contests;
+        color: var(--text-primary);
         font-size: clamp(0.875rem, 2vw, 0.95rem);
         line-height: 1.3;
         overflow: hidden;
@@ -1694,7 +1727,7 @@ app-custom-card {
       }
 
       small {
-        color: $text-secondary-contests;
+        color: var(--text-secondary);
         font-size: clamp(0.75rem, 1.5vw, 0.8rem);
         line-height: 1.2;
         opacity: 0.9;
@@ -1716,12 +1749,12 @@ app-custom-card {
 
         .date-label {
           font-weight: 500;
-          color: $text-secondary-contests;
+          color: var(--text-secondary);
           margin-right: 0.5rem;
         }
 
         .date-value {
-          color: $text-primary-contests;
+          color: var(--text-primary);
           font-weight: 400;
         }
       }
@@ -1729,7 +1762,7 @@ app-custom-card {
 
     td:nth-child(3) { // Cargo
       font-weight: 500;
-      color: $text-primary-contests;
+      color: var(--text-primary);
       font-size: clamp(0.8rem, 1.8vw, 0.9rem);
     }
 
@@ -1876,7 +1909,7 @@ app-custom-card {
 .concurso-card:focus-visible,
 app-custom-button:focus-visible,
 .sortable:focus-visible {
-  outline: 2px solid $contests-theme-color;
+  outline: 2px solid var(--contests-theme-color);
   outline-offset: 2px;
 }
 
@@ -1886,7 +1919,7 @@ app-custom-button:focus-visible,
   .concursos-table,
   app-custom-card ::ng-deep .custom-card {
     border-width: 2px;
-    border-color: $text-primary-contests;
+    border-color: var(--text-primary);
   }
 
   .status-badge {
@@ -2043,7 +2076,7 @@ app-custom-button:focus-visible,
 .concursos-admin-container {
   ::ng-deep app-custom-table {
     .pagination-container {
-      @include glass-contests-card;
+      @include glassmorphism-card('primary', 'normal');
       background: rgba(55, 65, 81, 0.95) !important;
       backdrop-filter: blur(12px) !important;
       -webkit-backdrop-filter: blur(12px) !important;

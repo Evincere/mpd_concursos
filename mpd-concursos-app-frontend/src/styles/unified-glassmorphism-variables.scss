@@ -1,0 +1,229 @@
+/* ===== SISTEMA GLASSMORPHISM UNIFICADO - VARIABLES ===== */
+/* Sistema consolidado que elimina duplicaciones y unifica diseño */
+/* Versión: 1.0.0 | Fecha: 2025-01-15 */
+
+/* === VARIABLES GLOBALES BASE === */
+:root {
+  /* === COLORES PRINCIPALES === */
+  --color-primary: #f9fafb;           /* Texto principal */
+  --color-secondary: #d1d5db;         /* Texto secundario */
+  --color-tertiary: #9ca3af;          /* Texto terciario */
+  --color-muted: #6b7280;             /* Texto deshabilitado */
+  
+  /* === COLORES SEMÁNTICOS === */
+  --color-success: #4CAF50;           /* Verde - tema concursos */
+  --color-info: #3b82f6;              /* Azul - información */
+  --color-warning: #f59e0b;           /* Naranja - advertencia */
+  --color-danger: #ef4444;            /* Rojo - error/destructivo */
+  --color-focus: #3b82f6;             /* Azul - estados de foco */
+  
+  /* === BACKGROUNDS GLASSMORPHISM === */
+  --glass-bg-primary: rgba(55, 65, 81, 0.8);      /* #374151 con 80% opacidad */
+  --glass-bg-secondary: rgba(75, 85, 99, 0.85);   /* #4b5563 con 85% opacidad */
+  --glass-bg-light: rgba(55, 65, 81, 0.6);        /* Versión más clara */
+  --glass-bg-dark: rgba(31, 41, 55, 0.9);         /* Versión más oscura */
+  --glass-bg-hover: rgba(75, 85, 99, 0.9);        /* Estado hover */
+  --glass-bg-active: rgba(55, 65, 81, 0.95);      /* Estado activo */
+  
+  /* === GRADIENTES GLASSMORPHISM === */
+  --glass-gradient-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+  --glass-gradient-radial: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  --glass-gradient-primary: linear-gradient(135deg, var(--glass-bg-primary) 0%, var(--glass-bg-secondary) 100%);
+  --glass-gradient-secondary: linear-gradient(180deg, var(--glass-bg-secondary) 0%, var(--glass-bg-primary) 100%);
+  
+  /* === BORDERS === */
+  --border-primary: rgba(255, 255, 255, 0.2);
+  --border-secondary: rgba(255, 255, 255, 0.15);
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.3);
+  --border-hover: rgba(255, 255, 255, 0.25);
+  --border-focus: rgba(59, 130, 246, 0.5);
+  
+  /* === BORDER RADIUS UNIFICADO === */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;                   /* Estándar glassmorphism */
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+  
+  /* === SHADOWS GLASSMORPHISM === */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+  
+  /* === BACKDROP FILTERS === */
+  --backdrop-blur-light: blur(8px);
+  --backdrop-blur-medium: blur(12px);
+  --backdrop-blur-strong: blur(16px);
+  --backdrop-blur-intense: blur(24px);
+  
+  /* === TRANSITIONS === */
+  --transition-fast: all 0.15s ease-in-out;
+  --transition-normal: all 0.3s ease-in-out;
+  --transition-slow: all 0.5s ease-in-out;
+  --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* === TRANSFORMS === */
+  --transform-hover: translateY(-1px);
+  --transform-active: translateY(0px) scale(0.98);
+  --transform-button-hover: translateY(-2px);
+  
+  /* === SPACING SISTEMA === */
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 0.75rem;    /* 12px */
+  --spacing-lg: 1rem;       /* 16px */
+  --spacing-xl: 1.5rem;     /* 24px */
+  --spacing-2xl: 2rem;      /* 32px */
+  --spacing-3xl: 3rem;      /* 48px */
+  --spacing-4xl: 4rem;      /* 64px */
+  
+  /* === COMPONENTES ESPECÍFICOS === */
+  
+  /* Cards */
+  --card-padding: var(--spacing-xl);
+  --card-padding-sm: var(--spacing-lg);
+  --card-margin: var(--spacing-xl);
+  --card-border-radius: var(--radius-md);
+  
+  /* Buttons */
+  --button-padding: var(--spacing-md) var(--spacing-xl);
+  --button-padding-sm: var(--spacing-sm) var(--spacing-lg);
+  --button-padding-lg: var(--spacing-lg) var(--spacing-2xl);
+  --button-height: 2.5rem;              /* 40px */
+  --button-height-sm: 2rem;             /* 32px */
+  --button-height-lg: 3rem;             /* 48px */
+  --button-border-radius: var(--radius-md);
+  
+  /* Inputs */
+  --input-padding: var(--spacing-md) var(--spacing-lg);
+  --input-height: 2.5rem;               /* 40px */
+  --input-border-radius: var(--radius-md);
+  --input-background: var(--glass-bg-light);
+  
+  /* Navigation */
+  --nav-width: 16rem;                   /* 256px */
+  --nav-width-collapsed: 4rem;          /* 64px */
+  --nav-item-height: 2.75rem;           /* 44px - touch target */
+  --nav-padding: var(--spacing-lg);
+  
+  /* Layout */
+  --header-height: 4rem;                /* 64px */
+  --footer-height: 3rem;                /* 48px */
+  --content-padding: var(--spacing-xl);
+  --sidebar-width: var(--nav-width);
+  
+  /* Badges */
+  --badge-padding: var(--spacing-xs) var(--spacing-sm);
+  --badge-border-radius: var(--radius-sm);
+  --badge-blue: rgba(59, 130, 246, 0.2);
+  --badge-green: rgba(34, 197, 94, 0.2);
+  --badge-orange: rgba(245, 158, 11, 0.2);
+  --badge-red: rgba(239, 68, 68, 0.2);
+  --badge-gray: rgba(156, 163, 175, 0.2);
+  
+  /* Tables */
+  --table-header-bg: var(--glass-bg-secondary);
+  --table-row-hover: rgba(255, 255, 255, 0.05);
+  --table-border: var(--border-light);
+  
+  /* Modals */
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --modal-border-radius: var(--radius-xl);
+  --modal-padding: var(--spacing-2xl);
+  
+  /* Tooltips */
+  --tooltip-bg: rgba(0, 0, 0, 0.9);
+  --tooltip-padding: var(--spacing-sm) var(--spacing-md);
+  --tooltip-border-radius: var(--radius-sm);
+  
+  /* Z-Index Scale */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+}
+
+/* === SCOPING PARA LAYOUTS ESPECÍFICOS === */
+
+/* Layout Usuario Común */
+.user-layout {
+  /* Overrides específicos para usuario común si son necesarios */
+  /* Por ahora heredan todas las variables globales */
+}
+
+/* Layout Administrador */
+.admin-layout {
+  /* Overrides específicos para admin si son necesarios */
+  /* Por ahora heredan todas las variables globales */
+}
+
+/* === VARIABLES LEGACY PARA COMPATIBILIDAD === */
+/* NOTA: Estas serán eliminadas en la migración final */
+:root {
+  /* Compatibilidad con sistema anterior */
+  --background-color: var(--glass-bg-primary);
+  --card-border: var(--border-primary);
+  --text-color: var(--color-primary);
+  --card-shadow: var(--shadow-md);
+  --card-backdrop-filter: var(--backdrop-blur-medium);
+  
+  /* Compatibilidad con sistema usuario */
+  --user-glass-primary: var(--glass-bg-primary);
+  --user-glass-secondary: var(--glass-bg-secondary);
+  --user-border-radius-md: var(--radius-md);
+  --user-border-radius-lg: var(--radius-lg);
+  --user-spacing-md: var(--spacing-md);
+  --user-spacing-lg: var(--spacing-lg);
+}
+
+/* === RESPONSIVE OVERRIDES === */
+@media (max-width: 768px) {
+  :root {
+    /* Ajustes para móvil */
+    --card-padding: var(--spacing-lg);
+    --content-padding: var(--spacing-lg);
+    --nav-width: 100%;
+    --backdrop-blur-medium: var(--backdrop-blur-light); /* Menos blur en móvil */
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    /* Ajustes para móvil pequeño */
+    --card-padding: var(--spacing-md);
+    --content-padding: var(--spacing-md);
+    --button-padding: var(--spacing-sm) var(--spacing-lg);
+  }
+}
+
+/* === ACCESSIBILITY OVERRIDES === */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: none;
+    --transition-normal: none;
+    --transition-slow: none;
+    --transition-bounce: none;
+    --transform-hover: none;
+    --transform-active: none;
+    --transform-button-hover: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  :root {
+    --border-primary: rgba(255, 255, 255, 0.4);
+    --border-secondary: rgba(255, 255, 255, 0.3);
+    --border-strong: rgba(255, 255, 255, 0.6);
+  }
+}

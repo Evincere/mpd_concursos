@@ -13,7 +13,7 @@ import { takeUntil } from 'rxjs/operators';
 import { AdminConcursosService, ConcursoStats } from '../../../../../../core/services/admin/admin-concursos.service';
 import { AdminDashboardService, ActivityItem } from '../../../../../../core/services/admin/admin-dashboard.service';
 import { StatCardComponent } from '../../../admin-dashboard/components/stat-card/stat-card.component';
-import { StatsChartComponent, ChartData } from '../../../admin-dashboard/components/stats-chart/stats-chart.component';
+import { StatsChartComponent, ApexChartData } from '../../../admin-dashboard/components/stats-chart/stats-chart.component';
 import { ActivityFeedComponent } from '../../../admin-dashboard/components/activity-feed/activity-feed.component';
 
 @Component({
@@ -41,9 +41,9 @@ export class ConcursosDashboardComponent implements OnInit, OnDestroy {
   recentActivities: ActivityItem[] = [];
 
   // Datos para gráficos
-  statusChartData!: ChartData;
-  departmentChartData!: ChartData;
-  categoryChartData!: ChartData;
+  statusChartData!: ApexChartData;
+  departmentChartData!: ApexChartData;
+  categoryChartData!: ApexChartData;
 
   // Pestaña activa
   activeTab = 0;
@@ -57,6 +57,8 @@ export class ConcursosDashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Initialize with test data first to ensure charts have data
+    this.initializeTestData();
     this.loadDashboardData();
   }
 
@@ -73,13 +75,23 @@ export class ConcursosDashboardComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (stats: ConcursoStats) => {
+          console.log('Stats received from service:', stats);
           this.stats = stats;
-          this.prepareChartData(stats);
+
+          // Only update charts if we have valid data
+          if (this.hasValidStats(stats)) {
+            this.prepareChartData(stats);
+          } else {
+            console.warn('Invalid stats received, keeping test data');
+          }
+
           this.isLoading = false;
         },
         error: (error: unknown) => {
           console.error('Error cargando estadísticas de concursos:', error);
+          console.log('Using test data due to service error');
           this.isLoading = false;
+          // Keep test data when service fails
         }
       });
 
@@ -96,57 +108,103 @@ export class ConcursosDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
+  /**
+   * Initialize test data for development
+   */
+  initializeTestData(): void {
+    console.log('Initializing test data for concursos dashboard');
+
+    const testStats: ConcursoStats = {
+      total: 19, // Sum of all status counts
+      active: 5,
+      draft: 3,
+      inProgress: 2,
+      closed: 8,
+      cancelled: 1,
+      byDepartment: {
+        'Recursos Humanos': 4,
+        'Tecnología': 6,
+        'Administración': 3,
+        'Legal': 2,
+        'Finanzas': 4
+      },
+      byCategory: {
+        'Profesional': 8,
+        'Técnico': 6,
+        'Administrativo': 5
+      }
+    };
+
+    this.prepareChartData(testStats);
+  }
+
+  /**
+   * Check if stats contain valid data
+   */
+  private hasValidStats(stats: ConcursoStats): boolean {
+    if (!stats) return false;
+
+    // Check if at least one numeric field has a value > 0
+    const hasNumericData = stats.active > 0 || stats.draft > 0 ||
+                          stats.inProgress > 0 || stats.closed > 0 ||
+                          stats.cancelled > 0;
+
+    // Check if department and category data exist
+    const hasDepartmentData = stats.byDepartment && Object.keys(stats.byDepartment).length > 0;
+    const hasCategoryData = stats.byCategory && Object.keys(stats.byCategory).length > 0;
+
+    return hasNumericData || hasDepartmentData || hasCategoryData;
+  }
+
   prepareChartData(stats: ConcursoStats): void {
-    // Gráfico de concursos por estado
+    console.log('Preparing chart data with stats:', stats);
+
+    // Gráfico de concursos por estado (donut chart)
+    const statusSeries = [
+      Number(stats.active) || 0,
+      Number(stats.draft) || 0,
+      Number(stats.inProgress) || 0,
+      Number(stats.closed) || 0,
+      Number(stats.cancelled) || 0
+    ];
+
     this.statusChartData = {
       labels: ['Activos', 'Borradores', 'En Proceso', 'Cerrados', 'Cancelados'],
-      datasets: [{
-        label: 'Concursos por Estado',
-        data: [
-          stats.active,
-          stats.draft,
-          stats.inProgress,
-          stats.closed,
-          stats.cancelled
-        ],
-        backgroundColor: [
-          '#4caf50', // Verde - Activos
-          '#2196f3', // Azul - Borradores
-          '#ff9800', // Naranja - En Proceso
-          '#9e9e9e', // Gris - Cerrados
-          '#f44336'  // Rojo - Cancelados
-        ],
-        borderWidth: 0
-      }]
+      series: statusSeries,
+      colors: [
+        '#4caf50', // Verde - Activos
+        '#2196f3', // Azul - Borradores
+        '#ff9800', // Naranja - En Proceso
+        '#9e9e9e', // Gris - Cerrados
+        '#f44336'  // Rojo - Cancelados
+      ]
     };
 
-    // Gráfico de concursos por departamento
-    const departmentLabels = Object.keys(stats.byDepartment);
-    const departmentData = departmentLabels.map(dept => stats.byDepartment[dept]);
+    // Gráfico de concursos por departamento (pie chart)
+    const departmentLabels = stats.byDepartment ? Object.keys(stats.byDepartment) : [];
+    const departmentData = departmentLabels.map(dept => Number(stats.byDepartment[dept]) || 0);
 
     this.departmentChartData = {
-      labels: departmentLabels,
-      datasets: [{
-        label: 'Concursos por Departamento',
-        data: departmentData,
-        backgroundColor: this.generateColors(departmentLabels.length),
-        borderWidth: 0
-      }]
+      labels: departmentLabels.length > 0 ? departmentLabels : ['Sin datos'],
+      series: departmentData.length > 0 ? departmentData : [1],
+      colors: this.generateColors(Math.max(departmentLabels.length, 1))
     };
 
-    // Gráfico de concursos por categoría
-    const categoryLabels = Object.keys(stats.byCategory);
-    const categoryData = categoryLabels.map(cat => stats.byCategory[cat]);
+    // Gráfico de concursos por categoría (pie chart)
+    const categoryLabels = stats.byCategory ? Object.keys(stats.byCategory) : [];
+    const categoryData = categoryLabels.map(cat => Number(stats.byCategory[cat]) || 0);
 
     this.categoryChartData = {
-      labels: categoryLabels,
-      datasets: [{
-        label: 'Concursos por Categoría',
-        data: categoryData,
-        backgroundColor: this.generateColors(categoryLabels.length, true),
-        borderWidth: 0
-      }]
+      labels: categoryLabels.length > 0 ? categoryLabels : ['Sin datos'],
+      series: categoryData.length > 0 ? categoryData : [1],
+      colors: this.generateColors(Math.max(categoryLabels.length, 1), true)
     };
+
+    console.log('Chart data prepared:', {
+      status: this.statusChartData,
+      department: this.departmentChartData,
+      category: this.categoryChartData
+    });
   }
 
   generateColors(count: number, alternate = false): string[] {

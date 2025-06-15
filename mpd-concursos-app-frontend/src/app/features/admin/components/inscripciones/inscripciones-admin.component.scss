@@ -1,11 +1,26 @@
 @import 'src/styles/glassmorphism-system';
 
-// ===== CONTENEDOR PRINCIPAL CON GLASSMORPHISM =====
+// ===== CONTENEDOR PRINCIPAL CON GLASSMORPHISM PREMIUM =====
 .inscripciones-admin-container {
   padding: var(--spacing-xl);
   background: transparent; // Heredar el background del dashboard
   min-height: 100vh;
   position: relative;
+
+  // Subtle glassmorphism pattern overlay
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(76, 175, 80, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
   // Responsive design
   @media (max-width: 768px) {
@@ -13,82 +28,67 @@
   }
 }
 
-// ===== HEADER CON GLASSMORPHISM REFINADO =====
+// ===== HEADER PREMIUM GLASSMORPHISM - CONSISTENT WITH DASHBOARD =====
 .header {
-  @include glassmorphism-card('primary', 'normal');
-  margin-bottom: var(--spacing-2xl);
-  padding: var(--spacing-xl) var(--spacing-2xl);
-  background-image: radial-gradient(circle at 80% 20%, var(--contests-theme-color) 0%, transparent 50%);
-  opacity: 0.1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  /* Premium glassmorphism background consistent with dashboard */
+  background: linear-gradient(135deg,
+    rgba(55, 65, 81, 0.8) 0%,
+    rgba(75, 85, 99, 0.9) 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
-
-  // Efecto de brillo sutil en hover
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-      transparent,
-      var(--contests-theme-color),
-      transparent);
-    opacity: 0.1;
-    transition: left 0.8s ease;
-    z-index: 1;
-  }
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   &:hover {
-    @include glassmorphism-hover;
-    transform: translateY(-2px);
-    border-color: var(--contests-theme-color);
-    opacity: 0.3;
-
-    &::before {
-      left: 100%;
-    }
+    transform: translateY(-1px);
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    z-index: 2;
+    flex: 1;
   }
 
-  .header-title {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
-  }
-
-  .header-icon {
+  .page-title {
     font-size: 1.5rem;
-    color: var(--contests-theme-color);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    filter: drop-shadow(0 0 8px var(--contests-theme-color));
-    opacity: 0.3;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    color: #f9fafb;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   }
 
-  h1 {
+  .page-subtitle {
+    font-size: 0.875rem;
+    color: #d1d5db;
     margin: 0;
-    font-size: clamp(1.25rem, 3vw, 1.75rem);
-    font-weight: 600;
-    color: var(--text-primary);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-
-    background: linear-gradient(135deg, var(--text-primary) 0%, #e5e7eb 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    opacity: 0.9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
   .header-actions {
-    position: relative;
-    z-index: 2;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
   }
 
   // Responsive design
@@ -118,7 +118,6 @@
     .custom-card {
       @include glassmorphism-card('primary', 'normal');
       background-image: radial-gradient(circle at 80% 20%, var(--contests-theme-color) 0%, transparent 50%) !important;
-      opacity: 0.1;
       position: relative;
       overflow: hidden;
 
@@ -134,7 +133,7 @@
           transparent,
           var(--contests-theme-color),
           transparent);
-        opacity: 0.1;
+        opacity: 0.6;
         transition: left 0.8s ease;
         z-index: 1;
       }
@@ -143,7 +142,7 @@
         @include glassmorphism-hover;
         transform: translateY(-2px) !important;
         border-color: var(--contests-theme-color) !important;
-        opacity: 0.3;
+        opacity: 0.9;
 
         &::before {
           left: 100%;
@@ -194,7 +193,6 @@
     .custom-card {
       @include glassmorphism-card('primary', 'normal');
       background-image: radial-gradient(circle at 90% 10%, var(--contests-theme-color) 0%, transparent 50%) !important;
-      opacity: 0.1;
       position: relative;
       overflow: hidden;
 
@@ -210,7 +208,7 @@
           transparent,
           var(--contests-theme-color),
           transparent);
-        opacity: 0.03;
+        opacity: 0.4;
         transition: left 1.2s ease;
         z-index: 1;
         pointer-events: none;
@@ -235,7 +233,7 @@
       background: linear-gradient(135deg,
         var(--contests-theme-color) 0%,
         rgba(55, 65, 81, 0.1) 100%);
-      opacity: 0.05;
+      opacity: 0.8;
 
       h3 {
         color: var(--text-primary);
@@ -270,7 +268,6 @@
 
       &::-webkit-scrollbar-track {
         background: var(--glass-background-secondary);
-        opacity: 0.3;
         border-radius: var(--border-radius-sm);
       }
 
@@ -408,35 +405,35 @@
       @include glassmorphism-badge('warning');
       color: var(--color-warning);
       box-shadow: 0 2px 8px var(--color-warning);
-      opacity: 0.2;
+      opacity: 0.9;
     }
 
     &.status-approved {
       @include glassmorphism-badge('success');
       color: var(--color-success);
       box-shadow: 0 2px 8px var(--color-success);
-      opacity: 0.2;
+      opacity: 0.9;
     }
 
     &.status-rejected {
       @include glassmorphism-badge('danger');
       color: var(--color-danger);
       box-shadow: 0 2px 8px var(--color-danger);
-      opacity: 0.2;
+      opacity: 0.9;
     }
 
     &.status-cancelled {
       @include glassmorphism-badge('secondary');
       color: var(--text-muted);
       box-shadow: 0 2px 8px var(--text-muted);
-      opacity: 0.2;
+      opacity: 0.9;
     }
 
     &.status-in-process {
       @include glassmorphism-badge('primary');
       color: var(--color-primary);
       box-shadow: 0 2px 8px var(--color-primary);
-      opacity: 0.2;
+      opacity: 0.9;
     }
   }
 
@@ -467,7 +464,7 @@
       width: 48px;
       height: 48px;
       border: 3px solid var(--contests-theme-color);
-      opacity: 0.3;
+      opacity: 0.8;
       border-radius: 50%;
       border-top-color: var(--contests-theme-color);
       animation: spin 1s ease-in-out infinite;
@@ -589,11 +586,11 @@
           background: linear-gradient(135deg,
             rgba(76, 175, 80, 0.1) 0%,
             rgba(76, 175, 80, 0.05) 100%) !important;
-          color: $text-primary !important;
+          color: var(--text-primary) !important;
           border: 1px solid rgba(76, 175, 80, 0.2) !important;
-          border-radius: $border-radius-md !important;
+          border-radius: var(--border-radius-md) !important;
           backdrop-filter: blur(4px) !important;
-          transition: $transition-smooth !important;
+          transition: var(--transition-normal) !important;
 
           &:hover:not(:disabled) {
             background: linear-gradient(135deg,
@@ -613,11 +610,11 @@
       .page-size-selector {
         select {
           background: linear-gradient(135deg,
-            $glass-background-secondary 0%,
-            $glass-background-tertiary 100%) !important;
-          color: $text-primary !important;
+            var(--glass-background-secondary) 0%,
+            var(--glass-background-tertiary) 100%) !important;
+          color: var(--text-primary) !important;
           border: 1px solid rgba(255, 255, 255, 0.1) !important;
-          border-radius: $border-radius-md !important;
+          border-radius: var(--border-radius-md) !important;
           backdrop-filter: blur(4px) !important;
           padding: 0.5rem !important;
         }

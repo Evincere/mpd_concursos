@@ -1,37 +1,138 @@
-@use 'src/styles/variables' as *;
+@import 'src/styles/glassmorphism-system';
+
+// Override Angular Material card styles with higher specificity
+:host ::ng-deep .stat-card.mat-mdc-card {
+  @include glassmorphism-card('light', 'subtle');
+  transition: var(--transition-normal) !important;
+  overflow: hidden !important;
+  height: 100% !important;
+  position: relative !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: var(--shadow-lg) !important;
+
+  /* Gradient overlay for differentiation */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.02) 50%,
+      rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Top accent line */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(59, 130, 246, 0.6) 25%,
+      rgba(59, 130, 246, 0.8) 50%,
+      rgba(59, 130, 246, 0.6) 75%,
+      transparent 100%);
+    opacity: 0.8;
+    z-index: 1;
+  }
+
+  &:hover {
+    @include glassmorphism-hover;
+    transform: translateY(-2px) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+
+    &::after {
+      opacity: 1;
+      height: 3px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.8) 25%,
+        rgba(59, 130, 246, 1) 50%,
+        rgba(59, 130, 246, 0.8) 75%,
+        transparent 100%);
+    }
+  }
+
+  /* Focus state for accessibility */
+  &:focus-within {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow-lg) !important;
+  }
+}
 
 .stat-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  overflow: hidden;
-  height: 100%;
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
   mat-card-content {
-    display: flex;
-    padding: 1rem;
+    display: flex !important;
+    padding: var(--spacing-lg) var(--spacing-xl) !important;
+    background: transparent !important;
+    position: relative !important;
+    z-index: 2 !important;
+    min-height: 180px !important; /* Altura mínima para distribución */
+    align-items: stretch !important; /* Estirar elementos hijos */
   }
 }
 
 .stat-icon {
+  @include glassmorphism-base('subtle');
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  margin-right: 1rem;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--border-radius-lg);
+  margin-right: var(--spacing-lg);
   flex-shrink: 0;
-  
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: var(--transition-normal);
+  position: relative;
+  align-self: flex-start; /* Alinear al inicio para mejor distribución */
+  margin-top: var(--spacing-xs); /* Pequeño margen superior */
+
+  /* Icon background gradient */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 100%);
+    z-index: 0;
+  }
+
   mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+    transition: var(--transition-normal);
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.stat-card:hover .stat-icon {
+  @include glassmorphism-hover;
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.3);
+
+  &::before {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.08) 100%);
+  }
+
+  mat-icon {
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
   }
 }
 
@@ -39,109 +140,223 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%; /* Usar toda la altura disponible */
+  padding: var(--spacing-xs) 0; /* Padding vertical para mejor distribución */
 }
 
 .stat-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.5rem;
-  
+  margin-bottom: var(--spacing-lg); /* Aumentar espacio inferior */
+  flex-shrink: 0; /* No comprimir este elemento */
+
   .stat-title {
     margin: 0;
-    font-size: $font-size-md;
+    font-size: 0.8rem;
     font-weight: 500;
-    color: $color-text-primary;
+    color: var(--text-secondary) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.3; /* Mejorar legibilidad */
   }
-  
+
   .stat-trend {
     display: flex;
     align-items: center;
-    font-size: $font-size-xs;
-    font-weight: 500;
-    
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+
     &.positive {
-      color: $color-success;
+      color: var(--color-success) !important;
+      background: rgba(76, 175, 80, 0.15);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
-    
+
     &.negative {
-      color: $color-error;
+      color: var(--color-danger) !important;
+      background: rgba(244, 67, 54, 0.15);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
-    
+
     mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
       margin-right: 2px;
     }
   }
 }
 
 .stat-value {
-  font-size: $font-size-xl;
-  font-weight: 600;
-  color: $color-text-primary;
-  margin-bottom: 0.5rem;
+  font-size: 2.25rem; /* Aumentar tamaño para mayor prominencia */
+  font-weight: 800;
+  color: var(--text-primary) !important;
+  margin: var(--spacing-lg) 0; /* Margen superior e inferior */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+  flex-grow: 1; /* Permitir que crezca para ocupar espacio */
+  display: flex;
+  align-items: center; /* Centrar verticalmente el valor */
 }
 
 .stat-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  
+  align-items: flex-end; /* Alinear al final para mejor distribución */
+  margin-top: auto;
+  flex-shrink: 0; /* No comprimir este elemento */
+  padding-top: var(--spacing-sm); /* Espacio superior */
+
   .stat-subtitle {
-    font-size: $font-size-xs;
-    color: $color-text-secondary;
+    font-size: 0.75rem; /* Aumentar ligeramente el tamaño */
+    color: var(--text-tertiary) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    line-height: 1.4; /* Mejorar legibilidad */
+    opacity: 0.9;
+    max-width: 60%; /* Limitar ancho para mejor distribución */
   }
-  
+
   .stat-link {
     display: flex;
     align-items: center;
-    font-size: $font-size-xs;
-    color: $color-primary;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-primary);
     text-decoration: none;
-    
+    transition: var(--transition-normal);
+    padding: 4px 8px;
+    border-radius: var(--border-radius-sm);
+    background: rgba(59, 130, 246, 0.1);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+
     &:hover {
-      text-decoration: underline;
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: var(--color-primary-hover);
+      transform: translateY(-1px);
     }
-    
+
+    &:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
     mat-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
+      font-size: 12px;
+      width: 12px;
+      height: 12px;
       margin-left: 4px;
+      transition: var(--transition-normal);
+    }
+
+    &:hover mat-icon {
+      transform: translateX(2px);
     }
   }
 }
 
-// Estilos para tema oscuro
-@media (prefers-color-scheme: dark) {
+/* Enhanced Accessibility Support */
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
   .stat-card {
-    background-color: $color-surface-dark;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    
+    border-width: 2px;
+    border-color: var(--border-high-contrast);
+
+    &:hover,
+    &:focus-within {
+      border-color: var(--border-high-contrast-hover);
+      background: var(--glass-background-high-contrast);
+    }
+  }
+
+  .stat-icon {
+    border-width: 2px !important;
+    border-color: var(--border-high-contrast) !important;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .stat-card {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
     &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transform: none !important;
+    }
+
+    .stat-icon {
+      &:hover {
+        transform: none !important;
+      }
     }
   }
-  
-  .stat-header {
-    .stat-title {
-      color: $color-text-primary-dark;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .stat-card {
+    /* Reduce blur for better mobile performance */
+    backdrop-filter: blur(6px);
+
+    /* Simplify hover effects on mobile */
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    mat-card-content {
+      padding: var(--spacing-md) var(--spacing-lg) !important;
+      min-height: 140px !important; /* Altura mínima reducida para móvil */
     }
   }
-  
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: var(--spacing-md);
+    margin-top: 0; /* Eliminar margen superior en móvil */
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+
   .stat-value {
-    color: $color-text-primary-dark;
+    font-size: 1.5rem; /* Mantener tamaño prominente en móvil */
+    margin: var(--spacing-md) 0; /* Reducir márgenes en móvil */
   }
-  
-  .stat-footer {
-    .stat-subtitle {
-      color: $color-text-secondary-dark;
+
+  .stat-header {
+    margin-bottom: var(--spacing-md); /* Reducir espacio en móvil */
+
+    .stat-title {
+      font-size: 0.75rem;
+      line-height: 1.2;
     }
-    
-    .stat-link {
-      color: $color-primary-dark;
+  }
+
+  .stat-footer {
+    padding-top: var(--spacing-xs); /* Reducir padding en móvil */
+
+    .stat-subtitle {
+      font-size: 0.7rem;
+      line-height: 1.3;
+      max-width: 65%; /* Ajustar ancho en móvil */
     }
   }
 }

@@ -39,6 +39,10 @@
   @include glassmorphism-button;
 }
 
+.glass-btn-primary {
+  @include glassmorphism-button('primary');
+}
+
 .glass-btn-secondary {
   @include glassmorphism-button('secondary');
 }

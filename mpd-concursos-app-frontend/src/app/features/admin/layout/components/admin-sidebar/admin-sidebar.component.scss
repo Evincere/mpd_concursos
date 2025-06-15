@@ -275,7 +275,7 @@
         }
 
         &.active {
-          color: $color-primary;
+          color: var(--color-primary);
         }
       }
 
@@ -308,7 +308,7 @@
     .section-title {
       font-size: 0.85rem;
       text-transform: uppercase;
-      color: $color-text-secondary;
+      color: var(--text-secondary);
       margin: 0;
       font-weight: 600;
       letter-spacing: 0.5px;
@@ -317,13 +317,13 @@
     .toggle-button {
       background: none;
       border: none;
-      color: $color-text-secondary;
+      color: var(--text-secondary);
       cursor: pointer;
       padding: 4px;
       font-size: 0.8rem;
 
       &:hover {
-        color: $color-text-primary;
+        color: var(--text-primary);
       }
     }
   }
@@ -340,17 +340,17 @@
       align-items: center;
       padding: 8px 16px;
       text-decoration: none;
-      color: $color-text-primary;
+      color: var(--text-primary);
       transition: background-color 0.2s ease;
-      height: $item-height;
+      height: var(--sidebar-item-height);
 
       &:hover, &.active {
-        background-color: rgba($color-primary, 0.1);
+        background-color: rgba(59, 130, 246, 0.1);
       }
 
       &.active {
-        color: $color-primary;
-        border-left: 3px solid $color-primary;
+        color: var(--color-primary);
+        border-left: 3px solid var(--color-primary);
       }
     }
 
@@ -358,7 +358,7 @@
       margin-right: 12px;
       width: 16px;
       text-align: center;
-      color: $color-primary;
+      color: var(--color-primary);
     }
 
     .favorite-label {
@@ -827,7 +827,7 @@
     .favorite-button {
       background: none;
       border: none;
-      color: $color-text-secondary;
+      color: var(--text-secondary);
       cursor: pointer;
       padding: 4px;
       opacity: 0;
@@ -870,7 +870,7 @@
 // Footer
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid $color-border;
+  border-top: 1px solid var(--border-primary);
   transition: all 0.3s ease;
 
   .sidebar.collapsed & {
@@ -883,7 +883,7 @@
     display: flex;
     align-items: center;
     padding: 0.75rem;
-    color: $color-text-secondary;
+    color: var(--text-secondary);
     text-decoration: none;
     border-radius: 4px;
     transition: all 0.2s ease;
@@ -901,8 +901,8 @@
     }
 
     &:hover {
-      background-color: rgba($color-primary, 0.1);
-      color: $color-primary;
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--color-primary);
     }
 
     .footer-icon {
@@ -944,27 +944,27 @@
   margin-left: 8px;
 
   &-primary {
-    background-color: $color-primary;
+    background-color: var(--color-primary);
     color: white;
   }
 
   &-accent {
-    background-color: $color-accent;
+    background-color: var(--color-info);
     color: white;
   }
 
   &-warn {
-    background-color: $color-warn;
+    background-color: var(--color-warning);
     color: white;
   }
 
   &-success {
-    background-color: $color-success;
+    background-color: var(--color-success);
     color: white;
   }
 
   &-info {
-    background-color: $color-info;
+    background-color: var(--color-info);
     color: white;
   }
 }
@@ -973,22 +973,22 @@
 .floating-menu {
   position: fixed;
   z-index: 1000;
-  background-color: $color-surface;
+  background-color: var(--glass-background-primary);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   min-width: 220px;
   overflow: hidden;
   animation: fadeIn 0.2s ease-out;
-  border: 1px solid $color-border;
+  border: 1px solid var(--border-primary);
 
   .floating-header {
     padding: 12px 16px;
-    background-color: rgba($color-primary, 0.1);
-    border-bottom: 1px solid $color-border;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-bottom: 1px solid var(--border-primary);
 
     .floating-title {
       font-weight: 600;
-      color: $color-primary;
+      color: var(--color-primary);
     }
   }
 
@@ -1006,15 +1006,15 @@
       align-items: center;
       padding: 10px 16px;
       text-decoration: none;
-      color: $color-text-primary;
+      color: var(--text-primary);
       transition: background-color 0.2s ease;
 
       &:hover, &.active {
-        background-color: rgba($color-primary, 0.1);
+        background-color: rgba(59, 130, 246, 0.1);
       }
 
       &.active {
-        color: $color-primary;
+        color: var(--color-primary);
       }
     }
 
@@ -1037,20 +1037,20 @@
     display: flex;
     align-items: center;
     padding: 1rem;
-    background-color: rgba($color-primary, 0.1);
-    border-bottom: 1px solid $color-border;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-bottom: 1px solid var(--border-primary);
 
     .floating-menu-icon {
       font-size: 1.25rem;
       width: 1.25rem;
       height: 1.25rem;
       margin-right: 0.75rem;
-      color: $color-primary;
+      color: var(--color-primary);
     }
 
     .floating-menu-title {
       font-weight: 600;
-      color: $color-primary;
+      color: var(--color-primary);
     }
   }
 
@@ -1064,18 +1064,18 @@
         display: flex;
         align-items: center;
         padding: 0.75rem 1rem;
-        color: $color-text-secondary;
+        color: var(--text-secondary);
         text-decoration: none;
         transition: all 0.2s ease;
 
         &:hover {
-          background-color: rgba($color-primary, 0.05);
-          color: $color-primary;
+          background-color: rgba(59, 130, 246, 0.05);
+          color: var(--color-primary);
         }
 
         &.active {
-          background-color: rgba($color-primary, 0.1);
-          color: $color-primary;
+          background-color: rgba(59, 130, 246, 0.1);
+          color: var(--color-primary);
           font-weight: 500;
         }
 
@@ -1092,8 +1092,8 @@
 
 // Indicador visual para el elemento que tiene el menú flotante activo
 .active-floating-menu {
-  background-color: rgba($color-primary, 0.15) !important;
-  color: $color-primary !important;
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: var(--color-primary) !important;
 }
 
 @keyframes fadeIn {
@@ -1120,7 +1120,7 @@
       }
 
       &:focus-visible {
-        border-color: $focus-color;
+        border-color: var(--color-primary);
         outline-width: 3px;
       }
     }
@@ -1130,7 +1130,7 @@
       border-color: rgba(255, 255, 255, 0.3);
 
       &:focus-within {
-        border-color: $focus-color;
+        border-color: var(--color-primary);
         border-width: 3px;
       }
     }
@@ -1178,86 +1178,86 @@
 // Estilos para tema oscuro
 @media (prefers-color-scheme: dark) {
   .sidebar {
-    background-color: $color-surface-dark;
-    color: $color-text-primary-dark;
-    border-right-color: $color-border-dark;
+    background-color: var(--glass-background-primary);
+    color: var(--text-primary);
+    border-right-color: var(--border-primary);
   }
 
   .sidebar-nav .nav-item a {
-    color: $color-text-secondary-dark;
+    color: var(--text-secondary);
 
     &:hover {
-      background-color: rgba($color-primary-dark, 0.2);
-      color: $color-primary-dark;
+      background-color: rgba(59, 130, 246, 0.2);
+      color: var(--color-primary);
     }
 
     &.active {
-      background-color: rgba($color-primary-dark, 0.25);
-      color: $color-primary-dark;
+      background-color: rgba(59, 130, 246, 0.25);
+      color: var(--color-primary);
 
       &::before {
-        background-color: $color-primary-dark;
+        background-color: var(--color-primary);
       }
 
       &::after {
         background: linear-gradient(
           to right,
-          rgba($color-primary-dark, 0.05) 0%,
-          rgba($color-primary-dark, 0.1) 50%,
-          rgba($color-primary-dark, 0.05) 100%
+          rgba(59, 130, 246, 0.05) 0%,
+          rgba(59, 130, 246, 0.1) 50%,
+          rgba(59, 130, 246, 0.05) 100%
         );
       }
     }
   }
 
   .sidebar-footer {
-    border-top-color: $color-border-dark;
+    border-top-color: var(--border-primary);
 
     .footer-item {
-      color: $color-text-secondary-dark;
+      color: var(--text-secondary);
 
       &:hover {
-        background-color: rgba($color-primary-dark, 0.2);
-        color: $color-primary-dark;
+        background-color: rgba(59, 130, 246, 0.2);
+        color: var(--color-primary);
       }
     }
   }
 
   // Estilos para el menú flotante en tema oscuro
   .floating-menu {
-    background-color: $color-surface-dark;
-    border-color: $color-border-dark;
+    background-color: var(--glass-background-primary);
+    border-color: var(--border-primary);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 
     .floating-menu-header {
-      background-color: rgba($color-primary-dark, 0.2);
-      border-bottom-color: $color-border-dark;
+      background-color: rgba(59, 130, 246, 0.2);
+      border-bottom-color: var(--border-primary);
 
       .floating-menu-icon,
       .floating-menu-title {
-        color: $color-primary-dark;
+        color: var(--color-primary);
       }
     }
 
     .floating-menu-list .floating-menu-item a {
-      color: $color-text-secondary-dark;
+      color: var(--text-secondary);
 
       &:hover {
-        background-color: rgba($color-primary-dark, 0.1);
-        color: $color-primary-dark;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--color-primary);
       }
 
       &.active {
-        background-color: rgba($color-primary-dark, 0.2);
-        color: $color-primary-dark;
+        background-color: rgba(59, 130, 246, 0.2);
+        color: var(--color-primary);
       }
     }
   }
 
   // Indicador visual para el elemento activo en tema oscuro
   .active-floating-menu {
-    background-color: rgba($color-primary-dark, 0.25) !important;
-    color: $color-primary-dark !important;
+    background-color: rgba(59, 130, 246, 0.25) !important;
+    color: var(--color-primary) !important;
   }
 }
 
@@ -1266,29 +1266,29 @@
   display: flex;
   gap: 8px;
   padding: 8px 16px;
-  border-bottom: 1px solid $glass-background-secondary;
+  border-bottom: 1px solid var(--glass-background-secondary);
   margin-bottom: 8px;
 
   .customization-btn,
   .drag-btn {
     background: transparent;
-    border: 1px solid $glass-background-secondary;
-    color: $text-primary;
+    border: 1px solid var(--glass-background-secondary);
+    color: var(--text-primary);
     padding: 6px 8px;
-    border-radius: $border-radius-lg;
+    border-radius: var(--border-radius-lg);
     cursor: pointer;
-    transition: all $transition-smooth;
+    transition: var(--transition-normal);
     font-size: 12px;
 
     &:hover {
-      background: $glass-hover-primary;
-      border-color: $focus-color;
+      background: var(--glass-hover-primary);
+      border-color: var(--color-primary);
       transform: translateY(-1px);
     }
 
     &.active {
-      background: $focus-color;
-      border-color: $focus-color;
+      background: var(--color-primary);
+      border-color: var(--color-primary);
       color: white;
       box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
@@ -1303,16 +1303,16 @@
   &.drag-mode {
     .module-item {
       cursor: grab;
-      transition: all $transition-smooth;
+      transition: var(--transition-normal);
 
       &.dragging {
         cursor: grabbing;
       }
 
       &.cdk-drag-preview {
-        background: $glass-background-primary;
-        border: 1px solid $focus-color;
-        border-radius: $border-radius-lg;
+        background: var(--glass-background-primary);
+        border: 1px solid var(--color-primary);
+        border-radius: var(--border-radius-lg);
         box-shadow:
           0 8px 32px rgba(0, 0, 0, 0.4),
           0 0 0 1px rgba(59, 130, 246, 0.3);
@@ -1323,9 +1323,9 @@
 
       &.cdk-drag-placeholder {
         opacity: 0.3;
-        background: $glass-hover-secondary;
-        border: 2px dashed $glass-background-secondary;
-        border-radius: $border-radius-lg;
+        background: var(--glass-hover-secondary);
+        border: 2px dashed var(--glass-background-secondary);
+        border-radius: var(--border-radius-lg);
 
         .module-header {
           opacity: 0.5;
@@ -1337,9 +1337,9 @@
       }
 
       &:hover {
-        background: $glass-hover-primary;
+        background: var(--glass-hover-primary);
         transform: translateX(2px);
-        border-left: 3px solid $focus-color;
+        border-left: 3px solid var(--color-primary);
       }
     }
   }
@@ -1350,10 +1350,10 @@
   bottom: 60px;
   left: 0;
   right: 0;
-  background: $glass-background-primary;
+  background: var(--glass-background-primary);
   backdrop-filter: blur(16px);
-  border-top: 1px solid $glass-background-secondary;
-  border-radius: $border-radius-lg $border-radius-lg 0 0;
+  border-top: 1px solid var(--glass-background-secondary);
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
   box-shadow:
     0 -8px 32px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -1367,11 +1367,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid $glass-background-secondary;
+    border-bottom: 1px solid var(--glass-background-secondary);
 
     h4 {
       margin: 0;
-      color: $text-primary;
+      color: var(--text-primary);
       font-size: 14px;
       font-weight: 600;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -1380,14 +1380,14 @@
     .close-btn {
       background: transparent;
       border: none;
-      color: $text-primary;
+      color: var(--text-primary);
       cursor: pointer;
       padding: 4px;
       border-radius: 4px;
-      transition: all $transition-smooth;
+      transition: var(--transition-normal);
 
       &:hover {
-        background: $glass-hover-primary;
+        background: var(--glass-hover-primary);
         transform: scale(1.1);
       }
     }
@@ -1401,7 +1401,7 @@
 
       label {
         display: block;
-        color: $text-primary;
+        color: var(--text-primary);
         font-size: 12px;
         font-weight: 500;
         margin-bottom: 4px;
@@ -1410,9 +1410,9 @@
 
       select {
         width: 100%;
-        background: $glass-hover-primary;
-        border: 1px solid $glass-background-secondary;
-        color: $text-primary;
+        background: var(--glass-hover-primary);
+        border: 1px solid var(--glass-background-secondary);
+        color: var(--text-primary);
         padding: 6px 8px;
         border-radius: 4px;
         font-size: 12px;
@@ -1420,13 +1420,13 @@
 
         &:focus {
           outline: none;
-          border-color: $focus-color;
-          box-shadow: 0 0 0 2px $focus-color-secondary;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 2px var(--focus-color-secondary);
         }
 
         option {
-          background: $glass-background-primary;
-          color: $text-primary;
+          background: var(--glass-background-primary);
+          color: var(--text-primary);
         }
       }
     }
@@ -1437,14 +1437,14 @@
       flex-wrap: wrap;
 
       .action-btn {
-        background: $glass-hover-primary;
-        border: 1px solid $glass-background-secondary;
-        color: $text-primary;
+        background: var(--glass-hover-primary);
+        border: 1px solid var(--glass-background-secondary);
+        color: var(--text-primary);
         padding: 6px 12px;
         border-radius: 4px;
         cursor: pointer;
         font-size: 11px;
-        transition: all $transition-smooth;
+        transition: var(--transition-normal);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
@@ -1484,12 +1484,12 @@
 
 // Variables CSS personalizables para temas
 :root {
-  --sidebar-primary-color: #{$focus-color};
+  --sidebar-primary-color: var(--color-primary);
   --sidebar-accent-color: #10b981;
-  --sidebar-background-color: #{$glass-background-primary};
-  --sidebar-text-color: #{$text-primary};
-  --sidebar-border-color: #{$glass-background-secondary};
-  --sidebar-hover-color: #{$glass-hover-primary};
+  --sidebar-background-color: var(--glass-background-primary);
+  --sidebar-text-color: var(--text-primary);
+  --sidebar-border-color: var(--glass-background-secondary);
+  --sidebar-hover-color: var(--glass-hover-primary);
   --sidebar-item-height: 40px;
   --sidebar-padding: 8px;
   --sidebar-font-size: 14px;

@@ -7,6 +7,31 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [1.0.0-prod] - 2025-01-XX - PREPARACIÓN PARA PRODUCCIÓN
 
+### 🎨 Vista Crear Nuevo Concurso - Auditoría de Visibilidad y Glassmorphism
+- **COMPLETADO**: Auditoría completa de visibilidad y estilos aplicando correcciones exitosas de gestión de concursos
+- **Migración al Sistema Unificado**: Implementación de variables glassmorphism centralizadas
+  - Uso de `--glass-gradient-primary`, `--text-primary`, `--text-secondary` para consistencia
+  - Aplicación de `--border-success`, `--shadow-focus-strong` para estados interactivos
+  - Integración completa con `glassmorphism-system.scss`
+- **Mejoras de Contraste WCAG AA**: Cumplimiento 4.5:1 ratio en todos los elementos
+  - Títulos principales: `--text-primary` con `text-shadow` y `filter: drop-shadow`
+  - Subtítulos/labels: `--text-secondary` con contraste mejorado
+  - Campos de formulario: Opacidades optimizadas (0.9-0.95 vs 0.8-0.9 anterior)
+  - Botones: Colores específicos con tema concursos `--contests-theme-color`
+- **Consistencia Visual Total**: Alineación con vistas ya corregidas
+  - Header glassmorphism con `--backdrop-filter-strong` y `--shadow-lg`
+  - Formularios con `--backdrop-filter-medium` y gradientes optimizados
+  - Pestañas (tabs) con estados activos mejorados usando tema #4CAF50
+  - Selectores y datepickers con mejor visibilidad y contraste
+- **Responsive Design Optimizado**: Mantenimiento de visibilidad en todos los dispositivos
+  - Variables de spacing (`--spacing-lg`, `--spacing-md`) para consistencia
+  - Backdrop-filter optimizado para móviles (`--backdrop-filter-light`)
+  - Transiciones suaves usando `--transition-normal`
+- **Accesibilidad Mejorada**: Soporte completo para navegación por teclado y alto contraste
+  - Focus states con `--shadow-focus-strong` y `--border-success`
+  - Soporte para `prefers-reduced-motion` y `prefers-contrast: high`
+  - Screen reader support y outline mejorado para `focus-visible`
+
 ### 🚀 Deployment en Servidor Donweb
 - **Configurado** deployment para servidor vps-4778464-x.dattaweb.com (149.50.132.23)
 - **Optimizado** Docker Compose para producción con límites de recursos

@@ -1,18 +1,35 @@
-<mat-card class="widget-card" [routerLink]="widget.route">
-  <mat-card-content>
-    <div class="widget-header">
-      <div class="widget-icon" [style.background-color]="widget.color + '15'">
-        <mat-icon [style.color]="widget.color">{{widget.icon}}</mat-icon>
-      </div>
-      <div class="widget-count" [style.color]="widget.color">{{widget.count | number}}</div>
+<!-- Quick Access Widget - Glassmorphism Premium Design -->
+<div
+  class="quick-access-card"
+  [routerLink]="widget.route"
+  [attr.aria-label]="'Acceder a ' + widget.title"
+  role="button"
+  tabindex="0"
+  (keydown.enter)="onCardClick()"
+  (keydown.space)="onCardClick()">
+
+  <!-- Card Header with Icon and Count -->
+  <div class="card-header">
+    <div class="icon-container" [style.background]="getIconBackground()">
+      <i [class]="'fas fa-' + widget.icon" [style.color]="widget.color" aria-hidden="true"></i>
     </div>
-    <div class="widget-content">
-      <h3 class="widget-title">{{widget.title}}</h3>
-      <p class="widget-description">{{widget.description}}</p>
+    <div class="count-display" [style.color]="widget.color">
+      {{ widget.count | number }}
     </div>
-    <div class="widget-footer">
-      <span class="widget-action">Ver ahora</span>
-      <mat-icon>arrow_forward</mat-icon>
-    </div>
-  </mat-card-content>
-</mat-card>
+  </div>
+
+  <!-- Card Content -->
+  <div class="card-content">
+    <h3 class="card-title">{{ widget.title }}</h3>
+    <p class="card-description">{{ widget.description }}</p>
+  </div>
+
+  <!-- Card Footer with Action -->
+  <div class="card-footer">
+    <span class="action-text">Ver ahora</span>
+    <i class="fas fa-arrow-right action-icon" aria-hidden="true"></i>
+  </div>
+
+  <!-- Hover Effect Overlay -->
+  <div class="hover-overlay" aria-hidden="true"></div>
+</div>
