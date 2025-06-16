@@ -74,11 +74,23 @@
               <span>{{ getStatusMessage(postulacion) }}</span>
             </div>
 
+            <!-- Botón para retomar proceso interrumpido -->
+            <app-custom-button
+              *ngIf="postulacion.estado === 'ACTIVE'"
+              [variant]="'primary'"
+              [icon]="'play'"
+              [label]="'Retomar proceso de inscripción'"
+              [tooltip]="'Continuar con el proceso de inscripción donde lo dejaste'"
+              [ariaLabel]="'Retomar proceso de inscripción para: ' + (postulacion.concurso?.title || 'Sin título')"
+              (buttonClick)="retomarInscripcion(postulacion)">
+            </app-custom-button>
+
             <!-- Botón para completar documentación si está pendiente -->
             <app-custom-button
               *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'"
-              [variant]="'primary'"
+              [variant]="'warning'"
               [icon]="'file-upload'"
+              [label]="'Completar documentación'"
               [tooltip]="'Completar documentación'"
               [ariaLabel]="'Completar documentación para: ' + (postulacion.concurso?.title || 'Sin título')"
               (buttonClick)="completarDocumentacion(postulacion)">

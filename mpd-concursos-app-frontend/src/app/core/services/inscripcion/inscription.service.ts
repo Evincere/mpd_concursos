@@ -458,6 +458,15 @@ export class InscriptionService {
       return of(localInscription.state);
     }
 
+    // CRITICAL FIX: Check localStorage for interrupted inscription processes
+    const incompleteInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
+    const interruptedInscription = incompleteInscriptions.find(ins => ins.contestId === numericContestId);
+
+    if (interruptedInscription) {
+      this.loggingService.debug(`[InscriptionService] Found interrupted inscription in localStorage for contest ${numericContestId}. Returning ACTIVE state.`, interruptedInscription, 'Inscription');
+      return of(InscripcionState.ACTIVE); // Return ACTIVE to indicate it can be resumed
+    }
+
     this.loggingService.debug('[InscriptionService] No local inscription found, querying backend...', undefined, 'Inscription');
 
     // Optimization: Check if a request for this contest is already pending

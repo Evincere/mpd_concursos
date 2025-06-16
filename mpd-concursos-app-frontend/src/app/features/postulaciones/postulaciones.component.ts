@@ -224,6 +224,18 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.postulacionSeleccionada = null;
   }
 
+  retomarInscripcion(postulacion: Postulacion): void {
+    if (postulacion.contestId) {
+      // Navegar al proceso de inscripción para retomar donde se dejó
+      this.router.navigate(['/concursos', postulacion.contestId, 'inscripcion'], {
+        queryParams: {
+          inscriptionId: postulacion.id,
+          resume: 'true'
+        }
+      });
+    }
+  }
+
   completarDocumentacion(postulacion: Postulacion): void {
     if (postulacion.contestId) {
       this.router.navigate(['/concursos', postulacion.contestId, 'inscripcion', 'documentos']);

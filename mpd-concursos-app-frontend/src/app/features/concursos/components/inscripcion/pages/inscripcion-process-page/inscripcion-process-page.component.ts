@@ -159,10 +159,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     ).subscribe(params => {
       this.contestId = params['contestId'] ? Number(params['contestId']) : null;
       this.inscriptionId = params['inscriptionId'] || null;
+      const isResume = params['resume'] === 'true';
 
       this.loggingService.debug('[InscripcionProcess] Parámetros recibidos:', {
         contestId: this.contestId,
-        inscriptionId: this.inscriptionId
+        inscriptionId: this.inscriptionId,
+        isResume: isResume
       }, 'InscripcionProcessPage');
 
       if (!this.contestId) {
@@ -171,30 +173,68 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // CRITICAL FIX: inscriptionId is now optional - will be created after terms acceptance
-      // if (!this.inscriptionId) {
-      //   console.error('[InscripcionProcess] Error: No se recibió el ID de inscripción');
-      //   this.notificationService.error('Error: No se pudo obtener el ID de inscripción. Por favor, intente nuevamente.');
-      //   this.router.navigate(['/dashboard/concursos']);
-      //   return;
-      // }
+      // CRITICAL FIX: Verificar si ya existe una inscripción cancelada para este concurso
+      // Si existe, mostrar mensaje y no permitir continuar
+      this.inscriptionService.getInscriptionStatus(this.contestId).pipe(
+        takeUntil(this.destroy$),
+        catchError(error => {
+          console.error('[InscripcionProcess] Error al verificar estado de inscripción:', error);
+          return of(InscripcionState.ACTIVE); // Continuar si hay error
+        })
+      ).subscribe(status => {
+        if (status === InscripcionState.CANCELLED) {
+          this.notificationService.error('No puede volver a inscribirse a un concurso donde canceló su inscripción');
+          this.router.navigate(['/dashboard/concursos']);
+          return;
+        }
 
-      // Cargar datos del concurso
-      this.cargarDatosConcurso();
-
-      // Cargar estado guardado si existe
-      this.cargarEstadoGuardado();
-
-      // Cargar centro de vida desde el perfil si existe
-      this.cargarCentroDeVidaDesdePerfilUsuario();
-
-      // Cargar términos y condiciones
-      this.loadTermsAndConditions();
-
-      // Actualizar el estado de los documentos en el resumen
-      // Esto debe hacerse después de cargar el estado guardado y los datos del concurso
-      this.actualizarEstadoDocumentos();
+        // Solo continuar si no hay inscripción cancelada
+        this.initializeInscriptionProcess(isResume);
+      });
     });
+
+    // Suscribirse al estado de documentación centralizado
+    this.inscriptionDocumentationService.documentationState$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      this.documentationState = state;
+      this.cdr.detectChanges();
+    });
+
+    // Suscribirse a cambios en el checkbox de inscripción provisional
+    this.documentosCompletosControl.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(value => {
+      this.onProvisionalAcceptanceChange(value);
+    });
+  }
+
+  /**
+   * CRITICAL FIX: Inicializa el proceso de inscripción solo después de verificar que no hay restricciones
+   * @param isResume Indica si es una recuperación de proceso interrumpido
+   */
+  private initializeInscriptionProcess(isResume: boolean = false): void {
+    // Cargar datos del concurso
+    this.cargarDatosConcurso();
+
+    // Cargar estado guardado si existe (solo si hay inscriptionId)
+    if (this.inscriptionId) {
+      this.cargarEstadoGuardado();
+    } else if (isResume) {
+      // CRITICAL FIX: Si es una recuperación pero no hay inscriptionId, buscar en localStorage
+      this.recuperarProcesoInterrumpido();
+    }
+
+    // Cargar centro de vida desde el perfil si existe
+    this.cargarCentroDeVidaDesdePerfilUsuario();
+
+    // Cargar términos y condiciones
+    this.loadTermsAndConditions();
+
+    // Actualizar el estado de los documentos en el resumen (solo si hay inscriptionId)
+    if (this.inscriptionId) {
+      this.actualizarEstadoDocumentos();
+    }
 
     // Suscribirse al estado de documentación centralizado
     this.inscriptionDocumentationService.documentationState$.pipe(
@@ -272,6 +312,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       if (!this.canProceed()) {
         this.showValidationErrorMessages();
         return;
+      }
+
+      // CRITICAL FIX: Crear inscripción solo cuando se avanza del paso 1 al paso 2
+      if (this.currentStep === 1 && !this.inscriptionId && this.contestId) {
+        this.createInscriptionWhenAdvancingToStep2();
+        return; // Salir aquí, la creación de inscripción manejará el avance al paso 2
       }
 
       this.currentStep++;
@@ -696,6 +742,74 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     ).subscribe();
   }
 
+  /**
+   * CRITICAL FIX: Recupera un proceso de inscripción interrumpido desde localStorage
+   * y sincroniza con el backend para obtener el inscriptionId
+   */
+  private recuperarProcesoInterrumpido(): void {
+    if (!this.contestId) {
+      this.loggingService.error('[InscripcionProcess] No contest ID available for recovery', undefined, 'InscripcionProcessPage');
+      return;
+    }
+
+    // Buscar proceso interrumpido en localStorage
+    const incompleteInscriptions = this.inscriptionStateService.getAllIncompleteInscriptions();
+    const interruptedProcess = incompleteInscriptions.find(ins => ins.contestId === this.contestId);
+
+    if (interruptedProcess) {
+      this.loggingService.debug('[InscripcionProcess] Found interrupted process in localStorage:', interruptedProcess, 'InscripcionProcessPage');
+
+      // Buscar la inscripción en el backend para obtener el ID real
+      this.inscriptionService.getUserInscriptions(0, 100).pipe(
+        takeUntil(this.destroy$),
+        map(page => page.content.find(ins => ins.contestId === this.contestId)),
+        catchError(error => {
+          this.loggingService.error('[InscripcionProcess] Error retrieving inscription from backend:', error, 'InscripcionProcessPage');
+          // Si no se puede obtener del backend, usar solo el estado local
+          this.cargarEstadoDesdeLocalStorage(interruptedProcess);
+          return of(null);
+        })
+      ).subscribe((inscription: any) => {
+        if (inscription) {
+          this.inscriptionId = inscription.id;
+          this.loggingService.debug('[InscripcionProcess] Retrieved inscription ID from backend:', this.inscriptionId, 'InscripcionProcessPage');
+
+          // Cargar estado combinando backend y localStorage
+          this.cargarEstadoGuardado();
+        } else {
+          // Usar solo el estado local si no hay respuesta del backend
+          this.cargarEstadoDesdeLocalStorage(interruptedProcess);
+        }
+
+        this.notificationService.info('Proceso de inscripción recuperado. Continuando donde lo dejaste.');
+      });
+    } else {
+      this.loggingService.debug('[InscripcionProcess] No interrupted process found in localStorage for contest:', this.contestId, 'InscripcionProcessPage');
+    }
+  }
+
+  /**
+   * Carga el estado desde localStorage cuando no hay conexión con backend
+   */
+  private cargarEstadoDesdeLocalStorage(savedState: any): void {
+    if (savedState) {
+      this.currentStep = Number(savedState.currentStep) || 1;
+
+      if (savedState.formData) {
+        this.inscriptionForm.patchValue({
+          termsAccepted: savedState.formData.termsAccepted || false,
+          centroDeVida: savedState.formData.centroDeVida || '',
+          selectedCircunscripciones: savedState.formData.selectedCircunscripciones || [],
+          documentosCompletos: savedState.formData.documentosCompletos || false,
+          confirmedPersonalData: savedState.formData.confirmedPersonalData || false
+        });
+      }
+
+      this.updateProgressPercentage();
+      this.loggingService.debug('[InscripcionProcess] Estado cargado desde localStorage:', savedState, 'InscripcionProcessPage');
+    }
+  }
+
   // Cargar estado guardado
   cargarEstadoGuardado(): void {
     // CRITICAL FIX: Only load saved state if inscriptionId exists
@@ -719,7 +833,24 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       }
 
       this.updateProgressPercentage();
-      this.notificationService.info('Estado de inscripción anterior recuperado.');
+
+      // CRITICAL FIX: Solo mostrar notificación si realmente hay datos significativos recuperados
+      // No mostrar para procesos nuevos donde solo se recupera el paso 1 con términos no aceptados
+      const hasSignificantData = savedState.formData && (
+        savedState.formData.termsAccepted ||
+        savedState.formData.centroDeVida ||
+        (savedState.formData.selectedCircunscripciones && savedState.formData.selectedCircunscripciones.length > 0) ||
+        savedState.formData.documentosCompletos ||
+        savedState.formData.confirmedPersonalData ||
+        (savedState.currentStep && Number(savedState.currentStep) > 1)
+      );
+
+      if (hasSignificantData) {
+        this.notificationService.info('Estado de inscripción anterior recuperado.');
+        this.loggingService.debug('[InscripcionProcess] Estado significativo recuperado - mostrando notificación', savedState, 'InscripcionProcessPage');
+      } else {
+        this.loggingService.debug('[InscripcionProcess] Estado mínimo recuperado - no se muestra notificación', savedState, 'InscripcionProcessPage');
+      }
     }
   }
 
@@ -825,14 +956,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         this.router.navigate(['/dashboard/concursos']);
       }, 1500);
     } else {
-      // CRITICAL FIX: Create inscription only when user accepts terms
-      if (!this.inscriptionId && this.contestId) {
-        this.createInscriptionAfterTermsAcceptance();
-      } else {
-        this.showValidationErrors = false; // Clear validation errors when accepted
-        this.guardarEstadoActual(); // Save current state only if accepted
-        this.cdr.detectChanges();
-      }
+      // CRITICAL FIX: Solo limpiar errores de validación cuando acepta términos
+      // La inscripción se creará cuando avance al paso 2, no aquí
+      this.showValidationErrors = false; // Clear validation errors when accepted
+      this.cdr.detectChanges();
     }
   }
 
@@ -1204,22 +1331,22 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * CRITICAL FIX: Creates inscription after user accepts terms and conditions
-   * If inscription already exists, uses the existing one instead of creating a new one
+   * CRITICAL FIX: Creates inscription when advancing from step 1 to step 2
+   * This ensures inscription is only created when user actually progresses beyond terms acceptance
    */
-  private createInscriptionAfterTermsAcceptance(): void {
+  private createInscriptionWhenAdvancingToStep2(): void {
     if (!this.contestId) {
       this.notificationService.error('Error: No se ha especificado un concurso válido');
       this.router.navigate(['/dashboard/concursos']);
       return;
     }
 
-    this.loggingService.debug('[InscripcionProcess] Creating inscription after terms acceptance for contest:', this.contestId, 'InscripcionProcessPage');
+    this.loggingService.debug('[InscripcionProcess] Creating inscription when advancing to step 2 for contest:', this.contestId, 'InscripcionProcessPage');
 
     this.inscriptionService.createInscription(this.contestId).pipe(
       takeUntil(this.destroy$),
       catchError(error => {
-        console.error('[InscripcionProcess] Error creating inscription after terms acceptance:', error);
+        console.error('[InscripcionProcess] Error creating inscription when advancing to step 2:', error);
 
         // Check if error is due to existing inscription (409 Conflict)
         if (error.message && error.message.includes('Ya existe una inscripción')) {
@@ -1266,8 +1393,18 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           });
 
           this.showValidationErrors = false;
+
+          // CRITICAL FIX: Avanzar al paso 2 después de crear la inscripción
+          this.currentStep = 2;
+          this.updateProgressPercentage();
           this.guardarEstadoActual();
           this.cdr.detectChanges();
+
+          // Scroll automático al nuevo paso
+          setTimeout(() => {
+            this.performImmediateScroll();
+            this.scrollToTopAfterAnimation();
+          }, 50);
         } else {
           this.notificationService.error('Error: No se recibió un ID de inscripción válido');
           this.router.navigate(['/dashboard/concursos']);
