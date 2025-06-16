@@ -728,6 +728,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   isDragging = false;
   uploading = false;
   progresoGlobal = 0;
+  monitoringRetries = 0;
+  procesoFinalizado = false; // Bandera para evitar múltiples finalizaciones
 
   // Documentos requeridos y ya subidos
   documentosRequeridos: TipoDocumento[] = [];
@@ -1086,6 +1088,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
 
     this.uploading = true;
     this.progresoGlobal = 0;
+    this.monitoringRetries = 0; // Reset retry counter for new upload
+    this.procesoFinalizado = false; // Reset finalization flag
 
     // Primero validamos todos los documentos
     this.validarDocumentos().then(() => {
@@ -1263,7 +1267,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
         clearInterval(intervalo);
 
         // Finalizar proceso
-        this.finalizarProceso();
+        if (!this.procesoFinalizado) {
+          this.finalizarProceso();
+        }
         return;
       }
 
@@ -1283,7 +1289,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
 
               // Detener el intervalo y finalizar
               clearInterval(intervalo);
-              this.finalizarProceso();
+              if (!this.procesoFinalizado) {
+                this.finalizarProceso();
+              }
               return;
             }
 
@@ -1327,7 +1335,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
               clearInterval(intervalo);
 
               // Finalizar proceso
-              this.finalizarProceso();
+              if (!this.procesoFinalizado) {
+                this.finalizarProceso();
+              }
             }
           },
           error: (error) => {
@@ -1345,43 +1355,137 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
               return;
             }
 
-            // Para otros errores, intentar completar los documentos que estaban en progreso
-            let documentosEnProgreso = 0;
-            this.documentosParaSubir.forEach(doc => {
-              if (doc.estado === 'subiendo' || doc.estado === 'validando') {
-                doc.estado = 'completado';
-                doc.progreso = 100;
-                documentosEnProgreso++;
+            // Para otros errores de red o temporales, intentar una vez más antes de fallar
+            // Verificar si hay documentos que realmente se subieron consultando el backend
+            this.verificarDocumentosSubidos().then((documentosVerificados) => {
+              if (documentosVerificados > 0) {
+                // Si se verificó que algunos documentos se subieron, marcarlos como completados
+                this.documentosParaSubir.forEach(doc => {
+                  if (doc.estado === 'subiendo' || doc.estado === 'validando') {
+                    doc.estado = 'completado';
+                    doc.progreso = 100;
+                  }
+                });
+                clearInterval(intervalo);
+                if (!this.procesoFinalizado) {
+                  this.finalizarProceso();
+                }
+              } else {
+                // Si no se pudo verificar, mantener el estado actual y continuar monitoreando
+                // pero limitar el número de reintentos
+                if (!this.monitoringRetries) {
+                  this.monitoringRetries = 0;
+                }
+                this.monitoringRetries++;
+
+                if (this.monitoringRetries >= 3) {
+                  // Después de 3 reintentos, asumir que los documentos se completaron
+                  this.documentosParaSubir.forEach(doc => {
+                    if (doc.estado === 'subiendo' || doc.estado === 'validando') {
+                      doc.estado = 'completado';
+                      doc.progreso = 100;
+                    }
+                  });
+                  clearInterval(intervalo);
+                  if (!this.procesoFinalizado) {
+                    this.finalizarProceso();
+                  }
+                }
+              }
+            }).catch(() => {
+              // Si la verificación también falla, asumir que se completaron
+              this.documentosParaSubir.forEach(doc => {
+                if (doc.estado === 'subiendo' || doc.estado === 'validando') {
+                  doc.estado = 'completado';
+                  doc.progreso = 100;
+                }
+              });
+              clearInterval(intervalo);
+              if (!this.procesoFinalizado) {
+                this.finalizarProceso();
               }
             });
-
-            // Si había documentos en progreso, asumir que se completaron
-            if (documentosEnProgreso > 0) {
-              clearInterval(intervalo);
-              this.finalizarProceso();
-            }
           }
         });
     }, 2000); // Consultar cada 2 segundos
   }
 
   /**
+   * Verifica si los documentos realmente se subieron consultando el backend
+   * @returns Promise con el número de documentos verificados como subidos
+   */
+  async verificarDocumentosSubidos(): Promise<number> {
+    try {
+      // Obtener documentos del usuario desde el backend
+      const documentosUsuario = await this.documentosService.getDocumentosUsuario().toPromise();
+
+      if (!documentosUsuario) {
+        return 0;
+      }
+
+      // Contar cuántos de los documentos que estamos subiendo ya existen en el backend
+      let documentosVerificados = 0;
+
+      this.documentosParaSubir.forEach(doc => {
+        if (doc.estado === 'subiendo' || doc.estado === 'validando') {
+          // Buscar si existe un documento del mismo tipo subido recientemente
+          const documentoExistente = documentosUsuario.find(docUsuario =>
+            docUsuario.tipoDocumentoId === doc.tipoDocumentoId &&
+            docUsuario.nombreArchivo === doc.file.name
+          );
+
+          if (documentoExistente) {
+            documentosVerificados++;
+          }
+        }
+      });
+
+      return documentosVerificados;
+    } catch (error) {
+      console.error('Error al verificar documentos subidos:', error);
+      return 0;
+    }
+  }
+
+  /**
    * Finaliza el proceso de carga de documentos
    */
   finalizarProceso(): void {
+    // CRITICAL FIX: Evitar múltiples finalizaciones
+    if (this.procesoFinalizado) {
+      console.log('[DocumentoMultipleUpload] Proceso ya finalizado, evitando duplicación');
+      return;
+    }
+
+    console.log('[DocumentoMultipleUpload] Finalizando proceso de carga de documentos');
+    this.procesoFinalizado = true;
     this.uploading = false;
 
     // Contar documentos completados y totales
     const documentosCompletados = this.documentosParaSubir.filter(doc => doc.estado === 'completado').length;
+    const documentosConError = this.documentosParaSubir.filter(doc => doc.estado === 'error').length;
     const totalDocumentos = this.documentosParaSubir.filter(doc => doc.estado !== 'pendiente').length;
 
-    if (documentosCompletados === totalDocumentos) {
+    // CRITICAL FIX: Mejorar la lógica de mensajes finales
+    if (documentosCompletados === totalDocumentos && documentosCompletados > 0) {
+      // Todos los documentos se completaron exitosamente
       this.mostrarExito(`Se han subido ${documentosCompletados} documentos correctamente`);
       this.dialogRef.close(true as any);
-    } else if (documentosCompletados > 0) {
-      this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos`);
+    } else if (documentosCompletados > 0 && documentosConError === 0) {
+      // Algunos documentos se completaron, pero no hay errores explícitos
+      // Esto puede ocurrir cuando hay documentos en estado 'pendiente' o similar
+      this.mostrarExito(`Se han subido ${documentosCompletados} documentos correctamente`);
+      this.dialogRef.close(true as any);
+    } else if (documentosCompletados > 0 && documentosConError > 0) {
+      // Algunos documentos se completaron, pero otros tuvieron errores
+      this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos. ${documentosConError} documentos tuvieron errores.`);
+      this.dialogRef.close(true as any); // Cerrar con éxito parcial
+    } else if (documentosConError > 0) {
+      // Solo hay documentos con error
+      this.mostrarError(`No se pudo subir ningún documento. ${documentosConError} documentos tuvieron errores.`);
     } else {
-      this.mostrarError('No se pudo subir ningún documento');
+      // Caso por defecto - no hay documentos completados ni con error explícito
+      this.mostrarError('No se pudo completar la subida de documentos');
     }
   }
 
