@@ -5,6 +5,39 @@
 /* Sistema glassmorphism unificado que reemplaza todos los sistemas anteriores */
 @import './styles/unified-glassmorphism-system';
 
+/* === SKIP LINKS PARA ACCESIBILIDAD === */
+.skip-links {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 9999;
+
+  .skip-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: var(--color-focus);
+    color: var(--color-primary);
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 0 0 var(--radius-md) 0;
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition-fast);
+
+    &:focus {
+      top: 0;
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    &:hover {
+      background: var(--color-info);
+      transform: var(--transform-hover);
+    }
+  }
+}
+
 /* === LEGACY IMPORTS === */
 /* Mantener solo las importaciones necesarias que no están en el sistema unificado */
 @import './styles/responsive';

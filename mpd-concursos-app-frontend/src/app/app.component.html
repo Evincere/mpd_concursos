@@ -1,6 +1,12 @@
+<!-- Skip Links para accesibilidad -->
+<div class="skip-links">
+  <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+  <a href="#navigation" class="skip-link">Saltar a la navegación</a>
+</div>
+
 <app-page-transition [simulateDelay]="true" [minDuration]="500"></app-page-transition>
 
-<main [@fadeAnimation]="o.isActivated ? o.activatedRoute : ''" class="mat-app-background">
+<main [@fadeAnimation]="o.isActivated ? o.activatedRoute : ''" class="mat-app-background" id="main-content">
   <router-outlet #o="outlet"></router-outlet>
 </main>
 

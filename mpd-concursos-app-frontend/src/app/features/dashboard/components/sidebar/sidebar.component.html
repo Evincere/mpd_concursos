@@ -1,11 +1,12 @@
 <div class="sidebar-container">
-    <div class="sidebar" [class.collapsed]="isCollapsed">
-        <nav class="nav-menu">
+    <div class="sidebar" [class.collapsed]="isCollapsed" id="navigation">
+        <nav class="nav-menu" role="navigation" aria-label="Navegación principal">
             <div class="nav-item">
                 <a routerLink="/dashboard"
                    routerLinkActive="active"
                    [routerLinkActiveOptions]="{exact: true}"
-                   [title]="isCollapsed ? 'Principal' : ''">
+                   [title]="isCollapsed ? 'Principal' : ''"
+                   [attr.aria-label]="'Ir a página principal' + (isCollapsed ? '' : ' - Principal')">
                     <i class="fas fa-home" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Principal</span>
                 </a>
@@ -46,12 +47,13 @@
 
         <div class="section-divider"></div>
 
-        <nav class="nav-menu">
+        <nav class="nav-menu" role="navigation" aria-label="Navegación secundaria">
             <!-- Enlace al Panel de Administración (solo visible para administradores) -->
             <div class="nav-item" *ngIf="isAdmin">
                 <a routerLink="/admin/dashboard"
                    routerLinkActive="active"
-                   [title]="isCollapsed ? 'Panel de Administración' : ''">
+                   [title]="isCollapsed ? 'Panel de Administración' : ''"
+                   [attr.aria-label]="'Ir a panel de administración' + (isCollapsed ? '' : ' - Panel de Administración')">
                     <i class="fas fa-user-shield" aria-hidden="true"></i>
                     <span *ngIf="!isCollapsed">Panel de Administración</span>
                 </a>
