@@ -283,35 +283,14 @@ export class ConcursosComponent implements OnInit, OnDestroy {
   onInscriptionComplete(concurso: Concurso): void {
     this.loggingService.debug('[ConcursosComponent] Initiating inscription process for contest:', concurso.id, 'Concursos');
 
-    this.createInscriptionWrapper(concurso.id)
-      .subscribe({
-        next: (response: any) => {
-          this.loggingService.debug('[ConcursosComponent] Inscription created successfully:', response, 'Concursos');
-
-          if (!response.id) {
-            console.error('[ConcursosComponent] Error: Inscription ID not received in response');
-            this.notification.error('Error al crear la inscripción: ID no válido');
-            return;
-          }
-
-          // Navigate to the inscription process with both parameters
-          this.router.navigate(['/dashboard/inscripcion'], {
-            queryParams: {
-              contestId: concurso.id,
-              inscriptionId: response.id
-            }
-          });
-
-          // Force inscription cache update so cards reflect new state
-          setTimeout(() => {
-            this.refreshInscriptionsWrapper();
-          }, 1000);
-        },
-        error: (error: any) => {
-          console.error('[ConcursosComponent] Error creating inscription:', error);
-          this.notification.error('Error al iniciar el proceso de inscripción. Por favor, intente nuevamente.');
-        }
-      });
+    // CRITICAL FIX: Navigate directly to inscription process without creating inscription
+    // The inscription will be created only after user accepts terms and conditions
+    this.router.navigate(['/dashboard/inscripcion'], {
+      queryParams: {
+        contestId: concurso.id
+        // No inscriptionId - will be created after terms acceptance
+      }
+    });
   }
 
   /**

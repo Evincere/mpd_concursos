@@ -171,12 +171,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if (!this.inscriptionId) {
-        console.error('[InscripcionProcess] Error: No se recibió el ID de inscripción');
-        this.notificationService.error('Error: No se pudo obtener el ID de inscripción. Por favor, intente nuevamente.');
-        this.router.navigate(['/dashboard/concursos']);
-        return;
-      }
+      // CRITICAL FIX: inscriptionId is now optional - will be created after terms acceptance
+      // if (!this.inscriptionId) {
+      //   console.error('[InscripcionProcess] Error: No se recibió el ID de inscripción');
+      //   this.notificationService.error('Error: No se pudo obtener el ID de inscripción. Por favor, intente nuevamente.');
+      //   this.router.navigate(['/dashboard/concursos']);
+      //   return;
+      // }
 
       // Cargar datos del concurso
       this.cargarDatosConcurso();
@@ -581,7 +582,11 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Cargar estado guardado
   cargarEstadoGuardado(): void {
-    if (!this.inscriptionId) return;
+    // CRITICAL FIX: Only load saved state if inscriptionId exists
+    if (!this.inscriptionId) {
+      this.loggingService.debug('[InscripcionProcess] No inscription ID available - starting fresh', undefined, 'InscripcionProcessPage');
+      return;
+    }
 
     const savedState = this.inscriptionStateService.getInscriptionState(this.inscriptionId);
     if (savedState) {
@@ -621,7 +626,14 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Guardar estado actual
   guardarEstadoActual(): void {
-    if (!this.inscriptionId || !this.contestId) return;
+    // CRITICAL FIX: Only save state if inscriptionId exists (after terms acceptance)
+    if (!this.inscriptionId || !this.contestId) {
+      this.loggingService.debug('[InscripcionProcess] Cannot save state - missing inscription ID or contest ID', {
+        inscriptionId: this.inscriptionId,
+        contestId: this.contestId
+      }, 'InscripcionProcessPage');
+      return;
+    }
 
     const formData = this.inscriptionForm.value;
 
@@ -676,18 +688,22 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     // CRITICAL FIX: Update the form control value
     this.termsAcceptedControl.setValue(accepted);
 
-    // If the user selects "No", show message and cancel inscription
+    // If the user selects "No", show message and return to contests (no inscription created)
     if (!accepted) {
       this.notificationService.warning('Para continuar con la inscripción debe leer y aceptar las bases y condiciones del concurso.');
       setTimeout(() => {
-        this.cancelarInscripcionYRegresar();
+        // CRITICAL FIX: Simply navigate back without creating/cancelling inscription
+        this.router.navigate(['/dashboard/concursos']);
       }, 1500);
     } else {
-      this.showValidationErrors = false; // Clear validation errors when accepted
-      this.guardarEstadoActual(); // Save current state only if accepted
-
-      // Trigger change detection to update the UI immediately
-      this.cdr.detectChanges();
+      // CRITICAL FIX: Create inscription only when user accepts terms
+      if (!this.inscriptionId && this.contestId) {
+        this.createInscriptionAfterTermsAcceptance();
+      } else {
+        this.showValidationErrors = false; // Clear validation errors when accepted
+        this.guardarEstadoActual(); // Save current state only if accepted
+        this.cdr.detectChanges();
+      }
     }
   }
 
@@ -1056,6 +1072,53 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
     this.selectedCircunscripcionesControl.setValue(selectedCircunscripciones);
     this.loggingService.debug(`[InscripcionProcess] Circunscripción ${checkbox.checked ? 'seleccionada' : 'deseleccionada'}: ${circunscripcionId}`, undefined, 'InscripcionProcessPage');
+  }
+
+  /**
+   * CRITICAL FIX: Creates inscription after user accepts terms and conditions
+   */
+  private createInscriptionAfterTermsAcceptance(): void {
+    if (!this.contestId) {
+      this.notificationService.error('Error: No se ha especificado un concurso válido');
+      this.router.navigate(['/dashboard/concursos']);
+      return;
+    }
+
+    this.loggingService.debug('[InscripcionProcess] Creating inscription after terms acceptance for contest:', this.contestId, 'InscripcionProcessPage');
+
+    this.inscriptionService.createInscription(this.contestId).pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        console.error('[InscripcionProcess] Error creating inscription after terms acceptance:', error);
+        this.notificationService.error('Error al crear la inscripción. Por favor, intente nuevamente.');
+        this.router.navigate(['/dashboard/concursos']);
+        return of(null);
+      })
+    ).subscribe({
+      next: (response: any) => {
+        if (response && response.id) {
+          this.inscriptionId = response.id;
+          this.loggingService.debug('[InscripcionProcess] Inscription created successfully with ID:', this.inscriptionId, 'InscripcionProcessPage');
+
+          // Update URL with inscription ID
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: {
+              contestId: this.contestId,
+              inscriptionId: this.inscriptionId
+            },
+            queryParamsHandling: 'merge'
+          });
+
+          this.showValidationErrors = false;
+          this.guardarEstadoActual();
+          this.cdr.detectChanges();
+        } else {
+          this.notificationService.error('Error: No se recibió un ID de inscripción válido');
+          this.router.navigate(['/dashboard/concursos']);
+        }
+      }
+    });
   }
 
   /**
