@@ -8,6 +8,8 @@
     position: relative;
     display: inline-block;
     z-index: var(--z-dropdown);
+    // Permitir que el badge se muestre fuera del contenedor
+    overflow: visible;
 }
 
 .notification-toggle {
@@ -27,49 +29,58 @@
     }
 
     i {
-        color: var(--color-secondary);
+        color: var(--color-primary); // Mejor contraste
         transition: var(--transition-fast);
         font-size: 1.1rem;
     }
 
     &:hover i {
-        color: var(--color-primary);
+        color: var(--color-info); // Azul en hover
     }
 
     .notification-badge {
         position: absolute;
-        top: -6px;
-        right: -6px;
+        top: -8px;
+        right: -8px;
         background: var(--color-danger);
         color: var(--color-primary);
         font-size: 0.75rem;
         font-weight: 600;
         padding: 2px 6px;
-        border-radius: 10px;
-        min-width: 18px;
-        height: 18px;
+        border-radius: 12px;
+        min-width: 20px;
+        height: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
         border: 2px solid var(--glass-bg-primary);
-        box-shadow: var(--shadow-sm);
+        box-shadow: var(--shadow-md);
+        // Asegurar que se muestre por encima
+        z-index: 10;
+        // Evitar que se corte
+        overflow: visible;
     }
 }
 
 .notifications-panel {
     @include glassmorphism-base('primary', 'strong');
     position: fixed !important;
-    top: var(--header-height) !important;
+    top: calc(var(--header-height) + 8px) !important;
     right: var(--spacing-lg) !important;
     width: 350px;
-    z-index: var(--z-popover) !important;
+    z-index: 9999 !important; // Z-index muy alto para asegurar visibilidad
     max-height: 500px;
     overflow-y: auto;
-    margin-top: var(--spacing-sm);
+    margin-top: 0;
     border: 1px solid var(--border-primary);
-    box-shadow: var(--shadow-xl), 0 20px 40px rgba(0, 0, 0, 0.3) !important;
+    box-shadow:
+        var(--shadow-xl),
+        0 20px 40px rgba(0, 0, 0, 0.4) !important,
+        0 0 0 1px rgba(255, 255, 255, 0.1) !important;
     animation: slideIn 0.3s ease-out;
     transform: translateZ(0);
+    // Asegurar que se muestre por encima de todo
+    will-change: transform, opacity;
 
     @include glassmorphism-scrollbar;
 }

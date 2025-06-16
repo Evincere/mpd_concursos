@@ -56,7 +56,7 @@
   .navbar-title {
     font-size: 1.2rem;
     font-weight: 500;
-    color: var(--color-primary);
+    color: var(--color-primary); // Consistente con sidebar activo
     margin-left: var(--spacing-md);
     transition: var(--transition-fast);
 
@@ -81,12 +81,12 @@
 
     i {
       font-size: 1rem;
-      color: var(--color-secondary);
+      color: var(--color-primary); // Mejor contraste, consistente con sidebar
       transition: var(--transition-fast);
     }
 
     &:hover i {
-      color: var(--color-primary);
+      color: var(--color-info); // Azul para hover, mejor visibilidad
     }
 
     span {
@@ -119,6 +119,9 @@
       height: fit-content;
       max-height: 100%;
       align-self: center;
+      // Permitir que el badge se muestre fuera del contenedor
+      overflow: visible;
+      position: relative;
     }
 
     app-user-info {
@@ -130,7 +133,14 @@
     }
 
     .logout-btn {
-      @include glassmorphism-button('danger');
+      // Botón más sutil y transparente
+      background: rgba(55, 65, 81, 0.4); // Más transparente
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      backdrop-filter: blur(8px);
+      color: var(--color-secondary);
+      transition: var(--transition-fast);
+
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
@@ -140,6 +150,15 @@
       max-height: 100%;
       align-self: center;
       box-sizing: border-box;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.2); // Rojo sutil en hover
+        border-color: rgba(239, 68, 68, 0.3);
+        color: var(--color-primary);
+        transform: var(--transform-hover);
+        box-shadow: var(--shadow-sm);
+      }
 
       &:focus {
         outline: 2px solid var(--color-focus);
@@ -148,12 +167,12 @@
 
       i {
         font-size: 1rem;
-        color: var(--color-secondary);
+        color: var(--color-primary); // Mejor contraste para logout
         transition: var(--transition-fast);
       }
 
       &:hover i {
-        color: var(--color-primary);
+        color: var(--color-danger); // Rojo para logout hover
       }
 
       .logout-text {
