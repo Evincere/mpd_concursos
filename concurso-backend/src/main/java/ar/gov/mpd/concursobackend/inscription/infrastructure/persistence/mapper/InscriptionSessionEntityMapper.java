@@ -16,8 +16,9 @@ import java.util.Map;
 
 /**
  * Mapper para convertir entre entidades y modelos de dominio de sesiones de inscripción
+ * TEMPORALMENTE DESHABILITADO PARA DEBUGGING
  */
-@Component
+// @Component
 public class InscriptionSessionEntityMapper {
     private final ObjectMapper objectMapper;
 

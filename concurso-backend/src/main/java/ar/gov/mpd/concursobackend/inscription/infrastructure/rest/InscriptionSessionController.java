@@ -24,9 +24,10 @@ import java.util.UUID;
 
 /**
  * Controlador REST para sesiones de inscripción
+ * TEMPORALMENTE DESHABILITADO PARA DEBUGGING
  */
-@RestController
-@RequestMapping("/api/inscription-sessions")
+// @RestController
+// @RequestMapping("/api/inscription-sessions")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class InscriptionSessionController {

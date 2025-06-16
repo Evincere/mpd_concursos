@@ -12,6 +12,8 @@
   width: 100%;
   min-height: 100vh;
   position: relative;
+  max-width: 100vw;
+  overflow-x: hidden;
 
   &::before {
     content: '';
@@ -89,6 +91,21 @@
   min-height: calc(100vh - 150px);
   position: relative;
   z-index: 1;
+  max-width: 100%;
+  margin: 0 auto;
+  width: 100%;
+  padding: clamp(1rem, 3vw, 2rem);
+
+  // Contenedor responsivo con ancho máximo
+  @media (min-width: 1200px) {
+    max-width: 1200px;
+    padding: var(--spacing-2xl);
+  }
+
+  @media (min-width: 992px) and (max-width: 1199px) {
+    max-width: 100%;
+    padding: clamp(1.5rem, 2.5vw, 2rem);
+  }
 }
 
 /* === ESTILOS PARA LOS PASOS === */
@@ -99,6 +116,9 @@
 
   margin-bottom: var(--spacing-2xl);
   position: relative;
+  padding: clamp(1rem, 3vw, 2rem);
+  max-width: 100%;
+  overflow: hidden;
 
   &::before {
     content: '';
@@ -114,9 +134,9 @@
 
   .step-line {
     position: absolute;
-    top: 3rem;
-    left: 4rem;
-    right: 4rem;
+    top: clamp(2.5rem, 4vw, 3rem);
+    left: clamp(2rem, 8vw, 4rem);
+    right: clamp(2rem, 8vw, 4rem);
     height: 3px;
     background: var(--border-primary);
     border-radius: var(--radius-xs);
@@ -125,8 +145,8 @@
 
   .step-progress {
     position: absolute;
-    top: 3rem;
-    left: 4rem;
+    top: clamp(2.5rem, 4vw, 3rem);
+    left: clamp(2rem, 8vw, 4rem);
     height: 3px;
     background: linear-gradient(90deg, var(--color-success) 0%, #059669 100%);
     border-radius: var(--radius-xs);
@@ -143,6 +163,8 @@
     position: relative;
     z-index: 3;
     width: 25%;
+    min-width: 0; // Permite que el contenido se contraiga
+    flex-shrink: 1;
 
     &.clickable {
       cursor: pointer;
@@ -154,8 +176,8 @@
     }
 
     .step-number {
-      width: 3.5rem;
-      height: 3.5rem;
+      width: clamp(2.5rem, 4vw, 3.5rem);
+      height: clamp(2.5rem, 4vw, 3.5rem);
       border-radius: var(--radius-full);
       background: var(--glass-bg-secondary);
       border: 2px solid var(--border-primary);
@@ -164,6 +186,7 @@
       justify-content: center;
       margin-bottom: var(--spacing-md);
       font-weight: 700;
+      font-size: clamp(0.875rem, 1.5vw, 1rem);
       transition: var(--transition-normal);
       color: var(--color-secondary);
       box-shadow: var(--shadow-md);
@@ -171,11 +194,14 @@
     }
 
     .step-label {
-      font-size: 0.875rem;
+      font-size: clamp(0.75rem, 1.2vw, 0.875rem);
       color: var(--color-secondary);
       text-align: center;
       transition: var(--transition-normal);
       font-weight: 500;
+      word-break: break-word;
+      hyphens: auto;
+      line-height: 1.2;
     }
 
     &.active {
@@ -1199,7 +1225,40 @@
   border: none;
 }
 
-// Estilos responsivos
+// Estilos responsivos para pantallas intermedias (tablets y laptops pequeños)
+@media (min-width: 769px) and (max-width: 1024px) {
+  .inscripcion-content {
+    padding: clamp(1.5rem, 2.5vw, 2rem);
+  }
+
+  .steps-container {
+    padding: clamp(1.5rem, 2.5vw, 2rem);
+
+    .step {
+      .step-number {
+        width: clamp(2.8rem, 3.5vw, 3.2rem);
+        height: clamp(2.8rem, 3.5vw, 3.2rem);
+        font-size: clamp(0.875rem, 1.2vw, 0.95rem);
+      }
+
+      .step-label {
+        font-size: clamp(0.8rem, 1.1vw, 0.85rem);
+      }
+    }
+
+    .step-line, .step-progress {
+      top: clamp(2.7rem, 3.5vw, 3rem);
+      left: clamp(2.5rem, 6vw, 3.5rem);
+      right: clamp(2.5rem, 6vw, 3.5rem);
+    }
+  }
+
+  .step-content-container {
+    padding: clamp(1.5rem, 2.5vw, 2rem);
+  }
+}
+
+// Estilos responsivos para pantallas pequeñas
 @media (max-width: 768px) {
   .inscripcion-header {
     padding: 1.5rem;
@@ -1364,6 +1423,67 @@
 
     span {
       font-size: 0.8rem;
+    }
+  }
+}
+
+// Estilos responsivos para pantallas muy pequeñas
+@media (max-width: 480px) {
+  .inscripcion-content {
+    padding: 1rem;
+  }
+
+  .steps-container {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+
+    .step {
+      .step-number {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .step-label {
+        font-size: 0.7rem;
+        line-height: 1.1;
+      }
+    }
+
+    .step-line, .step-progress {
+      top: 2.25rem;
+      left: 2rem;
+      right: 2rem;
+      height: 2px;
+    }
+  }
+
+  .step-content-container {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .terms-container {
+    max-height: 200px;
+    padding: 1rem;
+  }
+
+  .question-box {
+    padding: 1rem;
+
+    .question-icon i {
+      font-size: 24px;
+    }
+
+    .question-content {
+      h4 {
+        font-size: 1rem;
+      }
+
+      .question-text {
+        font-size: 0.875rem;
+      }
     }
   }
 }

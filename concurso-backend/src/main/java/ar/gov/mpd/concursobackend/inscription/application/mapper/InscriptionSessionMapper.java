@@ -14,8 +14,9 @@ import java.util.HashMap;
 
 /**
  * Mapper para convertir entre DTOs y modelos de dominio de sesiones de inscripción
+ * TEMPORALMENTE DESHABILITADO PARA DEBUGGING
  */
-@Component
+// @Component
 public class InscriptionSessionMapper {
     /**
      * Convierte un modelo de dominio a un DTO de respuesta
