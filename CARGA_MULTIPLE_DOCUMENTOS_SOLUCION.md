@@ -133,6 +133,81 @@ Se eliminaron las notificaciones redundantes de los componentes padre, dejando q
 ### En `documentos-embebidos.component.ts`:
 1. **Línea 1242-1248**: Comentadas notificaciones duplicadas en `abrirCargaMultiple()`
 
+## Refactorización del Sistema de Almacenamiento (Backend)
+
+### Nueva Estructura de Almacenamiento
+
+**Estructura anterior:**
+```
+document-storage/
+├── {UUID_USUARIO}/
+│   └── {UUID_DOCUMENTO}_{nombre_archivo_original}.pdf
+```
+
+**Nueva estructura implementada:**
+```
+document-storage/
+├── {DNI_USUARIO}/
+│   ├── {id_documento}_{tipo_documento}_{fecha_carga}.pdf
+│   └── {id_documento}_{tipo_documento}_{fecha_carga}.pdf
+```
+
+### Cambios en el Backend
+
+#### 1. Interfaz `IDocumentStorageService`
+- **Archivo**: `concurso-backend/src/main/java/ar/gov/mpd/concursobackend/document/domain/port/IDocumentStorageService.java`
+- **Cambio**: Agregados parámetros `userDni` y `documentTypeName` al método `storeFile()`
+
+#### 2. Implementación `FileSystemDocumentStorageService`
+- **Archivo**: `concurso-backend/src/main/java/ar/gov/mpd/concursobackend/document/infrastructure/storage/FileSystemDocumentStorageService.java`
+- **Cambios principales**:
+  - Uso de DNI en lugar de UUID para organizar carpetas
+  - Nomenclatura estandarizada: `{id_documento}_{tipo_documento}_{timestamp}.pdf`
+  - Creación automática de directorios por DNI
+  - Validaciones para parámetros requeridos
+  - Detección de documentos existentes del mismo tipo
+
+#### 3. Servicio `DocumentServiceImpl`
+- **Archivo**: `concurso-backend/src/main/java/ar/gov/mpd/concursobackend/document/application/service/DocumentServiceImpl.java`
+- **Cambios**:
+  - Agregado `IUserRepository` para obtener información del usuario
+  - Obtención del DNI del usuario antes del almacenamiento
+  - Actualización de llamadas al método `storeFile()` con nuevos parámetros
+
+### Beneficios de la Nueva Estructura
+
+1. **Organización por DNI**: Facilita la identificación y gestión de documentos por usuario
+2. **Nomenclatura estandarizada**: Evita conflictos de nombres y facilita la identificación
+3. **Timestamp único**: Previene sobrescritura accidental de archivos
+4. **Validaciones mejoradas**: Detección de documentos duplicados y validación de parámetros
+5. **Trazabilidad**: Mejor seguimiento de cuándo se cargó cada documento
+
+### Validaciones Implementadas
+
+1. **Validación de DNI**: Verificación de que el DNI no esté vacío
+2. **Validación de tipo de documento**: Verificación de que el nombre del tipo no esté vacío
+3. **Creación de directorios**: Creación automática del directorio del usuario si no existe
+4. **Detección de duplicados**: Identificación de documentos existentes del mismo tipo
+5. **Sanitización de nombres**: Limpieza de caracteres especiales en nombres de archivos
+
+## Pruebas Realizadas
+
+### Compilación
+- ✅ **Backend**: Compilación exitosa con `./mvnw clean compile`
+- ✅ **Frontend**: Instalación de dependencias exitosa con `pnpm install`
+
+### Validaciones de Código
+- ✅ **Sintaxis**: Sin errores de compilación
+- ✅ **Dependencias**: Todas las dependencias resueltas correctamente
+- ✅ **Estructura**: Arquitectura hexagonal mantenida
+
+## Próximos Pasos Recomendados
+
+1. **Pruebas funcionales**: Verificar el flujo completo de carga de documentos
+2. **Migración de datos**: Considerar migrar documentos existentes a la nueva estructura
+3. **Monitoreo**: Verificar que solo aparezca una notificación por operación
+4. **Documentación**: Actualizar documentación técnica con la nueva estructura
+
 ### 3. Lógica Mejorada de Mensajes Finales
 
 Se corrigió `finalizarProceso()` para distinguir mejor entre diferentes escenarios:
