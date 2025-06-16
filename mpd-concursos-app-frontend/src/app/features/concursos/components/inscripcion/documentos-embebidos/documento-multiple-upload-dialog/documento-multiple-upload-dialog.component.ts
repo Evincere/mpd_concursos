@@ -27,6 +27,7 @@ interface DocumentoParaSubir {
   queueId?: string;
   documentoId?: string;
   configurado: boolean; // Indica si el documento ya tiene asignado un tipo y está listo para subir
+  nombreEstandarizado: string; // Nombre estandarizado para mostrar en la interfaz: {tipo_documento}.pdf
 }
 
 // Interfaz para el documento en proceso de selección
@@ -212,7 +213,7 @@ interface DocumentoEnSeleccion {
                   <i class="fas" [class]="'fa-' + getFileIcon(doc.file)"></i>
                 </div>
                 <div class="file-info">
-                  <p class="file-name">{{doc.file.name}}</p>
+                  <p class="file-name">{{doc.nombreEstandarizado}}</p>
                   <p class="file-size">{{formatFileSize(doc.file.size)}}</p>
                   <p class="file-type">{{doc.tipoDocumentoNombre}}</p>
                 </div>
@@ -264,9 +265,9 @@ interface DocumentoEnSeleccion {
         <app-custom-button
           type="button"
           variant="text"
-          [disabled]="uploading"
-          (click)="cerrar()">
-          Cancelar
+          [disabled]="isCancelButtonDisabled()"
+          (click)="onCancelButtonClick()">
+          {{getTextoCancelButton()}}
         </app-custom-button>
         <app-custom-button
           type="button"
@@ -731,6 +732,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   monitoringRetries = 0;
   procesoFinalizado = false; // Bandera para evitar múltiples finalizaciones
 
+  // CRITICAL FIX: Control mejorado del botón Cancelar
+  documentosSubidosExitosamente = false; // Indica si al menos un documento se subió exitosamente
+
   // Documentos requeridos y ya subidos
   documentosRequeridos: TipoDocumento[] = [];
   documentosUsuario: DocumentoUsuario[] = [];
@@ -972,7 +976,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
       progreso: 0,
       estado: 'pendiente',
       validationWarnings: [],
-      configurado: true
+      configurado: true,
+      nombreEstandarizado: `${tipoDocumento.nombre}.pdf` // CRITICAL FIX: Nombre estandarizado para la interfaz
     };
 
     // Añadir a la lista de documentos para subir
@@ -1466,18 +1471,21 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
     const documentosConError = this.documentosParaSubir.filter(doc => doc.estado === 'error').length;
     const totalDocumentos = this.documentosParaSubir.filter(doc => doc.estado !== 'pendiente').length;
 
-    // CRITICAL FIX: Mejorar la lógica de mensajes finales
+    // CRITICAL FIX: Mejorar la lógica de mensajes finales y marcar documentos subidos
     if (documentosCompletados === totalDocumentos && documentosCompletados > 0) {
       // Todos los documentos se completaron exitosamente
+      this.documentosSubidosExitosamente = true;
       this.mostrarExito(`Se han subido ${documentosCompletados} documentos correctamente`);
       this.dialogRef.close(true as any);
     } else if (documentosCompletados > 0 && documentosConError === 0) {
       // Algunos documentos se completaron, pero no hay errores explícitos
       // Esto puede ocurrir cuando hay documentos en estado 'pendiente' o similar
+      this.documentosSubidosExitosamente = true;
       this.mostrarExito(`Se han subido ${documentosCompletados} documentos correctamente`);
       this.dialogRef.close(true as any);
     } else if (documentosCompletados > 0 && documentosConError > 0) {
       // Algunos documentos se completaron, pero otros tuvieron errores
+      this.documentosSubidosExitosamente = true;
       this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos. ${documentosConError} documentos tuvieron errores.`);
       this.dialogRef.close(true as any); // Cerrar con éxito parcial
     } else if (documentosConError > 0) {
@@ -1524,6 +1532,63 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
       default: return 'question-circle';
     }
   }
+
+  /**
+   * CRITICAL FIX: Lógica mejorada del botón Cancelar
+   * Determina el texto del botón según el estado actual
+   */
+  getTextoCancelButton(): string {
+    if (this.procesoFinalizado) {
+      return 'Cerrar';
+    } else if (this.uploading) {
+      return 'Cancelando...';
+    } else {
+      return 'Cancelar';
+    }
+  }
+
+  /**
+   * CRITICAL FIX: Determina si el botón Cancelar debe estar deshabilitado
+   */
+  isCancelButtonDisabled(): boolean {
+    // Deshabilitar solo durante la subida activa (no al finalizar)
+    return this.uploading && !this.procesoFinalizado;
+  }
+
+  /**
+   * CRITICAL FIX: Maneja la acción del botón Cancelar según el estado
+   */
+  onCancelButtonClick(): void {
+    if (this.procesoFinalizado) {
+      // Si el proceso ya finalizó, simplemente cerrar
+      this.cerrar();
+    } else if (this.uploading) {
+      // Si está subiendo, mostrar confirmación
+      this.confirmarCancelacion();
+    } else {
+      // Si no ha iniciado la subida, cancelar directamente
+      this.cerrar();
+    }
+  }
+
+  /**
+   * CRITICAL FIX: Confirma la cancelación durante la subida
+   */
+  confirmarCancelacion(): void {
+    const confirmar = confirm(
+      '¿Estás seguro de que deseas cancelar la subida? Los documentos que se estén procesando podrían perderse.'
+    );
+
+    if (confirmar) {
+      // Marcar como cancelado y cerrar
+      this.uploading = false;
+      this.procesoFinalizado = true;
+      this.mostrarAdvertencia('Subida cancelada por el usuario');
+      this.cerrar();
+    }
+  }
+
+
 
   cerrar(): void {
     this.dialogRef.close(false as any);
