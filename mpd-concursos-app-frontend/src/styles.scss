@@ -2,12 +2,8 @@
 @use 'sass:map';
 
 /* === UNIFIED GLASSMORPHISM SYSTEM === */
-/* Sistema glassmorphism unificado que reemplaza importaciones duplicadas */
-@import './styles/glassmorphism-system';
-
-/* === GLASSMORPHISM DESIGN SYSTEM === */
-/* Sistema glassmorphism unificado para usuario común */
-@import './styles/user-glassmorphism-system';
+/* Sistema glassmorphism unificado que reemplaza todos los sistemas anteriores */
+@import './styles/unified-glassmorphism-system';
 
 /* === LEGACY IMPORTS === */
 /* Mantener solo las importaciones necesarias que no están en el sistema unificado */

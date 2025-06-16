@@ -1,15 +1,11 @@
-@use 'variables' as *;
+@import '../../../../../styles/unified-glassmorphism-system';
 
 .header {
-   height: 92px;
-   background: #374151;
-   box-shadow:
-     0 4px 12px rgba(0, 0, 0, 0.2),
-     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-   backdrop-filter: blur(10px);
-   transition: all 0.3s ease;
-   position: sticky;
-   top: 0;
-   z-index: 100;
+  @include glassmorphism-base('primary', 'medium');
+  height: var(--header-height);
+  border-bottom: 1px solid var(--border-primary);
+  transition: var(--transition-fast);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
 }

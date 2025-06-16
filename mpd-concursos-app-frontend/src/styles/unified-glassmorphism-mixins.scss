@@ -241,6 +241,28 @@
   }
 }
 
+/* === MIXIN GLASSMORPHISM FORM FIELD === */
+@mixin glassmorphism-form-field {
+  @include glassmorphism-input;
+
+  // Estilos específicos para campos de formulario
+  border-radius: var(--radius-md);
+  background: var(--glass-bg-light);
+  backdrop-filter: var(--backdrop-blur-light);
+  border: 1px solid var(--border-light);
+
+  &:hover {
+    border-color: var(--border-hover);
+    background: var(--glass-bg-secondary);
+  }
+
+  &:focus {
+    border-color: var(--color-primary);
+    background: var(--glass-bg-secondary);
+    box-shadow: 0 0 0 2px var(--focus-ring), var(--shadow-sm);
+  }
+}
+
 /* === MIXIN GLASSMORPHISM BADGE === */
 @mixin glassmorphism-badge($color: 'info') {
   display: inline-flex;
@@ -333,11 +355,46 @@
   max-width: 90vw;
   max-height: 90vh;
   overflow: auto;
-  
+
   // Backdrop
   &::backdrop {
     background: var(--modal-backdrop);
     backdrop-filter: var(--backdrop-blur-light);
+  }
+}
+
+/* === MIXIN GLASSMORPHISM DIALOG === */
+@mixin glassmorphism-dialog {
+  @include glassmorphism-base('primary', 'medium');
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-primary);
+
+  .dialog-header {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+
+    .dialog-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+  }
+
+  .dialog-content {
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-secondary);
+  }
+
+  .dialog-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-light);
   }
 }
 

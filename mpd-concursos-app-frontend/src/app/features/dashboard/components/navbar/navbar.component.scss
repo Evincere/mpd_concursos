@@ -2,52 +2,47 @@
 /* Navbar con glassmorphism premium dark unificado */
 /* Scoped específicamente para no afectar al administrador */
 
-@use '../../../../../styles/variables' as *;
+@import '../../../../../styles/unified-glassmorphism-system';
 
 .navbar {
+  @include glassmorphism-base('primary', 'medium');
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--user-spacing-md) var(--user-spacing-lg); /* Padding vertical balanceado */
-  /* Glassmorphism premium dark */
-  background: var(--user-glass-gradient-primary);
-  background-image: var(--user-glass-gradient-overlay);
-  border-bottom: 1px solid var(--user-border-glass);
-  backdrop-filter: var(--user-backdrop-blur);
-  -webkit-backdrop-filter: var(--user-backdrop-blur);
-  box-shadow: var(--user-shadow-md), var(--user-shadow-inset);
-  color: var(--user-text-primary);
-  height: var(--user-header-height);
-  min-height: var(--user-header-height); /* Asegurar altura mínima */
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--color-primary);
+  height: var(--header-height);
+  min-height: var(--header-height);
   position: relative;
-  z-index: var(--user-z-header);
-  box-sizing: border-box; /* Incluir padding en el cálculo de altura */
-  overflow: visible; /* Asegurar que el contenido no se corte */
+  z-index: var(--z-header);
+  box-sizing: border-box;
+  overflow: visible;
 
   .logo-container {
     display: flex;
     align-items: center;
-    gap: var(--user-spacing-md);
+    gap: var(--spacing-md);
     text-decoration: none;
-    transition: var(--user-transition-normal);
+    transition: var(--transition-fast);
 
     &:hover {
-      transform: var(--user-transform-hover);
+      transform: var(--transform-hover);
     }
 
     img {
       height: 40px;
       width: auto;
-      transition: var(--user-transition-normal);
+      transition: var(--transition-fast);
     }
   }
 
   .navbar-title {
     font-size: 1.2rem;
     font-weight: 500;
-    color: var(--user-text-primary);
-    margin-left: var(--user-spacing-md);
-    transition: var(--user-transition-normal);
+    color: var(--color-primary);
+    margin-left: var(--spacing-md);
+    transition: var(--transition-fast);
 
     &.collapsed {
       display: none;
@@ -55,39 +50,27 @@
   }
 
   .admin-panel-btn {
+    @include glassmorphism-button('secondary');
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    background-color: rgba(75, 85, 99, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #f9fafb;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    gap: var(--spacing-sm);
     margin-left: auto;
-    margin-right: 1rem;
+    margin-right: var(--spacing-lg);
     font-weight: 500;
 
-    &:hover {
-      background-color: rgba(75, 85, 99, 0.5);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
     &:focus {
-      outline: 2px solid #3b82f6;
+      outline: 2px solid var(--color-focus);
       outline-offset: 2px;
     }
 
     i {
       font-size: 1rem;
-      color: #9ca3af;
-      transition: color 0.3s ease;
+      color: var(--color-secondary);
+      transition: var(--transition-fast);
     }
 
     &:hover i {
-      color: #f9fafb;
+      color: var(--color-primary);
     }
 
     span {
@@ -99,78 +82,62 @@
   .nav-right {
     display: flex;
     align-items: center;
-    gap: var(--user-spacing-sm); /* Gap reducido para mejor ajuste */
+    gap: var(--spacing-sm);
     margin-left: auto;
     padding: 0;
-    /* SOLUCIÓN CRÍTICA: Restricciones de altura para controlar elementos hijos */
-    height: calc(var(--user-header-height) - 20px); /* Altura controlada */
-    max-height: calc(var(--user-header-height) - 20px); /* Máximo estricto */
+    height: calc(var(--header-height) - 20px);
+    max-height: calc(var(--header-height) - 20px);
     align-self: center;
-    overflow: hidden; /* Evitar desbordamiento */
+    overflow: hidden;
     box-sizing: border-box;
 
-    /* Controlar altura de todos los elementos hijos */
     > * {
-      max-height: 100%; /* Limitar altura de hijos */
-      align-self: center; /* Centrado vertical */
-      flex-shrink: 0; /* No comprimir */
+      max-height: 100%;
+      align-self: center;
+      flex-shrink: 0;
     }
 
     app-notifications {
       display: flex;
       align-items: center;
-      height: fit-content; /* Altura ajustada al contenido */
-      max-height: 100%; /* No exceder contenedor padre */
+      height: fit-content;
+      max-height: 100%;
       align-self: center;
     }
 
     app-user-info {
       display: flex;
       align-items: center;
-      height: fit-content; /* Altura ajustada al contenido */
-      max-height: 100%; /* No exceder contenedor padre */
+      height: fit-content;
+      max-height: 100%;
       align-self: center;
     }
 
     .logout-btn {
+      @include glassmorphism-button('danger');
       display: flex;
       align-items: center;
-      gap: var(--user-spacing-sm);
-      padding: 0.5rem 0.75rem; /* Padding optimizado para altura del navbar */
-      background: var(--user-glass-light);
-      border: 1px solid var(--user-border-glass);
-      border-radius: var(--user-border-radius-md);
-      color: var(--user-text-primary);
-      cursor: pointer;
-      transition: var(--user-transition-normal);
+      gap: var(--spacing-sm);
+      padding: 0.5rem 0.75rem;
       font-weight: 500;
-      backdrop-filter: var(--user-backdrop-blur-light);
-      /* Restricciones de altura para evitar desbordamiento */
       height: fit-content;
-      max-height: 100%; /* No exceder contenedor padre */
+      max-height: 100%;
       align-self: center;
       box-sizing: border-box;
 
-      &:hover {
-        background: var(--user-glass-hover);
-        transform: var(--user-transform-hover);
-        box-shadow: var(--user-shadow-sm);
-        border-color: var(--user-border-glass-strong);
-      }
-
       &:focus {
-        outline: 2px solid var(--user-text-accent);
+        outline: 2px solid var(--color-focus);
         outline-offset: 2px;
       }
 
       i {
         font-size: 1rem;
-        color: var(--user-text-muted);
-        transition: var(--user-transition-normal);
+        color: var(--color-secondary);
+        transition: var(--transition-fast);
       }
 
       &:hover i {
-        color: var(--user-text-primary);
+        color: var(--color-primary);
       }
 
       .logout-text {
@@ -186,8 +153,9 @@
 // Responsive behavior mejorado
 @media (max-width: 768px) {
   .navbar {
-    padding: var(--user-spacing-md) var(--user-spacing-md);
-    height: 85px; /* Altura ajustada para móvil */
+    @include glassmorphism-responsive;
+    padding: var(--spacing-md);
+    height: 85px;
     min-height: 85px;
 
     .navbar-title {
@@ -195,20 +163,20 @@
     }
 
     .nav-right {
-      gap: var(--user-spacing-xs); /* Gap más pequeño en móvil */
-      height: calc(85px - 20px); /* Altura ajustada para móvil */
+      gap: var(--spacing-xs);
+      height: calc(85px - 20px);
       max-height: calc(85px - 20px);
     }
 
     .logout-btn {
-      padding: 0.4rem 0.6rem; /* Padding más compacto */
+      padding: 0.4rem 0.6rem;
 
       .logout-text {
-        font-size: 0.75rem; /* Texto más pequeño */
+        font-size: 0.75rem;
       }
 
       i {
-        font-size: 0.9rem; /* Icono más pequeño */
+        font-size: 0.9rem;
       }
     }
   }
@@ -216,29 +184,29 @@
 
 @media (max-width: 480px) {
   .navbar {
-    height: 80px; /* Altura para móvil pequeño */
+    height: 80px;
     min-height: 80px;
-    padding: var(--user-spacing-sm) var(--user-spacing-sm);
+    padding: var(--spacing-sm);
 
     .navbar-title {
       font-size: 1rem;
     }
 
     .nav-right {
-      gap: 0.25rem; /* Gap mínimo */
-      height: calc(80px - 20px); /* Altura muy ajustada */
+      gap: 0.25rem;
+      height: calc(80px - 20px);
       max-height: calc(80px - 20px);
     }
 
     .logout-btn {
-      padding: 0.375rem 0.5rem; /* Padding muy compacto */
+      padding: 0.375rem 0.5rem;
 
       .logout-text {
-        display: none; /* Ocultar texto en pantallas muy pequeñas */
+        display: none;
       }
 
       i {
-        font-size: 0.85rem; /* Icono muy pequeño */
+        font-size: 0.85rem;
       }
     }
   }
