@@ -1076,6 +1076,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   /**
    * CRITICAL FIX: Creates inscription after user accepts terms and conditions
+   * If inscription already exists, uses the existing one instead of creating a new one
    */
   private createInscriptionAfterTermsAcceptance(): void {
     if (!this.contestId) {
@@ -1090,15 +1091,40 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$),
       catchError(error => {
         console.error('[InscripcionProcess] Error creating inscription after terms acceptance:', error);
-        this.notificationService.error('Error al crear la inscripción. Por favor, intente nuevamente.');
-        this.router.navigate(['/dashboard/concursos']);
-        return of(null);
+
+        // Check if error is due to existing inscription (409 Conflict)
+        if (error.message && error.message.includes('Ya existe una inscripción')) {
+          this.loggingService.debug('[InscripcionProcess] Inscription already exists, attempting to load existing inscription', undefined, 'InscripcionProcessPage');
+
+          // Try to load existing inscriptions to get the ID
+          return this.inscriptionService.getUserInscriptions().pipe(
+            map(response => {
+              const existingInscription = response.content.find((insc: any) => insc.contestId === this.contestId);
+              if (existingInscription) {
+                this.loggingService.debug('[InscripcionProcess] Found existing inscription with ID:', existingInscription.id, 'InscripcionProcessPage');
+                return existingInscription;
+              } else {
+                throw new Error('No se pudo encontrar la inscripción existente');
+              }
+            }),
+            catchError(loadError => {
+              console.error('[InscripcionProcess] Error loading existing inscriptions:', loadError);
+              this.notificationService.error('Error al acceder a la inscripción existente. Por favor, intente nuevamente.');
+              this.router.navigate(['/dashboard/concursos']);
+              return of(null);
+            })
+          );
+        } else {
+          this.notificationService.error('Error al crear la inscripción. Por favor, intente nuevamente.');
+          this.router.navigate(['/dashboard/concursos']);
+          return of(null);
+        }
       })
     ).subscribe({
       next: (response: any) => {
         if (response && response.id) {
           this.inscriptionId = response.id;
-          this.loggingService.debug('[InscripcionProcess] Inscription created successfully with ID:', this.inscriptionId, 'InscripcionProcessPage');
+          this.loggingService.debug('[InscripcionProcess] Using inscription with ID:', this.inscriptionId, 'InscripcionProcessPage');
 
           // Update URL with inscription ID
           this.router.navigate([], {
