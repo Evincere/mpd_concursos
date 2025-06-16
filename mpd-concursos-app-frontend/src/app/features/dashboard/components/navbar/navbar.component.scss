@@ -5,17 +5,30 @@
 @import '../../../../../styles/unified-glassmorphism-system';
 
 .navbar {
-  @include glassmorphism-base('primary', 'medium');
+  // Glassmorphism premium dark específico para navbar
+  background: linear-gradient(135deg,
+    rgba(55, 65, 81, 0.95) 0%,
+    rgba(75, 85, 99, 0.9) 100%);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%),
+    radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--border-primary);
   color: var(--color-primary);
   height: var(--header-height);
   min-height: var(--header-height);
   position: relative;
-  z-index: var(--z-header);
+  z-index: var(--z-fixed);
   box-sizing: border-box;
   overflow: visible;
 
@@ -34,6 +47,9 @@
       height: 40px;
       width: auto;
       transition: var(--transition-fast);
+      // Asegurar que la animación funcione correctamente
+      transform-origin: center;
+      will-change: transform;
     }
   }
 
