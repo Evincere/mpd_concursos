@@ -255,6 +255,11 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       // No validation when going back, as currentStep will be decreased
       this.currentStep = step;
       this.updateProgressPercentage();
+
+      // Scroll inmediato para asegurar que se mueva
+      this.performImmediateScroll();
+
+      // Scroll suave después de la animación
       this.scrollToTopAfterAnimation();
     }
   }
@@ -275,6 +280,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         this.actualizarEstadoDocumentos();
       }
 
+      // Scroll inmediato para asegurar que se mueva
+      this.performImmediateScroll();
+
+      // Scroll suave después de la animación
       this.scrollToTopAfterAnimation();
     }
   }
@@ -283,6 +292,11 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     if (this.currentStep > 1) {
       this.currentStep--;
       this.updateProgressPercentage();
+
+      // Scroll inmediato para asegurar que se mueva
+      this.performImmediateScroll();
+
+      // Scroll suave después de la animación
       this.scrollToTopAfterAnimation();
     }
   }
@@ -303,7 +317,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   private scrollToTopAfterAnimation(): void {
     // Detectar si es dispositivo móvil para ajustar el timing
     const isMobile = this.isMobileDevice();
-    const animationDelay = isMobile ? 400 : 350; // Más tiempo en móviles para mejor experiencia
+    const animationDelay = isMobile ? 450 : 400; // Aumentar tiempo para asegurar que la animación termine
+
+    this.loggingService.debug('[InscripcionProcess] Iniciando scroll automático después de animación', {
+      isMobile,
+      animationDelay
+    }, 'InscripcionProcessPage');
 
     // Esperar a que se complete la animación @fadeInOut (300ms) más un buffer
     setTimeout(() => {
@@ -324,7 +343,21 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    * para asegurar compatibilidad con todos los navegadores y dispositivos
    */
   private performSmoothScrollToTop(): void {
-    // Método 0: Intentar scroll en el contenedor del componente si existe
+    this.loggingService.debug('[InscripcionProcess] Ejecutando scroll hacia la parte superior', undefined, 'InscripcionProcessPage');
+
+    // Método 0: Scroll inmediato sin smooth para asegurar que funcione
+    try {
+      // Primero hacer scroll inmediato para asegurar que se mueva
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+
+      this.loggingService.debug('[InscripcionProcess] Scroll inmediato ejecutado', undefined, 'InscripcionProcessPage');
+    } catch (error) {
+      console.warn('[InscripcionProcess] Error con scroll inmediato:', error);
+    }
+
+    // Método 1: Intentar scroll suave en el contenedor del componente si existe
     try {
       if (this.processContainer?.nativeElement) {
         const container = this.processContainer.nativeElement;
@@ -334,78 +367,23 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
             left: 0,
             behavior: 'smooth'
           });
-          // Also scroll window to ensure the whole page is at the top
-          window.scrollTo({
-            top: 0,
-            left: 0,
-            behavior: 'smooth'
-          });
-          return;
+          this.loggingService.debug('[InscripcionProcess] Scroll suave en contenedor ejecutado', undefined, 'InscripcionProcessPage');
         }
       }
     } catch (error) {
       console.warn('[InscripcionProcess] Error con contenedor del componente:', error);
     }
 
+    // Método 2: Scroll suave en window
     try {
-      // Método 1: window.scrollTo con smooth behavior (más compatible)
-      if ('scrollTo' in window) {
-        window.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'smooth'
-        });
-        return;
-      }
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth'
+      });
+      this.loggingService.debug('[InscripcionProcess] Scroll suave en window ejecutado', undefined, 'InscripcionProcessPage');
     } catch (error) {
-      console.warn('[InscripcionProcess] Error con window.scrollTo:', error);
-    }
-
-    try {
-      // Método 2: document.documentElement.scrollTo
-      if (document.documentElement && 'scrollTo' in document.documentElement) {
-        document.documentElement.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'smooth'
-        });
-        return;
-      }
-    } catch (error) {
-      console.warn('[InscripcionProcess] Error con document.documentElement.scrollTo:', error);
-    }
-
-    try {
-      // Método 3: document.body.scrollTo
-      if (document.body && 'scrollTo' in document.body) {
-        document.body.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'smooth'
-        });
-        return;
-      }
-    } catch (error) {
-      console.warn('[InscripcionProcess] Error con document.body.scrollTo:', error);
-    }
-
-    // Fallback 1: Usar scrollTop directamente (sin smooth)
-    try {
-      if (document.documentElement) {
-        document.documentElement.scrollTop = 0;
-      }
-      if (document.body) {
-        document.body.scrollTop = 0;
-      }
-    } catch (error) {
-      console.warn('[InscripcionProcess] Error con scrollTop directo:', error);
-    }
-
-    // Fallback 2: Usar window.scroll (método más antiguo)
-    try {
-      window.scroll(0, 0);
-    } catch (error) {
-      console.warn('[InscripcionProcess] Error con window.scroll:', error);
+      console.warn('[InscripcionProcess] Error con window.scrollTo suave:', error);
     }
 
     // Fallback especial para iOS: Forzar scroll después de un pequeño delay
@@ -415,11 +393,30 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           window.scrollTo(0, 0);
           document.body.scrollTop = 0;
           document.documentElement.scrollTop = 0;
+          this.loggingService.debug('[InscripcionProcess] Fallback iOS ejecutado', undefined, 'InscripcionProcessPage');
         } catch (error) {
           console.warn('[InscripcionProcess] Error con fallback iOS:', error);
         }
       }, 100);
     }
+
+    // Verificar que el scroll se ejecutó correctamente después de un breve delay
+    setTimeout(() => {
+      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      if (currentScrollTop > 50) {
+        this.loggingService.warn('[InscripcionProcess] El scroll automático no funcionó correctamente, posición actual:', currentScrollTop, 'InscripcionProcessPage');
+        // Intentar scroll forzado una vez más
+        try {
+          window.scrollTo(0, 0);
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        } catch (error) {
+          console.warn('[InscripcionProcess] Error en scroll forzado final:', error);
+        }
+      } else {
+        this.loggingService.debug('[InscripcionProcess] Scroll automático completado exitosamente', undefined, 'InscripcionProcessPage');
+      }
+    }, 200);
   }
 
   /**
@@ -427,6 +424,34 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    */
   private isIOSDevice(): boolean {
     return /iPad|iPhone|iPod/.test(navigator.userAgent);
+  }
+
+  /**
+   * Realiza un scroll inmediato hacia la parte superior
+   * Este método se ejecuta antes de las animaciones para asegurar el movimiento
+   */
+  private performImmediateScroll(): void {
+    try {
+      // Múltiples métodos para asegurar que el scroll funcione inmediatamente
+      window.scrollTo(0, 0);
+
+      if (document.documentElement) {
+        document.documentElement.scrollTop = 0;
+      }
+
+      if (document.body) {
+        document.body.scrollTop = 0;
+      }
+
+      // También intentar en el contenedor del componente
+      if (this.processContainer?.nativeElement) {
+        this.processContainer.nativeElement.scrollTop = 0;
+      }
+
+      this.loggingService.debug('[InscripcionProcess] Scroll inmediato ejecutado', undefined, 'InscripcionProcessPage');
+    } catch (error) {
+      console.warn('[InscripcionProcess] Error en scroll inmediato:', error);
+    }
   }
 
   // Verificar si se puede avanzar al siguiente paso
