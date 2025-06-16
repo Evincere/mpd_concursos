@@ -19,6 +19,7 @@ import {
 import { InscriptionStep } from '@shared/enums/inscription-step.enum';
 import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 import { InscriptionStateService } from './inscription-state.service';
+import { InscriptionStateMachineService } from './inscription-state-machine.service';
 
 @Injectable({
   providedIn: 'root'
@@ -39,6 +40,7 @@ export class InscriptionService {
     private tokenService: TokenService,
     private router: Router,
     private inscriptionStateService: InscriptionStateService,
+    private inscriptionStateMachine: InscriptionStateMachineService,
     private loggingService: LoggingService
   ) {
     // Save a reference to the inscription state service in the window object
@@ -47,6 +49,44 @@ export class InscriptionService {
   }
 
   // Public methods
+
+  /**
+   * Verifica si una transición de estado es válida usando el state machine
+   * @param from Estado actual
+   * @param to Estado objetivo
+   * @returns true si la transición es válida
+   */
+  canTransitionState(from: InscripcionState, to: InscripcionState): boolean {
+    return this.inscriptionStateMachine.canTransition(from, to);
+  }
+
+  /**
+   * Obtiene el siguiente estado automático basado en reglas de negocio
+   * @param currentState Estado actual
+   * @param hasAllDocuments Si tiene todos los documentos requeridos
+   * @returns Siguiente estado automático o null
+   */
+  getNextAutomaticState(currentState: InscripcionState, hasAllDocuments: boolean): InscripcionState | null {
+    return this.inscriptionStateMachine.getNextAutomaticState(currentState, hasAllDocuments);
+  }
+
+  /**
+   * Obtiene el texto de visualización para un estado
+   * @param state Estado de la inscripción
+   * @returns Texto descriptivo para el usuario
+   */
+  getStateDisplayText(state: InscripcionState): string {
+    return this.inscriptionStateMachine.getDisplayText(state);
+  }
+
+  /**
+   * Obtiene la clase CSS para un estado
+   * @param state Estado de la inscripción
+   * @returns Clase CSS para styling
+   */
+  getStateClass(state: InscripcionState): string {
+    return this.inscriptionStateMachine.getStateClass(state);
+  }
 
   /**
    * Maps a backend status string to an InscripcionState enum value.
@@ -170,9 +210,15 @@ export class InscriptionService {
         case InscripcionState.APPROVED:
           errorMessage = 'Ya tiene una inscripción aprobada para este concurso.';
           break;
+        case InscripcionState.COMPLETED_WITH_DOCS:
+        case InscripcionState.COMPLETED_PENDING_DOCS:
+          errorMessage = 'Ya tiene una inscripción completada para este concurso.';
+          break;
+        case InscripcionState.FROZEN:
+          errorMessage = 'Su inscripción anterior fue congelada. No puede volver a inscribirse.';
+          break;
         case InscripcionState.ACTIVE:
         case InscripcionState.PENDING:
-        case InscripcionState.CANCELLED: // Also block if cancelled, they should not re-register
           errorMessage = 'Ya existe una inscripción activa/pendiente para este concurso.';
           break;
         case InscripcionState.COMPLETED_WITH_DOCS:
@@ -462,9 +508,21 @@ export class InscriptionService {
               if (fallbackError.status === 404) {
                 this.loggingService.debug(`[InscriptionService] Fallback endpoint returned 404 for ${numericContestId}. No inscription exists - returning ACTIVE.`, undefined, 'Inscription');
               } else {
-                this.loggingService.warn(`[InscriptionService] Fallback endpoint failed with status ${fallbackError.status}. Defaulting to ACTIVE.`, undefined, 'Inscription');
+                this.loggingService.warn(`[InscriptionService] Fallback endpoint failed with status ${fallbackError.status}. Checking local state before defaulting.`, undefined, 'Inscription');
               }
-              return of(InscripcionState.ACTIVE); // Default to ACTIVE if all fail
+
+              // Verificar estado local antes de defaultear a ACTIVE
+              const currentInscriptions = this.inscriptions$.getValue();
+              const localInscription = currentInscriptions.find(ins => ins.contestId === numericContestId);
+
+              if (localInscription?.state) {
+                this.loggingService.debug(`[InscriptionService] Using local state: ${localInscription.state}`, undefined, 'Inscription');
+                return of(localInscription.state);
+              }
+
+              // Solo defaultear a ACTIVE si no hay información local
+              this.loggingService.warn(`[InscriptionService] No local state found. Defaulting to ACTIVE.`, undefined, 'Inscription');
+              return of(InscripcionState.ACTIVE);
             })
           );
         }
