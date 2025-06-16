@@ -1,93 +1,137 @@
-# Solución para Mensajes Ambivalentes en Carga Múltiple de Documentos
+# Solución: Notificaciones Duplicadas en Carga Múltiple de Documentos
 
 ## Problema Identificado
 
-En el componente de carga múltiple de documentos se presentaban mensajes ambivalentes donde:
+El componente de carga múltiple de documentos (`documento-multiple-upload-dialog.component.ts`) estaba mostrando tanto mensajes de éxito como de error simultáneamente durante la subida de documentos. Esto se debía a que la función `finalizarProceso()` se estaba llamando múltiples veces desde diferentes puntos del código.
 
-1. **Documento se subía correctamente** pero aparecía un mensaje de error
-2. **Estado visual mostraba "Completado"** pero el sistema reportaba error
-3. **Comportamiento inconsistente** entre el estado real y los mensajes mostrados
+### Problemas Observados
 
-### Causa Raíz
+1. **Notificaciones duplicadas**: Aparecían tanto mensajes de éxito como de error
+2. **Múltiples finalizaciones**: El proceso se finalizaba varias veces
+3. **Comportamiento inconsistente**: Estados confusos para el usuario
 
-El problema estaba en el método `monitorearEstadoDocumentos()` en las líneas 1333-1363:
+## Análisis del Problema
 
-```typescript
-error: (error) => {
-  // Para otros errores, intentar completar los documentos que estaban en progreso
-  this.documentosParaSubir.forEach(doc => {
-    if (doc.estado === 'subiendo' || doc.estado === 'validando') {
-      doc.estado = 'completado';  // ← PROBLEMA: Marcaba como completado sin verificar
-      doc.progreso = 100;
-    }
-  });
-  
-  this.finalizarProceso(); // ← Luego mostraba error porque no podía distinguir
-}
-```
+### Causas Identificadas
 
-**El flujo problemático era:**
-1. Documento se sube correctamente al backend
-2. Error temporal en consulta de estado (red, timeout, etc.)
-3. Sistema asume que documento se completó
-4. `finalizarProceso()` no puede distinguir entre "realmente completado" vs "asumido como completado"
-5. Muestra mensaje de error aunque el documento esté subido
+1. **Múltiples llamadas a `finalizarProceso()`**: La función se llamaba desde varios lugares:
+   - Cuando todos los documentos estaban completados
+   - Cuando había errores en el monitoreo
+   - Cuando se verificaba el estado de los documentos
+   - En los reintentos de verificación
+
+2. **Falta de control de estado**: No había un mecanismo para evitar que el proceso de finalización se ejecutara más de una vez.
+
+3. **Manejo de errores concurrente**: Los errores de red y los reintentos podían causar múltiples finalizaciones simultáneas.
+
+### Ubicaciones del Problema
+
+- Línea 1268: `this.finalizarProceso()` en monitoreo normal
+- Línea 1288: `this.finalizarProceso()` cuando no hay estados válidos
+- Línea 1332: `this.finalizarProceso()` después de actualizar estados
+- Línea 1362: `this.finalizarProceso()` en verificación de documentos subidos
+- Línea 1380: `this.finalizarProceso()` después de reintentos
+- Línea 1392: `this.finalizarProceso()` en catch de verificación
 
 ## Solución Implementada
 
-### 1. Verificación Real del Estado de Documentos
-
-Se agregó el método `verificarDocumentosSubidos()` que consulta el backend para confirmar si los documentos realmente se subieron:
+### 1. Bandera de Control de Estado
 
 ```typescript
-async verificarDocumentosSubidos(): Promise<number> {
-  // Obtener documentos del usuario desde el backend
-  const documentosUsuario = await this.documentosService.getDocumentosUsuario().toPromise();
-  
-  // Verificar cuántos documentos realmente existen
-  let documentosVerificados = 0;
-  this.documentosParaSubir.forEach(doc => {
-    const documentoExistente = documentosUsuario.find(docUsuario => 
-      docUsuario.tipoDocumentoId === doc.tipoDocumentoId &&
-      docUsuario.nombreArchivo === doc.file.name
-    );
-    if (documentoExistente) {
-      documentosVerificados++;
-    }
-  });
-  
-  return documentosVerificados;
+procesoFinalizado = false; // Bandera para evitar múltiples finalizaciones
+```
+
+### 2. Verificación en `finalizarProceso()`
+
+```typescript
+finalizarProceso(): void {
+  // CRITICAL FIX: Evitar múltiples finalizaciones
+  if (this.procesoFinalizado) {
+    console.log('[DocumentoMultipleUpload] Proceso ya finalizado, evitando duplicación');
+    return;
+  }
+
+  console.log('[DocumentoMultipleUpload] Finalizando proceso de carga de documentos');
+  this.procesoFinalizado = true;
+  this.uploading = false;
+  // ... resto de la lógica
 }
 ```
 
-### 2. Manejo Inteligente de Errores de Monitoreo
-
-Se mejoró el manejo de errores en `monitorearEstadoDocumentos()`:
+### 3. Reset de la Bandera
 
 ```typescript
-error: (error) => {
-  // Verificar si hay documentos que realmente se subieron
-  this.verificarDocumentosSubidos().then((documentosVerificados) => {
-    if (documentosVerificados > 0) {
-      // Si se verificó que se subieron, marcar como completados
-      this.documentosParaSubir.forEach(doc => {
-        if (doc.estado === 'subiendo' || doc.estado === 'validando') {
-          doc.estado = 'completado';
-          doc.progreso = 100;
-        }
-      });
-      this.finalizarProceso();
-    } else {
-      // Implementar sistema de reintentos limitados
-      this.monitoringRetries++;
-      if (this.monitoringRetries >= 3) {
-        // Después de 3 reintentos, asumir completado
-        this.finalizarProceso();
-      }
-    }
-  });
+uploadDocuments(): void {
+  // ...
+  this.procesoFinalizado = false; // Reset finalization flag
+  // ...
 }
 ```
+
+### 4. Verificaciones en Todas las Llamadas
+
+Todas las llamadas a `finalizarProceso()` ahora verifican la bandera:
+
+```typescript
+if (!this.procesoFinalizado) {
+  this.finalizarProceso();
+}
+```
+
+## Corrección Adicional: Notificaciones Duplicadas de Componentes Padre
+
+### Problema Identificado
+
+Después de implementar la bandera `procesoFinalizado`, aún persistían notificaciones duplicadas debido a que **múltiples componentes padre** estaban mostrando notificaciones adicionales cuando el diálogo se cerraba exitosamente.
+
+### Fuentes de Notificaciones Duplicadas Encontradas
+
+1. **`documentacion-tab.component.ts` (línea 821)**:
+   ```typescript
+   if (result) {
+     this.notification.success('Documentos cargados exitosamente'); // ← DUPLICADA
+   }
+   ```
+
+2. **`documentos-embebidos.component.ts` (línea 1242)**:
+   ```typescript
+   if (result && result.success) {
+     this.notificationService.success('Documentos cargados exitosamente.'); // ← DUPLICADA
+   }
+   ```
+
+### Solución Implementada
+
+Se eliminaron las notificaciones redundantes de los componentes padre, dejando que solo el componente hijo (`documento-multiple-upload-dialog.component.ts`) maneje las notificaciones en su función `finalizarProceso()`.
+
+## Beneficios de la Solución Completa
+
+1. **Eliminación total de notificaciones duplicadas**: Solo se muestra una notificación al final del proceso
+2. **Mejor experiencia de usuario**: Mensajes claros y únicos sin confusión
+3. **Código más robusto**: Manejo de errores mejorado y centralizado
+4. **Debugging mejorado**: Logging adicional para diagnóstico
+5. **Prevención de efectos secundarios**: Evita múltiples cierres del diálogo
+6. **Arquitectura más limpia**: Responsabilidad única para notificaciones
+
+## Archivos Modificados
+
+1. `mpd-concursos-app-frontend/src/app/features/concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component.ts`
+2. `mpd-concursos-app-frontend/src/app/features/perfil/components/documentacion-tab/documentacion-tab.component.ts`
+3. `mpd-concursos-app-frontend/src/app/features/concursos/components/inscripcion/documentos-embebidos/documentos-embebidos.component.ts`
+
+## Cambios Específicos
+
+### En `documento-multiple-upload-dialog.component.ts`:
+1. **Línea 732**: Agregada propiedad `procesoFinalizado = false`
+2. **Línea 1092**: Reset de la bandera en `uploadDocuments()`
+3. **Línea 1454-1458**: Verificación de bandera en `finalizarProceso()`
+4. **Múltiples líneas**: Verificaciones antes de llamar a `finalizarProceso()`
+
+### En `documentacion-tab.component.ts`:
+1. **Línea 821-823**: Comentada notificación duplicada en `abrirDialogoCargaMultiple()`
+
+### En `documentos-embebidos.component.ts`:
+1. **Línea 1242-1248**: Comentadas notificaciones duplicadas en `abrirCargaMultiple()`
 
 ### 3. Lógica Mejorada de Mensajes Finales
 

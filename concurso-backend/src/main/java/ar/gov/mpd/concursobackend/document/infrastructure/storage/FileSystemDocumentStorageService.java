@@ -110,9 +110,10 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
     }
 
     @Override
-    public String storeFile(InputStream fileContent, String fileName, UUID userId, UUID documentId) {
+    public String storeFile(InputStream fileContent, String fileName, UUID userId, UUID documentId, String userDni, String documentTypeName) {
         log.info("==== INICIO storeFile ====");
-        log.info("Almacenando archivo: {}, ID Documento: {}, ID Usuario: {}", fileName, documentId, userId);
+        log.info("Almacenando archivo: {}, ID Documento: {}, ID Usuario: {}, DNI: {}, Tipo: {}",
+                fileName, documentId, userId, userDni, documentTypeName);
         log.info("Thread actual: {}", Thread.currentThread().getName());
         validateFileName(fileName);
 
@@ -135,13 +136,66 @@ public class FileSystemDocumentStorageService implements IDocumentStorageService
             isInputStreamEmpty = true;
         }
 
-        String sanitizedFileName = sanitizeFileName(fileName);
-        String userDir = userId.toString();
-        String relativePath = String.format("%s/%s_%s", userDir, documentId.toString(), sanitizedFileName);
+        // CRITICAL REFACTOR: Nueva estructura de almacenamiento por DNI
+        // Validar parámetros requeridos
+        if (userDni == null || userDni.trim().isEmpty()) {
+            throw new DocumentException("DNI del usuario es requerido para el almacenamiento");
+        }
+        if (documentTypeName == null || documentTypeName.trim().isEmpty()) {
+            throw new DocumentException("Nombre del tipo de documento es requerido");
+        }
+
+        // Crear estructura: document-storage/{DNI_USUARIO}/{id_documento}_{tipo_documento}_{fecha_carga}.pdf
+        String userDir = userDni.trim(); // Usar DNI en lugar de UUID
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String sanitizedDocumentTypeName = sanitizeFileName(documentTypeName);
+
+        // Nomenclatura: {id_documento}_{tipo_documento}_{fecha_carga}.pdf
+        String newFileName = String.format("%s_%s_%s.pdf",
+                documentId.toString(),
+                sanitizedDocumentTypeName,
+                timestamp);
+
+        String relativePath = String.format("%s/%s", userDir, newFileName);
         Path targetLocation = Paths.get(storageLocation).resolve(relativePath);
 
         log.info("Directorio de almacenamiento configurado: {}", storageLocation);
+        log.info("Nueva estructura - DNI: {}, Tipo: {}, Archivo: {}", userDni, documentTypeName, newFileName);
         log.info("Ruta de destino del archivo: {}", targetLocation.toAbsolutePath());
+
+        // Crear directorio del usuario si no existe
+        Path userDirectory = Paths.get(storageLocation).resolve(userDir);
+        try {
+            if (!Files.exists(userDirectory)) {
+                Files.createDirectories(userDirectory);
+                log.info("Directorio creado para usuario DNI {}: {}", userDni, userDirectory.toAbsolutePath());
+            }
+        } catch (IOException e) {
+            log.error("Error al crear directorio para usuario DNI {}: {}", userDni, e.getMessage(), e);
+            throw new DocumentException("No se pudo crear el directorio de almacenamiento para el usuario", e);
+        }
+
+        // Verificar si ya existe un documento del mismo tipo para este usuario
+        try {
+            Path[] existingFiles = Files.list(userDirectory)
+                    .filter(path -> {
+                        String existingFileName = path.getFileName().toString();
+                        // Buscar archivos que contengan el tipo de documento en el nombre
+                        return existingFileName.contains(sanitizedDocumentTypeName) &&
+                               existingFileName.endsWith(".pdf");
+                    })
+                    .toArray(Path[]::new);
+
+            if (existingFiles.length > 0) {
+                log.info("Encontrados {} documentos existentes del tipo '{}' para usuario DNI {}",
+                        existingFiles.length, documentTypeName, userDni);
+                // Nota: Permitimos múltiples documentos del mismo tipo (actualización/reemplazo)
+                // El frontend y la lógica de negocio deben manejar la validación de duplicados
+            }
+        } catch (IOException e) {
+            log.warn("No se pudo verificar documentos existentes para usuario DNI {}: {}", userDni, e.getMessage());
+            // Continuar con el almacenamiento aunque no se pueda verificar duplicados
+        }
 
         try {
             // Verificar si existe el directorio base

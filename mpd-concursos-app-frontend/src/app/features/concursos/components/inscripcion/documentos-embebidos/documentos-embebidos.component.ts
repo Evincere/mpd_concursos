@@ -1239,12 +1239,16 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
           height: '80vh' // Example height
         }).afterClosed().subscribe((result: any) => {
           if (result && result.success) {
-            this.notificationService.success('Documentos cargados exitosamente.');
+            // CRITICAL FIX: Eliminar notificación duplicada
+            // El componente hijo ya maneja las notificaciones en finalizarProceso()
+            // this.notificationService.success('Documentos cargados exitosamente.');
             this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
           } else if (result && result.cancelled) {
             this.loggingService.debug('[DocumentosEmbebidos] Carga múltiple de documentos cancelada.', undefined, 'DocumentosEmbebidos');
           } else if (result !== null && result !== undefined) {
-            this.notificationService.error('Error al cargar documentos.');
+            // CRITICAL FIX: Eliminar notificación de error duplicada también
+            // El componente hijo ya maneja las notificaciones de error
+            // this.notificationService.error('Error al cargar documentos.');
           }
         });
       },
