@@ -807,6 +807,19 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     // If the user selects "No", show message and return to contests (no inscription created)
     if (!accepted) {
       this.notificationService.warning('Para continuar con la inscripción debe leer y aceptar las bases y condiciones del concurso.');
+
+      // CRITICAL FIX: Clear any potential cached inscription state for this contest
+      if (this.contestId) {
+        this.inscriptionService.clearCacheAndRefresh().subscribe({
+          next: () => {
+            this.loggingService.debug('[InscripcionProcess] Cache limpiado después de rechazar términos', undefined, 'InscripcionProcessPage');
+          },
+          error: (error) => {
+            console.error('[InscripcionProcess] Error al limpiar cache después de rechazar términos:', error);
+          }
+        });
+      }
+
       setTimeout(() => {
         // CRITICAL FIX: Simply navigate back without creating/cancelling inscription
         this.router.navigate(['/dashboard/concursos']);

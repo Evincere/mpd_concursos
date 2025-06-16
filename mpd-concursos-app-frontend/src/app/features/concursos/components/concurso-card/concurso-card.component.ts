@@ -154,7 +154,7 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
           this.loggingService.debug('[ConcursoCard] Estado recibido:', status, 'ConcursoCard');
           if (status !== InscripcionState.ACTIVE) {  // REFACTORING: Estado estándar
             this.userPostulation = {
-              status: status.toString(), // Convertir enum a string para compatibilidad
+              estado: status.toString(), // CRITICAL FIX: Usar 'estado' en lugar de 'status' para compatibilidad con Postulacion interface
               contestId: this.concurso.id
             };
             this.loggingService.debug('[ConcursoCard] UserPostulation asignada:', this.userPostulation, 'ConcursoCard');
