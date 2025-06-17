@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, Input, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ChartService, ChartData } from '../../services/chart.service';
+import { ChartService } from '../../services/chart.service';
+import { ApexChartData } from '../../../admin-dashboard/components/stats-chart/stats-chart.component';
 
 @Component({
   selector: 'app-report-charts',
@@ -19,9 +20,9 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Datos de los gráficos
   chartData: {
-    inscriptionsByState: ChartData;
-    inscriptionsByMonth: ChartData;
-    contestParticipation: ChartData;
+    inscriptionsByState: ApexChartData;
+    inscriptionsByMonth: ApexChartData;
+    contestParticipation: ApexChartData;
   } | null = null;
 
   constructor(private chartService: ChartService) {}
@@ -38,7 +39,7 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    this.chartService.destroyAllCharts();
+    // ApexCharts cleanup is handled automatically
   }
 
   /**
@@ -62,7 +63,7 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Procesa los datos de inscripciones por estado
    */
-  private processInscriptionsByState(): ChartData {
+  private processInscriptionsByState(): ApexChartData {
     const stateCounts: { [key: string]: number } = {};
     
     this.reportData.forEach(row => {
@@ -75,24 +76,21 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
 
     return {
       labels,
-      datasets: [{
-        label: 'Inscripciones por Estado',
-        data,
-        backgroundColor: [
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(239, 68, 68, 0.8)',
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(107, 114, 128, 0.8)'
-        ]
-      }]
+      series: data,
+      colors: [
+        '#10b981', // Verde
+        '#f59e0b', // Amarillo
+        '#ef4444', // Rojo
+        '#3b82f6', // Azul
+        '#6b7280'  // Gris
+      ]
     };
   }
 
   /**
    * Procesa los datos de inscripciones por mes
    */
-  private processInscriptionsByMonth(): ChartData {
+  private processInscriptionsByMonth(): ApexChartData {
     const monthCounts: { [key: string]: number } = {};
     
     this.reportData.forEach(row => {
@@ -111,19 +109,15 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
 
     return {
       labels,
-      datasets: [{
-        label: 'Inscripciones por Mes',
-        data,
-        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-        borderColor: 'rgba(59, 130, 246, 1)'
-      }]
+      series: data,
+      colors: ['#3b82f6']
     };
   }
 
   /**
    * Procesa los datos de participación por concurso
    */
-  private processContestParticipation(): ChartData {
+  private processContestParticipation(): ApexChartData {
     const contestCounts: { [key: string]: number } = {};
     
     this.reportData.forEach(row => {
@@ -136,48 +130,25 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
 
     return {
       labels,
-      datasets: [{
-        label: 'Participación por Concurso',
-        data,
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(16, 185, 129, 0.8)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(139, 92, 246, 0.8)',
-          'rgba(236, 72, 153, 0.8)'
-        ]
-      }]
+      series: data,
+      colors: [
+        '#3b82f6', // Azul
+        '#10b981', // Verde
+        '#f59e0b', // Amarillo
+        '#8b5cf6', // Púrpura
+        '#ec4899'  // Rosa
+      ]
     };
   }
 
   /**
-   * Crea todos los gráficos
+   * Crea todos los gráficos - ApexCharts se maneja automáticamente
    */
   private createCharts(): void {
     if (!this.chartData || !this.showCharts) return;
 
     try {
-      // Gráfico de dona - Estados de inscripción
-      this.chartService.createDoughnutChart(
-        'inscriptionsByStateChart',
-        this.chartData.inscriptionsByState,
-        'Distribución por Estado de Inscripción'
-      );
-
-      // Gráfico de líneas - Inscripciones por mes
-      this.chartService.createLineChart(
-        'inscriptionsByMonthChart',
-        this.chartData.inscriptionsByMonth,
-        'Tendencia de Inscripciones por Mes'
-      );
-
-      // Gráfico de barras - Participación por concurso
-      this.chartService.createBarChart(
-        'contestParticipationChart',
-        this.chartData.contestParticipation,
-        'Participación por Concurso'
-      );
-
+      // Los gráficos ApexCharts se crean automáticamente en el template
       this.chartsLoaded = true;
     } catch (error) {
       console.error('Error al crear gráficos:', error);
@@ -190,13 +161,12 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   toggleCharts(): void {
     this.showCharts = !this.showCharts;
-    
+
     if (this.showCharts) {
       setTimeout(() => {
         this.createCharts();
       }, 100);
     } else {
-      this.chartService.destroyAllCharts();
       this.chartsLoaded = false;
     }
   }
@@ -208,11 +178,10 @@ export class ReportChartsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.chartData) return;
 
     this.generateChartData();
-    
+
     if (this.chartsLoaded && this.showCharts) {
-      this.chartService.updateChart('inscriptionsByStateChart', this.chartData.inscriptionsByState);
-      this.chartService.updateChart('inscriptionsByMonthChart', this.chartData.inscriptionsByMonth);
-      this.chartService.updateChart('contestParticipationChart', this.chartData.contestParticipation);
+      // ApexCharts se actualiza automáticamente cuando cambian los datos
+      this.chartsLoaded = true;
     }
   }
 

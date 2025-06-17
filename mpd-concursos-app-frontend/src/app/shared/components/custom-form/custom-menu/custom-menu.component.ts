@@ -30,7 +30,7 @@ import { CustomMenuItemComponent } from './custom-menu-item.component';
 
     .custom-menu-container {
       position: fixed;
-      z-index: 9999;
+      z-index: 99999; /* Aumentado para estar por encima del navbar */
       display: none;
       transform-origin: top left;
       animation: menuFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -53,6 +53,8 @@ import { CustomMenuItemComponent } from './custom-menu-item.component';
         inset 0 -1px 0 rgba(0, 0, 0, 0.1);
       overflow: visible;
       min-width: 180px;
+      /* Asegurar que el menú esté por encima de todo */
+      pointer-events: auto;
     }
 
     .custom-menu-container.open {

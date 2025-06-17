@@ -59,6 +59,7 @@ import { CustomDividerComponent } from '@shared/components/custom-form/custom-di
 export class AdminHeaderComponent implements OnInit {
   @Input() isSidebarCollapsed = false;
   @Output() toggleSidebar = new EventEmitter<boolean>();
+  @Output() toggleCustomization = new EventEmitter<void>();
 
   userName = '';
   userRole = '';
@@ -109,6 +110,10 @@ export class AdminHeaderComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  onToggleCustomization(): void {
+    this.toggleCustomization.emit();
   }
 
   private getInitials(name: string): string {

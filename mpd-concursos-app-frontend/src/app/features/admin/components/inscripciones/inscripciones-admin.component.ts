@@ -57,6 +57,10 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
   filterForm: FormGroup;
   contests: { value: number, label: string }[] = [];
 
+  // Títulos dinámicos según la ruta
+  pageTitle = 'Gestión de Inscripciones';
+  pageSubtitle = 'Administra y supervisa todas las inscripciones del sistema';
+
   statusOptions: { value: InscripcionState | 'ALL', label: string }[] = [
     { value: 'ALL', label: 'Todos' },
     { value: InscripcionState.PENDING, label: 'Pendiente' },
@@ -101,12 +105,13 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
       endDate: [null]
     });
 
-    // Aplicar filtros de la ruta si existen
+    // Aplicar filtros de la ruta si existen y actualizar títulos
     const routeData = this.route.snapshot.data;
     if (routeData && routeData['filter']) {
       const filter = routeData['filter'];
       if (filter.status) {
         this.filterForm.get('status')?.setValue(filter.status);
+        this.updatePageTitles(filter.status);
       }
       if (filter.documentStatus) {
         this.filterForm.get('documentStatus')?.setValue(filter.documentStatus);
@@ -314,5 +319,25 @@ export class InscripcionesAdminComponent implements OnInit, OnDestroy {
   formatDate(date: string | Date): string {
     if (!date) return '';
     return new Date(date).toLocaleDateString();
+  }
+
+  private updatePageTitles(status: string): void {
+    switch (status) {
+      case 'PENDING':
+        this.pageTitle = 'Inscripciones Pendientes';
+        this.pageSubtitle = 'Gestiona las inscripciones que requieren revisión y aprobación';
+        break;
+      case 'APPROVED':
+        this.pageTitle = 'Inscripciones Aprobadas';
+        this.pageSubtitle = 'Visualiza todas las inscripciones que han sido aprobadas';
+        break;
+      case 'REJECTED':
+        this.pageTitle = 'Inscripciones Rechazadas';
+        this.pageSubtitle = 'Revisa las inscripciones que han sido rechazadas y sus motivos';
+        break;
+      default:
+        this.pageTitle = 'Gestión de Inscripciones';
+        this.pageSubtitle = 'Administra y supervisa todas las inscripciones del sistema';
+    }
   }
 }

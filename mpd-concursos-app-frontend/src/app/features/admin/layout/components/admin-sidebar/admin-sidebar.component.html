@@ -68,24 +68,7 @@
     <app-custom-divider *ngIf="!collapsed && favoriteItems.length > 0"></app-custom-divider>
   </div>
 
-  <!-- Botones de personalización -->
-  <div class="customization-controls" *ngIf="!collapsed">
-    <button
-      class="customization-btn"
-      [class.active]="isCustomizationMode"
-      (click)="toggleCustomizationMode()"
-      title="Personalizar sidebar">
-      <i class="fas fa-cog"></i>
-    </button>
-    <button
-      class="drag-btn"
-      [class.active]="isDragMode"
-      *ngIf="isCustomizationMode"
-      (click)="toggleDragMode()"
-      title="Reordenar módulos">
-      <i class="fas fa-arrows-alt"></i>
-    </button>
-  </div>
+
 
   <!-- Menú de navegación modular -->
   <nav class="sidebar-nav" *ngIf="!isSearching">

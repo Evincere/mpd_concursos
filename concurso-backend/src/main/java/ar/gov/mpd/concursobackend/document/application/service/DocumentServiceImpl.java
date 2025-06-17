@@ -25,6 +25,8 @@ import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
+import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +39,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final IDocumentTypeRepository documentTypeRepository;
     private final IDocumentStorageService documentStorageService;
     private final DocumentMapper documentMapper;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional
@@ -55,9 +58,15 @@ public class DocumentServiceImpl implements DocumentService {
                 null,
                 request.getComments());
 
+        // Get user DNI for storage organization
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DocumentException("User not found"));
+        String userDni = user.getDni().value();
+        String documentTypeName = documentType.getName();
+
         // Store the file
         String filePath = documentStorageService.storeFile(fileContent, request.getFileName(), userId,
-                document.getId().value());
+                document.getId().value(), userDni, documentTypeName);
         document.setFilePath(filePath);
 
         // Save document metadata
@@ -286,11 +295,17 @@ public class DocumentServiceImpl implements DocumentService {
                     throw new DocumentException("No se pudo leer el contenido del archivo", e);
                 }
 
+                // Get user DNI for storage organization
+                User user = userRepository.findById(userId)
+                        .orElseThrow(() -> new DocumentException("User not found"));
+                String userDni = user.getDni().value();
+                String documentTypeName = documentType.getName();
+
                 // Usar un nuevo InputStream a partir de los bytes copiados
                 try (InputStream copiedStream = new java.io.ByteArrayInputStream(fileBytes)) {
                     // AHORA SI guardamos en el disco
                     filePath = documentStorageService.storeFile(copiedStream, filename, userId,
-                            document.getId().value());
+                            document.getId().value(), userDni, documentTypeName);
 
                     if (filePath == null || filePath.isEmpty()) {
                         log.error("ERROR: La ruta del archivo retornada por storeFile es nula o vacía");

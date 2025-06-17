@@ -1,7 +1,7 @@
 <mat-card class="stat-card" [matTooltip]="tooltipText">
   <mat-card-content>
-    <div class="stat-icon" [style.background-color]="iconColor + '15'">
-      <mat-icon [style.color]="iconColor" aria-hidden="true">{{icon}}</mat-icon>
+    <div class="stat-icon">
+      <mat-icon [style.color]="iconColor" aria-hidden="true">{{getMaterialIcon(icon)}}</mat-icon>
     </div>
     <div class="stat-content">
       <div class="stat-header">

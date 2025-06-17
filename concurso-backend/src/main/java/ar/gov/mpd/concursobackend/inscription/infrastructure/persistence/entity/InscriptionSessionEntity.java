@@ -18,9 +18,10 @@ import java.util.UUID;
 
 /**
  * Entidad JPA para persistir sesiones de inscripción
+ * TEMPORALMENTE DESHABILITADA PARA DEBUGGING
  */
-@Entity
-@Table(name = "inscription_sessions")
+// @Entity
+// @Table(name = "inscription_sessions")
 @Getter
 @Setter
 public class InscriptionSessionEntity {
@@ -43,7 +44,7 @@ public class InscriptionSessionEntity {
     private InscriptionStep currentStep;
 
     @Lob
-    @Column(name = "form_data", columnDefinition = "LONGTEXT")
+    @Column(name = "form_data")
     private String formData;
 
     @Column(name = "created_at")

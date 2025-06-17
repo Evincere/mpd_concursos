@@ -8,6 +8,9 @@ import { CustomCardComponent } from '@shared/components/custom-form/custom-card/
 import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 
+// Directives
+import { LazyLoadImageDirective } from '@shared/directives/lazy-load-image.directive';
+
 // Models
 import { UserProfile } from '@core/models/perfil.model';
 
@@ -19,7 +22,8 @@ import { UserProfile } from '@core/models/perfil.model';
     ReactiveFormsModule,
     CustomCardComponent,
     CustomFormFieldComponent,
-    CustomButtonComponent
+    CustomButtonComponent,
+    LazyLoadImageDirective
   ],
   template: `
     <div class="personal-info-container">
@@ -29,7 +33,15 @@ import { UserProfile } from '@core/models/perfil.model';
           <div class="photo-content">
             <div class="photo-container">
               <ng-container *ngIf="fotoPerfil && fotoPerfil !== 'assets/images/default-avatar.png'; else defaultAvatar">
-                <img [src]="fotoPerfil" alt="Foto de perfil" class="profile-image">
+                <img
+                  appLazyLoadImage
+                  [src]="fotoPerfil"
+                  [placeholder]="'assets/images/avatar-placeholder.png'"
+                  alt="Foto de perfil"
+                  class="profile-image"
+                  [loadingClass]="'profile-image-loading'"
+                  [loadedClass]="'profile-image-loaded'"
+                  [errorClass]="'profile-image-error'">
               </ng-container>
               <ng-template #defaultAvatar>
                 <div class="default-avatar">

@@ -156,7 +156,7 @@
 
         &:hover .card-content .card-icon {
             opacity: 0.9;
-            transform: scale(1.05);
+            transform: scale3d(1.05, 1.05, 1); /* GPU-accelerated scale */
         }
 
         // ✅ EFECTOS HOVER ESPECÍFICOS - Glassmorphism Premium

@@ -1,10 +1,9 @@
-@use 'src/styles/variables' as *;
+@import 'src/styles/unified-glassmorphism-system';
 
 .breadcrumbs-container {
-  padding: 0.75rem 1.5rem;
-  background-color: $color-surface;
-  border-bottom: 1px solid $color-border;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  @include glassmorphism-base('light');
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-bottom: 1px solid var(--border-primary);
   position: relative;
   z-index: 10;
 }
@@ -25,12 +24,12 @@
 
   &.active {
     .breadcrumb-link {
-      color: $color-primary;
+      color: var(--color-primary);
       font-weight: 500;
       pointer-events: none;
-      background-color: rgba($color-primary, 0.1);
-      border-radius: $border-radius;
-      padding: 0.25rem 0.5rem;
+      background-color: var(--glass-background-active);
+      border-radius: var(--border-radius-md);
+      padding: var(--spacing-xs) var(--spacing-sm);
 
       &::after {
         content: '';
@@ -39,7 +38,7 @@
         left: 0;
         width: 100%;
         height: 2px;
-        background-color: $color-primary;
+        background-color: var(--color-primary);
         border-radius: 1px;
       }
     }
@@ -49,16 +48,16 @@
 .breadcrumb-link {
   display: flex;
   align-items: center;
-  color: $color-text-secondary;
+  color: var(--text-secondary);
   text-decoration: none;
-  font-size: $font-size-sm;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  padding: 0.25rem 0.5rem;
-  border-radius: $border-radius;
+  font-size: var(--font-size-sm);
+  transition: var(--transition-normal);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-md);
 
   &:hover {
-    color: $color-primary;
-    background-color: rgba($color-primary, 0.05);
+    color: var(--color-primary);
+    background-color: var(--glass-background-hover);
     transform: translateY(-1px);
   }
 
@@ -70,8 +69,8 @@
     font-size: 1rem;
     width: 1rem;
     height: 1rem;
-    margin-right: 0.5rem;
-    transition: transform 0.3s ease;
+    margin-right: var(--spacing-sm);
+    transition: transform var(--transition-normal);
   }
 
   &:hover .breadcrumb-icon {
@@ -88,8 +87,8 @@
       left: 0;
       width: 0;
       height: 1px;
-      background-color: $color-primary;
-      transition: width 0.3s ease;
+      background-color: var(--color-primary);
+      transition: width var(--transition-normal);
     }
   }
 
@@ -101,8 +100,8 @@
 .breadcrumb-separator {
   display: flex;
   align-items: center;
-  color: $color-text-tertiary;
-  margin: 0 0.25rem;
+  color: var(--text-tertiary);
+  margin: 0 var(--spacing-xs);
   position: relative;
 
   i {
@@ -122,7 +121,8 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background-color: rgba($color-text-tertiary, 0.2);
+    background-color: var(--text-tertiary);
+    opacity: 0.2;
     z-index: -1;
   }
 }
@@ -130,7 +130,7 @@
 // Media queries para responsive
 @media (max-width: 767px) {
   .breadcrumbs-container {
-    padding: 0.5rem 1rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
   }
 
   .breadcrumb-text {
@@ -144,38 +144,38 @@
 // Estilos para tema oscuro
 @media (prefers-color-scheme: dark) {
   .breadcrumbs-container {
-    background-color: $color-surface-dark;
-    border-bottom-color: $color-border-dark;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-color: var(--glass-background-dark);
+    border-bottom-color: var(--border-dark);
   }
 
   .breadcrumb-link {
-    color: $color-text-secondary-dark;
+    color: var(--text-secondary);
 
     &:hover {
-      color: $color-primary-dark;
-      background-color: rgba($color-primary-dark, 0.1);
+      color: var(--color-primary);
+      background-color: var(--glass-background-hover);
     }
 
     .breadcrumb-text::after {
-      background-color: $color-primary-dark;
+      background-color: var(--color-primary);
     }
   }
 
   .breadcrumb-item.active .breadcrumb-link {
-    color: $color-primary-dark;
-    background-color: rgba($color-primary-dark, 0.15);
+    color: var(--color-primary);
+    background-color: var(--glass-background-active);
 
     &::after {
-      background-color: $color-primary-dark;
+      background-color: var(--color-primary);
     }
   }
 
   .breadcrumb-separator {
-    color: $color-text-tertiary-dark;
+    color: var(--text-tertiary);
 
     &::after {
-      background-color: rgba($color-text-tertiary-dark, 0.2);
+      background-color: var(--text-tertiary);
+      opacity: 0.2;
     }
   }
 }

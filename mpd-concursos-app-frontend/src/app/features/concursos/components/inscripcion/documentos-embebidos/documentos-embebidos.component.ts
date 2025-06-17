@@ -981,8 +981,16 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
         this.documentoCache = {}; // Reset cache
         for (const documento of documentosUsuario) {
           if (documento.tipoDocumentoId) {
+            // CRITICAL FIX: Marcar como subido independientemente del estado de aprobación
             this.documentoSubidoCache[documento.tipoDocumentoId] = true;
             this.documentoCache[documento.tipoDocumentoId] = documento;
+
+            // Log para debugging
+            this.loggingService.debug(`[DocumentosEmbebidos] Documento en cache: ${documento.tipoDocumentoId}`, {
+              tipoDocumentoId: documento.tipoDocumentoId,
+              estado: documento.estado,
+              nombreArchivo: documento.nombreArchivo
+            }, 'DocumentosEmbebidos');
           }
         }
       }),
@@ -1162,7 +1170,16 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       return this.documentoSubidoCache['dni'] || (this.documentoSubidoCache['dni-frente'] && this.documentoSubidoCache['dni-dorso']);
     }
     // Verificación estándar para todos los documentos (incluidos DNI frente y dorso por separado)
-    return this.documentoSubidoCache[tipoDocumentoId] === true;
+    const isUploaded = this.documentoSubidoCache[tipoDocumentoId] === true;
+
+    // Log para debugging
+    this.loggingService.debug(`[DocumentosEmbebidos] Verificando documento ${tipoDocumentoId}: ${isUploaded ? 'SUBIDO' : 'NO SUBIDO'}`, {
+      tipoDocumentoId,
+      cacheValue: this.documentoSubidoCache[tipoDocumentoId],
+      allCache: this.documentoSubidoCache
+    }, 'DocumentosEmbebidos');
+
+    return isUploaded;
   }
 
   /**
@@ -1239,12 +1256,16 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
           height: '80vh' // Example height
         }).afterClosed().subscribe((result: any) => {
           if (result && result.success) {
-            this.notificationService.success('Documentos cargados exitosamente.');
+            // CRITICAL FIX: Eliminar notificación duplicada
+            // El componente hijo ya maneja las notificaciones en finalizarProceso()
+            // this.notificationService.success('Documentos cargados exitosamente.');
             this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
           } else if (result && result.cancelled) {
             this.loggingService.debug('[DocumentosEmbebidos] Carga múltiple de documentos cancelada.', undefined, 'DocumentosEmbebidos');
           } else if (result !== null && result !== undefined) {
-            this.notificationService.error('Error al cargar documentos.');
+            // CRITICAL FIX: Eliminar notificación de error duplicada también
+            // El componente hijo ya maneja las notificaciones de error
+            // this.notificationService.error('Error al cargar documentos.');
           }
         });
       },

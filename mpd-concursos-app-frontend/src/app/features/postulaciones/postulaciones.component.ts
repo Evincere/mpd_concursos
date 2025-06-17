@@ -224,9 +224,29 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.postulacionSeleccionada = null;
   }
 
+  retomarInscripcion(postulacion: Postulacion): void {
+    if (postulacion.contestId) {
+      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
+      this.router.navigate(['/dashboard/inscripcion'], {
+        queryParams: {
+          contestId: postulacion.contestId,
+          inscriptionId: postulacion.id,
+          resume: 'true'
+        }
+      });
+    }
+  }
+
   completarDocumentacion(postulacion: Postulacion): void {
     if (postulacion.contestId) {
-      this.router.navigate(['/concursos', postulacion.contestId, 'inscripcion', 'documentos']);
+      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
+      this.router.navigate(['/dashboard/inscripcion'], {
+        queryParams: {
+          contestId: postulacion.contestId,
+          inscriptionId: postulacion.id,
+          resume: 'true'
+        }
+      });
     }
   }
 
@@ -347,6 +367,7 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
                                   this.postulacionACancelar.estado === PostulationStatus.COMPLETED_PENDING_DOCS;
 
     this.inscriptionService.cancelInscription(postulacionId, isProcessCancellation)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           // Mostrar notificación de éxito
@@ -361,7 +382,9 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
           this.cancelandoPostulacion = false;
 
           // Actualizar dashboard
-          this.dashboardService.getDashboardCards().subscribe();
+          this.dashboardService.getDashboardCards()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe();
         },
         error: (error: Error) => {
           // Mostrar notificación de error

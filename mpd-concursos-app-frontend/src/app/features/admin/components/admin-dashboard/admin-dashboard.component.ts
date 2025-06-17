@@ -14,13 +14,18 @@ import { DashboardStats, ActivityItem, QuickAccessWidget, AdminDashboardService 
 import { StatCardComponent } from './components/stat-card/stat-card.component';
 import { QuickAccessWidgetComponent } from './components/quick-access-widget/quick-access-widget.component';
 import { ActivityFeedComponent } from './components/activity-feed/activity-feed.component';
-import { StatsChartComponent, ChartData } from './components/stats-chart/stats-chart.component';
+import { StatsChartComponent, ApexChartData } from './components/stats-chart/stats-chart.component';
 
 interface MenuItem {
   label: string;
   icon: string;
   route: string;
   description: string;
+}
+
+interface TabItem {
+  label: string;
+  icon: string;
 }
 
 @Component({
@@ -42,6 +47,13 @@ interface MenuItem {
   ]
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
+  // Configuración de tabs
+  tabs: TabItem[] = [
+    { label: 'Resumen', icon: 'chart-pie' },
+    { label: 'Navegación Rápida', icon: 'th-large' },
+    { label: 'Estadísticas', icon: 'chart-bar' }
+  ];
+
   // Menú de navegación rápida
   menuItems: MenuItem[] = [
     {
@@ -51,38 +63,38 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       description: 'Vista general del sistema'
     },
     {
-      label: 'Users',
-      icon: 'people',
-      route: '/admin/users',
-      description: 'User management'
+      label: 'Usuarios',
+      icon: 'users',
+      route: '/admin/usuarios',
+      description: 'Gestión de usuarios del sistema'
+    },
+    {
+      label: 'Concursos',
+      icon: 'trophy',
+      route: '/admin/concursos',
+      description: 'Administración de concursos'
+    },
+    {
+      label: 'Inscripciones',
+      icon: 'clipboard-list',
+      route: '/admin/inscripciones',
+      description: 'Gestión de inscripciones'
     },
     {
       label: 'Documentos',
-      icon: 'description',
+      icon: 'file-text',
       route: '/admin/documentos',
       description: 'Gestión de documentos'
     },
     {
-      label: 'Exámenes',
-      icon: 'assignment',
-      route: '/admin/examenes',
-      description: 'Administración de exámenes'
-    },
-    {
-      label: 'Comunicaciones',
-      icon: 'message',
-      route: '/admin/comunicaciones',
-      description: 'Envío de comunicaciones masivas'
-    },
-    {
       label: 'Reportes',
-      icon: 'assessment',
+      icon: 'chart-bar',
       route: '/admin/reportes',
       description: 'Reportes y estadísticas'
     },
     {
       label: 'Configuración',
-      icon: 'settings',
+      icon: 'cog',
       route: '/admin/configuracion',
       description: 'Configuración del sistema'
     }
@@ -95,9 +107,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   quickAccessWidgets: QuickAccessWidget[] = [];
 
   // Datos para gráficos
-  inscripcionesChartData!: ChartData;
-  concursosChartData!: ChartData;
-  usuariosChartData!: ChartData;
+  inscripcionesChartData!: ApexChartData;
+  concursosChartData!: ApexChartData;
+  usuariosChartData!: ApexChartData;
 
   // Pestaña activa
   activeTab = 0;
@@ -113,6 +125,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadDashboardData();
+    this.initializeTestChartData(); // Datos de prueba para desarrollo
   }
 
   ngOnDestroy(): void {
@@ -163,42 +176,76 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  prepareChartData(stats: DashboardStats): void {
-    // Gráfico de inscripciones
+  /**
+   * Inicializa datos de prueba para los gráficos durante desarrollo
+   */
+  initializeTestChartData(): void {
+    // Gráfico de inscripciones (pie chart)
     this.inscripcionesChartData = {
       labels: ['Pendientes', 'Aprobadas', 'Rechazadas'],
-      datasets: [{
-        label: 'Inscripciones',
-        data: [stats.inscripciones.pendientes, stats.inscripciones.aprobadas, stats.inscripciones.rechazadas],
-        backgroundColor: ['#ff9800', '#4caf50', '#f44336'],
-        borderWidth: 0
-      }]
+      series: [45, 120, 15], // Ensure these are numbers
+      colors: ['#ff9800', '#4caf50', '#f44336']
     };
 
-    // Gráfico de concursos
+    // Gráfico de concursos (donut chart)
     this.concursosChartData = {
       labels: ['Activos', 'Próximos', 'Finalizados'],
-      datasets: [{
-        label: 'Concursos',
-        data: [stats.concursos.activos, stats.concursos.proximos, stats.concursos.finalizados],
-        backgroundColor: ['#2196f3', '#9c27b0', '#607d8b'],
-        borderWidth: 0
-      }]
+      series: [8, 12, 25], // Ensure these are numbers
+      colors: ['#2196f3', '#9c27b0', '#607d8b']
     };
 
-    // Gráfico de usuarios por rol
+    // Gráfico de usuarios por rol (pie chart)
+    this.usuariosChartData = {
+      labels: ['Administradores', 'Usuarios'],
+      series: [5, 150], // Ensure these are numbers
+      colors: ['#9c27b0', '#2196f3']
+    };
+
+    console.log('Test chart data initialized:', {
+      inscripciones: this.inscripcionesChartData,
+      concursos: this.concursosChartData,
+      usuarios: this.usuariosChartData
+    });
+  }
+
+  prepareChartData(stats: DashboardStats): void {
+    // Gráfico de inscripciones (pie chart) - Ensure numbers
+    this.inscripcionesChartData = {
+      labels: ['Pendientes', 'Aprobadas', 'Rechazadas'],
+      series: [
+        Number(stats.inscripciones.pendientes) || 0,
+        Number(stats.inscripciones.aprobadas) || 0,
+        Number(stats.inscripciones.rechazadas) || 0
+      ],
+      colors: ['#ff9800', '#4caf50', '#f44336']
+    };
+
+    // Gráfico de concursos (donut chart) - Ensure numbers
+    this.concursosChartData = {
+      labels: ['Activos', 'Próximos', 'Finalizados'],
+      series: [
+        Number(stats.concursos.activos) || 0,
+        Number(stats.concursos.proximos) || 0,
+        Number(stats.concursos.finalizados) || 0
+      ],
+      colors: ['#2196f3', '#9c27b0', '#607d8b']
+    };
+
+    // Gráfico de usuarios por rol (pie chart) - Ensure numbers
     const roles = Object.keys(stats.usuarios.porRol);
-    const usuariosPorRol = roles.map(role => stats.usuarios.porRol[role]);
+    const usuariosPorRol = roles.map(role => Number(stats.usuarios.porRol[role]) || 0);
 
     this.usuariosChartData = {
       labels: roles.map(role => role.replace('ROLE_', '')),
-      datasets: [{
-        label: 'Usuarios por Rol',
-        data: usuariosPorRol,
-        backgroundColor: ['#9c27b0', '#2196f3'],
-        borderWidth: 0
-      }]
+      series: usuariosPorRol,
+      colors: ['#9c27b0', '#2196f3']
     };
+
+    console.log('Chart data prepared from stats:', {
+      inscripciones: this.inscripcionesChartData,
+      concursos: this.concursosChartData,
+      usuarios: this.usuariosChartData
+    });
   }
 
   navigateTo(route: string): void {
@@ -210,5 +257,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
    */
   setActiveTab(tabIndex: number): void {
     this.activeTab = tabIndex;
+  }
+
+  /**
+   * TrackBy function para widgets
+   */
+  trackByWidgetId(index: number, widget: QuickAccessWidget): string {
+    return widget.id || index.toString();
+  }
+
+  /**
+   * TrackBy function para menu items
+   */
+  trackByMenuRoute(index: number, item: MenuItem): string {
+    return item.route;
   }
 }

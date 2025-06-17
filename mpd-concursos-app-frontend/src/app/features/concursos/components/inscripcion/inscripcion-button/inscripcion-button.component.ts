@@ -72,12 +72,7 @@ export class InscripcionButtonComponent {
         case 'REJECTED':
           return 'Ver Resultado';           // ✅ Proceso finalizado - mostrar motivos
         case 'ACTIVE':
-          return 'Continuar Inscripción';   // ✅ Inscripción en proceso - permite continuar
-        // Estados legacy para compatibilidad temporal
-        case 'APPROVED':
-          return 'Ver Resultado';           // Legacy: mapea a APPROVED
-        case 'ACTIVE':
-          return 'Continuar Inscripción';   // Legacy: mapea a ACTIVE
+          return 'Retomar Inscripción';     // ✅ Inscripción en proceso - permite continuar
         case 'FROZEN':
           return 'Ver Estado';              // ✅ Inscripción congelada - solo visualización
         default:
@@ -385,7 +380,8 @@ export class InscripcionButtonComponent {
   }
 
   handleClick(): void {
-    if (this.userPostulation?.estado === 'COMPLETED_PENDING_DOCS') {
+    // CRITICAL FIX: Manejar correctamente los estados que requieren continuar vs iniciar nueva inscripción
+    if (this.userPostulation?.estado === 'COMPLETED_PENDING_DOCS' || this.userPostulation?.estado === 'ACTIVE') {
       this.continuarClick.emit(this.currentContest);
     } else {
       this.inscripcionClick.emit(this.currentContest);

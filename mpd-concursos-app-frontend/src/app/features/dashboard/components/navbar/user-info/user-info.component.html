@@ -1,7 +1,15 @@
 <div class="user-info">
     <div class="profile-image-container">
         <ng-container *ngIf="hasProfileImage(); else defaultAvatar">
-            <img [src]="userInfo().profileImage" [alt]="userInfo().username" class="profile-image">
+            <img
+                appLazyLoadImage
+                [src]="userInfo().profileImage || 'assets/images/default-avatar.png'"
+                [placeholder]="'assets/images/avatar-placeholder.png'"
+                [alt]="userInfo().username"
+                class="profile-image"
+                [loadingClass]="'profile-image-loading'"
+                [loadedClass]="'profile-image-loaded'"
+                [errorClass]="'profile-image-error'">
         </ng-container>
         <ng-template #defaultAvatar>
             <div class="default-avatar">

@@ -29,4 +29,23 @@ export class StatCardComponent {
   @Input() link: string | null = null;
   @Input() linkLabel = 'Ver detalles';
   @Input() tooltipText = '';
+
+  // Mapeo de iconos Font Awesome a Material Icons
+  private iconMap: { [key: string]: string } = {
+    'users': 'people',
+    'trophy': 'emoji_events',
+    'clock': 'schedule',
+    'file-text': 'description',
+    'chart-bar': 'bar_chart',
+    'chart-line': 'show_chart',
+    'user': 'person',
+    'document': 'description',
+    'warning': 'warning',
+    'check': 'check_circle',
+    'info': 'info'
+  };
+
+  getMaterialIcon(iconName: string): string {
+    return this.iconMap[iconName] || 'info';
+  }
 }

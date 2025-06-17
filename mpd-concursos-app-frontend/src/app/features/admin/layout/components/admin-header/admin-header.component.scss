@@ -1,38 +1,26 @@
-@use 'src/styles/variables' as *;
-
-/* Glassmorphism Design System Variables */
-$glass-background-primary: rgba(55, 65, 81, 0.8);
-$glass-background-secondary: rgba(75, 85, 99, 0.9);
-$text-primary: #f9fafb;
-$text-secondary: #d1d5db;
-$focus-color: #3b82f6;
-$border-radius-lg: 8px;
-$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+@import 'src/styles/unified-glassmorphism-system';
 
 .admin-header {
+  @include glassmorphism-base('secondary');
   height: 64px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1rem;
-  /* Glassmorphism header background */
-  background: $glass-background-primary;
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  color: $text-primary;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  z-index: 10;
+  padding: 0 var(--spacing-lg);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-primary);
+  /* Aumentar z-index para estar por encima de otros elementos */
+  z-index: 1001;
+  /* Permitir que los dropdowns se extiendan fuera del header */
+  overflow: visible;
+  position: relative;
 }
 
 .header-left {
   display: flex;
   align-items: center;
   position: relative;
-  gap: 1rem;
+  gap: var(--spacing-lg);
 
   .sidebar-toggle-container {
     position: relative;
@@ -41,44 +29,29 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sidebar-toggle {
-    /* Enhanced glassmorphism toggle button */
-    background: rgba(75, 85, 99, 0.7);
-    backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    @include glassmorphism-button('secondary', 'small');
     border-radius: 50%;
-    transition: all $transition-normal;
+    transition: var(--transition-normal);
     z-index: 100;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.2),
-      0 2px 6px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
 
     &:hover {
-      background: rgba(75, 85, 99, 0.9);
-      border-color: rgba(255, 255, 255, 0.25);
+      @include glassmorphism-hover;
+      border-color: var(--border-hover);
       transform: translateY(-1px) scale(1.05);
-      box-shadow:
-        0 6px 18px rgba(0, 0, 0, 0.25),
-        0 3px 8px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     &:active {
       transform: translateY(0) scale(1.02);
-      box-shadow:
-        0 3px 8px rgba(0, 0, 0, 0.2),
-        0 1px 4px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
 
     /* Icon styling */
     ::ng-deep .custom-button-content {
-      color: $text-primary;
+      color: var(--text-primary);
       font-size: 0.875rem;
     }
   }
@@ -95,15 +68,15 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       left: -5px;
       right: -5px;
       bottom: -5px;
-      border-radius: 8px;
+      border-radius: var(--border-radius-md);
       background: linear-gradient(
         45deg,
-        rgba($color-accent, 0.2) 0%,
-        rgba($color-accent, 0) 50%,
-        rgba($color-accent, 0.2) 100%
+        var(--color-accent) 0%,
+        transparent 50%,
+        var(--color-accent) 100%
       );
       z-index: -1;
-      opacity: 0.7;
+      opacity: 0.2;
       animation: rotate 4s linear infinite;
     }
 
@@ -114,21 +87,12 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .user-dashboard-btn {
+    @include glassmorphism-button('primary', 'normal');
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: $border-radius-lg;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
     font-weight: 500;
-    transition: all $transition-normal;
-    /* Glassmorphism button with focus color */
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.9) 100%);
-    color: $text-primary;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    box-shadow:
-      0 4px 12px rgba(59, 130, 246, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
     position: relative;
     overflow: hidden;
 
@@ -150,11 +114,7 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     &:hover {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(37, 99, 235, 1) 100%);
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow:
-        0 6px 16px rgba(59, 130, 246, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      @include glassmorphism-hover;
       transform: translateY(-2px);
 
       &::after {
@@ -164,9 +124,6 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:active {
       transform: translateY(-1px);
-      box-shadow:
-        0 4px 12px rgba(59, 130, 246, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     @media (max-width: 768px) {
@@ -174,7 +131,7 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: none;
       }
 
-      padding: 0.5rem;
+      padding: var(--spacing-sm);
     }
   }
 }
@@ -182,31 +139,25 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 .header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
+  /* Asegurar que los dropdowns funcionen correctamente */
+  position: relative;
+  z-index: 1002; /* Mayor que el header para dropdowns */
+  /* Solo permitir overflow visible donde sea necesario para dropdowns */
+  overflow: visible;
 
   .action-button {
-    /* Enhanced glassmorphism action buttons */
-    background: rgba(75, 85, 99, 0.6);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    @include glassmorphism-button('secondary', 'small');
     border-radius: 50%;
     width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all $transition-normal;
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
     &:hover {
-      background: rgba(75, 85, 99, 0.8);
-      border-color: rgba(255, 255, 255, 0.2);
+      @include glassmorphism-hover;
       transform: translateY(-1px) scale(1.05);
-      box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
 
     &:active {
@@ -215,13 +166,13 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Icon styling */
     ::ng-deep .custom-button-content {
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-size: 0.875rem;
-      transition: color $transition-normal;
+      transition: color var(--transition-normal);
     }
 
     &:hover ::ng-deep .custom-button-content {
-      color: $focus-color;
+      color: var(--color-primary);
     }
   }
 
@@ -229,13 +180,10 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 
     .notification-badge {
+      @include glassmorphism-badge('danger');
       position: absolute;
       top: -6px;
       right: -6px;
-      /* Enhanced glassmorphism notification badge */
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 1) 100%);
-      color: $text-primary;
-      border: 1px solid rgba(255, 255, 255, 0.3);
       border-radius: 50%;
       min-width: 20px;
       height: 20px;
@@ -245,11 +193,6 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       justify-content: center;
       padding: 0 4px;
       font-weight: 600;
-      backdrop-filter: blur(4px);
-      box-shadow:
-        0 3px 10px rgba(239, 68, 68, 0.4),
-        0 1px 4px rgba(239, 68, 68, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
       animation: pulse 2s infinite;
     }
 
@@ -260,69 +203,55 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .user-button {
+    @include glassmorphism-base('secondary');
     display: flex;
     align-items: center;
-    padding: 0.375rem 0.75rem;
-    border-radius: $border-radius-lg;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(75, 85, 99, 0.6);
-    backdrop-filter: blur(4px);
-    transition: all $transition-normal;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-primary);
+    transition: var(--transition-normal);
     cursor: pointer;
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Asegurar que el botón permita dropdowns */
+    position: relative;
+    z-index: 1003;
 
     &:hover {
-      /* Enhanced glassmorphism hover effect */
-      background: rgba(75, 85, 99, 0.8);
-      border-color: rgba(255, 255, 255, 0.2);
+      @include glassmorphism-hover;
       transform: translateY(-1px);
-      box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
     }
 
     &:active {
       transform: translateY(0);
-      box-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .user-avatar {
+      @include glassmorphism-base('light');
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      /* Subtle glassmorphism avatar - consistent with logo */
-      background: linear-gradient(135deg, rgba(75, 85, 99, 0.7) 0%, rgba(55, 65, 81, 0.8) 100%);
-      color: $text-primary;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+      border: 1px solid var(--border-primary);
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: 600;
       font-size: 0.875rem;
-      margin-right: 0.75rem;
-      transition: all $transition-normal;
-      box-shadow:
-        0 2px 6px rgba(0, 0, 0, 0.2),
-        0 1px 3px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      margin-right: var(--spacing-md);
+      transition: var(--transition-normal);
     }
 
     .user-info {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      margin-right: 0.75rem;
+      margin-right: var(--spacing-md);
       min-width: 0;
 
       .user-name {
         font-size: 0.8125rem;
         font-weight: 600;
         line-height: 1.2;
-        color: $text-primary;
+        color: var(--text-primary);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -331,7 +260,7 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
       .user-role {
         font-size: 0.6875rem;
-        color: $text-secondary;
+        color: var(--text-secondary);
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.025em;
@@ -339,25 +268,21 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .dropdown-icon {
-      color: $text-secondary;
+      color: var(--text-secondary);
       font-size: 0.75rem;
-      transition: all $transition-normal;
+      transition: var(--transition-normal);
     }
 
     &:hover {
       .dropdown-icon {
-        color: $text-primary;
+        color: var(--text-primary);
         transform: translateY(-1px);
       }
 
       .user-avatar {
+        @include glassmorphism-hover;
         transform: scale(1.02);
-        background: linear-gradient(135deg, rgba(75, 85, 99, 0.8) 0%, rgba(55, 65, 81, 0.9) 100%);
-        border-color: rgba(255, 255, 255, 0.2);
-        box-shadow:
-          0 3px 8px rgba(0, 0, 0, 0.25),
-          0 1px 4px rgba(0, 0, 0, 0.15),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-color: var(--border-hover);
       }
     }
   }
@@ -386,6 +311,76 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+/* Estilos específicos para el menú de usuario admin */
+::ng-deep .admin-header app-custom-menu {
+  /* Asegurar que el componente del menú no tenga restricciones */
+  position: relative !important;
+
+  .custom-menu-container {
+    /* OVERRIDE FUERTE: Cambiar de fixed a absolute */
+    position: absolute !important;
+    z-index: 99999 !important;
+    /* Evitar que se corte el menú */
+    overflow: visible !important;
+
+    /* Posicionamiento correcto debajo del botón - resetear las posiciones calculadas */
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    left: auto !important;
+
+    /* Resetear las posiciones dinámicas del componente */
+    transform: none !important;
+
+    /* Mejorar la visibilidad del menú */
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.4),
+      0 8px 16px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+
+    /* Asegurar que el menú aparezca fuera del navbar */
+    will-change: transform, opacity;
+    contain: none !important;
+    /* Forzar que se renderice por encima de cualquier contenedor */
+    isolation: isolate;
+  }
+
+  /* Asegurar que el menú se posicione correctamente cuando está abierto */
+  .custom-menu-container.open {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Override específico para el área de dropdowns del header */
+::ng-deep .admin-header .header-right {
+  /* Solo afectar el área específica donde están los dropdowns */
+  contain: none !important;
+
+  /* Asegurar que los menús puedan extenderse fuera del header */
+  app-custom-menu {
+    contain: none !important;
+    /* Permitir que el menú se extienda fuera del contenedor padre */
+    overflow: visible !important;
+
+    .custom-menu-container {
+      /* Usar posicionamiento absoluto respecto al elemento padre más cercano */
+      position: absolute !important;
+      z-index: 99999 !important;
+      /* Permitir que el menú se extienda fuera de cualquier contenedor */
+      contain: none !important;
+      /* Asegurar que se posicione correctamente debajo del botón */
+      top: calc(100% + 8px) !important;
+      right: 0 !important;
+      left: auto !important;
+      /* Resetear transformaciones dinámicas */
+      transform: none !important;
+    }
+  }
+}
+
 /* Mobile-specific menu adjustments */
 @media (max-width: 480px) {
   ::ng-deep .notifications-menu {
@@ -409,12 +404,12 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 /* Media queries para responsive design mejorado */
 @media (max-width: 768px) {
   .admin-header {
-    padding: 0 0.75rem;
+    padding: 0 var(--spacing-md);
     height: 56px;
   }
 
   .header-left {
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 
     .sidebar-toggle {
       width: 36px !important;
@@ -423,7 +418,7 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .header-right {
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 
     .action-button {
       width: 32px !important;
@@ -435,13 +430,13 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .user-button {
-      padding: 0.25rem 0.5rem !important;
+      padding: var(--spacing-xs) var(--spacing-sm) !important;
 
       .user-avatar {
         width: 32px !important;
         height: 32px !important;
         font-size: 0.75rem !important;
-        margin-right: 0.5rem !important;
+        margin-right: var(--spacing-sm) !important;
       }
 
       .user-info {
@@ -465,14 +460,14 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
 @media (max-width: 480px) {
   .admin-header {
-    padding: 0 0.5rem;
+    padding: 0 var(--spacing-sm);
   }
 
   .header-left {
-    gap: 0.375rem;
+    gap: var(--spacing-xs);
 
     .header-title-container {
-      gap: 0.375rem !important;
+      gap: var(--spacing-xs) !important;
 
       .title-icon {
         width: 28px !important;
@@ -489,14 +484,14 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         /* Ensure no animations on small mobile */
         animation: none !important;
         background: none !important;
-        -webkit-text-fill-color: $text-primary !important;
-        color: $text-primary !important;
+        -webkit-text-fill-color: var(--text-primary) !important;
+        color: var(--text-primary) !important;
       }
     }
   }
 
   .header-right {
-    gap: 0.375rem;
+    gap: var(--spacing-xs);
 
     .action-button {
       width: 30px !important;
@@ -523,9 +518,9 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   .user-button,
   .title-icon {
     &:focus {
-      outline: 2px solid $focus-color;
+      outline: 2px solid var(--color-primary);
       outline-offset: 2px;
-      border-color: $focus-color;
+      border-color: var(--color-primary);
     }
 
     &:focus:not(:focus-visible) {
@@ -533,7 +528,7 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     &:focus-visible {
-      outline: 2px solid $focus-color;
+      outline: 2px solid var(--color-primary);
       outline-offset: 2px;
     }
   }
@@ -560,8 +555,8 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       /* Ensure text is visible in high contrast mode */
       animation: none !important;
       background: none !important;
-      -webkit-text-fill-color: $text-primary !important;
-      color: $text-primary !important;
+      -webkit-text-fill-color: var(--text-primary) !important;
+      color: var(--text-primary) !important;
       text-shadow: none !important;
     }
   }

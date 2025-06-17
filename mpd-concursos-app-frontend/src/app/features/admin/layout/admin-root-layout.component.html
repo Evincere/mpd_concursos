@@ -8,12 +8,14 @@
   <!-- Header -->
   <app-admin-header
     [isSidebarCollapsed]="isSidebarCollapsed"
-    (toggleSidebar)="onSidebarToggle(!isSidebarCollapsed)">
+    (toggleSidebar)="onSidebarToggle(!isSidebarCollapsed)"
+    (toggleCustomization)="onToggleCustomization()">
   </app-admin-header>
 
   <div class="admin-container">
     <!-- Sidebar -->
     <app-admin-sidebar
+      #adminSidebar
       [collapsed]="isSidebarCollapsed"
       *ngIf="!isMobile || !isSidebarCollapsed">
     </app-admin-sidebar>

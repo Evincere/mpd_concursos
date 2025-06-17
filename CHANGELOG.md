@@ -5,7 +5,121 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-06-17
+
+### 🐛 **Correcciones Críticas en Sistema de Documentación**
+
+#### **Banner de Inscripción Provisional - CORREGIDO**
+- **PROBLEMA RESUELTO**: Banner seguía apareciendo aunque la documentación estuviera completa
+- **CAUSA**: Lógica de verificación excluía documentos en estado 'pendiente'
+- **SOLUCIÓN**: Modificada verificación para considerar documentos subidos independientemente del estado de aprobación
+- **ARCHIVOS MODIFICADOS**:
+  - `inscripcion-process-page.component.ts`: Líneas 1317-1332
+  - `documentos-embebidos.component.ts`: Líneas 978-995, 1154-1175
+
+#### **Navegación al Paso 3 - CORREGIDO**
+- **PROBLEMA RESUELTO**: No navegaba automáticamente al paso de documentación al retomar inscripción
+- **CAUSA**: Falta de logging y scroll automático en `determinarPasoInicialBasadoEnEstado()`
+- **SOLUCIÓN**: Mejorado logging y scroll automático para estado `COMPLETED_PENDING_DOCS`
+- **ARCHIVOS MODIFICADOS**:
+  - `inscripcion-process-page.component.ts`: Líneas 822-857
+
+#### **Estado de Documentación - CORREGIDO**
+- **PROBLEMA RESUELTO**: Estado de postulación no se actualizaba correctamente tras cargar documentos
+- **CAUSA**: Lógica inconsistente entre componentes para determinar completitud
+- **SOLUCIÓN**: Unificada lógica de verificación y agregado logging detallado
+- **MEJORAS**:
+  - Verificación basada en existencia de documento, no en estado de aprobación
+  - Logging detallado para debugging en ambos componentes
+  - Actualización automática del estado centralizado
+
 ## [1.0.0-prod] - 2025-01-XX - PREPARACIÓN PARA PRODUCCIÓN
+
+### 🔧 CRÍTICO - Corrección Completa del Sistema de Inscripciones
+
+#### 🎯 **Flujo de Retomar Inscripción - SOLUCIONADO**
+- **SOLUCIONADO**: Problema de redirección al login al presionar "RETOMAR PROCESO DE INSCRIPCIÓN"
+  - Corregida navegación en `postulaciones.component.ts` para usar ruta correcta `/dashboard/inscripcion`
+  - Agregados parámetros `contestId`, `inscriptionId` y `resume: 'true'` en queryParams
+- **SOLUCIONADO**: Cards de concursos no detectaban inscripciones "EN PROCESO"
+  - Implementado nuevo estado `NO_INSCRIPTION` para distinguir entre "sin inscripción" y "inscripción activa"
+  - Corregida lógica en `concurso-card.component.ts` para detectar correctamente estado `ACTIVE`
+  - Actualizado `InscriptionService.getInscriptionStatus()` para manejar respuesta del backend correctamente
+- **MEJORADO**: Botón de inscripción ahora muestra "Retomar Inscripción" para estado `ACTIVE`
+  - Actualizado `InscripcionButtonComponent` para manejar correctamente estados de continuación
+  - Corregida lógica de `handleClick()` para emitir evento `continuarClick` en estados apropiados
+
+#### 🎨 **Mejoras en UI/UX del Banner de Inscripción Provisional**
+- **REDISEÑADO**: Banner de inscripción provisional con mejor integración visual
+  - Checkbox ahora integrado dentro del banner principal en lugar de estar separado
+  - Agregado contenedor `.provisional-acceptance` con estilos glassmorphism
+  - Mejorado posicionamiento y espaciado para mejor experiencia visual
+  - Agregados efectos hover sutiles para mejor interactividad
+
+#### 🔄 **Navegación Corregida para Documentación Pendiente**
+- **SOLUCIONADO**: Botón "COMPLETAR DOCUMENTACIÓN" ahora navega correctamente
+  - Corregida navegación en `postulaciones.component.ts` y `postulacion-detalle.component.ts`
+  - Ambos componentes ahora usan `/dashboard/inscripcion` con parámetros correctos
+  - Eliminadas rutas incorrectas que causaban redirección al login
+
+#### 🎯 **Recuperación Inteligente de Paso en Proceso de Inscripción**
+- **IMPLEMENTADO**: Sistema de detección automática de paso inicial
+  - Nuevo método `determinarPasoInicialBasadoEnEstado()` para inscripciones existentes
+  - Para estado `COMPLETED_PENDING_DOCS`: navega automáticamente al paso 3 (documentación)
+  - Para estado `ACTIVE`: carga el estado guardado normalmente
+  - Formulario pre-completado con términos aceptados para continuación fluida
+
+#### 🛡️ **Prevención de Errores de Inscripción Duplicada**
+- **SOLUCIONADO**: Error "Ya tiene una inscripción completada para este concurso"
+  - Implementada verificación previa antes de crear nueva inscripción
+  - Nuevo método `proceedToNextStep()` para manejo unificado de avance de pasos
+  - Sistema detecta inscripciones existentes y las reutiliza automáticamente
+  - Eliminados intentos de crear inscripciones cuando ya existen
+
+#### 🔄 **Actualización Automática de Estado de Documentación - IMPLEMENTADA**
+- **IMPLEMENTADO**: Sistema de actualización inmediata del estado de documentación
+  - Agregada suscripción a `documentoActualizado$` en proceso de inscripción
+  - Banner de inscripción provisional se oculta automáticamente al completar 100% documentación
+  - Método `confirmarYCerrar()` notifica cambios al servicio de documentos
+  - Estado de documentación se actualiza con delay de 500ms para sincronización con backend
+
+#### 🎨 **Mejoras en Diálogo de Carga Múltiple - OPTIMIZADO**
+- **SIMPLIFICADO**: Eliminado botón cancelar duplicado en carga múltiple
+  - Botón "Cancelar" único en footer del diálogo
+  - Botón principal cambia a "Confirmar" después de subida exitosa
+  - Lógica unificada para manejo de estados del diálogo
+  - Mejor experiencia de usuario con flujo más claro
+
+#### 📋 **Estados y Transiciones Mejoradas**
+- **ACTUALIZADO**: Enum `InscripcionState` con nuevo estado `NO_INSCRIPTION`
+  - Agregado soporte en `InscriptionStateMachineService` para el nuevo estado
+  - Actualizada documentación y utilidades de estado
+- **VERIFICADO**: Compilación exitosa sin errores después de todos los cambios
+
+### 🎨 Vista Crear Nuevo Concurso - Auditoría de Visibilidad y Glassmorphism
+- **COMPLETADO**: Auditoría completa de visibilidad y estilos aplicando correcciones exitosas de gestión de concursos
+- **Migración al Sistema Unificado**: Implementación de variables glassmorphism centralizadas
+  - Uso de `--glass-gradient-primary`, `--text-primary`, `--text-secondary` para consistencia
+  - Aplicación de `--border-success`, `--shadow-focus-strong` para estados interactivos
+  - Integración completa con `glassmorphism-system.scss`
+- **Mejoras de Contraste WCAG AA**: Cumplimiento 4.5:1 ratio en todos los elementos
+  - Títulos principales: `--text-primary` con `text-shadow` y `filter: drop-shadow`
+  - Subtítulos/labels: `--text-secondary` con contraste mejorado
+  - Campos de formulario: Opacidades optimizadas (0.9-0.95 vs 0.8-0.9 anterior)
+  - Botones: Colores específicos con tema concursos `--contests-theme-color`
+- **Consistencia Visual Total**: Alineación con vistas ya corregidas
+  - Header glassmorphism con `--backdrop-filter-strong` y `--shadow-lg`
+  - Formularios con `--backdrop-filter-medium` y gradientes optimizados
+  - Pestañas (tabs) con estados activos mejorados usando tema #4CAF50
+  - Selectores y datepickers con mejor visibilidad y contraste
+- **Responsive Design Optimizado**: Mantenimiento de visibilidad en todos los dispositivos
+  - Variables de spacing (`--spacing-lg`, `--spacing-md`) para consistencia
+  - Backdrop-filter optimizado para móviles (`--backdrop-filter-light`)
+  - Transiciones suaves usando `--transition-normal`
+- **Accesibilidad Mejorada**: Soporte completo para navegación por teclado y alto contraste
+  - Focus states con `--shadow-focus-strong` y `--border-success`
+  - Soporte para `prefers-reduced-motion` y `prefers-contrast: high`
+  - Screen reader support y outline mejorado para `focus-visible`
 
 ### 🚀 Deployment en Servidor Donweb
 - **Configurado** deployment para servidor vps-4778464-x.dattaweb.com (149.50.132.23)

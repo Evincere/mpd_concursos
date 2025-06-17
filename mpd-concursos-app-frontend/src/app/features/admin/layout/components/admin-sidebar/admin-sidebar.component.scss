@@ -1,63 +1,30 @@
-@use 'src/styles/variables' as *;
-
-/* Enhanced Glassmorphism Design System Variables */
-$glass-background-primary: rgba(55, 65, 81, 0.95);
-$glass-background-secondary: rgba(75, 85, 99, 0.85);
-$glass-background-tertiary: rgba(55, 65, 81, 0.9);
-$glass-hover-primary: rgba(75, 85, 99, 0.9);
-$glass-hover-secondary: rgba(55, 65, 81, 0.95);
-$glass-active-primary: rgba(75, 85, 99, 0.95);
-$text-primary: #f9fafb;
-$text-secondary: #d1d5db;
-$text-muted: #9ca3af;
-$focus-color: #3b82f6;
-$focus-color-secondary: rgba(59, 130, 246, 0.2);
-$border-radius-lg: 8px;
-$border-radius-xl: 12px;
-$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-$transition-smooth: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-$transition-elastic: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+@import 'src/styles/unified-glassmorphism-system';
 
 /* Variables específicas del sidebar */
-$sidebar-width: 280px; // Increased from 250px to accommodate longer text
-$sidebar-collapsed-width: 64px;
-$sidebar-transition: all $transition-normal;
-$module-header-height: 48px;
-$item-height: 40px;
+:root {
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 64px;
+  --module-header-height: 48px;
+  --item-height: 40px;
+}
 
 /* Enhanced Glassmorphism Sidebar Base */
 .sidebar {
-  width: $sidebar-width;
+  @include glassmorphism-base('primary');
+  width: var(--sidebar-width);
   height: 100%;
-  /* Premium glassmorphism background with gradient layers */
-  background: linear-gradient(135deg,
-    $glass-background-primary 0%,
-    $glass-background-secondary 50%,
-    $glass-background-tertiary 100%);
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.1) 100%),
-    radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
-  color: $text-primary;
-  border-right: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(12px);
-  transition: $sidebar-transition;
+  color: var(--text-primary);
+  border-right: 1px solid var(--border-primary);
+  transition: var(--transition-normal);
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
   position: relative;
   z-index: 10;
-  /* Multi-layer glassmorphism shadows */
-  box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.4),
-    0 8px 20px rgba(0, 0, 0, 0.25),
-    0 4px 10px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 
   &.collapsed {
-    width: $sidebar-collapsed-width;
+    width: var(--sidebar-collapsed-width);
 
     .logo {
       margin: 0 auto;
@@ -70,40 +37,32 @@ $item-height: 40px;
   }
 
   &::-webkit-scrollbar-track {
-    background: rgba(75, 85, 99, 0.1);
+    background: var(--glass-background-secondary);
     border-radius: 3px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.4);
+    background: var(--text-muted);
     border-radius: 3px;
-    transition: background $transition-normal;
+    transition: background var(--transition-normal);
 
     &:hover {
-      background: rgba(156, 163, 175, 0.6);
+      background: var(--text-secondary);
     }
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.5);
   }
 }
 
 /* Enhanced Glassmorphism Header */
 .sidebar-header {
+  @include glassmorphism-base('secondary');
   display: flex;
   align-items: center;
-  padding: 1rem;
+  padding: var(--spacing-lg);
   height: 64px;
-  transition: all $transition-smooth;
+  transition: var(--transition-normal);
   justify-content: flex-start;
   position: relative;
-  /* Enhanced glassmorphism border with gradient */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(255, 255, 255, 0.03) 100%);
-  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-primary);
 
   /* Subtle glow effect */
   &::after {
@@ -115,69 +74,50 @@ $item-height: 40px;
     height: 1px;
     background: linear-gradient(90deg,
       transparent 0%,
-      rgba(59, 130, 246, 0.3) 50%,
+      var(--color-primary) 50%,
       transparent 100%);
+    opacity: 0.3;
   }
 
   .sidebar.collapsed & {
     justify-content: center;
-    padding: 1rem 0.5rem;
+    padding: var(--spacing-lg) var(--spacing-sm);
   }
 
   .logo-container {
+    @include glassmorphism-base('light');
     display: flex;
     justify-content: center;
     align-items: center;
     min-width: 44px;
     height: 44px;
-    border-radius: $border-radius-xl;
+    border-radius: var(--border-radius-xl);
     overflow: hidden;
     position: relative;
-    /* Subtle glassmorphism logo background - much more discrete */
-    background: linear-gradient(135deg,
-      rgba(75, 85, 99, 0.6) 0%,
-      rgba(55, 65, 81, 0.7) 50%,
-      rgba(31, 41, 55, 0.8) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(8px);
-    box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.2),
-      0 2px 6px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-    transition: all $transition-elastic;
+    border: 1px solid var(--border-primary);
+    transition: var(--transition-normal);
 
-    /* Subtle glow effect - much more discrete */
     &::before {
       content: '';
       position: absolute;
       inset: -1px;
-      border-radius: $border-radius-xl;
+      border-radius: var(--border-radius-xl);
       background: linear-gradient(45deg,
-        rgba(59, 130, 246, 0.15) 0%,
-        rgba(75, 85, 99, 0.2) 50%,
-        rgba(59, 130, 246, 0.15) 100%);
+        var(--color-primary) 0%,
+        var(--glass-background-secondary) 50%,
+        var(--color-primary) 100%);
       opacity: 0;
-      transition: opacity $transition-normal;
+      transition: opacity var(--transition-normal);
       z-index: -1;
     }
 
     &:hover {
+      @include glassmorphism-hover;
       transform: translateY(-1px) scale(1.02);
-      background: linear-gradient(135deg,
-        rgba(75, 85, 99, 0.7) 0%,
-        rgba(55, 65, 81, 0.8) 50%,
-        rgba(31, 41, 55, 0.9) 100%);
-      border-color: rgba(255, 255, 255, 0.18);
-      box-shadow:
-        0 6px 16px rgba(0, 0, 0, 0.25),
-        0 3px 8px rgba(0, 0, 0, 0.2),
-        0 1px 3px rgba(59, 130, 246, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+      border-color: var(--border-hover);
 
       &::before {
-        opacity: 1;
+        opacity: 0.15;
       }
     }
 
@@ -186,7 +126,7 @@ $item-height: 40px;
       height: 32px;
       object-fit: contain;
       filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
-      transition: transform $transition-normal;
+      transition: transform var(--transition-normal);
       opacity: 0.9;
     }
 
@@ -198,56 +138,45 @@ $item-height: 40px;
   }
 
   .title {
-    margin: 0 0 0 0.875rem;
+    margin: 0 0 0 var(--spacing-md);
     font-size: 0.9375rem;
     font-weight: 700;
     white-space: nowrap;
-    color: $text-primary;
+    color: var(--text-primary);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, $text-primary 0%, rgba(249, 250, 251, 0.8) 100%);
+    background: linear-gradient(135deg, var(--text-primary) 0%, rgba(249, 250, 251, 0.8) 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    transition: opacity $transition-normal, transform $transition-normal;
+    transition: var(--transition-normal);
     letter-spacing: 0.025em;
   }
 }
 
 /* Enhanced Glassmorphism Search */
 .search-container {
-  padding: 14px 16px;
+  padding: var(--spacing-md) var(--spacing-lg);
   position: relative;
 
   .search-input-wrapper {
+    @include glassmorphism-form-field;
     position: relative;
     display: flex;
     align-items: center;
-    /* Glassmorphism wrapper background */
-    background: linear-gradient(135deg,
-      rgba(75, 85, 99, 0.4) 0%,
-      rgba(55, 65, 81, 0.6) 100%);
     border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(8px);
-    box-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: all $transition-smooth;
+    transition: var(--transition-normal);
 
     &:hover {
-      border-color: rgba(255, 255, 255, 0.18);
-      box-shadow:
-        0 6px 20px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      @include glassmorphism-hover;
+      border-color: var(--border-hover);
       transform: translateY(-1px);
     }
 
     &:focus-within {
-      border-color: $focus-color;
+      border-color: var(--color-primary);
       box-shadow:
-        0 0 0 3px $focus-color-secondary,
-        0 8px 25px rgba(0, 0, 0, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 0 0 3px var(--focus-ring),
+        var(--shadow-lg);
       transform: translateY(-2px);
     }
   }
@@ -255,13 +184,13 @@ $item-height: 40px;
   .search-icon {
     position: absolute;
     left: 14px;
-    color: $text-secondary;
+    color: var(--text-secondary);
     font-size: 0.875rem;
     z-index: 2;
-    transition: color $transition-normal;
+    transition: color var(--transition-normal);
 
     .search-input-wrapper:focus-within & {
-      color: $focus-color;
+      color: var(--color-primary);
     }
   }
 
@@ -271,22 +200,23 @@ $item-height: 40px;
     border-radius: 24px;
     border: none;
     background: transparent;
-    color: $text-primary;
+    color: var(--text-primary);
     font-size: 0.875rem;
     font-weight: 500;
-    transition: all $transition-normal;
+    transition: var(--transition-normal);
 
     &::placeholder {
-      color: rgba(209, 213, 219, 0.6);
+      color: var(--text-muted);
       font-weight: 400;
     }
 
     &:focus {
       outline: none;
-      color: $text-primary;
+      color: var(--text-primary);
 
       &::placeholder {
-        color: rgba(209, 213, 219, 0.4);
+        color: var(--text-muted);
+        opacity: 0.4;
       }
     }
   }
@@ -294,12 +224,12 @@ $item-height: 40px;
   .clear-search {
     position: absolute;
     right: 10px;
-    color: $color-text-secondary;
+    color: var(--text-secondary);
     cursor: pointer;
     font-size: 0.9rem;
 
     &:hover {
-      color: $color-text-primary;
+      color: var(--text-primary);
     }
   }
 
@@ -309,8 +239,8 @@ $item-height: 40px;
     top: 100%;
     left: 0;
     right: 0;
-    background-color: $color-surface;
-    border: 1px solid $color-border;
+    background-color: var(--glass-background-secondary);
+    border: 1px solid var(--border-primary);
     border-radius: 4px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     margin-top: 4px;
@@ -321,7 +251,7 @@ $item-height: 40px;
     .no-results {
       padding: 12px 16px;
       text-align: center;
-      color: $color-text-secondary;
+      color: var(--text-secondary);
       font-style: italic;
     }
 
@@ -337,15 +267,15 @@ $item-height: 40px;
         align-items: center;
         padding: 10px 16px;
         text-decoration: none;
-        color: $color-text-primary;
+        color: var(--text-primary);
         transition: background-color 0.2s ease;
 
         &:hover, &.active {
-          background-color: rgba($color-primary, 0.1);
+          background-color: rgba(var(--color-primary-rgb), 0.1);
         }
 
         &.active {
-          color: $color-primary;
+          color: var(--color-primary);
         }
       }
 
@@ -378,7 +308,7 @@ $item-height: 40px;
     .section-title {
       font-size: 0.85rem;
       text-transform: uppercase;
-      color: $color-text-secondary;
+      color: var(--text-secondary);
       margin: 0;
       font-weight: 600;
       letter-spacing: 0.5px;
@@ -387,13 +317,13 @@ $item-height: 40px;
     .toggle-button {
       background: none;
       border: none;
-      color: $color-text-secondary;
+      color: var(--text-secondary);
       cursor: pointer;
       padding: 4px;
       font-size: 0.8rem;
 
       &:hover {
-        color: $color-text-primary;
+        color: var(--text-primary);
       }
     }
   }
@@ -410,17 +340,17 @@ $item-height: 40px;
       align-items: center;
       padding: 8px 16px;
       text-decoration: none;
-      color: $color-text-primary;
+      color: var(--text-primary);
       transition: background-color 0.2s ease;
-      height: $item-height;
+      height: var(--sidebar-item-height);
 
       &:hover, &.active {
-        background-color: rgba($color-primary, 0.1);
+        background-color: rgba(59, 130, 246, 0.1);
       }
 
       &.active {
-        color: $color-primary;
-        border-left: 3px solid $color-primary;
+        color: var(--color-primary);
+        border-left: 3px solid var(--color-primary);
       }
     }
 
@@ -428,7 +358,7 @@ $item-height: 40px;
       margin-right: 12px;
       width: 16px;
       text-align: center;
-      color: $color-primary;
+      color: var(--color-primary);
     }
 
     .favorite-label {
@@ -482,29 +412,19 @@ $item-height: 40px;
   }
 
   .module-header {
+    @include glassmorphism-base('secondary');
     display: flex;
     align-items: center;
-    padding: 0 16px;
-    height: $module-header-height;
+    padding: 0 var(--spacing-lg);
+    height: var(--module-header-height);
     cursor: pointer;
-    transition: all $transition-smooth;
+    transition: var(--transition-normal);
     position: relative;
-    border-radius: $border-radius-lg;
-    margin: 2px 8px 4px 8px;
-    color: #e5e7eb; // Improved contrast - lighter text
-    border: 1px solid rgba(255, 255, 255, 0.08); // Subtle border for definition
-    font-weight: 600; // Increased font weight for better visibility
-
-    /* Enhanced glassmorphism base with better contrast */
-    background: linear-gradient(135deg,
-      rgba(75, 85, 99, 0.4) 0%,
-      rgba(55, 65, 81, 0.5) 100%);
-    background-image:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
-    backdrop-filter: blur(8px);
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius-lg);
+    margin: 2px var(--spacing-sm) 4px var(--spacing-sm);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+    font-weight: 600;
 
     /* Visual hierarchy indicator */
     &::before {
@@ -515,87 +435,60 @@ $item-height: 40px;
       transform: translateY(-50%);
       width: 3px;
       height: 0;
-      background: linear-gradient(135deg, $focus-color 0%, rgba(59, 130, 246, 0.6) 100%);
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
       border-radius: 0 2px 2px 0;
-      transition: height $transition-elastic;
+      transition: height var(--transition-normal);
     }
 
     &:hover {
-      /* Enhanced glassmorphism hover effect with better visibility */
-      background: linear-gradient(135deg,
-        rgba(75, 85, 99, 0.7) 0%,
-        rgba(55, 65, 81, 0.8) 100%);
-      background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
-        radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
-      backdrop-filter: blur(12px);
-      color: #f9fafb; // High contrast white text
+      @include glassmorphism-hover;
+      color: var(--text-primary);
       transform: translateY(-2px) translateX(4px);
-      border-color: rgba(255, 255, 255, 0.2);
-      box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.25),
-        0 4px 12px rgba(0, 0, 0, 0.2),
-        0 2px 6px rgba(59, 130, 246, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      border-color: var(--border-hover);
 
       &::before {
         height: 24px;
-        background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
-        box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
+        box-shadow: 0 0 8px var(--color-primary);
+        opacity: 0.5;
       }
     }
 
     &.active-module {
-      /* Premium glassmorphism for active module */
-      background: linear-gradient(135deg,
-        $glass-active-primary 0%,
-        $glass-background-secondary 100%);
-      background-image:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%),
-        radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
-      color: $text-primary;
+      @include glassmorphism-base('active');
+      color: var(--text-primary);
       font-weight: 700;
-      border-color: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(12px);
-      box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.25),
-        0 4px 15px rgba(0, 0, 0, 0.15),
-        0 2px 8px rgba(59, 130, 246, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      border-color: var(--border-focus);
 
       &::before {
         height: 24px;
-        background: linear-gradient(135deg,
-          rgba(59, 130, 246, 0.9) 0%,
-          rgba(37, 99, 235, 1) 100%);
-        box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+        background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
+        box-shadow: 0 0 8px var(--color-primary);
+        opacity: 0.4;
       }
     }
   }
 
   .module-icon {
-    width: 22px; // Slightly larger for better visibility
+    width: 22px;
     text-align: center;
-    font-size: 1.1rem; // Increased icon size
-    margin-right: 14px;
-    color: #d1d5db; // Better contrast - lighter default color
-    transition: all $transition-smooth;
+    font-size: 1.1rem;
+    margin-right: var(--spacing-md);
+    color: var(--text-secondary);
+    transition: var(--transition-normal);
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     position: relative;
-    font-weight: 600; // Bolder icons
+    font-weight: 600;
 
     /* Enhanced icon background for better visibility */
     &::before {
       content: '';
       position: absolute;
       inset: -4px;
-      border-radius: 8px;
-      background: linear-gradient(135deg,
-        rgba(75, 85, 99, 0.3) 0%,
-        rgba(55, 65, 81, 0.4) 100%);
+      border-radius: var(--border-radius-md);
+      background: var(--glass-background-secondary);
       opacity: 0;
-      transition: all $transition-smooth;
+      transition: var(--transition-normal);
       z-index: -1;
     }
 
@@ -605,23 +498,22 @@ $item-height: 40px;
       position: absolute;
       inset: -3px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
       opacity: 0;
-      transition: opacity $transition-normal;
+      transition: opacity var(--transition-normal);
       z-index: -2;
     }
 
     .module-header:hover &,
     .module-header.active-module & {
-      color: #f9fafb; // High contrast white
-      transform: scale(1.15); // More pronounced scaling
+      color: var(--text-primary);
+      transform: scale(1.15);
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
       &::before {
         opacity: 1;
-        background: linear-gradient(135deg,
-          rgba(59, 130, 246, 0.2) 0%,
-          rgba(37, 99, 235, 0.3) 100%);
+        background: var(--color-primary);
+        opacity: 0.2;
       }
 
       &::after {
@@ -630,54 +522,54 @@ $item-height: 40px;
     }
 
     .module-header.active-module & {
-      color: #60a5fa; // Bright blue for active state
-      filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.7));
+      color: var(--color-info);
+      filter: drop-shadow(0 0 6px var(--color-primary));
 
       &::before {
-        background: linear-gradient(135deg,
-          rgba(59, 130, 246, 0.3) 0%,
-          rgba(37, 99, 235, 0.4) 100%);
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+        background: var(--color-primary);
+        opacity: 0.3;
+        box-shadow: 0 0 12px var(--color-primary);
+        opacity: 0.3;
       }
     }
   }
 
   .module-label {
     flex: 1;
-    font-weight: 600; // Increased font weight for better visibility
-    font-size: 0.95rem; // Slightly larger text
+    font-weight: 600;
+    font-size: 0.95rem;
     white-space: nowrap;
-    // Removed overflow and text-overflow to show full text
-    letter-spacing: 0.03em; // Improved letter spacing for readability
-    transition: all $transition-normal;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); // Better text shadow
+    letter-spacing: 0.03em;
+    transition: var(--transition-normal);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 
     .module-header:hover & {
-      color: #f9fafb; // High contrast on hover
+      color: var(--text-primary);
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 
     .module-header.active-module & {
-      color: #f9fafb; // High contrast for active state
-      font-weight: 700; // Even bolder for active state
+      color: var(--text-primary);
+      font-weight: 700;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     }
   }
 
   .expand-icon {
     font-size: 0.75rem;
-    transition: all $transition-elastic;
-    color: $text-muted;
-    margin-left: 8px;
+    transition: var(--transition-normal);
+    color: var(--text-muted);
+    margin-left: var(--spacing-sm);
 
     .module-header:hover &,
     .module-header.active-module & {
-      color: $text-primary;
+      color: var(--text-primary);
       transform: scale(1.2);
     }
 
     .module-header.active-module & {
-      color: rgba(59, 130, 246, 0.8);
+      color: var(--color-primary);
+      opacity: 0.8;
     }
   }
 
@@ -691,29 +583,20 @@ $item-height: 40px;
     margin-bottom: 3px; // Slightly increased spacing
 
     a {
+      @include glassmorphism-base('light');
       display: flex;
       align-items: center;
-      padding: 0 20px;
-      height: $item-height;
+      padding: 0 var(--spacing-lg);
+      height: var(--item-height);
       text-decoration: none;
-      color: #d1d5db; // Better contrast - lighter text
-      transition: all $transition-smooth;
+      color: var(--text-secondary);
+      transition: var(--transition-normal);
       position: relative;
-      border-radius: $border-radius-lg;
-      margin: 1px 12px 1px 20px;
-      border: 1px solid rgba(255, 255, 255, 0.06); // Subtle border for definition
+      border-radius: var(--border-radius-lg);
+      margin: 1px var(--spacing-md) 1px var(--spacing-lg);
+      border: 1px solid var(--border-primary);
       font-weight: 500;
-      font-size: 0.9rem; // Slightly larger text
-
-      /* Enhanced glassmorphism base for nav items with better visibility */
-      background: linear-gradient(135deg,
-        rgba(75, 85, 99, 0.25) 0%,
-        rgba(55, 65, 81, 0.3) 100%);
-      background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
-      backdrop-filter: blur(4px);
-      box-shadow:
-        0 1px 4px rgba(0, 0, 0, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      font-size: 0.9rem;
 
       /* Indentation visual indicator */
       &::after {
@@ -724,73 +607,44 @@ $item-height: 40px;
         transform: translateY(-50%);
         width: 2px;
         height: 0;
-        background: linear-gradient(135deg,
-          rgba(156, 163, 175, 0.4) 0%,
-          rgba(156, 163, 175, 0.2) 100%);
+        background: linear-gradient(135deg, var(--text-muted) 0%, var(--text-muted) 100%);
         border-radius: 1px;
-        transition: height $transition-elastic;
+        transition: height var(--transition-normal);
+        opacity: 0.4;
       }
 
       .sidebar.collapsed & {
-        padding: 0.75rem 0;
+        @include glassmorphism-base('secondary');
+        padding: var(--spacing-md) 0;
         justify-content: center;
-        margin: 0.5rem auto;
+        margin: var(--spacing-sm) auto;
         width: 42px;
         height: 42px;
         border-radius: 50%;
         display: flex;
         align-items: center;
-        background: linear-gradient(135deg,
-          rgba(75, 85, 99, 0.3) 0%,
-          rgba(55, 65, 81, 0.4) 100%);
       }
 
       &:hover {
-        /* Enhanced glassmorphism hover effect with better visibility */
-        background: linear-gradient(135deg,
-          rgba(75, 85, 99, 0.6) 0%,
-          rgba(55, 65, 81, 0.7) 100%);
-        background-image:
-          linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%),
-          radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
-        backdrop-filter: blur(8px);
-        color: #f9fafb; // High contrast white text
+        @include glassmorphism-hover;
+        color: var(--text-primary);
         transform: translateY(-1px) translateX(6px);
-        border-color: rgba(255, 255, 255, 0.15);
-        box-shadow:
-          0 6px 20px rgba(0, 0, 0, 0.2),
-          0 3px 10px rgba(0, 0, 0, 0.15),
-          0 1px 4px rgba(59, 130, 246, 0.1),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border-color: var(--border-hover);
 
         &::after {
           height: 18px;
-          background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.6) 0%,
-            rgba(37, 99, 235, 0.4) 100%);
-          box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
+          box-shadow: 0 0 4px var(--color-primary);
+          opacity: 0.6;
         }
       }
 
       &.active {
-        color: $text-primary;
+        @include glassmorphism-base('active');
+        color: var(--text-primary);
         font-weight: 700;
-        /* Premium glassmorphism for active item */
-        background: linear-gradient(135deg,
-          $glass-active-primary 0%,
-          $glass-background-secondary 100%);
-        background-image:
-          linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.1) 100%),
-          radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
-        border-color: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(10px);
+        border-color: var(--border-focus);
         transform: translateX(8px);
-        box-shadow:
-          0 6px 20px rgba(0, 0, 0, 0.25),
-          0 3px 12px rgba(0, 0, 0, 0.15),
-          0 1px 6px rgba(59, 130, 246, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.1);
 
         /* Enhanced active indicator */
         &::before {
@@ -801,24 +655,19 @@ $item-height: 40px;
           transform: translateY(-50%);
           height: 24px;
           width: 4px;
-          background: linear-gradient(135deg,
-            rgba(59, 130, 246, 1) 0%,
-            rgba(37, 99, 235, 0.9) 50%,
-            rgba(29, 78, 216, 1) 100%);
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
           border-radius: 0 3px 3px 0;
-          box-shadow:
-            0 0 12px rgba(59, 130, 246, 0.6),
-            0 0 6px rgba(59, 130, 246, 0.4);
+          box-shadow: 0 0 12px var(--color-primary);
+          opacity: 0.6;
           animation: slideInGlow 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
 
         /* Indentation indicator for active state */
         &::after {
           height: 20px;
-          background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.8) 0%,
-            rgba(37, 99, 235, 0.6) 100%);
-          box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
+          box-shadow: 0 0 4px var(--color-primary);
+          opacity: 0.8;
         }
 
         /* Enhanced animation for active indicator */
@@ -831,14 +680,12 @@ $item-height: 40px;
           50% {
             transform: translateY(-50%) translateX(-50%) scale(1.2);
             opacity: 0.8;
-            box-shadow: 0 0 16px rgba(59, 130, 246, 0.8);
+            box-shadow: 0 0 16px var(--color-primary);
           }
           100% {
             transform: translateY(-50%) translateX(0) scale(1);
-            opacity: 1;
-            box-shadow:
-              0 0 12px rgba(59, 130, 246, 0.6),
-              0 0 6px rgba(59, 130, 246, 0.4);
+            opacity: 0.6;
+            box-shadow: 0 0 12px var(--color-primary);
           }
         }
       }
@@ -853,59 +700,49 @@ $item-height: 40px;
       }
 
       &:focus-visible {
-        outline: 2px solid $focus-color;
+        outline: 2px solid var(--color-primary);
         outline-offset: 2px;
-        background: linear-gradient(135deg,
-          rgba(59, 130, 246, 0.15) 0%,
-          rgba(37, 99, 235, 0.1) 100%);
-        border-color: $focus-color;
-        box-shadow:
-          0 0 0 4px $focus-color-secondary,
-          0 4px 16px rgba(0, 0, 0, 0.15),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        background: var(--glass-background-focus);
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow-lg);
         transform: translateX(4px);
 
         /* Focus indicator */
         &::after {
           height: 18px;
-          background: linear-gradient(135deg,
-            rgba(59, 130, 246, 0.9) 0%,
-            rgba(37, 99, 235, 0.7) 100%);
-          box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+          background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
+          box-shadow: 0 0 6px var(--color-primary);
+          opacity: 0.5;
         }
       }
 
       /* Keyboard navigation support */
       &[tabindex]:focus-visible {
-        background: linear-gradient(135deg,
-          rgba(59, 130, 246, 0.2) 0%,
-          rgba(37, 99, 235, 0.15) 100%);
-        color: $text-primary;
+        background: var(--glass-background-focus);
+        color: var(--text-primary);
       }
     }
 
     .nav-icon {
-      width: 18px; // Slightly larger for better visibility
+      width: 18px;
       text-align: center;
-      margin-right: 14px;
-      font-size: 0.95rem; // Increased icon size
-      color: #9ca3af; // Better contrast - lighter default color
-      transition: all $transition-smooth;
+      margin-right: var(--spacing-md);
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      transition: var(--transition-normal);
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
       position: relative;
-      font-weight: 600; // Bolder icons
+      font-weight: 600;
 
       /* Enhanced icon background for better visibility */
       &::before {
         content: '';
         position: absolute;
         inset: -3px;
-        border-radius: 6px;
-        background: linear-gradient(135deg,
-          rgba(75, 85, 99, 0.2) 0%,
-          rgba(55, 65, 81, 0.3) 100%);
+        border-radius: var(--border-radius-sm);
+        background: var(--glass-background-secondary);
         opacity: 0;
-        transition: all $transition-smooth;
+        transition: var(--transition-normal);
         z-index: -1;
       }
 
@@ -915,9 +752,9 @@ $item-height: 40px;
         position: absolute;
         inset: -2px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(156, 163, 175, 0.3) 0%, transparent 70%);
+        background: radial-gradient(circle, var(--text-muted) 0%, transparent 70%);
         opacity: 0;
-        transition: opacity $transition-normal;
+        transition: opacity var(--transition-normal);
         z-index: -2;
       }
     }
@@ -925,47 +762,47 @@ $item-height: 40px;
     .nav-label {
       flex: 1;
       white-space: nowrap;
-      // Removed overflow and text-overflow to show full text
-      font-size: 0.9rem; // Slightly larger text
-      font-weight: 500; // Better font weight
-      letter-spacing: 0.03em; // Improved letter spacing
-      transition: all $transition-normal;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); // Better text shadow
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      transition: var(--transition-normal);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     a:hover .nav-icon,
     a.active .nav-icon,
     a:focus-visible .nav-icon {
-      color: #f9fafb; // High contrast white
-      transform: scale(1.15); // More pronounced scaling
+      color: var(--text-primary);
+      transform: scale(1.15);
       text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 
       &::before {
         opacity: 1;
-        background: linear-gradient(135deg,
-          rgba(59, 130, 246, 0.2) 0%,
-          rgba(37, 99, 235, 0.3) 100%);
+        background: var(--color-primary);
+        opacity: 0.2;
       }
 
       &::after {
         opacity: 1;
-        background: radial-gradient(circle, rgba(156, 163, 175, 0.5) 0%, transparent 70%);
+        background: radial-gradient(circle, var(--text-secondary) 0%, transparent 70%);
+        opacity: 0.5;
       }
     }
 
     a.active .nav-icon {
-      color: #60a5fa; // Bright blue for active state
-      filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.6));
+      color: var(--color-info);
+      filter: drop-shadow(0 0 5px var(--color-primary));
 
       &::before {
-        background: linear-gradient(135deg,
-          rgba(59, 130, 246, 0.3) 0%,
-          rgba(37, 99, 235, 0.4) 100%);
-        box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+        background: var(--color-primary);
+        opacity: 0.3;
+        box-shadow: 0 0 8px var(--color-primary);
+        opacity: 0.2;
       }
 
       &::after {
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
+        background: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+        opacity: 0.4;
       }
     }
 
@@ -973,14 +810,14 @@ $item-height: 40px;
     a:hover .nav-label,
     a.active .nav-label,
     a:focus-visible .nav-label {
-      color: #f9fafb; // High contrast white
-      font-weight: 600; // Bolder on interaction
+      color: var(--text-primary);
+      font-weight: 600;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     }
 
     a.active .nav-label {
-      color: #f9fafb; // High contrast for active state
-      font-weight: 700; // Even bolder for active state
+      color: var(--text-primary);
+      font-weight: 700;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
     }
 
@@ -990,7 +827,7 @@ $item-height: 40px;
     .favorite-button {
       background: none;
       border: none;
-      color: $color-text-secondary;
+      color: var(--text-secondary);
       cursor: pointer;
       padding: 4px;
       opacity: 0;
@@ -1033,7 +870,7 @@ $item-height: 40px;
 // Footer
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid $color-border;
+  border-top: 1px solid var(--border-primary);
   transition: all 0.3s ease;
 
   .sidebar.collapsed & {
@@ -1046,7 +883,7 @@ $item-height: 40px;
     display: flex;
     align-items: center;
     padding: 0.75rem;
-    color: $color-text-secondary;
+    color: var(--text-secondary);
     text-decoration: none;
     border-radius: 4px;
     transition: all 0.2s ease;
@@ -1064,8 +901,8 @@ $item-height: 40px;
     }
 
     &:hover {
-      background-color: rgba($color-primary, 0.1);
-      color: $color-primary;
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--color-primary);
     }
 
     .footer-icon {
@@ -1107,27 +944,27 @@ $item-height: 40px;
   margin-left: 8px;
 
   &-primary {
-    background-color: $color-primary;
+    background-color: var(--color-primary);
     color: white;
   }
 
   &-accent {
-    background-color: $color-accent;
+    background-color: var(--color-info);
     color: white;
   }
 
   &-warn {
-    background-color: $color-warn;
+    background-color: var(--color-warning);
     color: white;
   }
 
   &-success {
-    background-color: $color-success;
+    background-color: var(--color-success);
     color: white;
   }
 
   &-info {
-    background-color: $color-info;
+    background-color: var(--color-info);
     color: white;
   }
 }
@@ -1136,22 +973,22 @@ $item-height: 40px;
 .floating-menu {
   position: fixed;
   z-index: 1000;
-  background-color: $color-surface;
+  background-color: var(--glass-background-primary);
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   min-width: 220px;
   overflow: hidden;
   animation: fadeIn 0.2s ease-out;
-  border: 1px solid $color-border;
+  border: 1px solid var(--border-primary);
 
   .floating-header {
     padding: 12px 16px;
-    background-color: rgba($color-primary, 0.1);
-    border-bottom: 1px solid $color-border;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-bottom: 1px solid var(--border-primary);
 
     .floating-title {
       font-weight: 600;
-      color: $color-primary;
+      color: var(--color-primary);
     }
   }
 
@@ -1169,15 +1006,15 @@ $item-height: 40px;
       align-items: center;
       padding: 10px 16px;
       text-decoration: none;
-      color: $color-text-primary;
+      color: var(--text-primary);
       transition: background-color 0.2s ease;
 
       &:hover, &.active {
-        background-color: rgba($color-primary, 0.1);
+        background-color: rgba(59, 130, 246, 0.1);
       }
 
       &.active {
-        color: $color-primary;
+        color: var(--color-primary);
       }
     }
 
@@ -1200,20 +1037,20 @@ $item-height: 40px;
     display: flex;
     align-items: center;
     padding: 1rem;
-    background-color: rgba($color-primary, 0.1);
-    border-bottom: 1px solid $color-border;
+    background-color: rgba(59, 130, 246, 0.1);
+    border-bottom: 1px solid var(--border-primary);
 
     .floating-menu-icon {
       font-size: 1.25rem;
       width: 1.25rem;
       height: 1.25rem;
       margin-right: 0.75rem;
-      color: $color-primary;
+      color: var(--color-primary);
     }
 
     .floating-menu-title {
       font-weight: 600;
-      color: $color-primary;
+      color: var(--color-primary);
     }
   }
 
@@ -1227,18 +1064,18 @@ $item-height: 40px;
         display: flex;
         align-items: center;
         padding: 0.75rem 1rem;
-        color: $color-text-secondary;
+        color: var(--text-secondary);
         text-decoration: none;
         transition: all 0.2s ease;
 
         &:hover {
-          background-color: rgba($color-primary, 0.05);
-          color: $color-primary;
+          background-color: rgba(59, 130, 246, 0.05);
+          color: var(--color-primary);
         }
 
         &.active {
-          background-color: rgba($color-primary, 0.1);
-          color: $color-primary;
+          background-color: rgba(59, 130, 246, 0.1);
+          color: var(--color-primary);
           font-weight: 500;
         }
 
@@ -1255,8 +1092,8 @@ $item-height: 40px;
 
 // Indicador visual para el elemento que tiene el menú flotante activo
 .active-floating-menu {
-  background-color: rgba($color-primary, 0.15) !important;
-  color: $color-primary !important;
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: var(--color-primary) !important;
 }
 
 @keyframes fadeIn {
@@ -1283,7 +1120,7 @@ $item-height: 40px;
       }
 
       &:focus-visible {
-        border-color: $focus-color;
+        border-color: var(--color-primary);
         outline-width: 3px;
       }
     }
@@ -1293,7 +1130,7 @@ $item-height: 40px;
       border-color: rgba(255, 255, 255, 0.3);
 
       &:focus-within {
-        border-color: $focus-color;
+        border-color: var(--color-primary);
         border-width: 3px;
       }
     }
@@ -1341,124 +1178,116 @@ $item-height: 40px;
 // Estilos para tema oscuro
 @media (prefers-color-scheme: dark) {
   .sidebar {
-    background-color: $color-surface-dark;
-    color: $color-text-primary-dark;
-    border-right-color: $color-border-dark;
+    background-color: var(--glass-background-primary);
+    color: var(--text-primary);
+    border-right-color: var(--border-primary);
   }
 
   .sidebar-nav .nav-item a {
-    color: $color-text-secondary-dark;
+    color: var(--text-secondary);
 
     &:hover {
-      background-color: rgba($color-primary-dark, 0.2);
-      color: $color-primary-dark;
+      background-color: rgba(59, 130, 246, 0.2);
+      color: var(--color-primary);
     }
 
     &.active {
-      background-color: rgba($color-primary-dark, 0.25);
-      color: $color-primary-dark;
+      background-color: rgba(59, 130, 246, 0.25);
+      color: var(--color-primary);
 
       &::before {
-        background-color: $color-primary-dark;
+        background-color: var(--color-primary);
       }
 
       &::after {
         background: linear-gradient(
           to right,
-          rgba($color-primary-dark, 0.05) 0%,
-          rgba($color-primary-dark, 0.1) 50%,
-          rgba($color-primary-dark, 0.05) 100%
+          rgba(59, 130, 246, 0.05) 0%,
+          rgba(59, 130, 246, 0.1) 50%,
+          rgba(59, 130, 246, 0.05) 100%
         );
       }
     }
   }
 
   .sidebar-footer {
-    border-top-color: $color-border-dark;
+    border-top-color: var(--border-primary);
 
     .footer-item {
-      color: $color-text-secondary-dark;
+      color: var(--text-secondary);
 
       &:hover {
-        background-color: rgba($color-primary-dark, 0.2);
-        color: $color-primary-dark;
+        background-color: rgba(59, 130, 246, 0.2);
+        color: var(--color-primary);
       }
     }
   }
 
   // Estilos para el menú flotante en tema oscuro
   .floating-menu {
-    background-color: $color-surface-dark;
-    border-color: $color-border-dark;
+    background-color: var(--glass-background-primary);
+    border-color: var(--border-primary);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 
     .floating-menu-header {
-      background-color: rgba($color-primary-dark, 0.2);
-      border-bottom-color: $color-border-dark;
+      background-color: rgba(59, 130, 246, 0.2);
+      border-bottom-color: var(--border-primary);
 
       .floating-menu-icon,
       .floating-menu-title {
-        color: $color-primary-dark;
+        color: var(--color-primary);
       }
     }
 
     .floating-menu-list .floating-menu-item a {
-      color: $color-text-secondary-dark;
+      color: var(--text-secondary);
 
       &:hover {
-        background-color: rgba($color-primary-dark, 0.1);
-        color: $color-primary-dark;
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--color-primary);
       }
 
       &.active {
-        background-color: rgba($color-primary-dark, 0.2);
-        color: $color-primary-dark;
+        background-color: rgba(59, 130, 246, 0.2);
+        color: var(--color-primary);
       }
     }
   }
 
   // Indicador visual para el elemento activo en tema oscuro
   .active-floating-menu {
-    background-color: rgba($color-primary-dark, 0.25) !important;
-    color: $color-primary-dark !important;
+    background-color: rgba(59, 130, 246, 0.25) !important;
+    color: var(--color-primary) !important;
   }
 }
 
 // Estilos para personalización y drag & drop
-.customization-controls {
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px;
-  border-bottom: 1px solid $glass-background-secondary;
-  margin-bottom: 8px;
+.drag-btn {
+  background: transparent;
+  border: 1px solid var(--glass-background-secondary);
+  color: var(--text-primary);
+  padding: 6px 8px;
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  font-size: 12px;
+  margin: 8px 16px;
 
-  .customization-btn,
-  .drag-btn {
-    background: transparent;
-    border: 1px solid $glass-background-secondary;
-    color: $text-primary;
-    padding: 6px 8px;
-    border-radius: $border-radius-lg;
-    cursor: pointer;
-    transition: all $transition-smooth;
+  &:hover {
+    background: var(--glass-hover-primary);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+
+  i {
     font-size: 12px;
-
-    &:hover {
-      background: $glass-hover-primary;
-      border-color: $focus-color;
-      transform: translateY(-1px);
-    }
-
-    &.active {
-      background: $focus-color;
-      border-color: $focus-color;
-      color: white;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-    }
-
-    i {
-      font-size: 12px;
-    }
   }
 }
 
@@ -1466,16 +1295,16 @@ $item-height: 40px;
   &.drag-mode {
     .module-item {
       cursor: grab;
-      transition: all $transition-smooth;
+      transition: var(--transition-normal);
 
       &.dragging {
         cursor: grabbing;
       }
 
       &.cdk-drag-preview {
-        background: $glass-background-primary;
-        border: 1px solid $focus-color;
-        border-radius: $border-radius-lg;
+        background: var(--glass-background-primary);
+        border: 1px solid var(--color-primary);
+        border-radius: var(--border-radius-lg);
         box-shadow:
           0 8px 32px rgba(0, 0, 0, 0.4),
           0 0 0 1px rgba(59, 130, 246, 0.3);
@@ -1486,9 +1315,9 @@ $item-height: 40px;
 
       &.cdk-drag-placeholder {
         opacity: 0.3;
-        background: $glass-hover-secondary;
-        border: 2px dashed $glass-background-secondary;
-        border-radius: $border-radius-lg;
+        background: var(--glass-hover-secondary);
+        border: 2px dashed var(--glass-background-secondary);
+        border-radius: var(--border-radius-lg);
 
         .module-header {
           opacity: 0.5;
@@ -1500,9 +1329,9 @@ $item-height: 40px;
       }
 
       &:hover {
-        background: $glass-hover-primary;
+        background: var(--glass-hover-primary);
         transform: translateX(2px);
-        border-left: 3px solid $focus-color;
+        border-left: 3px solid var(--color-primary);
       }
     }
   }
@@ -1513,10 +1342,10 @@ $item-height: 40px;
   bottom: 60px;
   left: 0;
   right: 0;
-  background: $glass-background-primary;
+  background: var(--glass-background-primary);
   backdrop-filter: blur(16px);
-  border-top: 1px solid $glass-background-secondary;
-  border-radius: $border-radius-lg $border-radius-lg 0 0;
+  border-top: 1px solid var(--glass-background-secondary);
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
   box-shadow:
     0 -8px 32px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -1530,11 +1359,11 @@ $item-height: 40px;
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    border-bottom: 1px solid $glass-background-secondary;
+    border-bottom: 1px solid var(--glass-background-secondary);
 
     h4 {
       margin: 0;
-      color: $text-primary;
+      color: var(--text-primary);
       font-size: 14px;
       font-weight: 600;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
@@ -1543,14 +1372,14 @@ $item-height: 40px;
     .close-btn {
       background: transparent;
       border: none;
-      color: $text-primary;
+      color: var(--text-primary);
       cursor: pointer;
       padding: 4px;
       border-radius: 4px;
-      transition: all $transition-smooth;
+      transition: var(--transition-normal);
 
       &:hover {
-        background: $glass-hover-primary;
+        background: var(--glass-hover-primary);
         transform: scale(1.1);
       }
     }
@@ -1564,7 +1393,7 @@ $item-height: 40px;
 
       label {
         display: block;
-        color: $text-primary;
+        color: var(--text-primary);
         font-size: 12px;
         font-weight: 500;
         margin-bottom: 4px;
@@ -1573,9 +1402,9 @@ $item-height: 40px;
 
       select {
         width: 100%;
-        background: $glass-hover-primary;
-        border: 1px solid $glass-background-secondary;
-        color: $text-primary;
+        background: var(--glass-hover-primary);
+        border: 1px solid var(--glass-background-secondary);
+        color: var(--text-primary);
         padding: 6px 8px;
         border-radius: 4px;
         font-size: 12px;
@@ -1583,13 +1412,13 @@ $item-height: 40px;
 
         &:focus {
           outline: none;
-          border-color: $focus-color;
-          box-shadow: 0 0 0 2px $focus-color-secondary;
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 2px var(--focus-color-secondary);
         }
 
         option {
-          background: $glass-background-primary;
-          color: $text-primary;
+          background: var(--glass-background-primary);
+          color: var(--text-primary);
         }
       }
     }
@@ -1600,14 +1429,14 @@ $item-height: 40px;
       flex-wrap: wrap;
 
       .action-btn {
-        background: $glass-hover-primary;
-        border: 1px solid $glass-background-secondary;
-        color: $text-primary;
+        background: var(--glass-hover-primary);
+        border: 1px solid var(--glass-background-secondary);
+        color: var(--text-primary);
         padding: 6px 12px;
         border-radius: 4px;
         cursor: pointer;
         font-size: 11px;
-        transition: all $transition-smooth;
+        transition: var(--transition-normal);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
@@ -1647,12 +1476,12 @@ $item-height: 40px;
 
 // Variables CSS personalizables para temas
 :root {
-  --sidebar-primary-color: #{$focus-color};
+  --sidebar-primary-color: var(--color-primary);
   --sidebar-accent-color: #10b981;
-  --sidebar-background-color: #{$glass-background-primary};
-  --sidebar-text-color: #{$text-primary};
-  --sidebar-border-color: #{$glass-background-secondary};
-  --sidebar-hover-color: #{$glass-hover-primary};
+  --sidebar-background-color: var(--glass-background-primary);
+  --sidebar-text-color: var(--text-primary);
+  --sidebar-border-color: var(--glass-background-secondary);
+  --sidebar-hover-color: var(--glass-hover-primary);
   --sidebar-item-height: 40px;
   --sidebar-padding: 8px;
   --sidebar-font-size: 14px;

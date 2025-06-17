@@ -2,12 +2,41 @@
 @use 'sass:map';
 
 /* === UNIFIED GLASSMORPHISM SYSTEM === */
-/* Sistema glassmorphism unificado que reemplaza importaciones duplicadas */
-@import './styles/glassmorphism-system';
+/* Sistema glassmorphism unificado que reemplaza todos los sistemas anteriores */
+@import './styles/unified-glassmorphism-system';
 
-/* === GLASSMORPHISM DESIGN SYSTEM === */
-/* Sistema glassmorphism unificado para usuario común */
-@import './styles/user-glassmorphism-system';
+/* === SKIP LINKS PARA ACCESIBILIDAD === */
+.skip-links {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 9999;
+
+  .skip-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: var(--color-focus);
+    color: var(--color-primary);
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 0 0 var(--radius-md) 0;
+    box-shadow: var(--shadow-lg);
+    transition: var(--transition-fast);
+
+    &:focus {
+      top: 0;
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    &:hover {
+      background: var(--color-info);
+      transform: var(--transform-hover);
+    }
+  }
+}
 
 /* === LEGACY IMPORTS === */
 /* Mantener solo las importaciones necesarias que no están en el sistema unificado */
@@ -2579,12 +2608,26 @@ app-custom-dialog app-custom-select[disabled] select {
   }
 
   &.large {
-    min-width: 600px;
+    min-width: min(600px, 95vw); // Responsive min-width
     max-width: 95vw;
-    width: clamp(700px, 80vw, 1200px);
+    width: clamp(320px, 80vw, 1200px); // Mobile-first approach
     height: auto;
     max-height: 90vh;
-    min-height: 500px; // Altura mínima optimizada
+    min-height: min(500px, 80vh); // Responsive min-height
+
+    @media (max-width: 768px) {
+      min-width: 95vw;
+      width: 95vw;
+      min-height: min(400px, 70vh);
+    }
+
+    @media (max-width: 480px) {
+      min-width: 100vw;
+      width: 100vw;
+      max-width: 100vw;
+      min-height: min(350px, 60vh);
+      border-radius: 0; // Sin bordes redondeados en móviles muy pequeños
+    }
   }
 
   &.fullscreen {
@@ -2594,6 +2637,14 @@ app-custom-dialog app-custom-select[disabled] select {
     max-height: none;
     min-width: 95vw;
     min-height: 95vh;
+
+    @media (max-width: 768px) {
+      width: 100vw;
+      height: 100vh;
+      min-width: 100vw;
+      min-height: 100vh;
+      border-radius: 0;
+    }
   }
 }
 
@@ -2958,4 +3009,17 @@ app-custom-select .select-dropdown {
 app-custom-select .custom-select,
 app-custom-select .custom-select-container {
   overflow: visible !important;
+}
+
+/* ===== APEXCHARTS GLOBAL STYLING ===== */
+/* Global styling for ApexCharts components */
+
+/* ApexCharts glassmorphism integration */
+app-stats-chart {
+  display: block;
+  height: 100%;
+
+  apx-chart {
+    height: 100%;
+  }
 }

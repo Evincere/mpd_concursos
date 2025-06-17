@@ -339,31 +339,32 @@
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .custom-button {
+    /* All sizes maintain 44px minimum for accessibility */
     &.large {
       padding: 0.875rem 1.75rem;
       font-size: 0.875rem;
       min-height: 44px;
-      
+
       .button-icon {
         font-size: 1rem;
       }
     }
-    
+
     &.medium {
       padding: 0.625rem 1.25rem;
       font-size: 0.8125rem;
-      min-height: 36px;
-      
+      min-height: 44px; /* Increased from 36px to meet accessibility standards */
+
       .button-icon {
         font-size: 0.875rem;
       }
     }
-    
+
     &.small {
       padding: 0.5rem 0.875rem;
       font-size: 0.75rem;
-      min-height: 32px;
-      
+      min-height: 44px; /* Increased from 32px to meet accessibility standards */
+
       .button-icon {
         font-size: 0.75rem;
       }

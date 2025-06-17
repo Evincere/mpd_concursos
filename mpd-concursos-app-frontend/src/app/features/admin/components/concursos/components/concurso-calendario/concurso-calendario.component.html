@@ -74,28 +74,49 @@
 
   <!-- Enhanced Glassmorphism Calendar -->
   <div *ngIf="!isLoading" class="calendar">
-    <!-- Clean Calendar Header -->
-    <div class="calendar-header">
-      <div class="weekday">
-        <span class="weekday-text">Domingo</span>
+    <!-- Integrated Calendar Header with Legend -->
+    <div class="calendar-header-container">
+      <!-- Clean Calendar Header -->
+      <div class="calendar-header">
+        <div class="weekday">
+          <span class="weekday-text">Domingo</span>
+        </div>
+        <div class="weekday">
+          <span class="weekday-text">Lunes</span>
+        </div>
+        <div class="weekday">
+          <span class="weekday-text">Martes</span>
+        </div>
+        <div class="weekday">
+          <span class="weekday-text">Miércoles</span>
+        </div>
+        <div class="weekday">
+          <span class="weekday-text">Jueves</span>
+        </div>
+        <div class="weekday">
+          <span class="weekday-text">Viernes</span>
+        </div>
+        <div class="weekday">
+          <span class="weekday-text">Sábado</span>
+        </div>
       </div>
-      <div class="weekday">
-        <span class="weekday-text">Lunes</span>
-      </div>
-      <div class="weekday">
-        <span class="weekday-text">Martes</span>
-      </div>
-      <div class="weekday">
-        <span class="weekday-text">Miércoles</span>
-      </div>
-      <div class="weekday">
-        <span class="weekday-text">Jueves</span>
-      </div>
-      <div class="weekday">
-        <span class="weekday-text">Viernes</span>
-      </div>
-      <div class="weekday">
-        <span class="weekday-text">Sábado</span>
+
+      <!-- Integrated Compact Legend -->
+      <div class="calendar-legend-integrated">
+        <div class="legend-compact-items">
+          <div class="legend-compact-item high-priority">
+            <span class="legend-compact-dot"></span>
+            <span class="legend-compact-text">Críticas</span>
+          </div>
+          <div class="legend-compact-item medium-priority">
+            <span class="legend-compact-dot"></span>
+            <span class="legend-compact-text">Importantes</span>
+          </div>
+          <div class="legend-compact-item low-priority">
+            <span class="legend-compact-dot"></span>
+            <span class="legend-compact-text">Informativas</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -142,34 +163,5 @@
     </div>
   </div>
 
-  <!-- Enhanced Glassmorphism Legend -->
-  <div class="calendar-legend">
-    <div class="legend-header">
-      <h3 class="legend-title">Leyenda de Eventos</h3>
-      <span class="legend-icon">🏆</span>
-    </div>
-    <div class="legend-items">
-      <div class="legend-item high-priority">
-        <div class="legend-badge">
-          <span class="legend-dot"></span>
-          <span class="priority-icon">🔴</span>
-        </div>
-        <span class="legend-text">Fechas críticas (inscripciones, exámenes)</span>
-      </div>
-      <div class="legend-item medium-priority">
-        <div class="legend-badge">
-          <span class="legend-dot"></span>
-          <span class="priority-icon">🟡</span>
-        </div>
-        <span class="legend-text">Fechas importantes (publicaciones)</span>
-      </div>
-      <div class="legend-item low-priority">
-        <div class="legend-badge">
-          <span class="legend-dot"></span>
-          <span class="priority-icon">🟢</span>
-        </div>
-        <span class="legend-text">Fechas informativas</span>
-      </div>
-    </div>
-  </div>
+
 </div>

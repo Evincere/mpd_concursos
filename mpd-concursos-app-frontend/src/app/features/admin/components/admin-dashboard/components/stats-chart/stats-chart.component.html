@@ -2,12 +2,12 @@
   <mat-card-header>
     <mat-card-title>{{title}}</mat-card-title>
     <mat-card-subtitle *ngIf="subtitle">{{subtitle}}</mat-card-subtitle>
-    
+
     <div class="chart-actions">
       <button mat-icon-button [matMenuTriggerFor]="chartMenu" matTooltip="Opciones">
         <mat-icon>more_vert</mat-icon>
       </button>
-      
+
       <mat-menu #chartMenu="matMenu">
         <button mat-menu-item (click)="downloadChart('png')">
           <mat-icon>download</mat-icon>
@@ -17,17 +17,43 @@
           <mat-icon>download</mat-icon>
           <span>Descargar JPG</span>
         </button>
-        <button mat-menu-item (click)="downloadChart('pdf')">
+        <button mat-menu-item (click)="downloadChart('svg')">
           <mat-icon>picture_as_pdf</mat-icon>
-          <span>Exportar PDF</span>
+          <span>Exportar SVG</span>
         </button>
       </mat-menu>
     </div>
   </mat-card-header>
-  
+
   <mat-card-content [style.height]="height">
-    <div class="chart-container">
-      <canvas #chartCanvas></canvas>
+    <div class="chart-container" #chartContainer>
+      <!-- ApexCharts component with delayed rendering -->
+      <ng-container *ngIf="shouldRenderChart && isChartReady && apexSeries && apexSeries.length > 0; else loadingTemplate">
+        <!-- Additional wrapper to ensure proper DOM structure -->
+        <div class="chart-wrapper" [style.height]="height">
+          <apx-chart
+            [series]="apexSeries"
+            [chart]="apexChartOptions.chart"
+            [labels]="apexChartOptions.labels"
+            [colors]="apexChartOptions.colors"
+            [legend]="apexChartOptions.legend"
+            [dataLabels]="apexChartOptions.dataLabels"
+            [plotOptions]="apexChartOptions.plotOptions"
+            [xaxis]="apexChartOptions.xaxis"
+            [tooltip]="apexChartOptions.tooltip">
+          </apx-chart>
+        </div>
+      </ng-container>
+
+      <!-- Loading template -->
+      <ng-template #loadingTemplate>
+        <div class="chart-loading">
+          <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Cargando gráfico...</p>
+          </div>
+        </div>
+      </ng-template>
     </div>
   </mat-card-content>
 </mat-card>

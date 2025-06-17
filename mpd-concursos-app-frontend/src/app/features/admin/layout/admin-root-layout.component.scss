@@ -1,25 +1,17 @@
-@use 'src/styles/variables' as *;
-
-/* Glassmorphism Design System Variables */
-$glass-background-primary: rgba(55, 65, 81, 0.8);
-$glass-background-secondary: rgba(75, 85, 99, 0.9);
-$text-primary: #f9fafb;
-$text-secondary: #d1d5db;
-$focus-color: #3b82f6;
-$border-radius-lg: 8px;
-$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+@import 'src/styles/unified-glassmorphism-system';
 
 .admin-root-layout {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100%;
+  /* Mantener overflow: hidden para el layout principal, pero permitir dropdowns específicos */
   overflow: hidden;
   position: relative;
   /* Glassmorphism background with gradient overlay */
   background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%);
   background-attachment: fixed;
-  color: $text-primary;
+  color: var(--text-primary);
 
   /* Header administrativo como elemento superior principal */
   app-admin-header {
@@ -27,12 +19,15 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     top: 0;
     z-index: 1000;
     flex-shrink: 0;
+    /* Permitir que los dropdowns se extiendan fuera del header */
+    overflow: visible;
   }
 }
 
 .admin-container {
   display: flex;
   flex: 1;
+  /* Restaurar overflow: hidden para mantener el scrolling del contenido */
   overflow: hidden;
   /* Transparent background to let the main background show through */
   background: transparent;
@@ -41,7 +36,8 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 .admin-content {
   flex: 1;
   overflow-y: auto;
-  transition: margin-left $transition-normal;
+  overflow-x: hidden;
+  transition: margin-left var(--transition-normal);
   position: relative;
   /* Transparent background for seamless integration */
   background: transparent;
@@ -52,7 +48,7 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .content-wrapper {
-  padding: 1.5rem;
+  padding: var(--spacing-xl);
   min-height: calc(100% - 48px); /* Altura total menos la altura de breadcrumbs */
   /* Transparent background to inherit dashboard background */
   background: transparent;
@@ -60,29 +56,15 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
 /* Botón flotante para abrir el sidebar en móvil */
 .mobile-sidebar-toggle {
+  @include glassmorphism-button('primary', 'normal');
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
+  bottom: var(--spacing-xl);
+  right: var(--spacing-xl);
   z-index: 1000;
-  /* Glassmorphism effect for mobile toggle */
-  background: $glass-background-primary;
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  border-radius: $border-radius-lg;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: $transition-normal;
 
   &:hover {
-    background: $glass-background-secondary;
+    @include glassmorphism-hover;
     transform: translateY(-2px);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.3),
-      0 4px 12px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -94,6 +76,6 @@ $transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .content-wrapper {
-    padding: 1rem;
+    padding: var(--spacing-lg);
   }
 }

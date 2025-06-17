@@ -131,8 +131,8 @@
 
 .pagination-button {
   @include vars.glass-button;
-  width: 40px;
-  height: 40px;
+  width: 44px; /* Increased from 40px to meet accessibility standards */
+  height: 44px; /* Increased from 40px to meet accessibility standards */
   padding: 0;
   border-radius: 50%;
   display: flex;
@@ -154,8 +154,8 @@
 
 .page-button {
   @include vars.glass-button;
-  min-width: 40px;
-  height: 40px;
+  min-width: 44px; /* Increased from 40px to meet accessibility standards */
+  height: 44px; /* Increased from 40px to meet accessibility standards */
   padding: 0 0.5rem;
   border-radius: vars.$border-radius-md;
   font-weight: 600;

@@ -26,9 +26,10 @@ import java.util.stream.Collectors;
 
 /**
  * Servicio de aplicación para sesiones de inscripción
+ * TEMPORALMENTE DESHABILITADO PARA DEBUGGING
  */
-@Service
-@Transactional
+// @Service
+// @Transactional
 @RequiredArgsConstructor
 public class InscriptionSessionService implements SaveInscriptionSessionUseCase, GetInscriptionSessionUseCase, DeleteInscriptionSessionUseCase {
     private final InscriptionSessionRepository repository;

@@ -2,138 +2,111 @@
 /* Notificaciones con glassmorphism premium dark unificado */
 /* Scoped específicamente para no afectar al administrador */
 
+@import '../../../../styles/unified-glassmorphism-system';
+
 .notifications-container {
     position: relative;
     display: inline-block;
-    z-index: var(--user-z-dropdown); /* Asegurar z-index alto para todo el contenedor */
+    z-index: var(--z-dropdown);
+    // Permitir que el badge se muestre fuera del contenedor
+    overflow: visible;
 }
 
 .notification-toggle {
+    @include glassmorphism-button('secondary');
     position: relative;
-    /* Glassmorphism premium dark button */
-    background: var(--user-glass-light);
-    border: 1px solid var(--user-border-glass);
-    border-radius: var(--user-border-radius-md);
-    color: var(--user-text-primary);
-    transition: var(--user-transition-normal);
-    margin-right: var(--user-spacing-sm);
+    margin-right: var(--spacing-sm);
     width: 44px;
     height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    backdrop-filter: var(--user-backdrop-blur-light);
-    -webkit-backdrop-filter: var(--user-backdrop-blur-light);
-
-    &:hover {
-        background: var(--user-glass-hover);
-        transform: var(--user-transform-hover);
-        box-shadow: var(--user-shadow-sm);
-        border-color: var(--user-border-glass-strong);
-    }
 
     &:focus {
-        outline: 2px solid var(--user-text-accent);
+        outline: 2px solid var(--color-focus);
         outline-offset: 2px;
     }
 
     i {
-        color: var(--user-text-secondary);
-        transition: var(--user-transition-normal);
+        color: var(--color-primary); // Mejor contraste
+        transition: var(--transition-fast);
         font-size: 1.1rem;
     }
 
     &:hover i {
-        color: var(--user-text-primary);
+        color: var(--color-info); // Azul en hover
     }
 
     .notification-badge {
         position: absolute;
-        top: -6px;
-        right: -6px;
-        background: var(--user-color-danger);
-        color: var(--user-text-primary);
+        top: -8px;
+        right: -8px;
+        background: var(--color-danger);
+        color: var(--color-primary);
         font-size: 0.75rem;
         font-weight: 600;
         padding: 2px 6px;
-        border-radius: 10px;
-        min-width: 18px;
-        height: 18px;
+        border-radius: 12px;
+        min-width: 20px;
+        height: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid var(--user-glass-primary);
-        box-shadow: var(--user-shadow-sm);
+        border: 2px solid var(--glass-bg-primary);
+        box-shadow: var(--shadow-md);
+        // Asegurar que se muestre por encima
+        z-index: 10;
+        // Evitar que se corte
+        overflow: visible;
     }
 }
 
 .notifications-panel {
-    position: fixed !important; /* Posicionamiento fijo para asegurar que aparezca por encima */
-    top: var(--user-header-height) !important; /* Posicionar justo debajo del header */
-    right: var(--user-spacing-lg) !important; /* Margen desde el borde derecho */
+    @include glassmorphism-base('primary', 'strong');
+    position: fixed !important;
+    top: calc(var(--header-height) + 8px) !important;
+    right: var(--spacing-lg) !important;
     width: 350px;
-    /* Glassmorphism premium dark panel */
-    background: var(--user-glass-gradient-primary);
-    background-image: var(--user-glass-gradient-overlay);
-    border-radius: var(--user-border-radius-xl);
-    z-index: var(--user-z-dropdown) !important; /* Z-index 9999 con !important */
+    z-index: 9999 !important; // Z-index muy alto para asegurar visibilidad
     max-height: 500px;
     overflow-y: auto;
-    margin-top: var(--user-spacing-sm);
-    border: 1px solid var(--user-border-glass);
-    box-shadow: var(--user-shadow-lg), var(--user-shadow-inset), 0 20px 40px rgba(0, 0, 0, 0.3) !important; /* Sombra adicional */
-    backdrop-filter: var(--user-backdrop-blur); /* Asegurar backdrop-filter */
-    -webkit-backdrop-filter: var(--user-backdrop-blur);
+    margin-top: 0;
+    border: 1px solid var(--border-primary);
+    box-shadow:
+        var(--shadow-xl),
+        0 20px 40px rgba(0, 0, 0, 0.4) !important,
+        0 0 0 1px rgba(255, 255, 255, 0.1) !important;
     animation: slideIn 0.3s ease-out;
-    transform: translateZ(0); /* Forzar aceleración GPU */
+    transform: translateZ(0);
+    // Asegurar que se muestre por encima de todo
+    will-change: transform, opacity;
 
-    /* Custom scrollbar glassmorphism */
-    &::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: var(--user-glass-light);
-        border-radius: var(--user-border-radius-sm);
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background: var(--user-border-glass);
-        border-radius: var(--user-border-radius-sm);
-
-        &:hover {
-            background: var(--user-border-glass-strong);
-        }
-    }
+    @include glassmorphism-scrollbar;
 }
 
 .notifications-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--user-spacing-lg);
-    border-bottom: 1px solid var(--user-border-glass-light);
-    background: var(--user-glass-gradient-overlay);
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--glass-bg-secondary);
     position: sticky;
     top: 0;
     z-index: 1;
-    border-radius: var(--user-border-radius-xl) var(--user-border-radius-xl) 0 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 
     h3 {
         margin: 0;
         font-size: 1.1rem;
         font-weight: 600;
-        color: var(--user-text-primary);
+        color: var(--color-primary);
     }
 
     .close-button {
-        background: var(--user-glass-light);
-        border: 1px solid var(--user-border-glass);
-        border-radius: var(--user-border-radius-sm);
-        color: var(--user-text-secondary);
-        transition: var(--user-transition-normal);
-        padding: var(--user-spacing-sm);
+        @include glassmorphism-button('secondary');
+        padding: var(--spacing-sm);
         width: 2rem;
         height: 2rem;
         display: flex;
@@ -141,15 +114,8 @@
         justify-content: center;
         cursor: pointer;
 
-        &:hover {
-            color: var(--user-text-primary);
-            background: var(--user-glass-hover);
-            transform: var(--user-transform-hover);
-            border-color: var(--user-border-glass-strong);
-        }
-
         &:focus {
-            outline: 2px solid var(--user-text-accent);
+            outline: 2px solid var(--color-focus);
             outline-offset: 2px;
         }
 
@@ -166,23 +132,18 @@
 }
 
 .no-notifications {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--user-spacing-2xl) var(--user-spacing-lg);
-    color: var(--user-text-secondary);
+    @include glassmorphism-empty-state;
+    padding: var(--spacing-2xl) var(--spacing-lg);
 
     i {
         font-size: 3rem;
-        margin-bottom: var(--user-spacing-lg);
-        color: var(--user-text-muted);
+        margin-bottom: var(--spacing-lg);
         opacity: 0.7;
     }
 
     p {
         margin: 0;
         font-size: 1rem;
-        color: var(--user-text-secondary);
         font-weight: 500;
     }
 }

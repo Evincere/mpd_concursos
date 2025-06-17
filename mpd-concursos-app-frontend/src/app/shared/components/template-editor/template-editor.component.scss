@@ -364,7 +364,7 @@
           flex: 1;
           padding: 16px;
           color: $text-primary;
-          font-size: 14px;
+          font-size: clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem); /* 12.8px - 14px */
           line-height: 1.6;
           overflow-y: auto;
 
@@ -391,7 +391,7 @@
             padding: 2px 4px;
             border-radius: 3px;
             font-family: 'Courier New', monospace;
-            font-size: 12px;
+            font-size: clamp(0.7rem, 0.65rem + 0.25vw, 0.75rem); /* 11.2px - 12px */
           }
 
           ul, ol {

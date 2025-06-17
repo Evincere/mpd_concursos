@@ -74,19 +74,31 @@
               <span>{{ getStatusMessage(postulacion) }}</span>
             </div>
 
+            <!-- Botón para retomar proceso interrumpido -->
+            <app-custom-button
+              *ngIf="postulacion.estado === 'ACTIVE'"
+              [variant]="'primary'"
+              [icon]="'play'"
+              [label]="'Retomar proceso de inscripción'"
+              [tooltip]="'Continuar con el proceso de inscripción donde lo dejaste'"
+              [ariaLabel]="'Retomar proceso de inscripción para: ' + (postulacion.concurso?.title || 'Sin título')"
+              (buttonClick)="retomarInscripcion(postulacion)">
+            </app-custom-button>
+
             <!-- Botón para completar documentación si está pendiente -->
             <app-custom-button
               *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'"
-              [variant]="'primary'"
+              [variant]="'warn'"
               [icon]="'file-upload'"
+              [label]="'Completar documentación'"
               [tooltip]="'Completar documentación'"
               [ariaLabel]="'Completar documentación para: ' + (postulacion.concurso?.title || 'Sin título')"
               (buttonClick)="completarDocumentacion(postulacion)">
             </app-custom-button>
 
             <!-- Alerta para documentación pendiente -->
-            <div class="alert-banner" *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'">
-              <i class="fas fa-exclamation-triangle"></i>
+            <div class="alert-banner" *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'" role="alert" aria-live="polite">
+              <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
               <span>Documentación pendiente - Tienes 3 días hábiles para completarla</span>
             </div>
 

@@ -12,8 +12,9 @@ import java.util.UUID;
 
 /**
  * Repositorio JPA para las sesiones de inscripción
+ * TEMPORALMENTE DESHABILITADO PARA DEBUGGING
  */
-@Repository
+// @Repository
 public interface InscriptionSessionJpaRepository extends JpaRepository<InscriptionSessionEntity, UUID> {
     /**
      * Busca una sesión por su ID de inscripción

@@ -545,8 +545,8 @@
   transition: var(--transition-normal);
   font-size: 0.875rem;
   color: var(--text-secondary);
-  min-width: 2.5rem;
-  height: 2.5rem;
+  min-width: 2.75rem; /* Increased from 2.5rem (40px) to 2.75rem (44px) for accessibility */
+  height: 2.75rem; /* Increased from 2.5rem (40px) to 2.75rem (44px) for accessibility */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -700,8 +700,8 @@
   }
 
   .pagination-btn {
-    min-width: 2rem;
-    height: 2rem;
+    min-width: 2.75rem; /* Maintain 44px minimum even on mobile */
+    height: 2.75rem; /* Maintain 44px minimum even on mobile */
     font-size: 0.75rem;
   }
 }

@@ -62,6 +62,9 @@
       <app-custom-menu-item icon="cog" routerLink="/admin/configuracion">
         Configuración
       </app-custom-menu-item>
+      <app-custom-menu-item icon="palette" (itemSelected)="onToggleCustomization()">
+        Personalizar Interfaz
+      </app-custom-menu-item>
       <app-custom-divider></app-custom-divider>
       <app-custom-menu-item icon="sign-out-alt" (itemSelected)="logout()">
         Cerrar Sesión

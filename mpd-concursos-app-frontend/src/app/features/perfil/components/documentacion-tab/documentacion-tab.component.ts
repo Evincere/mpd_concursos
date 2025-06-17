@@ -818,7 +818,9 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
-        this.notification.success('Documentos cargados exitosamente');
+        // CRITICAL FIX: Eliminar notificación duplicada
+        // El componente hijo ya maneja las notificaciones en finalizarProceso()
+        // this.notification.success('Documentos cargados exitosamente');
         this.cargarDocumentosUsuario(true); // Force reload
         this.documentosService.notificarDocumentoActualizado();
       }
