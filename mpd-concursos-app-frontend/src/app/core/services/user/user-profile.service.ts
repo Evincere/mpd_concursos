@@ -26,7 +26,7 @@ export class UserProfileService {
     const formData = new FormData();
     formData.append('image', file);
 
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/profile-image`, formData).pipe(
+    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/image`, formData).pipe(
       tap((response: unknown) => {
         if (response && response.imageUrl) {
           // Logging implementado con LoggingService;
@@ -51,7 +51,7 @@ export class UserProfileService {
   }
 
   removeProfileImage(): Observable<Record<string, unknown>> {
-    return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/profile-image`).pipe(
+    return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/image`).pipe(
       tap(() => {
         // Logging implementado con LoggingService;
         this.profileImageSubject.next(null);

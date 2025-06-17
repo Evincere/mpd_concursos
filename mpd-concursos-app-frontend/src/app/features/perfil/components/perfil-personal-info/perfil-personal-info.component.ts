@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -13,6 +13,10 @@ import { LazyLoadImageDirective } from '@shared/directives/lazy-load-image.direc
 
 // Models
 import { UserProfile } from '@core/models/perfil.model';
+
+// Services
+import { UserProfileService } from '@core/services/user/user-profile.service';
+import { AuthService } from '@core/services/auth/auth.service';
 
 @Component({
   selector: 'app-perfil-personal-info',
@@ -51,8 +55,9 @@ import { UserProfile } from '@core/models/perfil.model';
               <button
                 class="change-photo-btn"
                 (click)="abrirSelectorArchivo()"
+                [disabled]="isUploadingImage"
                 aria-label="Cambiar foto de perfil">
-                <i class="fas fa-camera" aria-hidden="true"></i>
+                <i class="fas" [class.fa-camera]="!isUploadingImage" [class.fa-spinner]="isUploadingImage" [class.fa-spin]="isUploadingImage" aria-hidden="true"></i>
               </button>
               <input
                 type="file"
@@ -63,7 +68,8 @@ import { UserProfile } from '@core/models/perfil.model';
             </div>
             <div class="photo-info">
               <h3>Foto de Perfil</h3>
-              <p>Haga clic en el ícono de cámara para cambiar su foto</p>
+              <p *ngIf="!isUploadingImage">Haga clic en el ícono de cámara para cambiar su foto</p>
+              <p *ngIf="isUploadingImage" class="uploading-text">Subiendo imagen...</p>
             </div>
           </div>
         </div>
@@ -234,10 +240,26 @@ export class PerfilPersonalInfoComponent implements OnInit {
   @Output() formSave = new EventEmitter<void>();
   @Output() formReset = new EventEmitter<void>();
 
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+  private userProfileService = inject(UserProfileService);
+  private authService = inject(AuthService);
+
   fotoPerfil = 'assets/images/default-avatar.png';
+  isUploadingImage = false;
 
   ngOnInit(): void {
-    // Initialize component
+    // Initialize profile image from user profile or auth service
+    if (this.userProfile?.profileImageUrl) {
+      this.fotoPerfil = this.userProfile.profileImageUrl;
+    } else {
+      // Subscribe to auth service for profile image updates
+      this.authService.getUserInfo().subscribe(userInfo => {
+        if (userInfo.profileImage) {
+          this.fotoPerfil = userInfo.profileImage;
+        }
+      });
+    }
   }
 
   onEditToggle(): void {
@@ -255,10 +277,45 @@ export class PerfilPersonalInfoComponent implements OnInit {
   }
 
   abrirSelectorArchivo(): void {
-    // Implementation for file selector
+    if (this.fileInput) {
+      this.fileInput.nativeElement.click();
+    }
   }
 
   onFileSelected(event: Event): void {
-    // Implementation for file selection
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor, seleccione un archivo de imagen válido.');
+        return;
+      }
+
+      // Validar tamaño del archivo (máximo 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        alert('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
+        return;
+      }
+
+      this.isUploadingImage = true;
+      this.userProfileService.uploadProfileImage(file).subscribe({
+        next: (response) => {
+          if (response && (response as any).imageUrl) {
+            this.fotoPerfil = (response as any).imageUrl;
+            this.authService.updateProfileImage((response as any).imageUrl);
+            console.log('Imagen de perfil actualizada exitosamente');
+          }
+          this.isUploadingImage = false;
+        },
+        error: (error) => {
+          console.error('Error al cargar la imagen:', error);
+          alert('Error al cargar la imagen. Por favor, intente nuevamente.');
+          this.isUploadingImage = false;
+        }
+      });
+    }
   }
 }
