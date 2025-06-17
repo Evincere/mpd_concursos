@@ -237,6 +237,84 @@
   &-glow { box-shadow: var(--shadow-glow); }
 }
 
+/* === LAZY LOADING UTILITIES === */
+
+/* Base lazy loading image styles */
+.lazy-image {
+  transition: all 0.3s ease;
+
+  &.image-loading {
+    opacity: 0.6;
+    filter: blur(2px);
+    background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.1) 25%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.1) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  &.image-loaded {
+    opacity: 1;
+    filter: none;
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  &.image-error {
+    opacity: 0.5;
+    filter: grayscale(100%);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+}
+
+/* Profile image specific lazy loading */
+.lazy-profile-image {
+  @extend .lazy-image;
+  border-radius: 50%;
+
+  &.image-loading {
+    background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.1) 25%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.1) 75%);
+  }
+}
+
+/* Avatar lazy loading */
+.lazy-avatar {
+  @extend .lazy-profile-image;
+
+  &.image-error {
+    background: var(--glass-bg-light);
+    border: 1px solid var(--border-primary);
+
+    &::after {
+      content: '👤';
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+    }
+  }
+}
+
+/* Document/content image lazy loading */
+.lazy-content-image {
+  @extend .lazy-image;
+  border-radius: var(--radius-md);
+
+  &.image-loading {
+    background: linear-gradient(90deg,
+      rgba(107, 114, 128, 0.1) 25%,
+      rgba(107, 114, 128, 0.2) 50%,
+      rgba(107, 114, 128, 0.1) 75%);
+  }
+}
+
 /* === MOBILE NAVIGATION UTILITIES === */
 
 /* Optimized mobile navigation base */
@@ -590,4 +668,30 @@ input[type="reset"],
 
 .glass-modal {
   contain: layout style paint;
+}
+
+/* === GLOBAL ANIMATIONS === */
+
+/* Shimmer animation for lazy loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Fade in animation for loaded content */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Skeleton loading animation */
+@keyframes skeleton {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
 }

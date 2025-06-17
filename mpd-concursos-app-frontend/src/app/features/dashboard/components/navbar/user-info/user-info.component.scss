@@ -65,6 +65,31 @@
       height: 100%;
       object-fit: cover;
       border-radius: 50%;
+      transition: all 0.3s ease;
+
+      /* Lazy loading states */
+      &.profile-image-loading {
+        opacity: 0.6;
+        filter: blur(1px);
+        background: linear-gradient(90deg,
+          rgba(255, 255, 255, 0.1) 25%,
+          rgba(255, 255, 255, 0.2) 50%,
+          rgba(255, 255, 255, 0.1) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+
+      &.profile-image-loaded {
+        opacity: 1;
+        filter: none;
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      &.profile-image-error {
+        opacity: 0.5;
+        filter: grayscale(100%);
+        background: rgba(239, 68, 68, 0.1);
+      }
     }
 
     .default-avatar {
@@ -171,4 +196,18 @@
       display: none; /* Ocultar texto en pantallas muy pequeñas */
     }
   }
+}
+
+/* === LAZY LOADING ANIMATIONS === */
+
+/* Shimmer animation for loading state */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Fade in animation for loaded state */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

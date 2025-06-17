@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+// Directives
+import { LazyLoadImageDirective } from '@shared/directives/lazy-load-image.directive';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   standalone: true,
   imports: [
     CommonModule,
+    LazyLoadImageDirective,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule
@@ -18,7 +21,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   template: `
     <div class="profile-image-manager">
       <div class="image-container" [class.loading]="isLoading">
-        <img *ngIf="currentImage" [src]="currentImage" alt="Imagen de perfil" class="profile-image">
+        <img
+          *ngIf="currentImage"
+          appLazyLoadImage
+          [src]="currentImage"
+          [placeholder]="'assets/images/avatar-placeholder.png'"
+          alt="Imagen de perfil"
+          class="profile-image"
+          [loadingClass]="'profile-image-loading'"
+          [loadedClass]="'profile-image-loaded'"
+          [errorClass]="'profile-image-error'">
         <div *ngIf="!currentImage" class="default-avatar">
           <mat-icon>person</mat-icon>
         </div>
@@ -79,6 +91,31 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: all 0.3s ease;
+
+      /* Lazy loading states */
+      &.profile-image-loading {
+        opacity: 0.6;
+        filter: blur(2px);
+        background: linear-gradient(90deg,
+          rgba(224, 224, 224, 0.3) 25%,
+          rgba(224, 224, 224, 0.5) 50%,
+          rgba(224, 224, 224, 0.3) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+
+      &.profile-image-loaded {
+        opacity: 1;
+        filter: none;
+        animation: fadeIn 0.3s ease-in;
+      }
+
+      &.profile-image-error {
+        opacity: 0.5;
+        filter: grayscale(100%);
+        background: rgba(239, 68, 68, 0.1);
+      }
     }
 
     .default-avatar {
@@ -113,6 +150,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       display: flex;
       gap: 1rem;
       margin-top: 1rem;
+    }
+
+    /* Lazy loading animations */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   `]
 })

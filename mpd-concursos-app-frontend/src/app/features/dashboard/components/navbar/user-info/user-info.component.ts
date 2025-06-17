@@ -2,11 +2,12 @@ import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CuitFormatPipe } from '../../../../../shared/constants/pipes/cuit-format.pipe';
 import { AuthService } from '../../../../../core/services/auth/auth.service';
+import { LazyLoadImageDirective } from '../../../../../shared/directives/lazy-load-image.directive';
 
 @Component({
   selector: 'app-user-info',
   standalone: true,
-  imports: [CommonModule, CuitFormatPipe],
+  imports: [CommonModule, CuitFormatPipe, LazyLoadImageDirective],
   templateUrl: './user-info.component.html',
   styleUrls: ['./user-info.component.scss']
 })
