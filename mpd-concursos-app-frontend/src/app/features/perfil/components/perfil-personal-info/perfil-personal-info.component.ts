@@ -253,12 +253,11 @@ export class PerfilPersonalInfoComponent implements OnInit {
     if (this.userProfile?.profileImageUrl) {
       this.fotoPerfil = this.userProfile.profileImageUrl;
     } else {
-      // Subscribe to auth service for profile image updates
-      this.authService.getUserInfo().subscribe(userInfo => {
-        if (userInfo.profileImage) {
-          this.fotoPerfil = userInfo.profileImage;
-        }
-      });
+      // Get profile image from auth service signal
+      const userInfo = this.authService.userInfo();
+      if (userInfo.profileImage) {
+        this.fotoPerfil = userInfo.profileImage;
+      }
     }
   }
 

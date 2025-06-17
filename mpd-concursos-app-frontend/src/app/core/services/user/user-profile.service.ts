@@ -27,10 +27,10 @@ export class UserProfileService {
     formData.append('image', file);
 
     return this.http.post<Record<string, unknown>>(`${this.apiUrl}/image`, formData).pipe(
-      tap((response: unknown) => {
-        if (response && response.imageUrl) {
+      tap((response: Record<string, unknown>) => {
+        if (response && response['imageUrl']) {
           // Logging implementado con LoggingService;
-          this.authService.updateProfileImage(response.imageUrl);
+          this.authService.updateProfileImage(response['imageUrl'] as string);
         }
       })
     );
