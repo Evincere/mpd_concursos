@@ -88,8 +88,8 @@ public class ProfileImageService {
         // Guardar archivo
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         
-        // Generar URL relativa
-        String imageUrl = "/api/files/profile-images/" + user.getId().value() + "/" + fileName;
+        // Generar URL absoluta para desarrollo
+        String imageUrl = "http://localhost:8080/api/files/profile-images/" + user.getId().value() + "/" + fileName;
         
         // Actualizar usuario con nueva URL
         user.setProfileImageUrl(ProfileImageUrl.of(imageUrl));
