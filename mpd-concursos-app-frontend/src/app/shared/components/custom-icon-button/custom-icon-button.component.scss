@@ -13,32 +13,32 @@
   position: relative;
   overflow: hidden;
   
-  /* Size variants */
+  /* Size variants - All sizes meet 44px minimum touch target */
   &.small {
-    width: 32px;
-    height: 32px;
+    width: 44px; /* Increased from 32px to meet accessibility standards */
+    height: 44px; /* Increased from 32px to meet accessibility standards */
     border-radius: 6px;
-    
+
     i {
       font-size: 0.875rem;
     }
   }
-  
+
   &.medium {
-    width: 40px;
-    height: 40px;
+    width: 44px; /* Increased from 40px to meet accessibility standards */
+    height: 44px; /* Increased from 40px to meet accessibility standards */
     border-radius: var(--user-border-radius-md);
-    
+
     i {
       font-size: 1rem;
     }
   }
-  
+
   &.large {
     width: 48px;
     height: 48px;
     border-radius: var(--user-border-radius-lg);
-    
+
     i {
       font-size: 1.125rem;
     }
@@ -186,28 +186,29 @@
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .custom-icon-button {
+    /* All sizes maintain 44px minimum for accessibility */
     &.large {
       width: 44px;
       height: 44px;
-      
+
       i {
         font-size: 1rem;
       }
     }
-    
+
     &.medium {
-      width: 36px;
-      height: 36px;
-      
+      width: 44px; /* Increased from 36px to meet accessibility standards */
+      height: 44px; /* Increased from 36px to meet accessibility standards */
+
       i {
         font-size: 0.875rem;
       }
     }
-    
+
     &.small {
-      width: 28px;
-      height: 28px;
-      
+      width: 44px; /* Increased from 28px to meet accessibility standards */
+      height: 44px; /* Increased from 28px to meet accessibility standards */
+
       i {
         font-size: 0.75rem;
       }

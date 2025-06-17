@@ -378,6 +378,12 @@ app-usuario-filtros {
   opacity: 0.6;
   transition: var(--transition-fast);
   color: var(--text-muted);
+  min-width: 44px; /* Ensure adequate touch target */
+  min-height: 44px; /* Ensure adequate touch target */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 
   .sortable:hover & {
     opacity: 1;
@@ -523,8 +529,8 @@ app-usuario-filtros {
 
 .pagination-button {
   @include glassmorphism-button('secondary', 'small');
-  width: 40px;
-  height: 40px;
+  width: 44px; /* Increased from 40px to meet accessibility standards */
+  height: 44px; /* Increased from 40px to meet accessibility standards */
   padding: 0;
   border-radius: 50%;
   display: flex;
@@ -552,8 +558,8 @@ app-usuario-filtros {
 
 .page-button {
   @include glassmorphism-button('secondary', 'small');
-  min-width: 40px;
-  height: 40px;
+  min-width: 44px; /* Increased from 40px to meet accessibility standards */
+  height: 44px; /* Increased from 40px to meet accessibility standards */
   padding: 0 var(--spacing-sm);
   border-radius: var(--border-radius-md);
   font-weight: 600;
@@ -801,8 +807,8 @@ app-usuario-filtros {
   justify-content: center;
 
   .action-button {
-    width: 36px;
-    height: 36px;
+    width: 44px; /* Increased from 36px to meet accessibility standards */
+    height: 44px; /* Increased from 36px to meet accessibility standards */
     padding: 0;
     border-radius: 50%;
     display: flex;

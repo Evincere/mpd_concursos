@@ -73,6 +73,36 @@
   --transform-hover: translateY(-1px);
   --transform-active: translateY(0px) scale(0.98);
   --transform-button-hover: translateY(-2px);
+
+  /* === FLUID TYPOGRAPHY === */
+  --font-family-primary: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-family-secondary: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-family-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
+
+  /* Font Weights */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Fluid Typography with clamp() - Mobile-first approach */
+  --font-size-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.75rem);      /* 11.2px - 12px */
+  --font-size-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.875rem);     /* 12.8px - 14px */
+  --font-size-base: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);       /* 14.4px - 16px */
+  --font-size-lg: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);          /* 17.6px - 20px */
+  --font-size-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);       /* 20px - 24px */
+  --font-size-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 1.875rem);    /* 24px - 30px */
+  --font-size-3xl: clamp(1.75rem, 1.5rem + 1.25vw, 2.25rem);     /* 28px - 36px */
+  --font-size-4xl: clamp(2rem, 1.75rem + 1.25vw, 3rem);          /* 32px - 48px */
+
+  /* Heading-specific fluid typography */
+  --heading-h1: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem);         /* 28px - 40px */
+  --heading-h2: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);           /* 24px - 32px */
+  --heading-h3: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);         /* 20px - 24px */
+  --heading-h4: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);            /* 17.6px - 20px */
+  --heading-h5: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);         /* 16px - 18px */
+  --heading-h6: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);           /* 14.4px - 16px */
   
   /* === SPACING SISTEMA === */
   --spacing-xs: 0.25rem;    /* 4px */
@@ -92,18 +122,18 @@
   --card-margin: var(--spacing-xl);
   --card-border-radius: var(--radius-md);
   
-  /* Buttons */
+  /* Buttons - All sizes meet 44px minimum touch target */
   --button-padding: var(--spacing-md) var(--spacing-xl);
   --button-padding-sm: var(--spacing-sm) var(--spacing-lg);
   --button-padding-lg: var(--spacing-lg) var(--spacing-2xl);
-  --button-height: 2.5rem;              /* 40px */
-  --button-height-sm: 2rem;             /* 32px */
+  --button-height: 2.75rem;             /* 44px - Increased for accessibility */
+  --button-height-sm: 2.75rem;          /* 44px - Increased for accessibility */
   --button-height-lg: 3rem;             /* 48px */
   --button-border-radius: var(--radius-md);
   
-  /* Inputs */
+  /* Inputs - Meet 44px minimum touch target */
   --input-padding: var(--spacing-md) var(--spacing-lg);
-  --input-height: 2.5rem;               /* 40px */
+  --input-height: 2.75rem;              /* 44px - Increased for accessibility */
   --input-border-radius: var(--radius-md);
   --input-background: var(--glass-bg-light);
   

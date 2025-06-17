@@ -116,8 +116,8 @@
 
   .action-button {
     @include vars.glass-button;
-    width: 36px;
-    height: 36px;
+    width: 44px; /* Increased from 36px to meet accessibility standards */
+    height: 44px; /* Increased from 36px to meet accessibility standards */
     padding: 0;
     border-radius: 50%;
     display: flex;

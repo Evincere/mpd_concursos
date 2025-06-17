@@ -142,16 +142,19 @@
       }
     }
     
-    h1 { font-size: 2rem; }
-    h2 { font-size: 1.75rem; }
-    h3 { font-size: 1.5rem; }
-    h4 { font-size: 1.25rem; }
-    h5 { font-size: 1.125rem; }
-    h6 { font-size: 1rem; }
+    /* Fluid typography for better responsiveness */
+    h1 { font-size: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem); } /* 28px - 40px */
+    h2 { font-size: clamp(1.5rem, 1.25rem + 1.25vw, 2rem); }   /* 24px - 32px */
+    h3 { font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem); } /* 20px - 24px */
+    h4 { font-size: clamp(1.1rem, 1rem + 0.5vw, 1.25rem); }    /* 17.6px - 20px */
+    h5 { font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem); } /* 16px - 18px */
+    h6 { font-size: clamp(0.9rem, 0.85rem + 0.25vw, 1rem); }   /* 14.4px - 16px */
     
     p {
       margin: 0 0 1.25rem 0;
       color: #e5e7eb;
+      font-size: clamp(0.9rem, 0.85rem + 0.25vw, 1rem); /* 14.4px - 16px */
+      line-height: 1.6;
     }
     
     ul, ol {
