@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -7,15 +7,12 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CustomCardComponent } from '@shared/components/custom-form/custom-card/custom-card.component';
 import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
-
-// Directives
-import { LazyLoadImageDirective } from '@shared/directives/lazy-load-image.directive';
+import { ProfileImageManagerComponent } from '@shared/components/profile-image-manager/profile-image-manager.component';
 
 // Models
 import { UserProfile } from '@core/models/perfil.model';
 
 // Services
-import { UserProfileService } from '@core/services/user/user-profile.service';
 import { AuthService } from '@core/services/auth/auth.service';
 
 @Component({
@@ -27,52 +24,22 @@ import { AuthService } from '@core/services/auth/auth.service';
     CustomCardComponent,
     CustomFormFieldComponent,
     CustomButtonComponent,
-    LazyLoadImageDirective
+    ProfileImageManagerComponent
   ],
   template: `
     <div class="personal-info-container">
-      <!-- Profile Photo Section - Rebuilt without custom-card wrapper -->
+      <!-- Profile Photo Section - Using Unified ProfileImageManagerComponent -->
       <div class="profile-photo-section">
-        <div class="photo-glassmorphism-container">
-          <div class="photo-content">
-            <div class="photo-container">
-              <ng-container *ngIf="fotoPerfil && fotoPerfil !== 'assets/images/default-avatar.png'; else defaultAvatar">
-                <img
-                  appLazyLoadImage
-                  [src]="fotoPerfil"
-                  [placeholder]="'assets/images/avatar-placeholder.png'"
-                  alt="Foto de perfil"
-                  class="profile-image"
-                  [loadingClass]="'profile-image-loading'"
-                  [loadedClass]="'profile-image-loaded'"
-                  [errorClass]="'profile-image-error'">
-              </ng-container>
-              <ng-template #defaultAvatar>
-                <div class="default-avatar">
-                  <i class="fas fa-user" aria-hidden="true"></i>
-                </div>
-              </ng-template>
-              <button
-                class="change-photo-btn"
-                (click)="abrirSelectorArchivo()"
-                [disabled]="isUploadingImage"
-                aria-label="Cambiar foto de perfil">
-                <i class="fas" [class.fa-camera]="!isUploadingImage" [class.fa-spinner]="isUploadingImage" [class.fa-spin]="isUploadingImage" aria-hidden="true"></i>
-              </button>
-              <input
-                type="file"
-                hidden
-                #fileInput
-                (change)="onFileSelected($event)"
-                accept="image/*">
-            </div>
-            <div class="photo-info">
-              <h3>Foto de Perfil</h3>
-              <p *ngIf="!isUploadingImage">Haga clic en el ícono de cámara para cambiar su foto</p>
-              <p *ngIf="isUploadingImage" class="uploading-text">Subiendo imagen...</p>
-            </div>
-          </div>
-        </div>
+        <app-profile-image-manager
+          [initialImageUrl]="getCurrentImageUrl()"
+          [showRemoveButton]="true"
+          [showUploadInfo]="true"
+          size="large"
+          imageAlt="Foto de perfil del usuario"
+          (imageUploaded)="onImageUploaded($event)"
+          (imageRemoved)="onImageRemoved()"
+          (uploadError)="onUploadError($event)">
+        </app-profile-image-manager>
       </div>
 
       <!-- Personal Data Form -->
@@ -240,25 +207,10 @@ export class PerfilPersonalInfoComponent implements OnInit {
   @Output() formSave = new EventEmitter<void>();
   @Output() formReset = new EventEmitter<void>();
 
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-
-  private userProfileService = inject(UserProfileService);
   private authService = inject(AuthService);
 
-  fotoPerfil = 'assets/images/default-avatar.png';
-  isUploadingImage = false;
-
   ngOnInit(): void {
-    // Initialize profile image from user profile or auth service
-    if (this.userProfile?.profileImageUrl) {
-      this.fotoPerfil = this.userProfile.profileImageUrl;
-    } else {
-      // Get profile image from auth service signal
-      const userInfo = this.authService.userInfo();
-      if (userInfo.profileImage) {
-        this.fotoPerfil = userInfo.profileImage;
-      }
-    }
+    // Component initialization - ProfileImageManagerComponent handles image state
   }
 
   onEditToggle(): void {
@@ -275,75 +227,44 @@ export class PerfilPersonalInfoComponent implements OnInit {
     this.formReset.emit();
   }
 
-  abrirSelectorArchivo(): void {
-    if (this.fileInput) {
-      this.fileInput.nativeElement.click();
+  // === PROFILE IMAGE MANAGER HANDLERS ===
+
+  /**
+   * Get current image URL for ProfileImageManagerComponent
+   */
+  getCurrentImageUrl(): string | null {
+    if (this.userProfile?.profileImageUrl) {
+      return this.userProfile.profileImageUrl;
     }
+
+    const userInfo = this.authService.userInfo();
+    return userInfo.profileImage || null;
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-
-      // Validar tipo de archivo
-      if (!file.type.startsWith('image/')) {
-        this.showError('Por favor, seleccione un archivo de imagen válido.');
-        this.resetFileInput();
-        return;
-      }
-
-      // Validar tamaño del archivo (máximo 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        this.showError('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
-        this.resetFileInput();
-        return;
-      }
-
-      this.isUploadingImage = true;
-      this.userProfileService.uploadProfileImage(file).subscribe({
-        next: (response) => {
-          if (response && (response as any).imageUrl) {
-            this.fotoPerfil = (response as any).imageUrl;
-            this.authService.updateProfileImage((response as any).imageUrl);
-            console.log('Imagen de perfil actualizada exitosamente');
-          }
-          this.isUploadingImage = false;
-          this.resetFileInput();
-        },
-        error: (error) => {
-          console.error('Error al cargar la imagen:', error);
-
-          // Extraer mensaje de error específico del backend
-          let errorMessage = 'Error al cargar la imagen. Por favor, intente nuevamente.';
-          if (error?.error?.message) {
-            errorMessage = error.error.message;
-          } else if (error?.message) {
-            errorMessage = error.message;
-          }
-
-          this.showError(errorMessage);
-          this.isUploadingImage = false;
-          this.resetFileInput();
-        }
-      });
-    }
+  /**
+   * Handle successful image upload from ProfileImageManagerComponent
+   */
+  onImageUploaded(imageUrl: string): void {
+    console.log('Imagen de perfil actualizada exitosamente:', imageUrl);
+    // The ProfileImageManagerComponent already handles AuthService update
+    // Additional logic can be added here if needed
   }
 
-  private showError(message: string): void {
-    // Usar el sistema de notificaciones en lugar de alert()
-    // Por ahora usamos console.error, pero se puede integrar con un servicio de notificaciones
-    console.error('Error de validación:', message);
-
-    // Mostrar mensaje de error en la UI (temporal)
-    // TODO: Integrar con sistema de notificaciones/toast
-    alert(message);
+  /**
+   * Handle image removal from ProfileImageManagerComponent
+   */
+  onImageRemoved(): void {
+    console.log('Imagen de perfil eliminada exitosamente');
+    // The ProfileImageManagerComponent already handles AuthService update
+    // Additional logic can be added here if needed
   }
 
-  private resetFileInput(): void {
-    if (this.fileInput) {
-      this.fileInput.nativeElement.value = '';
-    }
+  /**
+   * Handle upload errors from ProfileImageManagerComponent
+   */
+  onUploadError(error: string): void {
+    console.error('Error en upload de imagen:', error);
+    // The ProfileImageManagerComponent already handles error notifications
+    // Additional error handling can be added here if needed
   }
 }
