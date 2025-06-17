@@ -1,0 +1,332 @@
+@import 'src/styles/unified-glassmorphism-system';
+
+/* ===== PROFILE IMAGE MANAGER - GLASSMORPHISM DESIGN ===== */
+
+.profile-image-manager {
+  @include glassmorphism-card('primary', 'normal', true);
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  max-width: 400px;
+  margin: 0 auto;
+  
+  /* Responsive adjustments */
+  @include glassmorphism-responsive;
+}
+
+/* === IMAGE PREVIEW CONTAINER === */
+.image-preview-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  width: 100%;
+  
+  &.loading {
+    pointer-events: none;
+  }
+}
+
+/* === IMAGE WRAPPER === */
+.image-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 2px solid var(--border-primary);
+  background: var(--glass-bg-secondary);
+  transition: var(--transition-normal);
+  
+  &:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Size variants */
+  .profile-image-manager[data-size="small"] & {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .profile-image-manager[data-size="large"] & {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+/* === PROFILE IMAGE === */
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: var(--transition-normal);
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* === IMAGE PLACEHOLDER === */
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-secondary);
+  background: var(--glass-bg-light);
+  transition: var(--transition-normal);
+  
+  .placeholder-icon {
+    font-size: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: var(--spacing-xs);
+    opacity: 0.7;
+  }
+  
+  .placeholder-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+  
+  /* Size variants */
+  .profile-image-manager[data-size="small"] & {
+    .placeholder-icon {
+      font-size: 1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+    
+    .placeholder-text {
+      font-size: 0.625rem;
+    }
+  }
+  
+  .profile-image-manager[data-size="large"] & {
+    .placeholder-icon {
+      font-size: 3.5rem;
+      width: 3.5rem;
+      height: 3.5rem;
+    }
+    
+    .placeholder-text {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* === LOADING OVERLAY === */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg-primary);
+  backdrop-filter: var(--backdrop-blur-medium);
+  border-radius: var(--radius-full);
+  gap: var(--spacing-sm);
+  
+  .loading-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    text-align: center;
+  }
+}
+
+/* === ACTION BUTTONS === */
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  justify-content: center;
+  
+  .glass-btn {
+    @include glassmorphism-button('primary', 'normal');
+    
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 100px;
+    font-weight: 500;
+    
+    mat-icon {
+      font-size: 1.125rem;
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+    
+    &.glass-btn-primary {
+      background: var(--glass-bg-success);
+      color: var(--color-success);
+      border-color: var(--border-success);
+      
+      &:hover:not(:disabled) {
+        background: var(--glass-hover-success);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+      
+      &:focus {
+        outline: 2px solid var(--focus-success);
+        outline-offset: 2px;
+      }
+    }
+    
+    &.glass-btn-danger {
+      background: var(--glass-bg-danger);
+      color: var(--color-danger);
+      border-color: var(--border-danger);
+      
+      &:hover:not(:disabled) {
+        background: var(--glass-hover-danger);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+      
+      &:focus {
+        outline: 2px solid var(--focus-danger);
+        outline-offset: 2px;
+      }
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      
+      &:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  }
+}
+
+/* === UPLOAD INFO === */
+.upload-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--glass-bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  width: 100%;
+  
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+    
+    .info-icon {
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+      color: var(--color-info);
+      opacity: 0.8;
+    }
+  }
+}
+
+/* === RESPONSIVE DESIGN === */
+
+@media (max-width: 768px) {
+  .profile-image-manager {
+    max-width: 100%;
+    padding: var(--spacing-lg);
+  }
+  
+  .image-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    
+    .glass-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  
+  .upload-info {
+    .info-item {
+      font-size: 0.8125rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .image-wrapper {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .loading-overlay .loading-text {
+    font-size: 0.6875rem;
+  }
+  
+  .upload-info .info-item {
+    font-size: 0.75rem;
+  }
+}
+
+/* === ACCESSIBILITY === */
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-image,
+  .image-wrapper,
+  .glass-btn {
+    transition: none;
+    
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-contrast: high) {
+  .image-wrapper {
+    border-width: 3px;
+    border-color: var(--border-strong);
+  }
+  
+  .glass-btn {
+    border-width: 2px;
+  }
+}
+
+/* === FOCUS MANAGEMENT === */
+
+.glass-btn:focus-visible {
+  outline: 2px solid var(--focus-primary);
+  outline-offset: 2px;
+}
+
+/* === LOADING STATES === */
+
+.profile-image-manager.loading {
+  .action-buttons .glass-btn:not(:disabled) {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+}

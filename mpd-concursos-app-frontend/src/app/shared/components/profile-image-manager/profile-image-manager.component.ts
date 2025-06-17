@@ -1,0 +1,344 @@
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, inject, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+
+import { UserProfileService } from '../../../core/services/user/user-profile.service';
+import { AuthService } from '../../../core/services/auth/auth.service';
+import { UnifiedNotificationService } from '../unified-notification/unified-notification.service';
+import { ImagePreviewDialogComponent, ImagePreviewData, ImagePreviewResult } from '../image-preview-dialog/image-preview-dialog.component';
+
+/**
+ * Componente unificado para gestión de imágenes de perfil
+ * 
+ * Reemplaza todos los componentes anteriores de upload de imagen:
+ * - ProfileImageUploadComponent
+ * - ProfileImageManagerComponent  
+ * - PerfilPersonalInfoComponent (funcionalidad de imagen)
+ * 
+ * Implementa glassmorphism design system y mejores prácticas UX
+ * 
+ * @author MPD Development Team
+ * @version 2.0.0
+ * @since 2025-06
+ */
+@Component({
+  selector: 'app-profile-image-manager',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatButtonModule
+  ],
+  template: `
+    <div class="profile-image-manager glass-card">
+      <!-- Preview Container -->
+      <div class="image-preview-container" [class.loading]="isUploading()">
+        
+        <!-- Current Image or Placeholder -->
+        <div class="image-wrapper">
+          <img
+            *ngIf="currentImageUrl()"
+            [src]="currentImageUrl()"
+            [alt]="imageAlt"
+            class="profile-image"
+            (error)="onImageError()"
+            (load)="onImageLoad()">
+          
+          <div *ngIf="!currentImageUrl()" class="image-placeholder">
+            <mat-icon class="placeholder-icon">person</mat-icon>
+            <span class="placeholder-text">Sin imagen</span>
+          </div>
+          
+          <!-- Loading Overlay -->
+          <div *ngIf="isUploading()" class="loading-overlay">
+            <mat-spinner diameter="40" color="primary"></mat-spinner>
+            <span class="loading-text">Subiendo imagen...</span>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button
+            mat-raised-button
+            class="glass-btn glass-btn-primary"
+            (click)="triggerFileInput()"
+            [disabled]="isUploading()"
+            [attr.aria-label]="currentImageUrl() ? 'Cambiar imagen de perfil' : 'Subir imagen de perfil'">
+            <mat-icon>{{ currentImageUrl() ? 'edit' : 'add_a_photo' }}</mat-icon>
+            {{ currentImageUrl() ? 'Cambiar' : 'Subir' }}
+          </button>
+          
+          <button
+            *ngIf="currentImageUrl() && showRemoveButton"
+            mat-raised-button
+            class="glass-btn glass-btn-danger"
+            (click)="removeImage()"
+            [disabled]="isUploading()"
+            aria-label="Eliminar imagen de perfil">
+            <mat-icon>delete</mat-icon>
+            Eliminar
+          </button>
+        </div>
+      </div>
+      
+      <!-- Hidden File Input -->
+      <input
+        #fileInput
+        type="file"
+        accept="image/*"
+        (change)="onFileSelected($event)"
+        style="display: none"
+        aria-hidden="true">
+      
+      <!-- Upload Info -->
+      <div class="upload-info" *ngIf="showUploadInfo">
+        <div class="info-item">
+          <mat-icon class="info-icon">info</mat-icon>
+          <span>Formatos: JPG, PNG, GIF</span>
+        </div>
+        <div class="info-item">
+          <mat-icon class="info-icon">storage</mat-icon>
+          <span>Tamaño máximo: 5MB</span>
+        </div>
+        <div class="info-item">
+          <mat-icon class="info-icon">aspect_ratio</mat-icon>
+          <span>Se redimensiona automáticamente a 256x256</span>
+        </div>
+      </div>
+    </div>
+  `,
+  styleUrls: ['./profile-image-manager.component.scss']
+})
+export class ProfileImageManagerComponent {
+  
+  // === INPUTS ===
+  @Input() initialImageUrl: string | null = null;
+  @Input() showRemoveButton = true;
+  @Input() showUploadInfo = true;
+  @Input() imageAlt = 'Imagen de perfil';
+  @Input() size: 'small' | 'medium' | 'large' = 'medium';
+  @Input() enablePreview = false; // Temporalmente deshabilitado
+  @Input() enableCompression = true;
+  
+  // === OUTPUTS ===
+  @Output() imageUploaded = new EventEmitter<string>();
+  @Output() imageRemoved = new EventEmitter<void>();
+  @Output() uploadError = new EventEmitter<string>();
+  
+  // === VIEW CHILD ===
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  
+  // === SERVICES ===
+  private userProfileService = inject(UserProfileService);
+  private authService = inject(AuthService);
+  private notificationService = inject(UnifiedNotificationService);
+  private dialog = inject(MatDialog);
+  
+  // === SIGNALS ===
+  private _currentImageUrl = signal<string | null>(null);
+  private _isUploading = signal(false);
+  private _imageLoadError = signal(false);
+  
+  // === COMPUTED SIGNALS ===
+  currentImageUrl = computed(() => {
+    if (this._imageLoadError()) return null;
+    return this._currentImageUrl() || this.initialImageUrl;
+  });
+  
+  isUploading = computed(() => this._isUploading());
+  
+  // === LIFECYCLE ===
+  ngOnInit() {
+    this.initializeImage();
+  }
+  
+  // === PUBLIC METHODS ===
+  
+  /**
+   * Trigger file input click
+   */
+  triggerFileInput(): void {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+  
+  /**
+   * Handle file selection
+   */
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    // Validate file
+    const validationError = this.validateFile(file);
+    if (validationError) {
+      this.handleError(validationError);
+      this.resetFileInput();
+      return;
+    }
+
+    // Show preview dialog if enabled, otherwise upload directly
+    if (this.enablePreview) {
+      this.showPreviewDialog(file);
+    } else {
+      this.uploadImage(file);
+    }
+  }
+  
+  /**
+   * Remove current image
+   */
+  removeImage(): void {
+    if (!this.currentImageUrl()) return;
+    
+    this._isUploading.set(true);
+    
+    this.userProfileService.removeProfileImage().subscribe({
+      next: () => {
+        this._currentImageUrl.set(null);
+        this.authService.updateProfileImage('');
+        this.imageRemoved.emit();
+        this.notificationService.success('Imagen de perfil eliminada exitosamente', 'Éxito');
+        this._isUploading.set(false);
+      },
+      error: (error) => {
+        const errorMessage = this.extractErrorMessage(error);
+        this.handleError(errorMessage);
+        this._isUploading.set(false);
+      }
+    });
+  }
+  
+  /**
+   * Handle image load error
+   */
+  onImageError(): void {
+    this._imageLoadError.set(true);
+  }
+  
+  /**
+   * Handle image load success
+   */
+  onImageLoad(): void {
+    this._imageLoadError.set(false);
+  }
+  
+  // === PRIVATE METHODS ===
+
+  /**
+   * Show preview dialog for image editing
+   */
+  private showPreviewDialog(file: File): void {
+    const dialogData: ImagePreviewData = {
+      file,
+      title: 'Vista Previa de Imagen de Perfil',
+      showCrop: true,
+      showCompression: this.enableCompression,
+      compressionOptions: {
+        maxWidth: 256,
+        maxHeight: 256,
+        quality: 0.8
+      }
+    };
+
+    const dialogRef = this.dialog.open(ImagePreviewDialogComponent, {
+      data: dialogData,
+      maxWidth: '600px',
+      width: '90vw',
+      maxHeight: '80vh',
+      autoFocus: false,
+      disableClose: false,
+      panelClass: ['glassmorphism-dialog', 'image-preview-dialog'],
+      backdropClass: 'cdk-overlay-dark-backdrop'
+    });
+
+    dialogRef.afterClosed().subscribe((result: ImagePreviewResult | null) => {
+      if (result) {
+        this.uploadImage(result.file);
+      }
+      this.resetFileInput();
+    });
+  }
+
+  private initializeImage(): void {
+    // Get image from auth service if not provided
+    if (!this.initialImageUrl) {
+      const userInfo = this.authService.userInfo();
+      if (userInfo.profileImage) {
+        this._currentImageUrl.set(userInfo.profileImage);
+      }
+    } else {
+      this._currentImageUrl.set(this.initialImageUrl);
+    }
+  }
+  
+  private validateFile(file: File): string | null {
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      return 'Por favor, seleccione un archivo de imagen válido (JPG, PNG, GIF)';
+    }
+    
+    // Check file size (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return 'El archivo es demasiado grande. El tamaño máximo permitido es 5MB';
+    }
+    
+    return null;
+  }
+  
+  private uploadImage(file: File): void {
+    this._isUploading.set(true);
+    
+    this.userProfileService.uploadProfileImage(file).subscribe({
+      next: (response) => {
+        if (response && (response as any).imageUrl) {
+          const imageUrl = (response as any).imageUrl;
+          this._currentImageUrl.set(imageUrl);
+          this.authService.updateProfileImage(imageUrl);
+          this.imageUploaded.emit(imageUrl);
+          this.notificationService.success('Imagen de perfil actualizada exitosamente', 'Éxito');
+        }
+        this._isUploading.set(false);
+        this.resetFileInput();
+      },
+      error: (error) => {
+        const errorMessage = this.extractErrorMessage(error);
+        this.handleError(errorMessage);
+        this._isUploading.set(false);
+        this.resetFileInput();
+      }
+    });
+  }
+  
+  private extractErrorMessage(error: any): string {
+    if (error?.error?.error) {
+      return error.error.error;
+    }
+    if (error?.error?.message) {
+      return error.error.message;
+    }
+    if (error?.message) {
+      return error.message;
+    }
+    return 'Error al procesar la imagen. Por favor, intente nuevamente.';
+  }
+  
+  private handleError(message: string): void {
+    this.notificationService.error(message, 'Error');
+    this.uploadError.emit(message);
+  }
+  
+  private resetFileInput(): void {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+}

@@ -5,6 +5,9 @@
     "changeOrigin": true,
     "logLevel": "debug",
     "timeout": 60000,
-    "proxyTimeout": 60000
+    "proxyTimeout": 60000,
+    "headers": {
+      "Access-Control-Allow-Origin": "*"
+    }
   }
 }

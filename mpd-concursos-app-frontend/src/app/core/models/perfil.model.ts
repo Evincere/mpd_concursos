@@ -20,6 +20,7 @@ export interface UserProfile {
   provincia?: string;
   pais?: string;
   fotoPerfil?: string;
+  profileImageUrl?: string;
   experiencias?: ExperienciaData[];
   educacion?: EducacionData[];
   habilidades?: HabilidadData[];

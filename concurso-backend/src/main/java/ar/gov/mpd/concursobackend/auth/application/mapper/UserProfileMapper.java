@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.auth.application.mapper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,36 +20,54 @@ public class UserProfileMapper {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_DATE;
 
     public List<ExperienciaDto> toExperienciaDtoList(List<Experiencia> experiencias) {
+        if (experiencias == null) {
+            return Collections.emptyList();
+        }
         return experiencias.stream()
                 .map(this::toExperienciaDto)
                 .collect(Collectors.toList());
     }
 
     public List<Experiencia> toExperienciaList(List<ExperienciaDto> dtos) {
+        if (dtos == null) {
+            return Collections.emptyList();
+        }
         return dtos.stream()
                 .map(this::toExperiencia)
                 .collect(Collectors.toList());
     }
 
     public List<EducacionDto> toEducacionDtoList(List<Educacion> educaciones) {
+        if (educaciones == null) {
+            return Collections.emptyList();
+        }
         return educaciones.stream()
                 .map(this::toEducacionDto)
                 .collect(Collectors.toList());
     }
 
     public List<Educacion> toEducacionList(List<EducacionDto> dtos) {
+        if (dtos == null) {
+            return Collections.emptyList();
+        }
         return dtos.stream()
                 .map(this::toEducacion)
                 .collect(Collectors.toList());
     }
 
     public List<HabilidadDto> toHabilidadDtoList(List<Habilidad> habilidades) {
+        if (habilidades == null) {
+            return Collections.emptyList();
+        }
         return habilidades.stream()
                 .map(this::toHabilidadDto)
                 .collect(Collectors.toList());
     }
 
     public List<Habilidad> toHabilidadList(List<HabilidadDto> dtos) {
+        if (dtos == null) {
+            return Collections.emptyList();
+        }
         return dtos.stream()
                 .map(this::toHabilidad)
                 .collect(Collectors.toList());

@@ -129,6 +129,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/api/documentos/queue/public/") ||
+                path.startsWith("/api/files/profile-images/") ||
                 (path.startsWith("/api/concursos") && request.getMethod().equals("GET"));
 
         logger.debug("Should not filter path {}: {}", path, shouldNotFilter);

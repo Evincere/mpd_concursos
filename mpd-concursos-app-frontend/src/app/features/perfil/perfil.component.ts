@@ -117,7 +117,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
     if (this.tabDefinitions.some(tab => tab.key === tabKey)) {
       this.selectedTab = tabKey;
       this.selectedTabIndex = this.tabDefinitions.findIndex(tab => tab.key === tabKey);
-      this.cdr.markForCheck();
+      // Diferir la detección de cambios al siguiente ciclo
+      setTimeout(() => this.cdr.markForCheck(), 0);
     }
   }
 
@@ -130,7 +131,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
     if (index >= 0 && index < availableTabs.length) {
       this.selectedTab = availableTabs[index].key;
       this.selectedTabIndex = index;
-      this.cdr.markForCheck();
+      // Diferir la detección de cambios al siguiente ciclo
+      setTimeout(() => this.cdr.markForCheck(), 0);
     }
   }
 

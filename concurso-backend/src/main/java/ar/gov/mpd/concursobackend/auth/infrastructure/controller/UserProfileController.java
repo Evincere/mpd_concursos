@@ -1,13 +1,16 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileResponse;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileUpdateRequest;
 import ar.gov.mpd.concursobackend.auth.application.mapper.UserProfileMapper;
 import ar.gov.mpd.concursobackend.auth.application.service.UserService;
+import ar.gov.mpd.concursobackend.auth.application.service.ProfileImageService;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
@@ -32,6 +35,7 @@ public class UserProfileController {
         private final SecurityUtils securityUtils;
         private final UserProfileMapper mapper;
         private final ExperienceService experienceService;
+        private final ProfileImageService profileImageService;
 
         @GetMapping
         @PreAuthorize("hasRole('ROLE_USER')")
@@ -63,6 +67,7 @@ public class UserProfileController {
                                 .lastName(user.getLastName())
                                 .telefono(user.getTelefono())
                                 .direccion(user.getDireccion())
+                                .profileImageUrl(user.getProfileImageUrl() != null ? user.getProfileImageUrl().getUrlOrNull() : null)
                                 .experiencias(experienciasConvertidas)
                                 .educacion(mapper.toEducacionDtoList(user.getEducacion()))
                                 .habilidades(mapper.toHabilidadDtoList(user.getHabilidades()))
@@ -128,11 +133,82 @@ public class UserProfileController {
                                 .lastName(updatedUser.getLastName())
                                 .telefono(updatedUser.getTelefono())
                                 .direccion(updatedUser.getDireccion())
+                                .profileImageUrl(updatedUser.getProfileImageUrl() != null ? updatedUser.getProfileImageUrl().getUrlOrNull() : null)
                                 .experiencias(mapper.toExperienciaDtoList(updatedUser.getExperiencias()))
                                 .educacion(mapper.toEducacionDtoList(updatedUser.getEducacion()))
                                 .habilidades(mapper.toHabilidadDtoList(updatedUser.getHabilidades()))
                                 .build();
 
                 return ResponseEntity.ok(response);
+        }
+
+        /**
+         * Sube una nueva imagen de perfil para el usuario autenticado
+         *
+         * @param file Archivo de imagen a subir
+         * @return URL de la imagen subida
+         */
+        @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        @PreAuthorize("hasRole('ROLE_USER')")
+        public ResponseEntity<?> uploadProfileImage(@RequestParam("image") MultipartFile file) {
+                try {
+                        String username = securityUtils.getCurrentUsername();
+                        log.info("Subiendo imagen de perfil para usuario: {}", username);
+
+                        String imageUrl = profileImageService.uploadProfileImage(username, file);
+
+                        return ResponseEntity.ok(java.util.Map.of(
+                                "success", true,
+                                "message", "Imagen de perfil subida exitosamente",
+                                "imageUrl", imageUrl
+                        ));
+
+                } catch (IllegalArgumentException e) {
+                        log.warn("Error de validación al subir imagen: {}", e.getMessage());
+                        return ResponseEntity.badRequest().body(java.util.Map.of(
+                                "success", false,
+                                "error", e.getMessage()
+                        ));
+                } catch (Exception e) {
+                        log.error("Error interno al subir imagen de perfil", e);
+                        return ResponseEntity.internalServerError().body(java.util.Map.of(
+                                "success", false,
+                                "error", "Error interno del servidor"
+                        ));
+                }
+        }
+
+        /**
+         * Elimina la imagen de perfil del usuario autenticado
+         *
+         * @return Confirmación de eliminación
+         */
+        @DeleteMapping("/image")
+        @PreAuthorize("hasRole('ROLE_USER')")
+        public ResponseEntity<?> deleteProfileImage() {
+                try {
+                        String username = securityUtils.getCurrentUsername();
+                        log.info("Eliminando imagen de perfil para usuario: {}", username);
+
+                        profileImageService.deleteProfileImage(username);
+
+                        return ResponseEntity.ok(java.util.Map.of(
+                                "success", true,
+                                "message", "Imagen de perfil eliminada exitosamente"
+                        ));
+
+                } catch (IllegalArgumentException e) {
+                        log.warn("Error al eliminar imagen: {}", e.getMessage());
+                        return ResponseEntity.badRequest().body(java.util.Map.of(
+                                "success", false,
+                                "error", e.getMessage()
+                        ));
+                } catch (Exception e) {
+                        log.error("Error interno al eliminar imagen de perfil", e);
+                        return ResponseEntity.internalServerError().body(java.util.Map.of(
+                                "success", false,
+                                "error", "Error interno del servidor"
+                        ));
+                }
         }
 }

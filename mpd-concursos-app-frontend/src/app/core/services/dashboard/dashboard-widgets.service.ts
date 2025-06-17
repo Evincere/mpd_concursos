@@ -15,7 +15,8 @@ import {
 import { ProfileService, UserProfile } from '@core/services/profile/profile.service';
 import { InscriptionService } from '@core/services/inscripcion/inscription.service';
 import { ConcursosService } from '@core/services/concursos/concursos.service';
-import { LoggingService } from '@core/services/logging/logging.service'; // Import LoggingService
+import { LoggingService } from '@core/services/logging/logging.service';
+import { UserDashboardService, UserDeadline, UserStats } from '@core/services/dashboard/user-dashboard.service';
 import { Contest } from '@shared/interfaces/concurso/concurso.interface'; // Assuming Contest interface
 
 @Injectable({
@@ -29,7 +30,8 @@ export class DashboardWidgetsService {
     private profileService: ProfileService,
     private inscriptionService: InscriptionService,
     private concursosService: ConcursosService,
-    private loggingService: LoggingService // Inject LoggingService
+    private loggingService: LoggingService,
+    private userDashboardService: UserDashboardService
   ) {
     this.loggingService.debug(`[${this.LOG_TAG}] Initializing DashboardWidgetsService.`, undefined, this.LOG_TAG);
   }
@@ -81,20 +83,81 @@ export class DashboardWidgetsService {
 
   /**
    * Calculates the user's profile status, including completeness and pending sections.
+   * Now uses real data from UserDashboardService when available.
    * @returns An Observable of EstadoPerfil.
    */
   private getEstadoPerfil(): Observable<EstadoPerfil> {
-    this.loggingService.info(`[${this.LOG_TAG}] Calculating user profile status.`, undefined, this.LOG_TAG);
-    return this.profileService.getUserProfile().pipe(
-      map(userProfile => {
-        const secciones = this.getSeccionesPerfil(userProfile); // Use local implementation
-        const completitud = DashboardUtils.calcularCompletitudPerfil(secciones);
+    this.loggingService.info(`[${this.LOG_TAG}] Calculating user profile status with real data.`, undefined, this.LOG_TAG);
+
+    return combineLatest([
+      this.profileService.getUserProfile(),
+      this.userDashboardService.getProfileStats().pipe(
+        catchError(error => {
+          this.loggingService.warn(`[${this.LOG_TAG}] Could not fetch profile stats from backend, using fallback calculation:`, error, this.LOG_TAG);
+          return of(null); // Fallback to null if backend is not available
+        })
+      )
+    ]).pipe(
+      map(([userProfile, profileStats]) => {
+        let completitud: number;
+        let secciones: SeccionPendiente[];
+        let documentosVencidos = 0;
+        let ultimaActualizacion = new Date();
+
+        if (profileStats) {
+          // Use real data from backend
+          this.loggingService.info(`[${this.LOG_TAG}] Using real profile stats from backend.`, profileStats, this.LOG_TAG);
+          completitud = profileStats.completionPercentage;
+          documentosVencidos = 0; // TODO: Add to backend response
+          ultimaActualizacion = new Date(profileStats.lastUpdated);
+
+          // Create sections based on backend data
+          secciones = [
+            {
+              nombre: 'Información Personal',
+              descripcion: 'Datos básicos del perfil',
+              prioridad: 'ALTA',
+              ruta: '/dashboard/perfil',
+              icono: 'fa-user',
+              completada: profileStats.hasBasicInfo
+            },
+            {
+              nombre: 'Información de Contacto',
+              descripcion: 'Teléfono y dirección',
+              prioridad: 'MEDIA',
+              ruta: '/dashboard/perfil',
+              icono: 'fa-phone',
+              completada: profileStats.hasContactInfo
+            },
+            {
+              nombre: 'Experiencia Laboral',
+              descripcion: 'Historial profesional',
+              prioridad: 'MEDIA',
+              ruta: '/dashboard/perfil',
+              icono: 'fa-briefcase',
+              completada: profileStats.hasExperience
+            },
+            {
+              nombre: 'Educación',
+              descripcion: 'Formación académica',
+              prioridad: 'MEDIA',
+              ruta: '/dashboard/perfil',
+              icono: 'fa-graduation-cap',
+              completada: profileStats.hasEducation
+            }
+          ];
+        } else {
+          // Fallback to original calculation
+          this.loggingService.info(`[${this.LOG_TAG}] Using fallback profile calculation.`, undefined, this.LOG_TAG);
+          secciones = this.getSeccionesPerfil(userProfile);
+          completitud = DashboardUtils.calcularCompletitudPerfil(secciones);
+        }
 
         const estadoPerfil: EstadoPerfil = {
           completitud,
           seccionesPendientes: secciones.filter((s: SeccionPendiente) => !s.completada),
-          documentosVencidos: 0, // TODO: Implement actual document expiration logic
-          ultimaActualizacion: new Date(), // Using current date as a placeholder
+          documentosVencidos,
+          ultimaActualizacion,
           puntajeCompletitud: this.calcularPuntajeCompletitud(completitud, secciones)
         };
 
@@ -102,7 +165,6 @@ export class DashboardWidgetsService {
         return estadoPerfil;
       }),
       catchError(error => {
-        // Solo loggear el error, no mostrar notificaciones automáticas para errores de perfil
         this.loggingService.error(`[${this.LOG_TAG}] Error calculating profile status:`, error, this.LOG_TAG);
         return of(this.getDefaultEstadoPerfil());
       })
@@ -111,17 +173,45 @@ export class DashboardWidgetsService {
 
   /**
    * Retrieves the upcoming critical expirations (contests, documents, etc.).
+   * Now uses real data from UserDashboardService when available.
    * @returns An Observable of an array of ProximoVencimiento.
    */
   private getProximosVencimientos(): Observable<ProximoVencimiento[]> {
-    this.loggingService.info(`[${this.LOG_TAG}] Getting upcoming critical expirations.`, undefined, this.LOG_TAG);
-    return combineLatest([
-      this.concursosService.getConcursos(),
-      this.inscriptionService.getUserInscriptions()
-    ]).pipe(
-      map(([concursos, inscripciones]) => {
-        const vencimientos: ProximoVencimiento[] = [];
-        const hoy = new Date();
+    this.loggingService.info(`[${this.LOG_TAG}] Getting upcoming critical expirations with real data.`, undefined, this.LOG_TAG);
+
+    return this.userDashboardService.getUserDeadlines(30).pipe(
+      map((deadlines: UserDeadline[]) => {
+        this.loggingService.info(`[${this.LOG_TAG}] Using real deadlines from backend.`, deadlines, this.LOG_TAG);
+
+        // Convert UserDeadline to ProximoVencimiento
+        const vencimientos: ProximoVencimiento[] = deadlines.map(deadline => ({
+          id: deadline.id,
+          tipo: this.mapDeadlineTypeToTipoVencimiento(deadline.type),
+          titulo: deadline.title,
+          descripcion: deadline.description,
+          fechaLimite: new Date(deadline.deadline),
+          diasRestantes: deadline.daysRemaining,
+          prioridad: this.mapPriorityToPrioridadVencimiento(deadline.priority),
+          concursoId: deadline.contestId,
+          accionRequerida: deadline.actionRequired,
+          ruta: deadline.route
+        }));
+
+        const topVencimientos = vencimientos.slice(0, 5); // Limit to top 5
+        this.loggingService.info(`[${this.LOG_TAG}] Found ${topVencimientos.length} critical expirations from backend.`, topVencimientos, this.LOG_TAG);
+        return topVencimientos;
+      }),
+      catchError(error => {
+        this.loggingService.warn(`[${this.LOG_TAG}] Could not fetch deadlines from backend, using fallback calculation:`, error, this.LOG_TAG);
+
+        // Fallback to original logic
+        return combineLatest([
+          this.concursosService.getConcursos(),
+          this.inscriptionService.getUserInscriptions()
+        ]).pipe(
+          map(([concursos, inscripciones]) => {
+            const vencimientos: ProximoVencimiento[] = [];
+            const hoy = new Date();
 
         const concursosArray: Contest[] = Array.isArray(concursos) ? concursos : (concursos as any)?.content || [];
         const inscripcionesArray: any[] = Array.isArray(inscripciones) ? inscripciones : (inscripciones as any)?.content || [];
@@ -192,14 +282,15 @@ export class DashboardWidgetsService {
           return a.diasRestantes - b.diasRestantes;
         });
 
-        const topVencimientos = vencimientos.slice(0, 5); // Limit to top 5 critical expirations
-        this.loggingService.info(`[${this.LOG_TAG}] Found ${topVencimientos.length} critical expirations (top 5 shown).`, topVencimientos, this.LOG_TAG);
-        return topVencimientos;
-      }),
-      catchError(error => {
-        // Solo loggear el error, no mostrar notificaciones automáticas para errores de vencimientos
-        this.loggingService.error(`[${this.LOG_TAG}] Error getting upcoming expirations:`, error, this.LOG_TAG);
-        return of([]);
+            const topVencimientos = vencimientos.slice(0, 5); // Limit to top 5 critical expirations
+            this.loggingService.info(`[${this.LOG_TAG}] Found ${topVencimientos.length} critical expirations (fallback calculation).`, topVencimientos, this.LOG_TAG);
+            return topVencimientos;
+          }),
+          catchError(fallbackError => {
+            this.loggingService.error(`[${this.LOG_TAG}] Error in fallback calculation:`, fallbackError, this.LOG_TAG);
+            return of([]);
+          })
+        );
       })
     );
   }
@@ -467,5 +558,41 @@ export class DashboardWidgetsService {
    */
   get currentDashboardData$(): Observable<DashboardData | null> {
     return this.dashboardData$.asObservable();
+  }
+
+  // --- Mapping Methods for UserDashboardService Integration ---
+
+  /**
+   * Maps UserDeadline type to TipoVencimiento
+   */
+  private mapDeadlineTypeToTipoVencimiento(type: string): TipoVencimiento {
+    switch (type) {
+      case 'INSCRIPTION':
+        return TipoVencimiento.INSCRIPCION;
+      case 'DOCUMENTS':
+        return TipoVencimiento.DOCUMENTOS;
+      case 'EXAM':
+        return TipoVencimiento.EXAMEN;
+      case 'RESULT':
+        return TipoVencimiento.RESULTADO;
+      default:
+        return TipoVencimiento.INSCRIPCION;
+    }
+  }
+
+  /**
+   * Maps UserDeadline priority to PrioridadVencimiento
+   */
+  private mapPriorityToPrioridadVencimiento(priority: string): PrioridadVencimiento {
+    switch (priority) {
+      case 'HIGH':
+        return PrioridadVencimiento.ALTA;
+      case 'MEDIUM':
+        return PrioridadVencimiento.MEDIA;
+      case 'LOW':
+        return PrioridadVencimiento.BAJA;
+      default:
+        return PrioridadVencimiento.MEDIA;
+    }
   }
 }

@@ -9,7 +9,7 @@ import { AuthService } from '../auth/auth.service';
   providedIn: 'root'
 })
 export class UserProfileService {
-  private apiUrl = `${environment.apiUrl}/users`;
+  private apiUrl = `${environment.apiUrl}/users/profile`;
   private profileImageSubject = new BehaviorSubject<string | null>(null);
   profileImage$ = this.profileImageSubject.asObservable();
   private authService = inject(AuthService);
@@ -26,11 +26,11 @@ export class UserProfileService {
     const formData = new FormData();
     formData.append('image', file);
 
-    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/profile-image`, formData).pipe(
-      tap((response: unknown) => {
-        if (response && response.imageUrl) {
+    return this.http.post<Record<string, unknown>>(`${this.apiUrl}/image`, formData).pipe(
+      tap((response: Record<string, unknown>) => {
+        if (response && response['imageUrl']) {
           // Logging implementado con LoggingService;
-          this.authService.updateProfileImage(response.imageUrl);
+          this.authService.updateProfileImage(response['imageUrl'] as string);
         }
       })
     );
@@ -51,7 +51,7 @@ export class UserProfileService {
   }
 
   removeProfileImage(): Observable<Record<string, unknown>> {
-    return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/profile-image`).pipe(
+    return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/image`).pipe(
       tap(() => {
         // Logging implementado con LoggingService;
         this.profileImageSubject.next(null);
