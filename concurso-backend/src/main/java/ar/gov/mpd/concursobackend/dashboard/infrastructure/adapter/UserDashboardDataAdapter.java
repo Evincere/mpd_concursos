@@ -12,6 +12,7 @@ import ar.gov.mpd.concursobackend.experience.infrastructure.persistence.Experien
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -490,31 +491,28 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
      */
     private UUID convertToUUID(Long userId) {
         try {
-            // Estrategia 1: Si userId es realmente un hash del UUID, intentar recuperar el UUID original
-            // Por ahora, como workaround, obtenemos el UUID del usuario autenticado actual
+            // CORRECCIÓN: Obtener el UUID del usuario autenticado actual desde SecurityContext
+            String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+            log.debug("Obteniendo UUID para usuario autenticado: {}", currentUsername);
 
-            // Buscar todos los usuarios activos y tomar el primero (para desarrollo)
-            // En producción, esto debería ser reemplazado por el UUID real del usuario autenticado
-            String uuidQuery = "SELECT u.id FROM UserEntity u WHERE u.status = 'ACTIVE' ORDER BY u.createdAt DESC";
+            String uuidQuery = "SELECT u.id FROM UserEntity u WHERE u.username = :username";
             Query query = entityManager.createQuery(uuidQuery);
-            query.setMaxResults(1);
+            query.setParameter("username", currentUsername);
 
             @SuppressWarnings("unchecked")
             List<UUID> results = query.getResultList();
 
             if (!results.isEmpty()) {
                 UUID userUuid = results.get(0);
-                log.debug("Usando UUID {} para userId {}", userUuid, userId);
+                log.debug("UUID encontrado {} para usuario {}", userUuid, currentUsername);
                 return userUuid;
             } else {
-                // Si no hay usuarios activos, crear un UUID por defecto para evitar errores
-                log.warn("No se encontraron usuarios activos, usando UUID por defecto");
-                return UUID.randomUUID();
+                log.error("No se encontró UUID para usuario autenticado: {}", currentUsername);
+                throw new RuntimeException("Usuario no encontrado: " + currentUsername);
             }
         } catch (Exception e) {
-            log.error("Error convirtiendo userId {} a UUID: {}", userId, e.getMessage());
-            // En caso de error, retornar un UUID por defecto para evitar que falle la aplicación
-            return UUID.randomUUID();
+            log.error("Error obteniendo UUID para usuario autenticado: {}", e.getMessage());
+            throw new RuntimeException("Error obteniendo datos del usuario", e);
         }
     }
 }
