@@ -222,19 +222,47 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         Query query = entityManager.createQuery(userQuery);
         query.setParameter("userId", userUuid);
 
-        Object[] userResult = (Object[]) query.getSingleResult();
+        Object[] userResult;
+        try {
+            userResult = (Object[]) query.getSingleResult();
+        } catch (Exception e) {
+            log.error("Error obteniendo datos del usuario {}: {}", userId, e.getMessage());
+            // Retornar estadísticas por defecto si no se encuentra el usuario
+            return UserDashboardStats.ProfileStats.builder()
+                    .completionPercentage(0)
+                    .totalFields(7)
+                    .completedFields(0)
+                    .pendingFields(7)
+                    .hasProfileImage(false)
+                    .hasBasicInfo(false)
+                    .hasContactInfo(false)
+                    .hasEducation(false)
+                    .hasExperience(false)
+                    .lastUpdated(LocalDateTime.now())
+                    .build();
+        }
 
-        // Contar educación
-        String educationCountQuery = "SELECT COUNT(e) FROM EducationEntity e WHERE e.userId = :userId";
-        Query educationQuery = entityManager.createQuery(educationCountQuery);
-        educationQuery.setParameter("userId", userUuid);
-        Long educationCount = (Long) educationQuery.getSingleResult();
+        // Contar educación (con manejo de errores)
+        Long educationCount = 0L;
+        try {
+            String educationCountQuery = "SELECT COUNT(e) FROM EducationEntity e WHERE e.userId = :userId";
+            Query educationQuery = entityManager.createQuery(educationCountQuery);
+            educationQuery.setParameter("userId", userUuid);
+            educationCount = (Long) educationQuery.getSingleResult();
+        } catch (Exception e) {
+            log.warn("Error contando educación para usuario {}: {}", userId, e.getMessage());
+        }
 
         // Contar experiencia (ExperienceEntity usa relación @ManyToOne con UserEntity)
-        String experienceCountQuery = "SELECT COUNT(ex) FROM ExperienceEntity ex WHERE ex.user.id = :userId";
-        Query experienceQuery = entityManager.createQuery(experienceCountQuery);
-        experienceQuery.setParameter("userId", userUuid);
-        Long experienceCount = (Long) experienceQuery.getSingleResult();
+        Long experienceCount = 0L;
+        try {
+            String experienceCountQuery = "SELECT COUNT(ex) FROM ExperienceEntity ex WHERE ex.user.id = :userId";
+            Query experienceQuery = entityManager.createQuery(experienceCountQuery);
+            experienceQuery.setParameter("userId", userUuid);
+            experienceCount = (Long) experienceQuery.getSingleResult();
+        } catch (Exception e) {
+            log.warn("Error contando experiencia para usuario {}: {}", userId, e.getMessage());
+        }
 
         // Calcular completitud del perfil
         int totalFields = 7; // firstName, lastName, email, dni, telefono, direccion, + (educacion o experiencia)
@@ -289,14 +317,14 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
 
         Object[] result = (Object[]) query.getSingleResult();
 
-        // Estadísticas por estado
+        // Estadísticas por estado (manejo seguro de nulos)
         Map<String, Integer> byStatus = new HashMap<>();
-        byStatus.put("total", ((Long) result[0]).intValue());
-        byStatus.put("active", ((Long) result[1]).intValue());
-        byStatus.put("completed", ((Long) result[2]).intValue());
-        byStatus.put("pending", ((Long) result[3]).intValue());
-        byStatus.put("cancelled", ((Long) result[4]).intValue());
-        byStatus.put("frozen", ((Long) result[5]).intValue());
+        byStatus.put("total", result[0] != null ? ((Long) result[0]).intValue() : 0);
+        byStatus.put("active", result[1] != null ? ((Long) result[1]).intValue() : 0);
+        byStatus.put("completed", result[2] != null ? ((Long) result[2]).intValue() : 0);
+        byStatus.put("pending", result[3] != null ? ((Long) result[3]).intValue() : 0);
+        byStatus.put("cancelled", result[4] != null ? ((Long) result[4]).intValue() : 0);
+        byStatus.put("frozen", result[5] != null ? ((Long) result[5]).intValue() : 0);
 
         // Estadísticas por concurso
         String contestStatsQuery = """
@@ -319,12 +347,12 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         }
 
         return UserDashboardStats.InscriptionStats.builder()
-                .totalInscriptions(((Long) result[0]).intValue())
-                .activeInscriptions(((Long) result[1]).intValue())
-                .completedInscriptions(((Long) result[2]).intValue())
-                .pendingInscriptions(((Long) result[3]).intValue())
-                .cancelledInscriptions(((Long) result[4]).intValue())
-                .frozenInscriptions(((Long) result[5]).intValue())
+                .totalInscriptions(result[0] != null ? ((Long) result[0]).intValue() : 0)
+                .activeInscriptions(result[1] != null ? ((Long) result[1]).intValue() : 0)
+                .completedInscriptions(result[2] != null ? ((Long) result[2]).intValue() : 0)
+                .pendingInscriptions(result[3] != null ? ((Long) result[3]).intValue() : 0)
+                .cancelledInscriptions(result[4] != null ? ((Long) result[4]).intValue() : 0)
+                .frozenInscriptions(result[5] != null ? ((Long) result[5]).intValue() : 0)
                 .byStatus(byStatus)
                 .byContest(byContest)
                 .build();
@@ -353,12 +381,12 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
 
         Object[] result = (Object[]) query.getSingleResult();
 
-        // Estadísticas por estado
+        // Estadísticas por estado (manejo seguro de nulos)
         Map<String, Integer> byStatus = new HashMap<>();
-        byStatus.put("total", ((Long) result[0]).intValue());
-        byStatus.put("pending", ((Long) result[1]).intValue());
-        byStatus.put("approved", ((Long) result[2]).intValue());
-        byStatus.put("rejected", ((Long) result[3]).intValue());
+        byStatus.put("total", result[0] != null ? ((Long) result[0]).intValue() : 0);
+        byStatus.put("pending", result[1] != null ? ((Long) result[1]).intValue() : 0);
+        byStatus.put("approved", result[2] != null ? ((Long) result[2]).intValue() : 0);
+        byStatus.put("rejected", result[3] != null ? ((Long) result[3]).intValue() : 0);
 
         // Estadísticas por tipo
         String typeStatsQuery = """
@@ -381,10 +409,10 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         }
 
         return UserDashboardStats.DocumentStats.builder()
-                .totalDocuments(((Long) result[0]).intValue())
-                .pendingDocuments(((Long) result[1]).intValue())
-                .approvedDocuments(((Long) result[2]).intValue())
-                .rejectedDocuments(((Long) result[3]).intValue())
+                .totalDocuments(result[0] != null ? ((Long) result[0]).intValue() : 0)
+                .pendingDocuments(result[1] != null ? ((Long) result[1]).intValue() : 0)
+                .approvedDocuments(result[2] != null ? ((Long) result[2]).intValue() : 0)
+                .rejectedDocuments(result[3] != null ? ((Long) result[3]).intValue() : 0)
                 .expiredDocuments(0) // TODO: Implementar lógica de documentos vencidos
                 .byStatus(byStatus)
                 .byType(byType)
