@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/concursos/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/documentos/queue/public/**").permitAll()
+                        .requestMatchers("/api/files/profile-images/**").permitAll() // Permitir acceso público a imágenes de perfil
                         .requestMatchers("/api/v1/roles/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()
