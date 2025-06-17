@@ -106,7 +106,7 @@ import { ImagePreviewDialogComponent, ImagePreviewData, ImagePreviewResult } fro
         </div>
         <div class="info-item">
           <mat-icon class="info-icon">aspect_ratio</mat-icon>
-          <span>Dimensiones máximas: 1024x1024</span>
+          <span>Se redimensiona automáticamente a 256x256</span>
         </div>
       </div>
     </div>
@@ -242,8 +242,8 @@ export class ProfileImageManagerComponent {
       showCrop: true,
       showCompression: this.enableCompression,
       compressionOptions: {
-        maxWidth: 1024,
-        maxHeight: 1024,
+        maxWidth: 256,
+        maxHeight: 256,
         quality: 0.8
       }
     };

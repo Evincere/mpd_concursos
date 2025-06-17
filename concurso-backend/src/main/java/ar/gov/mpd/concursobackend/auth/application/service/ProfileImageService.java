@@ -107,17 +107,20 @@ public class ProfileImageService {
      */
     public void deleteProfileImage(String username) throws IOException {
         log.info("Eliminando imagen de perfil para usuario: {}", username);
-        
+
         User user = userService.getByUsername(new UserUsername(username))
             .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + username));
-        
+
         if (user.getProfileImageUrl() != null && user.getProfileImageUrl().hasImage()) {
+            log.debug("Usuario {} tiene imagen de perfil: {}", username, user.getProfileImageUrl().getValue());
+
+            // Eliminar archivo físico
             deleteExistingImage(user.getProfileImageUrl());
-            
+
             // Actualizar usuario sin imagen
             user.setProfileImageUrl(ProfileImageUrl.empty());
             userService.updateUser(user);
-            
+
             log.info("Imagen de perfil eliminada exitosamente para usuario: {}", username);
         } else {
             log.warn("Usuario {} no tiene imagen de perfil para eliminar", username);
@@ -202,21 +205,51 @@ public class ProfileImageService {
     private void deleteExistingImage(ProfileImageUrl profileImageUrl) {
         try {
             String url = profileImageUrl.getValue();
-            if (url.startsWith("/api/files/profile-images/")) {
-                String relativePath = url.substring("/api/files/".length());
+            log.debug("Intentando eliminar imagen con URL: {}", url);
+
+            String relativePath = extractRelativePathFromUrl(url);
+
+            if (relativePath != null) {
                 Path filePath = Paths.get(uploadDir, relativePath);
+                log.debug("Ruta del archivo a eliminar: {}", filePath);
 
                 if (Files.exists(filePath)) {
                     Files.delete(filePath);
-                    log.info("Imagen anterior eliminada: {}", filePath);
+                    log.info("Imagen anterior eliminada exitosamente: {}", filePath);
                 } else {
                     log.warn("Archivo de imagen no encontrado para eliminar: {}", filePath);
                 }
+            } else {
+                log.warn("No se pudo extraer la ruta relativa de la URL: {}", url);
             }
         } catch (IOException e) {
             log.error("Error al eliminar imagen anterior: {}", e.getMessage());
             // No lanzar excepción para no interrumpir el proceso principal
         }
+    }
+
+    /**
+     * Extrae la ruta relativa del archivo desde una URL
+     *
+     * @param url URL completa o relativa de la imagen
+     * @return Ruta relativa del archivo o null si no se puede extraer
+     */
+    private String extractRelativePathFromUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return null;
+        }
+
+        // Manejar URLs absolutas (http://localhost:8080/api/files/profile-images/...)
+        if (url.contains("/api/files/profile-images/")) {
+            int startIndex = url.indexOf("/api/files/profile-images/");
+            return url.substring(startIndex + "/api/files/".length());
+        }
+        // Manejar URLs relativas (/api/files/profile-images/...)
+        else if (url.startsWith("/api/files/profile-images/")) {
+            return url.substring("/api/files/".length());
+        }
+
+        return null;
     }
 
     /**

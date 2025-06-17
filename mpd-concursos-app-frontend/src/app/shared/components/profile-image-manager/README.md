@@ -149,10 +149,11 @@ El componente se adapta automáticamente a diferentes tamaños de pantalla:
 
 ### Backend
 - Validación real de imagen con ImageIO
-- Dimensiones máximas: 1024x1024px
+- Redimensionamiento automático a 256x256px (mantiene proporción)
 - Rate limiting: 5 uploads por minuto
 - Path traversal protection
 - Sanitización de nombres de archivo
+- Procesamiento de alta calidad con Graphics2D
 
 ## 🎯 Migración desde Componentes Anteriores
 
