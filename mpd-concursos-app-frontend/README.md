@@ -8,6 +8,10 @@ Aplicación frontend para la gestión de concursos del Ministerio Público de la
 - **Gestión de Usuarios**: Creación, edición, cambio de estado y asignación de roles
 - **Arquitectura Hexagonal**: Separación clara de capas (dominio, aplicación, infraestructura)
 - **Componentes Personalizados**: Interfaz de usuario consistente y personalizada
+- **🎨 Sistema Glassmorphism**: Diseño moderno con efectos de cristal y transparencias
+- **📱 Responsive Design**: Optimizado para móviles, tablets y desktop con enfoque mobile-first
+- **♿ Accesibilidad WCAG AA**: Cumple estándares de accesibilidad con soporte para preferencias del usuario
+- **⚡ Optimización de Rendimiento**: Animaciones GPU-accelerated y lazy loading automático
 
 ## Estados de Usuario
 
@@ -108,6 +112,66 @@ Consulta `CODING_STANDARDS.md` para:
 - Estándares TypeScript y Angular
 - Patrones de diseño recomendados
 - Prevención de errores comunes
+
+## 📱 Sistema Responsive
+
+La aplicación implementa un sistema responsive completo con:
+
+### 🎯 Características Principales
+
+- **Mobile-First**: Diseño optimizado desde móviles hacia desktop
+- **Glassmorphism Adaptativo**: Efectos que se ajustan según el dispositivo
+- **Tipografía Fluida**: Escalado suave con `clamp()` CSS
+- **Touch Targets**: Mínimo 44px para accesibilidad
+- **Lazy Loading**: Carga perezosa de imágenes automática
+- **Preferencias de Usuario**: Respeta `prefers-reduced-motion` y otras preferencias
+
+### 📚 Documentación
+
+- **[📖 Guía Completa](./docs/RESPONSIVE_DESIGN_GUIDE.md)**: Conceptos y mejores prácticas
+- **[🔧 Referencia Técnica](./docs/RESPONSIVE_TECHNICAL_REFERENCE.md)**: API y ejemplos de código
+- **[🚀 Inicio Rápido](./docs/README_RESPONSIVE.md)**: Guía para desarrolladores
+
+### 🎨 Uso Básico
+
+```scss
+// Componente responsive con glassmorphism
+.my-component {
+  @include glassmorphism-card;
+  @include glassmorphism-accessibility;
+  @include hover-lift();
+
+  // Mobile first
+  padding: var(--spacing-md);
+
+  @include tablet {
+    padding: var(--spacing-lg);
+  }
+
+  @include desktop {
+    padding: var(--spacing-xl);
+  }
+}
+```
+
+```html
+<!-- Imagen con lazy loading -->
+<img
+  appLazyLoadImage
+  [src]="imageUrl"
+  [placeholder]="'assets/images/placeholder.png'"
+  alt="Descripción"
+  class="responsive-image">
+```
+
+### 📏 Breakpoints
+
+| Dispositivo | Ancho | Mixin |
+|-------------|-------|-------|
+| Mobile | 320px+ | Base (sin mixin) |
+| Tablet | 768px+ | `@include tablet` |
+| Desktop | 1024px+ | `@include desktop` |
+| Large | 1440px+ | `@include large` |
 
 ## Arquitectura
 
