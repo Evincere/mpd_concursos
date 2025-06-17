@@ -40,6 +40,7 @@ public class User {
     private UserResidentialAddress residentialAddress;
     private String telefono;
     private String direccion;
+    private String profileImageUrl;
     private List<Experiencia> experiencias = new ArrayList<>();
     private List<Educacion> educacion = new ArrayList<>();
     private List<Habilidad> habilidades = new ArrayList<>();

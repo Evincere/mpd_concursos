@@ -52,6 +52,7 @@ CREATE TABLE user_entity (
     residential_address VARCHAR(255),
     telefono VARCHAR(255),
     direccion VARCHAR(255),
+    profile_image_url VARCHAR(500),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status ENUM('ACTIVE', 'INACTIVE', 'BLOCKED') NOT NULL DEFAULT 'ACTIVE',
     version BIGINT NOT NULL DEFAULT 0
