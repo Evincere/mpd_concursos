@@ -577,4 +577,31 @@ $border-radius-xl: 12px;
       font-size: 0.6875rem;
     }
   }
+
+  /* Prevenir overflow horizontal en móviles muy pequeños */
+  .table-scroll-container {
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      height: 3px;
+    }
+  }
+
+  .custom-table {
+    min-width: 500px; /* Ancho mínimo para evitar colapso excesivo */
+
+    th, td {
+      padding: 0.25rem 0.125rem;
+      font-size: 0.625rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Ocultar columnas menos críticas en móviles muy pequeños */
+    .documents-cell,
+    .date-cell {
+      display: none;
+    }
+  }
 }

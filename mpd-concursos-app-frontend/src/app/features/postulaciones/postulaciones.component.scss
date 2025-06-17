@@ -35,13 +35,28 @@
 
 /* === LISTA DE POSTULACIONES === */
 .postulaciones-list {
-  @extend .glass-flex;
-  @extend .flex-col;
+  @extend .glass-grid;
   @include glassmorphism-scrollbar;
 
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: var(--spacing-lg);
   width: 100%;
   min-height: 300px;
+
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: var(--spacing-xl);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  @media (max-width: 480px) {
+    gap: var(--spacing-sm);
+  }
 
   &.blurred {
     filter: blur(2px);

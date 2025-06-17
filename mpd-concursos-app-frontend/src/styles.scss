@@ -2608,12 +2608,26 @@ app-custom-dialog app-custom-select[disabled] select {
   }
 
   &.large {
-    min-width: 600px;
+    min-width: min(600px, 95vw); // Responsive min-width
     max-width: 95vw;
-    width: clamp(700px, 80vw, 1200px);
+    width: clamp(320px, 80vw, 1200px); // Mobile-first approach
     height: auto;
     max-height: 90vh;
-    min-height: 500px; // Altura mínima optimizada
+    min-height: min(500px, 80vh); // Responsive min-height
+
+    @media (max-width: 768px) {
+      min-width: 95vw;
+      width: 95vw;
+      min-height: min(400px, 70vh);
+    }
+
+    @media (max-width: 480px) {
+      min-width: 100vw;
+      width: 100vw;
+      max-width: 100vw;
+      min-height: min(350px, 60vh);
+      border-radius: 0; // Sin bordes redondeados en móviles muy pequeños
+    }
   }
 
   &.fullscreen {
@@ -2623,6 +2637,14 @@ app-custom-dialog app-custom-select[disabled] select {
     max-height: none;
     min-width: 95vw;
     min-height: 95vh;
+
+    @media (max-width: 768px) {
+      width: 100vw;
+      height: 100vh;
+      min-width: 100vw;
+      min-height: 100vh;
+      border-radius: 0;
+    }
   }
 }
 
