@@ -43,17 +43,25 @@
   overflow: hidden;
 }
 
-/* === MIXIN GLASSMORPHISM HOVER === */
-@mixin glassmorphism-hover($transform: true, $glow: false) {
+/* === OPTIMIZED GLASSMORPHISM HOVER === */
+@mixin glassmorphism-hover($transform: true, $glow: false, $scale: false) {
+  /* Enable GPU acceleration */
+  will-change: transform, opacity, box-shadow;
+  transition: var(--transition-normal), var(--transition-shadow);
+
   &:hover {
     background: var(--glass-bg-hover);
     border-color: var(--border-hover);
     box-shadow: var(--shadow-lg);
-    
-    @if $transform {
+
+    @if $transform and $scale {
+      transform: var(--transform-hover) var(--transform-scale-hover);
+    } @else if $transform {
       transform: var(--transform-hover);
+    } @else if $scale {
+      transform: var(--transform-scale-hover);
     }
-    
+
     @if $glow {
       box-shadow: var(--shadow-lg), var(--shadow-glow);
     }
@@ -63,18 +71,104 @@
     background: var(--glass-bg-active);
     transform: var(--transform-active);
     box-shadow: var(--shadow-md);
+    transition-duration: var(--duration-fast);
+  }
+
+  /* Reset will-change after animation */
+  &:not(:hover):not(:active) {
+    will-change: auto;
   }
 }
 
-/* === MIXIN GLASSMORPHISM FOCUS === */
-@mixin glassmorphism-focus {
+/* === OPTIMIZED GLASSMORPHISM FOCUS === */
+@mixin glassmorphism-focus($animated: true) {
+  @if $animated {
+    transition: var(--transition-border), var(--transition-shadow);
+  }
+
   &:focus,
   &:focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
     border-color: var(--border-focus);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+
+    @if $animated {
+      transition-timing-function: var(--ease-out-quart);
+    }
   }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* === OPTIMIZED ANIMATION MIXINS === */
+
+/* GPU-accelerated fade in animation */
+@mixin fade-in($duration: var(--duration-normal), $timing: var(--ease-out-quart)) {
+  opacity: 0;
+  animation: fadeIn $duration $timing forwards;
+  will-change: opacity;
+}
+
+/* GPU-accelerated slide in animation */
+@mixin slide-in($direction: 'up', $distance: 20px, $duration: var(--duration-normal)) {
+  will-change: transform, opacity;
+
+  @if $direction == 'up' {
+    transform: translate3d(0, $distance, 0);
+  } @else if $direction == 'down' {
+    transform: translate3d(0, -$distance, 0);
+  } @else if $direction == 'left' {
+    transform: translate3d($distance, 0, 0);
+  } @else if $direction == 'right' {
+    transform: translate3d(-$distance, 0, 0);
+  }
+
+  opacity: 0;
+  animation: slideIn#{capitalize($direction)} $duration var(--ease-out-expo) forwards;
+}
+
+/* Optimized hover lift effect */
+@mixin hover-lift($lift: 2px, $scale: 1.02) {
+  will-change: transform;
+  transition: transform var(--duration-fast) var(--ease-out-quart);
+
+  &:hover {
+    transform: translate3d(0, -$lift, 0) scale3d($scale, $scale, 1);
+  }
+
+  &:active {
+    transform: translate3d(0, 0, 0) scale3d(0.98, 0.98, 1);
+    transition-duration: var(--duration-instant);
+  }
+
+  &:not(:hover):not(:active) {
+    will-change: auto;
+  }
+}
+
+/* Optimized pulse animation */
+@mixin pulse($scale: 1.05, $duration: 2s) {
+  animation: pulse $duration var(--ease-in-out-quart) infinite;
+  will-change: transform;
+
+  @keyframes pulse {
+    0%, 100% { transform: scale3d(1, 1, 1); }
+    50% { transform: scale3d($scale, $scale, 1); }
+  }
+}
+
+/* Performance-optimized shimmer effect */
+@mixin shimmer($duration: 1.5s) {
+  background: linear-gradient(90deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer $duration linear infinite;
+  will-change: background-position;
 }
 
 /* === MIXIN GLASSMORPHISM CARD === */

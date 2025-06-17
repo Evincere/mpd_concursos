@@ -47,9 +47,14 @@
       inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
 
-  /* Hover effects */
+  /* Optimized hover effects with GPU acceleration */
+  will-change: transform;
+  transition: transform var(--duration-normal) var(--ease-out-quart),
+              box-shadow var(--duration-normal) var(--ease-out-quart),
+              border-color var(--duration-normal) var(--ease-out-quart);
+
   &:hover {
-    transform: translateY(-3px) scale(1.02);
+    transform: translate3d(0, -3px, 0) scale3d(1.02, 1.02, 1);
     border-color: rgba(255, 255, 255, 0.25);
 
     /* Enhanced shadow on hover */
@@ -64,7 +69,7 @@
     }
 
     .action-icon {
-      transform: translateX(4px);
+      transform: translate3d(4px, 0, 0);
     }
 
     .action-text {
@@ -72,9 +77,18 @@
     }
 
     .icon-container {
-      transform: scale(1.1);
+      transform: scale3d(1.1, 1.1, 1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
+  }
+
+  &:active {
+    transform: translate3d(0, -1px, 0) scale3d(0.98, 0.98, 1);
+    transition-duration: var(--duration-fast);
+  }
+
+  &:not(:hover):not(:active) {
+    will-change: auto;
   }
 }
 
