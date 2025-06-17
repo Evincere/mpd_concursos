@@ -197,8 +197,10 @@ export class CustomTabsComponent implements AfterContentInit {
       this.selectedIndex = this.activeTab;
     }
 
-    // Mostrar la pestaña seleccionada inicialmente
-    this.selectTab(this.selectedIndex);
+    // Mostrar la pestaña seleccionada inicialmente en el siguiente ciclo
+    Promise.resolve().then(() => {
+      this.selectTab(this.selectedIndex);
+    });
   }
 
   selectTab(index: number): void {
@@ -209,9 +211,11 @@ export class CustomTabsComponent implements AfterContentInit {
     this.selectedIndexChange.emit(index);
     this.tabChange.emit(index);
 
-    // Actualizar la visibilidad de las pestañas
-    this.tabComponents.forEach((tab, i) => {
-      tab.active = i === index;
+    // Actualizar la visibilidad de las pestañas en el siguiente ciclo
+    Promise.resolve().then(() => {
+      this.tabComponents.forEach((tab, i) => {
+        tab.active = i === index;
+      });
     });
   }
 }
