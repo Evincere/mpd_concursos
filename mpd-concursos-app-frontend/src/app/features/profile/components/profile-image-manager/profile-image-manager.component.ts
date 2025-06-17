@@ -1,8 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Directives
 import { LazyLoadImageDirective } from '@shared/directives/lazy-load-image.directive';
+
+// Services
+import { AuthService } from '@core/services/auth/auth.service';
+import { UserProfileService } from '@core/services/user/user-profile.service';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -165,10 +169,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   `]
 })
 export class ProfileImageManagerComponent implements OnInit {
+  private authService = inject(AuthService);
+  private userProfileService = inject(UserProfileService);
+
   currentImage: string | null = null;
   isLoading = false;
-
-  
 
   ngOnInit() {
     this.authService.getUserInfo().subscribe(userInfo => {
@@ -195,9 +200,9 @@ export class ProfileImageManagerComponent implements OnInit {
       this.isLoading = true;
       this.userProfileService.uploadProfileImage(file).subscribe({
         next: (response) => {
-          if (response && response.imageUrl) {
-            this.currentImage = response.imageUrl;
-            this.authService.updateProfileImage(response.imageUrl);
+          if (response && (response as any).imageUrl) {
+            this.currentImage = (response as any).imageUrl;
+            this.authService.updateProfileImage((response as any).imageUrl);
           }
           this.isLoading = false;
         },

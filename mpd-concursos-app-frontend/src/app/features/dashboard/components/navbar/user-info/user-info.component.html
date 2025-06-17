@@ -3,7 +3,7 @@
         <ng-container *ngIf="hasProfileImage(); else defaultAvatar">
             <img
                 appLazyLoadImage
-                [src]="userInfo().profileImage"
+                [src]="userInfo().profileImage || 'assets/images/default-avatar.png'"
                 [placeholder]="'assets/images/avatar-placeholder.png'"
                 [alt]="userInfo().username"
                 class="profile-image"
