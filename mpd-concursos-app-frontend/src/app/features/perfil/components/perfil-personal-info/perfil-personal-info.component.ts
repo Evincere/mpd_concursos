@@ -288,14 +288,16 @@ export class PerfilPersonalInfoComponent implements OnInit {
 
       // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
-        alert('Por favor, seleccione un archivo de imagen válido.');
+        this.showError('Por favor, seleccione un archivo de imagen válido.');
+        this.resetFileInput();
         return;
       }
 
       // Validar tamaño del archivo (máximo 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
-        alert('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
+        this.showError('El archivo es demasiado grande. El tamaño máximo permitido es 5MB.');
+        this.resetFileInput();
         return;
       }
 
@@ -308,13 +310,40 @@ export class PerfilPersonalInfoComponent implements OnInit {
             console.log('Imagen de perfil actualizada exitosamente');
           }
           this.isUploadingImage = false;
+          this.resetFileInput();
         },
         error: (error) => {
           console.error('Error al cargar la imagen:', error);
-          alert('Error al cargar la imagen. Por favor, intente nuevamente.');
+
+          // Extraer mensaje de error específico del backend
+          let errorMessage = 'Error al cargar la imagen. Por favor, intente nuevamente.';
+          if (error?.error?.message) {
+            errorMessage = error.error.message;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          }
+
+          this.showError(errorMessage);
           this.isUploadingImage = false;
+          this.resetFileInput();
         }
       });
+    }
+  }
+
+  private showError(message: string): void {
+    // Usar el sistema de notificaciones en lugar de alert()
+    // Por ahora usamos console.error, pero se puede integrar con un servicio de notificaciones
+    console.error('Error de validación:', message);
+
+    // Mostrar mensaje de error en la UI (temporal)
+    // TODO: Integrar con sistema de notificaciones/toast
+    alert(message);
+  }
+
+  private resetFileInput(): void {
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
     }
   }
 }
