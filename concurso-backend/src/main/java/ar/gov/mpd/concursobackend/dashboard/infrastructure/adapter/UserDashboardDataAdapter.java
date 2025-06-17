@@ -230,8 +230,8 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         educationQuery.setParameter("userId", userUuid);
         Long educationCount = (Long) educationQuery.getSingleResult();
 
-        // Contar experiencia
-        String experienceCountQuery = "SELECT COUNT(ex) FROM ExperienceEntity ex WHERE ex.userId = :userId";
+        // Contar experiencia (ExperienceEntity usa relación @ManyToOne con UserEntity)
+        String experienceCountQuery = "SELECT COUNT(ex) FROM ExperienceEntity ex WHERE ex.user.id = :userId";
         Query experienceQuery = entityManager.createQuery(experienceCountQuery);
         experienceQuery.setParameter("userId", userUuid);
         Long experienceCount = (Long) experienceQuery.getSingleResult();
@@ -364,7 +364,7 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         String typeStatsQuery = """
             SELECT dt.name, COUNT(d)
             FROM DocumentEntity d
-            JOIN DocumentTypeEntity dt ON dt.id = d.documentType.id
+            JOIN d.documentType dt
             WHERE d.userId = :userId
             GROUP BY dt.id, dt.name
             """;
