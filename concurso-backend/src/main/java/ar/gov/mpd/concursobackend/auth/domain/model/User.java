@@ -20,6 +20,7 @@ import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserPassword;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserProvince;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserResidentialAddress;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.ProfileImageUrl;
 import lombok.Data;
 
 @Data
@@ -40,7 +41,7 @@ public class User {
     private UserResidentialAddress residentialAddress;
     private String telefono;
     private String direccion;
-    private String profileImageUrl;
+    private ProfileImageUrl profileImageUrl;
     private List<Experiencia> experiencias = new ArrayList<>();
     private List<Educacion> educacion = new ArrayList<>();
     private List<Habilidad> habilidades = new ArrayList<>();

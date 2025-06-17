@@ -23,6 +23,7 @@ public class UserProfileResponse {
     private String lastName;
     private String telefono;
     private String direccion;
+    private String profileImageUrl;
     private List<ExperienciaDto> experiencias;
     private List<EducacionDto> educacion;
     private List<HabilidadDto> habilidades;
