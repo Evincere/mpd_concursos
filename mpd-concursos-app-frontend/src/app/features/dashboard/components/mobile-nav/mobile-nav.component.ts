@@ -45,21 +45,32 @@ import { AuthService } from '@core/services/auth/auth.service';
       bottom: 0;
       left: 0;
       right: 0;
-      height: var(--user-mobile-nav-height);
-      /* Glassmorphism premium dark */
-      background: var(--user-glass-gradient-primary);
+      height: var(--user-mobile-nav-height, 70px);
+      /* Glassmorphism optimizado para móvil */
+      background: var(--user-glass-gradient-primary, rgba(55, 65, 81, 0.95));
       background-image: var(--user-glass-gradient-overlay);
-      border-top: 1px solid var(--user-border-glass);
-      backdrop-filter: var(--user-backdrop-blur);
-      -webkit-backdrop-filter: var(--user-backdrop-blur);
-      box-shadow: var(--user-shadow-md);
-      z-index: var(--user-z-mobile-nav);
+      border-top: 1px solid var(--user-border-glass, rgba(255, 255, 255, 0.2));
+      backdrop-filter: var(--user-backdrop-blur, blur(8px));
+      -webkit-backdrop-filter: var(--user-backdrop-blur, blur(8px));
+      box-shadow: var(--user-shadow-md, 0 -4px 16px rgba(0, 0, 0, 0.3));
+      z-index: var(--user-z-mobile-nav, 1000);
       justify-content: space-around;
       align-items: center;
-      padding: 0 var(--user-spacing-sm);
+      padding: 0 var(--user-spacing-sm, 8px);
+      /* Optimizaciones para rendimiento móvil */
+      will-change: transform;
+      contain: layout style paint;
+      /* Soporte para safe area en dispositivos con notch */
+      padding-bottom: env(safe-area-inset-bottom);
 
       @media (max-width: 768px) {
         display: flex;
+      }
+
+      /* Reducir blur en dispositivos de baja potencia */
+      @media (max-width: 480px) {
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
       }
 
       a {
@@ -67,15 +78,21 @@ import { AuthService } from '@core/services/auth/auth.service';
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: var(--user-text-secondary);
+        color: var(--user-text-secondary, rgba(255, 255, 255, 0.7));
         text-decoration: none;
         flex: 1;
         height: 100%;
-        transition: var(--user-transition-normal);
+        min-height: 44px; /* Ensure adequate touch target */
+        transition: var(--user-transition-normal, all 0.3s ease);
         position: relative;
-        padding: var(--user-spacing-sm) 0;
+        padding: var(--user-spacing-sm, 8px) 0;
         cursor: pointer;
-        border-radius: var(--user-border-radius-md);
+        border-radius: var(--user-border-radius-md, 8px);
+        /* Optimizaciones para touch */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        /* Mejorar área de toque */
+        margin: 0 2px;
 
         &::after {
           content: '';
@@ -91,29 +108,43 @@ import { AuthService } from '@core/services/auth/auth.service';
         }
 
         &.active {
-          color: var(--user-text-primary);
-          background: var(--user-glass-light);
+          color: var(--user-text-primary, #f9fafb);
+          background: var(--user-glass-light, rgba(255, 255, 255, 0.1));
+          transform: translateY(-1px);
 
           &::after {
             width: 40%;
           }
+
+          i {
+            transform: scale(1.1);
+            color: var(--user-text-accent, #3b82f6);
+          }
         }
 
-        &:hover {
-          color: var(--user-text-primary);
-          background: var(--user-glass-light);
+        &:hover:not(.active) {
+          color: var(--user-text-primary, #f9fafb);
+          background: var(--user-glass-light, rgba(255, 255, 255, 0.05));
+          transform: translateY(-1px);
+        }
+
+        /* Estados de focus para accesibilidad */
+        &:focus {
+          outline: 2px solid var(--user-text-accent, #3b82f6);
+          outline-offset: 2px;
         }
 
         i {
-          font-size: 20px;
+          font-size: clamp(18px, 4vw, 22px); /* Responsive icon size */
           margin-bottom: 4px;
-          transition: var(--user-transition-normal);
+          transition: var(--user-transition-normal, all 0.3s ease);
         }
 
         span {
-          font-size: 10px;
+          font-size: clamp(9px, 2.5vw, 11px); /* Responsive text size */
           font-weight: 500;
           white-space: nowrap;
+          line-height: 1.2;
         }
       }
     }

@@ -361,10 +361,66 @@
 @media (max-width: 768px) {
     .sidebar {
         padding: var(--spacing-lg) var(--spacing-md);
+        /* Optimizaciones para móvil */
+        backdrop-filter: var(--backdrop-blur-light); /* Menos blur para mejor rendimiento */
+        -webkit-backdrop-filter: var(--backdrop-blur-light);
+        /* Mejorar scroll en móvil */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
 
         .nav-menu {
             .nav-item a {
-                padding: var(--spacing-sm) var(--spacing-md);
+                padding: var(--spacing-md) var(--spacing-md); /* Aumentar padding para mejor touch */
+                min-height: 48px; /* Asegurar touch target adecuado */
+                font-size: clamp(0.875rem, 3vw, 1rem); /* Tipografía fluida */
+
+                /* Optimizar para touch */
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: transparent;
+
+                i {
+                    font-size: clamp(1.1rem, 4vw, 1.3rem); /* Iconos más grandes en móvil */
+                }
+
+                span {
+                    font-size: clamp(0.875rem, 3vw, 1rem);
+                }
+            }
+        }
+
+        /* Mejorar el tab de colapso en móvil */
+        .sidebar-tab {
+            width: 36px;
+            height: 72px;
+            right: -20px;
+
+            /* Hacer más fácil de tocar */
+            &::before {
+                content: '';
+                position: absolute;
+                top: -10px;
+                left: -10px;
+                right: -10px;
+                bottom: -10px;
+                background: transparent;
+            }
+        }
+    }
+}
+
+/* Optimizaciones para móviles pequeños */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 280px; /* Ancho fijo más apropiado para móviles pequeños */
+
+        .nav-menu {
+            .nav-item a {
+                padding: var(--spacing-lg) var(--spacing-md);
+                min-height: 52px; /* Touch target aún más grande */
+
+                i {
+                    margin-right: var(--spacing-lg); /* Más espacio entre icono y texto */
+                }
             }
         }
     }
