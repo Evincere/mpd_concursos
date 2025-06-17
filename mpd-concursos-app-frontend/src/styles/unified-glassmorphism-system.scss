@@ -859,3 +859,181 @@ input[type="reset"],
   transition: none !important;
   will-change: auto !important;
 }
+
+/* === ACCESSIBILITY SYSTEM === */
+
+/* Global accessibility classes applied by AccessibilityPreferencesService */
+.reduced-motion {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable specific animations that might still run */
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin,
+  .animate-fade-in,
+  .animate-slide-in-up,
+  .animate-slide-in-down,
+  .animate-slide-in-left,
+  .animate-slide-in-right {
+    animation: none !important;
+  }
+
+  /* Disable hover transforms */
+  .hover-lift,
+  .hover-scale,
+  [class*="hover-"] {
+    &:hover {
+      transform: none !important;
+    }
+  }
+
+  /* Disable glassmorphism hover effects */
+  .glass-card,
+  .glass-btn,
+  .glass-input,
+  [class*="glass-"] {
+    &:hover {
+      transform: none !important;
+    }
+  }
+}
+
+.high-contrast {
+  /* Increase border visibility */
+  .glass-card,
+  .glass-btn,
+  .glass-input,
+  [class*="glass-"] {
+    border-width: 2px !important;
+    border-color: var(--border-strong) !important;
+  }
+
+  /* Enhance focus indicators */
+  *:focus,
+  *:focus-visible {
+    outline-width: 3px !important;
+    outline-offset: 3px !important;
+  }
+
+  /* Improve text contrast */
+  .text-secondary,
+  .text-muted {
+    color: var(--text-primary) !important;
+  }
+}
+
+.reduced-transparency {
+  /* Remove backdrop filters */
+  .glass-card,
+  .glass-modal,
+  .glass-navigation,
+  [class*="glass-"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--glass-bg-solid) !important;
+  }
+
+  /* Reduce opacity effects */
+  .opacity-50 { opacity: 0.8 !important; }
+  .opacity-60 { opacity: 0.9 !important; }
+  .opacity-70 { opacity: 1 !important; }
+  .opacity-80 { opacity: 1 !important; }
+  .opacity-90 { opacity: 1 !important; }
+}
+
+.forced-colors {
+  /* Let the system handle colors */
+  .glass-card,
+  .glass-btn,
+  .glass-input,
+  [class*="glass-"] {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border-color: ButtonBorder !important;
+  }
+
+  /* System colors for interactive elements */
+  button,
+  .glass-btn,
+  [role="button"] {
+    background: ButtonFace !important;
+    color: ButtonText !important;
+    border-color: ButtonBorder !important;
+
+    &:hover {
+      background: Highlight !important;
+      color: HighlightText !important;
+    }
+
+    &:focus {
+      outline-color: Highlight !important;
+    }
+  }
+}
+
+/* === ACCESSIBILITY MEDIA QUERIES === */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animation-duration-multiplier: 0;
+    --transition-duration-multiplier: 0;
+  }
+
+  /* Apply reduced motion globally */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Respect user's contrast preferences */
+@media (prefers-contrast: high) {
+  :root {
+    --border-width-multiplier: 2;
+  }
+
+  .glass-card,
+  .glass-btn,
+  .glass-input,
+  [class*="glass-"] {
+    border-width: 2px !important;
+    border-color: var(--border-strong) !important;
+  }
+}
+
+/* Respect user's transparency preferences */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --backdrop-blur-multiplier: 0;
+    --opacity-multiplier: 1;
+  }
+
+  .glass-card,
+  .glass-modal,
+  .glass-navigation,
+  [class*="glass-"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: var(--glass-bg-solid) !important;
+  }
+}
+
+/* Respect forced colors mode */
+@media (forced-colors: active) {
+  .glass-card,
+  .glass-btn,
+  .glass-input,
+  [class*="glass-"] {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border-color: ButtonBorder !important;
+  }
+}

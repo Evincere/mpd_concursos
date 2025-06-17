@@ -627,27 +627,65 @@
   }
 }
 
-/* === MIXIN ACCESSIBILITY === */
-@mixin glassmorphism-accessibility {
-  /* High Contrast Support */
-  @media (prefers-contrast: high) {
-    border-width: 2px;
-    border-color: var(--border-strong);
-  }
+/* === ENHANCED ACCESSIBILITY MIXIN === */
+@mixin glassmorphism-accessibility($include-motion: true, $include-transparency: true, $include-contrast: true) {
 
-  /* Reduced Motion Support */
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-    transform: none !important;
-    
-    &:hover {
-      transform: none !important;
+  @if $include-contrast {
+    /* High Contrast Support */
+    @media (prefers-contrast: high) {
+      border-width: 2px;
+      border-color: var(--border-strong);
+    }
+
+    /* Forced Colors Support */
+    @media (forced-colors: active) {
+      background: Canvas !important;
+      color: CanvasText !important;
+      border-color: ButtonBorder !important;
     }
   }
-  
-  /* Focus visible para navegación por teclado */
+
+  @if $include-motion {
+    /* Reduced Motion Support */
+    @media (prefers-reduced-motion: reduce) {
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
+
+      &:hover,
+      &:focus,
+      &:active {
+        transform: none !important;
+      }
+    }
+
+    /* Use accessible durations */
+    transition: var(--transition-normal);
+  }
+
+  @if $include-transparency {
+    /* Reduced Transparency Support */
+    @media (prefers-reduced-transparency: reduce) {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background: var(--glass-bg-solid) !important;
+    }
+  }
+
+  /* Enhanced Focus Indicators */
   &:focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
+
+    @media (prefers-contrast: high) {
+      outline-width: 3px;
+      outline-offset: 3px;
+    }
+  }
+
+  /* Ensure focus is visible even when focus-visible is not supported */
+  &:focus:not(:focus-visible) {
+    outline: 1px solid var(--color-focus);
+    outline-offset: 1px;
   }
 }

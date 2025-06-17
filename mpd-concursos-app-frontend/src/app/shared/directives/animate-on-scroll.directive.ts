@@ -1,6 +1,7 @@
-import { Directive, Input, ElementRef, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Directive, Input, ElementRef, OnInit, OnDestroy, NgZone, inject } from '@angular/core';
 import { AnimationService } from '../services/animation.service';
 import { AnimationPlayer } from '@angular/animations';
+import { AccessibilityPreferencesService } from '@core/services/accessibility/accessibility-preferences.service';
 
 /**
  * Directiva para animar elementos cuando entran en el viewport.
@@ -31,6 +32,8 @@ export class AnimateOnScrollDirective implements OnInit, OnDestroy {
   private player: AnimationPlayer | null = null;
   private hasAnimated = false;
   
+  private accessibilityPreferences = inject(AccessibilityPreferencesService);
+
   constructor(
     private el: ElementRef,
     private animationService: AnimationService,
@@ -38,8 +41,8 @@ export class AnimateOnScrollDirective implements OnInit, OnDestroy {
   ) {}
   
   ngOnInit(): void {
-    // Verificar si el usuario prefiere reducir el movimiento
-    if (this.prefersReducedMotion()) {
+    // Verificar si el usuario prefiere reducir el movimiento usando el servicio
+    if (this.accessibilityPreferences.shouldDisableAnimations()) {
       // Si el usuario prefiere reducir el movimiento, mostrar el elemento sin animación
       this.el.nativeElement.style.opacity = '1';
       return;
@@ -168,8 +171,9 @@ export class AnimateOnScrollDirective implements OnInit, OnDestroy {
   /**
    * Verifica si el usuario prefiere reducir el movimiento
    * @returns true si el usuario prefiere reducir el movimiento
+   * @deprecated Use accessibilityPreferences.shouldDisableAnimations() instead
    */
   private prefersReducedMotion(): boolean {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return this.accessibilityPreferences.shouldDisableAnimations();
   }
 }

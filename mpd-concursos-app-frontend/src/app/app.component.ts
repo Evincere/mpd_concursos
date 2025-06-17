@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { ResponsiveTestRunnerService } from './shared/services/responsive-test-runner.service';
+import { AccessibilityPreferencesService } from './core/services/accessibility/accessibility-preferences.service';
 
 // Componentes cargados de forma perezosa
 import { PageTransitionComponent } from './shared/components/page-transition/page-transition.component';
@@ -29,10 +30,17 @@ import { ResponsiveDebugComponent } from './shared/components/responsive-debug/r
 export class AppComponent implements OnInit {
   title = 'mpd-concursos-app';
 
-  constructor(private responsiveTestRunner: ResponsiveTestRunnerService) {}
+  constructor(
+    private responsiveTestRunner: ResponsiveTestRunnerService,
+    private accessibilityPreferences: AccessibilityPreferencesService
+  ) {}
 
   ngOnInit(): void {
     // Ejecutar pruebas de responsividad en modo desarrollo
     this.responsiveTestRunner.runTestsIfDevelopment();
+
+    // Inicializar preferencias de accesibilidad
+    // El servicio se auto-inicializa, pero lo inyectamos para asegurar que se cargue
+    console.log('Accessibility preferences initialized:', this.accessibilityPreferences.preferences());
   }
 }

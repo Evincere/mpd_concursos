@@ -24,6 +24,12 @@
   --glass-bg-dark: rgba(31, 41, 55, 0.9);         /* Versión más oscura */
   --glass-bg-hover: rgba(75, 85, 99, 0.9);        /* Estado hover */
   --glass-bg-active: rgba(55, 65, 81, 0.95);      /* Estado activo */
+
+  /* === SOLID BACKGROUNDS FOR REDUCED TRANSPARENCY === */
+  --glass-bg-solid: rgb(55, 65, 81);              /* Solid version of primary */
+  --glass-bg-solid-secondary: rgb(75, 85, 99);    /* Solid version of secondary */
+  --glass-bg-solid-light: rgb(243, 244, 246);     /* Light solid background */
+  --glass-bg-solid-dark: rgb(17, 24, 39);         /* Dark solid background */
   
   /* === GRADIENTES GLASSMORPHISM === */
   --glass-gradient-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
@@ -57,21 +63,29 @@
   --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
   
-  /* === BACKDROP FILTERS === */
-  --backdrop-blur-light: blur(8px);
-  --backdrop-blur-medium: blur(12px);
-  --backdrop-blur-strong: blur(16px);
+  /* === ACCESSIBLE BACKDROP FILTERS === */
+  /* Backdrop filters that respect reduced transparency preferences */
+  --backdrop-blur-base-light: 8px;
+  --backdrop-blur-base-medium: 12px;
+  --backdrop-blur-base-strong: 16px;
+
+  --backdrop-blur-light: blur(calc(var(--backdrop-blur-base-light) * var(--backdrop-blur-multiplier)));
+  --backdrop-blur-medium: blur(calc(var(--backdrop-blur-base-medium) * var(--backdrop-blur-multiplier)));
+  --backdrop-blur-strong: blur(calc(var(--backdrop-blur-base-strong) * var(--backdrop-blur-multiplier)));
   --backdrop-blur-intense: blur(24px);
   
-  /* === OPTIMIZED TRANSITIONS === */
-  /* GPU-accelerated transitions using only transform and opacity */
-  --transition-fast: transform 0.15s ease-in-out, opacity 0.15s ease-in-out;
-  --transition-normal: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-  --transition-slow: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
-  --transition-bounce: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --transition-shadow: box-shadow 0.3s ease-in-out;
-  --transition-background: background-color 0.3s ease-in-out;
-  --transition-border: border-color 0.3s ease-in-out;
+  /* === ACCESSIBLE TRANSITIONS === */
+  /* GPU-accelerated transitions that respect user preferences */
+  --transition-fast: transform var(--duration-fast-accessible) ease-in-out,
+                     opacity var(--duration-fast-accessible) ease-in-out;
+  --transition-normal: transform var(--duration-normal-accessible) ease-in-out,
+                       opacity var(--duration-normal-accessible) ease-in-out;
+  --transition-slow: transform var(--duration-slow-accessible) ease-in-out,
+                     opacity var(--duration-slow-accessible) ease-in-out;
+  --transition-bounce: transform var(--duration-normal-accessible) cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-shadow: box-shadow var(--duration-normal-accessible) ease-in-out;
+  --transition-background: background-color var(--duration-normal-accessible) ease-in-out;
+  --transition-border: border-color var(--duration-normal-accessible) ease-in-out;
 
   /* === OPTIMIZED TRANSFORMS === */
   /* Using transform3d for GPU acceleration */
@@ -97,6 +111,21 @@
   --duration-normal: 0.3s;
   --duration-slow: 0.5s;
   --duration-slower: 0.8s;
+
+  /* === ACCESSIBILITY MULTIPLIERS === */
+  /* These are controlled by the AccessibilityPreferencesService */
+  --animation-duration-multiplier: 1;
+  --transition-duration-multiplier: 1;
+  --backdrop-blur-multiplier: 1;
+  --opacity-multiplier: 1;
+
+  /* === ACCESSIBLE DURATIONS === */
+  /* Durations that respect user preferences */
+  --duration-instant-accessible: calc(var(--duration-instant) * var(--animation-duration-multiplier));
+  --duration-fast-accessible: calc(var(--duration-fast) * var(--animation-duration-multiplier));
+  --duration-normal-accessible: calc(var(--duration-normal) * var(--animation-duration-multiplier));
+  --duration-slow-accessible: calc(var(--duration-slow) * var(--animation-duration-multiplier));
+  --duration-slower-accessible: calc(var(--duration-slower) * var(--animation-duration-multiplier));
 
   /* === FLUID TYPOGRAPHY === */
   --font-family-primary: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
