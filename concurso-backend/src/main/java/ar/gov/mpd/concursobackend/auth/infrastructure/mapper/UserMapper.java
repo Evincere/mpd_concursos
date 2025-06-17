@@ -5,6 +5,7 @@ import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.RoleEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.ProfileImageUrl;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IRoleSpringRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,13 @@ public class UserMapper {
 
         entity.setTelefono(user.getTelefono());
         entity.setDireccion(user.getDireccion());
+
+        // Mapear la URL de imagen de perfil
+        if (user.getProfileImageUrl() != null) {
+            entity.setProfileImageUrl(user.getProfileImageUrl().getUrlOrNull());
+        } else {
+            entity.setProfileImageUrl(null);
+        }
 
         // Mapear el estado del usuario
         if (user.getStatus() != null) {
@@ -186,6 +194,13 @@ public class UserMapper {
 
         user.setTelefono(entity.getTelefono());
         user.setDireccion(entity.getDireccion());
+
+        // Mapear la URL de imagen de perfil
+        if (entity.getProfileImageUrl() != null && !entity.getProfileImageUrl().trim().isEmpty()) {
+            user.setProfileImageUrl(ProfileImageUrl.of(entity.getProfileImageUrl()));
+        } else {
+            user.setProfileImageUrl(ProfileImageUrl.empty());
+        }
 
         // Ya no recuperamos experiencias de la tabla antigua
         // Ahora se obtienen desde el servicio de experiencias

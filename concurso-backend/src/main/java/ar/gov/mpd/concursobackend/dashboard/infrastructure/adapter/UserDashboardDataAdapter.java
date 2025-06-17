@@ -214,9 +214,9 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
 
         UUID userUuid = convertToUUID(userId);
 
-        // Obtener información básica del usuario
+        // Obtener información básica del usuario incluyendo imagen de perfil
         String userQuery = """
-            SELECT u.firstName, u.lastName, u.email, u.dni, u.telefono, u.direccion, u.createdAt
+            SELECT u.firstName, u.lastName, u.email, u.dni, u.telefono, u.direccion, u.createdAt, u.profileImageUrl
             FROM UserEntity u WHERE u.id = :userId
             """;
 
@@ -265,6 +265,10 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
             log.warn("Error contando experiencia para usuario {}: {}", userId, e.getMessage());
         }
 
+        // Verificar si tiene imagen de perfil
+        String profileImageUrl = (String) userResult[7]; // profileImageUrl es el índice 7
+        boolean hasProfileImage = profileImageUrl != null && !profileImageUrl.trim().isEmpty();
+
         // Calcular completitud del perfil
         int totalFields = 7; // firstName, lastName, email, dni, telefono, direccion, + (educacion o experiencia)
         int completedFields = 0;
@@ -284,7 +288,7 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
                 .totalFields(totalFields)
                 .completedFields(completedFields)
                 .pendingFields(totalFields - completedFields)
-                .hasProfileImage(false) // TODO: Implementar cuando se agregue soporte para imágenes
+                .hasProfileImage(hasProfileImage) // ✅ Ahora calculado correctamente
                 .hasBasicInfo(userResult[0] != null && userResult[1] != null && userResult[2] != null)
                 .hasContactInfo(userResult[4] != null || userResult[5] != null)
                 .hasEducation(educationCount > 0)
