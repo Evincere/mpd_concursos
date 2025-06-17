@@ -37,6 +37,70 @@
     display: flex;
     gap: var(--spacing-lg);
     align-items: center;
+
+    /* Estilos específicos para botones del dashboard admin */
+    .glass-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-lg);
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--border-radius-lg);
+      transition: var(--transition-normal);
+      border: 1px solid transparent;
+
+      i {
+        font-size: 1rem;
+        transition: var(--transition-fast);
+      }
+
+      span {
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+
+      &.glass-btn-primary {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+        color: #ffffff !important; /* Forzar texto blanco para contraste WCAG AA */
+        border-color: rgba(59, 130, 246, 0.6);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+
+        &:hover {
+          background: linear-gradient(135deg, rgba(59, 130, 246, 1), rgba(37, 99, 235, 1));
+          color: #ffffff !important;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        i, span {
+          color: #ffffff !important;
+        }
+      }
+
+      &.glass-btn-secondary {
+        background: linear-gradient(135deg, rgba(75, 85, 99, 0.8), rgba(55, 65, 81, 0.9));
+        color: #f9fafb !important; /* Texto claro para contraste adecuado */
+        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+          background: linear-gradient(135deg, rgba(75, 85, 99, 0.9), rgba(55, 65, 81, 1));
+          color: #ffffff !important;
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        i, span {
+          color: #f9fafb !important;
+        }
+
+        &:hover i, &:hover span {
+          color: #ffffff !important;
+        }
+      }
+    }
   }
 }
 

@@ -1262,40 +1262,32 @@
 }
 
 // Estilos para personalización y drag & drop
-.customization-controls {
-  display: flex;
-  gap: 8px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--glass-background-secondary);
-  margin-bottom: 8px;
+.drag-btn {
+  background: transparent;
+  border: 1px solid var(--glass-background-secondary);
+  color: var(--text-primary);
+  padding: 6px 8px;
+  border-radius: var(--border-radius-lg);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  font-size: 12px;
+  margin: 8px 16px;
 
-  .customization-btn,
-  .drag-btn {
-    background: transparent;
-    border: 1px solid var(--glass-background-secondary);
-    color: var(--text-primary);
-    padding: 6px 8px;
-    border-radius: var(--border-radius-lg);
-    cursor: pointer;
-    transition: var(--transition-normal);
+  &:hover {
+    background: var(--glass-hover-primary);
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  &.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+
+  i {
     font-size: 12px;
-
-    &:hover {
-      background: var(--glass-hover-primary);
-      border-color: var(--color-primary);
-      transform: translateY(-1px);
-    }
-
-    &.active {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: white;
-      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-    }
-
-    i {
-      font-size: 12px;
-    }
   }
 }
 

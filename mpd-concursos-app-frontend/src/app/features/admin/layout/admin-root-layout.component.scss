@@ -5,6 +5,7 @@
   flex-direction: column;
   height: 100vh;
   width: 100%;
+  /* Mantener overflow: hidden para el layout principal, pero permitir dropdowns específicos */
   overflow: hidden;
   position: relative;
   /* Glassmorphism background with gradient overlay */
@@ -18,12 +19,15 @@
     top: 0;
     z-index: 1000;
     flex-shrink: 0;
+    /* Permitir que los dropdowns se extiendan fuera del header */
+    overflow: visible;
   }
 }
 
 .admin-container {
   display: flex;
   flex: 1;
+  /* Restaurar overflow: hidden para mantener el scrolling del contenido */
   overflow: hidden;
   /* Transparent background to let the main background show through */
   background: transparent;
@@ -32,6 +36,7 @@
 .admin-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   transition: margin-left var(--transition-normal);
   position: relative;
   /* Transparent background for seamless integration */

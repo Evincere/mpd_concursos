@@ -230,41 +230,45 @@
   // Variantes de color
   @if $variant == 'primary' {
     background: rgba(59, 130, 246, 0.8);
-    color: var(--color-primary);
+    color: #ffffff; /* Texto blanco para contraste adecuado sobre fondo azul */
     border-color: rgba(59, 130, 246, 0.5);
-    
+
     &:hover {
       background: rgba(59, 130, 246, 0.9);
+      color: #ffffff; /* Mantener texto blanco en hover */
       transform: var(--transform-button-hover);
       box-shadow: var(--shadow-lg), 0 4px 12px rgba(59, 130, 246, 0.3);
     }
   } @else if $variant == 'success' {
     background: rgba(76, 175, 80, 0.8);
-    color: var(--color-primary);
+    color: #ffffff; /* Texto blanco para contraste adecuado sobre fondo verde */
     border-color: rgba(76, 175, 80, 0.5);
-    
+
     &:hover {
       background: rgba(76, 175, 80, 0.9);
+      color: #ffffff; /* Mantener texto blanco en hover */
       transform: var(--transform-button-hover);
       box-shadow: var(--shadow-lg), 0 4px 12px rgba(76, 175, 80, 0.3);
     }
   } @else if $variant == 'warning' {
     background: rgba(245, 158, 11, 0.8);
-    color: var(--color-primary);
+    color: #ffffff; /* Texto blanco para contraste adecuado sobre fondo naranja */
     border-color: rgba(245, 158, 11, 0.5);
-    
+
     &:hover {
       background: rgba(245, 158, 11, 0.9);
+      color: #ffffff; /* Mantener texto blanco en hover */
       transform: var(--transform-button-hover);
       box-shadow: var(--shadow-lg), 0 4px 12px rgba(245, 158, 11, 0.3);
     }
   } @else if $variant == 'danger' {
     background: rgba(239, 68, 68, 0.8);
-    color: var(--color-primary);
+    color: #ffffff; /* Texto blanco para contraste adecuado sobre fondo rojo */
     border-color: rgba(239, 68, 68, 0.5);
-    
+
     &:hover {
       background: rgba(239, 68, 68, 0.9);
+      color: #ffffff; /* Mantener texto blanco en hover */
       transform: var(--transform-button-hover);
       box-shadow: var(--shadow-lg), 0 4px 12px rgba(239, 68, 68, 0.3);
     }

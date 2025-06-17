@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NgIf, NgClass } from '@angular/common';
@@ -37,6 +37,8 @@ import { KeyboardShortcutsHelpComponent } from '../../../shared/components/keybo
   ]
 })
 export class AdminRootLayoutComponent implements OnInit {
+  @ViewChild('adminSidebar') adminSidebar!: AdminSidebarComponent;
+
   isSidebarCollapsed = false;
   isMobile = false;
 
@@ -74,5 +76,17 @@ export class AdminRootLayoutComponent implements OnInit {
 
     // Guardar preferencia del usuario
     localStorage.setItem('adminSidebarState', collapsed ? 'collapsed' : 'expanded');
+  }
+
+  onToggleCustomization() {
+    // Si el sidebar está colapsado, expandirlo primero para mostrar el panel de personalización
+    if (this.isSidebarCollapsed) {
+      this.onSidebarToggle(false);
+    }
+
+    // Llamar al método de personalización del sidebar
+    if (this.adminSidebar) {
+      this.adminSidebar.toggleCustomizationMode();
+    }
   }
 }
