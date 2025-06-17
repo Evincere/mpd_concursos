@@ -296,6 +296,10 @@
   box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
   position: relative;
   width: 100%;
+  /* CRITICAL FIX: Prevenir desbordamiento y asegurar contenido visible */
+  overflow: visible;
+  min-height: fit-content;
+  box-sizing: border-box;
 
   &::before {
     content: '';
@@ -315,23 +319,32 @@
   }
 
   .provisional-alert {
-    margin-bottom: var(--spacing-xl);
+    /* CRITICAL FIX: Asegurar que el contenido del alert sea completamente visible */
+    width: 100%;
+    overflow: visible;
 
     .alert-header {
       @extend .glass-flex;
       align-items: center;
       margin-bottom: var(--spacing-lg);
+      /* CRITICAL FIX: Prevenir desbordamiento del header */
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
 
       i {
         font-size: 1.25rem;
         color: var(--color-warning);
         margin-right: var(--spacing-md);
+        flex-shrink: 0;
       }
 
       span {
         font-size: 1.125rem;
         font-weight: 700;
         color: var(--color-warning);
+        /* CRITICAL FIX: Permitir que el texto se ajuste */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       }
     }
 
@@ -340,6 +353,11 @@
       line-height: 1.6;
       margin: 0 0 var(--spacing-lg) 0;
       font-size: 0.95rem;
+      /* CRITICAL FIX: Asegurar que el texto largo se muestre correctamente */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+      white-space: normal;
 
       strong {
         color: #fbbf24;
@@ -355,7 +373,11 @@
       border-radius: var(--radius-sm);
       padding: var(--spacing-lg);
       margin-top: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
       width: 100%;
+      /* CRITICAL FIX: Asegurar que la nota de advertencia sea completamente visible */
+      box-sizing: border-box;
+      overflow: visible;
 
       i {
         font-size: 1rem;
@@ -370,12 +392,36 @@
         font-size: 0.875rem;
         line-height: 1.5;
         font-weight: 500;
+        /* CRITICAL FIX: Permitir que el texto se ajuste correctamente */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        hyphens: auto;
+        flex: 1;
+        min-width: 0;
       }
     }
-  }
 
-  .provisional-checkbox {
-    margin-top: var(--spacing-xl);
+    .provisional-acceptance {
+      margin-top: var(--spacing-lg);
+      padding: var(--spacing-lg);
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: var(--radius-sm);
+      backdrop-filter: blur(4px);
+
+      /* Asegurar que el checkbox sea completamente visible */
+      width: 100%;
+      overflow: visible;
+      box-sizing: border-box;
+
+      /* Efecto de hover sutil */
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(245, 158, 11, 0.12);
+        border-color: rgba(245, 158, 11, 0.3);
+      }
+    }
   }
 }
 

@@ -137,30 +137,34 @@ export class ConcursosComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null; // Clear previous errors
     console.log('[ConcursosComponent] Starting to load contests...');
-    this.concursosService.getConcursos().subscribe({
-      next: (concursos: Concurso[]) => {
-        console.log(`[ConcursosComponent] Concursos loaded: ${concursos.length}`, concursos);
-        this.loggingService.debug(`[ConcursosComponent] Concursos loaded: ${concursos.length}`, undefined, 'Concursos');
-        this.concursosSinFiltrar = concursos; // Store the original list
+    this.concursosService.getConcursos()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (concursos: Concurso[]) => {
+          console.log(`[ConcursosComponent] Concursos loaded: ${concursos.length}`, concursos);
+          this.loggingService.debug(`[ConcursosComponent] Concursos loaded: ${concursos.length}`, undefined, 'Concursos');
+          this.concursosSinFiltrar = concursos; // Store the original list
 
-        // Get current filters from the service and apply them
-        this.filtersService.getFiltros().subscribe((filtros: FiltersConcurso) => {
-          this.loggingService.debug('[ConcursosComponent] Applying initial filters:', filtros, 'Concursos');
-          this.filtros = filtros; // Update component's filters
-          this._applyAllFilters(); // Apply all filters including search term
-        });
+          // Get current filters from the service and apply them
+          this.filtersService.getFiltros()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe((filtros: FiltersConcurso) => {
+              this.loggingService.debug('[ConcursosComponent] Applying initial filters:', filtros, 'Concursos');
+              this.filtros = filtros; // Update component's filters
+              this._applyAllFilters(); // Apply all filters including search term
+            });
 
-        this.loading = false;
-        this.primeraConsulta = false;
-        console.log(`[ConcursosComponent] Final state - loading: ${this.loading}, error: ${this.error}, concursos.length: ${this.concursos.length}`);
-      },
-      error: (error: HttpErrorResponse) => {
-        console.error('[ConcursosComponent] Error al cargar los concursos:', error);
-        this.error = error;
-        this.loading = false;
-        this.notification.error('Error al cargar los concursos. Por favor, inténtelo nuevamente.');
-      }
-    });
+          this.loading = false;
+          this.primeraConsulta = false;
+          console.log(`[ConcursosComponent] Final state - loading: ${this.loading}, error: ${this.error}, concursos.length: ${this.concursos.length}`);
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('[ConcursosComponent] Error al cargar los concursos:', error);
+          this.error = error;
+          this.loading = false;
+          this.notification.error('Error al cargar los concursos. Por favor, inténtelo nuevamente.');
+        }
+      });
   }
 
   /**

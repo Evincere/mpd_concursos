@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Inject, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CustomDialogRef } from '@shared/components/custom-form/custom-dialog/custom-dialog-ref';
@@ -265,17 +265,17 @@ interface DocumentoEnSeleccion {
         <app-custom-button
           type="button"
           variant="text"
-          [disabled]="isCancelButtonDisabled()"
-          (click)="onCancelButtonClick()">
-          {{getTextoCancelButton()}}
+          [disabled]="uploading && !procesoFinalizado"
+          (click)="cerrar()">
+          Cancelar
         </app-custom-button>
         <app-custom-button
           type="button"
-          variant="primary"
-          [disabled]="!canUpload() || uploading"
-          (click)="uploadDocuments()">
-          <i class="fas fa-cloud-upload-alt"></i>
-          Subir {{documentosParaSubir.length}} documentos
+          [variant]="procesoFinalizado ? 'primary' : 'primary'"
+          [disabled]="!canUpload() && !procesoFinalizado"
+          (click)="procesoFinalizado ? confirmarYCerrar() : uploadDocuments()">
+          <i class="fas" [class]="procesoFinalizado ? 'fa-check' : 'fa-cloud-upload-alt'"></i>
+          {{procesoFinalizado ? 'Confirmar' : 'Subir ' + documentosParaSubir.length + ' documentos'}}
         </app-custom-button>
       </div>
     </div>
@@ -722,6 +722,7 @@ interface DocumentoEnSeleccion {
 export class DocumentoMultipleUploadDialogComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('documentoForm') documentoForm: NgForm | null = null;
+  @Output() documentosSubidos = new EventEmitter<any[]>();
 
   tiposDocumento: TipoDocumento[] = [];
   tiposDocumentoOptions: SelectOption[] = [];
@@ -1556,19 +1557,18 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   }
 
   /**
-   * CRITICAL FIX: Maneja la acción del botón Cancelar según el estado
+   * CRITICAL FIX: Confirma la subida y cierra el diálogo
+   * Se ejecuta cuando el usuario presiona "Confirmar" después de la subida
    */
-  onCancelButtonClick(): void {
-    if (this.procesoFinalizado) {
-      // Si el proceso ya finalizó, simplemente cerrar
-      this.cerrar();
-    } else if (this.uploading) {
-      // Si está subiendo, mostrar confirmación
-      this.confirmarCancelacion();
-    } else {
-      // Si no ha iniciado la subida, cancelar directamente
-      this.cerrar();
-    }
+  confirmarYCerrar(): void {
+    // Emitir evento de confirmación para que el componente padre actualice el estado
+    this.documentosSubidos.emit(this.documentosParaSubir.filter(doc => doc.estado === 'completado'));
+
+    // Notificar al servicio de documentos que se han actualizado los documentos
+    this.documentosService.notificarDocumentoActualizado();
+
+    // Cerrar con resultado de éxito para que el componente padre sepa que se confirmó la subida
+    this.dialogRef.close({ success: true, confirmed: true });
   }
 
   /**

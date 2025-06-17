@@ -95,6 +95,8 @@ export class InscriptionService {
    */
   private mapStatusToState(status: string): InscripcionState {
     switch (status.toLowerCase()) {
+      case 'no_inscription':
+        return InscripcionState.NO_INSCRIPTION;
       case 'active':
         return InscripcionState.ACTIVE;
       case 'pending':
@@ -441,7 +443,7 @@ export class InscriptionService {
    * @returns An Observable of the inscription state.
    */
   getInscriptionStatus(contestId: string | number): Observable<InscripcionState> {
-    if (!this.validateAuthentication()) return of(InscripcionState.ACTIVE); // Default to ACTIVE if not authenticated
+    if (!this.validateAuthentication()) return of(InscripcionState.NO_INSCRIPTION); // Default to NO_INSCRIPTION if not authenticated
 
     const numericContestId = typeof contestId === 'string' ? parseInt(contestId, 10) : contestId;
 
@@ -479,7 +481,7 @@ export class InscriptionService {
     const userId = this.authService.getCurrentUserId();
     if (!userId) {
       console.error('[InscriptionService] Could not get current user ID for getInscriptionStatus.');
-      return of(InscripcionState.ACTIVE); // Default to ACTIVE
+      return of(InscripcionState.NO_INSCRIPTION); // Default to NO_INSCRIPTION
     }
 
     // Try optimized endpoint first: /inscriptions/user/{userId}/contest/{contestId}/status
@@ -488,13 +490,14 @@ export class InscriptionService {
       `${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}/status`
     ).pipe(
       map(response => {
-        // Handle the new simplified response format from backend
+        // CRITICAL FIX: Handle the new simplified response format from backend correctly
         if (response.hasInscription) {
           this.loggingService.debug(`[InscriptionService] Found inscription with status: ${response.status}`, undefined, 'Inscription');
           return this.mapStatusToState(response.status);
         } else {
-          this.loggingService.debug(`[InscriptionService] No inscription found, returning ACTIVE`, undefined, 'Inscription');
-          return InscripcionState.ACTIVE;
+          // CRITICAL FIX: When no inscription exists, return a special state to distinguish from ACTIVE inscription
+          this.loggingService.debug(`[InscriptionService] No inscription found, returning NO_INSCRIPTION`, undefined, 'Inscription');
+          return InscripcionState.NO_INSCRIPTION;
         }
       }),
       tap(state => {
@@ -510,7 +513,7 @@ export class InscriptionService {
           return this.http.get<IInscriptionResponse>(`${this.baseUrl}${this.inscriptionsEndpoint}/user/${userId}/contest/${numericContestId}`).pipe(
             map(response => {
               this.loggingService.debug(`[InscriptionService] Status fetched successfully from fallback endpoint: ${response.status}`, undefined, 'Inscription');
-              return this.mapStatusToState(response?.status || 'ACTIVE');
+              return this.mapStatusToState(response?.status || 'NO_INSCRIPTION');
             }),
             catchError(fallbackError => {
               // Only log as debug for 404 errors (expected when no inscription exists)

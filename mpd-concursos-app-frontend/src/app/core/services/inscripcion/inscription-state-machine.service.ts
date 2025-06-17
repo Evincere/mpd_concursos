@@ -170,6 +170,7 @@ export class InscriptionStateMachineService {
    */
   getDisplayText(state: InscripcionState): string {
     const displayTexts = {
+      [InscripcionState.NO_INSCRIPTION]: 'Sin inscripción',
       [InscripcionState.ACTIVE]: 'En proceso',
       [InscripcionState.PENDING]: 'Pendiente de revisión',
       [InscripcionState.COMPLETED_WITH_DOCS]: 'Completada con documentación',
@@ -190,6 +191,7 @@ export class InscriptionStateMachineService {
    */
   getStateClass(state: InscripcionState): string {
     const stateClasses = {
+      [InscripcionState.NO_INSCRIPTION]: 'state-no-inscription',
       [InscripcionState.ACTIVE]: 'state-active',
       [InscripcionState.PENDING]: 'state-pending',
       [InscripcionState.COMPLETED_WITH_DOCS]: 'state-completed',

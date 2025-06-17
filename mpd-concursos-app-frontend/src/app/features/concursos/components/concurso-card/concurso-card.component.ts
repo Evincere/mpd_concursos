@@ -152,15 +152,17 @@ export class ConcursoCardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (status: InscripcionState) => {
           this.loggingService.debug('[ConcursoCard] Estado recibido:', status, 'ConcursoCard');
-          if (status !== InscripcionState.ACTIVE) {  // REFACTORING: Estado estándar
+
+          // CRITICAL FIX: Distinguir entre NO_INSCRIPTION (sin inscripción) y otros estados (con inscripción)
+          if (status !== InscripcionState.NO_INSCRIPTION) {
             this.userPostulation = {
-              estado: status.toString(), // CRITICAL FIX: Usar 'estado' en lugar de 'status' para compatibilidad con Postulacion interface
+              estado: status.toString(),
               contestId: this.concurso.id
             };
             this.loggingService.debug('[ConcursoCard] UserPostulation asignada:', this.userPostulation, 'ConcursoCard');
           } else {
             this.userPostulation = null;
-            this.loggingService.debug('[ConcursoCard] No hay inscripción', undefined, 'ConcursoCard');
+            this.loggingService.debug('[ConcursoCard] No hay inscripción para este concurso', undefined, 'ConcursoCard');
           }
         },
         error: () => {

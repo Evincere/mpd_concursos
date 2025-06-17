@@ -15,6 +15,7 @@
  */
 export enum InscripcionState {
   // Standard states (English) - ONLY THESE REMAIN
+  NO_INSCRIPTION = 'NO_INSCRIPTION',           // No inscription exists for this contest (frontend-only state)
   ACTIVE = 'ACTIVE',                           // Initial state when inscription is created or in progress
   PENDING = 'PENDING',                         // Inscription completed, waiting for admin validation
   COMPLETED_WITH_DOCS = 'COMPLETED_WITH_DOCS', // Inscription completed with all documentation
@@ -103,6 +104,8 @@ export class InscripcionStateUtils {
   static getStateLabel(state: InscripcionState): string {
     // REFACTORING: Solo estados estándar después de eliminar legacy
     switch (state) {
+      case InscripcionState.NO_INSCRIPTION:
+        return 'Sin Inscripción';
       case InscripcionState.ACTIVE:
         return 'En Proceso';
       case InscripcionState.PENDING:
@@ -130,6 +133,8 @@ export class InscripcionStateUtils {
   static getStateClass(state: InscripcionState): string {
     // REFACTORING: Solo estados estándar después de eliminar legacy
     switch (state) {
+      case InscripcionState.NO_INSCRIPTION:
+        return 'status-no-inscription';
       case InscripcionState.ACTIVE:
         return 'status-in-process';
       case InscripcionState.PENDING:

@@ -47,7 +47,14 @@ export class PostulacionDetalleComponent {
 
   navegarADocumentacion() {
     if (this.postulacion.contestId) {
-      this.router.navigate(['/concursos', this.postulacion.contestId, 'inscripcion', 'documentos']);
+      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
+      this.router.navigate(['/dashboard/inscripcion'], {
+        queryParams: {
+          contestId: this.postulacion.contestId,
+          inscriptionId: this.postulacion.id,
+          resume: 'true'
+        }
+      });
       this.onCerrar();
     }
   }

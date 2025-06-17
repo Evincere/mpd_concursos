@@ -981,8 +981,16 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
         this.documentoCache = {}; // Reset cache
         for (const documento of documentosUsuario) {
           if (documento.tipoDocumentoId) {
+            // CRITICAL FIX: Marcar como subido independientemente del estado de aprobación
             this.documentoSubidoCache[documento.tipoDocumentoId] = true;
             this.documentoCache[documento.tipoDocumentoId] = documento;
+
+            // Log para debugging
+            this.loggingService.debug(`[DocumentosEmbebidos] Documento en cache: ${documento.tipoDocumentoId}`, {
+              tipoDocumentoId: documento.tipoDocumentoId,
+              estado: documento.estado,
+              nombreArchivo: documento.nombreArchivo
+            }, 'DocumentosEmbebidos');
           }
         }
       }),
@@ -1162,7 +1170,16 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       return this.documentoSubidoCache['dni'] || (this.documentoSubidoCache['dni-frente'] && this.documentoSubidoCache['dni-dorso']);
     }
     // Verificación estándar para todos los documentos (incluidos DNI frente y dorso por separado)
-    return this.documentoSubidoCache[tipoDocumentoId] === true;
+    const isUploaded = this.documentoSubidoCache[tipoDocumentoId] === true;
+
+    // Log para debugging
+    this.loggingService.debug(`[DocumentosEmbebidos] Verificando documento ${tipoDocumentoId}: ${isUploaded ? 'SUBIDO' : 'NO SUBIDO'}`, {
+      tipoDocumentoId,
+      cacheValue: this.documentoSubidoCache[tipoDocumentoId],
+      allCache: this.documentoSubidoCache
+    }, 'DocumentosEmbebidos');
+
+    return isUploaded;
   }
 
   /**
