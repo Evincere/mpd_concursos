@@ -7,6 +7,7 @@ import ar.gov.mpd.concursobackend.dashboard.application.port.in.GetUserStatsUseC
 import ar.gov.mpd.concursobackend.dashboard.application.port.out.LoadUserDashboardDataPort;
 import ar.gov.mpd.concursobackend.dashboard.domain.UserDeadline;
 import ar.gov.mpd.concursobackend.dashboard.domain.UserDashboardStats;
+import ar.gov.mpd.concursobackend.dashboard.infrastructure.cache.DashboardCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,20 +28,37 @@ import java.util.stream.Collectors;
 public class UserDashboardService implements GetUserDeadlinesUseCase, GetUserStatsUseCase {
     
     private final LoadUserDashboardDataPort loadUserDashboardDataPort;
+    private final DashboardCacheService cacheService;
     
     @Override
     public List<UserDeadlineResponse> getUserDeadlines(Long userId, Integer daysAhead) {
         log.info("Obteniendo vencimientos del usuario {} para los próximos {} días", userId, daysAhead);
-        
+
         if (daysAhead == null) {
             daysAhead = 30; // Por defecto 30 días
         }
-        
+
         LocalDateTime fromDate = LocalDateTime.now();
         LocalDateTime toDate = fromDate.plusDays(daysAhead);
-        
+
+        // Generar clave de cache basada en parámetros
+        String cacheKey = "all_" + daysAhead + "d";
+
+        // Intentar obtener desde cache
+        List<UserDeadline> cachedDeadlines = cacheService.getUserDeadlines(userId, cacheKey);
+        if (cachedDeadlines != null) {
+            log.debug("Vencimientos obtenidos desde cache para usuario {}", userId);
+            return cachedDeadlines.stream()
+                    .map(this::mapToDeadlineResponse)
+                    .collect(Collectors.toList());
+        }
+
+        // Si no está en cache, cargar desde base de datos
         List<UserDeadline> deadlines = loadUserDashboardDataPort.loadUserDeadlines(userId, fromDate, toDate);
-        
+
+        // Almacenar en cache antes de mapear
+        cacheService.putUserDeadlines(userId, cacheKey, deadlines);
+
         List<UserDeadlineResponse> response = deadlines.stream()
                 .map(this::mapToDeadlineResponse)
                 .sorted((d1, d2) -> {
@@ -51,8 +69,8 @@ public class UserDashboardService implements GetUserDeadlinesUseCase, GetUserSta
                     return d1.getDeadline().compareTo(d2.getDeadline());
                 })
                 .collect(Collectors.toList());
-        
-        log.info("Se encontraron {} vencimientos para el usuario {}", response.size(), userId);
+
+        log.info("Se encontraron {} vencimientos para el usuario {} (almacenados en cache)", response.size(), userId);
         return response;
     }
     
@@ -104,9 +122,23 @@ public class UserDashboardService implements GetUserDeadlinesUseCase, GetUserSta
     @Override
     public UserStatsResponse getUserStats(Long userId) {
         log.info("Obteniendo estadísticas completas del usuario {}", userId);
-        
-        UserDashboardStats stats = loadUserDashboardDataPort.loadUserStats(userId);
-        
+
+        // Intentar obtener desde cache
+        UserDashboardStats cachedStats = cacheService.getUserStats(userId);
+        UserDashboardStats stats;
+
+        if (cachedStats != null) {
+            log.debug("Estadísticas obtenidas desde cache para usuario {}", userId);
+            stats = cachedStats;
+        } else {
+            // Si no está en cache, cargar desde base de datos
+            stats = loadUserDashboardDataPort.loadUserStats(userId);
+
+            // Almacenar en cache
+            cacheService.putUserStats(userId, stats);
+            log.debug("Estadísticas cargadas desde BD y almacenadas en cache para usuario {}", userId);
+        }
+
         return UserStatsResponse.builder()
                 .profileStats(mapToProfileStatsResponse(stats.getProfileStats()))
                 .inscriptionStats(mapToInscriptionStatsResponse(stats.getInscriptionStats()))

@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.dashboard.infrastructure.config;
 import ar.gov.mpd.concursobackend.dashboard.application.port.out.LoadUserDashboardDataPort;
 import ar.gov.mpd.concursobackend.dashboard.application.service.UserDashboardService;
 import ar.gov.mpd.concursobackend.dashboard.infrastructure.adapter.UserDashboardDataAdapter;
+import ar.gov.mpd.concursobackend.dashboard.infrastructure.cache.DashboardCacheService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,7 +21,9 @@ public class DashboardConfig {
     }
     
     @Bean
-    public UserDashboardService userDashboardService(LoadUserDashboardDataPort loadUserDashboardDataPort) {
-        return new UserDashboardService(loadUserDashboardDataPort);
+    public UserDashboardService userDashboardService(
+            LoadUserDashboardDataPort loadUserDashboardDataPort,
+            DashboardCacheService cacheService) {
+        return new UserDashboardService(loadUserDashboardDataPort, cacheService);
     }
 }
