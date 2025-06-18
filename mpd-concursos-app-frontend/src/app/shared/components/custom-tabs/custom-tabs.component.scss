@@ -124,6 +124,11 @@
     span {
       color: #ffffff !important; /* Forzar blanco en texto */
     }
+
+    /* Additional specificity for stubborn blue text */
+    * {
+      color: #ffffff !important;
+    }
   }
 
   &.disabled {

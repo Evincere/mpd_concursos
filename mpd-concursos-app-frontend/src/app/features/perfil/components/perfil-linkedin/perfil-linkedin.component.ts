@@ -16,8 +16,19 @@ import { UserProfile } from '@core/models/perfil.model';
   ],
   template: `
     <div class="linkedin-container">
+      <!-- Development Notice Banner -->
+      <div class="development-notice">
+        <div class="notice-content">
+          <i class="fas fa-tools" aria-hidden="true"></i>
+          <div class="notice-text">
+            <h3>Funcionalidad en Desarrollo</h3>
+            <p>La integración con LinkedIn está actualmente en desarrollo. Esta funcionalidad estará disponible próximamente.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Glassmorphism LinkedIn Card -->
-      <div class="linkedin-glassmorphism-card">
+      <div class="linkedin-glassmorphism-card disabled-state">
         <div class="linkedin-content">
           <!-- Header -->
           <div class="linkedin-header">
@@ -122,10 +133,11 @@ import { UserProfile } from '@core/models/perfil.model';
 
             <div class="connect-action">
               <app-custom-button
-                color="primary"
-                icon="fab fa-linkedin"
-                label="Conectar con LinkedIn"
-                (buttonClick)="connectLinkedIn()">
+                color="secondary"
+                icon="fas fa-tools"
+                label="En Desarrollo"
+                [disabled]="true"
+                tooltip="Esta funcionalidad estará disponible próximamente">
               </app-custom-button>
             </div>
 

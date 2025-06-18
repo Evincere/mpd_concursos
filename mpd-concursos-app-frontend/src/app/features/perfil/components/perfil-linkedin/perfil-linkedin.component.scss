@@ -5,6 +5,80 @@
   padding: 1rem;
 }
 
+/* ===== DEVELOPMENT NOTICE BANNER ===== */
+.development-notice {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.1);
+  animation: pulseWarning 3s ease-in-out infinite;
+}
+
+.notice-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.notice-content i {
+  font-size: 2rem;
+  color: #f59e0b;
+  flex-shrink: 0;
+  animation: rotateTools 2s ease-in-out infinite;
+}
+
+.notice-text h3 {
+  margin: 0 0 0.5rem 0;
+  color: #ffffff !important; /* Force white for accessibility */
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.notice-text p {
+  margin: 0;
+  color: #d1d5db !important; /* Force light gray for accessibility */
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ===== DISABLED STATE FOR DEVELOPMENT ===== */
+.linkedin-glassmorphism-card.disabled-state {
+  opacity: 0.6;
+  pointer-events: none;
+  filter: grayscale(0.3);
+
+  &:hover {
+    transform: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulseWarning {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.1);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2);
+  }
+}
+
+@keyframes rotateTools {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
 // Glassmorphism Card Container
 .linkedin-glassmorphism-card {
   background: rgba(55, 65, 81, 0.8);
