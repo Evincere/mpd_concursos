@@ -125,7 +125,7 @@
     .username {
       font-weight: 600;
       font-size: 0.75rem; /* Tamaño más pequeño */
-      color: var(--user-text-primary);
+      color: #ffffff !important; /* Forzar blanco para máximo contraste */
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -136,7 +136,7 @@
 
     .cuit {
       font-size: 0.65rem; /* Tamaño más pequeño */
-      color: var(--user-text-secondary);
+      color: #d1d5db !important; /* Forzar gris claro para buen contraste */
       font-weight: 400;
       white-space: nowrap;
       overflow: hidden;

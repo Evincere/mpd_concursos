@@ -226,7 +226,7 @@
 
   /* Tabs - Glassmorphism System */
   --user-text-tab-inactive: #d1d5db; /* Gray-300 - Good contrast on dark backgrounds */
-  --user-text-tab-active: #ffffff; /* White - Maximum contrast */
+  --user-text-tab-active: #ffffff !important; /* White - Maximum contrast - FORCED */
   --user-border-tab-active: rgba(96, 165, 250, 0.8); /* Blue-400 with opacity */
   --user-font-size-tab: 1rem;
   --user-font-size-tab-mobile: 0.9375rem;

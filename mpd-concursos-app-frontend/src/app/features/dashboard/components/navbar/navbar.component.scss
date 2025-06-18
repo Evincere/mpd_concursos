@@ -51,7 +51,7 @@
   .navbar-title {
     font-size: 1.2rem;
     font-weight: 500;
-    color: var(--color-primary); // Consistente con sidebar activo
+    color: #ffffff !important; // Forzar blanco para máximo contraste
     margin-left: var(--spacing-md);
     transition: var(--transition-fast);
 

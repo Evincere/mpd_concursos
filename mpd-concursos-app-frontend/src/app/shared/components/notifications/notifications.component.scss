@@ -29,7 +29,7 @@
     }
 
     i {
-        color: var(--color-primary); // Mejor contraste
+        color: #ffffff !important; // Forzar blanco para máximo contraste
         transition: var(--transition-fast);
         font-size: 1.1rem;
     }
