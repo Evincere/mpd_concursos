@@ -1,8 +1,8 @@
 import { Component, OnInit, Inject, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { CustomDialogRef } from '@shared/components/custom-form/custom-dialog/custom-dialog-ref';
-import { DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/dialog-ref';
+import { UnifiedDialogRef } from '@shared/services/dialog/unified-dialog.service';
+import { DIALOG_DATA } from '@shared/services/dialog/dialog.service';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
@@ -787,7 +787,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   mostrarSelectorDocumento = true; // Controla si se muestra el selector de documentos
 
   constructor(
-    private dialogRef: CustomDialogRef<any>,
+    private dialogRef: UnifiedDialogRef<any>,
     @Inject(DIALOG_DATA) public data: any,
     private documentosService: DocumentosService,
     private documentoValidationService: DocumentoValidationService,
