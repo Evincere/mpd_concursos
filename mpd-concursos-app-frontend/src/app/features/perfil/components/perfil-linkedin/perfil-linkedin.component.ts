@@ -41,17 +41,6 @@ import { UserProfile } from '@core/models/perfil.model';
             </div>
           </div>
 
-          <!-- Connection Status -->
-          <div class="connection-status" [ngClass]="linkedInConectado ? 'connected' : 'disconnected'">
-            <div class="status-indicator">
-              <i class="fas" [ngClass]="linkedInConectado ? 'fa-check-circle' : 'fa-times-circle'" aria-hidden="true"></i>
-            </div>
-            <div class="status-text">
-              <h3>{{ linkedInConectado ? 'Cuenta Conectada' : 'Cuenta No Conectada' }}</h3>
-              <p>{{ linkedInConectado ? 'Su perfil de LinkedIn está sincronizado' : 'Conecte su cuenta para importar datos automáticamente' }}</p>
-            </div>
-          </div>
-
           <!-- Connected State -->
           <div *ngIf="linkedInConectado" class="connected-section">
             <div class="profile-info">
@@ -140,24 +129,6 @@ import { UserProfile } from '@core/models/perfil.model';
                 tooltip="Esta funcionalidad estará disponible próximamente">
               </app-custom-button>
             </div>
-
-            <div class="privacy-notice">
-              <div class="notice-header">
-                <i class="fas fa-shield-alt" aria-hidden="true"></i>
-                <h5>Privacidad y Seguridad</h5>
-              </div>
-              <p>
-                Solo accedemos a la información pública de su perfil de LinkedIn. 
-                Sus datos están protegidos y nunca compartimos información personal con terceros.
-              </p>
-              <ul class="privacy-points">
-                <li>✓ Conexión segura mediante OAuth 2.0</li>
-                <li>✓ Solo lectura de datos públicos</li>
-                <li>✓ Puede desconectar en cualquier momento</li>
-                <li>✓ Cumplimiento con GDPR y normativas de privacidad</li>
-              </ul>
-            </div>
-          </div>
 
           <!-- Loading State -->
           <div *ngIf="isLoading" class="loading-overlay">

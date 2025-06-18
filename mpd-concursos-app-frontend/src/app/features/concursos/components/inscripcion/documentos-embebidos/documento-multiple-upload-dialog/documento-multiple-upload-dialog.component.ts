@@ -261,21 +261,28 @@ interface DocumentoEnSeleccion {
         </div>
       </div>
 
+      <!-- REDESIGNED CONTAINER LEVEL ACTIONS -->
       <div class="dialog-actions">
+        <!-- Cancel Button - Always visible and enabled -->
         <app-custom-button
           type="button"
           variant="text"
-          [disabled]="uploading && !procesoFinalizado"
-          (click)="cerrar()">
+          [disabled]="false"
+          (click)="cancelarYCerrar()"
+          class="cancel-button">
+          <i class="fas fa-times"></i>
           Cancelar
         </app-custom-button>
+
+        <!-- Upload Documentation Button - Moved from internal component -->
         <app-custom-button
           type="button"
-          [variant]="procesoFinalizado ? 'primary' : 'primary'"
-          [disabled]="!canUpload() && !procesoFinalizado"
-          (click)="procesoFinalizado ? confirmarYCerrar() : uploadDocuments()">
-          <i class="fas" [class]="procesoFinalizado ? 'fa-check' : 'fa-cloud-upload-alt'"></i>
-          {{procesoFinalizado ? 'Confirmar' : 'Subir ' + documentosParaSubir.length + ' documentos'}}
+          [variant]="getUploadButtonVariant()"
+          [disabled]="getUploadButtonDisabled()"
+          (click)="handleUploadAction()"
+          class="upload-button">
+          <i class="fas" [class]="getUploadButtonIcon()"></i>
+          {{getUploadButtonText()}}
         </app-custom-button>
       </div>
     </div>
@@ -675,13 +682,42 @@ interface DocumentoEnSeleccion {
       color: #ef4444;
     }
 
+    /* ===== REDESIGNED DIALOG ACTIONS ===== */
     .dialog-actions {
       display: flex;
-      justify-content: flex-end;
-      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
       padding: 24px;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .cancel-button {
+      /* Always visible cancel button */
+      min-width: 120px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-button {
+      /* Primary upload action button */
+      min-width: 180px;
+      transition: all 0.3s ease;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      &.success-state {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+
+        &:hover:not(:disabled) {
+          background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+        }
+      }
     }
 
     .validation-warnings {
@@ -1092,15 +1128,29 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
       return;
     }
 
+    // Prevent double-clicking during upload
+    if (this.uploading) {
+      return;
+    }
+
     this.uploading = true;
     this.progresoGlobal = 0;
     this.monitoringRetries = 0; // Reset retry counter for new upload
     this.procesoFinalizado = false; // Reset finalization flag
 
+    // Hide document selector during upload
+    this.mostrarSelectorDocumento = false;
+
     // Primero validamos todos los documentos
     this.validarDocumentos().then(() => {
       // Luego subimos los documentos uno por uno
       this.subirDocumentosSecuencialmente();
+    }).catch((error) => {
+      // Handle validation errors
+      this.uploading = false;
+      this.mostrarSelectorDocumento = true;
+      this.notificationService.showError('Error en la validación de documentos');
+      console.error('Validation error:', error);
     });
   }
 
@@ -1467,28 +1517,26 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
     this.procesoFinalizado = true;
     this.uploading = false;
 
+    // Show document selector again after upload
+    this.mostrarSelectorDocumento = true;
+
     // Contar documentos completados y totales
     const documentosCompletados = this.documentosParaSubir.filter(doc => doc.estado === 'completado').length;
     const documentosConError = this.documentosParaSubir.filter(doc => doc.estado === 'error').length;
     const totalDocumentos = this.documentosParaSubir.filter(doc => doc.estado !== 'pendiente').length;
 
-    // CRITICAL FIX: Mejorar la lógica de mensajes finales y marcar documentos subidos
+    // REDESIGNED: Don't auto-close, let the new button logic handle it
     if (documentosCompletados === totalDocumentos && documentosCompletados > 0) {
       // Todos los documentos se completaron exitosamente
       this.documentosSubidosExitosamente = true;
-      this.mostrarExito(`Se han subido ${documentosCompletados} documentos correctamente`);
-      this.dialogRef.close(true as any);
+      // Don't show notification here - will be handled by button logic
     } else if (documentosCompletados > 0 && documentosConError === 0) {
       // Algunos documentos se completaron, pero no hay errores explícitos
-      // Esto puede ocurrir cuando hay documentos en estado 'pendiente' o similar
       this.documentosSubidosExitosamente = true;
-      this.mostrarExito(`Se han subido ${documentosCompletados} documentos correctamente`);
-      this.dialogRef.close(true as any);
     } else if (documentosCompletados > 0 && documentosConError > 0) {
       // Algunos documentos se completaron, pero otros tuvieron errores
       this.documentosSubidosExitosamente = true;
       this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos. ${documentosConError} documentos tuvieron errores.`);
-      this.dialogRef.close(true as any); // Cerrar con éxito parcial
     } else if (documentosConError > 0) {
       // Solo hay documentos con error
       this.mostrarError(`No se pudo subir ningún documento. ${documentosConError} documentos tuvieron errores.`);
@@ -1496,6 +1544,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
       // Caso por defecto - no hay documentos completados ni con error explícito
       this.mostrarError('No se pudo completar la subida de documentos');
     }
+
+    // Note: No auto-close here - the new button logic will handle closing
   }
 
   actualizarProgresoGlobal(): void {
@@ -1635,5 +1685,145 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   navegarAPerfil(): void {
     this.cerrar();
     this.router.navigate(['/dashboard/perfil'], { fragment: 'documentacion' });
+  }
+
+  // ===== REDESIGNED BUTTON LOGIC =====
+
+  /**
+   * Cancel button handler - Always enabled, clears data and closes
+   */
+  cancelarYCerrar(): void {
+    // If upload is in progress, abort it
+    if (this.uploading && !this.procesoFinalizado) {
+      this.abortUpload();
+    }
+
+    // Clear all temporary data
+    this.clearAllData();
+
+    // Close the dialog
+    this.cerrar();
+  }
+
+  /**
+   * Main upload action handler
+   */
+  handleUploadAction(): void {
+    if (this.procesoFinalizado) {
+      // Process completed - confirm and close with auto-close
+      this.confirmarYCerrarConAutoClose();
+    } else {
+      // Start upload process
+      this.uploadDocuments();
+    }
+  }
+
+  /**
+   * Get upload button variant based on state
+   */
+  getUploadButtonVariant(): string {
+    if (this.procesoFinalizado) {
+      return 'success';
+    }
+    return 'primary';
+  }
+
+  /**
+   * Get upload button disabled state
+   */
+  getUploadButtonDisabled(): boolean {
+    if (this.procesoFinalizado) {
+      return false; // Always enabled when process is finished
+    }
+
+    if (this.uploading) {
+      return true; // Disabled during upload to prevent double-clicking
+    }
+
+    return !this.canUpload(); // Disabled if no documents ready
+  }
+
+  /**
+   * Get upload button icon based on state
+   */
+  getUploadButtonIcon(): string {
+    if (this.procesoFinalizado) {
+      return 'fa-check';
+    }
+
+    if (this.uploading) {
+      return 'fa-spinner fa-spin';
+    }
+
+    return 'fa-cloud-upload-alt';
+  }
+
+  /**
+   * Get upload button text based on state
+   */
+  getUploadButtonText(): string {
+    if (this.procesoFinalizado) {
+      return 'Documentación Subida';
+    }
+
+    if (this.uploading) {
+      return 'Subiendo...';
+    }
+
+    const count = this.documentosParaSubir.length;
+    if (count === 0) {
+      return 'Subir Documentación';
+    }
+
+    return `Subir ${count} documento${count > 1 ? 's' : ''}`;
+  }
+
+  /**
+   * Abort upload process
+   */
+  private abortUpload(): void {
+    this.uploading = false;
+    this.progresoGlobal = 0;
+
+    // Reset all document states
+    this.documentosParaSubir.forEach(doc => {
+      if (doc.estado === 'subiendo' || doc.estado === 'validando') {
+        doc.estado = 'pendiente';
+        doc.progreso = 0;
+      }
+    });
+
+    this.notificationService.showWarning('Carga de documentos cancelada');
+  }
+
+  /**
+   * Clear all temporary data
+   */
+  private clearAllData(): void {
+    this.documentosParaSubir = [];
+    this.documentoActual = {
+      file: null,
+      tipoDocumentoId: '',
+      comentarios: ''
+    };
+    this.uploading = false;
+    this.progresoGlobal = 0;
+    this.procesoFinalizado = false;
+  }
+
+  /**
+   * Confirm and close with auto-close functionality
+   */
+  private confirmarYCerrarConAutoClose(): void {
+    // Disable both buttons
+    this.procesoFinalizado = true;
+
+    // Show success message
+    this.notificationService.showSuccess('Documentación subida exitosamente');
+
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+      this.confirmarYCerrar();
+    }, 3000);
   }
 }
