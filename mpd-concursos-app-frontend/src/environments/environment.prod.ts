@@ -40,6 +40,8 @@ export const environment = {
     filePreview: true,
     darkMode: true,
     accessibility: true,
+    useMockCvData: false,  // ❌ Mock CV data DESHABILITADO en producción
+    enableCvMockInterceptor: false  // ❌ Mock interceptor DESHABILITADO en producción
   },
 
   // Cache Configuration

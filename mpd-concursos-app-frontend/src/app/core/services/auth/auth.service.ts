@@ -20,7 +20,7 @@ export class AuthService {
   private userInfoSignal = signal<UserInfo>({
     username: '',
     cuit: '',
-    profileImage: localStorage.getItem('userProfileImage') || ''
+    profileImage: ''
   });
 
   public readonly userInfo = computed(() => this.userInfoSignal());
@@ -29,15 +29,21 @@ export class AuthService {
     private loginService: LoginService,
     private tokenService: TokenService
   ) {
+    // Limpiar imagen legacy al inicializar (migración)
+    this.cleanupLegacyProfileImage();
+
     this.loadUserInfo();
 
-    // Efecto para sincronizar con localStorage
+    // Efecto para sincronizar con localStorage usando clave específica por usuario
     effect(() => {
       const currentInfo = this.userInfo();
-      if (currentInfo.profileImage) {
-        localStorage.setItem('userProfileImage', currentInfo.profileImage);
-      } else {
-        localStorage.removeItem('userProfileImage');
+      if (currentInfo.username) {
+        const userProfileImageKey = `userProfileImage_${currentInfo.username}`;
+        if (currentInfo.profileImage) {
+          localStorage.setItem(userProfileImageKey, currentInfo.profileImage);
+        } else {
+          localStorage.removeItem(userProfileImageKey);
+        }
       }
     });
   }
@@ -127,7 +133,10 @@ export class AuthService {
 
     const username = this.tokenService.getUsername();
     const cuit = this.tokenService.getCuit();
-    const profileImage = localStorage.getItem('userProfileImage') || '';
+
+    // Cargar imagen específica del usuario usando clave única
+    const userProfileImageKey = `userProfileImage_${username}`;
+    const profileImage = localStorage.getItem(userProfileImageKey) || '';
 
     if (username && cuit) {
       this.userInfoSignal.set({
@@ -142,11 +151,33 @@ export class AuthService {
   }
 
   private clearUserInfo(): void {
+    // Limpiar imagen de perfil del usuario actual antes de limpiar la info
+    const currentUsername = this.userInfoSignal().username;
+    if (currentUsername) {
+      const userProfileImageKey = `userProfileImage_${currentUsername}`;
+      localStorage.removeItem(userProfileImageKey);
+    }
+
     this.userInfoSignal.set({
       username: '',
       cuit: '',
       profileImage: ''
     });
+  }
+
+  /**
+   * Limpia la imagen de perfil legacy del localStorage (migración)
+   */
+  private cleanupLegacyProfileImage(): void {
+    try {
+      const legacyImage = localStorage.getItem('userProfileImage');
+      if (legacyImage) {
+        console.log('[AuthService] Limpiando imagen de perfil legacy del localStorage');
+        localStorage.removeItem('userProfileImage');
+      }
+    } catch (error) {
+      console.error('[AuthService] Error al limpiar imagen legacy:', error);
+    }
   }
 
   public updateProfileImage(imageUrl: string): void {

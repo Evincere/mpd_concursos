@@ -24,7 +24,12 @@
     "build:check": "ng build --configuration production --output-path=dist-check",
     "validate": "node scripts/validate-code.js",
     "pre-commit": "node scripts/pre-commit.js",
-    "quality-check": "npm run lint && npm run validate && npm run test:quick && npm run build:check"
+    "quality-check": "npm run lint && npm run validate && npm run test:quick && npm run build:check",
+    "cv:migrate": "node scripts/master-cv-migration.js",
+    "cv:migrate:routes": "node scripts/migrate-cv-routes.js",
+    "cv:cleanup:legacy": "node scripts/cleanup-legacy-cv.js",
+    "cv:migration:execute": "node scripts/execute-cv-migration.js",
+    "cv:activate:now": "node scripts/activate-cv-migration-now.js"
   },
   "private": true,
   "dependencies": {

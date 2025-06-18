@@ -91,20 +91,30 @@ import { ControlValueAccessor, FormControl, NgControl, ReactiveFormsModule, Abst
       font-size: 1rem;
       line-height: 1.5;
       color: var(--color-text-primary, #333);
-      background-color: var(--color-surface, #fff);
-      border: 1px solid var(--color-border, #ddd);
-      border-radius: 4px;
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      /* Usar glassmorphism por defecto en lugar de fondo blanco */
+      background-color: rgba(75, 85, 99, 0.4);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      transition: all 0.2s ease-in-out;
     }
 
     .field-input:focus {
       outline: none;
-      border-color: var(--color-primary, #3f51b5);
-      box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+      border-color: rgba(96, 165, 250, 0.6);
+      background-color: rgba(75, 85, 99, 0.6);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
+    }
+
+    .field-input:hover:not(:focus):not(:disabled) {
+      border-color: rgba(255, 255, 255, 0.25);
+      background-color: rgba(75, 85, 99, 0.5);
     }
 
     .field-input:disabled {
-      background-color: var(--color-background-disabled, #f5f5f5);
+      background-color: rgba(55, 65, 81, 0.6);
+      color: #9ca3af;
       cursor: not-allowed;
       opacity: 0.7;
     }
@@ -339,7 +349,8 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
   }
 
   ngOnInit(): void {
-    if (this.control) {
+    // Solo manejar el control pasado como @Input si NO estamos usando ngControl (formControlName)
+    if (this.control && !this.ngControl) {
       // Sincronizar valor inicial
       this.value = this.control.value || '';
 
@@ -358,8 +369,10 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
         this.isDisabled = this.control?.disabled || false;
       });
     } else if (this.ngControl?.control) {
+      // Manejar a través de ControlValueAccessor cuando se usa formControlName
       this.ngControl.control.statusChanges.subscribe(() => {
         this.showError = this.ngControl?.invalid && (this.ngControl?.touched || this.ngControl?.dirty) || false;
+        this.isDisabled = this.ngControl?.disabled || false;
       });
     }
   }
@@ -384,13 +397,13 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
     const value = (event.target as HTMLInputElement).value;
     this.value = value;
 
-    // Si tenemos un control pasado como input, actualizarlo
-    if (this.control) {
+    // Solo actualizar el control directo si NO estamos usando ngControl
+    if (this.control && !this.ngControl) {
       this.control.setValue(value);
       this.control.markAsTouched();
     }
 
-    // También llamar al onChange para compatibilidad con ControlValueAccessor
+    // Siempre llamar al onChange para ControlValueAccessor (cuando se usa formControlName)
     this.onChange(value);
   }
 
@@ -406,13 +419,13 @@ export class CustomFormFieldComponent implements OnInit, ControlValueAccessor {
   clearValue(): void {
     this.value = '';
 
-    // Si tenemos un control pasado como input, actualizarlo
-    if (this.control) {
+    // Solo actualizar el control directo si NO estamos usando ngControl
+    if (this.control && !this.ngControl) {
       this.control.setValue('');
       this.control.markAsTouched();
     }
 
-    // También llamar al onChange para compatibilidad con ControlValueAccessor
+    // Siempre llamar al onChange para ControlValueAccessor
     this.onChange('');
   }
 

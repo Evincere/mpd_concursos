@@ -9,13 +9,15 @@ import { IndexedDBService } from './core/services/storage/indexed-db.service';
 import { CSPService } from './core/services/security/csp.service';
 import { AuthService } from './core/services/auth/auth.service';
 import { ProfileService } from './core/services/profile/profile.service';
-import { ExperienceService } from './core/services/experience/experience.service';
+// Legacy ExperienceService removed - using ExperienceSimpleService
 import { TokenService } from './core/services/auth/token.service';
 import { DocumentosService } from './core/services/documentos/documentos.service';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
-import { EducacionService } from './core/services/educacion/educacion.service';
+import { cvMockInterceptor } from './core/interceptors/cv-mock.interceptor';
+import { environment } from '../environments/environment';
+// Legacy EducacionService removed - using EducationSimpleService
 import { ArgentinaDataService } from './core/services/argentina-data.service';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
@@ -36,10 +38,10 @@ export const appConfig: ApplicationConfig = {
     // Proveedores de servicios core
     AuthService,
     ProfileService,
-    ExperienceService,
+    // ExperienceService, // ❌ Legacy service removed
     TokenService,
     DocumentosService,
-    EducacionService,
+    // EducacionService, // ❌ Legacy service removed
     ArgentinaDataService,
     IndexedDBService,
     CSPService,
@@ -49,7 +51,10 @@ export const appConfig: ApplicationConfig = {
     { provide: 'ResponsiveService', useExisting: ResponsiveService },
     // Deshabilitamos temporalmente los servicios de prueba
     { provide: 'ResponsiveTestRunnerService', useValue: {} },
-    provideHttpClient(withInterceptors([AuthInterceptor, ErrorInterceptor, debugInterceptor])),
+    // Configuración condicional de interceptores
+    provideHttpClient(withInterceptors(
+      getInterceptors()
+    )),
     // NgRx Store
     provideStore(reducers),
     provideEffects([]),
@@ -65,3 +70,23 @@ export const appConfig: ApplicationConfig = {
           })
   ]
 };
+
+/**
+ * Configuración condicional de interceptores basada en environment
+ * ✅ Mock interceptor solo en desarrollo
+ * ❌ Mock interceptor deshabilitado en producción
+ */
+function getInterceptors() {
+  const baseInterceptors = [
+    AuthInterceptor,
+    ErrorInterceptor,
+    debugInterceptor
+  ];
+
+  // Solo agregar mock interceptor en desarrollo
+  if (environment.features?.enableCvMockInterceptor) {
+    baseInterceptors.splice(2, 0, cvMockInterceptor);
+  }
+
+  return baseInterceptors;
+}

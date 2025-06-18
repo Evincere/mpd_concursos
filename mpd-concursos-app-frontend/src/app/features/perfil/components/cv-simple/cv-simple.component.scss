@@ -1,0 +1,667 @@
+/* ===== CV SIMPLE GLASSMORPHISM STYLES - MEJORADO ===== */
+
+.cv-simple-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--user-spacing-xl);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--user-spacing-md);
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--user-spacing-xl);
+  text-align: center;
+
+  p {
+    margin-top: var(--user-spacing-md);
+    color: var(--user-text-secondary);
+  }
+}
+
+.cv-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--user-spacing-xl);
+}
+
+/* ===== SECCIONES PRINCIPALES ===== */
+
+.cv-section-wrapper {
+  position: relative;
+  margin-bottom: var(--user-spacing-lg);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* ===== SECCIONES ===== */
+
+.cv-section {
+  padding: var(--user-spacing-lg);
+
+  /* Diferenciación visual por sección */
+  &.experience-section {
+    background: rgba(59, 130, 246, 0.03); /* Azul muy sutil */
+    border-left: 3px solid var(--user-primary-color);
+  }
+
+  &.education-section {
+    background: rgba(76, 175, 80, 0.03); /* Verde muy sutil */
+    border-left: 3px solid #4CAF50;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--user-spacing-lg);
+    padding-bottom: var(--user-spacing-md);
+    border-bottom: 2px solid var(--user-border-color);
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: var(--user-spacing-sm);
+      margin: 0;
+      color: var(--user-text-primary);
+      font-size: 1.4rem;
+      font-weight: 700;
+
+      i {
+        color: var(--user-primary-color);
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+/* ===== LISTA DE ITEMS ===== */
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--user-spacing-md);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--user-spacing-xl);
+  text-align: center;
+  background: var(--user-surface-color);
+  border: 2px dashed var(--user-border-color);
+  border-radius: var(--user-border-radius);
+  
+  i {
+    font-size: 3rem;
+    color: var(--user-text-secondary);
+    margin-bottom: var(--user-spacing-md);
+  }
+  
+  p {
+    color: var(--user-text-secondary);
+    margin-bottom: var(--user-spacing-md);
+  }
+}
+
+.item-card {
+  /* Glassmorphism con fondo más sólido para mejor legibilidad */
+  background: rgba(55, 65, 81, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border-color: #3b82f6;
+  }
+
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+
+    h4 {
+      margin: 0;
+      color: #f9fafb; /* Texto blanco para contraste con fondo oscuro */
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+  
+  .item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    p {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #d1d5db; /* Texto gris claro para contraste con fondo oscuro */
+      font-size: 0.9rem;
+
+      i {
+        color: #60a5fa; /* Azul claro para iconos */
+        width: 16px;
+        text-align: center;
+      }
+    }
+
+    .company, .institution {
+      font-weight: 500;
+      color: #f9fafb; /* Texto blanco para elementos importantes */
+    }
+
+    .dates {
+      color: #9ca3af; /* Gris más claro para fechas */
+    }
+
+    .type-status {
+      display: flex;
+      gap: 1rem;
+
+      .type, .status {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .type {
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
+
+      .status {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+    }
+
+    .description {
+      margin-top: 0.5rem;
+      padding: 1rem;
+      background: rgba(75, 85, 99, 0.5);
+      border-radius: 8px;
+      font-style: italic;
+      color: #e5e7eb;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+/* ===== FORMULARIOS EXPANDIBLES - MEJORADO PARA ACCESIBILIDAD ===== */
+
+.form-section {
+  margin: var(--user-spacing-lg) 0;
+  padding: var(--user-spacing-xl);
+  /* Fondo glassmorphism más transparente para evitar el blanco sólido */
+  background: rgba(55, 65, 81, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: expandIn 0.3s ease;
+
+  /* Texto blanco para contraste con fondo oscuro */
+  color: #ffffff;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 100%;
+  /* Remover fondo para evitar interferencia con glassmorphism del padre */
+  background: transparent !important;
+  padding: var(--user-spacing-lg) !important;
+  margin: var(--user-spacing-md) 0 !important;
+
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--user-spacing-lg);
+    padding-bottom: var(--user-spacing-md);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+
+    h4 {
+      margin: 0;
+      color: #ffffff !important; /* Texto blanco para fondo oscuro */
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: var(--user-spacing-sm);
+
+      i {
+        color: #60a5fa !important; /* Azul más claro para fondo oscuro */
+        font-size: 1.1rem;
+      }
+    }
+
+    .close-btn {
+      background: #ffffff !important;
+      border: 2px solid #dc2626 !important; /* Rojo accesible */
+      color: #dc2626 !important; /* Rojo accesible - 5.9:1 ratio */
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      width: 40px; /* Aumentado para mejor touch target */
+      height: 40px; /* Aumentado para mejor touch target */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: #fef2f2 !important; /* Fondo rojo muy claro */
+        border-color: #b91c1c !important;
+        color: #b91c1c !important;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2) !important;
+      }
+
+      &:focus {
+        outline: none !important;
+        box-shadow:
+          0 0 0 3px rgba(220, 38, 38, 0.2) !important,
+          0 2px 8px rgba(220, 38, 38, 0.2) !important;
+      }
+    }
+  }
+
+  form {
+    margin-top: var(--user-spacing-md);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--user-spacing-xl);
+    margin-bottom: var(--user-spacing-xl);
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Mejoras de accesibilidad para campos de formulario */
+    app-custom-form-field,
+    app-custom-select,
+    app-custom-datepicker {
+      /* Contenedor del campo */
+
+      .field-label,
+      .datepicker-label {
+        color: #f9fafb !important; /* Texto blanco para fondo oscuro */
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem !important;
+        display: block !important;
+      }
+
+      /* Remover estilos que interfieren con el glassmorphism del componente */
+      .field-input,
+      .datepicker-input {
+        /* Solo aplicar estilos que no interfieran con el glassmorphism base */
+        color: #ffffff !important; /* Texto blanco para contraste */
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        /* Los estilos de background, border y efectos glassmorphism
+           se manejan en el componente CustomFormFieldComponent y CustomDatepickerComponent */
+
+        &::placeholder {
+          color: #9ca3af !important; /* Placeholder legible para fondo oscuro */
+          opacity: 1 !important;
+        }
+
+        /* Los estilos de :focus y :hover se manejan en el componente base
+           para mantener consistencia glassmorphism */
+      }
+
+      /* Estilos específicos para textareas */
+      textarea.field-input {
+        resize: vertical !important;
+        min-height: 80px !important;
+        line-height: 1.5 !important;
+        /* Los estilos glassmorphism se heredan del componente base */
+      }
+
+      /* Estilos específicos para selects/dropdowns */
+      .select-container,
+      .custom-select {
+        position: relative;
+
+        select.field-input {
+          appearance: none !important;
+          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 0.75rem center !important;
+          background-size: 1rem !important;
+          padding-right: 2.5rem !important;
+          /* Los estilos glassmorphism se heredan del componente base */
+        }
+
+        /* Dropdown options styling */
+        option {
+          background: rgba(55, 65, 81, 0.95) !important;
+          color: #ffffff !important;
+          padding: 0.5rem !important;
+
+          &:checked {
+            background: rgba(59, 130, 246, 0.9) !important;
+            color: #ffffff !important;
+          }
+
+          &:hover {
+            background: rgba(75, 85, 99, 0.8) !important;
+          }
+        }
+      }
+    }
+
+    .checkbox-field {
+      grid-column: 1 / -1;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: var(--user-spacing-sm);
+        color: #f9fafb !important; /* Texto blanco para fondo oscuro */
+        font-weight: 500;
+        cursor: pointer;
+
+        input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          accent-color: var(--user-primary-color);
+        }
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--user-spacing-lg);
+    padding-top: var(--user-spacing-xl);
+    border-top: 2px solid rgba(255, 255, 255, 0.2); /* Borde glassmorphism */
+    margin-top: var(--user-spacing-lg);
+
+    /* Mejoras de accesibilidad para botones */
+    app-custom-button {
+      button {
+        min-height: 44px !important; /* Cumple con WCAG touch target */
+        padding: 0.75rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease !important;
+        border: 2px solid transparent !important;
+
+        /* Botón Cancelar */
+        &[color="warn"] {
+          background: #ffffff !important;
+          color: #dc2626 !important; /* Rojo accesible - 5.9:1 ratio */
+          border-color: #dc2626 !important;
+
+          &:hover {
+            background: #fef2f2 !important; /* Fondo rojo muy claro */
+            color: #b91c1c !important;
+            border-color: #b91c1c !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2) !important;
+          }
+
+          &:focus {
+            outline: none !important;
+            box-shadow:
+              0 0 0 3px rgba(220, 38, 38, 0.2) !important,
+              0 4px 12px rgba(220, 38, 38, 0.2) !important;
+          }
+        }
+
+        /* Botón Guardar */
+        &[color="primary"] {
+          background: #3b82f6 !important; /* Azul accesible */
+          color: #ffffff !important; /* Blanco - 4.5:1 ratio mínimo */
+          border-color: #3b82f6 !important;
+
+          &:hover:not(:disabled) {
+            background: #2563eb !important;
+            border-color: #2563eb !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+          }
+
+          &:focus {
+            outline: none !important;
+            box-shadow:
+              0 0 0 3px rgba(59, 130, 246, 0.2) !important,
+              0 4px 12px rgba(59, 130, 246, 0.3) !important;
+          }
+
+          &:disabled {
+            background: #9ca3af !important; /* Gris para deshabilitado */
+            border-color: #9ca3af !important;
+            color: #ffffff !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+            box-shadow: none !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+  .cv-simple-container {
+    padding: var(--user-spacing-sm);
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--user-spacing-sm);
+  }
+  
+  .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--user-spacing-sm);
+  }
+  
+  .form-container {
+    margin: var(--user-spacing-sm);
+    max-width: none;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+
+/* ===== ANIMACIONES ===== */
+
+.item-card {
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    transform: scaleY(0.8);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+    max-height: 1000px;
+  }
+}
+
+.form-section {
+  animation: expandIn 0.4s ease;
+}
+
+/* ===== MEJORAS DE ACCESIBILIDAD ADICIONALES ===== */
+
+/* Mejoras para alto contraste */
+@media (prefers-contrast: high) {
+  .form-section {
+    background: #ffffff !important;
+    border: 3px solid #000000 !important;
+
+    .form-header h4 {
+      color: #000000 !important;
+    }
+
+    .form-grid {
+      app-custom-form-field,
+      app-custom-select {
+        label {
+          color: #000000 !important;
+        }
+
+        input,
+        textarea,
+        select {
+          background: #ffffff !important;
+          border: 2px solid #000000 !important;
+          color: #000000 !important;
+
+          &:focus {
+            border-color: #0066cc !important;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.3) !important;
+          }
+        }
+      }
+    }
+
+    .form-actions app-custom-button button {
+      &[color="primary"] {
+        background: #0066cc !important;
+        border-color: #0066cc !important;
+        color: #ffffff !important;
+      }
+
+      &[color="warn"] {
+        background: #ffffff !important;
+        border-color: #cc0000 !important;
+        color: #cc0000 !important;
+      }
+    }
+  }
+}
+
+/* Mejoras para movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .form-section {
+    animation: none !important;
+  }
+
+  .form-actions app-custom-button button {
+    transition: none !important;
+    transform: none !important;
+
+    &:hover {
+      transform: none !important;
+    }
+  }
+
+  .close-btn {
+    transition: none !important;
+    transform: none !important;
+
+    &:hover {
+      transform: none !important;
+    }
+  }
+}
+
+/* Mejoras para pantallas pequeñas */
+@media (max-width: 768px) {
+  .form-section {
+    margin: var(--user-spacing-md) 0;
+    padding: var(--user-spacing-lg);
+
+    .form-grid {
+      grid-template-columns: 1fr !important;
+      gap: var(--user-spacing-lg);
+
+      app-custom-form-field,
+      app-custom-select {
+        input,
+        textarea,
+        select {
+          font-size: 1rem !important; /* Tamaño mínimo para móvil */
+          padding: 1rem !important; /* Padding aumentado para touch */
+        }
+      }
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: var(--user-spacing-md);
+
+      app-custom-button {
+        width: 100%;
+
+        button {
+          width: 100% !important;
+          min-height: 48px !important; /* Touch target más grande en móvil */
+        }
+      }
+    }
+  }
+}
+
+/* Mejoras para focus visible */
+.form-section {
+  *:focus-visible {
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: 2px !important;
+  }
+}

@@ -52,16 +52,10 @@
             <!-- CV Tab -->
             <ng-container *ngSwitchCase="'cv'">
               <div class="cv-section">
-                <app-perfil-cv
+                <app-cv-simple
                   [userProfile]="userProfile"
-                  [experiencias]="experienciasArray"
-                  [educacionList]="educacionList"
-                  [isLoading]="isLoading"
-                  (addExperience)="agregarExperiencia()"
-                  (addEducation)="agregarEducacion()"
-                  (deleteExperience)="eliminarExperiencia($event)"
-                  (deleteEducation)="eliminarEducacion($event)">
-                </app-perfil-cv>
+                  [isLoading]="isLoading">
+                </app-cv-simple>
               </div>
             </ng-container>
 
@@ -88,28 +82,5 @@
     </app-custom-tabs>
   </div>
 
-  <!-- Modals Section -->
-  <div class="modals-container">
-    <!-- Education Modal -->
-    <div *ngIf="mostrarModalEducacion && userProfile && userProfile.id" class="modal-overlay">
-      <div class="modal-container">
-        <app-educacion-container
-          [usuarioId]="usuarioId"
-          (educacionGuardada)="onEducacionGuardada($event)"
-          (cerrar)="cerrarModalEducacion()">
-        </app-educacion-container>
-      </div>
-    </div>
 
-    <!-- Experience Modal -->
-    <div *ngIf="mostrarModalExperiencia && esIdUsuarioValido()" class="modal-overlay">
-      <div class="modal-container">
-        <app-experiencia-container
-          [usuarioId]="usuarioId"
-          (experienciaGuardada)="onExperienciaGuardada($event)"
-          (cerrar)="cerrarModalExperiencia()">
-        </app-experiencia-container>
-      </div>
-    </div>
-  </div>
 </div>

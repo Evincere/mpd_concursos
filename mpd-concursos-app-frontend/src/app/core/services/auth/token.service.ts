@@ -112,12 +112,25 @@ export class TokenService {
 
   public signOut(): void {
     try {
+      // Obtener username antes de limpiar para limpiar su imagen específica
+      const username = this.getUsername();
+
       window.localStorage.removeItem(this.tokenKey);
       window.localStorage.removeItem(this.userKey);
       window.localStorage.removeItem(this.refreshTokenKey);
       window.localStorage.removeItem(this.usernameKey);
       window.localStorage.removeItem(this.authoritiesKey);
       window.localStorage.removeItem(this.cuitKey);
+
+      // IMPORTANTE: Limpiar imagen de perfil específica del usuario
+      if (username) {
+        const userProfileImageKey = `userProfileImage_${username}`;
+        window.localStorage.removeItem(userProfileImageKey);
+      }
+
+      // También limpiar la clave legacy por si acaso
+      window.localStorage.removeItem('userProfileImage');
+
       this.tokenSubject.next(null);
       // Logging implementado con LoggingService;
     } catch (error) {

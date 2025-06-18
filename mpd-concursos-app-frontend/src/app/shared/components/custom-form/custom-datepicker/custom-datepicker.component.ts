@@ -45,14 +45,14 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, ReactiveFormsModu
 
     .datepicker-label {
       font-size: 0.875rem;
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 0.5rem;
-      color: var(--color-text, #333);
+      color: #f9fafb; /* Texto blanco para fondo oscuro */
     }
 
     .datepicker-label.required::after {
       content: '*';
-      color: var(--color-warn, #f44336);
+      color: #ef4444;
       margin-left: 0.25rem;
     }
 
@@ -66,26 +66,34 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, ReactiveFormsModu
       width: 100%;
       padding: 0.75rem 1rem;
       font-size: 0.875rem;
-      border: 1px solid var(--color-border, #ddd);
-      border-radius: 4px;
-      background-color: var(--color-background, #fff);
-      transition: border-color 0.2s, box-shadow 0.2s;
+      font-weight: 500;
+
+      /* Glassmorphism styling */
+      background: rgba(55, 65, 81, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #ffffff;
+
+      transition: all 0.2s ease;
       outline: none;
     }
 
     .datepicker-input:focus {
-      border-color: var(--color-primary, #3f51b5);
-      box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      transform: translateY(-1px);
     }
 
     .datepicker-input::placeholder {
-      color: var(--color-text-hint, #999);
+      color: #d1d5db;
     }
 
     .datepicker-input:disabled {
-      background-color: var(--color-disabled-background, #f5f5f5);
-      color: var(--color-disabled-text, #999);
+      background: rgba(55, 65, 81, 0.5);
+      color: #9ca3af;
       cursor: not-allowed;
+      transform: none;
     }
 
     .clear-button {
@@ -97,65 +105,59 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, ReactiveFormsModu
       width: 1.5rem;
       height: 1.5rem;
       cursor: pointer;
-      color: var(--color-text-secondary, #666);
-      transition: color 0.2s;
+      color: #d1d5db;
+      transition: all 0.2s ease;
+      border-radius: 4px;
     }
 
     .clear-button:hover {
-      color: var(--color-warn, #f44336);
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .clear-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
     }
 
     .datepicker-hint {
       font-size: 0.75rem;
-      color: var(--color-text-hint, #999);
+      color: #9ca3af;
       margin-top: 0.25rem;
     }
 
     .custom-datepicker.disabled .datepicker-label {
-      color: var(--color-disabled-text, #999);
+      color: #6b7280;
     }
 
-    /* Estilos para tema oscuro */
-    @media (prefers-color-scheme: dark) {
-      .datepicker-label {
-        color: var(--color-text-dark, #e0e0e0);
-      }
+    /* Mejoras de accesibilidad */
+    .datepicker-input:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
 
-      .datepicker-input {
-        background-color: var(--color-background-dark, #333);
-        border-color: var(--color-border-dark, #555);
-        color: var(--color-text-dark, #e0e0e0);
-      }
+    /* Estilos específicos para el selector de fecha nativo */
+    .datepicker-input::-webkit-calendar-picker-indicator {
+      background: transparent;
+      color: #d1d5db;
+      cursor: pointer;
+      filter: invert(1) brightness(1.2);
+      width: 20px;
+      height: 20px;
+      margin-right: 4px;
+    }
 
-      .datepicker-input:focus {
-        border-color: var(--color-primary-dark, #7986cb);
-        box-shadow: 0 0 0 2px rgba(121, 134, 203, 0.2);
-      }
+    .datepicker-input::-webkit-calendar-picker-indicator:hover {
+      filter: invert(0.8) brightness(1.4);
+      transform: scale(1.1);
+    }
 
-      .datepicker-input::placeholder {
-        color: var(--color-text-hint-dark, #777);
-      }
-
-      .datepicker-input:disabled {
-        background-color: var(--color-disabled-background-dark, #444);
-        color: var(--color-disabled-text-dark, #777);
-      }
-
-      .clear-button {
-        color: var(--color-text-secondary-dark, #aaa);
-      }
-
-      .clear-button:hover {
-        color: var(--color-warn-dark, #ef5350);
-      }
-
-      .datepicker-hint {
-        color: var(--color-text-hint-dark, #777);
-      }
-
-      .custom-datepicker.disabled .datepicker-label {
-        color: var(--color-disabled-text-dark, #777);
-      }
+    /* Para Firefox */
+    .datepicker-input::-moz-calendar-picker-indicator {
+      background: transparent;
+      color: #d1d5db;
+      cursor: pointer;
+      filter: invert(1) brightness(1.2);
     }
   `],
   providers: [
@@ -175,10 +177,10 @@ export class CustomDatepickerComponent implements ControlValueAccessor, OnInit {
   @Input() clearable = true;
   @Input() formControl: FormControl | null = null;
 
-  inputControl = new FormControl<Date | null>(null);
+  inputControl = new FormControl<string | null>(null);
 
   // ControlValueAccessor implementation
-  onChange: (value: Date | null) => void = () => {
+  onChange: (value: string | null) => void = () => {
     // Este método será reemplazado por el framework
   };
   onTouched: () => void = () => {
@@ -239,11 +241,11 @@ export class CustomDatepickerComponent implements ControlValueAccessor, OnInit {
     });
   }
 
-  writeValue(value: Date | null): void {
+  writeValue(value: string | null): void {
     this.inputControl.setValue(value, { emitEvent: false });
   }
 
-  registerOnChange(fn: (value: Date | null) => void): void {
+  registerOnChange(fn: (value: string | null) => void): void {
     this.onChange = fn;
   }
 

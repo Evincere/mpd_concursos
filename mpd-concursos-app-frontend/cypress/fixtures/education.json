@@ -1,0 +1,108 @@
+[
+  {
+    "id": "edu-1",
+    "userId": "test-user-1",
+    "type": "UNDERGRADUATE_DEGREE",
+    "status": "COMPLETED",
+    "title": "Licenciatura en Sistemas de Información",
+    "institution": "Universidad Tecnológica Nacional",
+    "startDate": "2015-03-01T00:00:00Z",
+    "endDate": "2019-12-15T00:00:00Z",
+    "issueDate": "2020-02-20T00:00:00Z",
+    "description": "Carrera de grado enfocada en desarrollo de software, bases de datos y gestión de proyectos tecnológicos.",
+    "documentUrl": "/documents/titulo-licenciatura.pdf",
+    "documents": [
+      {
+        "id": "doc-edu-1",
+        "name": "Título Universitario",
+        "url": "/documents/titulo-licenciatura.pdf",
+        "type": "application/pdf"
+      }
+    ],
+    "durationYears": 5,
+    "average": 8.5,
+    "thesisTopic": null,
+    "hourlyLoad": null,
+    "hadFinalEvaluation": true,
+    "activityType": null,
+    "topic": null,
+    "activityRole": null,
+    "expositionPlaceDate": null,
+    "comments": "Graduado con promedio distinguido",
+    "scientificActivities": [],
+    "createdAt": "2020-02-20T00:00:00Z",
+    "updatedAt": "2025-06-18T10:00:00Z"
+  },
+  {
+    "id": "edu-2",
+    "userId": "test-user-1",
+    "type": "POSTGRADUATE_SPECIALIZATION",
+    "status": "IN_PROGRESS",
+    "title": "Especialización en Desarrollo de Software",
+    "institution": "Universidad de Buenos Aires",
+    "startDate": "2023-04-01T00:00:00Z",
+    "endDate": null,
+    "issueDate": null,
+    "description": "Especialización enfocada en arquitecturas de software modernas, microservicios y DevOps.",
+    "documentUrl": null,
+    "documents": [],
+    "durationYears": 2,
+    "average": null,
+    "thesisTopic": "Implementación de Arquitecturas Hexagonales en Aplicaciones Enterprise",
+    "hourlyLoad": 400,
+    "hadFinalEvaluation": false,
+    "activityType": null,
+    "topic": null,
+    "activityRole": null,
+    "expositionPlaceDate": null,
+    "comments": "Cursando actualmente con excelente rendimiento",
+    "scientificActivities": [
+      {
+        "id": "sci-1",
+        "type": "RESEARCH_PROJECT",
+        "title": "Análisis de Patrones de Arquitectura en Microservicios",
+        "description": "Investigación sobre la implementación efectiva de patrones arquitectónicos en sistemas distribuidos.",
+        "role": "PRINCIPAL_INVESTIGATOR",
+        "date": "2024-01-15T00:00:00Z",
+        "location": "Universidad de Buenos Aires",
+        "documentUrl": "/documents/paper-microservicios.pdf"
+      }
+    ],
+    "createdAt": "2023-04-01T00:00:00Z",
+    "updatedAt": "2025-06-18T10:00:00Z"
+  },
+  {
+    "id": "edu-3",
+    "userId": "test-user-1",
+    "type": "TRAINING_COURSE",
+    "status": "COMPLETED",
+    "title": "Curso Avanzado de Angular y TypeScript",
+    "institution": "Platzi",
+    "startDate": "2024-01-10T00:00:00Z",
+    "endDate": "2024-03-15T00:00:00Z",
+    "issueDate": "2024-03-20T00:00:00Z",
+    "description": "Curso intensivo sobre desarrollo frontend con Angular 17, TypeScript avanzado y mejores prácticas.",
+    "documentUrl": "/documents/certificado-angular.pdf",
+    "documents": [
+      {
+        "id": "doc-edu-3",
+        "name": "Certificado de Finalización",
+        "url": "/documents/certificado-angular.pdf",
+        "type": "application/pdf"
+      }
+    ],
+    "durationYears": null,
+    "average": null,
+    "thesisTopic": null,
+    "hourlyLoad": 120,
+    "hadFinalEvaluation": true,
+    "activityType": null,
+    "topic": null,
+    "activityRole": null,
+    "expositionPlaceDate": null,
+    "comments": "Curso completado con calificación excelente",
+    "scientificActivities": [],
+    "createdAt": "2024-03-20T00:00:00Z",
+    "updatedAt": "2025-06-18T10:00:00Z"
+  }
+]

@@ -268,14 +268,14 @@ export class ProfileImageManagerComponent {
   }
 
   private initializeImage(): void {
-    // Get image from auth service if not provided
-    if (!this.initialImageUrl) {
-      const userInfo = this.authService.userInfo();
-      if (userInfo.profileImage) {
-        this._currentImageUrl.set(userInfo.profileImage);
-      }
-    } else {
+    // Siempre usar la imagen del AuthService para asegurar que es del usuario correcto
+    const userInfo = this.authService.userInfo();
+    if (userInfo.profileImage) {
+      this._currentImageUrl.set(userInfo.profileImage);
+    } else if (this.initialImageUrl) {
       this._currentImageUrl.set(this.initialImageUrl);
+    } else {
+      this._currentImageUrl.set(null);
     }
   }
   
