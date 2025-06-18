@@ -29,12 +29,12 @@ export const cvMockInterceptor: HttpInterceptorFn = (req, next): Observable<Http
       return parts[parts.length - 1];
     };
 
-    // Función helper para mapear respuesta
+    // Función helper para mapear respuesta a HttpEvent
     const mapToHttpResponse = () => {
       return map((data: any) => new HttpResponse({
         status: 200,
         body: data
-      }));
+      }) as HttpEvent<any>);
     };
 
     // Experiencias
