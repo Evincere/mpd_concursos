@@ -15,11 +15,8 @@ export class UserProfileService {
   private authService = inject(AuthService);
 
   constructor(private http: HttpClient) {
-    // Intentar cargar la imagen almacenada en localStorage al inicio
-    const savedImage = localStorage.getItem('userProfileImage');
-    if (savedImage) {
-      this.profileImageSubject.next(savedImage);
-    }
+    // La imagen se carga desde AuthService, no desde localStorage directamente
+    // Esto evita problemas de sincronización entre usuarios
   }
 
   uploadProfileImage(file: File): Observable<Record<string, unknown>> {
@@ -41,12 +38,22 @@ export class UserProfileService {
   }
 
   private setProfileImage(imageUrl: string) {
-    localStorage.setItem('userProfileImage', imageUrl);
+    // Obtener username actual para crear clave específica
+    const currentUser = this.authService.userInfo();
+    if (currentUser.username) {
+      const userProfileImageKey = `userProfileImage_${currentUser.username}`;
+      localStorage.setItem(userProfileImageKey, imageUrl);
+    }
     this.profileImageSubject.next(imageUrl);
   }
 
   clearProfileImage() {
-    localStorage.removeItem('userProfileImage');
+    // Obtener username actual para limpiar clave específica
+    const currentUser = this.authService.userInfo();
+    if (currentUser.username) {
+      const userProfileImageKey = `userProfileImage_${currentUser.username}`;
+      localStorage.removeItem(userProfileImageKey);
+    }
     this.profileImageSubject.next(null);
   }
 

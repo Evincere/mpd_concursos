@@ -16,6 +16,8 @@ import { CustomCardComponent } from '@shared/components/custom-form/custom-card/
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
 import { CustomSelectComponent } from '@shared/components/custom-form/custom-select/custom-select.component';
+import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
+import { CustomTextareaComponent } from '@shared/components/custom-form/custom-textarea/custom-textarea.component';
 
 @Component({
   selector: 'app-cv-simple',
@@ -27,7 +29,9 @@ import { CustomSelectComponent } from '@shared/components/custom-form/custom-sel
     CustomCardComponent,
     CustomSpinnerComponent,
     CustomFormFieldComponent,
-    CustomSelectComponent
+    CustomSelectComponent,
+    CustomDatepickerComponent,
+    CustomTextareaComponent
   ],
   templateUrl: './cv-simple.component.html',
   styleUrls: ['./cv-simple.component.scss']
@@ -90,6 +94,8 @@ export class CvSimpleComponent implements OnInit, OnDestroy {
       status: ['En Curso', Validators.required],
       comments: ['']
     });
+
+
   }
 
   private loadData(): void {
@@ -302,4 +308,6 @@ export class CvSimpleComponent implements OnInit, OnDestroy {
     const option = this.educationStatuses.find(opt => opt.value === status);
     return option?.label || status;
   }
+
+
 }
