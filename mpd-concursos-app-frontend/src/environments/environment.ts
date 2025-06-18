@@ -20,8 +20,8 @@ export const environment = {
     profiles: true,
     admin: true,
     debug: true,
-    useMockCvData: true,  // ✅ Mock CV data habilitado en desarrollo
-    enableCvMockInterceptor: true  // ✅ Mock interceptor habilitado en desarrollo
+    useMockCvData: false,  // ⚠️ Mock CV data temporalmente deshabilitado
+    enableCvMockInterceptor: false  // ⚠️ Mock interceptor temporalmente deshabilitado
   },
 
   // Monitoring Configuration (desarrollo)

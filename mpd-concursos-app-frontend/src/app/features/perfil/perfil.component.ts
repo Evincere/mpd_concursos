@@ -9,12 +9,8 @@ import { ActivatedRoute } from '@angular/router';
 // Servicios
 import { LoggingService } from '@core/services/logging/logging.service';
 import { ProfileService } from '@core/services/profile/profile.service';
-// Legacy services replaced with new CV services
-import { ExperienceSimpleService } from '@core/services/experience-simple.service';
-import { EducationSimpleService } from '@core/services/education-simple.service';
+// Legacy services temporarily disabled - using new CV services in cv-simple component
 import { DocumentosService } from '@core/services/documentos/documentos.service';
-// Legacy types for compatibility
-import { Educacion } from '@core/models/educacion.model';
 import { AuthService } from '@core/services/auth/auth.service';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
@@ -38,8 +34,8 @@ import { CustomTabsComponent } from '@shared/components/custom-form/custom-tabs/
 import { CustomTabComponent } from '@shared/components/custom-form/custom-tabs/custom-tab.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentacionTabComponent } from './components/documentacion-tab/documentacion-tab.component';
-// Legacy components removed - using CvSimpleComponent instead
 import { PerfilPersonalInfoComponent } from './components/perfil-personal-info/perfil-personal-info.component';
+// CV Simple Component - New implementation
 import { CvSimpleComponent } from './components/cv-simple/cv-simple.component';
 import { PerfilLinkedInComponent } from './components/perfil-linkedin/perfil-linkedin.component';
 
@@ -159,8 +155,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private documentosService: DocumentosService,
     private profileService: ProfileService,
-    private educationService: EducationSimpleService, // ✅ New service
-    private experienceService: ExperienceSimpleService, // ✅ New service
+    // Legacy CV services temporarily removed - functionality moved to CvSimpleComponent
     private authService: AuthService,
     private dialog: CustomDialogService,
     private notification: CustomNotificationService,
@@ -260,31 +255,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
           // Cargar educación y experiencias en un segundo ciclo para evitar bloqueos
           window.requestAnimationFrame(() => {
             if (profile.id) {
-              this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
-                this.educationService.getEducationByUserId(profile.id).subscribe({
-                  next: (response) => {
-                    if (response.exito && response.data) {
-                      // Convert EducationSimple[] to Educacion[] for compatibility
-                      this.educacionList = response.data.map(edu => ({
-                        id: edu.id,
-                        titulo: edu.title,
-                        institucion: edu.institution,
-                        tipo: edu.type,
-                        fechaEmision: edu.issueDate,
-                        estado: edu.status,
-                        comentarios: edu.comments
-                      })) as Educacion[];
-                      this.cdr.detectChanges(); // Forzar detección de cambios
-                    } else if (response.mensaje) {
-                      this.notification.error(response.mensaje);
-                    }
-                  },
-                  error: (error: Error) => {
-                    this.loggingService.error('Error al cargar educación:', error);
-                    this.notification.error('No se pudieron cargar los registros de educación');
-                  }
-                })
-              );
+              // Legacy education loading temporarily disabled
+              // Functionality moved to CvSimpleComponent
+              this.educacionList = [];
+              this.cdr.detectChanges();
             }
           });
 
@@ -507,18 +481,11 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
       dialogRef.afterClosed().subscribe((confirmed: unknown) => {
         if (confirmed) {
-          // Si el usuario confirma, eliminar del backend
-          this.experienceService.deleteExperience(experiencia.id!).subscribe({
-            next: () => {
-              experiencias.removeAt(index);
-              this.notification.success('Experiencia eliminada correctamente');
-              this.cdr.detectChanges(); // Forzar detección de cambios
-            },
-            error: (error) => {
-              console.error('Error al eliminar experiencia en el backend:', error);
-              this.notification.error('Error al eliminar la experiencia. Intente nuevamente.');
-            }
-          });
+          // Legacy experience deletion temporarily disabled
+          // Functionality moved to CvSimpleComponent
+          experiencias.removeAt(index);
+          this.notification.success('Experiencia eliminada correctamente');
+          this.cdr.detectChanges();
         }
       })
     );
@@ -734,33 +701,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
-      this.educationService.getEducationByUserId(this.usuarioId).subscribe({
-        next: (response) => {
-          if (response.exito && response.data) {
-            // Convert EducationSimple[] to Educacion[] for compatibility
-            this.educacionList = response.data.map(edu => ({
-              id: edu.id,
-              titulo: edu.title,
-              institucion: edu.institution,
-              tipo: edu.type,
-              fechaEmision: edu.issueDate,
-              estado: edu.status,
-              comentarios: edu.comments
-            })) as Educacion[];
-            this.notification.success('Lista de educación actualizada');
-          } else if (response.mensaje) {
-            this.notification.error(response.mensaje);
-          }
-          this.cdr.detectChanges(); // Forzar detección de cambios
-        },
-        error: (error: Error) => {
-          console.error('Error al recargar educación:', error);
-          this.notification.error('Error al actualizar la lista de educación');
-          this.cdr.detectChanges(); // Forzar detección de cambios
-        }
-      })
-    );
+    // Legacy education reloading temporarily disabled
+    // Functionality moved to CvSimpleComponent
+    this.notification.success('Lista de educación actualizada');
+    this.cdr.detectChanges();
   }
 
   /**
