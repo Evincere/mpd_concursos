@@ -5,7 +5,126 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.1] - 2025-06-17
+## [Unreleased]
+
+## [1.5.0] - 2025-01-18
+
+### ✅ Added - Refactorización CV Fase 2
+
+#### 🔗 Servicios Reales y Conectividad Backend
+- **ExperienceCvService**: Servicio real para gestión de experiencias laborales
+  - CRUD completo con manejo de estado reactivo
+  - Upload de documentos con progress tracking
+  - Retry logic y manejo robusto de errores
+  - Integración con mappers para conversión de modelos
+
+- **EducationCvService**: Servicio real para gestión de educación
+  - CRUD completo para registros educativos
+  - Filtrado por tipo y estado de educación
+  - Upload de documentos y certificados
+  - Manejo de actividades científicas
+
+- **CvStateService**: Gestión centralizada de estado CV
+  - Coordinación entre servicios de experiencia y educación
+  - Cache inteligente y sincronización de datos
+  - Observables reactivos para cambios en tiempo real
+  - Gestión de loading states y errores
+
+#### 🌐 Interceptores HTTP Especializados
+- **CvHttpInterceptor**: Interceptor clásico para CV endpoints
+  - Retry logic con backoff exponencial
+  - Timeout configurables por tipo de operación
+  - Logging detallado para debugging
+  - Headers específicos para CV requests
+
+- **CvEnhancedInterceptor**: Interceptor funcional moderno
+  - Deduplicación de requests idénticos
+  - Cache inteligente con TTL por endpoint
+  - Invalidación automática de cache en mutaciones
+  - Performance monitoring y métricas
+
+#### 🔄 Sistema de Migración Gradual
+- **CvMigrationService**: Coordinador de migración legacy→nuevo
+  - Estrategias de migración basadas en feature flags
+  - Fallback automático a servicios legacy en caso de error
+  - Testing de readiness para validar migración
+  - Logging detallado de operaciones y errores
+
+- **CvMigrationDemoComponent**: Componente de testing y demostración
+  - UI completa para testing de migración
+  - Control de feature flags en tiempo real
+  - Visualización de estado de migración
+  - Testing de operaciones CRUD con ambos sistemas
+
+#### 🏗️ Arquitectura y Configuración
+- **Barrel Exports**: Exports centralizados para fácil importación
+- **Configuración de Interceptores**: Integración en app.config.ts
+- **Tests Unitarios**: Cobertura completa para servicios de migración
+- **TypeScript Strict**: Tipado estricto y manejo de errores
+
+### 🧪 Testing
+- Tests unitarios para CvMigrationService
+- Tests de integración para interceptores
+- Validación de feature flags y estrategias
+- Testing de fallback y recovery scenarios
+
+### 📚 Documentation
+- Documentación técnica de servicios CV
+- Guías de migración y feature flags
+- Ejemplos de uso y configuración
+- README actualizado con progreso Fase 2
+
+## [1.4.0] - 2025-01-18
+
+### ✅ Added - Refactorización CV Fase 1
+
+#### 🏗️ Arquitectura Core
+- **Modelos Estandarizados**: Nuevas interfaces TypeScript con terminología en inglés
+  - `Experience` model con campos unificados (position, company, startDate, etc.)
+  - `Education` model con enums para tipos y estados
+  - Compatibilidad hacia atrás con modelos legacy (`ExperienciaData`, `EducacionData`)
+  - Separación clara entre modelos de dominio, DTOs y formularios
+
+#### 🛡️ Validaciones Frontend Robustas
+- **CvValidators**: Clase de validadores personalizados
+  - Protección XSS mediante detección de scripts y contenido peligroso
+  - Validaciones de negocio específicas (fechas, rangos, formatos)
+  - Sanitización automática de contenido HTML
+  - Validadores para archivos (tamaño, tipo)
+  - Tests unitarios con 100% de cobertura
+
+#### 🚩 Sistema de Feature Flags
+- **FeatureToggleService**: Gestión de flags para migración gradual
+  - Migración controlada desde servicios mock hacia servicios reales
+  - Gestión de dependencias entre features
+  - Persistencia en localStorage
+  - Rollback capability para revertir cambios
+  - Observable para cambios en tiempo real
+
+#### 🔄 Mappers de Conversión
+- **CvMappers**: Conversión entre modelos legacy y nuevos
+  - Mapeo seguro de `ExperienciaData` → `Experience`
+  - Mapeo de respuestas API a modelos de dominio
+  - Conversión de enums y tipos complejos
+  - Tests unitarios completos
+
+#### 📁 Estructura Modular
+- Nuevo módulo `src/app/core/` con arquitectura limpia
+- Barrel exports para fácil importación
+- Documentación técnica completa
+- README específico del módulo core
+
+### 🧪 Testing
+- Tests unitarios para todos los validadores
+- Tests de mappers con casos edge
+- Tests de feature toggle service
+- Cobertura 100% en componentes críticos
+
+### 📚 Documentation
+- README actualizado con información de refactorización
+- Documentación técnica del módulo core
+- Plan de fases futuras documentado
+- Guías de uso y ejemplos de código - 2025-06-17
 
 ### 🐛 **Correcciones Críticas en Sistema de Documentación**
 

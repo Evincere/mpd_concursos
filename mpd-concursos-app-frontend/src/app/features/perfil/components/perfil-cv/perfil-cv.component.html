@@ -35,7 +35,7 @@
           </app-custom-button>
         </div>
 
-        <div *ngFor="let experiencia of experiencias; let i = index" 
+        <div *ngFor="let experiencia of experiencias; let i = index"
              class="experience-item">
           <div class="experience-header">
             <h4>{{ experiencia.get('puesto')?.value || experiencia.get('cargo')?.value }}</h4>
@@ -55,7 +55,7 @@
             </p>
             <p class="dates">
               <i class="fas fa-calendar"></i>
-              {{ formatDate(experiencia.get('fechaInicio')?.value) }} - 
+              {{ formatDate(experiencia.get('fechaInicio')?.value) }} -
               {{ experiencia.get('fechaFin')?.value ? formatDate(experiencia.get('fechaFin')?.value) : 'Actual' }}
             </p>
             <p *ngIf="experiencia.get('descripcion')?.value" class="description">
@@ -94,7 +94,7 @@
           </app-custom-button>
         </div>
 
-        <div *ngFor="let educacion of educacionList; let i = index" 
+        <div *ngFor="let educacion of educacionList; let i = index"
              class="education-item">
           <div class="education-header">
             <h4>{{ educacion.titulo }}</h4>

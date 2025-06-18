@@ -50,14 +50,13 @@ export class PerfilCvComponent {
   onDeleteEducation(index: number): void {
     this.deleteEducation.emit(index);
   }
-
   formatDate(date: any): string {
     if (!date) return '';
-    
+
     try {
       const dateObj = new Date(date);
       if (isNaN(dateObj.getTime())) return '';
-      
+
       return dateObj.toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long'

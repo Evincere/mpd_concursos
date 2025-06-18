@@ -15,6 +15,7 @@ import { DocumentosService } from './core/services/documentos/documentos.service
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
+import { cvEnhancedInterceptor } from './core/interceptors/cv-enhanced.interceptor';
 import { EducacionService } from './core/services/educacion/educacion.service';
 import { ArgentinaDataService } from './core/services/argentina-data.service';
 import { provideStore } from '@ngrx/store';
@@ -49,7 +50,12 @@ export const appConfig: ApplicationConfig = {
     { provide: 'ResponsiveService', useExisting: ResponsiveService },
     // Deshabilitamos temporalmente los servicios de prueba
     { provide: 'ResponsiveTestRunnerService', useValue: {} },
-    provideHttpClient(withInterceptors([AuthInterceptor, ErrorInterceptor, debugInterceptor])),
+    provideHttpClient(withInterceptors([
+      AuthInterceptor,
+      ErrorInterceptor,
+      cvEnhancedInterceptor,
+      debugInterceptor
+    ])),
     // NgRx Store
     provideStore(reducers),
     provideEffects([]),
