@@ -9,9 +9,12 @@ import { ActivatedRoute } from '@angular/router';
 // Servicios
 import { LoggingService } from '@core/services/logging/logging.service';
 import { ProfileService } from '@core/services/profile/profile.service';
-import { ExperienceService } from '@core/services/experience/experience.service';
+// Legacy services replaced with new CV services
+import { ExperienceSimpleService } from '@core/services/experience-simple.service';
+import { EducationSimpleService } from '@core/services/education-simple.service';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
-import { EducacionService, OperacionResponse } from '@core/services/educacion/educacion.service';
+// Legacy types for compatibility
+import { Educacion } from '@core/models/educacion.model';
 import { AuthService } from '@core/services/auth/auth.service';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
@@ -35,8 +38,7 @@ import { CustomTabsComponent } from '@shared/components/custom-form/custom-tabs/
 import { CustomTabComponent } from '@shared/components/custom-form/custom-tabs/custom-tab.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentacionTabComponent } from './components/documentacion-tab/documentacion-tab.component';
-import { EducacionContainerComponent } from './components/educacion/educacion-container/educacion-container.component';
-import { ExperienciaContainerComponent } from './components/experiencia/experiencia-container/experiencia-container.component';
+// Legacy components removed - using CvSimpleComponent instead
 import { PerfilPersonalInfoComponent } from './components/perfil-personal-info/perfil-personal-info.component';
 import { CvSimpleComponent } from './components/cv-simple/cv-simple.component';
 import { PerfilLinkedInComponent } from './components/perfil-linkedin/perfil-linkedin.component';
@@ -157,8 +159,8 @@ export class PerfilComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private documentosService: DocumentosService,
     private profileService: ProfileService,
-    private educacionService: EducacionService,
-    private experienceService: ExperienceService,
+    private educationService: EducationSimpleService, // ✅ New service
+    private experienceService: ExperienceSimpleService, // ✅ New service
     private authService: AuthService,
     private dialog: CustomDialogService,
     private notification: CustomNotificationService,
@@ -259,17 +261,26 @@ export class PerfilComponent implements OnInit, OnDestroy {
           window.requestAnimationFrame(() => {
             if (profile.id) {
               this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
-                this.educacionService.cargarEducacionPorUsuario(profile.id).subscribe({
-                  next: (response: OperacionResponse<Educacion[]>) => {
+                this.educationService.getEducationByUserId(profile.id).subscribe({
+                  next: (response) => {
                     if (response.exito && response.data) {
-                      this.educacionList = response.data;
+                      // Convert EducationSimple[] to Educacion[] for compatibility
+                      this.educacionList = response.data.map(edu => ({
+                        id: edu.id,
+                        titulo: edu.title,
+                        institucion: edu.institution,
+                        tipo: edu.type,
+                        fechaEmision: edu.issueDate,
+                        estado: edu.status,
+                        comentarios: edu.comments
+                      })) as Educacion[];
                       this.cdr.detectChanges(); // Forzar detección de cambios
                     } else if (response.mensaje) {
                       this.notification.error(response.mensaje);
                     }
                   },
                   error: (error: Error) => {
-                    console.error('Error al cargar educación:', error);
+                    this.loggingService.error('Error al cargar educación:', error);
                     this.notification.error('No se pudieron cargar los registros de educación');
                   }
                 })
@@ -724,10 +735,19 @@ export class PerfilComponent implements OnInit, OnDestroy {
     }
 
     this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
-      this.educacionService.cargarEducacionPorUsuario(this.usuarioId).subscribe({
-        next: (response: OperacionResponse<Educacion[]>) => {
+      this.educationService.getEducationByUserId(this.usuarioId).subscribe({
+        next: (response) => {
           if (response.exito && response.data) {
-            this.educacionList = response.data;
+            // Convert EducationSimple[] to Educacion[] for compatibility
+            this.educacionList = response.data.map(edu => ({
+              id: edu.id,
+              titulo: edu.title,
+              institucion: edu.institution,
+              tipo: edu.type,
+              fechaEmision: edu.issueDate,
+              estado: edu.status,
+              comentarios: edu.comments
+            })) as Educacion[];
             this.notification.success('Lista de educación actualizada');
           } else if (response.mensaje) {
             this.notification.error(response.mensaje);

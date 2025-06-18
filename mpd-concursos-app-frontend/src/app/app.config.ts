@@ -9,16 +9,15 @@ import { IndexedDBService } from './core/services/storage/indexed-db.service';
 import { CSPService } from './core/services/security/csp.service';
 import { AuthService } from './core/services/auth/auth.service';
 import { ProfileService } from './core/services/profile/profile.service';
-import { ExperienceService } from './core/services/experience/experience.service';
+// Legacy ExperienceService removed - using ExperienceSimpleService
 import { TokenService } from './core/services/auth/token.service';
 import { DocumentosService } from './core/services/documentos/documentos.service';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
-import { cvEnhancedInterceptor } from './core/interceptors/cv-enhanced.interceptor';
 import { cvMockInterceptor } from './core/interceptors/cv-mock.interceptor';
 import { environment } from '../environments/environment';
-import { EducacionService } from './core/services/educacion/educacion.service';
+// Legacy EducacionService removed - using EducationSimpleService
 import { ArgentinaDataService } from './core/services/argentina-data.service';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
@@ -39,10 +38,10 @@ export const appConfig: ApplicationConfig = {
     // Proveedores de servicios core
     AuthService,
     ProfileService,
-    ExperienceService,
+    // ExperienceService, // ❌ Legacy service removed
     TokenService,
     DocumentosService,
-    EducacionService,
+    // EducacionService, // ❌ Legacy service removed
     ArgentinaDataService,
     IndexedDBService,
     CSPService,
@@ -81,7 +80,6 @@ function getInterceptors() {
   const baseInterceptors = [
     AuthInterceptor,
     ErrorInterceptor,
-    cvEnhancedInterceptor,
     debugInterceptor
   ];
 
