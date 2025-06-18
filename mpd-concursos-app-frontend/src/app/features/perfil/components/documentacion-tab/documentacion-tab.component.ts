@@ -710,6 +710,8 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (tipos) => {
           this.tiposDocumento = tipos; // Store all available document types
+          // Update required documents from backend data
+          this.actualizarDocumentosRequeridos(tipos);
           this.cargarDocumentosUsuario(forzarRecarga); // Then load user documents
         },
         error: (error: unknown) => {
@@ -718,6 +720,24 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           this.notification.error('Error al cargar los tipos de documento');
         }
       });
+  }
+
+  /**
+   * Actualiza la lista de documentos requeridos basándose en los tipos de documento del backend.
+   * @param tipos Lista de tipos de documento del backend.
+   */
+  private actualizarDocumentosRequeridos(tipos: TipoDocumento[]): void {
+    // Filter only required and active document types from backend
+    const documentosRequeridosBackend = tipos.filter(tipo => tipo.requerido && tipo.activo);
+
+    if (documentosRequeridosBackend.length > 0) {
+      // Use backend data as the source of truth
+      this.documentosRequeridos = documentosRequeridosBackend;
+      console.log('[DocumentacionTab] Documentos requeridos actualizados desde backend:', this.documentosRequeridos.length);
+    } else {
+      // Fallback to hardcoded list if backend doesn't have required documents marked
+      console.log('[DocumentacionTab] No se encontraron documentos requeridos en backend, usando lista hardcodeada');
+    }
   }
 
   /**
@@ -735,6 +755,8 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (documentos: DocumentoUsuario[]) => {
           this.documentosUsuario = documentos;
+          console.log('[DocumentacionTab] Documentos del usuario cargados:', documentos.length);
+          console.log('[DocumentacionTab] Documentos requeridos configurados:', this.documentosRequeridos.length);
           // Actualizar el estado de los documentos en la interfaz (cards, progress)
           this.actualizarEstadoDocumentos();
           // Calcular el progreso después de actualizar el estado
@@ -765,6 +787,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
    */
   calcularProgreso(): void {
     if (!this.documentosRequeridos || this.documentosRequeridos.length === 0) {
+      console.log('[DocumentacionTab] No hay documentos requeridos configurados');
       this.progresoDocumentacion = 100;
       this.documentosFaltantes = 0;
       return;
@@ -773,8 +796,15 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     let documentosRequeridosCargados = 0;
     const documentosRequeridosActivos = this.documentosRequeridos.filter(d => d.requerido && d.activo);
 
+    console.log('[DocumentacionTab] Calculando progreso:');
+    console.log('- Documentos requeridos totales:', this.documentosRequeridos.length);
+    console.log('- Documentos requeridos activos:', documentosRequeridosActivos.length);
+    console.log('- Documentos del usuario:', this.documentosUsuario.length);
+
     for (const tipoDoc of documentosRequeridosActivos) {
-      if (this.isDocumentoSubido(tipoDoc.id)) {
+      const isSubido = this.isDocumentoSubido(tipoDoc.id);
+      console.log(`- ${tipoDoc.nombre} (${tipoDoc.id}): ${isSubido ? 'SUBIDO' : 'FALTANTE'}`);
+      if (isSubido) {
         documentosRequeridosCargados++;
       }
     }
@@ -784,6 +814,9 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     );
 
     this.documentosFaltantes = documentosRequeridosActivos.length - documentosRequeridosCargados;
+
+    console.log(`[DocumentacionTab] Progreso calculado: ${this.progresoDocumentacion}% (${documentosRequeridosCargados}/${documentosRequeridosActivos.length})`);
+    console.log(`[DocumentacionTab] Documentos faltantes: ${this.documentosFaltantes}`);
   }
 
   /**
