@@ -16,6 +16,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
 import { cvMockInterceptor } from './core/interceptors/cv-mock.interceptor';
+import { urlTransformInterceptor } from './core/interceptors/url-transform.interceptor';
 import { environment } from '../environments/environment';
 // Legacy EducacionService removed - using EducationSimpleService
 import { ArgentinaDataService } from './core/services/argentina-data.service';
@@ -80,7 +81,8 @@ function getInterceptors() {
   const baseInterceptors = [
     AuthInterceptor,
     ErrorInterceptor,
-    debugInterceptor
+    debugInterceptor,
+    urlTransformInterceptor  // Nuevo interceptor para transformar URLs
   ];
 
   // Solo agregar mock interceptor en desarrollo

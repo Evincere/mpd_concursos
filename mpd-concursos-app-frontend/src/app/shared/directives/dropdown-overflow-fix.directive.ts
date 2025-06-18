@@ -82,19 +82,29 @@ export class DropdownOverflowFixDirective implements AfterViewInit, OnDestroy {
       mutations.forEach((mutation) => {
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
+            // Validación de null safety
+            if (node && node.nodeType === Node.ELEMENT_NODE) {
               const element = node as HTMLElement;
-              
-              // Si se añade un dropdown, aplicar estilos
-              if (element.classList.contains('select-dropdown')) {
-                this.applyDropdownStyles(element);
+
+              // Verificar que el elemento y sus propiedades existan
+              if (element && element.classList) {
+                // Si se añade un dropdown, aplicar estilos
+                if (element.classList.contains('select-dropdown')) {
+                  this.applyDropdownStyles(element);
+                }
+
+                // Buscar dropdowns dentro del elemento añadido
+                try {
+                  const dropdowns = element.querySelectorAll('.select-dropdown');
+                  dropdowns.forEach(dropdown => {
+                    if (dropdown) {
+                      this.applyDropdownStyles(dropdown as HTMLElement);
+                    }
+                  });
+                } catch (error) {
+                  console.warn('Error al buscar dropdowns:', error);
+                }
               }
-              
-              // Buscar dropdowns dentro del elemento añadido
-              const dropdowns = element.querySelectorAll('.select-dropdown');
-              dropdowns.forEach(dropdown => {
-                this.applyDropdownStyles(dropdown as HTMLElement);
-              });
             }
           });
         }
