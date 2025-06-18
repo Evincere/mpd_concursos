@@ -8,7 +8,7 @@ import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-sp
 import { CustomTableComponent, TableColumn } from '@shared/components/custom-table/custom-table.component';
 
 // Services
-import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 
 import { DocumentoUsuario, TipoDocumento } from '../../../../core/models/documento.model';
@@ -676,7 +676,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   private subscription: Subscription | undefined;
 
   constructor(
-    private dialog: CustomDialogService,
+    private dialog: UnifiedDialogService,
     private notification: CustomNotificationService,
     private documentosService: DocumentosService
   ) {}
