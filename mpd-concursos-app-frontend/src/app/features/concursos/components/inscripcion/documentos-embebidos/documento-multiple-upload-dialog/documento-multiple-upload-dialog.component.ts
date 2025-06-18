@@ -1690,18 +1690,20 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   // ===== REDESIGNED BUTTON LOGIC =====
 
   /**
-   * Cancel button handler - Always enabled, clears data and closes
+   * Cancel button handler - Smart behavior based on current state:
+   * - During upload: Aborts process, clears data, and closes dialog
+   * - When idle: Simply closes dialog (preserves user data for resume)
    */
   cancelarYCerrar(): void {
-    // If upload is in progress, abort it
+    // If upload is in progress, abort it and clear data
     if (this.uploading && !this.procesoFinalizado) {
       this.abortUpload();
+      this.clearAllData(); // Clear data when aborting upload
+      this.cerrar();
+      return;
     }
 
-    // Clear all temporary data
-    this.clearAllData();
-
-    // Close the dialog
+    // If no upload in progress, just close the dialog (preserve user data)
     this.cerrar();
   }
 
