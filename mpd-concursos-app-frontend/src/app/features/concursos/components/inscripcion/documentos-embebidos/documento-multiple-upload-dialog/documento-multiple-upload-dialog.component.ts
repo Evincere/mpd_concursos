@@ -1149,7 +1149,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
       // Handle validation errors
       this.uploading = false;
       this.mostrarSelectorDocumento = true;
-      this.notificationService.showError('Error en la validación de documentos');
+      this.notificationService.error('Error en la validación de documentos', 'Error');
       console.error('Validation error:', error);
     });
   }
@@ -1721,9 +1721,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   /**
    * Get upload button variant based on state
    */
-  getUploadButtonVariant(): string {
+  getUploadButtonVariant(): "flat" | "stroked" | "icon" | "text" | "primary" | "warn" {
     if (this.procesoFinalizado) {
-      return 'success';
+      return 'primary'; // Use primary with success styling via CSS
     }
     return 'primary';
   }
@@ -1793,7 +1793,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
       }
     });
 
-    this.notificationService.showWarning('Carga de documentos cancelada');
+    this.notificationService.warning('Carga de documentos cancelada', 'Cancelado');
   }
 
   /**
@@ -1819,7 +1819,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
     this.procesoFinalizado = true;
 
     // Show success message
-    this.notificationService.showSuccess('Documentación subida exitosamente');
+    this.notificationService.success('Documentación subida exitosamente', 'Éxito');
 
     // Auto-close after 3 seconds
     setTimeout(() => {
