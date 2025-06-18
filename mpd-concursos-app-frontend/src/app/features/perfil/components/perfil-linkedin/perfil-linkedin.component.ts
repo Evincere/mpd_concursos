@@ -133,7 +133,7 @@ import { UserProfile } from '@core/models/perfil.model';
 
             <div class="connect-action">
               <app-custom-button
-                color="secondary"
+                color="warn"
                 icon="fas fa-tools"
                 label="En Desarrollo"
                 [disabled]="true"
