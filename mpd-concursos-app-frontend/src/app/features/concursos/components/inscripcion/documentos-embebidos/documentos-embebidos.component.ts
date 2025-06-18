@@ -1248,6 +1248,9 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       next: (tiposDocumento) => {
         this.dialog.open(DocumentoMultipleUploadDialogComponent, {
           title: 'Carga Múltiple de Documentos',
+          showFooter: false, // Disable external footer buttons
+          showCancelButton: false, // Disable external cancel button
+          showConfirmButton: false, // Disable external confirm button
           data: {
             tiposDocumento: tiposDocumento, // Pass the complete TipoDocumento array
             concursoId: this.concursoId // Pass contest ID if needed by multi-upload

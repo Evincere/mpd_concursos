@@ -813,6 +813,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
    */
   abrirDialogoCargaMultiple(): void {
     const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
+      title: 'Carga Múltiple de Documentos',
+      showFooter: false, // Disable external footer buttons
+      showCancelButton: false, // Disable external cancel button
+      showConfirmButton: false, // Disable external confirm button
       data: { /* any data needed for multiple upload component */ }
     });
 
