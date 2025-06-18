@@ -9,7 +9,6 @@ import { ActivatedRoute } from '@angular/router';
 // Servicios
 import { LoggingService } from '@core/services/logging/logging.service';
 import { ProfileService } from '@core/services/profile/profile.service';
-// Legacy services temporarily disabled - using new CV services in cv-simple component
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { AuthService } from '@core/services/auth/auth.service';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
@@ -155,7 +154,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private documentosService: DocumentosService,
     private profileService: ProfileService,
-    // Legacy CV services temporarily removed - functionality moved to CvSimpleComponent
+
     private authService: AuthService,
     private dialog: CustomDialogService,
     private notification: CustomNotificationService,
@@ -255,8 +254,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
           // Cargar educación y experiencias en un segundo ciclo para evitar bloqueos
           window.requestAnimationFrame(() => {
             if (profile.id) {
-              // Legacy education loading temporarily disabled
-              // Functionality moved to CvSimpleComponent
+              // Education data is now handled by CvSimpleComponent
               this.educacionList = [];
               this.cdr.detectChanges();
             }
@@ -481,8 +479,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
       dialogRef.afterClosed().subscribe((confirmed: unknown) => {
         if (confirmed) {
-          // Legacy experience deletion temporarily disabled
-          // Functionality moved to CvSimpleComponent
+          // Experience deletion handled locally (backend operations in CvSimpleComponent)
           experiencias.removeAt(index);
           this.notification.success('Experiencia eliminada correctamente');
           this.cdr.detectChanges();
@@ -701,8 +698,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Legacy education reloading temporarily disabled
-    // Functionality moved to CvSimpleComponent
+    // Education reloading handled by CvSimpleComponent
     this.notification.success('Lista de educación actualizada');
     this.cdr.detectChanges();
   }
