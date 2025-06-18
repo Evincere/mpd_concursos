@@ -27,7 +27,7 @@ import java.nio.file.Paths;
  */
 @RestController
 @RequestMapping("/api/files/profile-images")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:8000", "http://149.50.132.23:8000"})
 @Slf4j
 public class ProfileImageFileController {
 
@@ -92,7 +92,54 @@ public class ProfileImageFileController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
+    /**
+     * Endpoint de verificación para debug
+     *
+     * @return Estado del controlador
+     */
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        log.info("ProfileImageFileController health check");
+        return ResponseEntity.ok("ProfileImageFileController is working. Upload dir: " + uploadDir);
+    }
+
+    /**
+     * Lista archivos de un usuario específico para debug
+     *
+     * @param userId ID del usuario
+     * @return Lista de archivos
+     */
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> listUserImages(@PathVariable String userId) {
+        try {
+            Path userDir = Paths.get(uploadDir, PROFILE_IMAGES_DIR, userId);
+
+            if (!Files.exists(userDir)) {
+                return ResponseEntity.ok(java.util.Map.of(
+                    "message", "No images found for user",
+                    "userId", userId,
+                    "path", userDir.toString()
+                ));
+            }
+
+            java.util.List<String> files = Files.list(userDir)
+                .filter(Files::isRegularFile)
+                .map(path -> path.getFileName().toString())
+                .collect(java.util.stream.Collectors.toList());
+
+            return ResponseEntity.ok(java.util.Map.of(
+                "userId", userId,
+                "files", files,
+                "path", userDir.toString()
+            ));
+
+        } catch (Exception e) {
+            log.error("Error listing images for user: {}", userId, e);
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
     /**
      * Determina el tipo de contenido basado en la extensión del archivo
      * 

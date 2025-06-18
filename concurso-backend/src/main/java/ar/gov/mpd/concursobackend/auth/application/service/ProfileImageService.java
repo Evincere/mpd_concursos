@@ -41,6 +41,9 @@ public class ProfileImageService {
     
     @Value("${app.file.upload-dir:uploads}")
     private String uploadDir;
+
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
     
     private static final String PROFILE_IMAGES_DIR = "profile-images";
     private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
@@ -88,8 +91,8 @@ public class ProfileImageService {
         // Procesar y guardar archivo (con redimensionamiento si es necesario)
         processAndSaveImage(file, filePath);
         
-        // Generar URL absoluta para desarrollo
-        String imageUrl = "http://localhost:8080/api/files/profile-images/" + user.getId().value() + "/" + fileName;
+        // Generar URL absoluta usando configuración
+        String imageUrl = baseUrl + "/api/files/profile-images/" + user.getId().value() + "/" + fileName;
         
         // Actualizar usuario con nueva URL
         user.setProfileImageUrl(ProfileImageUrl.of(imageUrl));
