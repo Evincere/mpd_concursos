@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-06-18T05:10:36.012Z",
+  "activatedBy": "immediate-migration-script",
+  "flags": {
+    "useNewCvServices": true,
+    "useNewCvStateManagement": true,
+    "useInlineComponents": true,
+    "enableRealTimeValidation": true,
+    "enableCvInlineTesting": true,
+    "enableCvTestingMetrics": true,
+    "enableCvTestingLogging": true,
+    "enableCvMockDataGeneration": true,
+    "enableCvValidationTesting": true,
+    "enableCvPerformanceTesting": true,
+    "fallbackToLegacy": true,
+    "enableErrorRecovery": true,
+    "logMigrationEvents": true
+  }
+}

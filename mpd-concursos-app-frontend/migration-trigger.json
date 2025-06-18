@@ -1,0 +1,38 @@
+{
+  "migrationId": "immediate-1750223436030",
+  "triggeredAt": "2025-06-18T05:10:36.030Z",
+  "triggeredBy": "immediate-activation-script",
+  "status": "ready-to-execute",
+  "phases": [
+    {
+      "name": "preparation",
+      "status": "ready"
+    },
+    {
+      "name": "activation",
+      "status": "ready"
+    },
+    {
+      "name": "validation",
+      "status": "ready"
+    },
+    {
+      "name": "route-migration",
+      "status": "ready"
+    },
+    {
+      "name": "legacy-cleanup",
+      "status": "ready"
+    },
+    {
+      "name": "verification",
+      "status": "ready"
+    }
+  ],
+  "instructions": [
+    "Navigate to /dashboard/cv-nuevo/execute-migration",
+    "Click \"Start Migration\" button",
+    "Monitor progress in real-time",
+    "Verify completion"
+  ]
+}

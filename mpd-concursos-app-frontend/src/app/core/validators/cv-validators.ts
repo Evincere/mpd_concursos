@@ -359,7 +359,7 @@ export class CvValidators {
       }
 
       const file = control.value as File;
-      
+
       if (!allowedTypes.includes(file.type)) {
         return {
           fileType: {
@@ -372,5 +372,114 @@ export class CvValidators {
 
       return null;
     };
+  }
+
+  /**
+   * Checks if content contains dangerous/malicious patterns
+   * Used by inline components for real-time validation
+   */
+  static containsDangerousContent(value: string): boolean {
+    if (!value || typeof value !== 'string') {
+      return false;
+    }
+
+    const dangerousPatterns = [
+      // Script injection patterns
+      /<script[^>]*>.*?<\/script>/gi,
+      /javascript:/gi,
+      /vbscript:/gi,
+      /data:text\/html/gi,
+
+      // Event handlers
+      /on\w+\s*=/gi,
+
+      // Dangerous HTML tags
+      /<iframe[^>]*>/gi,
+      /<object[^>]*>/gi,
+      /<embed[^>]*>/gi,
+      /<link[^>]*>/gi,
+      /<meta[^>]*>/gi,
+      /<form[^>]*>/gi,
+
+      // SQL injection patterns
+      /(\b(union|select|insert|update|delete|drop|create|alter|exec|execute)\b)/gi,
+
+      // Command injection patterns
+      /(\||&|;|\$\(|\`)/g,
+
+      // XSS patterns
+      /alert\s*\(/gi,
+      /confirm\s*\(/gi,
+      /prompt\s*\(/gi,
+      /document\.(cookie|domain|location)/gi,
+      /window\.(location|open)/gi,
+
+      // Base64 encoded scripts (common in attacks)
+      /data:.*base64.*script/gi,
+
+      // PHP/ASP code injection
+      /<\?php/gi,
+      /<%.*%>/gi
+    ];
+
+    // Check each pattern
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(value)) {
+        return true;
+      }
+    }
+
+    // Check for suspicious character sequences
+    const suspiciousSequences = [
+      'eval(',
+      'Function(',
+      'setTimeout(',
+      'setInterval(',
+      'document.write',
+      'innerHTML',
+      'outerHTML',
+      'document.createElement',
+      'appendChild'
+    ];
+
+    const lowerValue = value.toLowerCase();
+    for (const sequence of suspiciousSequences) {
+      if (lowerValue.includes(sequence.toLowerCase())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Sanitizes dangerous content from a string
+   * Returns cleaned version of the input
+   */
+  static sanitizeDangerousContent(value: string): string {
+    if (!value || typeof value !== 'string') {
+      return value;
+    }
+
+    let sanitized = value;
+
+    // Remove script tags and their content
+    sanitized = sanitized.replace(/<script[^>]*>.*?<\/script>/gi, '');
+
+    // Remove dangerous HTML tags
+    sanitized = sanitized.replace(/<(iframe|object|embed|link|meta|form)[^>]*>/gi, '');
+
+    // Remove javascript and vbscript protocols
+    sanitized = sanitized.replace(/javascript:/gi, '');
+    sanitized = sanitized.replace(/vbscript:/gi, '');
+
+    // Remove event handlers
+    sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+
+    // Remove dangerous functions
+    sanitized = sanitized.replace(/eval\s*\(/gi, '');
+    sanitized = sanitized.replace(/Function\s*\(/gi, '');
+
+    return sanitized.trim();
   }
 }

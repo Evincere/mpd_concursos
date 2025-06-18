@@ -1,0 +1,23 @@
+{
+  "id": "test-user-1",
+  "username": "user_test",
+  "email": "user_test@example.com",
+  "firstName": "Usuario",
+  "lastName": "Test",
+  "roles": ["USER"],
+  "isActive": true,
+  "profile": {
+    "dni": "12345678",
+    "phone": "+54 11 1234-5678",
+    "address": "Calle Test 123, Buenos Aires",
+    "birthDate": "1990-01-01"
+  },
+  "preferences": {
+    "language": "es",
+    "theme": "light",
+    "notifications": true
+  },
+  "lastLogin": "2025-06-18T10:00:00Z",
+  "createdAt": "2025-01-01T00:00:00Z",
+  "updatedAt": "2025-06-18T10:00:00Z"
+}

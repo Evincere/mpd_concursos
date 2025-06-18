@@ -113,6 +113,49 @@ export class FeatureToggleService {
       enabled: this.getStoredFlag('enableCvDebugMode', false),
       description: 'Enable debug logging for CV operations',
       dependencies: []
+    },
+
+    // Testing Features for CV Inline (Fase 2)
+    enableCvInlineTesting: {
+      key: 'enableCvInlineTesting',
+      enabled: this.getStoredFlag('enableCvInlineTesting', true),
+      description: 'Enable CV inline components testing page',
+      dependencies: []
+    },
+
+    enableCvTestingMetrics: {
+      key: 'enableCvTestingMetrics',
+      enabled: this.getStoredFlag('enableCvTestingMetrics', true),
+      description: 'Enable performance metrics collection for CV testing',
+      dependencies: ['enableCvInlineTesting']
+    },
+
+    enableCvTestingLogging: {
+      key: 'enableCvTestingLogging',
+      enabled: this.getStoredFlag('enableCvTestingLogging', true),
+      description: 'Enable detailed logging for CV testing operations',
+      dependencies: ['enableCvInlineTesting']
+    },
+
+    enableCvMockDataGeneration: {
+      key: 'enableCvMockDataGeneration',
+      enabled: this.getStoredFlag('enableCvMockDataGeneration', true),
+      description: 'Enable automatic mock data generation for CV testing',
+      dependencies: ['enableCvInlineTesting']
+    },
+
+    enableCvValidationTesting: {
+      key: 'enableCvValidationTesting',
+      enabled: this.getStoredFlag('enableCvValidationTesting', true),
+      description: 'Enable validation system testing for CV components',
+      dependencies: ['enableCvInlineTesting', 'useEnhancedValidation']
+    },
+
+    enableCvPerformanceTesting: {
+      key: 'enableCvPerformanceTesting',
+      enabled: this.getStoredFlag('enableCvPerformanceTesting', true),
+      description: 'Enable performance testing for CV inline components',
+      dependencies: ['enableCvInlineTesting', 'enableCvTestingMetrics']
     }
   };
 
@@ -234,6 +277,68 @@ export class FeatureToggleService {
   }
 
   /**
+   * Get CV testing configuration based on current feature flags
+   */
+  getCvTestingConfiguration(): {
+    enableTesting: boolean;
+    enableMetrics: boolean;
+    enableLogging: boolean;
+    enableMockData: boolean;
+    enableValidationTesting: boolean;
+    enablePerformanceTesting: boolean;
+  } {
+    return {
+      enableTesting: this.isEnabled('enableCvInlineTesting'),
+      enableMetrics: this.isEnabled('enableCvTestingMetrics'),
+      enableLogging: this.isEnabled('enableCvTestingLogging'),
+      enableMockData: this.isEnabled('enableCvMockDataGeneration'),
+      enableValidationTesting: this.isEnabled('enableCvValidationTesting'),
+      enablePerformanceTesting: this.isEnabled('enableCvPerformanceTesting')
+    };
+  }
+
+  /**
+   * Enable all CV testing features for development
+   */
+  enableCvTestingMode(): void {
+    console.log('[FeatureToggle] Enabling CV testing mode');
+
+    this.setFeature('enableCvInlineTesting', true);
+    this.setFeature('enableCvTestingMetrics', true);
+    this.setFeature('enableCvTestingLogging', true);
+    this.setFeature('enableCvMockDataGeneration', true);
+    this.setFeature('enableCvValidationTesting', true);
+    this.setFeature('enableCvPerformanceTesting', true);
+    this.setFeature('enableCvDebugMode', true);
+
+    // Also enable inline components for testing
+    this.setFeature('useInlineEditing', true);
+    this.setFeature('useUnifiedCvComponents', true);
+  }
+
+  /**
+   * Disable all CV testing features for production
+   */
+  disableCvTestingMode(): void {
+    console.log('[FeatureToggle] Disabling CV testing mode');
+
+    this.setFeature('enableCvInlineTesting', false);
+    this.setFeature('enableCvTestingMetrics', false);
+    this.setFeature('enableCvTestingLogging', false);
+    this.setFeature('enableCvMockDataGeneration', false);
+    this.setFeature('enableCvValidationTesting', false);
+    this.setFeature('enableCvPerformanceTesting', false);
+    this.setFeature('enableCvDebugMode', false);
+  }
+
+  /**
+   * Check if CV testing is available
+   */
+  isCvTestingAvailable(): boolean {
+    return this.isEnabled('enableCvInlineTesting');
+  }
+
+  /**
    * Initialize features from storage and environment
    */
   private initializeFeatures(): void {
@@ -288,7 +393,7 @@ export class FeatureToggleService {
   private persistFeatures(features: FeatureConfig): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(features));
-      
+
       // Also store individual flags for easier access
       Object.entries(features).forEach(([key, feature]) => {
         const enabled = typeof feature === 'boolean' ? feature : feature.enabled;
@@ -297,5 +402,117 @@ export class FeatureToggleService {
     } catch (error) {
       console.warn('[FeatureToggle] Failed to persist features:', error);
     }
+  }
+
+  // ========================================
+  // CV MIGRATION METHODS
+  // ========================================
+
+  /**
+   * Activate complete CV migration to new system
+   * Phase 1: Enable new system as default with legacy fallback
+   */
+  activateCompleteCvMigration(): void {
+    console.log('[FeatureToggleService] 🚀 Activating complete CV migration to new system');
+
+    // Enable all new CV features
+    this.enableFeature('useNewCvServices');
+    this.enableFeature('useNewCvStateManagement');
+    this.enableFeature('useInlineComponents');
+    this.enableFeature('enableRealTimeValidation');
+
+    // Enable CV testing features for monitoring
+    this.enableFeature('enableCvInlineTesting');
+    this.enableFeature('enableCvTestingMetrics');
+    this.enableFeature('enableCvTestingLogging');
+    this.enableFeature('enableCvMockDataGeneration');
+    this.enableFeature('enableCvValidationTesting');
+    this.enableFeature('enableCvPerformanceTesting');
+
+    // Keep fallback enabled during transition
+    this.enableFeature('fallbackToLegacy');
+    this.enableFeature('enableErrorRecovery');
+    this.enableFeature('logMigrationEvents');
+
+    console.log('[FeatureToggleService] ✅ Complete CV migration activated with legacy fallback');
+  }
+
+  /**
+   * Disable legacy CV system (final step)
+   * Phase 2: Remove legacy fallback after validation
+   */
+  disableLegacyCvSystem(): void {
+    console.log('[FeatureToggleService] 🔄 Disabling legacy CV system');
+
+    // Disable fallback to legacy
+    this.disableFeature('fallbackToLegacy');
+
+    // Keep error recovery and logging for monitoring
+    this.enableFeature('enableErrorRecovery');
+    this.enableFeature('logMigrationEvents');
+
+    console.log('[FeatureToggleService] ✅ Legacy CV system disabled - New system only');
+  }
+
+  /**
+   * Check if CV migration is complete
+   */
+  isCvMigrationComplete(): boolean {
+    return this.isEnabled('useNewCvServices') &&
+           this.isEnabled('useNewCvStateManagement') &&
+           this.isEnabled('useInlineComponents') &&
+           !this.isEnabled('fallbackToLegacy');
+  }
+
+  /**
+   * Get migration status for monitoring
+   */
+  getCvMigrationStatus(): {
+    phase: 'legacy' | 'transitioning' | 'complete';
+    newSystemEnabled: boolean;
+    legacyFallbackEnabled: boolean;
+    testingEnabled: boolean;
+    timestamp: Date;
+  } {
+    const newSystemEnabled = this.isEnabled('useNewCvServices');
+    const legacyFallbackEnabled = this.isEnabled('fallbackToLegacy');
+    const testingEnabled = this.isEnabled('enableCvTestingMetrics');
+
+    let phase: 'legacy' | 'transitioning' | 'complete';
+
+    if (!newSystemEnabled) {
+      phase = 'legacy';
+    } else if (legacyFallbackEnabled) {
+      phase = 'transitioning';
+    } else {
+      phase = 'complete';
+    }
+
+    return {
+      phase,
+      newSystemEnabled,
+      legacyFallbackEnabled,
+      testingEnabled,
+      timestamp: new Date()
+    };
+  }
+
+  /**
+   * Emergency rollback to legacy system
+   */
+  emergencyRollbackToLegacy(): void {
+    console.warn('[FeatureToggleService] 🚨 EMERGENCY ROLLBACK to legacy CV system');
+
+    // Disable new system
+    this.disableFeature('useNewCvServices');
+    this.disableFeature('useNewCvStateManagement');
+    this.disableFeature('useInlineComponents');
+
+    // Enable legacy fallback
+    this.enableFeature('fallbackToLegacy');
+    this.enableFeature('enableErrorRecovery');
+    this.enableFeature('logMigrationEvents');
+
+    console.warn('[FeatureToggleService] ⚠️ Emergency rollback completed - Legacy system active');
   }
 }

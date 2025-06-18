@@ -38,7 +38,7 @@ import { DocumentacionTabComponent } from './components/documentacion-tab/docume
 import { EducacionContainerComponent } from './components/educacion/educacion-container/educacion-container.component';
 import { ExperienciaContainerComponent } from './components/experiencia/experiencia-container/experiencia-container.component';
 import { PerfilPersonalInfoComponent } from './components/perfil-personal-info/perfil-personal-info.component';
-import { PerfilCvComponent } from './components/perfil-cv';
+import { CvSimpleComponent } from './components/cv-simple/cv-simple.component';
 import { PerfilLinkedInComponent } from './components/perfil-linkedin/perfil-linkedin.component';
 
 const TAB_KEYS = {
@@ -64,10 +64,8 @@ const TAB_KEYS = {
     CustomTabComponent,
     CustomSpinnerComponent,
     DocumentacionTabComponent,
-    EducacionContainerComponent,
-    ExperienciaContainerComponent,
     PerfilPersonalInfoComponent,
-    PerfilCvComponent,
+    CvSimpleComponent,
     PerfilLinkedInComponent
   ]
 })

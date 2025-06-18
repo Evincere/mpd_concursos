@@ -6,6 +6,8 @@ export const environment = {
   indexedDBEnabled: true,
   mockData: false,
   logLevel: 'debug',
+  enableConsoleLogging: true,
+  logEndpoint: null,
   version: '1.0.0-dev',
   buildDate: new Date().toISOString(),
   defaultLanguage: 'es',
@@ -17,6 +19,16 @@ export const environment = {
     documents: true,
     profiles: true,
     admin: true,
-    debug: true
+    debug: true,
+    useMockCvData: true,  // ✅ Mock CV data habilitado en desarrollo
+    enableCvMockInterceptor: true  // ✅ Mock interceptor habilitado en desarrollo
+  },
+
+  // Monitoring Configuration (desarrollo)
+  monitoring: {
+    enableErrorTracking: false,
+    enablePerformanceTracking: false,
+    enableUserTracking: false,
+    sampleRate: 1.0
   }
 };

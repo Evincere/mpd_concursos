@@ -56,7 +56,8 @@ export const routes: Routes = [
         path: 'ayuda',
         loadChildren: () => import('./features/ayuda/ayuda.module')
           .then(m => m.AyudaModule)
-      }
+      },
+
     ]
   },
   {

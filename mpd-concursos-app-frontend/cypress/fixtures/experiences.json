@@ -1,0 +1,57 @@
+[
+  {
+    "id": "exp-1",
+    "userId": "test-user-1",
+    "position": "Desarrollador Frontend Senior",
+    "company": "Tech Solutions SA",
+    "startDate": "2022-01-15T00:00:00Z",
+    "endDate": null,
+    "description": "Desarrollo de aplicaciones web con Angular, TypeScript y Node.js. Implementación de arquitecturas escalables y mantenibles.",
+    "location": "Buenos Aires, Argentina",
+    "documentUrl": null,
+    "documents": [],
+    "comments": "Trabajo actual con excelente ambiente laboral",
+    "isCurrent": true,
+    "createdAt": "2022-01-15T00:00:00Z",
+    "updatedAt": "2025-06-18T10:00:00Z"
+  },
+  {
+    "id": "exp-2",
+    "userId": "test-user-1",
+    "position": "Desarrollador Full Stack",
+    "company": "Innovación Digital SRL",
+    "startDate": "2020-03-01T00:00:00Z",
+    "endDate": "2021-12-31T00:00:00Z",
+    "description": "Desarrollo de sistemas web completos utilizando tecnologías modernas. Participación en proyectos de transformación digital.",
+    "location": "Córdoba, Argentina",
+    "documentUrl": "/documents/certificado-trabajo-innovacion.pdf",
+    "documents": [
+      {
+        "id": "doc-1",
+        "name": "Certificado de Trabajo",
+        "url": "/documents/certificado-trabajo-innovacion.pdf",
+        "type": "application/pdf"
+      }
+    ],
+    "comments": "Excelente experiencia en desarrollo de APIs REST",
+    "isCurrent": false,
+    "createdAt": "2020-03-01T00:00:00Z",
+    "updatedAt": "2022-01-10T00:00:00Z"
+  },
+  {
+    "id": "exp-3",
+    "userId": "test-user-1",
+    "position": "Desarrollador Junior",
+    "company": "StartUp Tech",
+    "startDate": "2019-06-01T00:00:00Z",
+    "endDate": "2020-02-28T00:00:00Z",
+    "description": "Primer trabajo como desarrollador. Aprendizaje de tecnologías web modernas y metodologías ágiles.",
+    "location": "Remoto",
+    "documentUrl": null,
+    "documents": [],
+    "comments": "Experiencia inicial muy enriquecedora",
+    "isCurrent": false,
+    "createdAt": "2019-06-01T00:00:00Z",
+    "updatedAt": "2020-03-01T00:00:00Z"
+  }
+]
