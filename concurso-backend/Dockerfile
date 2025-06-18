@@ -20,8 +20,10 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Create directory for document storage
-RUN mkdir -p /app/document-storage
+# Create directories for document storage and profile images
+RUN mkdir -p /app/document-storage && \
+    mkdir -p /app/uploads/profile-images && \
+    chmod -R 755 /app/uploads
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
