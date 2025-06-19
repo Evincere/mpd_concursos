@@ -1,8 +1,7 @@
 import { Component, OnInit, Inject, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { UnifiedDialogRef } from '@shared/services/dialog/unified-dialog.service';
-import { DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
+import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
@@ -125,12 +124,10 @@ interface DocumentoEnSeleccion {
             <div class="upload-text">
               <ng-container *ngIf="!documentoActual.file">
                 <p>Arrastra y suelta tu archivo aquí o</p>
-                <app-custom-button
-                  type="button"
-                  variant="primary"
-                  (click)="fileInput.click()">
+                <label for="fileInput" class="custom-file-button" [class.disabled]="uploading || fileInputActive">
+                  <i class="fas fa-folder-open"></i>
                   Seleccionar archivo
-                </app-custom-button>
+                </label>
                 <p class="upload-hint">Formatos permitidos: PDF (Máx. 10MB)</p>
               </ng-container>
 
@@ -148,9 +145,11 @@ interface DocumentoEnSeleccion {
             </div>
 
             <input type="file"
+                   id="fileInput"
                    #fileInput
-                   style="display: none"
+                   class="hidden-file-input"
                    accept=".pdf"
+                   [disabled]="uploading || fileInputActive"
                    (change)="onSingleFileSelected($event)">
           </div>
 
@@ -753,6 +752,59 @@ interface DocumentoEnSeleccion {
       margin-right: 4px;
       color: #f59e0b;
     }
+
+    .custom-file-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: rgba(59, 130, 246, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: none;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .custom-file-button:hover:not(.disabled) {
+      background: rgba(59, 130, 246, 1);
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .custom-file-button:active:not(.disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+    }
+
+    .custom-file-button.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      pointer-events: none;
+    }
+
+    .custom-file-button i {
+      font-size: 16px;
+    }
+
+    .hidden-file-input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
   `]
 })
 export class DocumentoMultipleUploadDialogComponent implements OnInit {
@@ -768,6 +820,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
   progresoGlobal = 0;
   monitoringRetries = 0;
   procesoFinalizado = false; // Bandera para evitar múltiples finalizaciones
+  fileInputActive = false; // Bandera para evitar múltiples activaciones del selector de archivos
 
   // CRITICAL FIX: Control mejorado del botón Cancelar
   documentosSubidosExitosamente = false; // Indica si al menos un documento se subió exitosamente
@@ -956,6 +1009,29 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
       this.processSingleFile(file);
       // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
       input.value = '';
+    }
+  }
+
+  triggerFileInput(): void {
+    // Prevenir múltiples llamadas
+    if (this.uploading || this.fileInputActive) {
+      return;
+    }
+
+    this.fileInputActive = true;
+
+    try {
+      if (this.fileInput && this.fileInput.nativeElement) {
+        // Llamada directa sin setTimeout
+        this.fileInput.nativeElement.click();
+      }
+    } catch (error) {
+      console.error('Error al abrir selector de archivos:', error);
+    } finally {
+      // Resetear la bandera después de un breve delay
+      setTimeout(() => {
+        this.fileInputActive = false;
+      }, 1000);
     }
   }
 

@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
 import { FormsModule } from '@angular/forms';
-import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
 
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { NotificationService } from '@shared/services/notification.service';
@@ -925,7 +925,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   public readonly EstadoDocumento = EstadoDocumento;
 
   constructor(
-    private dialog: CustomDialogService,
+    private dialog: UnifiedDialogService,
     private notificationService: NotificationService,
     private documentosService: DocumentosService,
     private loggingService: LoggingService,
@@ -1223,6 +1223,9 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
     this.dialog.open(DocumentoUploadDialogComponent, {
       title: `Cargar ${tipoDoc.title}`,
+      showFooter: false, // Disable external footer buttons
+      showCancelButton: false, // Disable external cancel button
+      showConfirmButton: false, // Disable external confirm button
       data: { tipoDocumentoId: tipoDoc.tipoDocumentoId }
     }).afterClosed().subscribe((result: any) => {
       if (result && result.success) {
@@ -1254,9 +1257,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
           data: {
             tiposDocumento: tiposDocumento, // Pass the complete TipoDocumento array
             concursoId: this.concursoId // Pass contest ID if needed by multi-upload
-          },
-          width: '600px', // Example width
-          height: '80vh' // Example height
+          }
         }).afterClosed().subscribe((result: any) => {
           if (result && result.success) {
             // CRITICAL FIX: Eliminar notificación duplicada

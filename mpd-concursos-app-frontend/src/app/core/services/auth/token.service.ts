@@ -186,13 +186,20 @@ export class TokenService {
 
   public validateToken(token: string): boolean {
     try {
+      console.log('[TokenService] 🔍 Validando token...');
       const isExpired = this.jwtHelper.isTokenExpired(token);
+      console.log(`[TokenService] Token expirado: ${isExpired}`);
 
-      // Logging implementado con LoggingService;
+      if (isExpired) {
+        console.warn('[TokenService] ⚠️ Token expirado, limpiando localStorage...');
+        this.signOut();
+      }
 
-      return !isExpired;
+      const isValid = !isExpired;
+      console.log(`[TokenService] ${isValid ? '✅' : '❌'} Token ${isValid ? 'válido' : 'inválido'}`);
+      return isValid;
     } catch (error) {
-      console.error('[TokenService] Error validando token:', error);
+      console.error('[TokenService] ❌ Error validando token:', error);
       return false;
     }
   }

@@ -5,12 +5,11 @@
   <title>Defensa Mendoza - Sistema de Concursos</title>
   <meta name="description" content="Sistema de gestión de concursos del Ministerio Público de la Defensa de Mendoza">
   <meta name="theme-color" content="#374151">
+  <base href="/">
   <script>
-    // Configurar base href según el entorno
+    // Configurar base href según el entorno (solo para Electron)
     if (window.process && window.process.type === 'renderer') {
-      document.write('<base href="app://">');
-    } else {
-      document.write('<base href="./">');
+      document.querySelector('base').href = 'app://';
     }
   </script>
   <!-- La política de seguridad se aplicará dinámicamente desde el código JavaScript según el entorno -->

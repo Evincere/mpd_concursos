@@ -67,6 +67,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { role: 'ROLE_ADMIN' }
   },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: '**', redirectTo: '/login' }
+  {
+    path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: '**',
+    redirectTo: '/dashboard'
+  }
 ];

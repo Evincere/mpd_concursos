@@ -59,8 +59,27 @@ public class DocumentController {
     @GetMapping("/usuario")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<List<DocumentDto>> getUserDocuments() {
-        UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
-        return ResponseEntity.ok(documentService.getUserDocuments(userId));
+        log.debug("🔍 [DocumentController] Solicitando documentos del usuario");
+
+        String currentUserIdStr = securityUtils.getCurrentUserId();
+        log.debug("🔍 [DocumentController] ID del usuario obtenido: {}", currentUserIdStr);
+
+        if (currentUserIdStr == null) {
+            log.error("❌ [DocumentController] No se pudo obtener el ID del usuario actual");
+            return ResponseEntity.badRequest().build();
+        }
+
+        UUID userId = UUID.fromString(currentUserIdStr);
+        log.debug("🔍 [DocumentController] UUID del usuario: {}", userId);
+
+        List<DocumentDto> documents = documentService.getUserDocuments(userId);
+        log.debug("✅ [DocumentController] Documentos encontrados: {}", documents.size());
+
+        if (!documents.isEmpty()) {
+            log.debug("📄 [DocumentController] Primer documento: {}", documents.get(0));
+        }
+
+        return ResponseEntity.ok(documents);
     }
 
     @PostMapping("/upload")

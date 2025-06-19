@@ -83,10 +83,19 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional(readOnly = true)
     public List<DocumentDto> getUserDocuments(UUID userId) {
-        log.debug("Getting documents for user: {}", userId);
+        log.debug("🔍 [DocumentService] Getting documents for user: {}", userId);
 
         List<Document> documents = documentRepository.findByUserId(userId);
-        return documentMapper.toDtoList(documents);
+        log.debug("📊 [DocumentService] Documents found in repository: {}", documents.size());
+
+        if (!documents.isEmpty()) {
+            log.debug("📄 [DocumentService] First document: {}", documents.get(0));
+        }
+
+        List<DocumentDto> documentDtos = documentMapper.toDtoList(documents);
+        log.debug("✅ [DocumentService] Documents mapped to DTOs: {}", documentDtos.size());
+
+        return documentDtos;
     }
 
     /**

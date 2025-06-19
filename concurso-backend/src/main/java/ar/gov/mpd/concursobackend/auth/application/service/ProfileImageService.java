@@ -90,14 +90,14 @@ public class ProfileImageService {
         
         // Procesar y guardar archivo (con redimensionamiento si es necesario)
         processAndSaveImage(file, filePath);
-        
-        // Generar URL absoluta usando configuración
-        String imageUrl = baseUrl + "/api/files/profile-images/" + user.getId().value() + "/" + fileName;
-        
+
+        // Generar URL relativa (funciona tanto en desarrollo como en producción)
+        String imageUrl = "/api/files/profile-images/" + user.getId().value() + "/" + fileName;
+
         // Actualizar usuario con nueva URL
         user.setProfileImageUrl(ProfileImageUrl.of(imageUrl));
         userService.updateUser(user);
-        
+
         log.info("Imagen de perfil subida exitosamente para usuario {}: {}", username, imageUrl);
         return imageUrl;
     }

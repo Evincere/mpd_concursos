@@ -206,6 +206,8 @@ export class InscriptionDocumentationService {
 
   /**
    * SIMPLIFICADO: Actualiza el estado de completitud de documentos requeridos basado en documentos del usuario
+   * CRITICAL FIX: Un documento se considera completado simplemente por haber sido subido,
+   * independientemente de su estado de aprobación administrativa
    * @param requiredDocuments Documentos requeridos
    * @param userDocuments Documentos del usuario
    * @returns Documentos requeridos con estado actualizado
@@ -215,10 +217,10 @@ export class InscriptionDocumentationService {
     userDocuments: DocumentoUsuario[]
   ): RequiredDocument[] {
     return requiredDocuments.map(requiredDoc => {
-      // Verificación directa para todos los documentos (incluidos DNI frente y dorso por separado)
+      // ✅ CRITICAL FIX: Verificación directa para todos los documentos (incluidos DNI frente y dorso por separado)
+      // Un documento se considera completado si existe, independientemente de su estado de aprobación
       const isUploaded = userDocuments.some(userDoc =>
-        userDoc.tipoDocumento?.id === requiredDoc.tipoDocumentoId &&
-        userDoc.estado !== 'pendiente'
+        userDoc.tipoDocumento?.id === requiredDoc.tipoDocumentoId
       );
 
       return {

@@ -48,8 +48,14 @@ export class DocumentosService {
 
     // Si no hay caché o ha expirado, obtener del servidor
     // Usar el endpoint correcto: /api/documentos/usuario
+    console.log('[DocumentosService] 🔍 Solicitando documentos del usuario desde:', `${this.apiUrl}/usuario`);
     return this.http.get<DocumentoUsuario[]>(`${this.apiUrl}/usuario`).pipe(
       tap(documentos => {
+        console.log('[DocumentosService] ✅ Respuesta del backend:', documentos);
+        console.log('[DocumentosService] 📊 Cantidad de documentos recibidos:', documentos.length);
+        if (documentos.length > 0) {
+          console.log('[DocumentosService] 📄 Primer documento:', documentos[0]);
+        }
         this.documentosCache = documentos;
         this.ultimaActualizacion = Date.now();
       }),

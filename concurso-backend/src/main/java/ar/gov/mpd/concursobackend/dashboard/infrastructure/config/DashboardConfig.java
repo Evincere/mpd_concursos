@@ -12,7 +12,7 @@ import jakarta.persistence.EntityManager;
 /**
  * Configuración de Spring para el módulo Dashboard
  */
-@Configuration
+//@Configuration
 public class DashboardConfig {
     
     @Bean

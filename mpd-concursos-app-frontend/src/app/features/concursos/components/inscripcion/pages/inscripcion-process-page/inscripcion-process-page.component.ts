@@ -82,6 +82,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   contest: Contest | null = null;
   showValidationErrors = false;
 
+  // CRITICAL FIX: Bandera para evitar reinicialización en navegaciones internas
+  private isInternalNavigation: boolean = false;
+
+  // CRITICAL FIX: Guardar el paso solicitado desde la URL para navegación directa
+  private requestedStepFromUrl: number | null = null;
+
   // Formulario reactivo
   inscriptionForm: FormGroup;
 
@@ -157,20 +163,38 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     this.route.queryParams.pipe(
       takeUntil(this.destroy$)
     ).subscribe(params => {
+      // CRITICAL FIX: Evitar reinicialización en navegaciones internas
+      if (this.isInternalNavigation) {
+        this.loggingService.debug('[InscripcionProcess] Navegación interna detectada - omitiendo reinicialización', undefined, 'InscripcionProcessPage');
+        this.isInternalNavigation = false; // Reset flag
+        return;
+      }
+
       this.contestId = params['contestId'] ? Number(params['contestId']) : null;
       this.inscriptionId = params['inscriptionId'] || null;
       const isResume = params['resume'] === 'true';
+      const stepParam = params['step'] ? Number(params['step']) : null;
 
       this.loggingService.debug('[InscripcionProcess] Parámetros recibidos:', {
         contestId: this.contestId,
         inscriptionId: this.inscriptionId,
-        isResume: isResume
+        isResume: isResume,
+        step: stepParam
       }, 'InscripcionProcessPage');
 
       if (!this.contestId) {
         this.notificationService.error('No se ha especificado un concurso válido');
         this.router.navigate(['/dashboard/concursos']);
         return;
+      }
+
+      // CRITICAL FIX: Guardar el paso solicitado desde la URL para navegación directa
+      this.requestedStepFromUrl = stepParam;
+
+      // Si hay un paso específico en la URL, validarlo y aplicarlo
+      if (stepParam && stepParam >= 1 && stepParam <= 4) {
+        // Validar que el usuario pueda acceder a este paso
+        this.validateAndSetStep(stepParam);
       }
 
       // CRITICAL FIX: Verificar si ya existe una inscripción cancelada para este concurso
@@ -228,11 +252,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     // Cargar datos del concurso
     this.cargarDatosConcurso();
 
-    // CRITICAL FIX: Si es una recuperación, verificar el estado de la inscripción para determinar el paso correcto
-    if (isResume && this.inscriptionId) {
+    // CRITICAL FIX: SIEMPRE consultar backend cuando hay inscriptionId para permitir navegación directa
+    if (this.inscriptionId) {
+      // Determinar paso basado en estado del backend (funciona para resume Y navegación directa)
       this.determinarPasoInicialBasadoEnEstado();
-    } else if (this.inscriptionId) {
-      this.cargarEstadoGuardado();
     } else if (isResume) {
       // CRITICAL FIX: Si es una recuperación pero no hay inscriptionId, buscar en localStorage
       this.recuperarProcesoInterrumpido();
@@ -296,6 +319,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       // No validation when going back, as currentStep will be decreased
       this.currentStep = step;
       this.updateProgressPercentage();
+      this.updateUrlWithCurrentStep();
 
       // Esperar un momento adicional para que el DOM se actualice completamente
       setTimeout(() => {
@@ -331,12 +355,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
             this.inscriptionId = existingInscription.id;
             this.loggingService.debug('[InscripcionProcess] Found existing inscription, using ID:', this.inscriptionId, 'InscripcionProcessPage');
 
-            // Actualizar URL con inscription ID
+            // Actualizar URL con inscription ID y paso actual
             this.router.navigate([], {
               relativeTo: this.route,
               queryParams: {
                 contestId: this.contestId,
-                inscriptionId: this.inscriptionId
+                inscriptionId: this.inscriptionId,
+                step: this.currentStep
               },
               queryParamsHandling: 'merge'
             });
@@ -359,8 +384,16 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    * CRITICAL FIX: Método auxiliar para proceder al siguiente paso
    */
   private proceedToNextStep(): void {
+    const previousStep = this.currentStep;
     this.currentStep++;
+
+    this.loggingService.debug('[InscripcionProcess] Avanzando paso:', {
+      previousStep,
+      newStep: this.currentStep
+    }, 'InscripcionProcessPage');
+
     this.updateProgressPercentage();
+    this.updateUrlWithCurrentStep();
     this.guardarEstadoActual();
 
     // Si avanzamos al paso de confirmación, actualizar el estado de los documentos
@@ -370,6 +403,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
     // Forzar detección de cambios para asegurar que el nuevo contenido se renderice
     this.cdr.detectChanges();
+
+    this.loggingService.debug('[InscripcionProcess] Detección de cambios forzada, currentStep:', this.currentStep, 'InscripcionProcessPage');
 
     // Esperar un momento adicional para que el DOM se actualice completamente
     setTimeout(() => {
@@ -385,6 +420,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     if (this.currentStep > 1) {
       this.currentStep--;
       this.updateProgressPercentage();
+      this.updateUrlWithCurrentStep();
 
       // Forzar detección de cambios para asegurar que el nuevo contenido se renderice
       this.cdr.detectChanges();
@@ -406,6 +442,70 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     this.progressPercentage = (this.currentStep / 4) * 100;
     if (this.currentStep === 4) { // Max out at 100% when all steps are validated
       this.progressPercentage = 100;
+    }
+  }
+
+  /**
+   * Actualiza la URL con el paso actual para permitir navegación directa y bookmarking
+   */
+  private updateUrlWithCurrentStep(): void {
+    const queryParams: any = {
+      contestId: this.contestId,
+      step: this.currentStep
+    };
+
+    // Solo agregar inscriptionId si existe
+    if (this.inscriptionId) {
+      queryParams.inscriptionId = this.inscriptionId;
+    }
+
+    // CRITICAL FIX: Marcar como navegación interna para evitar reinicialización
+    this.isInternalNavigation = true;
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: queryParams,
+      queryParamsHandling: 'merge',
+      replaceUrl: true // Usar replaceUrl para no crear entradas adicionales en el historial
+    });
+
+    this.loggingService.debug('[InscripcionProcess] URL actualizada con paso actual:', {
+      step: this.currentStep,
+      contestId: this.contestId,
+      inscriptionId: this.inscriptionId
+    }, 'InscripcionProcessPage');
+  }
+
+  /**
+   * Valida si el usuario puede acceder al paso solicitado y lo establece
+   * @param requestedStep Paso solicitado desde la URL
+   */
+  private validateAndSetStep(requestedStep: number): void {
+    // Si hay una inscripción existente, verificar el estado para determinar el paso máximo permitido
+    if (this.inscriptionId) {
+      // Permitir navegación directa cuando hay inscriptionId (el backend determinará el estado correcto)
+      this.currentStep = requestedStep;
+      this.updateProgressPercentage();
+      this.loggingService.debug('[InscripcionProcess] Paso establecido desde URL con inscriptionId:', {
+        requestedStep,
+        currentStep: this.currentStep
+      }, 'InscripcionProcessPage');
+      return;
+    }
+
+    // Si no hay inscripción, solo permitir el paso 1 (términos)
+    if (requestedStep > 1) {
+      this.loggingService.warn('[InscripcionProcess] Acceso denegado a paso avanzado sin inscripción:', {
+        requestedStep
+      }, 'InscripcionProcessPage');
+
+      this.currentStep = 1;
+      this.updateProgressPercentage();
+      this.updateUrlWithCurrentStep(); // Corregir la URL
+      this.notificationService.info('Debe comenzar el proceso de inscripción desde el primer paso.');
+    } else {
+      this.currentStep = requestedStep;
+      this.updateProgressPercentage();
     }
   }
 
@@ -857,17 +957,44 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
             break;
 
           case 'ACTIVE':
-            // Para inscripciones activas, cargar el estado guardado normalmente
-            this.cargarEstadoGuardado();
+            // CRITICAL FIX: Para inscripciones activas, respetar navegación directa si existe
+            if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
+              this.loggingService.debug('[InscripcionProcess] Navegación directa detectada - respetando paso de URL:', {
+                requestedStep: this.requestedStepFromUrl,
+                inscriptionState: inscription.estado
+              }, 'InscripcionProcessPage');
+
+              // Mantener el paso ya establecido desde la URL
+              this.updateProgressPercentage();
+              this.cargarDatosFormulario(); // Solo cargar datos del formulario sin cambiar el paso
+            } else {
+              // Si no hay navegación directa, cargar el estado guardado normalmente
+              this.cargarEstadoGuardado();
+            }
             break;
 
           default:
-            // Para otros estados, cargar estado guardado
-            this.cargarEstadoGuardado();
+            // CRITICAL FIX: Para otros estados, también respetar navegación directa si existe
+            if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
+              this.loggingService.debug('[InscripcionProcess] Navegación directa detectada para estado:', {
+                requestedStep: this.requestedStepFromUrl,
+                inscriptionState: inscription.estado
+              }, 'InscripcionProcessPage');
+
+              // Mantener el paso ya establecido desde la URL
+              this.updateProgressPercentage();
+              this.cargarDatosFormulario(); // Solo cargar datos del formulario sin cambiar el paso
+            } else {
+              // Si no hay navegación directa, cargar estado guardado
+              this.cargarEstadoGuardado();
+            }
             this.loggingService.debug(`[InscripcionProcess] Using saved state for inscription status: ${inscription.estado}`, undefined, 'InscripcionProcessPage');
         }
       } else {
         // Si no se encuentra la inscripción, usar estado guardado como fallback
+        this.loggingService.warn('[InscripcionProcess] Inscription not found in backend, using saved state as fallback', {
+          inscriptionId: this.inscriptionId
+        }, 'InscripcionProcessPage');
         this.cargarEstadoGuardado();
       }
     });
@@ -941,6 +1068,42 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * CRITICAL FIX: Carga solo los datos del formulario sin cambiar el paso actual
+   * Útil para navegación directa donde queremos mantener el paso de la URL
+   */
+  private cargarDatosFormulario(): void {
+    if (!this.inscriptionId) {
+      this.loggingService.debug('[InscripcionProcess] No inscription ID available - no form data to load', undefined, 'InscripcionProcessPage');
+      return;
+    }
+
+    const savedState = this.inscriptionStateService.getInscriptionState(this.inscriptionId);
+    if (savedState && savedState.formData) {
+      // Cargar solo los datos del formulario, manteniendo el paso actual
+      this.inscriptionForm.patchValue(savedState.formData, { emitEvent: false });
+
+      // CRITICAL FIX: addressData no está en IInscriptionFormState, se reconstruye desde centroDeVida
+      if (savedState.formData.centroDeVida) {
+        // Reconstruir addressData básico desde la dirección guardada
+        this.addressData = {
+          formattedAddress: savedState.formData.centroDeVida,
+          placeId: '',
+          coordinates: { lat: 0, lng: 0 },
+          components: {}
+        };
+      }
+
+      this.loggingService.debug('[InscripcionProcess] Datos del formulario cargados sin cambiar paso:', {
+        currentStep: this.currentStep,
+        formData: savedState.formData
+      }, 'InscripcionProcessPage');
+    }
+
+    // Actualizar estado de documentos y otros datos necesarios
+    this.actualizarEstadoDocumentos();
+  }
+
   // Cargar estado guardado
   cargarEstadoGuardado(): void {
     // CRITICAL FIX: Only load saved state if inscriptionId exists
@@ -951,7 +1114,16 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
     const savedState = this.inscriptionStateService.getInscriptionState(this.inscriptionId);
     if (savedState) {
-      this.currentStep = Number(savedState.currentStep) || 1;
+      // CRITICAL FIX: Respetar navegación directa si existe
+      if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
+        this.loggingService.debug('[InscripcionProcess] Navegación directa detectada - manteniendo paso de URL:', {
+          requestedStep: this.requestedStepFromUrl,
+          savedStep: savedState.currentStep
+        }, 'InscripcionProcessPage');
+        // No cambiar currentStep, ya fue establecido desde la URL
+      } else {
+        this.currentStep = Number(savedState.currentStep) || 1;
+      }
 
       if (savedState.formData) {
         this.inscriptionForm.patchValue({
@@ -1151,12 +1323,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Actualizar el perfil del usuario con el centro de vida
-  actualizarPerfilConCentroDeVida(): void {
+  // Actualizar el perfil del usuario con el centro de vida (versión asíncrona)
+  actualizarPerfilConCentroDeVidaAsync(): Observable<any> {
     const centroDeVida = this.centroDeVidaControl.value;
     if (!centroDeVida) {
       this.loggingService.warn('[InscripcionProcess] Centro de vida no proporcionado para actualizar el perfil.', undefined, 'InscripcionProcessPage');
-      return;
+      return of(null);
     }
 
     try {
@@ -1171,7 +1343,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
       this.loggingService.debug(`[InscripcionProcess] Actualizando perfil con centro de vida: ${direccionFormateada}`, undefined, 'InscripcionProcessPage');
 
-      this.profileService.getUserProfile().pipe(
+      return this.profileService.getUserProfile().pipe(
         takeUntil(this.destroy$),
         catchError(error => {
           console.error('[InscripcionProcess] Error al obtener el perfil para actualizar centro de vida:', error);
@@ -1188,7 +1360,20 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
             dataToUpdate.firstName = profile.firstName;
             dataToUpdate.lastName = profile.lastName;
             dataToUpdate.dni = profile.dni;
-            dataToUpdate.cuit = profile.cuit;
+
+            // CRITICAL FIX: Manejar CUIT vacío para evitar errores de validación del backend
+            // El backend requiere CUIT no vacío, pero algunos usuarios pueden tener CUIT vacío
+            if (profile.cuit && profile.cuit.trim() !== '') {
+              dataToUpdate.cuit = profile.cuit;
+            } else {
+              // Si el CUIT está vacío, generar uno temporal válido basado en el DNI
+              // Formato: 20 + DNI (8 dígitos) + dígito verificador
+              const dni = profile.dni || '12345678';
+              const tempCuit = this.generateTempCuit(dni);
+              dataToUpdate.cuit = tempCuit;
+              this.loggingService.warn(`[InscripcionProcess] CUIT vacío detectado, usando CUIT temporal: ${tempCuit}`, undefined, 'InscripcionProcessPage');
+            }
+
             dataToUpdate.telefono = profile.telefono;
             dataToUpdate.experiencias = profile.experiencias || [];
             dataToUpdate.educacion = profile.educacion || [];
@@ -1201,19 +1386,29 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         catchError(error => {
           console.error('[InscripcionProcess] Error al actualizar centro de vida en el perfil:', error);
           this.notificationService.error('Error al guardar su centro de vida. Por favor, intente nuevamente.');
-          return of(null); // Continue with the flow despite the error
-        })
-      ).subscribe({
-        next: (response) => {
+          return throwError(() => error); // Propagar el error para que se maneje en finalizarInscripcion
+        }),
+        tap(response => {
           if (response) {
             this.notificationService.success('Centro de vida actualizado en su perfil.');
           }
-        }
-      });
+        })
+      );
     } catch (error) {
       console.error('[InscripcionProcess] Error inesperado al actualizar centro de vida:', error);
-      // Do not interrupt the main flow for an unexpected error in profile update
+      return throwError(() => error);
     }
+  }
+
+  // Actualizar el perfil del usuario con el centro de vida (versión legacy para compatibilidad)
+  actualizarPerfilConCentroDeVida(): void {
+    this.actualizarPerfilConCentroDeVidaAsync().pipe(
+      takeUntil(this.destroy$),
+      catchError(error => {
+        // Error ya manejado en la versión async
+        return of(null);
+      })
+    ).subscribe();
   }
 
   // Manejar el evento de documentos completados desde el componente de documentos embebidos
@@ -1394,22 +1589,25 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
-    this.actualizarPerfilConCentroDeVida();
 
-    // UNIFICADO: Determinar estado basado en documentación usando servicio centralizado
-    const allRequiredDocsUploaded = this.allRequiredDocumentsUploaded();
-    const state = allRequiredDocsUploaded
-      ? InscripcionState.COMPLETED_WITH_DOCS    // Inscripción completa con todos los documentos
-      : InscripcionState.COMPLETED_PENDING_DOCS; // Inscripción completa pero con documentos pendientes
-
-    // Logging implementado con LoggingService;
-
-    const updateRequest: IInscriptionUpdateRequest = {
-      state: state
-    };
-
-    this.updateInscriptionStatusWrapper(this.inscriptionId!, updateRequest).pipe(
+    // CRITICAL FIX: Esperar a que se complete la actualización del perfil antes de finalizar
+    this.actualizarPerfilConCentroDeVidaAsync().pipe(
       takeUntil(this.destroy$),
+      switchMap(() => {
+        // UNIFICADO: Determinar estado basado en documentación usando servicio centralizado
+        const allRequiredDocsUploaded = this.allRequiredDocumentsUploaded();
+        const state = allRequiredDocsUploaded
+          ? InscripcionState.COMPLETED_WITH_DOCS    // Inscripción completa con todos los documentos
+          : InscripcionState.COMPLETED_PENDING_DOCS; // Inscripción completa pero con documentos pendientes
+
+        // Logging implementado con LoggingService;
+
+        const updateRequest: IInscriptionUpdateRequest = {
+          state: state
+        };
+
+        return this.updateInscriptionStatusWrapper(this.inscriptionId!, updateRequest);
+      }),
       finalize(() => {
         this.loading = false;
         this.guardarEstadoActual(); // Save final state
@@ -1429,8 +1627,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
         // CORRECCIÓN CRÍTICA: Forzar actualización de servicios antes de navegar
         this.loggingService.debug('[InscripcionProcess] Inscripción finalizada exitosamente - marcada como completada', {
-          inscriptionId: this.inscriptionId,
-          state: state
+          inscriptionId: this.inscriptionId
         }, 'InscripcionProcessPage');
 
         // Forzar refresh de inscripciones para sincronizar estado
@@ -1562,21 +1759,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           this.inscriptionId = response.id;
           this.loggingService.debug('[InscripcionProcess] Using inscription with ID:', this.inscriptionId, 'InscripcionProcessPage');
 
-          // Update URL with inscription ID
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: {
-              contestId: this.contestId,
-              inscriptionId: this.inscriptionId
-            },
-            queryParamsHandling: 'merge'
-          });
-
           this.showValidationErrors = false;
 
           // CRITICAL FIX: Avanzar al paso 2 después de crear la inscripción
           this.currentStep = 2;
           this.updateProgressPercentage();
+          this.updateUrlWithCurrentStep();
           this.guardarEstadoActual();
           this.cdr.detectChanges();
 
@@ -1598,5 +1786,39 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    */
   getContestId(): number {
     return this.contestId || 0;
+  }
+
+  /**
+   * Genera un CUIT temporal válido basado en el DNI
+   * Formato: 20 + DNI (8 dígitos) + dígito verificador
+   */
+  private generateTempCuit(dni: string): string {
+    // Asegurar que el DNI tenga 8 dígitos
+    const cleanDni = dni.replace(/\D/g, '').padStart(8, '0').substring(0, 8);
+
+    // Usar prefijo 20 (persona física masculina)
+    const prefix = '20';
+    const cuitWithoutVerifier = prefix + cleanDni;
+
+    // Calcular dígito verificador
+    const multipliers = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+    let sum = 0;
+
+    for (let i = 0; i < 10; i++) {
+      sum += parseInt(cuitWithoutVerifier[i]) * multipliers[i];
+    }
+
+    const remainder = sum % 11;
+    let verifier: number;
+
+    if (remainder === 0) {
+      verifier = 0;
+    } else if (remainder === 1) {
+      verifier = 9; // Para personas físicas con prefijo 20
+    } else {
+      verifier = 11 - remainder;
+    }
+
+    return cuitWithoutVerifier + verifier.toString();
   }
 }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms'; // Import Validators
 
 // Custom Components
-import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-spinner/custom-spinner.component';
 
@@ -70,12 +70,10 @@ export interface DocumentoUploadDialogResult {
             <div class="upload-text">
               <ng-container *ngIf="!selectedFile">
                 <p>Arrastra y suelta tu archivo aquí o</p>
-                <app-custom-button
-                  variant="primary"
-                  icon="folder-open"
-                  label="Seleccionar archivo"
-                  (buttonClick)="fileInput.click()">
-                </app-custom-button>
+                <label for="fileInputSingle" class="custom-file-button">
+                  <i class="fas fa-folder-open"></i>
+                  Seleccionar archivo
+                </label>
                 <p class="upload-hint">Formatos permitidos: PDF (Máx. 10MB)</p>
               </ng-container>
 
@@ -108,8 +106,9 @@ export interface DocumentoUploadDialogResult {
             </div>
 
             <input type="file"
+                   id="fileInputSingle"
                    #fileInput
-                   style="display: none"
+                   class="hidden-file-input"
                    accept=".pdf"
                    (change)="onFileSelected($event)">
           </div>
@@ -442,6 +441,59 @@ export interface DocumentoUploadDialogResult {
         }
       }
     }
+
+    .hidden-file-input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .custom-file-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: rgba(59, 130, 246, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: none;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    .custom-file-button:hover:not(.disabled) {
+      background: rgba(59, 130, 246, 1);
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .custom-file-button:active:not(.disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+    }
+
+    .custom-file-button.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      pointer-events: none;
+    }
+
+    .custom-file-button i {
+      font-size: 16px;
+    }
   `]
 })
 export class DocumentoUploadDialogComponent implements OnInit {
@@ -457,9 +509,9 @@ export class DocumentoUploadDialogComponent implements OnInit {
     private documentosService: DocumentosService,
     private documentoValidationService: DocumentoValidationService,
     private notificationService: UnifiedNotificationService,
-    public dialogRef: CustomDialogRef<DocumentoUploadDialogResult>,
+    public dialogRef: UnifiedDialogRef<DocumentoUploadDialogResult>,
     private loggingService: LoggingService,
-    @Inject(CUSTOM_DIALOG_DATA) public data: { tipoDocumentoId: string, tipoDocumentoNombre: string }
+    @Inject(DIALOG_DATA) public data: { tipoDocumentoId: string, tipoDocumentoNombre: string }
   ) {
     this.loggingService.debug('[DocumentoUploadDialog] Constructor: Initializing form and injecting data.', { data: this.data }, 'DocumentoUploadDialog');
     this.uploadForm = this.fb.group({

@@ -1,4 +1,4 @@
-import { ApplicationConfig, isDevMode } from '@angular/core';
+import { ApplicationConfig, isDevMode, APP_INITIALIZER } from '@angular/core';
 import { provideRouter, withInMemoryScrolling, withRouterConfig } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -8,6 +8,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { IndexedDBService } from './core/services/storage/indexed-db.service';
 import { CSPService } from './core/services/security/csp.service';
 import { AuthService } from './core/services/auth/auth.service';
+import { AppInitializationService } from './core/services/app-initialization.service';
 import { ProfileService } from './core/services/profile/profile.service';
 // Legacy ExperienceService removed - using ExperienceSimpleService
 import { TokenService } from './core/services/auth/token.service';
@@ -46,6 +47,14 @@ export const appConfig: ApplicationConfig = {
     ArgentinaDataService,
     IndexedDBService,
     CSPService,
+    AppInitializationService,
+    // Inicialización de la aplicación
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (appInit: AppInitializationService) => () => appInit.initializeApp(),
+      deps: [AppInitializationService],
+      multi: true
+    },
     // Proveedores de servicios de responsividad
     ResponsiveService,
     // Proveedores de tokens para inyección
