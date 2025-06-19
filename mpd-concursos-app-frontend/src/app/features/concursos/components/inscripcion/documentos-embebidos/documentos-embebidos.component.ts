@@ -1015,6 +1015,19 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
    * @returns A consolidated and cleaned list of required documents.
    */
   private processRequiredDocumentTypes(rawTipos: TipoDocumento[]): { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] {
+
+    // 🔍 DEBUGGING: Log de tipos de documento recibidos del backend
+    this.loggingService.debug('[DocumentosEmbebidos] === TIPOS DE DOCUMENTO DEL BACKEND ===', {
+      totalTipos: rawTipos.length,
+      tiposRecibidos: rawTipos.map(tipo => ({
+        id: tipo.id,
+        code: tipo.code,
+        nombre: tipo.nombre,
+        requerido: tipo.requerido,
+        activo: tipo.activo
+      }))
+    }, 'DocumentosEmbebidos');
+
     let documentosFinal: { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] = [];
 
     // Prioritize getting DNI consolidated entry
@@ -1070,6 +1083,26 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       this.notificationService.error('Error de configuración de documentos. Se usarán documentos básicos obligatorios.');
       documentosFinal = this.getEmergencyBaseDocuments();
     }
+
+    // 🔍 DEBUGGING: Log de documentos finales procesados
+    const obligatorios = documentosFinal.filter(doc => doc.required);
+    const opcionales = documentosFinal.filter(doc => !doc.required);
+
+    this.loggingService.debug('[DocumentosEmbebidos] === DOCUMENTOS FINALES PROCESADOS ===', {
+      totalDocumentos: documentosFinal.length,
+      obligatoriosCount: obligatorios.length,
+      opcionalesCount: opcionales.length,
+      documentosObligatorios: obligatorios.map(doc => ({
+        title: doc.title,
+        tipoDocumentoId: doc.tipoDocumentoId,
+        required: doc.required
+      })),
+      documentosOpcionales: opcionales.map(doc => ({
+        title: doc.title,
+        tipoDocumentoId: doc.tipoDocumentoId,
+        required: doc.required
+      }))
+    }, 'DocumentosEmbebidos');
 
     return documentosFinal;
   }
