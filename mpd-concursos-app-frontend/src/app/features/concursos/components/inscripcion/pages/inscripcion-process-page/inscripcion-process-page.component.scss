@@ -480,14 +480,16 @@
 
     i {
       font-size: 1rem;
-      color: #3b82f6;
+      /* ✅ ACCESIBILIDAD: Cambiar color azul por blanco */
+      color: var(--color-primary);
       margin-right: 0.5rem;
     }
 
     span {
       font-size: 0.875rem;
       font-weight: 600;
-      color: #3b82f6;
+      /* ✅ ACCESIBILIDAD: Cambiar color azul por blanco */
+      color: var(--color-primary);
     }
   }
 
@@ -498,7 +500,8 @@
     font-size: 0.8rem;
 
     strong {
-      color: #93c5fd;
+      /* ✅ ACCESIBILIDAD: Cambiar color azul por blanco */
+      color: var(--color-primary);
       font-weight: 600;
     }
   }
