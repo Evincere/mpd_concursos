@@ -1413,7 +1413,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Manejar el evento de documentos completados desde el componente de documentos embebidos
   onDocumentosCompletados(completados: boolean): void {
-    this.loggingService.debug(`[InscripcionProcess] Evento 'documentosCompletados' recibido: ${completados}`, undefined, 'InscripcionProcessPage');
+    this.loggingService.debug(`[InscripcionProcess] === EVENTO DOCUMENTOS COMPLETADOS ===`, {
+      completados,
+      estadoAnterior: this.todosDocumentosCompletos,
+      pasoActual: this.currentStep,
+      mostrandoProvisional: this.mostrarInscripcionProvisional
+    }, 'InscripcionProcessPage');
+
     // Actualizar el estado de documentación usando el servicio centralizado
     this.actualizarEstadoDocumentos();
   }
@@ -1445,7 +1451,11 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Actualizar el estado de los documentos en el resumen
   actualizarEstadoDocumentos(): void {
-    this.loggingService.debug('[InscripcionProcess] Actualizando estado de documentos requeridos y subidos.', undefined, 'InscripcionProcessPage');
+    this.loggingService.debug('[InscripcionProcess] === ACTUALIZANDO ESTADO DE DOCUMENTOS ===', {
+      pasoActual: this.currentStep,
+      inscriptionId: this.inscriptionId,
+      mostrandoProvisional: this.mostrarInscripcionProvisional
+    }, 'InscripcionProcessPage');
 
     forkJoin([
       this.documentosService.getTiposDocumento(),
@@ -1453,8 +1463,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     ]).pipe(
       takeUntil(this.destroy$),
       map(([tiposDocumento, documentosUsuario]) => {
-        this.loggingService.debug('[InscripcionProcess] Tipos de documento:', tiposDocumento, 'InscripcionProcessPage');
-        this.loggingService.debug('[InscripcionProcess] Documentos de usuario:', documentosUsuario, 'InscripcionProcessPage');
+        this.loggingService.debug('[InscripcionProcess] === DATOS RECIBIDOS DEL BACKEND ===', {
+          tiposDocumentoCount: tiposDocumento.length,
+          documentosUsuarioCount: documentosUsuario.length,
+          tiposDocumento: tiposDocumento.map(t => ({ id: t.id, nombre: t.nombre, requerido: t.requerido })),
+          documentosUsuario: documentosUsuario.map(d => ({ tipoDocumentoId: d.tipoDocumentoId, nombre: d.tipoDocumento?.nombre }))
+        }, 'InscripcionProcessPage');
 
         // ✅ CRITICAL FIX: Usar la propiedad 'requerido' del backend para determinar si es obligatorio
         let docsRequeridos: { title: string, required: boolean, completed: boolean, tipoDocumentoId: string }[] =
@@ -1512,6 +1526,19 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
             consolidatedDocs.push(doc);
           }
         });
+
+        // 🔍 DEBUGGING: Log antes de actualizar el servicio centralizado
+        this.loggingService.debug('[InscripcionProcess] === ACTUALIZANDO SERVICIO CENTRALIZADO ===', {
+          consolidatedDocsCount: consolidatedDocs.length,
+          documentosUsuarioCount: documentosUsuario.length,
+          provisionalAccepted: this.documentosCompletosControl.value || false,
+          consolidatedDocs: consolidatedDocs.map(doc => ({
+            title: doc.title,
+            required: doc.required,
+            completed: doc.completed,
+            tipoDocumentoId: doc.tipoDocumentoId
+          }))
+        }, 'InscripcionProcessPage');
 
         // Actualizar el servicio centralizado con los documentos consolidados
         this.inscriptionDocumentationService.updateDocumentationState(
