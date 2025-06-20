@@ -293,8 +293,14 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
    */
   private getResponseSize(response: HttpResponse<any>): number {
     if (!response.body) return 0;
-    
+
     try {
+      // Manejar Blobs de manera especial
+      if (response.body instanceof Blob) {
+        return response.body.size;
+      }
+
+      // Para otros tipos de respuesta, usar JSON.stringify
       return JSON.stringify(response.body).length;
     } catch {
       return 0;
@@ -326,23 +332,36 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   private sanitizeResponseBody(body: any): any {
     if (!body) return null;
 
-    // Solo incluir respuestas pequeñas para evitar logs masivos
-    const bodyStr = JSON.stringify(body);
-    if (bodyStr.length > 1000) {
-      return '[RESPONSE_TOO_LARGE]';
+    // Manejar Blobs de manera especial
+    if (body instanceof Blob) {
+      return {
+        type: 'Blob',
+        size: body.size,
+        mimeType: body.type
+      };
     }
 
-    const sanitized = { ...body };
-    
-    // Remover campos sensibles
-    const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
-    sensitiveFields.forEach(field => {
-      if (sanitized[field]) {
-        sanitized[field] = '[REDACTED]';
+    try {
+      // Solo incluir respuestas pequeñas para evitar logs masivos
+      const bodyStr = JSON.stringify(body);
+      if (bodyStr.length > 1000) {
+        return '[RESPONSE_TOO_LARGE]';
       }
-    });
 
-    return sanitized;
+      const sanitized = { ...body };
+
+      // Remover campos sensibles
+      const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
+      sensitiveFields.forEach(field => {
+        if (sanitized[field]) {
+          sanitized[field] = '[REDACTED]';
+        }
+      });
+
+      return sanitized;
+    } catch {
+      return '[RESPONSE_NOT_SERIALIZABLE]';
+    }
   }
 
   /**

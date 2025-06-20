@@ -462,8 +462,8 @@ export class ConcursosComponent implements OnInit, OnDestroy {
 
   // Métodos para el template
   onFilter(): void {
-    // Método para manejar el evento de filtro
-    this.aplicarFiltros();
+    // Método para manejar el evento de filtro - alternar panel de filtros
+    this.toggleFiltros();
   }
 
   aplicarFiltros(event?: any): void {

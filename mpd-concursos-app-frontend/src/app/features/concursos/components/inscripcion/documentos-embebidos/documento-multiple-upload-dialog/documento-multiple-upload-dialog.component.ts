@@ -124,7 +124,9 @@ interface DocumentoEnSeleccion {
             <div class="upload-text">
               <ng-container *ngIf="!documentoActual.file">
                 <p>Arrastra y suelta tu archivo aquí o</p>
-                <label for="fileInput" class="custom-file-button" [class.disabled]="uploading || fileInputActive">
+                <label for="fileInput"
+                       class="custom-file-button"
+                       [class.disabled]="uploading || fileInputActive">
                   <i class="fas fa-folder-open"></i>
                   Seleccionar archivo
                 </label>
@@ -147,10 +149,11 @@ interface DocumentoEnSeleccion {
             <input type="file"
                    id="fileInput"
                    #fileInput
-                   class="hidden-file-input"
+                   class="visually-hidden-input"
                    accept=".pdf"
                    [disabled]="uploading || fileInputActive"
-                   (change)="onSingleFileSelected($event)">
+                   (change)="onSingleFileSelected($event)"
+                   tabindex="-1">
           </div>
 
           <!-- Configuración del documento actual -->
@@ -772,19 +775,20 @@ interface DocumentoEnSeleccion {
       user-select: none;
     }
 
-    .custom-file-button:hover:not(.disabled) {
+    .custom-file-button:hover:not(.disabled):not(:disabled) {
       background: rgba(59, 130, 246, 1);
       border-color: rgba(59, 130, 246, 0.5);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
-    .custom-file-button:active:not(.disabled) {
+    .custom-file-button:active:not(.disabled):not(:disabled) {
       transform: translateY(0);
       box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
     }
 
-    .custom-file-button.disabled {
+    .custom-file-button.disabled,
+    .custom-file-button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
@@ -795,15 +799,17 @@ interface DocumentoEnSeleccion {
       font-size: 16px;
     }
 
-    .hidden-file-input {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 1;
+    .visually-hidden-input {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+      opacity: 0 !important;
     }
   `]
 })
@@ -1012,28 +1018,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit {
     }
   }
 
-  triggerFileInput(): void {
-    // Prevenir múltiples llamadas
-    if (this.uploading || this.fileInputActive) {
-      return;
-    }
 
-    this.fileInputActive = true;
-
-    try {
-      if (this.fileInput && this.fileInput.nativeElement) {
-        // Llamada directa sin setTimeout
-        this.fileInput.nativeElement.click();
-      }
-    } catch (error) {
-      console.error('Error al abrir selector de archivos:', error);
-    } finally {
-      // Resetear la bandera después de un breve delay
-      setTimeout(() => {
-        this.fileInputActive = false;
-      }, 1000);
-    }
-  }
 
   processSingleFile(file: File): void {
     // Verificar si el archivo ya está en la lista

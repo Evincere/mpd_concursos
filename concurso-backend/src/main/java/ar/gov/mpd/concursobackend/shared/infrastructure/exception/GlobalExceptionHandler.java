@@ -6,6 +6,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionNotFoundException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.DuplicateInscriptionException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionStatusException;
 import ar.gov.mpd.concursobackend.shared.infrastructure.dto.ApiError;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,6 +24,52 @@ public class GlobalExceptionHandler {
                 "No tiene permisos suficientes para realizar esta acción",
                 "Para gestionar roles de usuario se requiere ser administrador del sistema");
         return new ResponseEntity<>(apiError, HttpStatus.FORBIDDEN);
+    }
+
+    // ========== MANEJADORES ESPECÍFICOS PARA EXCEPCIONES DE INSCRIPCIONES ==========
+
+    @ExceptionHandler(InscriptionNotFoundException.class)
+    public ResponseEntity<ApiError> handleInscriptionNotFoundException(InscriptionNotFoundException ex) {
+        log.warn("Inscripción no encontrada: {}", ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.NOT_FOUND.value(),
+                "Inscripción no encontrada",
+                ex.getMessage() != null ? ex.getMessage() : "La inscripción solicitada no existe o no tiene permisos para acceder a ella");
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DuplicateInscriptionException.class)
+    public ResponseEntity<ApiError> handleDuplicateInscriptionException(DuplicateInscriptionException ex) {
+        log.warn("Intento de inscripción duplicada: {}", ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.CONFLICT.value(),
+                "Ya existe una inscripción para este concurso",
+                ex.getMessage() != null ? ex.getMessage() : "Ya existe una inscripción activa para este concurso. Por favor, verifique su estado actual.");
+        return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidInscriptionException.class)
+    public ResponseEntity<ApiError> handleInvalidInscriptionException(InvalidInscriptionException ex) {
+        log.warn("Datos de inscripción inválidos: {}", ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Datos de inscripción inválidos",
+                ex.getMessage() != null ? ex.getMessage() : "Los datos proporcionados para la inscripción no son válidos");
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidInscriptionStatusException.class)
+    public ResponseEntity<ApiError> handleInvalidInscriptionStatusException(InvalidInscriptionStatusException ex) {
+        log.warn("Estado de inscripción inválido: {}", ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Estado de inscripción inválido",
+                ex.getMessage() != null ? ex.getMessage() : "El estado de inscripción proporcionado no es válido o no se puede aplicar en este contexto");
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -40,6 +90,43 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Error en la solicitud",
                 ex.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    // ========== MANEJADORES MEJORADOS PARA EXCEPCIONES COMUNES ==========
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.warn("Argumento inválido: {}", ex.getMessage());
+
+        String message = ex.getMessage();
+        String userMessage = "Solicitud inválida";
+        String detail = message;
+
+        // Proporcionar mensajes más específicos basados en el contenido del error
+        if (message != null) {
+            if (message.toLowerCase().contains("concurso no encontrado") || message.toLowerCase().contains("contest not found")) {
+                userMessage = "Concurso no encontrado";
+                detail = "El concurso solicitado no existe o no está disponible";
+            } else if (message.toLowerCase().contains("usuario no encontrado") || message.toLowerCase().contains("user not found")) {
+                userMessage = "Usuario no encontrado";
+                detail = "El usuario especificado no existe en el sistema";
+            } else if (message.toLowerCase().contains("inscripción no encontrada") || message.toLowerCase().contains("inscription not found")) {
+                userMessage = "Inscripción no encontrada";
+                detail = "La inscripción solicitada no existe";
+            } else if (message.toLowerCase().contains("id") && message.toLowerCase().contains("inválido")) {
+                userMessage = "Identificador inválido";
+                detail = "El identificador proporcionado no tiene un formato válido";
+            } else if (message.toLowerCase().contains("estado") && message.toLowerCase().contains("inválido")) {
+                userMessage = "Estado inválido";
+                detail = message;
+            }
+        }
+
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                userMessage,
+                detail);
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
@@ -68,10 +155,44 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
+    // Manejador mejorado para RuntimeException específicas
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiError> handleRuntimeException(RuntimeException ex) {
+        log.error("Error de tiempo de ejecución: {} - Tipo: {}", ex.getMessage(), ex.getClass().getSimpleName(), ex);
+
+        String message = ex.getMessage();
+        String userMessage = "Error en el procesamiento";
+        String detail = "Ha ocurrido un error durante el procesamiento de su solicitud";
+
+        // Proporcionar mensajes más específicos para errores comunes
+        if (message != null) {
+            if (message.toLowerCase().contains("verificar inscripción")) {
+                userMessage = "Error al verificar inscripción";
+                detail = "No se pudo verificar el estado de la inscripción. Por favor, inténtelo de nuevo";
+            } else if (message.toLowerCase().contains("actualizar") && message.toLowerCase().contains("estado")) {
+                userMessage = "Error al actualizar estado";
+                detail = "No se pudo actualizar el estado. Por favor, inténtelo de nuevo";
+            } else if (message.toLowerCase().contains("base de datos") || message.toLowerCase().contains("database")) {
+                userMessage = "Error de base de datos";
+                detail = "Ha ocurrido un error al acceder a los datos. Por favor, inténtelo de nuevo más tarde";
+            }
+        }
+
+        ApiError apiError = new ApiError(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                userMessage,
+                detail);
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     // Manejador genérico para excepciones no controladas
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGenericException(Exception ex) {
-        log.error("Error no controlado: {}", ex.getMessage(), ex);
+        log.error("Error no controlado: {} - Tipo: {} - Causa raíz: {}",
+                ex.getMessage(),
+                ex.getClass().getSimpleName(),
+                ex.getCause() != null ? ex.getCause().getMessage() : "N/A",
+                ex);
 
         ApiError apiError = new ApiError(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

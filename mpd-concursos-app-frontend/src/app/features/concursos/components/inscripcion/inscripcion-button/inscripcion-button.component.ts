@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { Concurso } from '@shared/interfaces/concurso/concurso.interface';
 import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interface';
@@ -41,6 +42,8 @@ export class InscripcionButtonComponent {
   @Input() userPostulation: Postulacion | null = null;
   @Output() inscripcionClick = new EventEmitter<Concurso>();
   @Output() continuarClick = new EventEmitter<Concurso>();
+
+  constructor(private router: Router) {}
 
   // Getter para acceder al concurso
   get currentContest(): Concurso {
@@ -381,10 +384,46 @@ export class InscripcionButtonComponent {
 
   handleClick(): void {
     // CRITICAL FIX: Manejar correctamente los estados que requieren continuar vs iniciar nueva inscripción
-    if (this.userPostulation?.estado === 'COMPLETED_PENDING_DOCS' || this.userPostulation?.estado === 'ACTIVE') {
-      this.continuarClick.emit(this.currentContest);
+    if (this.userPostulation) {
+      switch (this.userPostulation.estado) {
+        case 'COMPLETED_PENDING_DOCS':
+        case 'ACTIVE':
+          // Estados que permiten continuar/retomar el proceso de inscripción
+          this.continuarClick.emit(this.currentContest);
+          break;
+        case 'PENDING':
+        case 'COMPLETED_WITH_DOCS':
+          // Estados completos - navegar al detalle de postulación
+          this.navegarADetallePostulacion();
+          break;
+        case 'APPROVED':
+        case 'REJECTED':
+        case 'FROZEN':
+        case 'CANCELLED':
+          // Estados finales - solo mostrar resultado/estado
+          console.log('Estado final - solo visualización permitida');
+          break;
+        default:
+          this.inscripcionClick.emit(this.currentContest);
+      }
     } else {
+      // No hay postulación - iniciar nueva inscripción
       this.inscripcionClick.emit(this.currentContest);
+    }
+  }
+
+  /**
+   * Navega al detalle de la postulación en la vista de "Mis Postulaciones"
+   */
+  private navegarADetallePostulacion(): void {
+    if (this.userPostulation?.id) {
+      // Navegar a la página de postulaciones con el ID de la postulación para abrir el detalle
+      this.router.navigate(['/dashboard/postulaciones'], {
+        queryParams: {
+          postulacionId: this.userPostulation.id,
+          openDetail: 'true'
+        }
+      });
     }
   }
 }

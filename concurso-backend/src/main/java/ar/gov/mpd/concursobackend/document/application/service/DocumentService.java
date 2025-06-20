@@ -53,8 +53,20 @@ public interface DocumentService {
     InputStream getDocumentFile(String documentId, UUID userId) throws IOException;
 
     /**
+     * Update/replace a document
+     *
+     * @param documentId  Document's UUID as string
+     * @param request     Update request
+     * @param inputStream New document input stream
+     * @param userId      User's UUID
+     * @return Document response
+     * @throws IOException If an I/O error occurs
+     */
+    DocumentResponse updateDocument(String documentId, DocumentUploadRequest request, InputStream inputStream, UUID userId) throws IOException;
+
+    /**
      * Delete a document
-     * 
+     *
      * @param documentId Document's UUID as string
      * @param userId     User's UUID
      */

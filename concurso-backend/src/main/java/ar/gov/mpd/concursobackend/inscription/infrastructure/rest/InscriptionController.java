@@ -59,8 +59,23 @@ public class InscriptionController {
         request.setUserId(UUID.fromString(currentUserId));
         log.debug("Creating inscription for user {} in contest {}", currentUserId, request.getContestId());
 
-        InscriptionDetailResponse response = createInscriptionUseCase.createInscription(request);
-        return ResponseEntity.ok(response);
+        try {
+            InscriptionDetailResponse response = createInscriptionUseCase.createInscription(request);
+            log.info("Successfully created inscription for user {} in contest {}", currentUserId, request.getContestId());
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            log.error("Business rule violation when creating inscription for user {} in contest {}: {}",
+                    currentUserId, request.getContestId(), e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (IllegalArgumentException e) {
+            log.error("Validation error when creating inscription for user {} in contest {}: {}",
+                    currentUserId, request.getContestId(), e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("Unexpected error when creating inscription for user {} in contest {}: {}",
+                    currentUserId, request.getContestId(), e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     /**

@@ -42,7 +42,7 @@ this.router.navigate(['/dashboard/inscripcion'], {
   queryParams: {
     contestId: contest.id,
     inscriptionId: inscriptionId, // Opcional
-    continueInscription: true // Opcional
+    resume: 'true' // Opcional - para retomar proceso interrumpido
   }
 });
 ```

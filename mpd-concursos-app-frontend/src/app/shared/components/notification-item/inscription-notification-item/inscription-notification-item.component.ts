@@ -353,8 +353,13 @@ export class InscriptionNotificationItemComponent implements OnInit {
       return;
     }
 
-    this.router.navigate(['/inscripcion', this.notification.metadata.contestId], {
-      queryParams: { inscriptionId: this.notification.metadata.inscriptionId }
+    // CRITICAL FIX: Usar la ruta correcta del dashboard y parámetros estándar
+    this.router.navigate(['/dashboard/inscripcion'], {
+      queryParams: {
+        contestId: this.notification.metadata.contestId,
+        inscriptionId: this.notification.metadata.inscriptionId,
+        resume: 'true'
+      }
     });
   }
 

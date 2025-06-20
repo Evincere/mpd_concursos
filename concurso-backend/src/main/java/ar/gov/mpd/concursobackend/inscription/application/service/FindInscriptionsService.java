@@ -14,6 +14,7 @@ import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptio
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStatus;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionNotFoundException;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -68,12 +69,18 @@ public class FindInscriptionsService implements FindInscriptionsUseCase {
     @Override
     @Transactional(readOnly = true)
     public InscriptionDetailResponse findById(UUID id) {
+        log.debug("Buscando inscripción por ID: {}", id);
+
         Inscription inscription = loadInscriptionPort.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Inscription not found with id: " + id));
+                .orElseThrow(() -> {
+                    log.warn("Inscripción no encontrada con ID: {}", id);
+                    return new InscriptionNotFoundException("No se encontró la inscripción con ID: " + id);
+                });
 
         Contest contest = contestRepository.findById(inscription.getContestId().getValue())
                 .orElse(null);
 
+        log.debug("Inscripción encontrada: {} para concurso: {}", id, contest != null ? contest.getTitle() : "N/A");
         return inscriptionMapper.toDetailResponse(inscription, contest);
     }
 

@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 })
 public interface InscriptionEntityMapper {
 
-    @Mapping(target = "id", expression = "java(domain.getId().getValue())")
+    @Mapping(target = "id", expression = "java(domain.getId() != null ? domain.getId().getValue() : null)")
     @Mapping(target = "contestId", source = "contestId")
     @Mapping(target = "userId", expression = "java(domain.getUserId().getValue())")
     @Mapping(target = "status", source = "state")

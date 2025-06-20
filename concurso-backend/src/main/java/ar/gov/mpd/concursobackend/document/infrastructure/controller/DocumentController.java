@@ -240,13 +240,42 @@ public class DocumentController {
             InputStreamResource resource = new InputStreamResource(
                     documentService.getDocumentFile(documentId, userId));
 
+            // Usar 'inline' para permitir visualización en el navegador
+            // en lugar de 'attachment' que fuerza descarga
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + document.getNombreArchivo() + "\"")
+                            "inline; filename=\"" + document.getNombreArchivo() + "\"")
                     .contentType(MediaType.parseMediaType(document.getContentType()))
                     .body(resource);
         } catch (Exception e) {
             log.error("Error getting document file", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<DocumentResponse> updateDocument(
+            @PathVariable("id") String documentId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "tipoDocumentoId", required = false) String tipoDocumentoId,
+            @RequestParam(value = "comentarios", required = false) String comentarios) {
+
+        try {
+            UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
+
+            // Crear request para actualización
+            DocumentUploadRequest request = DocumentUploadRequest.builder()
+                    .fileName(file.getOriginalFilename())
+                    .contentType(file.getContentType())
+                    .documentTypeId(tipoDocumentoId)
+                    .comments(comentarios)
+                    .build();
+
+            DocumentResponse response = documentService.updateDocument(documentId, request, file.getInputStream(), userId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error updating document", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

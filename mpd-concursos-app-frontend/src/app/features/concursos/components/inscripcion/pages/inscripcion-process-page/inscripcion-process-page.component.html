@@ -181,8 +181,10 @@
             (documentosCompletados)="onDocumentosCompletados($event)">
           </app-documentos-embebidos>
 
+
+
           <!-- UNIFICADO: Checkbox para inscripción provisional cuando hay documentos pendientes -->
-          <div class="provisional-inscription-section" *ngIf="documentationState && !documentationState.completenessResult.allDocumentsComplete">
+          <div class="provisional-inscription-section" *ngIf="!shouldHideProvisionalSection()">
             <div class="provisional-alert">
               <div class="alert-header">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -254,11 +256,11 @@
               <div class="info-grid">
                 <div class="info-item">
                   <span class="label">Centro de Vida:</span>
-                  <span class="value">{{ centroDeVidaControl.value }}</span>
+                  <span class="value">{{ getCentroDeVidaValue() }}</span>
                 </div>
                 <div class="info-item">
                   <span class="label">Circunscripciones Seleccionadas:</span>
-                  <span class="value">{{ selectedCircunscripcionesControl.value.join(', ') }}</span>
+                  <span class="value">{{ getSelectedCircunscripcionesValue() }}</span>
                 </div>
               </div>
             </div>
@@ -271,7 +273,7 @@
                 <div class="documentation-summary">
                   <span class="docs-completed">{{ getDocumentosCompletados() }}</span>
                   <span class="docs-separator">/</span>
-                  <span class="docs-total">{{ documentacionRequerida.length }}</span>
+                  <span class="docs-total">{{ documentacionRequerida?.length || 0 }}</span>
                   <span class="docs-label">documentos</span>
                 </div>
               </div>
@@ -301,7 +303,7 @@
               </div>
 
               <!-- Información de inscripción provisional (solo informativa en el resumen) -->
-              <div class="provisional-info" *ngIf="documentationState && !documentationState.completenessResult.allDocumentsComplete">
+              <div class="provisional-info" *ngIf="!shouldHideProvisionalSection()">
                 <div class="info-header">
                   <i class="fas fa-info-circle"></i>
                   <span>Inscripción Provisional</span>

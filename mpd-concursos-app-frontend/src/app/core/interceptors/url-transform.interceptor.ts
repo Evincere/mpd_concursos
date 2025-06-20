@@ -36,7 +36,15 @@ export const urlTransformInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     map(event => {
       if (event instanceof HttpResponse) {
-        // Transformar URLs en el cuerpo de la respuesta
+        // NO transformar Blobs, ArrayBuffers u otros tipos binarios
+        if (event.body instanceof Blob ||
+            event.body instanceof ArrayBuffer ||
+            event.body instanceof Uint8Array ||
+            event.body instanceof File) {
+          return event;
+        }
+
+        // Transformar URLs en el cuerpo de la respuesta solo para objetos JSON
         const transformedBody = transformUrls(event.body);
 
         if (transformedBody !== event.body) {
@@ -53,6 +61,16 @@ export const urlTransformInterceptor: HttpInterceptorFn = (req, next) => {
  */
 function transformUrls(obj: any): any {
     if (obj === null || obj === undefined) {
+      return obj;
+    }
+
+    // No transformar tipos binarios o especiales
+    if (obj instanceof Blob ||
+        obj instanceof ArrayBuffer ||
+        obj instanceof Uint8Array ||
+        obj instanceof File ||
+        obj instanceof Date ||
+        obj instanceof RegExp) {
       return obj;
     }
 

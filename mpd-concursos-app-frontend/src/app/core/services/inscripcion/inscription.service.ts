@@ -191,48 +191,11 @@ export class InscriptionService {
       contestId: typeof contestId === 'string' ? parseInt(contestId, 10) : contestId
     };
 
-    const currentInscriptions = this.inscriptions$.getValue();
-    this.loggingService.debug('[InscriptionService] Checking for existing inscription for contest ID:', request.contestId, 'Inscription');
-
-    const existingInscription = currentInscriptions.find(ins =>
-      ins.contestId === request.contestId
-    );
-
-    if (existingInscription) {
-      this.loggingService.warn('[InscriptionService] Existing inscription found:', existingInscription, 'Inscription');
-
-      let errorMessage = 'Ya existe una inscripción para este concurso.';
-      switch (existingInscription.state) {
-        case InscripcionState.CANCELLED:
-          errorMessage = 'No puede volver a inscribirse a un concurso donde ya canceló su inscripción.';
-          break;
-        case InscripcionState.REJECTED:
-          errorMessage = 'No puede volver a inscribirse a un concurso donde su inscripción fue rechazada.';
-          break;
-        case InscripcionState.APPROVED:
-          errorMessage = 'Ya tiene una inscripción aprobada para este concurso.';
-          break;
-        case InscripcionState.COMPLETED_WITH_DOCS:
-        case InscripcionState.COMPLETED_PENDING_DOCS:
-          errorMessage = 'Ya tiene una inscripción completada para este concurso.';
-          break;
-        case InscripcionState.FROZEN:
-          errorMessage = 'Su inscripción anterior fue congelada. No puede volver a inscribirse.';
-          break;
-        case InscripcionState.ACTIVE:
-        case InscripcionState.PENDING:
-          errorMessage = 'Ya existe una inscripción activa/pendiente para este concurso.';
-          break;
-        case InscripcionState.COMPLETED_WITH_DOCS:
-        case InscripcionState.COMPLETED_PENDING_DOCS:
-          errorMessage = 'Ya tiene una inscripción completa para este concurso.';
-          break;
-      }
-
-      return throwError(() => new Error(errorMessage));
-    }
-
+    // CRITICAL FIX: Remove local cache validation - let the backend handle all validations
+    // The local cache might be stale or incorrect, so we should always attempt to create
+    // and let the backend return appropriate errors if needed
     this.loggingService.info('[InscriptionService] Creating new inscription for contest:', request.contestId, 'Inscription');
+
     return this.http.post<any>(
       `${this.baseUrl}${this.inscriptionsEndpoint}`,
       request

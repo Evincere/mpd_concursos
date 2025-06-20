@@ -102,6 +102,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   // Estado de documentación centralizado
   documentationState: InscriptionDocumentationState | null = null;
 
+  // ✅ CORRECCIÓN: Agregar propiedad para documentos del usuario
+  documentosUsuario: DocumentoUsuario[] = [];
+
   // Contenido de términos y condiciones
   termsAndConditionsContent: string = '';
 
@@ -339,41 +342,11 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // CRITICAL FIX: Crear inscripción solo cuando se avanza del paso 1 al paso 2 Y no existe ya una inscripción
+      // CRITICAL FIX: Crear inscripción cuando se avanza del paso 1 al paso 2 Y no existe ya una inscripción
       if (this.currentStep === 1 && !this.inscriptionId && this.contestId) {
-        // Verificar primero si ya existe una inscripción para este concurso
-        this.inscriptionService.getUserInscriptions(0, 100).pipe(
-          takeUntil(this.destroy$),
-          map(page => page.content.find(ins => ins.contestId === this.contestId)),
-          catchError(error => {
-            this.loggingService.error('[InscripcionProcess] Error checking existing inscriptions:', error, 'InscripcionProcessPage');
-            return of(null);
-          })
-        ).subscribe((existingInscription: any) => {
-          if (existingInscription) {
-            // Ya existe una inscripción, usar esa
-            this.inscriptionId = existingInscription.id;
-            this.loggingService.debug('[InscripcionProcess] Found existing inscription, using ID:', this.inscriptionId, 'InscripcionProcessPage');
-
-            // Actualizar URL con inscription ID y paso actual
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: {
-                contestId: this.contestId,
-                inscriptionId: this.inscriptionId,
-                step: this.currentStep
-              },
-              queryParamsHandling: 'merge'
-            });
-
-            // Continuar al siguiente paso
-            this.proceedToNextStep();
-          } else {
-            // No existe inscripción, crear una nueva
-            this.createInscriptionWhenAdvancingToStep2();
-          }
-        });
-        return; // Salir aquí, la verificación manejará el avance
+        // Crear inscripción directamente - el backend maneja las validaciones
+        this.createInscriptionWhenAdvancingToStep2();
+        return; // Salir aquí, la creación manejará el avance
       }
 
       this.proceedToNextStep();
@@ -795,13 +768,96 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    */
   getDocumentosCompletados(): number {
     if (!this.documentationState) return 0;
+
+    // ✅ CRITICAL FIX: Retornar solo documentos obligatorios completados
+    // El servicio ya calcula correctamente completedCount solo para documentos obligatorios
     return this.documentationState.completenessResult.completedCount;
   }
 
   getDocumentationProgress(): number {
     if (!this.documentationState) return 0;
-    const { completedCount, totalCount } = this.documentationState.completenessResult;
-    return totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    // ✅ CRITICAL FIX: El progreso debe basarse SOLO en documentos obligatorios
+    // El servicio ya calcula correctamente completedCount y totalCount solo para documentos obligatorios
+    const { completedCount, totalCount, allDocumentsComplete } = this.documentationState.completenessResult;
+
+    // Si todos los documentos obligatorios están completos, mostrar 100%
+    if (allDocumentsComplete) {
+      return 100;
+    }
+
+    const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+    this.loggingService.debug('[InscripcionProcess] Cálculo de progreso desde documentationState', {
+      completedCount,
+      totalCount,
+      allDocumentsComplete,
+      calculatedProgress: progress
+    }, 'InscripcionProcessPage');
+
+    return progress;
+  }
+
+  // ✅ MÉTODOS AUXILIARES PARA EL DEBUG PANEL
+  getDocumentosObligatoriosCount(): number {
+    if (!this.documentacionRequerida) return 0;
+    return this.documentacionRequerida.filter(doc => doc.required === true).length;
+  }
+
+  getDocumentosOpcionalesCount(): number {
+    if (!this.documentacionRequerida) return 0;
+    return this.documentacionRequerida.filter(doc => doc.required !== true).length;
+  }
+
+  getDocumentosObligatoriosCompletadosCount(): number {
+    if (!this.documentacionRequerida) return 0;
+    return this.documentacionRequerida.filter(doc => doc.required === true && doc.completed === true).length;
+  }
+
+  // ✅ MÉTODOS AUXILIARES PARA EVITAR ERRORES DE TEMPLATE
+  getCentroDeVidaValue(): string {
+    return this.centroDeVidaControl?.value || '';
+  }
+
+  getSelectedCircunscripcionesValue(): string {
+    const value = this.selectedCircunscripcionesControl?.value;
+    return Array.isArray(value) ? value.join(', ') : '';
+  }
+
+  // ✅ MÉTODO CRÍTICO: Verificar si realmente todos los documentos obligatorios están completos
+  shouldHideProvisionalSection(): boolean {
+    if (!this.documentacionRequerida || this.documentacionRequerida.length === 0) {
+      return true; // Si no hay documentos, ocultar la sección
+    }
+
+    const obligatoryDocs = this.documentacionRequerida.filter(doc => doc.required === true);
+    const completedObligatory = obligatoryDocs.filter(doc => doc.completed === true);
+    const allObligatoryComplete = obligatoryDocs.length > 0 && completedObligatory.length === obligatoryDocs.length;
+
+    this.loggingService.debug('[InscripcionProcess] shouldHideProvisionalSection', {
+      obligatoryDocsCount: obligatoryDocs.length,
+      completedObligatoryCount: completedObligatory.length,
+      allObligatoryComplete,
+      documentationStateAllComplete: this.documentationState?.completenessResult.allDocumentsComplete,
+      shouldHide: allObligatoryComplete
+    }, 'InscripcionProcessPage');
+
+    // ✅ CORRECCIÓN CRÍTICA: Si todos los documentos obligatorios están completos pero el estado no lo refleja,
+    // forzar actualización inmediata
+    if (allObligatoryComplete && this.documentationState && !this.documentationState.completenessResult.allDocumentsComplete) {
+      this.loggingService.debug('[InscripcionProcess] FORZANDO actualización inmediata - estado inconsistente detectado', {
+        calculatedComplete: allObligatoryComplete,
+        stateComplete: this.documentationState.completenessResult.allDocumentsComplete
+      }, 'InscripcionProcessPage');
+
+      // Forzar actualización del estado
+      setTimeout(() => {
+        this.actualizarEstadoDocumentos();
+        this.cdr.detectChanges();
+      }, 0);
+    }
+
+    return allObligatoryComplete;
   }
 
   /**
@@ -1415,13 +1471,28 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   onDocumentosCompletados(completados: boolean): void {
     this.loggingService.debug(`[InscripcionProcess] === EVENTO DOCUMENTOS COMPLETADOS ===`, {
       completados,
-      estadoAnterior: this.todosDocumentosCompletos,
+      documentosCompletosControl: this.documentosCompletosControl.value,
       pasoActual: this.currentStep,
-      mostrandoProvisional: this.mostrarInscripcionProvisional
+      documentationState: this.documentationState
     }, 'InscripcionProcessPage');
 
     // Actualizar el estado de documentación usando el servicio centralizado
     this.actualizarEstadoDocumentos();
+
+    // ✅ CORRECCIÓN ADICIONAL: Verificar y forzar actualización si es necesario
+    setTimeout(() => {
+      this.verificarDocumentosObligatoriosCompletos();
+
+      if (completados) {
+        this.loggingService.debug('[InscripcionProcess] Forzando actualización de estado después de completar documentos', {
+          documentationState: this.documentationState,
+          allDocumentsComplete: this.documentationState?.completenessResult.allDocumentsComplete
+        }, 'InscripcionProcessPage');
+
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+      }
+    }, 200);
   }
 
   /**
@@ -1449,12 +1520,67 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // ✅ MÉTODO AUXILIAR: Verificar si todos los documentos obligatorios están completos
+  private verificarDocumentosObligatoriosCompletos(): boolean {
+    if (!this.documentacionRequerida || this.documentacionRequerida.length === 0) {
+      return true; // Si no hay documentos requeridos, consideramos que están completos
+    }
+
+    const documentosObligatorios = this.documentacionRequerida.filter(doc => doc.required === true);
+    const documentosObligatoriosCompletos = documentosObligatorios.filter(doc => doc.completed === true);
+
+    const todosCompletos = documentosObligatorios.length > 0 && documentosObligatoriosCompletos.length === documentosObligatorios.length;
+
+    this.loggingService.debug('[InscripcionProcess] Verificación documentos obligatorios', {
+      totalObligatorios: documentosObligatorios.length,
+      completados: documentosObligatoriosCompletos.length,
+      todosCompletos,
+      documentosObligatorios: documentosObligatorios.map(doc => ({
+        title: doc.title,
+        completed: doc.completed,
+        required: doc.required
+      }))
+    }, 'InscripcionProcessPage');
+
+    // ✅ CORRECCIÓN ADICIONAL: Si todos los documentos obligatorios están completos,
+    // forzar actualización del estado de documentación
+    if (todosCompletos && this.documentationState && !this.documentationState.completenessResult.allDocumentsComplete) {
+      this.loggingService.debug('[InscripcionProcess] FORZANDO actualización de estado - documentos obligatorios completos pero estado no actualizado', {
+        documentationStateAllComplete: this.documentationState.completenessResult.allDocumentsComplete,
+        calculatedAllComplete: todosCompletos
+      }, 'InscripcionProcessPage');
+
+      // ✅ CORRECCIÓN CRÍTICA: Forzar actualización manual del estado
+      const obligatoryDocs = this.documentacionRequerida.filter(doc => doc.required === true);
+      const completedObligatory = obligatoryDocs.filter(doc => doc.completed === true);
+
+      if (completedObligatory.length === obligatoryDocs.length && obligatoryDocs.length > 0) {
+        // Forzar actualización del servicio con el estado correcto
+        this.inscriptionDocumentationService.updateDocumentationState(
+          this.documentacionRequerida,
+          this.documentosUsuario || [],
+          false // No es provisional porque todos los documentos están completos
+        );
+
+        // Marcar el checkbox como completado
+        this.documentosCompletosControl.setValue(true, { emitEvent: false });
+
+        this.loggingService.debug('[InscripcionProcess] Estado forzado a completado', {
+          obligatoryCount: obligatoryDocs.length,
+          completedCount: completedObligatory.length
+        }, 'InscripcionProcessPage');
+      }
+    }
+
+    return todosCompletos;
+  }
+
   // Actualizar el estado de los documentos en el resumen
   actualizarEstadoDocumentos(): void {
     this.loggingService.debug('[InscripcionProcess] === ACTUALIZANDO ESTADO DE DOCUMENTOS ===', {
       pasoActual: this.currentStep,
       inscriptionId: this.inscriptionId,
-      mostrandoProvisional: this.mostrarInscripcionProvisional
+      documentationState: this.documentationState
     }, 'InscripcionProcessPage');
 
     forkJoin([
@@ -1527,26 +1653,7 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           }
         });
 
-        // 🔍 DEBUGGING: Log antes de actualizar el servicio centralizado
-        this.loggingService.debug('[InscripcionProcess] === ACTUALIZANDO SERVICIO CENTRALIZADO ===', {
-          consolidatedDocsCount: consolidatedDocs.length,
-          documentosUsuarioCount: documentosUsuario.length,
-          provisionalAccepted: this.documentosCompletosControl.value || false,
-          consolidatedDocs: consolidatedDocs.map(doc => ({
-            title: doc.title,
-            required: doc.required,
-            completed: doc.completed,
-            tipoDocumentoId: doc.tipoDocumentoId
-          }))
-        }, 'InscripcionProcessPage');
-
-        // Actualizar el servicio centralizado con los documentos consolidados
-        this.inscriptionDocumentationService.updateDocumentationState(
-          consolidatedDocs,
-          documentosUsuario,
-          this.documentosCompletosControl.value || false
-        );
-
+        // ✅ CORRECCIÓN CRÍTICA: Actualizar el estado de completitud ANTES de actualizar el servicio centralizado
         // --- Update `completed` status based on `documentosUsuario` ---
         consolidatedDocs.forEach(requiredDoc => {
           // SIMPLIFICADO: Verificación directa para cada documento individual
@@ -1564,19 +1671,63 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           }, 'InscripcionProcessPage');
         });
 
+        // 🔍 DEBUGGING: Log antes de actualizar el servicio centralizado (con estados actualizados)
+        this.loggingService.debug('[InscripcionProcess] === ACTUALIZANDO SERVICIO CENTRALIZADO ===', {
+          consolidatedDocsCount: consolidatedDocs.length,
+          documentosUsuarioCount: documentosUsuario.length,
+          provisionalAccepted: this.documentosCompletosControl.value || false,
+          consolidatedDocs: consolidatedDocs.map(doc => ({
+            title: doc.title,
+            required: doc.required,
+            completed: doc.completed,
+            tipoDocumentoId: doc.tipoDocumentoId
+          }))
+        }, 'InscripcionProcessPage');
+
+        // ✅ CORRECCIÓN: Actualizar el servicio centralizado con los documentos consolidados Y SUS ESTADOS ACTUALIZADOS
+        this.inscriptionDocumentationService.updateDocumentationState(
+          consolidatedDocs,
+          documentosUsuario,
+          this.documentosCompletosControl.value || false
+        );
+
         // ✅ CRITICAL FIX: Solo verificar documentos OBLIGATORIOS para auto-completar
         const obligatoryDocs = consolidatedDocs.filter(doc => doc.required === true);
         const allObligatoryDocsCompleted = obligatoryDocs.every(doc => doc.completed);
 
-        // CRITICAL FIX: Only auto-set to true when all OBLIGATORY docs are completed
-        // Do NOT auto-set to false when docs are incomplete - let user decide about provisional inscription
+        // ✅ CORRECCIÓN CRÍTICA: Gestión automática del checkbox de inscripción provisional
         setTimeout(() => {
-          if (allObligatoryDocsCompleted && !this.documentosCompletosControl.value) {
-            this.documentosCompletosControl.setValue(true, { emitEvent: false }); // Auto-check when all obligatory docs complete
+          if (allObligatoryDocsCompleted) {
+            // Cuando todos los documentos obligatorios están completos:
+            // 1. Marcar el checkbox como true (permite continuar)
+            // 2. Actualizar el servicio para reflejar que ya no es necesaria la inscripción provisional
+            this.documentosCompletosControl.setValue(true, { emitEvent: false });
+
+            this.loggingService.debug('[InscripcionProcess] Todos los documentos obligatorios completados - actualizando estado', {
+              allObligatoryDocsCompleted,
+              obligatoryDocsCount: obligatoryDocs.length,
+              completedObligatoryDocs: obligatoryDocs.filter(doc => doc.completed).length
+            }, 'InscripcionProcessPage');
+
+            // ✅ CORRECCIÓN ADICIONAL: Forzar actualización del servicio centralizado con documentos completados
+            this.inscriptionDocumentationService.updateDocumentationState(
+              consolidatedDocs, // Documentos con estados actualizados
+              documentosUsuario,
+              false // Ya no es provisional porque todos los documentos están completos
+            );
+
             this.cdr.detectChanges();
+          } else if (!this.documentosCompletosControl.value) {
+            // Si no todos los documentos están completos y el usuario no ha aceptado inscripción provisional,
+            // mantener el estado actual sin forzar cambios
+            this.loggingService.debug('[InscripcionProcess] Documentos obligatorios incompletos - manteniendo estado actual', {
+              allObligatoryDocsCompleted,
+              obligatoryDocsCount: obligatoryDocs.length,
+              completedObligatoryDocs: obligatoryDocs.filter(doc => doc.completed).length,
+              provisionalAccepted: this.documentosCompletosControl.value
+            }, 'InscripcionProcessPage');
           }
-          // Do NOT auto-uncheck when docs are incomplete - preserve user's provisional choice
-        }, 0);
+        }, 100); // ✅ Aumentar el delay para asegurar que la UI se actualice correctamente
 
         this.loggingService.debug('[InscripcionProcess] Documentación requerida final (con estado):', consolidatedDocs, 'InscripcionProcessPage');
         this.loggingService.debug(`[InscripcionProcess] Todos los documentos OBLIGATORIOS completos: ${allObligatoryDocsCompleted} (${obligatoryDocs.length} obligatorios de ${consolidatedDocs.length} totales)`, undefined, 'InscripcionProcessPage');
@@ -1752,33 +1903,18 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       catchError(error => {
         console.error('[InscripcionProcess] Error creating inscription when advancing to step 2:', error);
 
-        // Check if error is due to existing inscription (409 Conflict)
-        if (error.message && error.message.includes('Ya existe una inscripción')) {
-          this.loggingService.debug('[InscripcionProcess] Inscription already exists, attempting to load existing inscription', undefined, 'InscripcionProcessPage');
-
-          // Try to load existing inscriptions to get the ID
-          return this.inscriptionService.getUserInscriptions().pipe(
-            map(response => {
-              const existingInscription = response.content.find((insc: any) => insc.contestId === this.contestId);
-              if (existingInscription) {
-                this.loggingService.debug('[InscripcionProcess] Found existing inscription with ID:', existingInscription.id, 'InscripcionProcessPage');
-                return existingInscription;
-              } else {
-                throw new Error('No se pudo encontrar la inscripción existente');
-              }
-            }),
-            catchError(loadError => {
-              console.error('[InscripcionProcess] Error loading existing inscriptions:', loadError);
-              this.notificationService.error('Error al acceder a la inscripción existente. Por favor, intente nuevamente.');
-              this.router.navigate(['/dashboard/concursos']);
-              return of(null);
-            })
-          );
-        } else {
+        // Mostrar errores específicos basados en el tipo de error
+        if (error.status === 409) {
+          this.notificationService.error('La operación no pudo completarse debido a un conflicto con el estado actual del recurso.');
+        } else if (error.status === 500) {
           this.notificationService.error('Error al crear la inscripción. Por favor, intente nuevamente.');
-          this.router.navigate(['/dashboard/concursos']);
-          return of(null);
+        } else {
+          this.notificationService.error('Error: No se recibió un ID de inscripción válido');
         }
+
+        // Redirigir de vuelta a la lista de concursos
+        this.router.navigate(['/dashboard/concursos']);
+        return of(null);
       })
     ).subscribe({
       next: (response: any) => {

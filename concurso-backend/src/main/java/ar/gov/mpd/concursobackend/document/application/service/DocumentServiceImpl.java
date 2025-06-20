@@ -50,10 +50,13 @@ public class DocumentServiceImpl implements DocumentService {
         // Try to find document type by ID or code
         DocumentType documentType = findDocumentType(request.getDocumentTypeId());
 
+        // Generar nombre de archivo basado en el tipo de documento
+        String displayFileName = documentType.getName() + ".pdf";
+
         Document document = Document.create(
                 userId,
                 documentType,
-                new DocumentName(request.getFileName()),
+                new DocumentName(displayFileName),
                 request.getContentType(),
                 null,
                 request.getComments());
@@ -188,6 +191,64 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
+    public DocumentResponse updateDocument(String documentId, DocumentUploadRequest request, InputStream inputStream, UUID userId) throws IOException {
+        log.debug("Updating document: {} for user: {}", documentId, userId);
+
+        // Find existing document
+        Document existingDocument = documentRepository.findById(new DocumentId(UUID.fromString(documentId)))
+                .orElseThrow(() -> new DocumentException("Document not found"));
+
+        // Verify the document belongs to the user
+        if (!existingDocument.getUserId().equals(userId)) {
+            throw new DocumentException("Document does not belong to the user");
+        }
+
+        // Delete old file from storage
+        try {
+            documentStorageService.deleteFile(existingDocument.getFilePath());
+        } catch (Exception e) {
+            log.warn("Could not delete old file from storage: {}", existingDocument.getFilePath(), e);
+        }
+
+        // Get user DNI for storage organization
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DocumentException("User not found"));
+        String userDni = user.getDni().value();
+
+        // Use existing document type if not provided in request
+        DocumentType documentType = existingDocument.getDocumentType();
+        if (request.getDocumentTypeId() != null && !request.getDocumentTypeId().isEmpty()) {
+            documentType = findDocumentType(request.getDocumentTypeId());
+        }
+
+        // Generate display filename based on document type
+        String displayFileName = documentType.getName() + ".pdf";
+
+        // Store the new file
+        String newFilePath = documentStorageService.storeFile(inputStream, request.getFileName(), userId,
+                existingDocument.getId().value(), userDni, documentType.getName());
+
+        // Update document metadata
+        existingDocument.setFileName(new DocumentName(displayFileName));
+        existingDocument.setContentType(request.getContentType());
+        existingDocument.setFilePath(newFilePath);
+        if (request.getComments() != null) {
+            existingDocument.setComments(request.getComments());
+        }
+
+        // Save updated document
+        Document updatedDocument = documentRepository.save(existingDocument);
+        log.debug("Document updated: {}", updatedDocument);
+
+        return DocumentResponse.builder()
+                .id(updatedDocument.getId().value().toString())
+                .mensaje("Document updated successfully")
+                .documento(documentMapper.toDto(updatedDocument))
+                .build();
+    }
+
+    @Override
+    @Transactional
     public void deleteDocument(String documentId, UUID userId) {
         log.debug("Deleting document: {} for user: {}", documentId, userId);
 
@@ -268,10 +329,13 @@ public class DocumentServiceImpl implements DocumentService {
 
             // Create document entity
             log.debug("Creando entidad Document");
+            // Generar nombre de archivo basado en el tipo de documento
+            String displayFileName = documentType.getName() + ".pdf";
+
             Document document = Document.create(
                     userId,
                     documentType,
-                    new DocumentName(filename),
+                    new DocumentName(displayFileName),
                     "application/pdf", // Assuming PDF for work experience certificates
                     null,
                     "Certificado de experiencia laboral");

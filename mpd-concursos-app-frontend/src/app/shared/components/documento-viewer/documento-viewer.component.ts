@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CUSTOM_DIALOG_DATA } from '../custom-form/custom-dialog/custom-dialog.service';
+import { DIALOG_DATA, UnifiedDialogRef } from '@shared/services/dialog/unified-dialog.service';
 import { CustomButtonComponent } from '../custom-form/custom-button/custom-button.component';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { SafePipe } from '@shared/pipes/safe.pipe';
@@ -64,22 +64,38 @@ export class DocumentoViewerComponent {
   documentUrl: string | null = null;
 
   constructor(
-    @Inject(CUSTOM_DIALOG_DATA) private data: { documentoId: string },
-    private documentosService: DocumentosService
+    @Inject(DIALOG_DATA) private data: { documentoId: string },
+    private documentosService: DocumentosService,
+    private dialogRef: UnifiedDialogRef
   ) {
     this.cargarDocumento();
   }
 
   private async cargarDocumento(): Promise<void> {
     try {
-      const url = await this.documentosService.getDocumentoUrl(this.data.documentoId);
-      this.documentUrl = url;
+      if (!this.data.documentoId) {
+        console.error('No se proporcionó ID de documento');
+        return;
+      }
+
+      // Usar el servicio para obtener el archivo como blob y crear URL
+      this.documentosService.getDocumentoFile(this.data.documentoId).subscribe({
+        next: (response) => {
+          // Verificar si la respuesta es un Blob directamente
+          if (response instanceof Blob) {
+            this.documentUrl = URL.createObjectURL(response);
+          }
+        },
+        error: (error) => {
+          console.error('Error al cargar el documento:', error);
+        }
+      });
     } catch (error) {
       console.error('Error al cargar el documento:', error);
     }
   }
 
   cerrar(): void {
-    // El dialog service se encargará de cerrar el diálogo
+    this.dialogRef.close();
   }
 }

@@ -75,41 +75,36 @@
       </div>
 
       <!-- Documentos Adjuntos -->
-      <div class="info-section" *ngIf="postulacion.attachedDocuments && postulacion.attachedDocuments.length > 0">
+      <div class="info-section">
         <h3><i class="fas fa-paperclip"></i> Documentos Adjuntos</h3>
-        <div class="documents-list">
-          <div class="document-item" *ngFor="let doc of postulacion.attachedDocuments">
+
+        <!-- Loading state -->
+        <div class="loading-documents" *ngIf="cargandoDocumentos">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Cargando documentos...</p>
+        </div>
+
+        <!-- Documents list -->
+        <div class="documents-list" *ngIf="!cargandoDocumentos && documentosUsuario.length > 0">
+          <div class="document-item" *ngFor="let doc of documentosUsuario">
             <div class="doc-info">
               <i class="fas fa-file-pdf"></i>
               <div class="doc-details">
-                <span class="doc-name">{{ doc.name }}</span>
-                <span class="doc-type">{{ doc.type }}</span>
+                <span class="doc-name">{{ getDocumentDisplayName(doc) }}</span>
+                <span class="doc-type">{{ doc.tipoDocumento?.nombre || 'Documento' }}</span>
               </div>
             </div>
-            <div class="doc-actions">
-              <app-custom-button
-                [variant]="'icon'"
-                [icon]="'download'"
-                [tooltip]="'Descargar'"
-                [ariaLabel]="'Descargar ' + doc.name"
-                (buttonClick)="descargarDocumento(doc)">
-              </app-custom-button>
-              <app-custom-button
-                [variant]="'icon'"
-                [icon]="'trash'"
-                [tooltip]="'Eliminar'"
-                [ariaLabel]="'Eliminar ' + doc.name"
-                (buttonClick)="eliminarDocumento(doc)">
-              </app-custom-button>
+            <div class="doc-status">
+              <div class="status-indicator" [ngClass]="getDocumentStatusClass(doc)">
+                <i class="fas" [ngClass]="getDocumentStatusIcon(doc)"></i>
+                <span>{{ getDocumentStatusText(doc) }}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Estado sin documentos -->
-      <div class="info-section" *ngIf="!postulacion.attachedDocuments || postulacion.attachedDocuments.length === 0">
-        <h3><i class="fas fa-paperclip"></i> Documentos Adjuntos</h3>
-        <div class="empty-documents">
+        <!-- Empty state -->
+        <div class="empty-documents" *ngIf="!cargandoDocumentos && documentosUsuario.length === 0">
           <i class="fas fa-file-alt fa-2x"></i>
           <p>No hay documentos adjuntos a esta postulación.</p>
         </div>

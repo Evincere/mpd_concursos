@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 
@@ -89,16 +89,48 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     private inscriptionService: InscriptionService,
     private dashboardService: DashboardService,
     private router: Router,
+    private route: ActivatedRoute,
     private notificationService: CustomNotificationService
   ) {}
 
   ngOnInit(): void {
     this.cargarPostulaciones();
+    this.verificarParametrosQuery();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Verifica los parámetros de query para abrir automáticamente el detalle de una postulación
+   */
+  private verificarParametrosQuery(): void {
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['postulacionId'] && params['openDetail'] === 'true') {
+        // Esperar a que se carguen las postulaciones antes de abrir el detalle
+        setTimeout(() => {
+          this.abrirDetalleDesdeQuery(params['postulacionId']);
+        }, 1000);
+      }
+    });
+  }
+
+  /**
+   * Abre el detalle de una postulación específica basado en el ID de los parámetros de query
+   */
+  private abrirDetalleDesdeQuery(postulacionId: string): void {
+    const postulacion = this.postulaciones.find(p => p.id === postulacionId);
+    if (postulacion) {
+      this.verDetalle(postulacion);
+      // Limpiar los parámetros de query después de abrir el detalle
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: {},
+        replaceUrl: true
+      });
+    }
   }
 
   cargarPostulaciones(): void {
