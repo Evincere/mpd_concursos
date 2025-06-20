@@ -16,7 +16,7 @@ import { DocumentosService } from './core/services/documentos/documentos.service
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
-import { cvMockInterceptor } from './core/interceptors/cv-mock.interceptor';
+// CV Mock interceptor removed - CV functionality will be reimplemented
 import { urlTransformInterceptor } from './core/interceptors/url-transform.interceptor';
 import { environment } from '../environments/environment';
 // Legacy EducacionService removed - using EducationSimpleService
@@ -82,22 +82,13 @@ export const appConfig: ApplicationConfig = {
 };
 
 /**
- * Configuración condicional de interceptores basada en environment
- * ✅ Mock interceptor solo en desarrollo
- * ❌ Mock interceptor deshabilitado en producción
+ * Configuración de interceptores
  */
 function getInterceptors() {
-  const baseInterceptors = [
+  return [
     AuthInterceptor,
     ErrorInterceptor,
     debugInterceptor,
-    urlTransformInterceptor  // Nuevo interceptor para transformar URLs
+    urlTransformInterceptor
   ];
-
-  // Solo agregar mock interceptor en desarrollo
-  if (environment.features?.enableCvMockInterceptor) {
-    baseInterceptors.splice(2, 0, cvMockInterceptor);
-  }
-
-  return baseInterceptors;
 }

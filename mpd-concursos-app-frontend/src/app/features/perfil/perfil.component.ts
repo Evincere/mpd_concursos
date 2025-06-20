@@ -18,8 +18,18 @@ import { PerfilStateService } from './services/perfil-state.service';
 // Tipos y modelos
 import { TabKey, ProfileTab } from './models/types';
 import { UserProfile, ExperienciaData, HabilidadData } from '@core/models/perfil.model';
-import { Educacion, TipoEducacion } from '@core/models/educacion.model';
-import { Experiencia } from '@core/models/experiencia.model';
+
+// Interfaz temporal para Experiencia (será removida con la reimplementación)
+interface Experiencia {
+  id?: string;
+  puesto: string;
+  empresa: string;
+  descripcion: string;
+  fechaInicio: string;
+  fechaFin?: string;
+  actual?: boolean;
+  ubicacion?: string;
+}
 
 
 // Componentes personalizados
@@ -34,8 +44,7 @@ import { CustomTabComponent } from '@shared/components/custom-form/custom-tabs/c
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentacionTabComponent } from './components/documentacion-tab/documentacion-tab.component';
 import { PerfilPersonalInfoComponent } from './components/perfil-personal-info/perfil-personal-info.component';
-// CV Simple Component - New implementation
-import { CvSimpleComponent } from './components/cv-simple/cv-simple.component';
+// CV Component - Will be reimplemented
 import { PerfilLinkedInComponent } from './components/perfil-linkedin/perfil-linkedin.component';
 
 const TAB_KEYS = {
@@ -62,7 +71,6 @@ const TAB_KEYS = {
     CustomSpinnerComponent,
     DocumentacionTabComponent,
     PerfilPersonalInfoComponent,
-    CvSimpleComponent,
     PerfilLinkedInComponent
   ]
 })
@@ -82,9 +90,6 @@ export class PerfilComponent implements OnInit, OnDestroy {
   maxDate: Date = new Date();
 
   private subscriptions: Subscription[] = [];
-
-  mostrarModalEducacion = false;
-  educacionList: Educacion[] = [];
 
   mostrarModalExperiencia = false;
 
@@ -251,11 +256,10 @@ export class PerfilComponent implements OnInit, OnDestroy {
           this.cargarDatosBasicos(profile);
           this.cargarPerfilForm(profile); // Llamar para cargar el formulario completo
 
-          // Cargar educación y experiencias en un segundo ciclo para evitar bloqueos
+          // Cargar datos adicionales en un segundo ciclo para evitar bloqueos
           window.requestAnimationFrame(() => {
             if (profile.id) {
-              // Education data is now handled by CvSimpleComponent
-              this.educacionList = [];
+              // CV data will be handled by new CV component
               this.cdr.detectChanges();
             }
           });
@@ -663,77 +667,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.subscriptions = [];
   }
 
-  // Método para mostrar el modal de educación
-  agregarEducacion(): void {
-    if (!this.userProfile || !this.userProfile.id) {
-      this.notification.error('No se puede agregar educación sin datos de usuario. Por favor, espere a que cargue el perfil.');
-      return;
-    }
+  // Education methods removed - will be handled by new CV component
 
-    if (!this.esIdUsuarioValido()) {
-      this.notification.error('No se puede agregar educación: ID de usuario inválido.');
-      console.error(`ID de usuario inválido: ${this.usuarioId}`);
-      return;
-    }
-
-    this.mostrarModalEducacion = true;
-    this.cdr.markForCheck();
-  }
-
-  // Método para cerrar el modal de educación
-  cerrarModalEducacion(): void {
-    this.mostrarModalEducacion = false;
-    this.cdr.markForCheck();
-  }
-
-  // Método para manejar la educación guardada
-  onEducacionGuardada(_educacion: Educacion): void {
-    this.recargarEducacion();
-  }
-
-  // Método para recargar educación desde el backend
-  private recargarEducacion(): void {
-    if (!this.usuarioId) {
-      console.error('No hay usuarioId disponible para recargar educación');
-      return;
-    }
-
-    // Education reloading handled by CvSimpleComponent
-    this.notification.success('Lista de educación actualizada');
-    this.cdr.detectChanges();
-  }
-
-  /**
-   * Verifica si la educación es de tipo Carrera de Nivel Superior o Carrera de Grado
-   */
-  private esCarreraSuperiorOGrado(educacion: Educacion): boolean {
-    return educacion.tipo === TipoEducacion.CARRERA_NIVEL_SUPERIOR ||
-      educacion.tipo === TipoEducacion.CARRERA_GRADO;
-  }
-
-  /**
-   * Verifica si la educación es de tipo Posgrado (especialización, maestría o doctorado)
-   */
-  private esPosgrado(educacion: Educacion): boolean {
-    return educacion.tipo === TipoEducacion.POSGRADO_ESPECIALIZACION ||
-      educacion.tipo === TipoEducacion.POSGRADO_MAESTRIA ||
-      educacion.tipo === TipoEducacion.POSGRADO_DOCTORADO;
-  }
-
-  /**
-   * Verifica si la educación es de tipo Diplomatura o Curso de Capacitación
-   */
-  private esDiplomaturaOCurso(educacion: Educacion): boolean {
-    return educacion.tipo === TipoEducacion.DIPLOMATURA ||
-      educacion.tipo === TipoEducacion.CURSO_CAPACITACION;
-  }
-
-  /**
-   * Verifica si la educación es de tipo Actividad Científica
-   */
-  private esActividadCientifica(educacion: Educacion): boolean {
-    return educacion.tipo === TipoEducacion.ACTIVIDAD_CIENTIFICA;
-  }
+  // Education type verification methods removed - will be handled by new CV component
 
   // Método para cargar el perfil en el formulario
   cargarPerfilForm(profile: UserProfile): void {
@@ -797,20 +733,5 @@ export class PerfilComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /**
-   * Elimina una educación de la lista
-   * @param educacion La educación a eliminar
-   */
-  eliminarEducacion(educacion: any): void {
-    console.log('Eliminando educación:', educacion);
-
-    // TODO: Implementar lógica para eliminar educación del backend
-    // this.educacionService.eliminarEducacion(educacion.id).subscribe(...)
-
-    // Mostrar notificación de éxito
-    this.notification.success('Educación eliminada correctamente');
-
-    // Recargar el perfil para actualizar la lista
-    this.loadUserProfile();
-  }
+  // Education deletion method removed - will be handled by new CV component
 }
