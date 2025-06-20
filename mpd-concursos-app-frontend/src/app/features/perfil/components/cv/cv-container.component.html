@@ -1,0 +1,87 @@
+<!-- Componente Contenedor del Sistema CV - Versión Simplificada -->
+<div class="cv-container">
+
+  <!-- Header del CV -->
+  <app-custom-card>
+    <div class="cv-header-content">
+      <div class="cv-title-section">
+        <h2 class="cv-title">
+          <i class="material-icons">description</i>
+          Curriculum Vitae
+        </h2>
+        <p class="cv-subtitle" *ngIf="userProfile">
+          {{ userProfile.firstName }} {{ userProfile.lastName }}
+        </p>
+      </div>
+
+      <div class="cv-actions">
+        <button class="btn btn-primary" (click)="exportCv()" [disabled]="!hasData()">
+          <i class="material-icons">download</i>
+          Exportar CV
+        </button>
+
+        <button class="btn btn-secondary" (click)="refreshData()">
+          <i class="material-icons">refresh</i>
+          Actualizar
+        </button>
+      </div>
+    </div>
+  </app-custom-card>
+
+  <!-- Contenido principal simplificado -->
+  <div class="cv-content">
+
+    <!-- Estado vacío -->
+    <div *ngIf="!hasData() && !isAnyLoading()">
+      <app-custom-card>
+        <div class="empty-state-content">
+          <i class="material-icons">description</i>
+          <h3>Tu CV está vacío</h3>
+          <p>Comienza agregando tu experiencia laboral y educación para crear un CV completo.</p>
+
+          <div class="empty-state-actions">
+            <button class="btn btn-primary" (click)="addExperience()">
+              <i class="material-icons">work</i>
+              Agregar Experiencia
+            </button>
+
+            <button class="btn btn-secondary" (click)="addEducation()">
+              <i class="material-icons">school</i>
+              Agregar Educación
+            </button>
+          </div>
+        </div>
+      </app-custom-card>
+    </div>
+
+    <!-- Tabs del CV -->
+    <div *ngIf="hasData() || isAnyLoading()">
+      <app-custom-tabs
+        [tabs]="getTabItems()"
+        [activeTabIndex]="getActiveTabIndex()"
+        (tabChange)="onTabIndexChange($event)">
+      </app-custom-tabs>
+
+      <!-- Contenido básico -->
+      <div class="cv-tab-content">
+        <app-custom-card>
+          <div *ngIf="activeTab() === 'experience'">
+            <h3>Experiencia Laboral</h3>
+            <p>Total de experiencias: {{ cvState().experiences.data.length }}</p>
+            <button class="btn btn-primary" (click)="addExperience()">
+              Agregar Experiencia
+            </button>
+          </div>
+
+          <div *ngIf="activeTab() === 'education'">
+            <h3>Educación</h3>
+            <p>Total de educación: {{ cvState().education.data.length }}</p>
+            <button class="btn btn-primary" (click)="addEducation()">
+              Agregar Educación
+            </button>
+          </div>
+        </app-custom-card>
+      </div>
+    </div>
+  </div>
+</div>

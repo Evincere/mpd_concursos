@@ -44,7 +44,8 @@ import { CustomTabComponent } from '@shared/components/custom-form/custom-tabs/c
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentacionTabComponent } from './components/documentacion-tab/documentacion-tab.component';
 import { PerfilPersonalInfoComponent } from './components/perfil-personal-info/perfil-personal-info.component';
-// CV Component - Will be reimplemented
+// CV Component - New implementation
+import { CvContainerComponent } from './components/cv/cv-container.component';
 import { PerfilLinkedInComponent } from './components/perfil-linkedin/perfil-linkedin.component';
 
 const TAB_KEYS = {
@@ -71,6 +72,7 @@ const TAB_KEYS = {
     CustomSpinnerComponent,
     DocumentacionTabComponent,
     PerfilPersonalInfoComponent,
+    CvContainerComponent,
     PerfilLinkedInComponent
   ]
 })

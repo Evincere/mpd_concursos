@@ -337,7 +337,7 @@ export class CvValidationService implements ICvValidationService {
       };
     }
 
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.includes(file.type as any)) {
       return { 
         isValid: false, 
         error: `Tipo de archivo no permitido. Tipos permitidos: ${allowedTypes.join(', ')}` 

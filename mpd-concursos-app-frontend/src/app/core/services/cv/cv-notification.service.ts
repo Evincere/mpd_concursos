@@ -59,28 +59,48 @@ export class CvNotificationService implements ICvNotificationService {
    * Muestra notificación de éxito
    */
   showSuccess(message: string, duration?: number): void {
-    this.notificationService.success(message, duration || this.defaultDuration);
+    this.notificationService.show({
+      message,
+      title: 'Éxito',
+      type: 'success',
+      duration: duration || this.defaultDuration
+    });
   }
 
   /**
    * Muestra notificación de error
    */
   showError(message: string, duration?: number): void {
-    this.notificationService.error(message, duration || this.errorDuration);
+    this.notificationService.show({
+      message,
+      title: 'Error',
+      type: 'error',
+      duration: duration || this.errorDuration
+    });
   }
 
   /**
    * Muestra notificación de advertencia
    */
   showWarning(message: string, duration?: number): void {
-    this.notificationService.warning(message, duration || this.warningDuration);
+    this.notificationService.show({
+      message,
+      title: 'Advertencia',
+      type: 'warning',
+      duration: duration || this.warningDuration
+    });
   }
 
   /**
    * Muestra notificación informativa
    */
   showInfo(message: string, duration?: number): void {
-    this.notificationService.info(message, duration || this.defaultDuration);
+    this.notificationService.show({
+      message,
+      title: 'Información',
+      type: 'info',
+      duration: duration || this.defaultDuration
+    });
   }
 
   /**

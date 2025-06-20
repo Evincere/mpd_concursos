@@ -52,10 +52,10 @@
             <!-- CV Tab -->
             <ng-container *ngSwitchCase="'cv'">
               <div class="cv-section">
-                <div class="cv-placeholder">
-                  <h3>Sistema CV en Desarrollo</h3>
-                  <p>La funcionalidad de Curriculum Vitae será reimplementada próximamente con mejoras en seguridad y usabilidad.</p>
-                </div>
+                <app-cv-container
+                  [userProfile]="userProfile"
+                  [isLoading]="isLoading">
+                </app-cv-container>
               </div>
             </ng-container>
 

@@ -14,18 +14,20 @@ export {
   EducationType,
   EducationStatus,
   ScientificActivityType,
-  ScientificActivityRole,
-  
+  ScientificActivityRole
+} from './cv.model';
+
+export type {
   // Interfaces base
   CvEntry,
   DateRange,
   CvDocument,
-  
+
   // Modelos de experiencia laboral
   WorkExperience,
   WorkExperienceDto,
   WorkExperienceValidation,
-  
+
   // Modelos de educación
   Education,
   UniversityEducation,
@@ -34,12 +36,12 @@ export {
   ScientificActivity,
   EducationEntry,
   EducationDto,
-  
+
   // Modelo completo del CV
   CurriculumVitae,
   CvExportConfig,
   CvExportResult,
-  
+
   // Interfaces de API
   CvApiResponse,
   CvSearchFilters,
@@ -49,38 +51,42 @@ export {
 
 // ===== CONTRATOS E INTERFACES =====
 export {
+  // Eventos del sistema
+  CvEventType,
+
+  // Tokens de inyección
+  CV_TOKENS
+} from './cv.contracts';
+
+export type {
   // Contratos de repositorio
   IWorkExperienceRepository,
   IEducationRepository,
   ICvRepository,
-  
+
   // Contratos de casos de uso
   IWorkExperienceUseCases,
   IEducationUseCases,
   ICvUseCases,
-  
+
   // Contratos de servicios de dominio
   ICvValidationService,
   ICvExportService,
   ICvTransformService,
-  
+
   // Contratos de servicios de infraestructura
   IFileStorageService,
   ICvNotificationService,
   ICvCacheService,
-  
+
   // Contratos de componentes
   ICvFormComponent,
   ICvListComponent,
   CvComponentConfig,
-  
+
   // Eventos del sistema
-  CvEventType,
   CvEvent,
-  ICvEventService,
-  
-  // Tokens de inyección
-  CV_TOKENS
+  ICvEventService
 } from './cv.contracts';
 
 // ===== TIPOS UTILITARIOS =====
@@ -127,8 +133,8 @@ export interface ComponentState<T> {
   selectedItem: T | null;
   isLoading: boolean;
   error: string | null;
-  filters: CvSearchFilters;
-  pagination: PaginationConfig;
+  filters: any; // CvSearchFilters;
+  pagination: any; // PaginationConfig;
 }
 
 /**
@@ -140,8 +146,8 @@ export type ComponentAction<T> =
   | { type: 'LOAD_ERROR'; payload: string }
   | { type: 'SELECT_ITEM'; payload: T }
   | { type: 'CLEAR_SELECTION' }
-  | { type: 'SET_FILTERS'; payload: CvSearchFilters }
-  | { type: 'SET_PAGINATION'; payload: PaginationConfig };
+  | { type: 'SET_FILTERS'; payload: any }
+  | { type: 'SET_PAGINATION'; payload: any };
 
 /**
  * Tipo para configuración de exportación
@@ -269,7 +275,7 @@ export const CV_DEFAULTS = {
     dateTo: undefined,
     searchTerm: '',
     type: undefined
-  } as CvSearchFilters,
+  } as any, // CvSearchFilters,
   
   EXPORT_CONFIG: {
     format: 'PDF' as const,
@@ -278,7 +284,7 @@ export const CV_DEFAULTS = {
     includePersonalInfo: true,
     includeWorkExperience: true,
     includeEducation: true
-  } as CvExportConfig,
+  } as any, // CvExportConfig,
   
   COMPONENT_CONFIG: {
     allowAdd: true,
@@ -289,5 +295,5 @@ export const CV_DEFAULTS = {
     enableFileUpload: true,
     maxFileSize: CV_CONSTANTS.MAX_FILE_SIZE,
     allowedFileTypes: CV_CONSTANTS.ALLOWED_FILE_TYPES
-  } as CvComponentConfig
+  } as any // CvComponentConfig
 } as const;

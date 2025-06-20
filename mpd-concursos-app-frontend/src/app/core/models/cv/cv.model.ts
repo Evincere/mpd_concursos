@@ -154,7 +154,7 @@ export interface WorkExperienceValidation {
 /**
  * Modelo base para educación
  */
-export interface Education extends CvEntry {
+export interface Education extends Omit<CvEntry, 'status'> {
   type: EducationType;
   status: EducationStatus;
   title: string;

@@ -1,0 +1,240 @@
+<!-- Formulario Inteligente de Experiencia Laboral -->
+<div class="experience-form">
+  
+  <!-- Header del formulario -->
+  <div class="form-header">
+    <h3 class="form-title">
+      <i class="material-icons">work</i>
+      {{ mode === 'create' ? 'Agregar Experiencia Laboral' : 'Editar Experiencia Laboral' }}
+    </h3>
+    <p class="form-subtitle">
+      Completa la información sobre tu experiencia profesional
+    </p>
+  </div>
+
+  <!-- Alertas de validación -->
+  <div class="validation-alerts" *ngIf="hasErrors() || hasWarnings()">
+    <div class="alert alert-error" *ngIf="hasErrors()">
+      <i class="material-icons">error</i>
+      <div class="alert-content">
+        <strong>Errores de validación:</strong>
+        <ul>
+          <li *ngFor="let error of validationState().errors">{{ error }}</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="alert alert-warning" *ngIf="hasWarnings()">
+      <i class="material-icons">warning</i>
+      <div class="alert-content">
+        <strong>Advertencias:</strong>
+        <ul>
+          <li *ngFor="let warning of validationState().warnings">{{ warning }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <form [formGroup]="form()" (ngSubmit)="onSave()" class="dynamic-form">
+    
+    <!-- Campos dinámicos -->
+    <div class="form-grid">
+      <ng-container *ngFor="let field of dynamicFields">
+        <div 
+          class="form-field"
+          [class.full-width]="field.type === 'textarea' || field.type === 'chips'"
+          *ngIf="shouldShowField(field)">
+          
+          <!-- Campo de texto -->
+          <app-custom-form-field
+            *ngIf="field.type === 'text'"
+            [label]="field.label"
+            [placeholder]="field.placeholder || ''"
+            [required]="field.required"
+            [formControlName]="field.name"
+            [errors]="getFieldErrors(field.name)"
+            [helpText]="field.helpText">
+          </app-custom-form-field>
+          
+          <!-- Campo de área de texto -->
+          <app-custom-form-field
+            *ngIf="field.type === 'textarea'"
+            [label]="field.label"
+            [placeholder]="field.placeholder || ''"
+            [required]="field.required"
+            [formControlName]="field.name"
+            [errors]="getFieldErrors(field.name)"
+            [helpText]="field.helpText"
+            [type]="'textarea'"
+            [rows]="4">
+          </app-custom-form-field>
+          
+          <!-- Campo de fecha -->
+          <app-custom-datepicker
+            *ngIf="field.type === 'date'"
+            [label]="field.label"
+            [required]="field.required"
+            [formControlName]="field.name"
+            [errors]="getFieldErrors(field.name)"
+            [helpText]="field.helpText"
+            [disabled]="isLoading">
+          </app-custom-datepicker>
+          
+          <!-- Campo de checkbox -->
+          <div class="checkbox-field" *ngIf="field.type === 'checkbox'">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [formControlName]="field.name"
+                [disabled]="isLoading"
+                class="checkbox-input">
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-text">{{ field.label }}</span>
+            </label>
+            <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
+          </div>
+          
+          <!-- Campo de chips (tecnologías/logros) -->
+          <div class="chips-field" *ngIf="field.type === 'chips'">
+            <label class="field-label">
+              {{ field.label }}
+              <span class="required-indicator" *ngIf="field.required">*</span>
+            </label>
+            
+            <!-- Input para agregar chips -->
+            <div class="chips-input-container">
+              <input
+                type="text"
+                class="chips-input"
+                [placeholder]="field.placeholder || 'Escribe y presiona Enter'"
+                [disabled]="isLoading"
+                (keydown.enter)="$event.preventDefault(); onAddChip(field.name, $event.target.value); $event.target.value = ''"
+                #chipInput>
+              <button
+                type="button"
+                class="add-chip-btn"
+                [disabled]="isLoading"
+                (click)="onAddChip(field.name, chipInput.value); chipInput.value = ''">
+                <i class="material-icons">add</i>
+              </button>
+            </div>
+            
+            <!-- Lista de chips -->
+            <div class="chips-list" *ngIf="form().get(field.name)?.value?.length > 0">
+              <div
+                class="chip"
+                *ngFor="let item of form().get(field.name)?.value; let i = index">
+                <span class="chip-text">{{ item }}</span>
+                <button
+                  type="button"
+                  class="chip-remove"
+                  [disabled]="isLoading"
+                  (click)="onRemoveChip(field.name, i)"
+                  [title]="'Eliminar'">
+                  <i class="material-icons">close</i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Contador de elementos -->
+            <div class="chips-counter" *ngIf="form().get(field.name)?.value?.length > 0">
+              {{ form().get(field.name)?.value?.length }} / {{ field.name === 'technologies' ? 20 : 10 }}
+            </div>
+            
+            <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
+            
+            <!-- Errores del campo -->
+            <div class="field-errors" *ngIf="getFieldErrors(field.name).length > 0">
+              <p class="error-message" *ngFor="let error of getFieldErrors(field.name)">
+                <i class="material-icons">error</i>
+                {{ error }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+    
+    <!-- Campo de comentarios adicionales -->
+    <div class="form-field full-width">
+      <app-custom-form-field
+        label="Comentarios Adicionales"
+        placeholder="Información adicional que consideres relevante..."
+        [required]="false"
+        formControlName="comments"
+        [errors]="getFieldErrors('comments')"
+        helpText="Comentarios opcionales (máximo 500 caracteres)"
+        type="textarea"
+        [rows]="3">
+      </app-custom-form-field>
+    </div>
+  </form>
+
+  <!-- Indicador de estado del formulario -->
+  <div class="form-status" *ngIf="isDirty()">
+    <div class="status-indicator" [class.valid]="isFormValid()" [class.invalid]="!isFormValid()">
+      <i class="material-icons">{{ isFormValid() ? 'check_circle' : 'error' }}</i>
+      <span>{{ isFormValid() ? 'Formulario válido' : 'Formulario incompleto' }}</span>
+    </div>
+  </div>
+
+  <!-- Acciones del formulario -->
+  <div class="form-actions">
+    <div class="actions-left">
+      <app-custom-button
+        [text]="'Resetear'"
+        [type]="'ghost'"
+        [icon]="'refresh'"
+        [disabled]="isLoading || !isDirty()"
+        (click)="onReset()">
+      </app-custom-button>
+    </div>
+    
+    <div class="actions-right">
+      <app-custom-button
+        [text]="'Cancelar'"
+        [type]="'secondary'"
+        [disabled]="isLoading"
+        (click)="onCancel()">
+      </app-custom-button>
+      
+      <app-custom-button
+        [text]="mode === 'create' ? 'Guardar Experiencia' : 'Actualizar Experiencia'"
+        [type]="'primary'"
+        [icon]="mode === 'create' ? 'save' : 'update'"
+        [loading]="isLoading"
+        [disabled]="!canSave()"
+        (click)="onSave()">
+      </app-custom-button>
+    </div>
+  </div>
+
+  <!-- Información de ayuda -->
+  <div class="form-help">
+    <div class="help-section">
+      <h4 class="help-title">
+        <i class="material-icons">help</i>
+        Consejos para completar tu experiencia
+      </h4>
+      <ul class="help-list">
+        <li>Sé específico en la descripción de tus responsabilidades</li>
+        <li>Incluye logros cuantificables cuando sea posible</li>
+        <li>Menciona las tecnologías y herramientas que utilizaste</li>
+        <li>Usa verbos de acción para describir tus actividades</li>
+        <li>Mantén la información actualizada y relevante</li>
+      </ul>
+    </div>
+    
+    <div class="help-section">
+      <h4 class="help-title">
+        <i class="material-icons">security</i>
+        Seguridad y privacidad
+      </h4>
+      <p class="help-text">
+        Toda la información ingresada es sanitizada automáticamente para prevenir vulnerabilidades de seguridad.
+        Tus datos están protegidos y solo serán visibles en tu perfil profesional.
+      </p>
+    </div>
+  </div>
+</div>

@@ -82,7 +82,6 @@ export class CvTransformService implements ICvTransformService {
     const baseEducation = {
       id: undefined,
       userId,
-      status: CvEntryStatus.ACTIVE,
       type: dto.type,
       status: dto.status,
       title: dto.title,
@@ -383,7 +382,7 @@ export class CvTransformService implements ICvTransformService {
     
     let highestLevel: EducationType | null = null;
     for (let i = levelHierarchy.length - 1; i >= 0; i--) {
-      if (educationTypes.includes(levelHierarchy[i])) {
+      if (educationTypes.includes(levelHierarchy[i] as any)) {
         highestLevel = levelHierarchy[i];
         break;
       }
