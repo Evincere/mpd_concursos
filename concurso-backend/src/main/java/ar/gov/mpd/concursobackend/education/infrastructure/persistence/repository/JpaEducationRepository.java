@@ -6,19 +6,19 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationEntity;
+import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationRecordEntity;
 
 /**
  * JPA repository interface for education records
  */
 @Repository
-public interface JpaEducationRepository extends JpaRepository<EducationEntity, UUID> {
-    
+public interface JpaEducationRepository extends JpaRepository<EducationRecordEntity, UUID> {
+
     /**
      * Find all education records for a user
-     * 
+     *
      * @param userId the user ID
      * @return a list of education records
      */
-    List<EducationEntity> findAllByUserId(UUID userId);
-} 
+    List<EducationRecordEntity> findAllByUserId(UUID userId);
+}

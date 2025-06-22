@@ -16,36 +16,37 @@ public class ExperienceEntityMapper {
 
     /**
      * Converts a domain Experience to a JPA entity
-     * 
+     *
      * @param experience Domain model
      * @param userEntity User entity to associate with the experience
      * @return JPA entity
      */
-    public ExperienceEntity toEntity(Experience experience, UserEntity userEntity) {
+    public WorkExperienceEntity toEntity(Experience experience, UserEntity userEntity) {
         if (experience == null) {
             return null;
         }
 
-        return ExperienceEntity.builder()
+        return WorkExperienceEntity.builder()
                 .id(experience.getId())
                 .user(userEntity)
-                .company(experience.getCompany())
-                .position(experience.getPosition())
+                .companyName(experience.getCompany())
+                .positionTitle(experience.getPosition())
                 .startDate(experience.getStartDate())
                 .endDate(experience.getEndDate())
-                .description(experience.getDescription())
-                .comments(experience.getComments())
-                .documentUrl(experience.getDocumentUrl())
+                .jobDescription(experience.getDescription())
+                .verificationNotes(experience.getComments())
+                .supportingDocumentUrl(experience.getDocumentUrl())
+                .isCurrentPosition(experience.getEndDate() == null)
                 .build();
     }
 
     /**
      * Converts a JPA entity to a domain Experience
-     * 
+     *
      * @param entity JPA entity
      * @return Domain model
      */
-    public Experience toDomain(ExperienceEntity entity) {
+    public Experience toDomain(WorkExperienceEntity entity) {
         if (entity == null) {
             return null;
         }
@@ -53,23 +54,23 @@ public class ExperienceEntityMapper {
         return Experience.builder()
                 .id(entity.getId())
                 .userId(entity.getUser().getId())
-                .company(entity.getCompany())
-                .position(entity.getPosition())
+                .company(entity.getCompanyName())
+                .position(entity.getPositionTitle())
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
-                .description(entity.getDescription())
-                .comments(entity.getComments())
-                .documentUrl(entity.getDocumentUrl())
+                .description(entity.getJobDescription())
+                .comments(entity.getVerificationNotes())
+                .documentUrl(entity.getSupportingDocumentUrl())
                 .build();
     }
 
     /**
      * Converts a list of JPA entities to domain models
-     * 
+     *
      * @param entities List of JPA entities
      * @return List of domain models
      */
-    public List<Experience> toDomainList(List<ExperienceEntity> entities) {
+    public List<Experience> toDomainList(List<WorkExperienceEntity> entities) {
         if (entities == null) {
             return List.of();
         }

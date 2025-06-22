@@ -3,8 +3,6 @@ package ar.gov.mpd.concursobackend.auth.application.service;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.ProfileImageUrl;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.application.service.UserService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
