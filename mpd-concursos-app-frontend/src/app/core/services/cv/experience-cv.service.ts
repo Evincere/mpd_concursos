@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { map, tap, catchError, retry } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 import { WorkExperience, WorkExperienceDto } from '@core/models/cv';
 
 export interface ExperienceApiResponse {
@@ -39,7 +39,7 @@ export class ExperienceCvService {
   public loading$ = this.loadingSubject.asObservable();
   public error$ = this.errorSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Obtiene todas las experiencias laborales de un usuario
@@ -205,9 +205,9 @@ export class ExperienceCvService {
       technologies: [], // Campo no disponible en API actual
       comments: response.comments,
       document: response.documentUrl ? {
-        id: '', // No disponible en API actual
-        fileName: '', // No disponible en API actual
-        url: response.documentUrl,
+        id: response.id + '_doc',
+        fileName: response.documentUrl.split('/').pop() || 'documento.pdf',
+        originalFileName: response.documentUrl.split('/').pop() || 'documento.pdf',
         uploadDate: new Date(),
         fileSize: 0, // No disponible en API actual
         mimeType: 'application/pdf' // Valor por defecto
@@ -236,9 +236,9 @@ export class ExperienceCvService {
    */
   private handleError(operation: string, error: HttpErrorResponse): Observable<never> {
     this.setLoading(false);
-    
+
     let errorMessage = 'Error desconocido';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Error del lado del cliente
       errorMessage = `Error de red: ${error.error.message}`;
@@ -267,7 +267,7 @@ export class ExperienceCvService {
 
     this.setError(errorMessage);
     console.error(`[ExperienceCvService] Error in ${operation}:`, error);
-    
+
     return throwError(() => new Error(errorMessage));
   }
 

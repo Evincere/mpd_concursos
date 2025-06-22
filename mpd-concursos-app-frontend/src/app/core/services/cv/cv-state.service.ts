@@ -51,56 +51,63 @@ export class CvStateService {
   public lastUpdated$ = this.lastUpdatedSubject.asObservable();
   public currentUserId$ = this.currentUserIdSubject.asObservable();
 
-  // Estado combinado del CV
-  public cvState$: Observable<CvState> = combineLatest([
-    this.experienceService.experiences$,
-    this.educationService.education$,
-    this.isLoading$,
-    this.error$,
-    this.lastUpdated$
-  ]).pipe(
-    map(([experiences, education, isLoading, error, lastUpdated]) => ({
-      experiences,
-      education,
-      isLoading,
-      error,
-      lastUpdated,
-      hasData: experiences.length > 0 || education.length > 0,
-      totalItems: experiences.length + education.length
-    }))
-  );
+  // Estado combinado del CV - se inicializa en el constructor
+  public cvState$: Observable<CvState>;
 
-  // Estado de carga detallado
-  public loadingState$: Observable<CvLoadingState> = combineLatest([
-    this.experienceService.loading$,
-    this.educationService.loading$,
-    this.isLoading$
-  ]).pipe(
-    map(([experiencesLoading, educationLoading, overallLoading]) => ({
-      experiences: experiencesLoading,
-      education: educationLoading,
-      overall: overallLoading || experiencesLoading || educationLoading
-    }))
-  );
+  // Estado de carga detallado - se inicializa en el constructor
+  public loadingState$: Observable<CvLoadingState>;
 
-  // Estado de errores detallado
-  public errorState$: Observable<CvErrorState> = combineLatest([
-    this.experienceService.error$,
-    this.educationService.error$,
-    this.error$
-  ]).pipe(
-    map(([experiencesError, educationError, generalError]) => ({
-      experiences: experiencesError,
-      education: educationError,
-      general: generalError
-    }))
-  );
+  // Estado de errores detallado - se inicializa en el constructor
+  public errorState$: Observable<CvErrorState>;
 
   constructor(
     private experienceService: ExperienceCvService,
     private educationService: EducationCvService
   ) {
     console.log('[CvStateService] Service initialized');
+
+    // Inicializar los observables después de la inyección de dependencias
+    this.cvState$ = combineLatest([
+      this.experienceService.experiences$,
+      this.educationService.education$,
+      this.isLoading$,
+      this.error$,
+      this.lastUpdated$
+    ]).pipe(
+      map(([experiences, education, isLoading, error, lastUpdated]) => ({
+        experiences,
+        education,
+        isLoading,
+        error,
+        lastUpdated,
+        hasData: experiences.length > 0 || education.length > 0,
+        totalItems: experiences.length + education.length
+      }))
+    );
+
+    this.loadingState$ = combineLatest([
+      this.experienceService.loading$,
+      this.educationService.loading$,
+      this.isLoading$
+    ]).pipe(
+      map(([experiencesLoading, educationLoading, overallLoading]) => ({
+        experiences: experiencesLoading,
+        education: educationLoading,
+        overall: overallLoading || experiencesLoading || educationLoading
+      }))
+    );
+
+    this.errorState$ = combineLatest([
+      this.experienceService.error$,
+      this.educationService.error$,
+      this.error$
+    ]).pipe(
+      map(([experiencesError, educationError, generalError]) => ({
+        experiences: experiencesError,
+        education: educationError,
+        general: generalError
+      }))
+    );
   }
 
   /**
@@ -113,7 +120,7 @@ export class CvStateService {
     }
 
     console.log(`[CvStateService] Loading CV data for user: ${userId}`);
-    
+
     this.setLoading(true);
     this.setError(null);
     this.currentUserIdSubject.next(userId);
@@ -137,7 +144,7 @@ export class CvStateService {
       map(([experiences, education]) => {
         this.setLastUpdated(new Date());
         console.log(`[CvStateService] CV data loaded successfully. Experiences: ${experiences.length}, Education: ${education.length}`);
-        
+
         return {
           experiences,
           education,
@@ -294,8 +301,8 @@ export class CvStateService {
         totalExperiences: state.experiences.length,
         totalEducation: state.education.length,
         totalItems: state.totalItems,
-        hasDocuments: state.experiences.some(exp => exp.document) || 
-                     state.education.some(edu => edu.document),
+        hasDocuments: state.experiences.some(exp => exp.document) ||
+          state.education.some(edu => edu.document),
         lastUpdated: state.lastUpdated
       }))
     );
@@ -311,7 +318,7 @@ export class CvStateService {
     return this.cvState$.pipe(
       map(state => {
         const term = searchTerm.toLowerCase();
-        
+
         const filteredExperiences = state.experiences.filter(exp =>
           exp.position.toLowerCase().includes(term) ||
           exp.company.toLowerCase().includes(term) ||

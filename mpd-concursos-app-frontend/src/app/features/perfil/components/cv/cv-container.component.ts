@@ -26,7 +26,7 @@ import {
   ExperienceCvService,
   EducationCvService,
   CvStateService,
-  CvState
+  CvState as CvServiceState
 } from '@core/services/cv';
 
 // Servicios de utilidad
@@ -227,7 +227,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
 
     try {
       // TODO: Implementar exportación real
-      await this.simulateExport();
+      await this.delay(2000); // Simular tiempo de exportación
       this.notificationService.showCvExported('PDF');
     } catch (error) {
       this.notificationService.showError('Error al exportar el CV');
@@ -307,7 +307,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
 
     try {
       // TODO: Implementar eliminación real
-      await this.simulateDelete();
+      await this.delay(1000); // Simular tiempo de eliminación
 
       // Remover de la lista local
       this.updateExperienceState(state => ({
@@ -343,7 +343,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
 
     try {
       // TODO: Implementar eliminación real
-      await this.simulateDelete();
+      await this.delay(1000); // Simular tiempo de eliminación
 
       // Remover de la lista local
       this.updateEducationState(state => ({
@@ -472,13 +472,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Filtra los datos según el término de búsqueda
-   */
-  private filterData(term: string): void {
-    // TODO: Implementar filtrado real
-    console.log('Filtering data with term:', term);
-  }
+
 
   /**
    * Actualiza el estado general
@@ -652,5 +646,12 @@ export class CvContainerComponent implements OnInit, OnDestroy {
         console.error('[CvContainerComponent] Error creating education:', error);
       }
     });
+  }
+
+  /**
+   * Método de utilidad para simular delays
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

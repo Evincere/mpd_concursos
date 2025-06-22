@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { map, tap, catchError, retry } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { environment } from '../../../../environments/environment';
 import { EducationEntry, EducationDto, EducationType, EducationStatus } from '@core/models/cv';
 
 export interface EducationApiResponse {
@@ -48,7 +48,7 @@ export class EducationCvService {
   public loading$ = this.loadingSubject.asObservable();
   public error$ = this.errorSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Obtiene toda la educación de un usuario
@@ -201,37 +201,30 @@ export class EducationCvService {
   private mapApiResponseToEducationEntry(response: EducationApiResponse): EducationEntry {
     return {
       id: response.id,
-      userId: '', // Se asignará desde el contexto
-      status: 'ACTIVE' as any, // Valor por defecto
-      type: this.mapStringToEducationType(response.type),
-      educationStatus: this.mapStringToEducationStatus(response.status),
+      type: this.mapStringToEducationType(response.type) as any,
+      status: this.mapStringToEducationStatus(response.status),
       title: response.title,
       institution: response.institution,
       startDate: new Date(), // Campo no disponible en API actual
       endDate: response.issueDate ? new Date(response.issueDate) : undefined,
       isOngoing: response.status === 'En Curso',
       document: response.documentUrl ? {
-        id: '', // No disponible en API actual
-        fileName: '', // No disponible en API actual
-        url: response.documentUrl,
+        id: response.id + '_doc',
+        fileName: response.documentUrl.split('/').pop() || 'documento.pdf',
+        originalFileName: response.documentUrl.split('/').pop() || 'documento.pdf',
         uploadDate: new Date(),
         fileSize: 0, // No disponible en API actual
         mimeType: 'application/pdf' // Valor por defecto
       } : undefined,
-      // Campos específicos según el tipo
+      // Campos específicos según el tipo (solo los que existen en la interfaz)
       durationYears: response.durationYears,
       average: response.average,
       thesisTopic: response.thesisTopic,
       hourlyLoad: response.hourlyLoad,
-      hadFinalEvaluation: response.hadFinalEvaluation,
-      activityType: response.activityType,
-      topic: response.topic,
-      activityRole: response.activityRole,
-      expositionPlaceDate: response.expositionPlaceDate,
-      comments: response.comments,
-      createdAt: new Date(), // Valor por defecto
-      updatedAt: new Date() // Valor por defecto
-    };
+      activityType: (response.activityType || 'CONFERENCE') as any,
+      topic: response.topic || '',
+      comments: response.comments
+    } as unknown as EducationEntry;
   }
 
   /**
@@ -265,7 +258,7 @@ export class EducationCvService {
    */
   private mapStringToEducationType(type: string): EducationType {
     const typeMap: { [key: string]: EducationType } = {
-      'Título Terciario': EducationType.TECHNICAL_DEGREE,
+      'Título Terciario': EducationType.TECHNICAL,
       'Título Universitario': EducationType.UNIVERSITY_DEGREE,
       'Especialización': EducationType.POSTGRADUATE_SPECIALIZATION,
       'Maestría': EducationType.MASTER_DEGREE,
@@ -274,7 +267,7 @@ export class EducationCvService {
       'Curso de Capacitación': EducationType.CERTIFICATION,
       'Actividad Científica': EducationType.SCIENTIFIC_ACTIVITY
     };
-    
+
     return typeMap[type] || EducationType.CERTIFICATION;
   }
 
@@ -287,7 +280,7 @@ export class EducationCvService {
       'Completado': EducationStatus.COMPLETED,
       'Abandonado': EducationStatus.ABANDONED
     };
-    
+
     return statusMap[status] || EducationStatus.IN_PROGRESS;
   }
 
@@ -296,9 +289,9 @@ export class EducationCvService {
    */
   private handleError(operation: string, error: HttpErrorResponse): Observable<never> {
     this.setLoading(false);
-    
+
     let errorMessage = 'Error desconocido';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Error del lado del cliente
       errorMessage = `Error de red: ${error.error.message}`;
@@ -327,7 +320,7 @@ export class EducationCvService {
 
     this.setError(errorMessage);
     console.error(`[EducationCvService] Error in ${operation}:`, error);
-    
+
     return throwError(() => new Error(errorMessage));
   }
 
