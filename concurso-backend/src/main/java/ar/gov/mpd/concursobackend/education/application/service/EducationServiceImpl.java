@@ -14,6 +14,7 @@ import ar.gov.mpd.concursobackend.education.application.mapper.EducationMapper;
 import ar.gov.mpd.concursobackend.education.domain.model.Education;
 import ar.gov.mpd.concursobackend.education.domain.repository.EducationRepository;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
+import ar.gov.mpd.concursobackend.shared.infrastructure.service.CvDocumentService;
 import ar.gov.mpd.concursobackend.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class EducationServiceImpl implements EducationService {
     private final EducationRepository educationRepository;
     private final EducationMapper educationMapper;
     private final DocumentService documentService;
+    private final CvDocumentService cvDocumentService;
 
     @Override
     @Transactional(readOnly = true)
@@ -98,17 +100,17 @@ public class EducationServiceImpl implements EducationService {
         log.info("ID de documento generado: {}", documentId);
 
         try {
-            // Usar documentService.saveDocument que maneja tanto el almacenamiento físico
-            // como los metadatos
-            log.info("Llamando a documentService.saveDocument");
-            String documentUrl = documentService.saveDocument(
+            // Usar el nuevo CvDocumentService para almacenamiento organizado
+            log.info("Usando CvDocumentService para almacenar documento de educación");
+
+            String documentUrl = cvDocumentService.storeEducationDocumentFromStream(
+                    education.getUserId(),
+                    education.getId(),
                     inputStream,
-                    filename,
-                    documentId,
-                    education.getUserId());
+                    filename);
 
             if (documentUrl == null || documentUrl.isEmpty()) {
-                log.error("ERROR: La URL del documento retornada por saveDocument es nula o vacía");
+                log.error("ERROR: La URL del documento retornada por CvDocumentService es nula o vacía");
                 throw new RuntimeException("Document URL is null or empty");
             }
 

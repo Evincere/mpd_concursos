@@ -21,10 +21,15 @@ import {
   CvSearchFilters,
   LoadingState,
   ComponentState,
-  CV_DEFAULTS
+  CV_DEFAULTS,
+  // Servicios HTTP reales
+  ExperienceCvService,
+  EducationCvService,
+  CvStateService,
+  CvState
 } from '@core/services/cv';
 
-// Servicios
+// Servicios de utilidad
 import { CvValidationService } from '@core/services/cv/cv-validation.service';
 import { CvTransformService } from '@core/services/cv/cv-transform.service';
 import { CvNotificationService } from '@core/services/cv/cv-notification.service';
@@ -149,10 +154,15 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
     private readonly validationService: CvValidationService,
     private readonly transformService: CvTransformService,
-    private readonly notificationService: CvNotificationService
+    private readonly notificationService: CvNotificationService,
+    // Servicios HTTP reales
+    private readonly experienceService: ExperienceCvService,
+    private readonly educationService: EducationCvService,
+    private readonly cvStateService: CvStateService
   ) {
     this.setupSearchSubscription();
     this.setupRefreshSubscription();
+    this.setupCvStateSubscription();
   }
 
   // ===== LIFECYCLE =====
@@ -163,6 +173,8 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    // Limpiar estado del CV al destruir el componente
+    this.cvStateService.clearState();
   }
 
   // ===== PUBLIC METHODS =====
@@ -194,7 +206,9 @@ export class CvContainerComponent implements OnInit, OnDestroy {
    * Refresca los datos del CV
    */
   refreshData(): void {
-    this.refreshTrigger$.next();
+    if (this.userProfile?.id) {
+      this.cvStateService.refreshCvData();
+    }
   }
 
   /**
@@ -294,7 +308,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     try {
       // TODO: Implementar eliminación real
       await this.simulateDelete();
-      
+
       // Remover de la lista local
       this.updateExperienceState(state => ({
         ...state,
@@ -330,7 +344,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     try {
       // TODO: Implementar eliminación real
       await this.simulateDelete();
-      
+
       // Remover de la lista local
       this.updateEducationState(state => ({
         ...state,
@@ -353,74 +367,84 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   // ===== PRIVATE METHODS =====
 
   /**
-   * Carga los datos iniciales
+   * Carga los datos iniciales usando servicios HTTP reales
    */
   private loadInitialData(): void {
-    if (!this.userProfile?.id) return;
+    if (!this.userProfile?.id) {
+      console.warn('[CvContainerComponent] No user profile ID available for loading CV data');
+      return;
+    }
 
-    this.loadExperiences();
-    this.loadEducation();
-  }
+    console.log(`[CvContainerComponent] Loading CV data for user: ${this.userProfile.id}`);
 
-  /**
-   * Carga las experiencias laborales
-   */
-  private loadExperiences(): void {
-    this.updateExperienceState(state => ({
-      ...state,
-      isLoading: true,
-      error: null
-    }));
-
-    // TODO: Implementar carga real desde el backend
-    this.simulateDataLoad('experiences').subscribe({
-      next: (experiences) => {
-        const sortedExperiences = this.transformService.sortExperiencesByDate(experiences);
-        this.updateExperienceState(state => ({
-          ...state,
-          data: sortedExperiences,
-          isLoading: false
-        }));
+    // Cargar datos usando el servicio de estado centralizado
+    this.cvStateService.loadCvData(this.userProfile.id).subscribe({
+      next: (cvState) => {
+        console.log('[CvContainerComponent] CV data loaded successfully:', cvState);
       },
       error: (error) => {
-        this.updateExperienceState(state => ({
-          ...state,
-          isLoading: false,
-          error: 'Error al cargar experiencias'
-        }));
-        this.notificationService.showNetworkError('cargar experiencias');
+        console.error('[CvContainerComponent] Error loading CV data:', error);
+        this.notificationService.showError('Error al cargar los datos del CV');
       }
     });
   }
 
   /**
-   * Carga la educación
+   * Configura la suscripción al estado del CV
    */
-  private loadEducation(): void {
-    this.updateEducationState(state => ({
-      ...state,
-      isLoading: true,
-      error: null
-    }));
+  private setupCvStateSubscription(): void {
+    // Suscribirse al estado centralizado del CV
+    this.cvStateService.cvState$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(cvState => {
+      this.updateState(state => ({
+        experiences: {
+          data: cvState.experiences,
+          selectedItem: state.experiences.selectedItem,
+          isLoading: cvState.isLoading,
+          error: cvState.error,
+          filters: state.experiences.filters,
+          pagination: state.experiences.pagination
+        },
+        education: {
+          data: cvState.education,
+          selectedItem: state.education.selectedItem,
+          isLoading: cvState.isLoading,
+          error: cvState.error,
+          filters: state.education.filters,
+          pagination: state.education.pagination
+        },
+        isExporting: state.isExporting,
+        lastUpdated: cvState.lastUpdated
+      }));
+    });
+  }
 
-    // TODO: Implementar carga real desde el backend
-    this.simulateDataLoad('education').subscribe({
-      next: (education) => {
-        const sortedEducation = this.transformService.sortEducationByDate(education);
-        this.updateEducationState(state => ({
-          ...state,
-          data: sortedEducation,
-          isLoading: false
-        }));
-      },
-      error: (error) => {
-        this.updateEducationState(state => ({
-          ...state,
-          isLoading: false,
-          error: 'Error al cargar educación'
-        }));
-        this.notificationService.showNetworkError('cargar educación');
-      }
+  /**
+   * Filtra los datos según el término de búsqueda usando el servicio de estado
+   */
+  private filterData(term: string): void {
+    if (!term.trim()) {
+      // Si no hay término de búsqueda, recargar datos originales
+      this.refreshData();
+      return;
+    }
+
+    // Usar el método de búsqueda del servicio de estado
+    this.cvStateService.searchCv(term).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(results => {
+      this.updateState(state => ({
+        ...state,
+        experiences: {
+          ...state.experiences,
+          data: results.experiences
+        },
+        education: {
+          ...state.education,
+          data: results.education
+        }
+      }));
     });
   }
 
@@ -592,33 +616,41 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ===== MÉTODOS DE SIMULACIÓN (TEMPORAL) =====
+  // ===== MÉTODOS DE INTEGRACIÓN CON SERVICIOS REALES =====
 
   /**
-   * Simula la carga de datos
+   * Crea una nueva experiencia laboral
    */
-  private simulateDataLoad(type: 'experiences' | 'education'): Observable<any[]> {
-    return of([]).pipe(
-      // Simular delay de red
-      switchMap(() => new Promise<any[]>(resolve => setTimeout(() => resolve([]), 1000))),
-      catchError(error => {
-        console.error(`Error loading ${type}:`, error);
-        return of([]);
-      })
-    );
+  createExperience(experienceData: any): void {
+    if (!this.userProfile?.id) return;
+
+    this.experienceService.create(this.userProfile.id, experienceData).subscribe({
+      next: (newExperience) => {
+        this.notificationService.showSuccess('Experiencia laboral agregada exitosamente');
+        console.log('[CvContainerComponent] Experience created:', newExperience);
+      },
+      error: (error) => {
+        this.notificationService.showError('Error al agregar experiencia laboral');
+        console.error('[CvContainerComponent] Error creating experience:', error);
+      }
+    });
   }
 
   /**
-   * Simula la exportación
+   * Crea un nuevo registro de educación
    */
-  private simulateExport(): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, 2000));
-  }
+  createEducation(educationData: any): void {
+    if (!this.userProfile?.id) return;
 
-  /**
-   * Simula la eliminación
-   */
-  private simulateDelete(): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, 500));
+    this.educationService.create(this.userProfile.id, educationData).subscribe({
+      next: (newEducation) => {
+        this.notificationService.showSuccess('Registro de educación agregado exitosamente');
+        console.log('[CvContainerComponent] Education created:', newEducation);
+      },
+      error: (error) => {
+        this.notificationService.showError('Error al agregar registro de educación');
+        console.error('[CvContainerComponent] Error creating education:', error);
+      }
+    });
   }
 }
