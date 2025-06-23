@@ -46,7 +46,7 @@ export class CvValidationService implements ICvValidationService {
   private readonly phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
   private readonly urlRegex = /^https?:\/\/.+/;
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(private sanitizer: DomSanitizer) { }
 
   // ===== VALIDACIÓN DE EXPERIENCIA LABORAL =====
 
@@ -76,11 +76,23 @@ export class CvValidationService implements ICvValidationService {
     if (!dateValidation.isValid) errors.push(...dateValidation.errors);
     warnings.push(...dateValidation.warnings);
 
+    // Incluir fechas en datos sanitizados
+    sanitizedData.startDate = experience.startDate;
+    sanitizedData.endDate = experience.endDate;
+    sanitizedData.isCurrentJob = experience.isCurrentJob;
+
     // Validar campos opcionales
     if (experience.location) {
       const locationResult = this.validateAndSanitizeText(experience.location, 'Ubicación', false, 0, 100);
       if (!locationResult.isValid) warnings.push(...locationResult.errors);
       sanitizedData.location = locationResult.sanitizedValue;
+    }
+
+    // Validar comentarios
+    if (experience.comments) {
+      const commentsResult = this.validateAndSanitizeText(experience.comments, 'Comentarios', false, 0, 500);
+      if (!commentsResult.isValid) warnings.push(...commentsResult.errors);
+      sanitizedData.comments = commentsResult.sanitizedValue;
     }
 
     // Validar tecnologías
@@ -130,7 +142,7 @@ export class CvValidationService implements ICvValidationService {
     // Validar fecha de fin si no es trabajo actual
     if (!experience.isCurrentJob && experience.endDate) {
       const endDate = new Date(experience.endDate);
-      
+
       if (isNaN(endDate.getTime())) {
         errors.push('La fecha de fin no es válida');
       } else if (endDate > today) {
@@ -227,7 +239,7 @@ export class CvValidationService implements ICvValidationService {
 
     if (education.endDate) {
       const endDate = new Date(education.endDate);
-      
+
       if (isNaN(endDate.getTime())) {
         errors.push('La fecha de fin no es válida');
       } else if (endDate <= startDate) {
@@ -303,7 +315,7 @@ export class CvValidationService implements ICvValidationService {
     }
 
     const today = new Date();
-    
+
     if (startDate > today) {
       return { isValid: false, error: 'La fecha de inicio no puede ser futura' };
     }
@@ -331,16 +343,16 @@ export class CvValidationService implements ICvValidationService {
     const allowedTypes = config?.allowedTypes || CV_CONSTANTS.ALLOWED_FILE_TYPES;
 
     if (file.size > maxSize) {
-      return { 
-        isValid: false, 
-        error: `El archivo es demasiado grande. Máximo permitido: ${Math.round(maxSize / 1024 / 1024)}MB` 
+      return {
+        isValid: false,
+        error: `El archivo es demasiado grande. Máximo permitido: ${Math.round(maxSize / 1024 / 1024)}MB`
       };
     }
 
     if (!allowedTypes.includes(file.type as any)) {
-      return { 
-        isValid: false, 
-        error: `Tipo de archivo no permitido. Tipos permitidos: ${allowedTypes.join(', ')}` 
+      return {
+        isValid: false,
+        error: `Tipo de archivo no permitido. Tipos permitidos: ${allowedTypes.join(', ')}`
       };
     }
 
@@ -393,14 +405,14 @@ export class CvValidationService implements ICvValidationService {
    * Valida y sanitiza texto con configuración específica
    */
   private validateAndSanitizeText(
-    value: string, 
-    fieldName: string, 
-    required: boolean, 
-    minLength: number, 
+    value: string,
+    fieldName: string,
+    required: boolean,
+    minLength: number,
     maxLength: number
   ): { isValid: boolean; errors: string[]; sanitizedValue: string } {
     const errors: string[] = [];
-    
+
     if (!value || value.trim().length === 0) {
       if (required) {
         errors.push(`${fieldName} es obligatorio`);
@@ -409,11 +421,11 @@ export class CvValidationService implements ICvValidationService {
     }
 
     const sanitized = this.sanitizeInput(value);
-    
+
     if (sanitized.length < minLength) {
       errors.push(`${fieldName} debe tener al menos ${minLength} caracteres`);
     }
-    
+
     if (sanitized.length > maxLength) {
       errors.push(`${fieldName} no puede exceder ${maxLength} caracteres`);
     }

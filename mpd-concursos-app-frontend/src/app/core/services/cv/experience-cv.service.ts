@@ -221,14 +221,44 @@ export class ExperienceCvService {
    * Mapea WorkExperienceDto a formato de API request
    */
   private mapWorkExperienceDtoToApiRequest(dto: WorkExperienceDto): any {
-    return {
+    console.log('[ExperienceCvService] Mapping DTO to API request:', dto);
+
+    // Convertir fechas de string ISO a LocalDate format (YYYY-MM-DD)
+    const startDate = dto.startDate ? this.formatDateForBackend(dto.startDate) : null;
+    const endDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
+
+    const payload = {
       company: dto.company,
       position: dto.position,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate: startDate,
+      endDate: endDate,
       description: dto.description,
       comments: dto.comments
     };
+
+    console.log('[ExperienceCvService] API payload:', payload);
+    return payload;
+  }
+
+  /**
+   * Formatea una fecha para el backend (YYYY-MM-DD)
+   */
+  private formatDateForBackend(dateInput: string | Date): string {
+    let date: Date;
+
+    if (typeof dateInput === 'string') {
+      date = new Date(dateInput);
+    } else {
+      date = dateInput;
+    }
+
+    if (isNaN(date.getTime())) {
+      console.error('[ExperienceCvService] Invalid date:', dateInput);
+      throw new Error('Fecha inválida');
+    }
+
+    // Formato YYYY-MM-DD requerido por LocalDate
+    return date.toISOString().split('T')[0];
   }
 
   /**
@@ -246,7 +276,18 @@ export class ExperienceCvService {
       // Error del lado del servidor
       switch (error.status) {
         case 400:
-          errorMessage = 'Datos inválidos enviados al servidor';
+          // Intentar extraer mensaje específico de validación
+          if (error.error && typeof error.error === 'object') {
+            if (error.error.message) {
+              errorMessage = error.error.message;
+            } else if (error.error.errors && Array.isArray(error.error.errors)) {
+              errorMessage = error.error.errors.join(', ');
+            } else {
+              errorMessage = 'Datos inválidos enviados al servidor';
+            }
+          } else {
+            errorMessage = 'Datos inválidos enviados al servidor';
+          }
           break;
         case 401:
           errorMessage = 'No autorizado. Por favor, inicie sesión nuevamente';
@@ -258,7 +299,7 @@ export class ExperienceCvService {
           errorMessage = 'Experiencia laboral no encontrada';
           break;
         case 500:
-          errorMessage = 'Error interno del servidor';
+          errorMessage = 'Error interno del servidor. Por favor, intente nuevamente más tarde.';
           break;
         default:
           errorMessage = `Error del servidor: ${error.status} - ${error.message}`;
@@ -266,9 +307,14 @@ export class ExperienceCvService {
     }
 
     this.setError(errorMessage);
-    console.error(`[ExperienceCvService] Error in ${operation}:`, error);
+    console.error(`[ExperienceCvService] Error in ${operation}:`, {
+      type: 'SERVER',
+      message: errorMessage,
+      originalError: error,
+      timestamp: Date.now()
+    });
 
-    return throwError(() => new Error(errorMessage));
+    return throwError(() => new Error(`Error del servidor: ${error.status} - ${errorMessage}`));
   }
 
   /**

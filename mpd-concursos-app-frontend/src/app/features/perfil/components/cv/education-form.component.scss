@@ -1,0 +1,561 @@
+/**
+ * Estilos para Formulario de Educación
+ * 
+ * @description Estilos específicos para el formulario de gestión de educación
+ * @author Augment Agent
+ * @date 2025-06-22
+ */
+
+// ===== IMPORTAR ESTILOS BASE =====
+@import '../../../../../styles/variables';
+@import '../../../../../styles/mixins';
+
+// ===== CONTENEDOR PRINCIPAL =====
+.education-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+
+  // ===== HEADER =====
+  .form-header {
+    text-align: center;
+    margin-bottom: 32px;
+
+    .form-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 8px 0;
+
+      .material-icons {
+        color: #3b82f6;
+        font-size: 1.75rem;
+      }
+    }
+
+    .form-subtitle {
+      color: #6b7280;
+      font-size: 1rem;
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+
+  // ===== ALERTAS DE VALIDACIÓN =====
+  .validation-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 8px;
+      border-left: 4px solid;
+
+      .material-icons {
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .alert-content {
+        flex: 1;
+
+        strong {
+          display: block;
+          margin-bottom: 8px;
+        }
+
+        ul {
+          margin: 0;
+          padding-left: 16px;
+
+          li {
+            margin-bottom: 4px;
+            line-height: 1.4;
+          }
+        }
+      }
+
+      &.alert-error {
+        background-color: #fef2f2;
+        border-color: #ef4444;
+        color: #dc2626;
+
+        .material-icons {
+          color: #ef4444;
+        }
+      }
+
+      &.alert-warning {
+        background-color: #fffbeb;
+        border-color: #f59e0b;
+        color: #d97706;
+
+        .material-icons {
+          color: #f59e0b;
+        }
+      }
+    }
+  }
+
+  // ===== FORMULARIO =====
+  .dynamic-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  // ===== GRID DE CAMPOS =====
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    align-items: start;
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+
+      &.full-width {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  // ===== CAMPOS ESPECÍFICOS =====
+  
+  // Textarea glassmorphism
+  .field-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: vertical;
+    transition: all 0.3s ease;
+
+    &::placeholder {
+      color: transparent !important;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  // Labels
+  .field-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    display: block;
+
+    &.required::after {
+      content: ' *';
+      color: #ef4444;
+    }
+
+    .required-indicator {
+      color: #ef4444;
+      margin-left: 2px;
+    }
+  }
+
+  // Help text
+  .field-help {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  // Errores
+  .field-errors {
+    margin-top: 6px;
+
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #dc2626;
+      margin: 0 0 4px 0;
+      line-height: 1.4;
+
+      .material-icons {
+        font-size: 14px;
+      }
+    }
+  }
+
+  // ===== CHECKBOX =====
+  .checkbox-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      line-height: 1.5;
+
+      .checkbox-input {
+        width: 18px;
+        height: 18px;
+        accent-color: #3b82f6;
+        cursor: pointer;
+      }
+
+      .checkbox-custom {
+        width: 18px;
+        height: 18px;
+        border: 2px solid #d1d5db;
+        border-radius: 3px;
+        position: relative;
+        transition: all 0.2s ease;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 2px;
+          left: 6px;
+          width: 4px;
+          height: 8px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+      }
+
+      .checkbox-text {
+        flex: 1;
+        color: #374151;
+      }
+
+      &:hover .checkbox-custom {
+        border-color: #3b82f6;
+      }
+    }
+
+    .checkbox-input:checked + .checkbox-custom {
+      background-color: #3b82f6;
+      border-color: #3b82f6;
+
+      &::after {
+        opacity: 1;
+      }
+    }
+  }
+
+  // ===== CHIPS =====
+  .chips-field {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .chips-input-container {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+
+      .chips-input {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: border-color 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        &::placeholder {
+          color: #9ca3af;
+        }
+      }
+
+      .add-chip-btn {
+        padding: 10px;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover:not(:disabled) {
+          background-color: #2563eb;
+        }
+
+        &:disabled {
+          background-color: #9ca3af;
+          cursor: not-allowed;
+        }
+
+        .material-icons {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background-color: #eff6ff;
+        color: #1e40af;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        border: 1px solid #bfdbfe;
+
+        .chip-text {
+          line-height: 1.2;
+        }
+
+        .chip-remove {
+          background: none;
+          border: none;
+          color: #6b7280;
+          cursor: pointer;
+          padding: 2px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+
+          &:hover:not(:disabled) {
+            background-color: #dc2626;
+            color: white;
+          }
+
+          &:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+          }
+
+          .material-icons {
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    .chips-counter {
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-align: right;
+    }
+  }
+
+  // ===== ESTADO DEL FORMULARIO =====
+  .form-status {
+    padding: 16px;
+    border-radius: 8px;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+
+      &.valid {
+        color: #059669;
+
+        .material-icons {
+          color: #10b981;
+        }
+      }
+
+      &.invalid {
+        color: #dc2626;
+
+        .material-icons {
+          color: #ef4444;
+        }
+      }
+    }
+  }
+
+  // ===== ACCIONES =====
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+
+    .actions-left,
+    .actions-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .actions-right {
+      margin-left: auto;
+    }
+  }
+
+  // ===== AYUDA =====
+  .form-help {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+
+    .help-section {
+      .help-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0 0 12px 0;
+
+        .material-icons {
+          color: #3b82f6;
+          font-size: 1.25rem;
+        }
+      }
+
+      .help-list {
+        margin: 0;
+        padding-left: 20px;
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.6;
+
+        li {
+          margin-bottom: 6px;
+        }
+      }
+
+      .help-text {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        margin: 0;
+      }
+    }
+  }
+
+  // ===== SECCIÓN DE DOCUMENTACIÓN =====
+  .documentation-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+
+    .section-header {
+      margin-bottom: 1.5rem;
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 0.5rem 0;
+
+        .material-icons {
+          color: var(--primary-color);
+          font-size: 1.25rem;
+        }
+
+        .required-indicator {
+          color: var(--error-color);
+          margin-left: 0.25rem;
+        }
+      }
+
+      .section-subtitle {
+        color: var(--text-secondary);
+        margin: 0;
+        line-height: 1.5;
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+// ===== RESPONSIVE =====
+@media (max-width: 768px) {
+  .education-form {
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 12px;
+
+      .actions-left,
+      .actions-right {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .actions-right {
+        margin-left: 0;
+      }
+    }
+
+    .form-help {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+}

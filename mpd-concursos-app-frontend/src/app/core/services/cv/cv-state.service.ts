@@ -12,7 +12,7 @@ import { BehaviorSubject, Observable, combineLatest, EMPTY } from 'rxjs';
 import { map, catchError, finalize } from 'rxjs/operators';
 import { ExperienceCvService } from './experience-cv.service';
 import { EducationCvService } from './education-cv.service';
-import { WorkExperience, EducationEntry } from '@core/models/cv';
+import { WorkExperience, EducationEntry, CvExportConfig, CvExportResult } from '@core/models/cv';
 
 export interface CvState {
   experiences: WorkExperience[];
@@ -337,5 +337,24 @@ export class CvStateService {
         };
       })
     );
+  }
+
+  /**
+   * Exporta el CV completo
+   */
+  exportCv(userId: string, config: CvExportConfig): Observable<CvExportResult> {
+    console.log(`[CvStateService] Exporting CV for user: ${userId}`, config);
+
+    // Por ahora, simular la exportación hasta que se implemente el servicio real
+    return new Observable(observer => {
+      setTimeout(() => {
+        observer.next({
+          success: true,
+          downloadUrl: 'data:application/pdf;base64,JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVGl0bGUgKEN1cnJpY3VsdW0gVml0YWUpCi9Qcm9kdWNlciAoTVBEIENvbmN1cnNvcyBTeXN0ZW0pCi9DcmVhdGlvbkRhdGUgKEQ6MjAyNTA2MjIpCj4+CmVuZG9iagp4cmVmCjAgMQowMDAwMDAwMDAwIDY1NTM1IGYgCnRyYWlsZXIKPDwKL1NpemUgMQovUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKMTczCiUlRU9G',
+          fileName: `cv_${userId}_${new Date().toISOString().split('T')[0]}.pdf`
+        });
+        observer.complete();
+      }, 2000);
+    });
   }
 }

@@ -1,14 +1,14 @@
-<!-- Formulario Inteligente de Experiencia Laboral -->
-<div class="experience-form">
+<!-- Formulario Inteligente de Educación -->
+<div class="education-form">
 
   <!-- Header del formulario (solo si no está en modal) -->
   <div class="form-header" *ngIf="!isInModal">
     <h3 class="form-title">
-      <i class="material-icons">work</i>
-      {{ mode === 'create' ? 'Agregar Experiencia Laboral' : 'Editar Experiencia Laboral' }}
+      <i class="material-icons">school</i>
+      {{ mode === 'create' ? 'Agregar Educación' : 'Editar Educación' }}
     </h3>
     <p class="form-subtitle">
-      Completa la información sobre tu experiencia profesional
+      Completa la información sobre tu formación académica
     </p>
   </div>
 
@@ -37,7 +37,7 @@
 
   <!-- Formulario -->
   <form
-    id="experience-form"
+    id="education-form"
     [formGroup]="form()"
     (ngSubmit)="onSave()"
     class="dynamic-form"
@@ -45,7 +45,7 @@
     
     <!-- Campos dinámicos -->
     <div class="form-grid">
-      <ng-container *ngFor="let field of dynamicFields">
+      <ng-container *ngFor="let field of dynamicFields; trackBy: trackByFieldName">
         <div 
           class="form-field"
           [class.full-width]="field.type === 'textarea' || field.type === 'chips'"
@@ -105,13 +105,13 @@
             <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
           </div>
           
-          <!-- Campo de chips (tecnologías/logros) -->
+          <!-- Campo de chips (habilidades) -->
           <div class="chips-field" *ngIf="field.type === 'chips'">
             <label class="field-label">
               {{ field.label }}
               <span class="required-indicator" *ngIf="field.required">*</span>
             </label>
-
+            
             <!-- Input para agregar chips -->
             <div class="chips-input-container">
               <input
@@ -129,7 +129,7 @@
                 <i class="material-icons">add</i>
               </button>
             </div>
-
+            
             <!-- Lista de chips -->
             <div class="chips-list" *ngIf="form().get(field.name)?.value?.length > 0">
               <div
@@ -146,14 +146,14 @@
                 </button>
               </div>
             </div>
-
+            
             <!-- Contador de elementos -->
             <div class="chips-counter" *ngIf="form().get(field.name)?.value?.length > 0">
-              {{ form().get(field.name)?.value?.length }} / {{ field.name === 'technologies' ? 20 : 10 }}
+              {{ form().get(field.name)?.value?.length }} / 15
             </div>
-
+            
             <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
-
+            
             <!-- Errores del campo -->
             <div class="field-errors" *ngIf="getFieldErrors(field.name).length > 0">
               <p class="error-message" *ngFor="let error of getFieldErrors(field.name)">
@@ -170,18 +170,18 @@
     <div class="documentation-section">
       <div class="section-header">
         <h4 class="section-title">
-          <i class="material-icons">description</i>
-          Documentación de Experiencia Laboral
+          <i class="material-icons">school</i>
+          Documentación de Formación Académica
           <span class="required-indicator">*</span>
         </h4>
         <p class="section-subtitle">
-          Es obligatorio adjuntar documentos que acrediten tu experiencia laboral (certificados laborales, cartas de recomendación, contratos, etc.)
+          Es obligatorio adjuntar documentos que acrediten tu formación académica (títulos, certificados, diplomas, etc.)
         </p>
       </div>
 
       <app-cv-document-uploader
-        [documentType]="'work_experience'"
-        [entityId]="experience?.id || null"
+        [documentType]="'education'"
+        [entityId]="education?.id || null"
         [required]="true"
         [maxFiles]="3"
         [acceptedFormats]="['pdf', 'jpg', 'jpeg', 'png']"
@@ -189,17 +189,6 @@
         (documentsChange)="onDocumentsChange($event)"
         (validationChange)="onDocumentValidationChange($event)">
       </app-cv-document-uploader>
-    </div>
-    
-    <!-- Campo de comentarios adicionales -->
-    <div class="form-field full-width">
-      <app-custom-form-field
-        label="Comentarios Adicionales"
-        placeholder="Información adicional que consideres relevante..."
-        [required]="false"
-        formControlName="comments"
-        hint="Comentarios opcionales (máximo 500 caracteres)">
-      </app-custom-form-field>
     </div>
   </form>
 
@@ -232,7 +221,7 @@
       </app-custom-button>
 
       <app-custom-button
-        [label]="mode === 'create' ? 'Guardar Experiencia' : 'Actualizar Experiencia'"
+        [label]="mode === 'create' ? 'Guardar Educación' : 'Actualizar Educación'"
         [variant]="'primary'"
         [icon]="mode === 'create' ? 'save' : 'update'"
         [loading]="isLoading"
@@ -247,14 +236,14 @@
     <div class="help-section">
       <h4 class="help-title">
         <i class="material-icons">help</i>
-        Consejos para completar tu experiencia
+        Consejos para completar tu educación
       </h4>
       <ul class="help-list">
-        <li>Sé específico en la descripción de tus responsabilidades</li>
-        <li>Incluye logros cuantificables cuando sea posible</li>
-        <li>Menciona las tecnologías y herramientas que utilizaste</li>
-        <li>Usa verbos de acción para describir tus actividades</li>
-        <li>Mantén la información actualizada y relevante</li>
+        <li>Incluye toda tu formación académica relevante</li>
+        <li>Menciona certificaciones y cursos importantes</li>
+        <li>Agrega calificaciones destacadas si las tienes</li>
+        <li>Describe proyectos o materias relevantes para tu carrera</li>
+        <li>Mantén la información actualizada</li>
       </ul>
     </div>
 

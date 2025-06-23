@@ -1,10 +1,10 @@
 /**
- * Componente de Formulario Inteligente para Experiencias Laborales
+ * Componente de Formulario de Educación
  * 
- * @description Formulario adaptativo con validación en tiempo real y sanitización XSS
+ * @description Formulario inteligente y reactivo para gestionar información educativa
  * @author Augment Agent
- * @date 2025-06-20
- * @version 2.0.0
+ * @date 2025-06-22
+ * @version 1.0.0
  */
 
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
@@ -15,26 +15,14 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 // Modelos y servicios del CV
 import {
-  WorkExperience,
-  WorkExperienceDto,
-  ICvFormComponent,
+  EducationEntry,
+  EducationDto,
   FormMode,
-  FormValidationResult
+  ValidationResult,
+  CvValidationService,
+  CvTransformService,
+  CvNotificationService
 } from '@core/services/cv';
-
-// Servicios
-import { CvValidationService, ValidationResult } from '@core/services/cv/cv-validation.service';
-import { CvTransformService } from '@core/services/cv/cv-transform.service';
-import { CvNotificationService } from '@core/services/cv/cv-notification.service';
-
-// Componentes compartidos
-import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
-import { CustomSelectComponent } from '@shared/components/custom-form/custom-select/custom-select.component';
-import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
-import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
-
-// Componente uploader CV
-import { CvDocumentUploaderComponent, CvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
 
 /**
  * Configuración de campo dinámico
@@ -51,36 +39,43 @@ interface DynamicField {
   options?: { value: any; label: string }[];
 }
 
+// Componentes compartidos
+import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
+import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+
+// Componente uploader CV
+import { CvDocumentUploaderComponent, CvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
+
 @Component({
-  selector: 'app-experience-form',
+  selector: 'app-education-form',
   standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
     CustomFormFieldComponent,
-    CustomSelectComponent,
-    CustomButtonComponent,
     CustomDatepickerComponent,
+    CustomButtonComponent,
     CvDocumentUploaderComponent
   ],
-  templateUrl: './experience-form.component.html',
-  styleUrls: ['./experience-form.component.scss'],
+  templateUrl: './education-form.component.html',
+  styleUrls: ['./education-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormComponent<WorkExperienceDto> {
+export class EducationFormComponent implements OnInit, OnDestroy {
 
   // ===== INPUTS Y OUTPUTS =====
-  @Input() experience: WorkExperience | null = null;
+  @Input() education: EducationEntry | null = null;
   @Input() mode: FormMode = 'create';
   @Input() isLoading = false;
   @Input() isInModal = false;
 
-  @Output() save = new EventEmitter<WorkExperienceDto>();
+  @Output() save = new EventEmitter<EducationDto>();
   @Output() cancel = new EventEmitter<void>();
-  @Output() validationChange = new EventEmitter<FormValidationResult>();
+  @Output() validationChange = new EventEmitter<any>();
 
-  // ===== PROPIEDADES DE LA INTERFAZ =====
-  public formData: WorkExperienceDto = {} as WorkExperienceDto;
+  // ===== PROPIEDADES PÚBLICAS =====
+  public formData: EducationDto | null = null;
   public isEditing = false;
   public validationErrors: string[] = [];
 
@@ -119,68 +114,68 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   // ===== CONFIGURACIÓN DE CAMPOS DINÁMICOS =====
   public readonly dynamicFields: DynamicField[] = [
     {
-      name: 'position',
-      label: 'Puesto de Trabajo',
+      name: 'institution',
+      label: 'Institución Educativa',
       type: 'text',
       required: true,
-      helpText: 'Especifica tu rol o posición en la empresa'
+      helpText: 'Nombre completo de la institución educativa'
     },
     {
-      name: 'company',
-      label: 'Empresa',
+      name: 'degree',
+      label: 'Título/Grado',
       type: 'text',
       required: true,
-      helpText: 'Nombre completo de la empresa u organización'
+      helpText: 'Título, grado o certificación obtenida'
     },
     {
-      name: 'location',
-      label: 'Ubicación',
+      name: 'fieldOfStudy',
+      label: 'Campo de Estudio',
       type: 'text',
       required: false,
-      helpText: 'Ciudad y país donde trabajaste'
+      helpText: 'Área o especialización de estudio'
     },
     {
       name: 'startDate',
       label: 'Fecha de Inicio',
       type: 'date',
       required: true,
-      helpText: 'Fecha en que comenzaste en este puesto'
+      helpText: 'Fecha en que comenzaste los estudios'
     },
     {
-      name: 'isCurrentJob',
-      label: 'Trabajo Actual',
+      name: 'isCurrentStudy',
+      label: 'Estudio Actual',
       type: 'checkbox',
       required: false,
-      helpText: 'Marca si actualmente trabajas en esta empresa'
+      helpText: 'Marca si actualmente estás cursando'
     },
     {
       name: 'endDate',
-      label: 'Fecha de Fin',
+      label: 'Fecha de Finalización',
       type: 'date',
       required: false,
-      helpText: 'Fecha en que terminaste en este puesto',
-      showWhen: (formValue) => !formValue.isCurrentJob
+      helpText: 'Fecha en que completaste los estudios',
+      showWhen: (formValue: any) => !formValue.isCurrentStudy
+    },
+    {
+      name: 'grade',
+      label: 'Calificación/Promedio',
+      type: 'text',
+      required: false,
+      helpText: 'Calificación final o promedio obtenido'
     },
     {
       name: 'description',
-      label: 'Descripción del Puesto',
+      label: 'Descripción',
       type: 'textarea',
-      required: true,
-      helpText: 'Detalla qué hacías en este puesto (máximo 2000 caracteres)'
+      required: false,
+      helpText: 'Información adicional sobre tus estudios (máximo 1000 caracteres)'
     },
     {
-      name: 'technologies',
-      label: 'Tecnologías Utilizadas',
+      name: 'skills',
+      label: 'Habilidades Adquiridas',
       type: 'chips',
       required: false,
-      helpText: 'Tecnologías, herramientas o lenguajes que usaste (máximo 20)'
-    },
-    {
-      name: 'achievements',
-      label: 'Logros Destacados',
-      type: 'chips',
-      required: false,
-      helpText: 'Logros específicos y cuantificables (máximo 10)'
+      helpText: 'Habilidades y conocimientos adquiridos (máximo 15)'
     }
   ];
 
@@ -211,7 +206,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   // ===== MÉTODOS PÚBLICOS =====
 
   /**
-   * Guarda la experiencia
+   * Guarda la educación
    */
   onSave(): void {
     if (!this.validateForm()) {
@@ -220,7 +215,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     }
 
     const formValue = this.form().value;
-    const validationResult = this.validationService.validateWorkExperience(formValue);
+    const validationResult = this.validationService.validateEducation(formValue);
 
     if (!validationResult.isValid) {
       this.notificationService.showValidationErrors(validationResult.errors);
@@ -228,7 +223,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     }
 
     // Usar datos sanitizados
-    const sanitizedData = validationResult.sanitizedData as WorkExperienceDto;
+    const sanitizedData = validationResult.sanitizedData as EducationDto;
     this.formData = sanitizedData;
     this.save.emit(sanitizedData);
   }
@@ -259,7 +254,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    */
   validateForm(): boolean {
     const formValue = this.form().value;
-    const validationResult = this.validationService.validateWorkExperience(formValue);
+    const validationResult = this.validationService.validateEducation(formValue);
 
     this.validationState.set(validationResult);
     this.validationErrors = validationResult.errors;
@@ -301,9 +296,6 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     if (fieldErrors['maxlength']) {
       errors.push(`${this.getFieldLabel(fieldName)} no puede exceder ${fieldErrors['maxlength'].requiredLength} caracteres`);
     }
-    if (fieldErrors['pattern']) {
-      errors.push(`${this.getFieldLabel(fieldName)} tiene un formato inválido`);
-    }
 
     return errors;
   }
@@ -317,12 +309,12 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   }
 
   /**
-   * Maneja el cambio en el checkbox de trabajo actual
+   * Maneja el cambio en el checkbox de estudio actual
    */
-  onCurrentJobChange(isCurrentJob: boolean): void {
+  onCurrentStudyChange(isCurrentStudy: boolean): void {
     const endDateControl = this.form().get('endDate');
 
-    if (isCurrentJob) {
+    if (isCurrentStudy) {
       endDateControl?.setValue(null);
       endDateControl?.clearValidators();
     } else {
@@ -334,7 +326,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   }
 
   /**
-   * Maneja la adición de chips (tecnologías/logros)
+   * Maneja la adición de chips (habilidades)
    */
   onAddChip(fieldName: string, value: string): void {
     if (!value.trim()) return;
@@ -343,7 +335,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     const currentValues = control?.value || [];
 
     // Validar límites
-    const maxItems = fieldName === 'technologies' ? 20 : 10;
+    const maxItems = 15;
     if (currentValues.length >= maxItems) {
       this.notificationService.showWarning(`Máximo ${maxItems} elementos permitidos`);
       return;
@@ -392,8 +384,8 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   private initializeForm(): void {
     const formGroup = this.createForm();
 
-    if (this.experience && this.mode !== 'create') {
-      const dto = this.transformService.workExperienceEntityToDto(this.experience);
+    if (this.education && this.mode !== 'create') {
+      const dto = this.transformService.educationEntityToDto(this.education);
       formGroup.patchValue(dto);
       this.isEditing = true;
     }
@@ -407,16 +399,15 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    */
   private createForm(): FormGroup {
     return this.fb.group({
-      position: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
-      company: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      location: ['', [Validators.maxLength(100)]],
+      institution: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
+      degree: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
+      fieldOfStudy: ['', [Validators.maxLength(200)]],
       startDate: ['', [Validators.required]],
       endDate: [''],
-      isCurrentJob: [false],
-      description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
-      technologies: [[]],
-      achievements: [[]],
-      comments: ['', [Validators.maxLength(500)]]
+      isCurrentStudy: [false],
+      grade: ['', [Validators.maxLength(50)]],
+      description: ['', [Validators.maxLength(1000)]],
+      skills: [[]]
     });
   }
 
@@ -446,11 +437,11 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       this.validateForm();
     });
 
-    // Watcher específico para trabajo actual
-    this.form().get('isCurrentJob')?.valueChanges.pipe(
+    // Watcher específico para estudio actual
+    this.form().get('isCurrentStudy')?.valueChanges.pipe(
       takeUntil(this.destroy$)
-    ).subscribe(isCurrentJob => {
-      this.onCurrentJobChange(isCurrentJob);
+    ).subscribe(isCurrentStudy => {
+      this.onCurrentStudyChange(isCurrentStudy);
     });
   }
 
@@ -491,6 +482,4 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     this.documentValidation = validation;
     this.cdr.markForCheck();
   }
-
-
 }

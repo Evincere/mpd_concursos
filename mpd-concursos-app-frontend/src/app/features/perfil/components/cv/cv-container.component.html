@@ -2,7 +2,7 @@
 <div class="cv-container">
 
   <!-- Header del CV -->
-  <app-custom-card>
+  <div class="cv-header">
     <div class="cv-header-content">
       <div class="cv-title-section">
         <h2 class="cv-title">
@@ -26,16 +26,15 @@
         </button>
       </div>
     </div>
-  </app-custom-card>
+  </div>
 
   <!-- Contenido principal simplificado -->
   <div class="cv-content">
 
     <!-- Estado vacío -->
-    <div *ngIf="!hasData() && !isAnyLoading()">
-      <app-custom-card>
-        <div class="empty-state-content">
-          <i class="material-icons">description</i>
+    <div *ngIf="!hasData() && !isAnyLoading()" class="cv-empty-state">
+      <div class="empty-state-content">
+          <i class="material-icons empty-icon">description</i>
           <h3>Tu CV está vacío</h3>
           <p>Comienza agregando tu experiencia laboral y educación para crear un CV completo.</p>
 
@@ -51,37 +50,208 @@
             </button>
           </div>
         </div>
-      </app-custom-card>
-    </div>
+      </div>
 
     <!-- Tabs del CV -->
-    <div *ngIf="hasData() || isAnyLoading()">
-      <app-custom-tabs
-        [tabs]="getTabItems()"
-        [activeTabIndex]="getActiveTabIndex()"
-        (tabChange)="onTabIndexChange($event)">
-      </app-custom-tabs>
+    <div *ngIf="hasData() || isAnyLoading()" class="cv-tabs-container">
+      <div class="cv-tabs-header">
+        <button
+          *ngFor="let tab of tabs(); let i = index"
+          class="cv-tab-button"
+          [class.active]="tab.isActive"
+          (click)="onTabChange(tab.id)">
+          <i class="material-icons">{{ tab.icon }}</i>
+          <span>{{ tab.label }}</span>
+          <span class="tab-count" *ngIf="tab.count > 0">{{ tab.count }}</span>
+        </button>
+      </div>
 
-      <!-- Contenido básico -->
+      <!-- Contenido de las pestañas -->
       <div class="cv-tab-content">
-        <app-custom-card>
-          <div *ngIf="activeTab() === 'experience'">
-            <h3>Experiencia Laboral</h3>
-            <p>Total de experiencias: {{ cvState().experiences.data.length }}</p>
-            <button class="btn btn-primary" (click)="addExperience()">
-              Agregar Experiencia
-            </button>
+
+        <!-- Pestaña de Experiencia Laboral -->
+        <div *ngIf="activeTab() === 'experience'" class="tab-panel">
+          <div class="tab-panel-header">
+            <h3 class="panel-title">
+              <i class="material-icons">work</i>
+              Experiencia Laboral
+            </h3>
+            <app-custom-button
+              [label]="'Agregar Experiencia'"
+              [variant]="'primary'"
+              [icon]="'add'"
+              (buttonClick)="addExperience()">
+            </app-custom-button>
           </div>
 
-          <div *ngIf="activeTab() === 'education'">
-            <h3>Educación</h3>
-            <p>Total de educación: {{ cvState().education.data.length }}</p>
-            <button class="btn btn-primary" (click)="addEducation()">
-              Agregar Educación
-            </button>
+          <!-- Lista de experiencias -->
+          <div class="experience-cards" *ngIf="cvState().experiences.data.length > 0; else emptyExperiences">
+            <div class="section-header">
+              <h4>Experiencias cargadas: {{ cvState().experiences.data.length }}</h4>
+            </div>
+
+            <!-- Tarjetas de experiencia simplificadas -->
+            <div class="experience-card"
+                 *ngFor="let experience of cvState().experiences.data; trackBy: trackByExperienceId">
+
+              <div class="card-header">
+                <div class="card-title">
+                  <h5>{{ experience.position }}</h5>
+                  <span class="company-name">{{ experience.company }}</span>
+                </div>
+                <div class="card-actions">
+                  <button type="button"
+                          class="action-btn edit-btn"
+                          (click)="editExperience(experience)"
+                          title="Editar experiencia">
+                    <i class="material-icons">edit</i>
+                  </button>
+                  <button type="button"
+                          class="action-btn delete-btn"
+                          (click)="deleteExperience(experience)"
+                          title="Eliminar experiencia">
+                    <i class="material-icons">delete</i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-content">
+                <div class="experience-dates">
+                  <i class="material-icons">date_range</i>
+                  <span>{{ formatExperienceDates(experience) }}</span>
+                  <span class="current-job" *ngIf="experience.isCurrentJob">
+                    <i class="material-icons">work</i>
+                    Trabajo Actual
+                  </span>
+                </div>
+
+                <div class="experience-description" *ngIf="experience.description">
+                  <p>{{ experience.description }}</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </app-custom-card>
+
+          <!-- Estado vacío para experiencias -->
+          <ng-template #emptyExperiences>
+            <div class="empty-experiences">
+              <i class="material-icons">work_off</i>
+              <h4>No hay experiencias laborales</h4>
+              <p>Agrega tu primera experiencia laboral para comenzar a construir tu CV profesional.</p>
+              <app-custom-button
+                [label]="'Agregar Primera Experiencia'"
+                [variant]="'primary'"
+                [icon]="'add'"
+                (buttonClick)="addExperience()">
+              </app-custom-button>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Pestaña de Educación -->
+        <div *ngIf="activeTab() === 'education'" class="tab-panel">
+          <div class="tab-panel-header">
+            <h3 class="panel-title">
+              <i class="material-icons">school</i>
+              Formación Académica
+            </h3>
+            <app-custom-button
+              [label]="'Agregar Educación'"
+              [variant]="'primary'"
+              [icon]="'add'"
+              (buttonClick)="addEducation()">
+            </app-custom-button>
+          </div>
+
+          <!-- Lista de educación -->
+          <div class="education-cards" *ngIf="cvState().education.data.length > 0; else emptyEducation">
+            <div class="section-header">
+              <h4>Educación registrada: {{ cvState().education.data.length }}</h4>
+            </div>
+
+            <!-- Tarjetas de educación simplificadas -->
+            <div class="education-card"
+                 *ngFor="let education of cvState().education.data; trackBy: trackByEducationId">
+
+              <div class="card-header">
+                <div class="card-title">
+                  <h5>{{ education.title }}</h5>
+                  <span class="institution-name">{{ education.institution }}</span>
+                </div>
+                <div class="card-actions">
+                  <button type="button"
+                          class="action-btn edit-btn"
+                          (click)="editEducation(education)"
+                          title="Editar educación">
+                    <i class="material-icons">edit</i>
+                  </button>
+                  <button type="button"
+                          class="action-btn delete-btn"
+                          (click)="deleteEducation(education)"
+                          title="Eliminar educación">
+                    <i class="material-icons">delete</i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-content">
+                <div class="education-type-status">
+                  <span class="education-type">{{ getEducationTypeLabel(education.type) }}</span>
+                  <span class="education-status" [class]="'status-' + (education.status || 'unknown').toLowerCase()">
+                    {{ getEducationStatusLabel(education.status) }}
+                  </span>
+                </div>
+
+                <div class="education-dates">
+                  <i class="material-icons">date_range</i>
+                  <span>{{ formatEducationDates(education) }}</span>
+                  <span class="ongoing" *ngIf="education.isOngoing">
+                    <i class="material-icons">school</i>
+                    En Curso
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estado vacío para educación -->
+          <ng-template #emptyEducation>
+            <div class="empty-education">
+              <i class="material-icons">school</i>
+              <h4>No hay formación académica registrada</h4>
+              <p>Agrega tu formación académica para completar tu perfil profesional.</p>
+              <app-custom-button
+                [label]="'Agregar Primera Educación'"
+                [variant]="'primary'"
+                [icon]="'add'"
+                (buttonClick)="addEducation()">
+              </app-custom-button>
+            </div>
+          </ng-template>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Experience Modal -->
+  <app-experience-modal
+    [isOpen]="showExperienceModal()"
+    [experience]="selectedExperience()"
+    [mode]="experienceModalMode()"
+    [isLoading]="isExperienceLoading()"
+    (close)="onExperienceModalClose()"
+    (save)="onExperienceSave($event)"
+    (delete)="onExperienceDelete($event)">
+  </app-experience-modal>
+
+  <!-- Education Modal -->
+  <app-education-modal
+    [isOpen]="showEducationModal()"
+    [education]="selectedEducation()"
+    [mode]="educationModalMode()"
+    [isLoading]="isEducationLoading()"
+    (close)="onEducationModalClose()"
+    (save)="onEducationSave($event)"
+    (delete)="onEducationDelete($event)">
+  </app-education-modal>
 </div>

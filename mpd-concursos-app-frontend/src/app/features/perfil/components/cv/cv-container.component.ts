@@ -16,7 +16,10 @@ import { of } from 'rxjs';
 // Modelos y servicios del CV
 import {
   WorkExperience,
+  WorkExperienceDto,
   EducationEntry,
+  EducationDto,
+  EducationType,
   CurriculumVitae,
   CvSearchFilters,
   LoadingState,
@@ -42,6 +45,10 @@ import { CustomCardComponent } from '@shared/components/custom-form/custom-card/
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-spinner/custom-spinner.component';
 import { CustomTabsComponent, TabItem } from '@shared/components/custom-tabs/custom-tabs.component';
+
+// Componentes de modales
+import { ExperienceModalComponent } from './experience-modal/experience-modal.component';
+import { EducationModalComponent } from './education-modal/education-modal.component';
 
 /**
  * Estado del componente CV
@@ -72,7 +79,9 @@ interface CvTab {
     CustomCardComponent,
     CustomButtonComponent,
     CustomSpinnerComponent,
-    CustomTabsComponent
+    CustomTabsComponent,
+    ExperienceModalComponent,
+    EducationModalComponent
   ],
   templateUrl: './cv-container.component.html',
   styleUrls: ['./cv-container.component.scss'],
@@ -143,6 +152,17 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   public readonly activeTab = signal<string>('experience');
   public readonly searchTerm = signal<string>('');
   public readonly showFilters = signal<boolean>(false);
+
+  // ===== MODAL STATE =====
+  public readonly showExperienceModal = signal<boolean>(false);
+  public readonly selectedExperience = signal<WorkExperience | null>(null);
+  public readonly experienceModalMode = signal<'create' | 'edit' | 'view'>('create');
+  public readonly isExperienceLoading = signal<boolean>(false);
+
+  public readonly showEducationModal = signal<boolean>(false);
+  public readonly selectedEducation = signal<EducationEntry | null>(null);
+  public readonly educationModalMode = signal<'create' | 'edit' | 'view'>('create');
+  public readonly isEducationLoading = signal<boolean>(false);
 
   // ===== SUBJECTS =====
   private readonly destroy$ = new Subject<void>();
@@ -226,13 +246,44 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     }));
 
     try {
-      // TODO: Implementar exportación real
-      await this.delay(2000); // Simular tiempo de exportación
-      this.notificationService.showCvExported('PDF');
+      // Usar el servicio de estado para exportar
+      this.cvStateService.exportCv(this.userProfile.id, {
+        format: 'PDF',
+        template: 'modern',
+        includePhoto: true,
+        includePersonalInfo: true,
+        includeWorkExperience: true,
+        includeEducation: true
+      }).subscribe({
+        next: (result) => {
+          if (result.success && result.downloadUrl) {
+            // Descargar el archivo
+            const link = document.createElement('a');
+            link.href = result.downloadUrl;
+            link.download = result.fileName || 'cv.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            this.notificationService.showSuccess('CV exportado exitosamente');
+          } else {
+            throw new Error(result.error || 'Error desconocido en la exportación');
+          }
+        },
+        error: (error) => {
+          this.notificationService.showError('Error al exportar el CV');
+          console.error('[CvContainerComponent] Error exporting CV:', error);
+        },
+        complete: () => {
+          this.updateState(state => ({
+            ...state,
+            isExporting: false
+          }));
+        }
+      });
     } catch (error) {
       this.notificationService.showError('Error al exportar el CV');
-      console.error('Error exporting CV:', error);
-    } finally {
+      console.error('[CvContainerComponent] Error exporting CV:', error);
       this.updateState(state => ({
         ...state,
         isExporting: false
@@ -249,8 +300,9 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // TODO: Abrir modal de experiencia
-    this.notificationService.showInfo('Modal de experiencia en desarrollo');
+    this.selectedExperience.set(null);
+    this.experienceModalMode.set('create');
+    this.showExperienceModal.set(true);
   }
 
   /**
@@ -262,9 +314,14 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // TODO: Abrir modal de educación
-    this.notificationService.showInfo('Modal de educación en desarrollo');
+    this.selectedEducation.set(null);
+    this.educationModalMode.set('create');
+    this.showEducationModal.set(true);
   }
+
+
+
+
 
   /**
    * Edita una experiencia laboral
@@ -275,8 +332,45 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       selectedItem: experience
     }));
 
-    // TODO: Abrir modal de edición
-    this.notificationService.showInfo(`Editando experiencia en ${experience.company}`);
+    this.selectedExperience.set(experience);
+    this.experienceModalMode.set('edit');
+    this.showExperienceModal.set(true);
+  }
+
+  /**
+   * Elimina una experiencia laboral
+   */
+  async deleteExperience(experience: WorkExperience): Promise<void> {
+    if (!experience.id) {
+      this.notificationService.showError('No se puede eliminar una experiencia sin ID');
+      return;
+    }
+
+    if (!confirm(`¿Está seguro de eliminar la experiencia en ${experience.company}?`)) {
+      return;
+    }
+
+    this.updateExperienceState(state => ({
+      ...state,
+      isLoading: true
+    }));
+
+    this.experienceService.delete(experience.id).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Experiencia eliminada exitosamente');
+        this.refreshData(); // Recargar datos desde el servidor
+        this.updateLastModified();
+      },
+      error: (error) => {
+        this.updateExperienceState(state => ({
+          ...state,
+          isLoading: false,
+          error: 'Error al eliminar experiencia'
+        }));
+        this.notificationService.showError('Error al eliminar la experiencia');
+        console.error('[CvContainerComponent] Error deleting experience:', error);
+      }
+    });
   }
 
   /**
@@ -288,50 +382,22 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       selectedItem: education
     }));
 
-    // TODO: Abrir modal de edición
-    this.notificationService.showInfo(`Editando ${education.title}`);
+    this.selectedEducation.set(education);
+    this.educationModalMode.set('edit');
+    this.showEducationModal.set(true);
   }
 
-  /**
-   * Elimina una experiencia laboral
-   */
-  async deleteExperience(experience: WorkExperience): Promise<void> {
-    if (!confirm(`¿Está seguro de eliminar la experiencia en ${experience.company}?`)) {
-      return;
-    }
 
-    this.updateExperienceState(state => ({
-      ...state,
-      isLoading: true
-    }));
-
-    try {
-      // TODO: Implementar eliminación real
-      await this.delay(1000); // Simular tiempo de eliminación
-
-      // Remover de la lista local
-      this.updateExperienceState(state => ({
-        ...state,
-        data: state.data.filter(exp => exp.id !== experience.id),
-        isLoading: false
-      }));
-
-      this.notificationService.showExperienceDeleted(experience.company);
-      this.updateLastModified();
-    } catch (error) {
-      this.updateExperienceState(state => ({
-        ...state,
-        isLoading: false,
-        error: 'Error al eliminar experiencia'
-      }));
-      this.notificationService.showError('Error al eliminar la experiencia');
-    }
-  }
 
   /**
    * Elimina una educación
    */
   async deleteEducation(education: EducationEntry): Promise<void> {
+    if (!education.id) {
+      this.notificationService.showError('No se puede eliminar una educación sin ID');
+      return;
+    }
+
     if (!confirm(`¿Está seguro de eliminar ${education.title}?`)) {
       return;
     }
@@ -341,27 +407,170 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       isLoading: true
     }));
 
-    try {
-      // TODO: Implementar eliminación real
-      await this.delay(1000); // Simular tiempo de eliminación
+    this.educationService.delete(education.id).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Educación eliminada exitosamente');
+        this.refreshData(); // Recargar datos desde el servidor
+        this.updateLastModified();
+      },
+      error: (error) => {
+        this.updateEducationState(state => ({
+          ...state,
+          isLoading: false,
+          error: 'Error al eliminar educación'
+        }));
+        this.notificationService.showError('Error al eliminar la educación');
+        console.error('[CvContainerComponent] Error deleting education:', error);
+      }
+    });
+  }
 
-      // Remover de la lista local
-      this.updateEducationState(state => ({
-        ...state,
-        data: state.data.filter(edu => edu.id !== education.id),
-        isLoading: false
-      }));
+  // ===== MODAL EVENT HANDLERS =====
 
-      this.notificationService.showEducationDeleted(education.title);
-      this.updateLastModified();
-    } catch (error) {
-      this.updateEducationState(state => ({
-        ...state,
-        isLoading: false,
-        error: 'Error al eliminar educación'
-      }));
-      this.notificationService.showError('Error al eliminar la educación');
+  /**
+   * Maneja el cierre del modal de experiencia
+   */
+  onExperienceModalClose(): void {
+    this.showExperienceModal.set(false);
+    this.selectedExperience.set(null);
+    this.isExperienceLoading.set(false);
+  }
+
+  /**
+   * Maneja el guardado de experiencia desde el modal
+   */
+  onExperienceSave(experienceData: WorkExperienceDto): void {
+    if (!this.userProfile?.id) {
+      this.notificationService.showError('No se puede guardar la experiencia sin datos de usuario');
+      return;
     }
+
+    this.isExperienceLoading.set(true);
+
+    const isEditing = this.experienceModalMode() === 'edit';
+    const serviceCall = isEditing
+      ? this.experienceService.update(this.selectedExperience()!.id!, experienceData)
+      : this.experienceService.create(this.userProfile.id, experienceData);
+
+    serviceCall.subscribe({
+      next: (savedExperience) => {
+        const message = isEditing
+          ? 'Experiencia laboral actualizada exitosamente'
+          : 'Experiencia laboral agregada exitosamente';
+
+        this.notificationService.showSuccess(message);
+        this.onExperienceModalClose();
+        this.refreshData(); // Recargar datos
+      },
+      error: (error) => {
+        const message = isEditing
+          ? 'Error al actualizar la experiencia laboral'
+          : 'Error al agregar la experiencia laboral';
+
+        this.notificationService.showError(message);
+        console.error('[CvContainerComponent] Error saving experience:', error);
+        this.isExperienceLoading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Maneja la eliminación de experiencia desde el modal
+   */
+  onExperienceDelete(experience: WorkExperience): void {
+    if (!experience.id) {
+      this.notificationService.showError('No se puede eliminar una experiencia sin ID');
+      return;
+    }
+
+    this.isExperienceLoading.set(true);
+
+    this.experienceService.delete(experience.id).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Experiencia laboral eliminada exitosamente');
+        this.onExperienceModalClose();
+        this.refreshData(); // Recargar datos
+      },
+      error: (error) => {
+        this.notificationService.showError('Error al eliminar la experiencia laboral');
+        console.error('[CvContainerComponent] Error deleting experience:', error);
+        this.isExperienceLoading.set(false);
+      }
+    });
+  }
+
+  // ===== EDUCATION MODAL EVENT HANDLERS =====
+
+  /**
+   * Maneja el cierre del modal de educación
+   */
+  onEducationModalClose(): void {
+    this.showEducationModal.set(false);
+    this.selectedEducation.set(null);
+    this.isEducationLoading.set(false);
+  }
+
+  /**
+   * Maneja el guardado de educación desde el modal
+   */
+  onEducationSave(educationData: EducationDto): void {
+    if (!this.userProfile?.id) {
+      this.notificationService.showError('No se puede guardar la educación sin datos de usuario');
+      return;
+    }
+
+    this.isEducationLoading.set(true);
+
+    const isEditing = this.educationModalMode() === 'edit';
+    const serviceCall = isEditing
+      ? this.educationService.update(this.selectedEducation()!.id!, educationData)
+      : this.educationService.create(this.userProfile.id, educationData);
+
+    serviceCall.subscribe({
+      next: (savedEducation) => {
+        const message = isEditing
+          ? 'Educación actualizada exitosamente'
+          : 'Educación agregada exitosamente';
+
+        this.notificationService.showSuccess(message);
+        this.onEducationModalClose();
+        this.refreshData(); // Recargar datos
+      },
+      error: (error) => {
+        const message = isEditing
+          ? 'Error al actualizar la educación'
+          : 'Error al agregar la educación';
+
+        this.notificationService.showError(message);
+        console.error('[CvContainerComponent] Error saving education:', error);
+        this.isEducationLoading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Maneja la eliminación de educación desde el modal
+   */
+  onEducationDelete(education: EducationEntry): void {
+    if (!education.id) {
+      this.notificationService.showError('No se puede eliminar una educación sin ID');
+      return;
+    }
+
+    this.isEducationLoading.set(true);
+
+    this.educationService.delete(education.id).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('Educación eliminada exitosamente');
+        this.onEducationModalClose();
+        this.refreshData(); // Recargar datos
+      },
+      error: (error) => {
+        this.notificationService.showError('Error al eliminar la educación');
+        console.error('[CvContainerComponent] Error deleting education:', error);
+        this.isEducationLoading.set(false);
+      }
+    });
   }
 
   // ===== PRIVATE METHODS =====
@@ -581,6 +790,8 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     return labels[status] || status;
   }
 
+
+
   /**
    * Convierte las tabs a TabItems para el componente de tabs
    */
@@ -610,48 +821,24 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ===== MÉTODOS DE INTEGRACIÓN CON SERVICIOS REALES =====
+  // ===== MÉTODOS AUXILIARES =====
 
   /**
-   * Crea una nueva experiencia laboral
+   * Limpia los filtros de búsqueda
    */
-  createExperience(experienceData: any): void {
-    if (!this.userProfile?.id) return;
-
-    this.experienceService.create(this.userProfile.id, experienceData).subscribe({
-      next: (newExperience) => {
-        this.notificationService.showSuccess('Experiencia laboral agregada exitosamente');
-        console.log('[CvContainerComponent] Experience created:', newExperience);
-      },
-      error: (error) => {
-        this.notificationService.showError('Error al agregar experiencia laboral');
-        console.error('[CvContainerComponent] Error creating experience:', error);
-      }
-    });
+  clearFilters(): void {
+    this.searchTerm$.next('');
+    this.refreshData();
   }
 
   /**
-   * Crea un nuevo registro de educación
+   * Obtiene el total de elementos en el CV
    */
-  createEducation(educationData: any): void {
-    if (!this.userProfile?.id) return;
-
-    this.educationService.create(this.userProfile.id, educationData).subscribe({
-      next: (newEducation) => {
-        this.notificationService.showSuccess('Registro de educación agregado exitosamente');
-        console.log('[CvContainerComponent] Education created:', newEducation);
-      },
-      error: (error) => {
-        this.notificationService.showError('Error al agregar registro de educación');
-        console.error('[CvContainerComponent] Error creating education:', error);
-      }
-    });
+  getTotalItems(): number {
+    const state = this.cvState();
+    return state.experiences.data.length + state.education.data.length;
   }
 
-  /**
-   * Método de utilidad para simular delays
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+
+
 }
