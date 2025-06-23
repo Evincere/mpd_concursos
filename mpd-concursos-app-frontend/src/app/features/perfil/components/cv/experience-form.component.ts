@@ -232,10 +232,13 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       return;
     }
 
-    // VALIDACIÓN CRÍTICA: Verificar que el documento de respaldo esté presente
-    const supportDocument = form.get('supportDocument')?.value;
-    if (!supportDocument) {
-      this.notificationService.showError('Es obligatorio adjuntar un documento que respalde esta experiencia laboral');
+    // VALIDACIÓN CRÍTICA: Verificar que los documentos estén válidos usando el cv-document-uploader
+    if (!this.documentValidation.isValid) {
+      if (this.documentValidation.errors.length > 0) {
+        this.notificationService.showValidationErrors(this.documentValidation.errors);
+      } else {
+        this.notificationService.showError('Es obligatorio adjuntar un documento que respalde esta experiencia laboral');
+      }
       return;
     }
 
@@ -448,71 +451,8 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     }
   }
 
-  /**
-   * Maneja la selección de archivo de documento de respaldo
-   */
-  onDocumentFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!file) {
-      return;
-    }
-
-    // Validar tipo de archivo
-    if (!this.isValidFileType(file)) {
-      this.notificationService.showError('Solo se permiten archivos PDF, DOC, DOCX o imágenes (JPG, PNG)');
-      input.value = '';
-      return;
-    }
-
-    // Validar tamaño de archivo (máximo 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      this.notificationService.showError('El archivo no puede superar los 10MB');
-      input.value = '';
-      return;
-    }
-
-    // Actualizar el formulario y el signal
-    const form = this.form();
-    if (form) {
-      form.get('supportDocument')?.setValue(file);
-      this.uploadedDocument.set(file);
-      this.notificationService.showSuccess(`Documento "${file.name}" seleccionado correctamente`);
-    }
-  }
-
-  /**
-   * Elimina el documento seleccionado
-   */
-  onRemoveDocument(): void {
-    const form = this.form();
-    if (form) {
-      form.get('supportDocument')?.setValue(null);
-      this.uploadedDocument.set(null);
-
-      // Limpiar el input file
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-      if (fileInput) {
-        fileInput.value = '';
-      }
-    }
-  }
-
-  /**
-   * Valida el tipo de archivo
-   */
-  private isValidFileType(file: File): boolean {
-    const allowedTypes = [
-      'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'image/jpeg',
-      'image/jpg',
-      'image/png'
-    ];
-    return allowedTypes.includes(file.type);
-  }
+  // NOTA: Los métodos de manejo de archivos se removieron porque ahora
+  // se usa el cv-document-uploader component para manejar los documentos
   // ===== MÉTODOS PRIVADOS =====
 
   /**
@@ -545,9 +485,8 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
       technologies: [[]],
       achievements: [[]],
-      comments: ['', [Validators.maxLength(500)]],
-      // NUEVO: Campo obligatorio para documento de respaldo
-      supportDocument: [null, [Validators.required]]
+      comments: ['', [Validators.maxLength(500)]]
+      // NOTA: El documento de respaldo se maneja ahora a través del cv-document-uploader
     });
   }
 
