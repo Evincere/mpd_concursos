@@ -206,7 +206,7 @@ export class EducationCvService {
       title: response.title,
       institution: response.institution,
       startDate: new Date(), // Campo no disponible en API actual
-      endDate: response.issueDate ? new Date(response.issueDate) : undefined,
+      endDate: response.issueDate ? this.parseApiDate(response.issueDate) : undefined,
       isOngoing: response.status === 'En Curso',
       document: response.documentUrl ? {
         id: response.id + '_doc',
@@ -330,6 +330,15 @@ export class EducationCvService {
     };
 
     return statusMap[status] || EducationStatus.IN_PROGRESS;
+  }
+
+  /**
+   * Parsea una fecha que viene del backend (YYYY-MM-DD) evitando problemas de zona horaria
+   */
+  private parseApiDate(dateString: string): Date {
+    // Crear fecha usando los componentes individuales para evitar problemas de zona horaria
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day); // month - 1 porque Date usa índices 0-11 para meses
   }
 
   /**

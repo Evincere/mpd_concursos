@@ -124,141 +124,39 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
 
     // Convert UserFilter to Record<string, string | number | boolean> for API parameters
     const params: Record<string, string | number | boolean> = {};
-
-    // Add a timestamp parameter to prevent browser caching issues
     params['_t'] = new Date().getTime();
-
     if (filters) {
-      // Process search term
-      if (filters.search) {
-        params['query'] = filters.search.toString().trim();
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding search query param: ${params['query']}`, undefined, 'UserRepository');
-      }
-
-      // Process role filter
-      if (filters.role && filters.role !== '') {
-        params['role'] = filters.role;
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding role filter param: ${params['role']}`, undefined, 'UserRepository');
-      }
-
-      // Process status filter
-      if ('status' in filters && filters.status && filters.status !== '') {
-        params['status'] = filters.status;
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding status filter param: ${params['status']}`, undefined, 'UserRepository');
-      }
-
-      // Process date filters
-      if (filters.startDate) {
-        if (filters.startDate instanceof Date) {
-          params['startDate'] = filters.startDate.toISOString().split('T')[0];
-        } else if (typeof filters.startDate === 'string') {
-          params['startDate'] = filters.startDate;
-        } else {
-          this.loggingService.warn(`[OptimizedUserRepositoryAdapter] Unexpected type for startDate: ${typeof filters.startDate}`, undefined, 'UserRepository');
-        }
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding startDate param: ${params['startDate']}`, undefined, 'UserRepository');
-      }
-
-      if (filters.endDate) {
-        if (filters.endDate instanceof Date) {
-          params['endDate'] = filters.endDate.toISOString().split('T')[0];
-        } else if (typeof filters.endDate === 'string') {
-          params['endDate'] = filters.endDate;
-        } else {
-          this.loggingService.warn(`[OptimizedUserRepositoryAdapter] Unexpected type for endDate: ${typeof filters.endDate}`, undefined, 'UserRepository');
-        }
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding endDate param: ${params['endDate']}`, undefined, 'UserRepository');
-      }
-
-      // Process pagination
-      if (filters.page !== undefined) {
-        params['page'] = filters.page;
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding page param: ${params['page']}`, undefined, 'UserRepository');
-      }
-
-      if (filters.size !== undefined) {
-        params['size'] = filters.size;
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding size param: ${params['size']}`, undefined, 'UserRepository');
-      }
-
-      // Process sorting
-      if (filters.sort) {
-        params['sort'] = filters.sort;
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding sort param: ${params['sort']}`, undefined, 'UserRepository');
-      }
-
-      if (filters.direction) {
-        params['direction'] = filters.direction;
-        this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Adding direction param: ${params['direction']}`, undefined, 'UserRepository');
-      }
+      if (filters.search) params['query'] = filters.search.toString().trim();
+      if (filters.role && filters.role !== '') params['role'] = filters.role;
+      if ('status' in filters && filters.status && filters.status !== '') params['status'] = filters.status;
+      if (filters.startDate) params['startDate'] = filters.startDate instanceof Date ? filters.startDate.toISOString().split('T')[0] : filters.startDate;
+      if (filters.endDate) params['endDate'] = filters.endDate instanceof Date ? filters.endDate.toISOString().split('T')[0] : filters.endDate;
+      if (filters.page !== undefined) params['page'] = filters.page;
+      if (filters.size !== undefined) params['size'] = filters.size;
+      if (filters.sort) params['sort'] = filters.sort;
+      if (filters.direction) params['direction'] = filters.direction;
     }
-
     this.loggingService.debug('[OptimizedUserRepositoryAdapter] Sending GET request for users with params:', params, 'UserRepository');
     return this.apiService.get<SpringPageResponse<User>>(this.API_BASE_PATH, {
       params,
-      cache: {
-        ttl: 0, // No cache for this request
-        forceRefresh: true // Force reload from network
-      },
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      },
-      maxRetries: 2,
-      retryDelay: 1000
+      cache: { ttl: 0 },
     }).pipe(
-      // Map backend response to the expected frontend structure
-      map(response => {
-        this.loggingService.debug('[OptimizedUserRepositoryAdapter] Received response for getUsers:', response, 'UserRepository');
-        // If the response has the Spring Page structure
-        if (response && typeof response === 'object' && 'content' in response && 'totalElements' in response) {
-          const springPageResponse = response as {
-            content: User[];
-            totalElements: number;
-            number: number;
-            size: number;
-            last: boolean;
-            totalPages: number;
-          };
-          const paginatedResponse = {
-            users: springPageResponse.content,
-            total: springPageResponse.totalElements,
-            page: springPageResponse.number,
-            size: springPageResponse.size,
-            last: springPageResponse.last,
-            totalPages: springPageResponse.totalPages
-          } as PaginatedUsersResponse;
-
-          // Save to cache
-          this.usersCache = paginatedResponse;
-          this.loggingService.debug('[OptimizedUserRepositoryAdapter] Users data cached:', this.usersCache, 'UserRepository');
-          return paginatedResponse;
-        }
-
-        // If the response is an array (less common but possible for unfiltered lists)
-        if (Array.isArray(response)) {
-          const responseArray = response as User[]; // Cast directly to User[]
-          const paginatedResponse = {
-            users: responseArray,
-            total: responseArray.length,
-            page: 0, // Default to first page
-            size: responseArray.length, // Default size to array length
-            last: true, // If it's a simple array, assume it's the last page
-            totalPages: 1 // Assume one page
-          } as PaginatedUsersResponse;
-          this.usersCache = paginatedResponse;
-          this.loggingService.debug('[OptimizedUserRepositoryAdapter] Users data (array response) cached:', this.usersCache, 'UserRepository');
-          return paginatedResponse;
-        }
-
-        // If we cannot determine the structure, return an empty object and log an error
-        this.loggingService.error('[OptimizedUserRepositoryAdapter] Unrecognized response structure for getUsers:', response, 'UserRepository');
-        return { users: [], total: 0, page: 0, size: 0, last: true, totalPages: 0 };
+      map((springPage: SpringPageResponse<User>) => ({
+        users: springPage.content,
+        total: springPage.totalElements,
+        page: springPage.number,
+        size: springPage.size,
+        last: springPage.last,
+        totalPages: springPage.totalPages
+      })),
+      tap(response => {
+        this.usersCache = response;
+        this.loadingSubject.next(false);
       }),
       catchError(error => {
         this.loggingService.error('[OptimizedUserRepositoryAdapter] Error fetching users:', error, 'UserRepository');
-        return of({ users: [], total: 0, page: 0, size: 0, last: true, totalPages: 0 }); // Return empty data on error
+        this.loadingSubject.next(false);
+        return of({ users: [], total: 0 });
       }),
       finalize(() => this.loadingSubject.next(false))
     );

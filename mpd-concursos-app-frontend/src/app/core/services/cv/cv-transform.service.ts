@@ -305,10 +305,11 @@ export class CvTransformService implements ICvTransformService {
    * Formatea una fecha para mostrar en la UI
    */
   formatDateForDisplay(date: Date, format: 'short' | 'long' = 'short'): string {
-    const options: Intl.DateTimeFormatOptions = format === 'short' 
-      ? { year: 'numeric', month: 'short' }
-      : { year: 'numeric', month: 'long', day: 'numeric' };
-    
+    // Usar UTC para evitar problemas de zona horaria
+    const options: Intl.DateTimeFormatOptions = format === 'short'
+      ? { year: 'numeric', month: 'short', timeZone: 'UTC' }
+      : { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
+
     return date.toLocaleDateString('es-ES', options);
   }
 
@@ -601,7 +602,8 @@ export class CvTransformService implements ICvTransformService {
     return dateObj.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'UTC'
     });
   }
 }
