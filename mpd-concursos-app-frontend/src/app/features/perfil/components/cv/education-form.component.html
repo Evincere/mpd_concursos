@@ -552,7 +552,8 @@
   <!-- Formulario -->
   <form
     id="education-form"
-    [formGroup]="form()"
+    [formGroup]="form()!"
+    *ngIf="form()"
     (ngSubmit)="onSave()"
     class="dynamic-form"
     novalidate>
@@ -645,10 +646,10 @@
             </div>
             
             <!-- Lista de chips -->
-            <div class="chips-list" *ngIf="form().get(field.name)?.value?.length > 0">
+            <div class="chips-list" *ngIf="form() && form()!.get(field.name)?.value?.length > 0">
               <div
                 class="chip"
-                *ngFor="let item of form().get(field.name)?.value; let i = index">
+                *ngFor="let item of form()!.get(field.name)?.value; let i = index">
                 <span class="chip-text">{{ item }}</span>
                 <button
                   type="button"
@@ -662,8 +663,8 @@
             </div>
             
             <!-- Contador de elementos -->
-            <div class="chips-counter" *ngIf="form().get(field.name)?.value?.length > 0">
-              {{ form().get(field.name)?.value?.length }} / 15
+            <div class="chips-counter" *ngIf="form() && form()!.get(field.name)?.value?.length > 0">
+              {{ form()!.get(field.name)?.value?.length }} / 15
             </div>
             
             <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>

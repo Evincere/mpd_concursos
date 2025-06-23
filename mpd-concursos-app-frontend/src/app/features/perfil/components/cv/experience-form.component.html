@@ -47,16 +47,13 @@
   </div>
 
   <!-- Formulario -->
-<<<<<<< HEAD
-  <form *ngIf="form()" [formGroup]="form()!" (ngSubmit)="onSave()" class="dynamic-form">
-=======
   <form
+    *ngIf="form()"
     id="experience-form"
-    [formGroup]="form()"
+    [formGroup]="form()!"
     (ngSubmit)="onSave()"
     class="dynamic-form"
     novalidate>
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
     
     <!-- Campos dinámicos -->
     <div class="form-grid">
@@ -72,24 +69,10 @@
             [label]="field.label"
             [placeholder]="field.placeholder || ''"
             [required]="field.required"
-<<<<<<< HEAD
-            [formControlName]="field.name">
-          </app-custom-form-field>
-          
-          <!-- Campo de área de texto -->
-          <app-custom-form-field
-            *ngIf="field.type === 'textarea'"
-            [label]="field.label"
-            [placeholder]="field.placeholder || ''"
-            [required]="field.required"
-            [formControlName]="field.name"
-            [type]="'textarea'">
-          </app-custom-form-field>
-=======
             [formControlName]="field.name"
             [hint]="field.helpText || ''">
           </app-custom-form-field>
-          
+
           <!-- Campo de área de texto -->
           <div *ngIf="field.type === 'textarea'" class="form-field">
             <label class="field-label" [class.required]="field.required">
@@ -109,20 +92,15 @@
               </p>
             </div>
           </div>
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
           
           <!-- Campo de fecha -->
           <app-custom-datepicker
             *ngIf="field.type === 'date'"
             [label]="field.label"
             [required]="field.required"
-<<<<<<< HEAD
-            [formControlName]="field.name">
-=======
             [formControlName]="field.name"
             [hint]="field.helpText || ''"
             [disabled]="isLoading">
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
           </app-custom-datepicker>
           
           <!-- Campo de checkbox -->
@@ -151,13 +129,8 @@
                 type="text"
                 class="chips-input"
                 [placeholder]="field.placeholder || 'Escribe y presiona Enter'"
-<<<<<<< HEAD
-                [attr.disabled]="isLoading ? '' : null"
-                (keydown.enter)="handleChipInput($event, field.name)"
-=======
                 [disabled]="isLoading"
                 (keydown.enter)="onChipInputEnter($any($event), field.name, chipInput)"
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
                 #chipInput>
               <button
                 type="button"
@@ -236,11 +209,8 @@
         placeholder="Información adicional que consideres relevante..."
         [required]="false"
         formControlName="comments"
-<<<<<<< HEAD
-        type="textarea">
-=======
+        type="textarea"
         hint="Comentarios opcionales (máximo 500 caracteres)">
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
       </app-custom-form-field>
     </div>
   </form>
@@ -253,70 +223,6 @@
     </div>
   </div>
 
-<<<<<<< HEAD
-  <!-- SECCIÓN CRÍTICA: Documentación de Respaldo Obligatoria -->
-  <div class="form-section document-section">
-    <h4 class="section-title required">
-      <i class="material-icons">attach_file</i>
-      Documento de Respaldo
-      <span class="required-indicator">*</span>
-    </h4>
-    <p class="section-description">
-      Adjunta un documento que respalde esta experiencia laboral (certificado de trabajo, carta de recomendación, contrato, etc.)
-    </p>
-
-    <div class="document-upload-area">
-      <!-- Input de archivo -->
-      <div class="file-input-container" *ngIf="!uploadedDocument()">
-        <input
-          type="file"
-          id="supportDocument"
-          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-          (change)="onDocumentFileSelected($event)"
-          class="file-input">
-        <label for="supportDocument" class="file-input-label">
-          <i class="material-icons">cloud_upload</i>
-          <span class="upload-text">
-            <strong>Seleccionar archivo</strong>
-            <small>PDF, DOC, DOCX, JPG, PNG (máx. 10MB)</small>
-          </span>
-        </label>
-      </div>
-
-      <!-- Archivo seleccionado -->
-      <div class="selected-file" *ngIf="uploadedDocument()">
-        <div class="file-info">
-          <i class="material-icons file-icon">description</i>
-          <div class="file-details">
-            <span class="file-name">{{ uploadedDocument()?.name }}</span>
-            <span class="file-size">{{ (uploadedDocument()?.size! / 1024 / 1024).toFixed(2) }} MB</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          class="btn btn-icon btn-error"
-          (click)="onRemoveDocument()"
-          title="Eliminar archivo">
-          <i class="material-icons">delete</i>
-        </button>
-      </div>
-
-      <!-- Error de validación -->
-      <div class="validation-error" *ngIf="form()?.get('supportDocument')?.invalid && form()?.get('supportDocument')?.touched">
-        <i class="material-icons">error</i>
-        <span>Es obligatorio adjuntar un documento de respaldo</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Acciones del formulario -->
-  <div class="form-actions">
-    <div class="actions-left">
-      <app-custom-button
-        label="Resetear"
-        variant="text"
-        icon="refresh"
-=======
   <!-- Acciones del formulario (solo si no está en modal) -->
   <div class="form-actions" *ngIf="!isInModal">
     <div class="actions-left">
@@ -324,7 +230,6 @@
         [label]="'Resetear'"
         [variant]="'stroked'"
         [icon]="'refresh'"
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
         [disabled]="isLoading || !isDirty()"
         (buttonClick)="onReset()">
       </app-custom-button>
@@ -332,24 +237,15 @@
 
     <div class="actions-right">
       <app-custom-button
-<<<<<<< HEAD
-        label="Cancelar"
-        variant="stroked"
-=======
         [label]="'Cancelar'"
         [variant]="'stroked'"
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
         [disabled]="isLoading"
         (buttonClick)="onCancel()">
       </app-custom-button>
 
       <app-custom-button
         [label]="mode === 'create' ? 'Guardar Experiencia' : 'Actualizar Experiencia'"
-<<<<<<< HEAD
-        variant="primary"
-=======
         [variant]="'primary'"
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
         [icon]="mode === 'create' ? 'save' : 'update'"
         [loading]="isLoading"
         [disabled]="!canSave()"

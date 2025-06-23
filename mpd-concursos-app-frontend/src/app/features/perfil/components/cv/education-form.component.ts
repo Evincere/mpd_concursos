@@ -718,7 +718,9 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   onAddChip(fieldName: string, value: string): void {
     if (!value.trim()) return;
 
-    const control = this.form().get(fieldName);
+    const form = this.form();
+    if (!form) return;
+    const control = form.get(fieldName);
     const currentValues = control?.value || [];
 
     // Validar límites
@@ -739,7 +741,9 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
    * Maneja la eliminación de chips
    */
   onRemoveChip(fieldName: string, index: number): void {
-    const control = this.form().get(fieldName);
+    const form = this.form();
+    if (!form) return;
+    const control = form.get(fieldName);
     const currentValues = control?.value || [];
     currentValues.splice(index, 1);
     control?.setValue([...currentValues]);

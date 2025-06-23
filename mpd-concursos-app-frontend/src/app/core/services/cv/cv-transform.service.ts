@@ -453,7 +453,7 @@ export class CvTransformService implements ICvTransformService {
   /**
    * Obtiene la etiqueta de tipo de educación
    */
-  private getEducationTypeLabel(type: EducationType): string {
+  public getEducationTypeLabel(type: EducationType): string {
     const labels = {
       [EducationType.SECONDARY]: 'Educación Secundaria',
       [EducationType.TECHNICAL]: 'Educación Técnica',
@@ -471,7 +471,7 @@ export class CvTransformService implements ICvTransformService {
   /**
    * Obtiene la etiqueta de estado de educación
    */
-  private getEducationStatusLabel(status: EducationStatus): string {
+  public getEducationStatusLabel(status: EducationStatus): string {
     const labels = {
       [EducationStatus.IN_PROGRESS]: 'En Curso',
       [EducationStatus.COMPLETED]: 'Completado',
@@ -511,5 +511,55 @@ export class CvTransformService implements ICvTransformService {
     }
 
     return info.join(' | ');
+  }
+
+  /**
+   * Calcula la duración entre dos fechas
+   */
+  public calculateDuration(startDate: string | Date, endDate?: string | Date | null): string {
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffMonths = Math.floor(diffDays / 30);
+    const diffYears = Math.floor(diffMonths / 12);
+
+    if (diffYears > 0) {
+      const remainingMonths = diffMonths % 12;
+      return remainingMonths > 0
+        ? `${diffYears} año${diffYears > 1 ? 's' : ''} y ${remainingMonths} mes${remainingMonths > 1 ? 'es' : ''}`
+        : `${diffYears} año${diffYears > 1 ? 's' : ''}`;
+    } else if (diffMonths > 0) {
+      return `${diffMonths} mes${diffMonths > 1 ? 'es' : ''}`;
+    } else {
+      return `${diffDays} día${diffDays > 1 ? 's' : ''}`;
+    }
+  }
+
+  /**
+   * Obtiene información específica de educación
+   */
+  public getEducationSpecificInfo(education: EducationEntry): any {
+    return {
+      type: this.getEducationTypeLabel(education.type),
+      status: this.getEducationStatusLabel(education.status),
+      duration: this.calculateDuration(education.startDate, education.endDate),
+      isOngoing: education.isOngoing || false
+    };
+  }
+
+  /**
+   * Formatea una fecha individual
+   */
+  public formatSingleDate(date: string | Date): string {
+    if (!date) return '';
+
+    const dateObj = new Date(date);
+    return dateObj.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   }
 }

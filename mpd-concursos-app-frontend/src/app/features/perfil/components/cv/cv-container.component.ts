@@ -181,13 +181,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   public readonly expandedEducation = signal<Set<string>>(new Set());
 
   // ===== MODAL STATES =====
-  public readonly educationModalOpen = signal<boolean>(false);
-  public readonly experienceModalOpen = signal<boolean>(false);
-  public readonly modalMode = signal<FormMode>('create');
-  public readonly selectedEducation = signal<EducationEntry | null>(null);
-  public readonly selectedExperience = signal<WorkExperience | null>(null);
-
-  // ===== MODAL STATE =====
   public readonly showExperienceModal = signal<boolean>(false);
   public readonly selectedExperience = signal<WorkExperience | null>(null);
   public readonly experienceModalMode = signal<'create' | 'edit' | 'view'>('create');
@@ -262,6 +255,15 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Maneja el cambio de filtros
+   */
+  onFiltersChange(filters: any): void {
+    // Implementar lógica de filtros según sea necesario
+    console.log('[CvContainerComponent] Filters changed:', filters);
+    this.cdr.markForCheck();
+  }
+
+  /**
    * Refresca los datos del CV
    */
   refreshData(): void {
@@ -315,7 +317,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
           // Fallback al servicio local de PDF
           try {
             const result = await this.pdfExportService.exportToPdf(
-              this.userProfile,
+              this.userProfile!,
               this.cvState().experiences.data,
               this.cvState().education.data
             );
@@ -994,7 +996,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   /**
    * Obtiene la etiqueta del estado de educación
    */
-  getEducationStatusLabel(status: string): string {
+  getEducationStatusLabel(status: EducationStatus): string {
     return this.transformService.getEducationStatusLabel(status);
   }
 
