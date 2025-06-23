@@ -231,13 +231,23 @@ export class EducationCvService {
    * Mapea EducationDto a formato de API request
    */
   private mapEducationDtoToApiRequest(dto: EducationDto): any {
-    return {
-      type: dto.type,
-      status: dto.status,
+    console.log('[EducationCvService] Mapping DTO to API request:', dto);
+
+    // Convertir enums a strings que el backend entiende
+    const typeString = this.mapEducationTypeToString(dto.type);
+    const statusString = this.mapEducationStatusToString(dto.status);
+
+    // Convertir fechas de string ISO a LocalDate format (YYYY-MM-DD)
+    const startDate = dto.startDate ? this.formatDateForBackend(dto.startDate) : null;
+    const endDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
+
+    const payload = {
+      type: typeString,
+      status: statusString,
       title: dto.title,
       institution: dto.institution,
-      startDate: dto.startDate,
-      endDate: dto.endDate,
+      startDate: startDate,
+      endDate: endDate,
       isOngoing: dto.isOngoing,
       durationYears: dto.durationYears,
       average: dto.average,
@@ -251,6 +261,42 @@ export class EducationCvService {
       presentationDate: dto.presentationDate,
       comments: dto.comments
     };
+
+    console.log('[EducationCvService] API payload:', payload);
+    return payload;
+  }
+
+  /**
+   * Mapea EducationType enum a string para la API
+   */
+  private mapEducationTypeToString(type: EducationType): string {
+    const typeMap: { [key in EducationType]: string } = {
+      [EducationType.SECONDARY]: 'Educación Secundaria',
+      [EducationType.TECHNICAL]: 'Título Terciario',
+      [EducationType.UNIVERSITY_DEGREE]: 'Título Universitario',
+      [EducationType.POSTGRADUATE_SPECIALIZATION]: 'Especialización',
+      [EducationType.MASTER_DEGREE]: 'Maestría',
+      [EducationType.DOCTORATE]: 'Doctorado',
+      [EducationType.DIPLOMA]: 'Diplomatura',
+      [EducationType.CERTIFICATION]: 'Curso de Capacitación',
+      [EducationType.SCIENTIFIC_ACTIVITY]: 'Actividad Científica'
+    };
+
+    return typeMap[type] || 'Curso de Capacitación';
+  }
+
+  /**
+   * Mapea EducationStatus enum a string para la API
+   */
+  private mapEducationStatusToString(status: EducationStatus): string {
+    const statusMap: { [key in EducationStatus]: string } = {
+      [EducationStatus.IN_PROGRESS]: 'En Curso',
+      [EducationStatus.COMPLETED]: 'Completado',
+      [EducationStatus.SUSPENDED]: 'Suspendido',
+      [EducationStatus.ABANDONED]: 'Abandonado'
+    };
+
+    return statusMap[status] || 'En Curso';
   }
 
   /**
@@ -258,6 +304,7 @@ export class EducationCvService {
    */
   private mapStringToEducationType(type: string): EducationType {
     const typeMap: { [key: string]: EducationType } = {
+      'Educación Secundaria': EducationType.SECONDARY,
       'Título Terciario': EducationType.TECHNICAL,
       'Título Universitario': EducationType.UNIVERSITY_DEGREE,
       'Especialización': EducationType.POSTGRADUATE_SPECIALIZATION,
@@ -278,10 +325,33 @@ export class EducationCvService {
     const statusMap: { [key: string]: EducationStatus } = {
       'En Curso': EducationStatus.IN_PROGRESS,
       'Completado': EducationStatus.COMPLETED,
+      'Suspendido': EducationStatus.SUSPENDED,
       'Abandonado': EducationStatus.ABANDONED
     };
 
     return statusMap[status] || EducationStatus.IN_PROGRESS;
+  }
+
+  /**
+   * Formatea fecha para el backend (YYYY-MM-DD)
+   */
+  private formatDateForBackend(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        console.warn('[EducationCvService] Invalid date string:', dateString);
+        return dateString;
+      }
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('[EducationCvService] Error formatting date:', error);
+      return dateString;
+    }
   }
 
   /**
