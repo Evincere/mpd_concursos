@@ -1,19 +1,10 @@
 /**
-<<<<<<< HEAD
- * Componente de Formulario Inteligente para Educación
- * 
- * @description Formulario adaptativo para diferentes tipos de educación con validación en tiempo real
- * @author Augment Agent
- * @date 2025-06-20
- * @version 2.0.0
-=======
  * Componente de Formulario de Educación
- * 
+ *
  * @description Formulario inteligente y reactivo para gestionar información educativa
  * @author Augment Agent
  * @date 2025-06-22
  * @version 1.0.0
->>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
  */
 
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
@@ -554,6 +545,82 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   }
 
   /**
+   * Obtiene las opciones para un campo select
+   */
+  getSelectOptions(fieldName: string): { value: any; label: string }[] {
+    switch (fieldName) {
+      case 'type':
+        return this.educationTypeOptions;
+      case 'status':
+        return this.educationStatusOptions;
+      case 'activityType':
+        return this.scientificActivityTypeOptions;
+      case 'role':
+        return this.scientificActivityRoleOptions;
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * TrackBy function para campos dinámicos
+   */
+  trackByFieldName(index: number, field: EducationDynamicField): string {
+    return field.name;
+  }
+
+  /**
+   * Maneja el evento Enter en el input de chips
+   */
+  onChipInputEnter(event: KeyboardEvent, fieldName: string, input: HTMLInputElement): void {
+    event.preventDefault();
+    const value = input.value.trim();
+    if (value) {
+      this.onAddChip(fieldName, value);
+      input.value = '';
+    }
+  }
+
+  /**
+   * Agrega un chip al campo especificado
+   */
+  onAddChip(fieldName: string, value: string): void {
+    const form = this.form();
+    if (!form || !value.trim()) return;
+
+    const control = form.get(fieldName);
+    if (!control) return;
+
+    const currentValues = control.value || [];
+    const trimmedValue = value.trim();
+
+    // Evitar duplicados
+    if (!currentValues.includes(trimmedValue) && currentValues.length < 15) {
+      const newValues = [...currentValues, trimmedValue];
+      control.setValue(newValues);
+      control.markAsTouched();
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Remueve un chip del campo especificado
+   */
+  onRemoveChip(fieldName: string, index: number): void {
+    const form = this.form();
+    if (!form) return;
+
+    const control = form.get(fieldName);
+    if (!control) return;
+
+    const currentValues = control.value || [];
+    const newValues = currentValues.filter((_: any, i: number) => i !== index);
+    control.setValue(newValues);
+    control.markAsTouched();
+    this.cdr.markForCheck();
+  }
+
+  /**
    * Maneja el cambio de tipo de educación
    */
   onEducationTypeChange(type: EducationType): void {
@@ -712,60 +779,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
     endDateControl?.updateValueAndValidity();
   }
 
-  /**
-   * Maneja la adición de chips (habilidades)
-   */
-  onAddChip(fieldName: string, value: string): void {
-    if (!value.trim()) return;
 
-    const form = this.form();
-    if (!form) return;
-    const control = form.get(fieldName);
-    const currentValues = control?.value || [];
-
-    // Validar límites
-    const maxItems = 15;
-    if (currentValues.length >= maxItems) {
-      this.notificationService.showWarning(`Máximo ${maxItems} elementos permitidos`);
-      return;
-    }
-
-    // Sanitizar y agregar
-    const sanitizedValue = this.validationService.sanitizeInput(value.trim());
-    if (sanitizedValue && !currentValues.includes(sanitizedValue)) {
-      control?.setValue([...currentValues, sanitizedValue]);
-    }
-  }
-
-  /**
-   * Maneja la eliminación de chips
-   */
-  onRemoveChip(fieldName: string, index: number): void {
-    const form = this.form();
-    if (!form) return;
-    const control = form.get(fieldName);
-    const currentValues = control?.value || [];
-    currentValues.splice(index, 1);
-    control?.setValue([...currentValues]);
-  }
-
-  /**
-   * TrackBy function para campos dinámicos
-   */
-  trackByFieldName(_index: number, field: EducationDynamicField): string {
-    return field.name;
-  }
-
-  /**
-   * Maneja el evento Enter en el input de chips
-   */
-  onChipInputEnter(event: KeyboardEvent, fieldName: string, inputElement: HTMLInputElement): void {
-    event.preventDefault();
-    if (inputElement && inputElement.value.trim()) {
-      this.onAddChip(fieldName, inputElement.value.trim());
-      inputElement.value = '';
-    }
-  }
 
   // ===== MÉTODOS PRIVADOS =====
 
