@@ -370,12 +370,26 @@ export class CvDocumentUploaderComponent implements OnInit, OnDestroy {
     }
 
     const pendingDocs = docs.filter(doc => doc.status === 'pending');
+    const validatedDocs = docs.filter(doc => doc.status === 'validated');
+
+    // REGLA DE NEGOCIO: Los documentos pendientes son válidos para permitir guardar la experiencia
+    // Solo se muestran como warnings informativos para el usuario
     if (pendingDocs.length > 0) {
-      warnings.push(`${pendingDocs.length} documento(s) están pendientes de validación`);
+      warnings.push(`${pendingDocs.length} documento(s) están pendientes de validación administrativa`);
     }
 
+    if (validatedDocs.length > 0) {
+      warnings.push(`${validatedDocs.length} documento(s) validados correctamente`);
+    }
+
+    // Los documentos son válidos si:
+    // 1. Hay al menos un documento cargado (cuando es requerido)
+    // 2. No hay documentos rechazados
+    // 3. Los documentos pueden estar pendientes o validados
+    const hasValidDocuments = this.required ? docs.length > 0 && rejectedDocs.length === 0 : true;
+
     const validationState: DocumentValidationState = {
-      isValid: errors.length === 0,
+      isValid: errors.length === 0 && hasValidDocuments,
       hasRequiredDocuments,
       errors,
       warnings

@@ -114,7 +114,17 @@
                 <!-- Contenido de la experiencia -->
                 <div class="item-content">
                   <div class="item-header">
-                    <h4>{{ experience.position || 'Sin título' }}</h4>
+                    <div class="title-section">
+                      <h4>{{ experience.position || 'Sin título' }}</h4>
+                      <!-- Indicador de estado de validación de documentos -->
+                      <div class="validation-status">
+                        <span class="status-badge status-pending"
+                              title="Documentación pendiente de validación administrativa">
+                          <i class="material-icons">schedule</i>
+                          Pendiente de validación
+                        </span>
+                      </div>
+                    </div>
                     <div class="item-actions">
                       <button class="btn btn-icon btn-secondary" (click)="editExperience(experience)">
                         <i class="material-icons">edit</i>
@@ -247,7 +257,17 @@
                 <!-- Contenido de la educación -->
                 <div class="item-content">
                   <div class="item-header">
-                    <h4>{{ education.title || 'Sin título' }}</h4>
+                    <div class="title-section">
+                      <h4>{{ education.title || 'Sin título' }}</h4>
+                      <!-- Indicador de estado de validación de documentos -->
+                      <div class="validation-status">
+                        <span class="status-badge status-pending"
+                              title="Documentación pendiente de validación administrativa">
+                          <i class="material-icons">schedule</i>
+                          Pendiente de validación
+                        </span>
+                      </div>
+                    </div>
                     <div class="item-actions">
                       <button class="btn btn-icon btn-secondary" (click)="editEducation(education)">
                         <i class="material-icons">edit</i>
