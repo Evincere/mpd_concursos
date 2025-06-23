@@ -11,6 +11,11 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
 - **Sistema de Notificaciones**: Alertas y comunicaciones automáticas
 - **Seguimiento de Estados**: Control del progreso de cada concurso y postulación
 - **Máquinas de Estado**: Validación centralizada de transiciones de estado con reglas de negocio
+- **🆕 Sistema CV Avanzado**: Funcionalidades avanzadas para gestión de currículum vitae
+  - Búsqueda inteligente con filtros avanzados
+  - Exportación a PDF con múltiples plantillas
+  - Drag & drop para reordenamiento
+  - Autocompletado inteligente
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -23,6 +28,16 @@ Sistema de gestión de concursos para el Ministerio Público de la Defensa de Me
 - RxJS para programación reactiva
 - JWT para autenticación
 - Electron (para versión de escritorio)
+- **🆕 Funcionalidades CV Avanzadas**:
+  - Fuse.js para búsqueda fuzzy
+  - jsPDF para exportación PDF
+  - html2canvas para captura de elementos
+  - Angular CDK Drag & Drop
+- **🆕 Funcionalidades CV Avanzadas**:
+  - Fuse.js para búsqueda fuzzy
+  - jsPDF para exportación PDF
+  - html2canvas para captura de elementos
+  - Angular CDK Drag & Drop
 
 ### Backend
 - Spring Boot 3.2.4

@@ -1,0 +1,303 @@
+<!-- Componente de Búsqueda Avanzada del CV - Versión Simplificada -->
+<div class="cv-search">
+
+  <!-- Búsqueda rápida -->
+  <div class="quick-search">
+    <div class="search-input-container">
+      <i class="material-icons search-icon">search</i>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Buscar en CV..."
+        [value]="searchForm()?.get('searchTerm')?.value || ''"
+        (input)="onQuickSearchInput($event)"
+        [disabled]="isLoading">
+
+      <button
+        class="clear-search-btn"
+        *ngIf="searchForm()?.get('searchTerm')?.value"
+        (click)="clearSearch()"
+        title="Limpiar búsqueda">
+        <i class="material-icons">clear</i>
+      </button>
+    </div>
+
+    <!-- Indicador de búsqueda activa -->
+    <div class="search-status" *ngIf="isSearching()">
+      <i class="material-icons spinning">search</i>
+      <span>Buscando...</span>
+    </div>
+  </div>
+
+  <!-- Controles de filtros -->
+  <div class="filter-controls">
+    <button
+      class="advanced-filters-toggle"
+      [class.active]="showAdvancedFilters()"
+      (click)="toggleAdvancedFilters()"
+      [disabled]="isLoading">
+      <i class="material-icons">tune</i>
+      <span>Filtros Avanzados</span>
+      <span class="filter-count" *ngIf="activeFiltersCount() > 0">{{ activeFiltersCount() }}</span>
+    </button>
+
+    <button
+      class="reset-filters-btn"
+      *ngIf="hasActiveFilters()"
+      (click)="resetFilters()"
+      [disabled]="isLoading"
+      title="Limpiar todos los filtros">
+      <i class="material-icons">clear_all</i>
+      <span>Limpiar</span>
+    </button>
+  </div>
+
+  <!-- Panel de filtros avanzados -->
+  <div class="advanced-filters-panel" *ngIf="showAdvancedFilters() && searchForm()">
+    <form [formGroup]="searchForm()!" class="filters-form">
+
+      <!-- Sección de Fechas -->
+      <div class="filter-section">
+        <h4 class="section-title">
+          <i class="material-icons">date_range</i>
+          Rango de Fechas
+        </h4>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Preset de Fechas</label>
+            <select formControlName="datePreset" (change)="onDatePresetChange($event)">
+              <option *ngFor="let option of getDatePresetOptions()" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-row" *ngIf="searchForm()?.get('datePreset')?.value === ''">
+          <div class="filter-field">
+            <label>Desde</label>
+            <input type="date" formControlName="dateFrom">
+          </div>
+          <div class="filter-field">
+            <label>Hasta</label>
+            <input type="date" formControlName="dateTo">
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Experiencia Laboral -->
+      <div class="filter-section">
+        <h4 class="section-title">
+          <i class="material-icons">work</i>
+          Experiencia Laboral
+        </h4>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Empresas</label>
+            <input type="text" placeholder="Agregar empresa..." (keydown.enter)="addFilterValue('companies', $event)">
+            <div class="filter-chips">
+              <span *ngFor="let company of searchForm()?.get('companies')?.value" class="filter-chip">
+                {{ company }}
+                <i class="material-icons" (click)="removeArrayValue('companies', company)">close</i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Puestos</label>
+            <input type="text" placeholder="Agregar puesto..." (keydown.enter)="addFilterValue('positions', $event)">
+            <div class="filter-chips">
+              <span *ngFor="let position of searchForm()?.get('positions')?.value" class="filter-chip">
+                {{ position }}
+                <i class="material-icons" (click)="removeArrayValue('positions', position)">close</i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Tecnologías</label>
+            <input type="text" placeholder="Agregar tecnología..." (keydown.enter)="addFilterValue('technologies', $event)">
+            <div class="filter-chips">
+              <span *ngFor="let tech of searchForm()?.get('technologies')?.value" class="filter-chip">
+                {{ tech }}
+                <i class="material-icons" (click)="removeArrayValue('technologies', tech)">close</i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Rango Salarial</label>
+            <div class="range-inputs">
+              <input type="number" formControlName="minSalary" placeholder="Mín">
+              <span>-</span>
+              <input type="number" formControlName="maxSalary" placeholder="Máx">
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="isCurrentJob">
+              Solo trabajos actuales
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Educación -->
+      <div class="filter-section">
+        <h4 class="section-title">
+          <i class="material-icons">school</i>
+          Educación
+        </h4>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Instituciones</label>
+            <input type="text" placeholder="Agregar institución..." (keydown.enter)="addFilterValue('institutions', $event)">
+            <div class="filter-chips">
+              <span *ngFor="let institution of searchForm()?.get('institutions')?.value" class="filter-chip">
+                {{ institution }}
+                <i class="material-icons" (click)="removeArrayValue('institutions', institution)">close</i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Rango de Calificaciones</label>
+            <div class="range-inputs">
+              <input type="number" formControlName="minGrade" placeholder="Mín" min="0" max="10" step="0.1">
+              <span>-</span>
+              <input type="number" formControlName="maxGrade" placeholder="Máx" min="0" max="10" step="0.1">
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="isOngoing">
+              Solo estudios en curso
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Filtros Avanzados -->
+      <div class="filter-section">
+        <h4 class="section-title">
+          <i class="material-icons">tune</i>
+          Filtros Avanzados
+        </h4>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Palabras Clave</label>
+            <input type="text" placeholder="Agregar palabra clave..." (keydown.enter)="addFilterValue('keywords', $event)">
+            <div class="filter-chips">
+              <span *ngFor="let keyword of searchForm()?.get('keywords')?.value" class="filter-chip">
+                {{ keyword }}
+                <i class="material-icons" (click)="removeArrayValue('keywords', keyword)">close</i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Excluir Palabras</label>
+            <input type="text" placeholder="Excluir palabra..." (keydown.enter)="addFilterValue('excludeKeywords', $event)">
+            <div class="filter-chips">
+              <span *ngFor="let keyword of searchForm()?.get('excludeKeywords')?.value" class="filter-chip exclude">
+                {{ keyword }}
+                <i class="material-icons" (click)="removeArrayValue('excludeKeywords', keyword)">close</i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="hasAchievements">
+              Con logros destacados
+            </label>
+          </div>
+          <div class="filter-field checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="hasProjects">
+              Con proyectos
+            </label>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filter-field checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="fuzzySearch">
+              Búsqueda difusa
+            </label>
+          </div>
+          <div class="filter-field checkbox-field">
+            <label>
+              <input type="checkbox" formControlName="exactMatch">
+              Coincidencia exacta
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de Ordenamiento -->
+      <div class="filter-section">
+        <h4 class="section-title">
+          <i class="material-icons">sort</i>
+          Ordenamiento
+        </h4>
+
+        <div class="filter-row">
+          <div class="filter-field">
+            <label>Ordenar por</label>
+            <select formControlName="sortBy">
+              <option value="date">Fecha</option>
+              <option value="relevance">Relevancia</option>
+              <option value="alphabetical">Alfabético</option>
+              <option value="duration">Duración</option>
+              <option value="grade">Calificación</option>
+              <option value="salary">Salario</option>
+            </select>
+          </div>
+          <div class="filter-field">
+            <label>Orden</label>
+            <select formControlName="sortOrder">
+              <option value="desc">Descendente</option>
+              <option value="asc">Ascendente</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas de búsqueda -->
+      <div class="search-stats" *ngIf="experiences.length > 0 || education.length > 0">
+        <div class="stat-item">
+          <span class="stat-number">{{ experiences.length }}</span>
+          <span class="stat-label">Experiencias</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ education.length }}</span>
+          <span class="stat-label">Educación</span>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

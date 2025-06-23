@@ -1,0 +1,343 @@
+/* Estilos compartidos para modales de CV */
+:host {
+  /* SOLO MOSTRAR CUANDO EL MODAL ESTÁ ABIERTO */
+  display: block;
+
+  /* BACKDROP MODAL - SOLO APLICAR AL CONTENEDOR CONDICIONAL */
+  .modal-backdrop {
+    /* CONFIGURACIÓN CRÍTICA PARA MODAL EMERGENTE */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    pointer-events: auto;
+
+    /* BACKDROP OSCURO SEMITRANSPARENTE */
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    /* CENTRAR EL MODAL */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+
+    /* ANIMACIÓN DE ENTRADA */
+    animation: modalBackdropFadeIn 0.3s ease-out;
+  }
+
+  .modal-container {
+    max-height: 85vh; // Altura máxima del modal
+    max-width: 90vw;  // Ancho máximo del modal
+    width: 800px;     // Ancho preferido
+    display: flex;
+    flex-direction: column;
+    background: var(--background-color, rgba(255, 255, 255, 0.95));
+    border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+    border-radius: var(--border-radius-lg, 12px);
+    box-shadow: var(--shadow-lg, 0 20px 40px rgba(0, 0, 0, 0.3));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    /* ANIMACIÓN DEL CONTENEDOR */
+    animation: modalContainerSlideIn 0.3s ease-out;
+
+    /* EVITAR QUE EL CLIC EN EL MODAL CIERRE EL BACKDROP */
+    pointer-events: auto;
+  }
+
+  .modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; // Evita que el header se encoja
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-color, #333);
+    }
+
+    .modal-subtitle {
+      margin: 0;
+      color: var(--text-secondary, #666);
+      font-size: 0.9rem;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      padding: 0.5rem;
+      cursor: pointer;
+      color: var(--text-secondary, #666);
+      border-radius: var(--border-radius, 6px);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.1);
+        color: var(--text-color, #333);
+      }
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    overflow-y: auto; // Habilita scroll vertical
+    overflow-x: visible !important; // CRÍTICO: Permitir overflow horizontal para dropdowns
+    flex: 1; // Toma el espacio restante
+    min-height: 0; // Necesario para que flex: 1 funcione correctamente con overflow
+    position: relative;
+    z-index: 1;
+
+    // Estilo personalizado para la barra de desplazamiento
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(59, 130, 246, 0.5);
+      border-radius: 4px;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.7);
+      }
+    }
+  }
+
+  .modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0; // Evita que el footer se encoja
+  }
+
+  // Soporte para tema oscuro
+  @media (prefers-color-scheme: dark) {
+    .modal-content {
+      &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.3);
+
+        &:hover {
+          background: rgba(59, 130, 246, 0.5);
+        }
+      }
+    }
+  }
+
+  // Ajustes responsivos
+  @media (max-width: 768px) {
+    .modal-backdrop {
+      padding: 0.5rem;
+    }
+
+    .modal-container {
+      max-height: 95vh;
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .modal-backdrop {
+      padding: 0.25rem;
+    }
+
+    .modal-container {
+      max-height: 98vh;
+      border-radius: var(--border-radius, 8px);
+    }
+  }
+}
+
+/* ANIMACIONES PARA EL MODAL */
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContainerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===== SOLUCIÓN DEFINITIVA PARA DROPDOWNS EN MODALES ===== */
+
+/* PASO 1: Crear nuevo stacking context para el modal */
+:host .modal-container {
+  overflow: visible !important;
+  /* Crear nuevo stacking context aislado */
+  isolation: isolate !important;
+  /* Contener el layout para evitar bleeding */
+  contain: layout style !important;
+}
+
+/* PASO 2: Configurar contenedor de dropdowns con portal approach */
+:host .modal-content {
+  /* Crear stacking context específico para dropdowns */
+  position: relative !important;
+  z-index: 1 !important;
+  isolation: isolate !important;
+}
+
+/* PASO 3: Configurar custom-select con backdrop sólido */
+:host .modal-content app-custom-select {
+  position: relative;
+  z-index: 10;
+
+  .custom-select {
+    overflow: visible !important;
+    position: relative;
+    z-index: 10;
+    isolation: isolate !important;
+  }
+
+  .select-container {
+    overflow: visible !important;
+    position: relative;
+    z-index: 10;
+    isolation: isolate !important;
+  }
+
+  /* PASO 4: Dropdown con backdrop completamente opaco */
+  .select-dropdown {
+    /* Posicionamiento absoluto con portal approach */
+    position: fixed !important;
+    z-index: 999999 !important; /* Z-index extremadamente alto */
+
+    /* CRÍTICO: Backdrop completamente opaco para evitar bleeding */
+    background: #374151 !important; /* Color sólido sin transparencia */
+
+    /* Eliminar backdrop-filter que puede causar bleeding */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    /* Sombra sólida para separación visual */
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.8),
+      0 10px 20px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+
+    /* Borde sólido para definición clara */
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+
+    /* Asegurar visibilidad completa */
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    /* Crear nuevo stacking context */
+    isolation: isolate !important;
+    contain: layout style paint !important;
+
+    /* Padding interno para mejor separación */
+    padding: 0.5rem 0 !important;
+    margin-top: 0.5rem !important;
+
+    /* Ancho mínimo para evitar colapso */
+    min-width: 200px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+  }
+
+  /* PASO 5: Opciones con fondo sólido */
+  .select-option {
+    position: relative !important;
+    z-index: 1 !important;
+    cursor: pointer !important;
+    padding: 0.75rem 1rem !important;
+    color: #f9fafb !important;
+    transition: all 0.2s ease !important;
+
+    /* Fondo sólido para cada opción */
+    background: transparent !important;
+
+    &:hover {
+      background: #4f46e5 !important; /* Color sólido sin transparencia */
+      color: #ffffff !important;
+    }
+
+    &.selected {
+      background: #3b82f6 !important; /* Color sólido sin transparencia */
+      color: #ffffff !important;
+      font-weight: 500 !important;
+    }
+
+    /* Separador visual entre opciones */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+  }
+}
+
+/* Reducir z-index de elementos que pueden interferir */
+:host .modal-content .form-field {
+  .field-label,
+  .field-hint,
+  .field-placeholder {
+    z-index: 1 !important;
+    position: relative;
+    pointer-events: none !important; /* CRÍTICO: Evitar que intercepten clics */
+  }
+
+  input,
+  textarea {
+    z-index: 2 !important;
+    position: relative;
+  }
+}
+
+/* CRÍTICO: Asegurar que los labels no interfieran con dropdowns */
+:host .modal-content label {
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* Permitir clics en elementos interactivos dentro de labels */
+:host .modal-content label input,
+:host .modal-content label button,
+:host .modal-content label select {
+  pointer-events: auto !important;
+}
+
+/* Asegurar que otros elementos no interfieran */
+:host .modal-content .form-section,
+:host .modal-content .form-row,
+:host .modal-content .form-field {
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}

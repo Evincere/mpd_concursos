@@ -1,0 +1,517 @@
+<!-- Formulario de Educación Inteligente -->
+<div class="education-form-container">
+  
+  <!-- Header del formulario -->
+  <div class="form-header">
+    <h3 class="form-title">
+      <i class="material-icons">school</i>
+      {{ isEditing ? 'Editar Educación' : 'Agregar Educación' }}
+    </h3>
+    <p class="form-subtitle">
+      Completa la información sobre tu formación académica
+    </p>
+
+    <!-- ADVERTENCIA CRÍTICA sobre documentación obligatoria -->
+    <div class="document-requirement-alert">
+      <div class="alert alert-warning">
+        <i class="material-icons">warning</i>
+        <div class="alert-content">
+          <strong>Documentación Obligatoria:</strong>
+          <p>Es <strong>obligatorio</strong> adjuntar un documento que respalde esta educación (certificado de estudios, diploma, título, etc.). Sin este documento no podrás guardar la educación.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario principal -->
+  <form *ngIf="form()" [formGroup]="form()!" class="education-form" novalidate>
+    
+    <!-- Sección: Información Básica -->
+    <div class="form-section">
+      <h4 class="section-title">
+        <i class="material-icons">info</i>
+        Información Básica
+      </h4>
+
+      <div class="form-row">
+        <!-- Tipo de Educación -->
+        <div class="form-field">
+          <app-custom-select
+            label="Tipo de Educación"
+            [options]="educationTypeOptions"
+            [control]="getFormControl('type')"
+            [required]="true"
+            placeholder="Selecciona el tipo de educación"
+            hint="Tipo de formación académica o educativa">
+          </app-custom-select>
+          
+          <div class="field-errors" *ngIf="getFieldErrors('type').length > 0">
+            <span *ngFor="let error of getFieldErrors('type')" class="error-message">
+              {{ error }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Estado -->
+        <div class="form-field">
+          <app-custom-select
+            label="Estado"
+            [options]="educationStatusOptions"
+            [control]="getFormControl('status')"
+            [required]="true"
+            placeholder="Selecciona el estado"
+            hint="Estado actual de la educación">
+          </app-custom-select>
+          
+          <div class="field-errors" *ngIf="getFieldErrors('status').length > 0">
+            <span *ngFor="let error of getFieldErrors('status')" class="error-message">
+              {{ error }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Título -->
+        <div class="form-field full-width">
+          <app-custom-form-field
+            label="Título o Nombre"
+            [control]="getControl('title')"
+            [required]="true"
+            placeholder="Ej: Licenciatura en Sistemas de Información"
+            hint="Nombre completo del título, curso o actividad">
+          </app-custom-form-field>
+          
+          <div class="field-errors" *ngIf="getFieldErrors('title').length > 0">
+            <span *ngFor="let error of getFieldErrors('title')" class="error-message">
+              {{ error }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Institución -->
+        <div class="form-field full-width">
+          <app-custom-form-field
+            label="Institución"
+            [control]="getControl('institution')"
+            [required]="true"
+            placeholder="Ej: Universidad Nacional de Buenos Aires"
+            hint="Nombre de la institución educativa">
+          </app-custom-form-field>
+          
+          <div class="field-errors" *ngIf="getFieldErrors('institution').length > 0">
+            <span *ngFor="let error of getFieldErrors('institution')" class="error-message">
+              {{ error }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección: Fechas -->
+    <div class="form-section">
+      <h4 class="section-title">
+        <i class="material-icons">date_range</i>
+        Período de Estudios
+      </h4>
+
+      <div class="form-row">
+        <!-- Fecha de Inicio -->
+        <div class="form-field">
+          <app-custom-datepicker
+            label="Fecha de Inicio"
+            [formControl]="getFormControl('startDate')"
+            [required]="true"
+            placeholder="Selecciona la fecha"
+            hint="Fecha en que comenzaste los estudios">
+          </app-custom-datepicker>
+          
+          <div class="field-errors" *ngIf="getFieldErrors('startDate').length > 0">
+            <span *ngFor="let error of getFieldErrors('startDate')" class="error-message">
+              {{ error }}
+            </span>
+          </div>
+        </div>
+
+        <!-- En Curso -->
+        <div class="form-field">
+          <div class="checkbox-field">
+            <input
+              type="checkbox"
+              id="isOngoing"
+              formControlName="isOngoing"
+              class="custom-checkbox">
+            <label for="isOngoing" class="checkbox-label">
+              <span class="checkbox-indicator"></span>
+              En Curso
+            </label>
+            <p class="help-text">Marca si actualmente estás cursando</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row" *ngIf="shouldShowEndDate()">
+        <!-- Fecha de Finalización -->
+        <div class="form-field">
+          <app-custom-datepicker
+            label="Fecha de Finalización"
+            [formControl]="getFormControl('endDate')"
+            placeholder="Selecciona la fecha"
+            [hint]="getEndDateHint()">
+          </app-custom-datepicker>
+
+          <div class="field-errors" *ngIf="getFieldErrors('endDate').length > 0">
+            <span *ngFor="let error of getFieldErrors('endDate')" class="error-message">
+              {{ error }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección: Campos Específicos por Tipo -->
+    <div class="form-section" *ngIf="visibleFields().length > 0">
+      <h4 class="section-title">
+        <i class="material-icons">tune</i>
+        Información Específica
+      </h4>
+
+      <!-- Campos para Educación Universitaria -->
+      <div *ngIf="selectedType() === 'UNIVERSITY_DEGREE'" class="type-specific-fields">
+        <div class="form-row">
+          <!-- Duración en años -->
+          <div class="form-field">
+            <app-custom-form-field
+              label="Duración (años)"
+              type="number"
+              [control]="getControl('durationYears')"
+              placeholder="5"
+              hint="Duración total de la carrera en años"
+              [min]="1"
+              [max]="10">
+            </app-custom-form-field>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('durationYears').length > 0">
+              <span *ngFor="let error of getFieldErrors('durationYears')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Promedio Académico -->
+          <div class="form-field">
+            <app-custom-number-input
+              label="Promedio Académico"
+              [control]="getFormControl('average')"
+              placeholder="8,5"
+              hint="Promedio académico (1-10)"
+              [min]="1"
+              [max]="10"
+              [decimals]="1"
+              locale="es-AR">
+            </app-custom-number-input>
+
+            <div class="field-errors" *ngIf="getFieldErrors('average').length > 0">
+              <span *ngFor="let error of getFieldErrors('average')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos para Posgrados -->
+      <div *ngIf="selectedType() === 'POSTGRADUATE_SPECIALIZATION' || 
+                  selectedType() === 'MASTER_DEGREE' || 
+                  selectedType() === 'DOCTORATE'" 
+           class="type-specific-fields">
+        <div class="form-row">
+          <!-- Tema de Tesis -->
+          <div class="form-field full-width">
+            <app-custom-form-field
+              label="Tema de Tesis"
+              type="textarea"
+              [control]="getControl('thesisTopic')"
+              placeholder="Título y descripción breve de la tesis..."
+              hint="Tema o título de la tesis de posgrado">
+            </app-custom-form-field>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('thesisTopic').length > 0">
+              <span *ngFor="let error of getFieldErrors('thesisTopic')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Director de Tesis -->
+          <div class="form-field">
+            <app-custom-form-field
+              label="Director de Tesis"
+              [control]="getControl('advisor')"
+              placeholder="Dr. Juan Pérez"
+              hint="Nombre del director o tutor de tesis">
+            </app-custom-form-field>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('advisor').length > 0">
+              <span *ngFor="let error of getFieldErrors('advisor')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos para Diplomas y Certificaciones -->
+      <div *ngIf="selectedType() === 'DIPLOMA' || selectedType() === 'CERTIFICATION'" 
+           class="type-specific-fields">
+        <div class="form-row">
+          <!-- Carga Horaria -->
+          <div class="form-field">
+            <app-custom-form-field
+              label="Carga Horaria"
+              type="number"
+              [control]="getControl('hourlyLoad')"
+              placeholder="120"
+              hint="Cantidad total de horas del curso"
+              [min]="1"
+              [max]="2000">
+            </app-custom-form-field>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('hourlyLoad').length > 0">
+              <span *ngFor="let error of getFieldErrors('hourlyLoad')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos para Actividades Científicas -->
+      <div *ngIf="selectedType() === 'SCIENTIFIC_ACTIVITY'" class="type-specific-fields">
+        <div class="form-row">
+          <!-- Tipo de Actividad -->
+          <div class="form-field">
+            <app-custom-select
+              label="Tipo de Actividad"
+              [options]="scientificActivityTypeOptions"
+              [control]="getFormControl('activityType')"
+              placeholder="Selecciona el tipo"
+              hint="Tipo de actividad científica">
+            </app-custom-select>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('activityType').length > 0">
+              <span *ngFor="let error of getFieldErrors('activityType')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Rol en la Actividad -->
+          <div class="form-field">
+            <app-custom-select
+              label="Rol en la Actividad"
+              [options]="scientificActivityRoleOptions"
+              [control]="getFormControl('role')"
+              placeholder="Selecciona tu rol"
+              hint="Tu rol en la actividad científica">
+            </app-custom-select>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('role').length > 0">
+              <span *ngFor="let error of getFieldErrors('role')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Tema/Tópico -->
+          <div class="form-field full-width">
+            <app-custom-form-field
+              label="Tema/Tópico"
+              type="textarea"
+              [control]="getControl('topic')"
+              placeholder="Descripción del tema tratado..."
+              hint="Tema principal de la actividad científica">
+            </app-custom-form-field>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('topic').length > 0">
+              <span *ngFor="let error of getFieldErrors('topic')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <!-- Lugar/Evento -->
+          <div class="form-field">
+            <app-custom-form-field
+              label="Lugar/Evento"
+              [control]="getControl('venue')"
+              placeholder="Ej: Congreso Internacional de IA 2024"
+              hint="Lugar o evento donde se realizó la actividad">
+            </app-custom-form-field>
+            
+            <div class="field-errors" *ngIf="getFieldErrors('venue').length > 0">
+              <span *ngFor="let error of getFieldErrors('venue')" class="error-message">
+                {{ error }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección: Comentarios -->
+    <div class="form-section">
+      <h4 class="section-title">
+        <i class="material-icons">comment</i>
+        Información Adicional
+      </h4>
+
+      <div class="form-row">
+        <!-- Comentarios -->
+        <div class="form-field full-width">
+          <app-custom-form-field
+            label="Comentarios Adicionales"
+            type="textarea"
+            [control]="getControl('comments')"
+            placeholder="Información adicional relevante..."
+            hint="Cualquier información adicional que consideres relevante">
+          </app-custom-form-field>
+          
+          <div class="field-errors" *ngIf="getFieldErrors('comments').length > 0">
+            <span *ngFor="let error of getFieldErrors('comments')" class="error-message">
+              {{ error }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas de validación -->
+    <div class="validation-alerts" *ngIf="hasErrors() || hasWarnings()">
+      <!-- Errores -->
+      <div class="alert alert-error" *ngIf="hasErrors()">
+        <i class="material-icons">error</i>
+        <div class="alert-content">
+          <h5>Errores de validación</h5>
+          <ul>
+            <li *ngFor="let error of validationState().errors">{{ error }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Advertencias -->
+      <div class="alert alert-warning" *ngIf="hasWarnings()">
+        <i class="material-icons">warning</i>
+        <div class="alert-content">
+          <h5>Advertencias</h5>
+          <ul>
+            <li *ngFor="let warning of validationState().warnings">{{ warning }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CRÍTICA: Documentación de Respaldo Obligatoria -->
+    <div class="form-section document-section">
+      <h4 class="section-title required">
+        <i class="material-icons">attach_file</i>
+        Documento de Respaldo
+        <span class="required-indicator">*</span>
+      </h4>
+      <p class="section-description">
+        Adjunta un documento que respalde esta educación (certificado de estudios, diploma, título, constancia, etc.)
+      </p>
+
+      <div class="document-upload-area">
+        <!-- Input de archivo -->
+        <div class="file-input-container" *ngIf="!uploadedDocument()">
+          <input
+            type="file"
+            id="supportDocument"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            (change)="onDocumentFileSelected($event)"
+            class="file-input">
+          <label for="supportDocument" class="file-input-label">
+            <i class="material-icons">cloud_upload</i>
+            <span class="upload-text">
+              <strong>Seleccionar archivo</strong>
+              <small>PDF, DOC, DOCX, JPG, PNG (máx. 10MB)</small>
+            </span>
+          </label>
+        </div>
+
+        <!-- Archivo seleccionado -->
+        <div class="selected-file" *ngIf="uploadedDocument()">
+          <div class="file-info">
+            <i class="material-icons file-icon">description</i>
+            <div class="file-details">
+              <span class="file-name">{{ uploadedDocument()?.name }}</span>
+              <span class="file-size">{{ (uploadedDocument()?.size! / 1024 / 1024).toFixed(2) }} MB</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn-icon btn-error"
+            (click)="onRemoveDocument()"
+            title="Eliminar archivo">
+            <i class="material-icons">delete</i>
+          </button>
+        </div>
+
+        <!-- Error de validación -->
+        <div class="validation-error" *ngIf="form()?.get('supportDocument')?.invalid && form()?.get('supportDocument')?.touched">
+          <i class="material-icons">error</i>
+          <span>Es obligatorio adjuntar un documento de respaldo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones del formulario -->
+    <div class="form-actions">
+      <div class="actions-left">
+        <app-custom-button
+          variant="text"
+          label="Resetear"
+          icon="refresh"
+          (buttonClick)="onReset()"
+          [disabled]="isLoading || !isDirty()">
+        </app-custom-button>
+      </div>
+
+      <div class="actions-right">
+        <app-custom-button
+          variant="stroked"
+          label="Cancelar"
+          icon="close"
+          (buttonClick)="onCancel()"
+          [disabled]="isLoading">
+        </app-custom-button>
+
+        <app-custom-button
+          variant="primary"
+          [label]="isEditing ? 'Actualizar' : 'Guardar'"
+          icon="save"
+          (buttonClick)="onSave()"
+          [disabled]="!canSave()"
+          [loading]="isLoading">
+        </app-custom-button>
+      </div>
+    </div>
+  </form>
+
+  <!-- Indicador de carga -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p>{{ isEditing ? 'Actualizando educación...' : 'Guardando educación...' }}</p>
+    </div>
+  </div>
+</div>

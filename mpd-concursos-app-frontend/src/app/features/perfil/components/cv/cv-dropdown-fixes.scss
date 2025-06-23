@@ -1,0 +1,204 @@
+/**
+ * Correcciones de Z-Index para Dropdowns en Formularios CV
+ * 
+ * @description Soluciona problemas de superposición de dropdowns con otros elementos
+ * @author Augment Agent
+ * @date 2025-06-21
+ * @version 1.0.0
+ */
+
+/* ===== SOLUCIÓN GLOBAL PARA DROPDOWNS EN FORMULARIOS CV ===== */
+
+// Contenedores de formularios CV
+.education-modal-content,
+.experience-modal-content,
+.cv-form-container,
+.form-section {
+  // Permitir overflow visible para dropdowns
+  overflow: visible !important;
+  
+  // Asegurar que los contenedores no corten los dropdowns
+  .form-field,
+  .form-row,
+  .form-group {
+    overflow: visible !important;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* ===== CUSTOM SELECT COMPONENT FIXES ===== */
+
+// Solución específica para app-custom-select en formularios CV
+::ng-deep .education-modal-content app-custom-select,
+::ng-deep .experience-modal-content app-custom-select,
+::ng-deep .cv-form-container app-custom-select {
+  
+  // Contenedor principal del select
+  .custom-select,
+  .custom-select-container {
+    overflow: visible !important;
+    position: relative;
+    z-index: 10;
+  }
+  
+  // Dropdown del select - Z-index muy alto
+  .select-dropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 9999 !important;
+    margin-top: 0.25rem !important;
+    
+    // Asegurar visibilidad
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    
+    // Mejorar el backdrop para mejor visibilidad
+    background: linear-gradient(135deg,
+      rgba(55, 65, 81, 0.98) 0%,
+      rgba(75, 85, 99, 0.95) 100%) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    
+    // Sombra más prominente
+    box-shadow: 
+      0 12px 32px rgba(0, 0, 0, 0.4),
+      0 6px 16px rgba(0, 0, 0, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  }
+  
+  // Si usa otros tipos de panel
+  .select-panel,
+  .mat-select-panel,
+  .cdk-overlay-pane {
+    z-index: 9999 !important;
+    position: absolute !important;
+  }
+}
+
+/* ===== SOLUCIÓN PARA PLACEHOLDERS QUE SE SUPERPONEN ===== */
+
+// Reducir z-index de elementos que pueden interferir
+.form-field {
+  .field-label,
+  .field-hint,
+  .field-placeholder {
+    z-index: 1 !important;
+    position: relative;
+  }
+  
+  // Input fields que pueden estar detrás
+  input,
+  textarea {
+    z-index: 2 !important;
+    position: relative;
+  }
+  
+  // Select field debe estar por encima
+  app-custom-select {
+    z-index: 10 !important;
+    position: relative;
+  }
+}
+
+/* ===== SOLUCIÓN PARA MODALES ===== */
+
+// Asegurar que los modales permitan overflow para dropdowns
+::ng-deep app-custom-dialog {
+  .dialog-content,
+  .modal-content,
+  .dialog-body {
+    overflow: visible !important;
+    
+    // Contenedores internos
+    .education-modal-content,
+    .experience-modal-content {
+      overflow: visible !important;
+      max-height: none !important; // Temporalmente remover límite de altura
+    }
+  }
+}
+
+/* ===== SOLUCIÓN PARA CDK OVERLAY (Angular Material) ===== */
+
+.cdk-overlay-container {
+  z-index: 10000 !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 9999 !important;
+}
+
+/* ===== SOLUCIÓN ESPECÍFICA PARA FORMULARIOS DE EDUCACIÓN ===== */
+
+// Formulario de educación tiene muchos selects
+::ng-deep app-education-form {
+  overflow: visible !important;
+  
+  .form-section {
+    overflow: visible !important;
+    
+    .form-row {
+      overflow: visible !important;
+      
+      .form-field {
+        overflow: visible !important;
+        
+        app-custom-select {
+          z-index: 100 !important;
+          
+          .select-dropdown {
+            z-index: 9999 !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ===== SOLUCIÓN PARA CAMPOS ESPECÍFICOS PROBLEMÁTICOS ===== */
+
+// Tipo de educación y estado (que aparecen en las imágenes del problema)
+.form-field:has([formControlName="type"]) app-custom-select,
+.form-field:has([formControlName="status"]) app-custom-select {
+  z-index: 200 !important;
+  
+  .select-dropdown {
+    z-index: 10000 !important;
+    
+    // Forzar que aparezca por encima de todo
+    position: fixed !important;
+    
+    // Recalcular posición si es necesario
+    transform: translateY(0) !important;
+  }
+}
+
+/* ===== RESPONSIVE FIXES ===== */
+
+@media (max-width: 768px) {
+  // En móviles, asegurar que los dropdowns no se salgan de pantalla
+  ::ng-deep app-custom-select .select-dropdown {
+    max-width: calc(100vw - 2rem) !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto !important;
+  }
+}
+
+/* ===== DEBUG HELPERS (remover en producción) ===== */
+
+// Uncomment para debug visual
+/*
+::ng-deep app-custom-select .select-dropdown {
+  border: 2px solid red !important;
+  background: rgba(255, 0, 0, 0.1) !important;
+}
+
+.form-field {
+  border: 1px solid blue !important;
+}
+*/

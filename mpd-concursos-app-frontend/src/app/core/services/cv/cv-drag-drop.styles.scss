@@ -1,0 +1,352 @@
+/**
+ * Estilos para Drag & Drop del Sistema CV
+ * 
+ * @description Animaciones y estilos visuales para drag & drop optimizado
+ * @author Augment Agent
+ * @date 2025-06-21
+ * @version 1.0.0
+ */
+
+// ===== VARIABLES =====
+:root {
+  --drag-transition-duration: 300ms;
+  --drag-transition-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --drag-shadow-color: rgba(0, 0, 0, 0.15);
+  --drag-valid-color: #4CAF50;
+  --drag-invalid-color: #F44336;
+  --drag-hover-color: rgba(33, 150, 243, 0.1);
+}
+
+// ===== CONTENEDORES DRAG & DROP =====
+.cv-drag-container {
+  position: relative;
+  min-height: 100px;
+  border: 2px dashed transparent;
+  border-radius: 12px;
+  transition: all var(--drag-transition-duration) var(--drag-transition-easing);
+  
+  &.cdk-drop-list-dragging {
+    border-color: var(--primary-color);
+    background: var(--drag-hover-color);
+  }
+  
+  &.drag-over-valid {
+    border-color: var(--drag-valid-color);
+    background: rgba(76, 175, 80, 0.05);
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+  
+  &.drag-over-invalid {
+    border-color: var(--drag-invalid-color);
+    background: rgba(244, 67, 54, 0.05);
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+  }
+}
+
+// ===== ELEMENTOS ARRASTRABLES =====
+.cv-drag-item {
+  position: relative;
+  cursor: grab;
+  transition: all var(--drag-transition-duration) var(--drag-transition-easing);
+  border-radius: 8px;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--drag-shadow-color);
+  }
+  
+  &:active {
+    cursor: grabbing;
+  }
+  
+  &.cdk-drag-dragging {
+    cursor: grabbing;
+    transform: scale(1.02) rotate(2deg);
+    box-shadow: 0 8px 25px var(--drag-shadow-color);
+    z-index: 1000;
+    opacity: 0.9;
+  }
+  
+  &.cdk-drag-disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    
+    &:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+// ===== PREVIEW DE DRAG =====
+.cv-drag-preview {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid var(--primary-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 25px var(--drag-shadow-color);
+  transform: scale(1.05);
+  
+  // Glassmorphism effect
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    border-radius: 10px;
+    z-index: -1;
+    opacity: 0.7;
+  }
+}
+
+// ===== PLACEHOLDER =====
+.cv-drag-placeholder {
+  background: rgba(var(--primary-color-rgb), 0.1);
+  border: 2px dashed var(--primary-color);
+  border-radius: 8px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: 'Soltar aquí';
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.7;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(var(--primary-color-rgb), 0.2),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+}
+
+// ===== HANDLE DE DRAG =====
+.cv-drag-handle {
+  cursor: grab;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: var(--primary-color);
+    background: rgba(var(--primary-color-rgb), 0.1);
+  }
+  
+  &:active {
+    cursor: grabbing;
+  }
+  
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+// ===== INDICADORES VISUALES =====
+.cv-drag-indicator {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  
+  .cv-drag-item:hover & {
+    opacity: 1;
+  }
+  
+  &::before {
+    content: '⋮⋮';
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 0.5;
+  }
+}
+
+// ===== ESTADOS DE VALIDACIÓN =====
+.cv-drag-valid {
+  border-color: var(--drag-valid-color) !important;
+  
+  .cv-drag-indicator::before {
+    content: '✓';
+    color: var(--drag-valid-color);
+  }
+}
+
+.cv-drag-invalid {
+  border-color: var(--drag-invalid-color) !important;
+  
+  .cv-drag-indicator::before {
+    content: '✗';
+    color: var(--drag-invalid-color);
+  }
+}
+
+// ===== ANIMACIONES =====
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes dragPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes dropSuccess {
+  0% {
+    transform: scale(1);
+    background: rgba(76, 175, 80, 0.1);
+  }
+  50% {
+    transform: scale(1.05);
+    background: rgba(76, 175, 80, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    background: transparent;
+  }
+}
+
+@keyframes dropError {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+// ===== CLASES DE ANIMACIÓN =====
+.cv-drag-pulse {
+  animation: dragPulse 1s ease-in-out infinite;
+}
+
+.cv-drop-success {
+  animation: dropSuccess 0.6s ease-out;
+}
+
+.cv-drop-error {
+  animation: dropError 0.5s ease-in-out;
+}
+
+// ===== RESPONSIVE =====
+@media (max-width: 768px) {
+  .cv-drag-item {
+    &:hover {
+      transform: none; // Desactivar hover en móviles
+    }
+  }
+  
+  .cv-drag-handle {
+    padding: 0.75rem; // Área de toque más grande
+  }
+  
+  .cv-drag-placeholder {
+    min-height: 80px; // Área de drop más grande
+    
+    &::before {
+      font-size: 1rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .cv-drag-container {
+    min-height: 80px;
+  }
+  
+  .cv-drag-item {
+    &.cdk-drag-dragging {
+      transform: scale(1.05); // Escala menor en móviles
+    }
+  }
+}
+
+// ===== ACCESIBILIDAD =====
+@media (prefers-reduced-motion: reduce) {
+  .cv-drag-item,
+  .cv-drag-container,
+  .cv-drag-placeholder {
+    transition: none;
+    animation: none;
+  }
+  
+  .cv-drag-item {
+    &:hover {
+      transform: none;
+    }
+    
+    &.cdk-drag-dragging {
+      transform: none;
+    }
+  }
+}
+
+// ===== MODO OSCURO =====
+@media (prefers-color-scheme: dark) {
+  :root {
+    --drag-shadow-color: rgba(0, 0, 0, 0.3);
+    --drag-hover-color: rgba(33, 150, 243, 0.15);
+  }
+  
+  .cv-drag-preview {
+    background: rgba(30, 30, 30, 0.95);
+    border-color: var(--primary-color);
+  }
+  
+  .cv-drag-placeholder {
+    background: rgba(var(--primary-color-rgb), 0.15);
+  }
+}
+
+// ===== UTILIDADES =====
+.cv-drag-disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.cv-drag-locked {
+  cursor: not-allowed;
+  
+  &::after {
+    content: '🔒';
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+}

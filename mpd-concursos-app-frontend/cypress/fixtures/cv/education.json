@@ -1,0 +1,155 @@
+[
+  {
+    "id": "1",
+    "type": "UNIVERSITY",
+    "title": "Ingeniería en Sistemas de Información",
+    "institution": "Universidad Tecnológica Nacional",
+    "startDate": "2018-03-01T00:00:00.000Z",
+    "endDate": "2022-12-01T00:00:00.000Z",
+    "status": "COMPLETED",
+    "description": "Carrera de grado enfocada en el desarrollo de sistemas de información, programación, bases de datos y gestión de proyectos tecnológicos.",
+    "grade": 8.5,
+    "isOngoing": false,
+    "duration": "5 años",
+    "averageGrade": 8.5,
+    "thesisTitle": "Sistema de Gestión de Inventario con Machine Learning",
+    "advisor": "Dr. María González",
+    "projects": [
+      "Sistema de gestión académica",
+      "Aplicación móvil para estudiantes",
+      "Plataforma de e-learning"
+    ]
+  },
+  {
+    "id": "2",
+    "type": "POSTGRADUATE",
+    "title": "Especialización en Desarrollo de Software",
+    "institution": "Universidad de Buenos Aires",
+    "startDate": "2023-03-01T00:00:00.000Z",
+    "endDate": null,
+    "status": "IN_PROGRESS",
+    "description": "Especialización enfocada en metodologías ágiles, arquitectura de software y tecnologías emergentes.",
+    "grade": 9.2,
+    "isOngoing": true,
+    "duration": "1.5 años",
+    "thesisTitle": "Microservicios con Arquitectura Hexagonal",
+    "advisor": "Dr. Carlos Rodríguez",
+    "projects": [
+      "Implementación de microservicios",
+      "Sistema de monitoreo distribuido"
+    ]
+  },
+  {
+    "id": "3",
+    "type": "COURSE",
+    "title": "Curso Avanzado de Angular",
+    "institution": "TechAcademy",
+    "startDate": "2023-01-01T00:00:00.000Z",
+    "endDate": "2023-03-01T00:00:00.000Z",
+    "status": "COMPLETED",
+    "description": "Curso especializado en Angular avanzado, incluyendo NgRx, testing, performance optimization y arquitectura de aplicaciones.",
+    "grade": 9.5,
+    "isOngoing": false,
+    "hourlyLoad": 120,
+    "certificate": "Certificado de Excelencia",
+    "projects": [
+      "Aplicación de gestión de tareas",
+      "Dashboard de métricas en tiempo real"
+    ]
+  },
+  {
+    "id": "4",
+    "type": "COURSE",
+    "title": "AWS Solutions Architect",
+    "institution": "Amazon Web Services",
+    "startDate": "2022-09-01T00:00:00.000Z",
+    "endDate": "2022-11-30T00:00:00.000Z",
+    "status": "COMPLETED",
+    "description": "Certificación oficial de AWS para arquitectos de soluciones, cubriendo servicios cloud, seguridad y mejores prácticas.",
+    "grade": 8.8,
+    "isOngoing": false,
+    "hourlyLoad": 80,
+    "certificate": "AWS Certified Solutions Architect",
+    "projects": [
+      "Arquitectura de aplicación serverless",
+      "Migración de infraestructura a cloud"
+    ]
+  },
+  {
+    "id": "5",
+    "type": "SCIENTIFIC_ACTIVITY",
+    "title": "Investigación en Machine Learning Aplicado",
+    "institution": "Instituto de Investigación Tecnológica",
+    "startDate": "2021-06-01T00:00:00.000Z",
+    "endDate": "2022-05-31T00:00:00.000Z",
+    "status": "COMPLETED",
+    "description": "Participación en proyecto de investigación sobre aplicación de machine learning en sistemas de recomendación.",
+    "grade": 9.0,
+    "isOngoing": false,
+    "activityType": "Investigación",
+    "role": "Investigador Junior",
+    "topic": "Machine Learning en Sistemas de Recomendación",
+    "publications": [
+      "Optimización de Algoritmos de Recomendación usando Deep Learning",
+      "Análisis Comparativo de Técnicas de Filtrado Colaborativo"
+    ]
+  },
+  {
+    "id": "6",
+    "type": "COURSE",
+    "title": "Scrum Master Certification",
+    "institution": "Scrum Alliance",
+    "startDate": "2021-04-01T00:00:00.000Z",
+    "endDate": "2021-04-15T00:00:00.000Z",
+    "status": "COMPLETED",
+    "description": "Certificación oficial de Scrum Master, incluyendo facilitación de ceremonias, gestión de equipos ágiles y resolución de impedimentos.",
+    "grade": 9.3,
+    "isOngoing": false,
+    "hourlyLoad": 40,
+    "certificate": "Certified Scrum Master (CSM)",
+    "projects": [
+      "Implementación de Scrum en equipo de desarrollo",
+      "Mejora de procesos ágiles"
+    ]
+  },
+  {
+    "id": "7",
+    "type": "UNIVERSITY",
+    "title": "Licenciatura en Ciencias de la Computación",
+    "institution": "Universidad Nacional de Córdoba",
+    "startDate": "2015-03-01T00:00:00.000Z",
+    "endDate": "2019-12-01T00:00:00.000Z",
+    "status": "COMPLETED",
+    "description": "Carrera de grado con fuerte base teórica en algoritmos, estructuras de datos, matemática aplicada y fundamentos de la computación.",
+    "grade": 8.2,
+    "isOngoing": false,
+    "duration": "4.5 años",
+    "averageGrade": 8.2,
+    "thesisTitle": "Algoritmos de Optimización para Problemas de Ruteo",
+    "advisor": "Dr. Ana Martínez",
+    "projects": [
+      "Simulador de algoritmos de ordenamiento",
+      "Compilador para lenguaje funcional",
+      "Sistema de gestión de biblioteca"
+    ]
+  },
+  {
+    "id": "8",
+    "type": "COURSE",
+    "title": "Docker y Kubernetes para Desarrolladores",
+    "institution": "Linux Foundation",
+    "startDate": "2020-08-01T00:00:00.000Z",
+    "endDate": "2020-10-31T00:00:00.000Z",
+    "status": "COMPLETED",
+    "description": "Curso intensivo sobre containerización con Docker y orquestación con Kubernetes, incluyendo mejores prácticas de DevOps.",
+    "grade": 8.9,
+    "isOngoing": false,
+    "hourlyLoad": 60,
+    "certificate": "Kubernetes Application Developer (CKAD)",
+    "projects": [
+      "Containerización de aplicación web",
+      "Deployment automatizado con Kubernetes",
+      "Monitoreo de contenedores"
+    ]
+  }
+]

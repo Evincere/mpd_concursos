@@ -1,0 +1,352 @@
+/**
+ * Estilos de Performance para Virtual Scrolling
+ * 
+ * @description Optimizaciones CSS para virtual scrolling de alto rendimiento
+ * @author Augment Agent
+ * @date 2025-06-21
+ * @version 1.0.0
+ */
+
+// ===== VARIABLES DE PERFORMANCE =====
+:root {
+  --virtual-scroll-transition: transform 0.1s ease-out;
+  --virtual-scroll-gpu-acceleration: translateZ(0);
+  --virtual-scroll-will-change: transform, opacity;
+  --virtual-scroll-contain: layout style paint;
+}
+
+// ===== CONTENEDOR PRINCIPAL =====
+.virtual-scroll-container {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  // Optimizaciones de performance
+  will-change: var(--virtual-scroll-will-change);
+  contain: var(--virtual-scroll-contain);
+  transform: var(--virtual-scroll-gpu-acceleration);
+  
+  // Scrollbar personalizada
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--primary-color-rgb), 0.3) transparent;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--primary-color-rgb), 0.3);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+    
+    &:hover {
+      background: rgba(var(--primary-color-rgb), 0.5);
+    }
+  }
+  
+  // Smooth scrolling nativo
+  scroll-behavior: smooth;
+  
+  // Optimización para iOS
+  -webkit-overflow-scrolling: touch;
+}
+
+// ===== SPACERS =====
+.virtual-scroll-spacer {
+  // Optimización: usar transform en lugar de height cuando sea posible
+  pointer-events: none;
+  contain: strict;
+  
+  // Evitar reflows
+  flex-shrink: 0;
+}
+
+// ===== CONTENIDO =====
+.virtual-scroll-content {
+  position: relative;
+  
+  // Optimizaciones de performance
+  contain: layout style;
+  will-change: transform;
+}
+
+// ===== ELEMENTOS VIRTUALIZADOS =====
+.virtual-scroll-item {
+  position: relative;
+  
+  // Optimizaciones críticas de performance
+  contain: layout style paint;
+  will-change: transform, opacity;
+  transform: var(--virtual-scroll-gpu-acceleration);
+  
+  // Transiciones suaves
+  transition: var(--virtual-scroll-transition);
+  
+  // Evitar layout shifts
+  box-sizing: border-box;
+  
+  // Optimización para elementos que entran/salen del viewport
+  &.virtual-item-entering {
+    opacity: 0;
+    transform: translateY(20px) var(--virtual-scroll-gpu-acceleration);
+    
+    &.virtual-item-visible {
+      opacity: 1;
+      transform: translateY(0) var(--virtual-scroll-gpu-acceleration);
+    }
+  }
+  
+  &.virtual-item-leaving {
+    opacity: 0;
+    transform: translateY(-20px) var(--virtual-scroll-gpu-acceleration);
+  }
+}
+
+// ===== LOADING INDICATOR =====
+.virtual-scroll-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  
+  // Optimización de performance
+  contain: layout style;
+  
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(var(--primary-color-rgb), 0.2);
+    border-top: 2px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    
+    // GPU acceleration
+    will-change: transform;
+    transform: var(--virtual-scroll-gpu-acceleration);
+  }
+}
+
+// ===== SCROLLBAR PERSONALIZADA =====
+.virtual-scrollbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  
+  // Optimización de performance
+  contain: layout style;
+  will-change: opacity;
+  
+  &.active {
+    opacity: 1;
+  }
+  
+  .virtual-scrollbar-thumb {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    background: rgba(var(--primary-color-rgb), 0.6);
+    border-radius: 4px;
+    min-height: 20px;
+    transition: background 0.2s ease;
+    
+    // GPU acceleration
+    will-change: transform;
+    transform: var(--virtual-scroll-gpu-acceleration);
+    
+    &:hover {
+      background: rgba(var(--primary-color-rgb), 0.8);
+    }
+  }
+}
+
+// ===== ANIMACIONES OPTIMIZADAS =====
+@keyframes spin {
+  0% { 
+    transform: rotate(0deg) var(--virtual-scroll-gpu-acceleration); 
+  }
+  100% { 
+    transform: rotate(360deg) var(--virtual-scroll-gpu-acceleration); 
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) var(--virtual-scroll-gpu-acceleration);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) var(--virtual-scroll-gpu-acceleration);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) var(--virtual-scroll-gpu-acceleration);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px) var(--virtual-scroll-gpu-acceleration);
+  }
+}
+
+// ===== CLASES DE ANIMACIÓN =====
+.virtual-item-fade-in {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.virtual-item-fade-out {
+  animation: fadeOutDown 0.3s ease-out;
+}
+
+// ===== OPTIMIZACIONES ESPECÍFICAS =====
+
+// Optimización para listas grandes
+.virtual-scroll-container[data-large-list="true"] {
+  .virtual-scroll-item {
+    // Reducir transiciones en listas muy grandes
+    transition: none;
+    
+    // Optimización más agresiva
+    contain: strict;
+  }
+}
+
+// Optimización para elementos complejos
+.virtual-scroll-item[data-complex="true"] {
+  // Aislar completamente el contenido
+  contain: layout style paint;
+  
+  // Evitar repaints innecesarios
+  isolation: isolate;
+}
+
+// ===== RESPONSIVE OPTIMIZATIONS =====
+@media (max-width: 768px) {
+  .virtual-scroll-container {
+    // Optimizaciones móviles
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+  }
+  
+  .virtual-scroll-item {
+    // Reducir efectos en móviles para mejor performance
+    transition: none;
+  }
+  
+  .virtual-scrollbar {
+    width: 8px;
+  }
+}
+
+// ===== MODO REDUCIDO DE MOVIMIENTO =====
+@media (prefers-reduced-motion: reduce) {
+  .virtual-scroll-container {
+    scroll-behavior: auto;
+  }
+  
+  .virtual-scroll-item,
+  .virtual-scrollbar-thumb,
+  .loading-spinner {
+    transition: none;
+    animation: none;
+  }
+  
+  .virtual-item-entering,
+  .virtual-item-leaving {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ===== OPTIMIZACIONES DE CONTENIDO =====
+
+// Para imágenes en elementos virtualizados
+.virtual-scroll-item img {
+  // Evitar layout shifts
+  width: 100%;
+  height: auto;
+  
+  // Optimización de carga
+  loading: lazy;
+  decoding: async;
+  
+  // GPU acceleration
+  will-change: transform;
+  transform: var(--virtual-scroll-gpu-acceleration);
+}
+
+// Para texto en elementos virtualizados
+.virtual-scroll-item .text-content {
+  // Optimización de renderizado de texto
+  text-rendering: optimizeSpeed;
+  
+  // Evitar reflows por cambios de texto
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ===== DEBUG Y DESARROLLO =====
+.virtual-scroll-debug {
+  .virtual-scroll-item {
+    border: 1px solid rgba(255, 0, 0, 0.2);
+    
+    &::before {
+      content: attr(data-index);
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      padding: 2px 4px;
+      font-size: 10px;
+      z-index: 1000;
+    }
+  }
+  
+  .virtual-scroll-spacer {
+    background: rgba(0, 255, 0, 0.1);
+    border: 1px dashed rgba(0, 255, 0, 0.3);
+  }
+}
+
+// ===== UTILIDADES DE PERFORMANCE =====
+.virtual-scroll-optimized {
+  // Clase para aplicar todas las optimizaciones
+  contain: layout style paint;
+  will-change: transform, opacity;
+  transform: var(--virtual-scroll-gpu-acceleration);
+  isolation: isolate;
+}
+
+.virtual-scroll-static {
+  // Para elementos que no cambian
+  contain: strict;
+  will-change: auto;
+}
+
+.virtual-scroll-dynamic {
+  // Para elementos que cambian frecuentemente
+  contain: layout style;
+  will-change: transform, opacity, contents;
+}

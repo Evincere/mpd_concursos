@@ -63,24 +63,26 @@
 .tabs-nav {
   display: flex;
   position: relative;
+  gap: var(--spacing-xs); // Espaciado entre pestañas
 }
 
 .tab-button {
   flex: 1;
-  padding: var(--user-spacing-lg) var(--user-spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
   background: transparent;
   border: none;
   color: var(--user-text-tab-inactive);
-  font-size: var(--user-font-size-tab);
+  font-size: var(--font-size-sm);
   font-weight: 500;
   cursor: pointer;
   transition: var(--user-transition-normal);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--user-spacing-sm);
+  gap: var(--spacing-sm); // Espaciado entre icono y texto
   position: relative;
-  min-height: 52px; /* Increased for better touch targets */
+  min-height: 56px; // Altura más cómoda
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0; // Bordes redondeados arriba
 
   /* Focus state for accessibility */
   &:focus-visible {
@@ -90,14 +92,17 @@
   }
 
   i {
-    font-size: 1rem;
-    opacity: 0.8;
+    font-size: var(--font-size-lg); // Iconos más grandes
+    opacity: 0.9;
     transition: var(--user-transition-normal);
+    margin-right: var(--spacing-xs); // Espaciado adicional después del icono
   }
 
   span {
     letter-spacing: -0.025em;
     transition: var(--user-transition-normal);
+    font-weight: 500;
+    white-space: nowrap; // Evitar que el texto se corte
   }
 
   &:hover:not(.disabled) {

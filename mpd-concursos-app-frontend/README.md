@@ -6,12 +6,14 @@ Aplicación frontend para la gestión de concursos del Ministerio Público de la
 
 - **Panel Administrativo**: Gestión completa de usuarios, concursos e inscripciones
 - **Gestión de Usuarios**: Creación, edición, cambio de estado y asignación de roles
+- **🔍 Sistema CV Avanzado**: Búsqueda inteligente, filtros avanzados y gestión de preferencias
 - **Arquitectura Hexagonal**: Separación clara de capas (dominio, aplicación, infraestructura)
 - **Componentes Personalizados**: Interfaz de usuario consistente y personalizada
 - **🎨 Sistema Glassmorphism**: Diseño moderno con efectos de cristal y transparencias
 - **📱 Responsive Design**: Optimizado para móviles, tablets y desktop con enfoque mobile-first
 - **♿ Accesibilidad WCAG AA**: Cumple estándares de accesibilidad con soporte para preferencias del usuario
 - **⚡ Optimización de Rendimiento**: Animaciones GPU-accelerated y lazy loading automático
+- **🧪 Testing Completo**: Tests unitarios, de componentes e integración con alta cobertura
 
 ## Estados de Usuario
 
@@ -26,6 +28,47 @@ La aplicación soporta los siguientes estados de usuario:
 Los administradores pueden cambiar el estado de un usuario desde:
 1. La vista de lista de usuarios (botón de acción rápida)
 2. La vista de detalle de usuario (botón junto al estado)
+
+## 🔍 Sistema CV Avanzado
+
+El sistema de gestión de CV incluye funcionalidades avanzadas de búsqueda, filtrado y personalización:
+
+### Características Principales
+
+- **🔍 Búsqueda Inteligente**: Motor de búsqueda full-text con Fuse.js
+- **🎯 Filtros Avanzados**: Múltiples criterios combinables (empresa, tecnologías, fechas, etc.)
+- **📊 Facetas Dinámicas**: Contadores automáticos de resultados por categoría
+- **⚙️ Preferencias Personalizables**: Configuración persistente de búsqueda y visualización
+- **📚 Historial de Búsquedas**: Registro automático de búsquedas realizadas
+- **💾 Filtros Guardados**: Posibilidad de guardar y reutilizar configuraciones
+- **📤 Exportación**: Múltiples formatos (PDF, DOCX, HTML)
+- **🧪 Testing Completo**: Cobertura de tests unitarios, componentes e integración
+
+### Documentación Técnica
+
+- **[🔍 Sistema de Búsqueda Avanzada](./docs/CV_ADVANCED_SEARCH_SYSTEM.md)**: Arquitectura y funcionalidades
+- **[⚙️ Sistema de Preferencias](./docs/CV_PREFERENCES_SYSTEM.md)**: Gestión de configuraciones
+- **[🧪 Guía de Testing](./docs/CV_TESTING_GUIDE.md)**: Tests unitarios e integración
+
+### Uso Rápido
+
+```typescript
+// Configurar búsqueda
+this.searchService.updateFilters({
+  searchTerm: 'Angular Developer',
+  companies: ['TechCorp'],
+  technologies: ['Angular', 'TypeScript']
+});
+
+// Guardar preferencias
+this.preferencesService.updateSearchPreferences({
+  defaultSortBy: 'relevance',
+  enableFuzzySearch: true
+});
+
+// Guardar filtro personalizado
+this.searchService.saveCurrentFiltersAsPreset('Mi Filtro', 'Descripción');
+```
 
 ## Desarrollo
 
@@ -65,6 +108,12 @@ npm run watch            # Build en modo watch
 npm test                 # Ejecutar tests
 npm run test:quick       # Tests rápidos sin coverage
 npm run test:coverage    # Tests con cobertura
+
+# Testing CV System
+node scripts/run-cv-tests.js unit        # Tests unitarios CV
+node scripts/run-cv-tests.js component   # Tests de componentes CV
+node scripts/run-cv-tests.js integration # Tests de integración CV
+node scripts/run-cv-tests.js all         # Todos los tests CV
 
 # Linting y Validación
 npm run lint             # Verificar código

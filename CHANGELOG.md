@@ -5,6 +5,53 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-06-20
+
+### ✨ Agregado
+- **Sistema CV Avanzado**: Implementación completa de funcionalidades avanzadas para el CV
+  - Búsqueda inteligente con filtros avanzados y facetas
+  - Exportación a PDF con múltiples plantillas
+  - Drag & drop para reordenamiento de experiencias y educación
+  - Autocompletado inteligente con sugerencias contextuales
+  - Interfaz moderna con glassmorphism y animaciones suaves
+
+- **Nuevos Servicios Core**:
+  - `CvSearchService`: Búsqueda full-text con Fuse.js
+  - `CvAutocompleteService`: Autocompletado inteligente
+  - `CvPdfExportService`: Exportación PDF con html2canvas y jsPDF
+  - `CvDragDropService`: Manejo de drag & drop con validaciones
+  - `CvValidationService`: Validaciones avanzadas del CV
+  - `CvTransformService`: Transformaciones de datos
+  - `CvNotificationService`: Sistema de notificaciones específico
+
+- **Componentes Nuevos**:
+  - `CvSearchComponent`: Búsqueda avanzada con filtros múltiples
+  - Integración completa con `CvContainerComponent`
+
+- **Dependencias**:
+  - `fuse.js`: Para búsqueda fuzzy avanzada
+  - `jspdf`: Para generación de PDFs
+  - `html2canvas`: Para captura de elementos HTML
+  - `@angular/cdk/drag-drop`: Para funcionalidad drag & drop
+
+### 🔧 Mejorado
+- **Arquitectura CV**: Refactorización completa siguiendo principios SOLID
+- **Responsive Design**: Mejoras en la experiencia móvil
+- **Performance**: Optimizaciones con debounce y lazy loading
+- **Accesibilidad**: Soporte completo para lectores de pantalla
+
+### 📚 Documentación
+- Creado `CV_ADVANCED_FEATURES.md` con documentación completa
+- Actualizada documentación de arquitectura
+- Agregados ejemplos de uso para todos los servicios
+
+### 🛠️ Técnico
+- Implementación de arquitectura hexagonal en servicios CV
+- Uso de signals de Angular para reactividad
+- Patrones de diseño: Observer, Strategy, Factory
+- Validaciones XSS y sanitización de contenido
+- Compilación exitosa sin errores críticos
+
 ## [Unreleased]
 
 ## [2.0.0] - 2025-06-18

@@ -26,6 +26,7 @@ import {
 import { CvValidationService, ValidationResult } from '@core/services/cv/cv-validation.service';
 import { CvTransformService } from '@core/services/cv/cv-transform.service';
 import { CvNotificationService } from '@core/services/cv/cv-notification.service';
+import { DocumentosService } from '@core/services/documentos/documentos.service';
 
 // Componentes compartidos
 import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
@@ -68,7 +69,14 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   // ===== INPUTS Y OUTPUTS =====
   @Input() experience: WorkExperience | null = null;
   @Input() mode: FormMode = 'create';
-  @Input() isLoading = false;
+  @Input() set isLoading(value: boolean) {
+    this._isLoading = value;
+    this.updateFormDisabledState();
+  }
+  get isLoading(): boolean {
+    return this._isLoading;
+  }
+  private _isLoading = false;
 
   @Output() save = new EventEmitter<WorkExperienceDto>();
   @Output() cancel = new EventEmitter<void>();
@@ -80,7 +88,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   public validationErrors: string[] = [];
 
   // ===== SIGNALS =====
-  public readonly form = signal<FormGroup>(this.createForm());
+  public readonly form = signal<FormGroup | null>(null);
   public readonly isFormValid = signal<boolean>(false);
   public readonly isDirty = signal<boolean>(false);
   public readonly validationState = signal<ValidationResult>({
@@ -88,17 +96,20 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     errors: [],
     warnings: []
   });
+  public readonly uploadedDocument = signal<File | null>(null);
+  public readonly isUploadingDocument = signal<boolean>(false);
 
   // ===== COMPUTED SIGNALS =====
-  public readonly canSave = computed(() => 
-    this.isFormValid() && !this.isLoading && this.isDirty()
-  );
+  public readonly canSave = computed(() => {
+    const form = this.form();
+    return form !== null && this.isFormValid() && !this.isLoading && this.isDirty();
+  });
 
-  public readonly hasErrors = computed(() => 
+  public readonly hasErrors = computed(() =>
     this.validationState().errors.length > 0
   );
 
-  public readonly hasWarnings = computed(() => 
+  public readonly hasWarnings = computed(() =>
     this.validationState().warnings.length > 0
   );
 
@@ -185,7 +196,8 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     private readonly cdr: ChangeDetectorRef,
     private readonly validationService: CvValidationService,
     private readonly transformService: CvTransformService,
-    private readonly notificationService: CvNotificationService
+    private readonly notificationService: CvNotificationService,
+    private readonly documentosService: DocumentosService
   ) {}
 
   // ===== LIFECYCLE =====
@@ -206,12 +218,20 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Guarda la experiencia
    */
   onSave(): void {
-    if (!this.validateForm()) {
+    const form = this.form();
+    if (!form || !this.validateForm()) {
       this.notificationService.showValidationErrors(this.validationState().errors);
       return;
     }
 
-    const formValue = this.form().value;
+    // VALIDACIÓN CRÍTICA: Verificar que el documento de respaldo esté presente
+    const supportDocument = form.get('supportDocument')?.value;
+    if (!supportDocument) {
+      this.notificationService.showError('Es obligatorio adjuntar un documento que respalde esta experiencia laboral');
+      return;
+    }
+
+    const formValue = form.value;
     const validationResult = this.validationService.validateWorkExperience(formValue);
 
     if (!validationResult.isValid) {
@@ -236,13 +256,38 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   }
 
   /**
+   * Maneja la entrada de chips con teclado
+   */
+  handleChipInput(event: Event, fieldName: string): void {
+    event.preventDefault();
+    const input = event.target as HTMLInputElement;
+    if (input.value.trim()) {
+      this.onAddChip(fieldName, input.value.trim());
+      input.value = '';
+    }
+  }
+
+  /**
+   * Maneja el clic del botón de agregar chip
+   */
+  handleChipButtonClick(input: HTMLInputElement, fieldName: string): void {
+    if (input.value.trim()) {
+      this.onAddChip(fieldName, input.value.trim());
+      input.value = '';
+    }
+  }
+
+  /**
    * Resetea el formulario
    */
   onReset(): void {
     if (!confirm('¿Estás seguro de resetear el formulario?')) {
       return;
     }
-    this.form().reset();
+    const form = this.form();
+    if (form) {
+      form.reset();
+    }
     this.initializeForm();
   }
 
@@ -250,12 +295,17 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Valida el formulario completo
    */
   validateForm(): boolean {
-    const formValue = this.form().value;
+    const form = this.form();
+    if (!form) {
+      return false;
+    }
+
+    const formValue = form.value;
     const validationResult = this.validationService.validateWorkExperience(formValue);
-    
+
     this.validationState.set(validationResult);
     this.validationErrors = validationResult.errors;
-    
+
     // Emitir cambio de validación
     this.validationChange.emit({
       isValid: validationResult.isValid,
@@ -271,14 +321,19 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    */
   shouldShowField(field: DynamicField): boolean {
     if (!field.showWhen) return true;
-    return field.showWhen(this.form().value);
+    const form = this.form();
+    if (!form) return true;
+    return field.showWhen(form.value);
   }
 
   /**
    * Obtiene los errores de un campo específico
    */
   getFieldErrors(fieldName: string): string[] {
-    const control = this.form().get(fieldName);
+    const form = this.form();
+    if (!form) return [];
+
+    const control = form.get(fieldName);
     if (!control || !control.errors || !control.touched) return [];
 
     const errors: string[] = [];
@@ -312,15 +367,18 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Maneja el cambio en el checkbox de trabajo actual
    */
   onCurrentJobChange(isCurrentJob: boolean): void {
-    const endDateControl = this.form().get('endDate');
-    
+    const form = this.form();
+    if (!form) return;
+
+    const endDateControl = form.get('endDate');
+
     if (isCurrentJob) {
       endDateControl?.setValue(null);
       endDateControl?.clearValidators();
     } else {
       endDateControl?.setValidators([Validators.required]);
     }
-    
+
     endDateControl?.updateValueAndValidity();
     this.cdr.markForCheck();
   }
@@ -331,9 +389,12 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   onAddChip(fieldName: string, value: string): void {
     if (!value.trim()) return;
 
-    const control = this.form().get(fieldName);
+    const form = this.form();
+    if (!form) return;
+
+    const control = form.get(fieldName);
     const currentValues = control?.value || [];
-    
+
     // Validar límites
     const maxItems = fieldName === 'technologies' ? 20 : 10;
     if (currentValues.length >= maxItems) {
@@ -352,10 +413,79 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Maneja la eliminación de chips
    */
   onRemoveChip(fieldName: string, index: number): void {
-    const control = this.form().get(fieldName);
+    const form = this.form();
+    if (!form) return;
+
+    const control = form.get(fieldName);
     const currentValues = control?.value || [];
     currentValues.splice(index, 1);
     control?.setValue([...currentValues]);
+  }
+
+  /**
+   * Maneja la selección de archivo de documento de respaldo
+   */
+  onDocumentFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    // Validar tipo de archivo
+    if (!this.isValidFileType(file)) {
+      this.notificationService.showError('Solo se permiten archivos PDF, DOC, DOCX o imágenes (JPG, PNG)');
+      input.value = '';
+      return;
+    }
+
+    // Validar tamaño de archivo (máximo 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      this.notificationService.showError('El archivo no puede superar los 10MB');
+      input.value = '';
+      return;
+    }
+
+    // Actualizar el formulario y el signal
+    const form = this.form();
+    if (form) {
+      form.get('supportDocument')?.setValue(file);
+      this.uploadedDocument.set(file);
+      this.notificationService.showSuccess(`Documento "${file.name}" seleccionado correctamente`);
+    }
+  }
+
+  /**
+   * Elimina el documento seleccionado
+   */
+  onRemoveDocument(): void {
+    const form = this.form();
+    if (form) {
+      form.get('supportDocument')?.setValue(null);
+      this.uploadedDocument.set(null);
+
+      // Limpiar el input file
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
+  }
+
+  /**
+   * Valida el tipo de archivo
+   */
+  private isValidFileType(file: File): boolean {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/jpg',
+      'image/png'
+    ];
+    return allowedTypes.includes(file.type);
   }
 
   // ===== MÉTODOS PRIVADOS =====
@@ -390,7 +520,9 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
       technologies: [[]],
       achievements: [[]],
-      comments: ['', [Validators.maxLength(500)]]
+      comments: ['', [Validators.maxLength(500)]],
+      // NUEVO: Campo obligatorio para documento de respaldo
+      supportDocument: [null, [Validators.required]]
     });
   }
 
@@ -398,7 +530,10 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Configura la validación en tiempo real
    */
   private setupValidation(): void {
-    this.form().statusChanges.pipe(
+    const form = this.form();
+    if (!form) return;
+
+    form.statusChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(status => {
       this.isFormValid.set(status === 'VALID');
@@ -410,18 +545,24 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Configura los watchers del formulario
    */
   private setupFormWatchers(): void {
+    const form = this.form();
+    if (!form) return;
+
     // Watcher para detectar cambios
-    this.form().valueChanges.pipe(
+    form.valueChanges.pipe(
       takeUntil(this.destroy$),
       debounceTime(300),
       distinctUntilChanged()
     ).subscribe(() => {
-      this.isDirty.set(this.form().dirty);
-      this.validateForm();
+      const currentForm = this.form();
+      if (currentForm) {
+        this.isDirty.set(currentForm.dirty);
+        this.validateForm();
+      }
     });
 
     // Watcher específico para trabajo actual
-    this.form().get('isCurrentJob')?.valueChanges.pipe(
+    form.get('isCurrentJob')?.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(isCurrentJob => {
       this.onCurrentJobChange(isCurrentJob);
@@ -446,5 +587,19 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     });
 
     return grouped;
+  }
+
+  /**
+   * Actualiza el estado disabled de todos los controles del formulario
+   */
+  private updateFormDisabledState(): void {
+    const form = this.form();
+    if (!form) return;
+
+    if (this._isLoading) {
+      form.disable();
+    } else {
+      form.enable();
+    }
   }
 }

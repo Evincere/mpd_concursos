@@ -59,13 +59,24 @@ export class CvTransformService implements ICvTransformService {
    * Convierte entidad de experiencia laboral a DTO
    */
   workExperienceEntityToDto(entity: WorkExperience): WorkExperienceDto {
+    // Validar fechas antes de la conversión
+    if (!entity.startDate || isNaN(entity.startDate.getTime())) {
+      console.warn('Invalid startDate in WorkExperience entity:', entity);
+      entity.startDate = new Date(); // Usar fecha actual como fallback
+    }
+
+    if (entity.endDate && isNaN(entity.endDate.getTime())) {
+      console.warn('Invalid endDate in WorkExperience entity:', entity);
+      entity.endDate = undefined; // Eliminar fecha inválida
+    }
+
     return {
-      position: entity.position,
-      company: entity.company,
-      description: entity.description,
+      position: entity.position || '',
+      company: entity.company || '',
+      description: entity.description || '',
       startDate: this.dateToISOString(entity.startDate),
       endDate: entity.endDate ? this.dateToISOString(entity.endDate) : undefined,
-      isCurrentJob: entity.isCurrentJob,
+      isCurrentJob: entity.isCurrentJob || false,
       location: entity.location,
       achievements: entity.achievements || [],
       technologies: entity.technologies || [],
@@ -247,6 +258,11 @@ export class CvTransformService implements ICvTransformService {
    * Convierte Date a string ISO
    */
   private dateToISOString(date: Date): string {
+    // Validar que la fecha sea válida
+    if (!date || isNaN(date.getTime())) {
+      console.warn('Invalid date provided to dateToISOString:', date);
+      return new Date().toISOString().split('T')[0]; // Retornar fecha actual como fallback
+    }
     return date.toISOString().split('T')[0];
   }
 

@@ -1,0 +1,135 @@
+[
+  {
+    "id": "1",
+    "position": "Desarrollador Frontend Senior",
+    "company": "TechCorp",
+    "startDate": "2022-01-01T00:00:00.000Z",
+    "endDate": "2023-12-31T00:00:00.000Z",
+    "description": "Desarrollo de aplicaciones web modernas utilizando Angular, TypeScript y metodologías ágiles. Liderazgo de equipo de 3 desarrolladores junior.",
+    "technologies": ["Angular", "TypeScript", "JavaScript", "HTML5", "CSS3", "SASS", "RxJS", "NgRx"],
+    "achievements": [
+      "Implementó sistema de testing automatizado que redujo bugs en producción en 40%",
+      "Mejoró performance de la aplicación principal en 30%",
+      "Mentoreó a 3 desarrolladores junior",
+      "Lideró migración de AngularJS a Angular 15"
+    ],
+    "isCurrentJob": false,
+    "location": "Buenos Aires, Argentina",
+    "salary": 75000,
+    "projects": [
+      "Sistema de gestión de inventario",
+      "Plataforma de e-commerce",
+      "Dashboard de analytics"
+    ]
+  },
+  {
+    "id": "2",
+    "position": "Desarrollador Full Stack",
+    "company": "StartupXYZ",
+    "startDate": "2021-06-01T00:00:00.000Z",
+    "endDate": "2021-12-31T00:00:00.000Z",
+    "description": "Desarrollo de aplicaciones web completas desde el backend hasta el frontend, trabajando en un ambiente startup dinámico.",
+    "technologies": ["React", "Node.js", "Express", "MongoDB", "JavaScript", "Docker", "AWS"],
+    "achievements": [
+      "Creó API REST completa para aplicación móvil",
+      "Implementó sistema de autenticación JWT",
+      "Optimizó consultas de base de datos mejorando tiempo de respuesta en 50%"
+    ],
+    "isCurrentJob": false,
+    "location": "Córdoba, Argentina",
+    "salary": 45000,
+    "projects": [
+      "API de gestión de usuarios",
+      "Sistema de notificaciones push",
+      "Panel de administración"
+    ]
+  },
+  {
+    "id": "3",
+    "position": "Desarrollador Backend",
+    "company": "FinanceInc",
+    "startDate": "2020-03-01T00:00:00.000Z",
+    "endDate": "2021-05-31T00:00:00.000Z",
+    "description": "Desarrollo de sistemas backend robustos para aplicaciones financieras, con énfasis en seguridad y performance.",
+    "technologies": ["Java", "Spring Boot", "PostgreSQL", "Redis", "Docker", "Kubernetes", "Jenkins"],
+    "achievements": [
+      "Desarrolló microservicios para procesamiento de transacciones",
+      "Implementó sistema de cache que redujo latencia en 60%",
+      "Estableció pipeline de CI/CD con Jenkins"
+    ],
+    "isCurrentJob": false,
+    "location": "Rosario, Argentina",
+    "salary": 55000,
+    "projects": [
+      "Sistema de procesamiento de pagos",
+      "API de consulta de balances",
+      "Servicio de notificaciones"
+    ]
+  },
+  {
+    "id": "4",
+    "position": "Desarrollador Mobile",
+    "company": "MobileApps Co",
+    "startDate": "2023-01-01T00:00:00.000Z",
+    "endDate": null,
+    "description": "Desarrollo de aplicaciones móviles nativas e híbridas para iOS y Android, con foco en UX/UI excepcional.",
+    "technologies": ["React Native", "Flutter", "Dart", "Swift", "Kotlin", "Firebase", "GraphQL"],
+    "achievements": [
+      "Desarrolló app con más de 100k descargas",
+      "Implementó sistema de sincronización offline",
+      "Optimizó performance de app reduciendo tiempo de carga en 45%"
+    ],
+    "isCurrentJob": true,
+    "location": "Mendoza, Argentina",
+    "salary": 80000,
+    "projects": [
+      "App de delivery de comida",
+      "Aplicación de fitness",
+      "App de gestión financiera personal"
+    ]
+  },
+  {
+    "id": "5",
+    "position": "Desarrollador Python",
+    "company": "DataScience Ltd",
+    "startDate": "2019-08-01T00:00:00.000Z",
+    "endDate": "2020-02-29T00:00:00.000Z",
+    "description": "Desarrollo de soluciones de análisis de datos y machine learning utilizando Python y sus librerías especializadas.",
+    "technologies": ["Python", "Django", "Flask", "Pandas", "NumPy", "Scikit-learn", "TensorFlow", "PostgreSQL"],
+    "achievements": [
+      "Desarrolló modelo de ML para predicción de ventas con 85% de precisión",
+      "Automatizó procesos de ETL reduciendo tiempo de procesamiento en 70%",
+      "Creó dashboard interactivo para visualización de datos"
+    ],
+    "isCurrentJob": false,
+    "location": "La Plata, Argentina",
+    "salary": 50000,
+    "projects": [
+      "Sistema de recomendaciones",
+      "Análisis predictivo de ventas",
+      "Dashboard de métricas de negocio"
+    ]
+  },
+  {
+    "id": "6",
+    "position": "Desarrollador DevOps",
+    "company": "CloudTech Solutions",
+    "startDate": "2018-11-01T00:00:00.000Z",
+    "endDate": "2019-07-31T00:00:00.000Z",
+    "description": "Implementación y mantenimiento de infraestructura cloud, automatización de deployments y monitoreo de sistemas.",
+    "technologies": ["AWS", "Docker", "Kubernetes", "Terraform", "Ansible", "Jenkins", "Prometheus", "Grafana"],
+    "achievements": [
+      "Migró infraestructura on-premise a AWS reduciendo costos en 40%",
+      "Implementó CI/CD pipeline que redujo tiempo de deployment en 80%",
+      "Estableció sistema de monitoreo y alertas 24/7"
+    ],
+    "isCurrentJob": false,
+    "location": "Buenos Aires, Argentina",
+    "salary": 65000,
+    "projects": [
+      "Migración a microservicios",
+      "Automatización de infraestructura",
+      "Sistema de monitoreo distribuido"
+    ]
+  }
+]
