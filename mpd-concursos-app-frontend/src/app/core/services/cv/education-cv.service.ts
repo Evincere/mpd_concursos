@@ -199,14 +199,30 @@ export class EducationCvService {
    * Mapea la respuesta de la API a EducationEntry
    */
   private mapApiResponseToEducationEntry(response: EducationApiResponse): EducationEntry {
+    // Calcular fechas basándose en issueDate y durationYears
+    const endDate = response.issueDate ? this.parseApiDate(response.issueDate) : undefined;
+    let startDate: Date | undefined;
+
+    if (endDate && response.durationYears && response.durationYears > 0) {
+      // Si tenemos fecha de finalización y duración, calcular fecha de inicio
+      startDate = new Date(endDate);
+      startDate.setFullYear(startDate.getFullYear() - response.durationYears);
+    } else if (endDate) {
+      // Si no hay duración específica, usar la fecha de emisión como inicio (para cursos cortos)
+      startDate = new Date(endDate);
+    } else {
+      // Si no hay fecha de emisión, usar fecha actual como fallback
+      startDate = new Date();
+    }
+
     return {
       id: response.id,
       type: this.mapStringToEducationType(response.type) as any,
       status: this.mapStringToEducationStatus(response.status),
       title: response.title,
       institution: response.institution,
-      startDate: new Date(), // Campo no disponible en API actual
-      endDate: response.issueDate ? this.parseApiDate(response.issueDate) : undefined,
+      startDate: startDate,
+      endDate: endDate,
       isOngoing: response.status === 'En Curso',
       document: response.documentUrl ? {
         id: response.id + '_doc',
@@ -237,28 +253,22 @@ export class EducationCvService {
     const typeString = this.mapEducationTypeToString(dto.type);
     const statusString = this.mapEducationStatusToString(dto.status);
 
-    // Convertir fechas de string ISO a LocalDate format (YYYY-MM-DD)
-    const startDate = dto.startDate ? this.formatDateForBackend(dto.startDate) : null;
-    const endDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
+    // El backend solo maneja issueDate (fecha de finalización/emisión)
+    // Mapear endDate del frontend a issueDate del backend
+    const issueDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
 
     const payload = {
       type: typeString,
       status: statusString,
       title: dto.title,
       institution: dto.institution,
-      startDate: startDate,
-      endDate: endDate,
-      isOngoing: dto.isOngoing,
+      issueDate: issueDate, // Backend espera issueDate, no startDate/endDate
       durationYears: dto.durationYears,
       average: dto.average,
       thesisTopic: dto.thesisTopic,
-      advisor: dto.advisor,
       hourlyLoad: dto.hourlyLoad,
       activityType: dto.activityType,
-      role: dto.role,
       topic: dto.topic,
-      venue: dto.venue,
-      presentationDate: dto.presentationDate,
       comments: dto.comments
     };
 

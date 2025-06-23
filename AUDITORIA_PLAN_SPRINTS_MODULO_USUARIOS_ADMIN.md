@@ -9,11 +9,11 @@ Este documento detalla los sprints, historias de usuario (HU), tareas y subtarea
 ### HU1: Como administrador, quiero gestionar usuarios reales desde el panel para operar sobre la base de datos real.
 
 #### Tareas:
-- [ ] Conectar el frontend con los endpoints reales del backend en `admin-users.service.ts`.
-  - [ ] Descomentar y adaptar métodos HTTP.
-  - [ ] Probar integración con endpoints existentes (`GET`, `PUT`, `DELETE`).
-- [ ] Ajustar modelos y DTOs para compatibilidad entre frontend y backend.
-- [ ] Validar feedback de errores y mensajes en la UI.
+- [x] Conectar el frontend con los endpoints reales del backend en `admin-users.service.ts`.
+  - [x] Descomentar y adaptar métodos HTTP.
+  - [x] Probar integración con endpoints existentes (`GET`, `PUT`, `DELETE`).
+- [x] Ajustar modelos y DTOs para compatibilidad entre frontend y backend.
+- [x] Validar feedback de errores y mensajes en la UI.
 
 ### HU2: Como administrador, quiero poder crear usuarios desde el panel admin.
 
@@ -68,7 +68,7 @@ Este documento detalla los sprints, historias de usuario (HU), tareas y subtarea
 ### HU7: Como administrador, quiero recibir mensajes claros y útiles ante errores o validaciones fallidas.
 
 #### Tareas:
-- [ ] Mejorar feedback de errores en frontend.
+- [x] Mejorar feedback de errores en frontend.
 - [ ] Revisar y mejorar mensajes de error en backend.
 
 ---
