@@ -34,6 +34,9 @@ import { CustomSelectComponent } from '@shared/components/custom-form/custom-sel
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
 
+// Componente uploader CV
+import { CvDocumentUploaderComponent, CvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
+
 /**
  * Configuración de campo dinámico
  */
@@ -58,7 +61,8 @@ interface DynamicField {
     CustomFormFieldComponent,
     CustomSelectComponent,
     CustomButtonComponent,
-    CustomDatepickerComponent
+    CustomDatepickerComponent,
+    CvDocumentUploaderComponent
   ],
   templateUrl: './experience-form.component.html',
   styleUrls: ['./experience-form.component.scss'],
@@ -69,6 +73,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   // ===== INPUTS Y OUTPUTS =====
   @Input() experience: WorkExperience | null = null;
   @Input() mode: FormMode = 'create';
+<<<<<<< HEAD
   @Input() set isLoading(value: boolean) {
     this._isLoading = value;
     this.updateFormDisabledState();
@@ -77,6 +82,10 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     return this._isLoading;
   }
   private _isLoading = false;
+=======
+  @Input() isLoading = false;
+  @Input() isInModal = false;
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
 
   @Output() save = new EventEmitter<WorkExperienceDto>();
   @Output() cancel = new EventEmitter<void>();
@@ -87,8 +96,21 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   public isEditing = false;
   public validationErrors: string[] = [];
 
+  // ===== PROPIEDADES DEL UPLOADER =====
+  public documents: CvDocument[] = [];
+  public documentValidation: DocumentValidationState = {
+    isValid: false,
+    hasRequiredDocuments: false,
+    errors: [],
+    warnings: []
+  };
+
   // ===== SIGNALS =====
+<<<<<<< HEAD
   public readonly form = signal<FormGroup | null>(null);
+=======
+  public readonly form = signal<FormGroup>(new FormGroup({}));
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
   public readonly isFormValid = signal<boolean>(false);
   public readonly isDirty = signal<boolean>(false);
   public readonly validationState = signal<ValidationResult>({
@@ -100,10 +122,16 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   public readonly isUploadingDocument = signal<boolean>(false);
 
   // ===== COMPUTED SIGNALS =====
+<<<<<<< HEAD
   public readonly canSave = computed(() => {
     const form = this.form();
     return form !== null && this.isFormValid() && !this.isLoading && this.isDirty();
   });
+=======
+  public readonly canSave = computed(() =>
+    this.isFormValid() && !this.isLoading && this.isDirty() && this.documentValidation.isValid
+  );
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
 
   public readonly hasErrors = computed(() =>
     this.validationState().errors.length > 0
@@ -120,7 +148,6 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       label: 'Puesto de Trabajo',
       type: 'text',
       required: true,
-      placeholder: 'Ej: Desarrollador Frontend Senior',
       helpText: 'Especifica tu rol o posición en la empresa'
     },
     {
@@ -128,7 +155,6 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       label: 'Empresa',
       type: 'text',
       required: true,
-      placeholder: 'Ej: Google Argentina',
       helpText: 'Nombre completo de la empresa u organización'
     },
     {
@@ -136,7 +162,6 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       label: 'Ubicación',
       type: 'text',
       required: false,
-      placeholder: 'Ej: Buenos Aires, Argentina',
       helpText: 'Ciudad y país donde trabajaste'
     },
     {
@@ -166,7 +191,6 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       label: 'Descripción del Puesto',
       type: 'textarea',
       required: true,
-      placeholder: 'Describe tus responsabilidades, logros y actividades principales...',
       helpText: 'Detalla qué hacías en este puesto (máximo 2000 caracteres)'
     },
     {
@@ -174,7 +198,6 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       label: 'Tecnologías Utilizadas',
       type: 'chips',
       required: false,
-      placeholder: 'Ej: Angular, TypeScript, Node.js',
       helpText: 'Tecnologías, herramientas o lenguajes que usaste (máximo 20)'
     },
     {
@@ -182,7 +205,6 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       label: 'Logros Destacados',
       type: 'chips',
       required: false,
-      placeholder: 'Ej: Aumenté la eficiencia del equipo en 30%',
       helpText: 'Logros específicos y cuantificables (máximo 10)'
     }
   ];
@@ -196,9 +218,14 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     private readonly cdr: ChangeDetectorRef,
     private readonly validationService: CvValidationService,
     private readonly transformService: CvTransformService,
+<<<<<<< HEAD
     private readonly notificationService: CvNotificationService,
     private readonly documentosService: DocumentosService
   ) {}
+=======
+    private readonly notificationService: CvNotificationService
+  ) { }
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
 
   // ===== LIFECYCLE =====
   ngOnInit(): void {
@@ -367,10 +394,14 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Maneja el cambio en el checkbox de trabajo actual
    */
   onCurrentJobChange(isCurrentJob: boolean): void {
+<<<<<<< HEAD
     const form = this.form();
     if (!form) return;
 
     const endDateControl = form.get('endDate');
+=======
+    const endDateControl = this.form().get('endDate');
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
 
     if (isCurrentJob) {
       endDateControl?.setValue(null);
@@ -423,6 +454,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   }
 
   /**
+<<<<<<< HEAD
    * Maneja la selección de archivo de documento de respaldo
    */
   onDocumentFileSelected(event: Event): void {
@@ -488,6 +520,25 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     return allowedTypes.includes(file.type);
   }
 
+=======
+   * TrackBy function para campos dinámicos
+   */
+  trackByFieldName(_index: number, field: DynamicField): string {
+    return field.name;
+  }
+
+  /**
+   * Maneja el evento Enter en el input de chips
+   */
+  onChipInputEnter(event: KeyboardEvent, fieldName: string, inputElement: HTMLInputElement): void {
+    event.preventDefault();
+    if (inputElement && inputElement.value.trim()) {
+      this.onAddChip(fieldName, inputElement.value.trim());
+      inputElement.value = '';
+    }
+  }
+
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
   // ===== MÉTODOS PRIVADOS =====
 
   /**
@@ -495,7 +546,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    */
   private initializeForm(): void {
     const formGroup = this.createForm();
-    
+
     if (this.experience && this.mode !== 'create') {
       const dto = this.transformService.workExperienceEntityToDto(this.experience);
       formGroup.patchValue(dto);
@@ -574,12 +625,12 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    */
   private groupErrorsByField(errors: string[]): Record<string, string[]> {
     const grouped: Record<string, string[]> = {};
-    
+
     errors.forEach(error => {
       // Extraer el nombre del campo del mensaje de error
       const fieldMatch = error.match(/^([^:]+):/);
       const fieldName = fieldMatch ? fieldMatch[1].toLowerCase() : 'general';
-      
+
       if (!grouped[fieldName]) {
         grouped[fieldName] = [];
       }
@@ -589,6 +640,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     return grouped;
   }
 
+<<<<<<< HEAD
   /**
    * Actualiza el estado disabled de todos los controles del formulario
    */
@@ -602,4 +654,25 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       form.enable();
     }
   }
+=======
+  // ===== MÉTODOS DEL UPLOADER =====
+
+  /**
+   * Maneja el cambio de documentos
+   */
+  onDocumentsChange(documents: CvDocument[]): void {
+    this.documents = documents;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Maneja el cambio de validación de documentos
+   */
+  onDocumentValidationChange(validation: DocumentValidationState): void {
+    this.documentValidation = validation;
+    this.cdr.markForCheck();
+  }
+
+
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
 }

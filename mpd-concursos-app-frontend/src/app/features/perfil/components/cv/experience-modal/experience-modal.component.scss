@@ -1,0 +1,97 @@
+/**
+ * Estilos para Modal de Experiencias
+ * 
+ * @description Estilos específicos para el modal de gestión de experiencias laborales
+ * @author Augment Agent
+ * @date 2025-06-22
+ */
+
+// ===== MODAL CONTENT =====
+.experience-modal-content {
+  min-height: 400px;
+  
+  // Asegurar que el formulario ocupe todo el espacio disponible
+  app-experience-form {
+    display: block;
+    width: 100%;
+  }
+}
+
+// ===== MODAL ICON =====
+.modal-icon {
+  margin-right: 8px;
+  vertical-align: middle;
+  color: #3b82f6;
+  font-size: 20px;
+}
+
+// ===== FOOTER =====
+.experience-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+  
+  .footer-left {
+    flex: 0 0 auto;
+  }
+  
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+  }
+}
+
+// ===== RESPONSIVE =====
+@media (max-width: 768px) {
+  .experience-modal-footer {
+    flex-direction: column;
+    gap: 12px;
+    
+    .footer-left,
+    .footer-right {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .footer-right {
+      flex-direction: column;
+      gap: 8px;
+      
+      app-custom-button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// ===== ESTADOS DE CARGA =====
+:host {
+  &.loading {
+    .experience-modal-content {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+  }
+}
+
+// ===== ANIMACIONES =====
+.experience-modal-content {
+  transition: opacity 0.2s ease;
+}
+
+// ===== CUSTOMIZACIÓN DEL MODAL BASE =====
+:host ::ng-deep {
+  .experience-modal {
+    .modal-container {
+      max-width: 900px;
+    }
+    
+    .modal-body {
+      padding-top: 0;
+    }
+  }
+}

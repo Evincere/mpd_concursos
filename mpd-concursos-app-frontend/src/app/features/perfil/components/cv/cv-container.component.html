@@ -2,7 +2,7 @@
 <div class="cv-container">
 
   <!-- Header del CV -->
-  <app-custom-card>
+  <div class="cv-header">
     <div class="cv-header-content">
       <div class="cv-title-section">
         <h2 class="cv-title">
@@ -26,7 +26,7 @@
         </button>
       </div>
     </div>
-  </app-custom-card>
+  </div>
 
   <!-- Componente de búsqueda avanzada -->
   <div *ngIf="hasData()">
@@ -42,10 +42,9 @@
   <div class="cv-content">
 
     <!-- Estado vacío -->
-    <div *ngIf="!hasData() && !isAnyLoading()">
-      <app-custom-card>
-        <div class="empty-state-content">
-          <i class="material-icons">description</i>
+    <div *ngIf="!hasData() && !isAnyLoading()" class="cv-empty-state">
+      <div class="empty-state-content">
+          <i class="material-icons empty-icon">description</i>
           <h3>Tu CV está vacío</h3>
           <p>Comienza agregando tu experiencia laboral y educación para crear un CV completo.</p>
 
@@ -61,18 +60,23 @@
             </button>
           </div>
         </div>
-      </app-custom-card>
-    </div>
+      </div>
 
     <!-- Tabs del CV -->
-    <div *ngIf="hasData() || isAnyLoading()">
-      <app-custom-tabs
-        [tabs]="getTabItems()"
-        [activeTabIndex]="getActiveTabIndex()"
-        (tabChange)="onTabIndexChange($event)">
-      </app-custom-tabs>
+    <div *ngIf="hasData() || isAnyLoading()" class="cv-tabs-container">
+      <div class="cv-tabs-header">
+        <button
+          *ngFor="let tab of tabs(); let i = index"
+          class="cv-tab-button"
+          [class.active]="tab.isActive"
+          (click)="onTabChange(tab.id)">
+          <i class="material-icons">{{ tab.icon }}</i>
+          <span>{{ tab.label }}</span>
+          <span class="tab-count" *ngIf="tab.count > 0">{{ tab.count }}</span>
+        </button>
+      </div>
 
-      <!-- Contenido con drag & drop -->
+      <!-- Contenido con drag & drop mejorado -->
       <div class="cv-tab-content">
         <!-- Tab de Experiencia Laboral con Drag & Drop -->
         <div *ngIf="activeTab() === 'experience'">
@@ -81,10 +85,12 @@
               <h3>Experiencia Laboral</h3>
               <div class="tab-actions">
                 <span class="item-count">{{ cvState().experiences.data.length }} experiencias</span>
-                <button class="btn btn-primary" (click)="addExperience()">
-                  <i class="material-icons">add</i>
-                  Agregar Experiencia
-                </button>
+                <app-custom-button
+                  [label]="'Agregar Experiencia'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addExperience()">
+                </app-custom-button>
               </div>
             </div>
 
@@ -194,9 +200,12 @@
               <div class="empty-drop-zone" *ngIf="cvState().experiences.data.length === 0">
                 <i class="material-icons">work_off</i>
                 <p>No hay experiencias laborales</p>
-                <button class="btn btn-primary" (click)="addExperience()">
-                  Agregar Primera Experiencia
-                </button>
+                <app-custom-button
+                  [label]="'Agregar Primera Experiencia'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addExperience()">
+                </app-custom-button>
               </div>
             </div>
           </app-custom-card>
@@ -209,10 +218,12 @@
               <h3>Educación</h3>
               <div class="tab-actions">
                 <span class="item-count">{{ cvState().education.data.length }} estudios</span>
-                <button class="btn btn-primary" (click)="addEducation()">
-                  <i class="material-icons">add</i>
-                  Agregar Educación
-                </button>
+                <app-custom-button
+                  [label]="'Agregar Educación'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addEducation()">
+                </app-custom-button>
               </div>
             </div>
 
@@ -314,9 +325,12 @@
               <div class="empty-drop-zone" *ngIf="cvState().education.data.length === 0">
                 <i class="material-icons">school_off</i>
                 <p>No hay educación registrada</p>
-                <button class="btn btn-primary" (click)="addEducation()">
-                  Agregar Primera Educación
-                </button>
+                <app-custom-button
+                  [label]="'Agregar Primera Educación'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addEducation()">
+                </app-custom-button>
               </div>
             </div>
           </app-custom-card>
@@ -325,20 +339,24 @@
     </div>
   </div>
 
-  <!-- Modales con Funcionalidad de Documentos -->
-  <app-education-modal-wrapper
-    [isOpen]="educationModalOpen()"
-    [education]="selectedEducation()"
-    [mode]="modalMode()"
-    (result)="onEducationModalResult($event)"
-    (close)="onEducationModalClose()">
-  </app-education-modal-wrapper>
-
-  <app-experience-modal-wrapper
-    [isOpen]="experienceModalOpen()"
+  <!-- Modales con funcionalidad mejorada -->
+  <app-experience-modal
+    [isOpen]="showExperienceModal()"
     [experience]="selectedExperience()"
-    [mode]="modalMode()"
-    (result)="onExperienceModalResult($event)"
-    (close)="onExperienceModalClose()">
-  </app-experience-modal-wrapper>
+    [mode]="experienceModalMode()"
+    [isLoading]="isExperienceLoading()"
+    (close)="onExperienceModalClose()"
+    (save)="onExperienceSave($event)"
+    (delete)="onExperienceDelete($event)">
+  </app-experience-modal>
+
+  <app-education-modal
+    [isOpen]="showEducationModal()"
+    [education]="selectedEducation()"
+    [mode]="educationModalMode()"
+    [isLoading]="isEducationLoading()"
+    (close)="onEducationModalClose()"
+    (save)="onEducationSave($event)"
+    (delete)="onEducationDelete($event)">
+  </app-education-modal>
 </div>

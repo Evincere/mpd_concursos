@@ -1,15 +1,24 @@
 /**
+<<<<<<< HEAD
  * Componente de Formulario Inteligente para Educación
  * 
  * @description Formulario adaptativo para diferentes tipos de educación con validación en tiempo real
  * @author Augment Agent
  * @date 2025-06-20
  * @version 2.0.0
+=======
+ * Componente de Formulario de Educación
+ * 
+ * @description Formulario inteligente y reactivo para gestionar información educativa
+ * @author Augment Agent
+ * @date 2025-06-22
+ * @version 1.0.0
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
  */
 
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -27,13 +36,14 @@ import {
   ScientificActivityRole,
   ICvFormComponent,
   FormMode,
-  FormValidationResult
-} from '@core/models/cv';
+  FormValidationResult,
+  ValidationResult,
+  CvValidationService,
+  CvTransformService,
+  CvNotificationService
+} from '@core/services/cv';
 
-// Servicios
-import { CvValidationService, ValidationResult } from '@core/services/cv/cv-validation.service';
-import { CvTransformService } from '@core/services/cv/cv-transform.service';
-import { CvNotificationService } from '@core/services/cv/cv-notification.service';
+// Servicios adicionales
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 
 // Componentes compartidos
@@ -43,24 +53,27 @@ import { CustomButtonComponent } from '@shared/components/custom-form/custom-but
 import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
 import { CustomNumberInputComponent } from '@shared/components/custom-form/custom-number-input/custom-number-input.component';
 
+// Componente uploader CV
+import { CvDocumentUploaderComponent, CvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
+
 /**
  * Configuración de campo dinámico para educación
  */
 interface EducationDynamicField {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'date' | 'checkbox' | 'select' | 'number';
+  type: 'text' | 'textarea' | 'date' | 'checkbox' | 'select' | 'number' | 'chips';
   required: boolean;
   placeholder?: string;
   helpText?: string;
   validation?: any;
   showForTypes?: EducationType[];
+  showWhen?: (formValue: any) => boolean;
   options?: { value: any; label: string }[];
   min?: number;
   max?: number;
   step?: number;
 }
-
 @Component({
   selector: 'app-education-form',
   standalone: true,
@@ -71,7 +84,8 @@ interface EducationDynamicField {
     CustomSelectComponent,
     CustomButtonComponent,
     CustomDatepickerComponent,
-    CustomNumberInputComponent
+    CustomNumberInputComponent,
+    CvDocumentUploaderComponent
   ],
   templateUrl: './education-form.component.html',
   styleUrls: ['./education-form.component.scss'],
@@ -83,6 +97,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   @Input() education: EducationEntry | null = null;
   @Input() mode: FormMode = 'create';
   @Input() isLoading = false;
+  @Input() isInModal = false;
 
   @Output() save = new EventEmitter<EducationDto>();
   @Output() cancel = new EventEmitter<void>();
@@ -92,6 +107,15 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   public formData: EducationDto = {} as EducationDto;
   public isEditing = false;
   public validationErrors: string[] = [];
+
+  // ===== PROPIEDADES DEL UPLOADER =====
+  public documents: CvDocument[] = [];
+  public documentValidation: DocumentValidationState = {
+    isValid: false,
+    hasRequiredDocuments: false,
+    errors: [],
+    warnings: []
+  };
 
   // ===== SIGNALS =====
   public readonly form = signal<FormGroup | null>(null);
@@ -109,18 +133,18 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   // ===== COMPUTED SIGNALS =====
   public readonly canSave = computed(() => {
     const form = this.form();
-    return form !== null && this.isFormValid() && !this.isLoading && this.isDirty();
+    return form !== null && this.isFormValid() && !this.isLoading && this.isDirty() && this.documentValidation.isValid;
   });
 
-  public readonly hasErrors = computed(() => 
+  public readonly hasErrors = computed(() =>
     this.validationState().errors.length > 0
   );
 
-  public readonly hasWarnings = computed(() => 
+  public readonly hasWarnings = computed(() =>
     this.validationState().warnings.length > 0
   );
 
-  public readonly visibleFields = computed(() => 
+  public readonly visibleFields = computed(() =>
     this.dynamicFields.filter(field => this.shouldShowField(field))
   );
 
@@ -213,7 +237,8 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       label: 'Fecha de Finalización',
       type: 'date',
       required: false,
-      helpText: 'Fecha en que terminaste o esperas terminar'
+      helpText: 'Fecha en que terminaste o esperas terminar',
+      showWhen: (formValue: any) => !formValue.isOngoing
     },
     // Campos específicos para educación universitaria
     {
@@ -361,8 +386,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
     }
 
     // VALIDACIÓN CRÍTICA: Verificar que el documento de respaldo esté presente
-    const supportDocument = form.get('supportDocument')?.value;
-    if (!supportDocument) {
+    if (!this.documentValidation.isValid) {
       this.notificationService.showError('Es obligatorio adjuntar un documento que respalde esta educación');
       return;
     }
@@ -388,6 +412,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       this.notificationService.showError('Si los estudios están en curso, el estado debe ser "En Curso"');
       return;
     }
+
     const validationResult = this.validationService.validateEducation(formValue);
 
     if (!validationResult.isValid) {
@@ -454,8 +479,17 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
    * Verifica si un campo debe mostrarse según el tipo de educación
    */
   shouldShowField(field: EducationDynamicField): boolean {
-    if (!field.showForTypes) return true;
-    return field.showForTypes.includes(this.selectedType());
+    // Verificar condición showWhen primero
+    if (field.showWhen && !field.showWhen(this.form()?.value || {})) {
+      return false;
+    }
+
+    // Verificar showForTypes si está definido
+    if (field.showForTypes && field.showForTypes.length > 0) {
+      return field.showForTypes.includes(this.selectedType());
+    }
+
+    return true;
   }
 
   /**
@@ -599,6 +633,22 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   }
 
   /**
+   * Maneja el cambio de documentos del uploader
+   */
+  onDocumentsChange(documents: CvDocument[]): void {
+    this.documents = documents;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Maneja el cambio de validación de documentos
+   */
+  onDocumentValidationChange(validation: DocumentValidationState): void {
+    this.documentValidation = validation;
+    this.cdr.markForCheck();
+  }
+
+  /**
    * Maneja el cambio de estado de educación
    */
   onEducationStatusChange(status: EducationStatus): void {
@@ -662,6 +712,57 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
     endDateControl?.updateValueAndValidity();
   }
 
+  /**
+   * Maneja la adición de chips (habilidades)
+   */
+  onAddChip(fieldName: string, value: string): void {
+    if (!value.trim()) return;
+
+    const control = this.form().get(fieldName);
+    const currentValues = control?.value || [];
+
+    // Validar límites
+    const maxItems = 15;
+    if (currentValues.length >= maxItems) {
+      this.notificationService.showWarning(`Máximo ${maxItems} elementos permitidos`);
+      return;
+    }
+
+    // Sanitizar y agregar
+    const sanitizedValue = this.validationService.sanitizeInput(value.trim());
+    if (sanitizedValue && !currentValues.includes(sanitizedValue)) {
+      control?.setValue([...currentValues, sanitizedValue]);
+    }
+  }
+
+  /**
+   * Maneja la eliminación de chips
+   */
+  onRemoveChip(fieldName: string, index: number): void {
+    const control = this.form().get(fieldName);
+    const currentValues = control?.value || [];
+    currentValues.splice(index, 1);
+    control?.setValue([...currentValues]);
+  }
+
+  /**
+   * TrackBy function para campos dinámicos
+   */
+  trackByFieldName(_index: number, field: EducationDynamicField): string {
+    return field.name;
+  }
+
+  /**
+   * Maneja el evento Enter en el input de chips
+   */
+  onChipInputEnter(event: KeyboardEvent, fieldName: string, inputElement: HTMLInputElement): void {
+    event.preventDefault();
+    if (inputElement && inputElement.value.trim()) {
+      this.onAddChip(fieldName, inputElement.value.trim());
+      inputElement.value = '';
+    }
+  }
+
   // ===== MÉTODOS PRIVADOS =====
 
   /**
@@ -715,8 +816,13 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       topic: [''],
       venue: [''],
       comments: ['', [Validators.maxLength(1000)]],
-      // NUEVO: Campo obligatorio para documento de respaldo
-      supportDocument: [null, [Validators.required]]
+
+      // Campos adicionales del remoto
+      degree: ['', [Validators.maxLength(200)]],
+      fieldOfStudy: ['', [Validators.maxLength(200)]],
+      grade: ['', [Validators.maxLength(50)]],
+      description: ['', [Validators.maxLength(1000)]],
+      skills: [[]]
     });
   }
 
@@ -844,12 +950,12 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
    */
   private groupErrorsByField(errors: string[]): Record<string, string[]> {
     const grouped: Record<string, string[]> = {};
-    
+
     errors.forEach(error => {
       // Extraer el nombre del campo del mensaje de error
       const fieldMatch = error.match(/^([^:]+):/);
       const fieldName = fieldMatch ? fieldMatch[1].toLowerCase() : 'general';
-      
+
       if (!grouped[fieldName]) {
         grouped[fieldName] = [];
       }
@@ -858,6 +964,8 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
 
     return grouped;
   }
+
+  // ===== MÉTODOS DEL UPLOADER =====
 
   /**
    * Maneja la selección de archivo de documento de respaldo

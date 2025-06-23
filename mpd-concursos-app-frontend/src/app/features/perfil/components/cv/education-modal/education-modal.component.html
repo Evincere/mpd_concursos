@@ -1,0 +1,82 @@
+<!-- Education Modal -->
+<app-modal-base
+  [isOpen]="isOpen"
+  [config]="modalConfig()"
+  (close)="onClose()">
+  
+  <!-- Modal Title -->
+  <div slot="title">
+    <i class="material-icons modal-icon">school</i>
+    {{ modalTitle() }}
+  </div>
+  
+  <!-- Modal Subtitle -->
+  <div slot="subtitle" *ngIf="modalSubtitle()">
+    {{ modalSubtitle() }}
+  </div>
+  
+  <!-- Modal Body - Education Form -->
+  <div class="education-modal-content">
+    <app-education-form
+      [education]="education"
+      [mode]="mode"
+      [isLoading]="isLoading"
+      [isInModal]="true"
+      (save)="onSave($event)"
+      (cancel)="onClose()"
+      (validationChange)="onValidationChange($event)">
+    </app-education-form>
+  </div>
+  
+  <!-- Modal Footer -->
+  <div slot="footer" class="education-modal-footer">
+    
+    <!-- Delete Button (solo en modo edición) -->
+    <div class="footer-left">
+      <app-custom-button
+        *ngIf="showDeleteButton()"
+        label="Eliminar"
+        variant="warn"
+        size="medium"
+        icon="trash"
+        [disabled]="isLoading"
+        (buttonClick)="onDelete()">
+      </app-custom-button>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="footer-right">
+      <!-- Cancel Button -->
+      <app-custom-button
+        label="Cancelar"
+        variant="stroked"
+        size="medium"
+        [disabled]="isLoading"
+        (buttonClick)="onClose()">
+      </app-custom-button>
+      
+      <!-- Save Button -->
+      <button
+        *ngIf="mode !== 'view'"
+        type="submit"
+        form="education-form"
+        class="custom-button primary"
+        [disabled]="!canSave()"
+        [class.loading]="isLoading">
+        <i *ngIf="!isLoading" class="material-icons">save</i>
+        <i *ngIf="isLoading" class="material-icons spinning">refresh</i>
+        {{ mode === 'create' ? 'Agregar' : 'Guardar' }}
+      </button>
+      
+      <!-- Close Button (solo en modo vista) -->
+      <app-custom-button
+        *ngIf="mode === 'view'"
+        label="Cerrar"
+        variant="primary"
+        size="medium"
+        icon="close"
+        (buttonClick)="onClose()">
+      </app-custom-button>
+    </div>
+  </div>
+</app-modal-base>

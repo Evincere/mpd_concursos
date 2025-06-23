@@ -3,6 +3,10 @@ package ar.gov.mpd.concursobackend.experience.application.service;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +15,7 @@ import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEnti
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceRequestDto;
+import ar.gov.mpd.concursobackend.shared.infrastructure.service.CvDocumentService;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
 import ar.gov.mpd.concursobackend.experience.application.mapper.ExperienceMapper;
 import ar.gov.mpd.concursobackend.experience.domain.model.Experience;
@@ -35,6 +40,7 @@ public class ExperienceServiceImpl implements ExperienceService {
     private final ExperienceEntityMapper entityMapper;
     private final DocumentService documentService;
     private final WorkExperienceDeletionService deletionService;
+    private final CvDocumentService cvDocumentService;
 
     @Override
     @Transactional(readOnly = true)
@@ -128,22 +134,18 @@ public class ExperienceServiceImpl implements ExperienceService {
         log.info("Experiencia encontrada: {}, usuario: {}", experienceEntity.getId(),
                 experienceEntity.getUser().getId());
 
-        // Generate a document ID
-        UUID documentId = UUID.randomUUID();
-        log.info("ID de documento generado: {}", documentId);
-
         try {
-            // Usar documentService.saveDocument que maneja tanto el almacenamiento físico
-            // como los metadatos
-            log.info("Llamando a documentService.saveDocument");
-            String documentUrl = documentService.saveDocument(
+            // Usar el nuevo CvDocumentService para almacenamiento organizado
+            log.info("Usando CvDocumentService para almacenar documento de experiencia");
+
+            String documentUrl = cvDocumentService.storeExperienceDocumentFromStream(
+                    experienceEntity.getUser().getId(),
+                    experienceEntity.getId(),
                     inputStream,
-                    filename,
-                    documentId,
-                    experienceEntity.getUser().getId());
+                    filename);
 
             if (documentUrl == null || documentUrl.isEmpty()) {
-                log.error("ERROR: La URL del documento retornada por saveDocument es nula o vacía");
+                log.error("ERROR: La URL del documento retornada por CvDocumentService es nula o vacía");
                 throw new RuntimeException("Document URL is null or empty");
             }
 
@@ -158,7 +160,8 @@ public class ExperienceServiceImpl implements ExperienceService {
             log.info("Experiencia actualizada con la URL del documento");
 
             // Verificar que el documento se guardó correctamente
-            if (updatedEntity.getSupportingDocumentUrl() == null || !updatedEntity.getSupportingDocumentUrl().equals(documentUrl)) {
+            if (updatedEntity.getSupportingDocumentUrl() == null
+                    || !updatedEntity.getSupportingDocumentUrl().equals(documentUrl)) {
                 log.error("ERROR: La URL del documento no se guardó correctamente en la experiencia");
                 throw new RuntimeException("Failed to save document URL in experience");
             }

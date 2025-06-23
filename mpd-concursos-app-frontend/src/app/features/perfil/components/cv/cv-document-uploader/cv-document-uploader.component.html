@@ -1,0 +1,241 @@
+<!-- CV Document Uploader -->
+<div class="cv-document-uploader" [class.disabled]="disabled">
+
+  <!-- Área de carga de archivos -->
+  <div class="upload-area" 
+       [class.dragging]="isDragging()"
+       [class.has-documents]="hasDocuments()"
+       [class.disabled]="disabled || !canUploadMore()"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)">
+
+    <!-- Input de archivo oculto -->
+    <input
+      type="file"
+      #fileInput
+      class="file-input"
+      [accept]="getAcceptedFormatsString()"
+      [multiple]="maxFiles > 1"
+      [disabled]="disabled || !canUploadMore()"
+      (change)="onFileSelected($event)">
+
+    <!-- Contenido del área de carga -->
+    <div class="upload-content" *ngIf="canUploadMore()">
+      <div class="upload-icon">
+        <i class="material-icons" 
+           [class.animate]="isDragging()">
+          {{ isDragging() ? 'cloud_upload' : 'description' }}
+        </i>
+      </div>
+
+      <div class="upload-text">
+        <h4 class="upload-title">
+          {{ isDragging() ? 'Suelta los archivos aquí' : 'Documentos de ' + documentTypeLabel() }}
+        </h4>
+        <p class="upload-description" *ngIf="!isDragging()">
+          Arrastra y suelta tus documentos aquí o 
+          <button type="button" 
+                  class="upload-link"
+                  [disabled]="disabled"
+                  (click)="fileInput.click()">
+            selecciona archivos
+          </button>
+        </p>
+        <div class="upload-specs">
+          <span class="spec-item">
+            <i class="material-icons">file_present</i>
+            Formatos: {{ acceptedFormatsText() }}
+          </span>
+          <span class="spec-item">
+            <i class="material-icons">data_usage</i>
+            Máx. {{ maxFileSize }}MB por archivo
+          </span>
+          <span class="spec-item">
+            <i class="material-icons">folder</i>
+            Hasta {{ maxFiles }} archivo{{ maxFiles > 1 ? 's' : '' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando se alcanza el límite -->
+    <div class="upload-limit" *ngIf="!canUploadMore() && !disabled">
+      <div class="limit-icon">
+        <i class="material-icons">check_circle</i>
+      </div>
+      <div class="limit-text">
+        <h4>Límite alcanzado</h4>
+        <p>Has subido {{ documents().length }} de {{ maxFiles }} archivos permitidos</p>
+      </div>
+    </div>
+
+    <!-- Mensaje cuando está deshabilitado -->
+    <div class="upload-disabled" *ngIf="disabled">
+      <div class="disabled-icon">
+        <i class="material-icons">block</i>
+      </div>
+      <div class="disabled-text">
+        <h4>Carga deshabilitada</h4>
+        <p>No se pueden cargar documentos en este momento</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicador de progreso de carga -->
+  <div class="upload-progress" *ngIf="isUploading()">
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="uploadProgress$()"></div>
+    </div>
+    <div class="progress-text">
+      <span>Subiendo archivo... {{ uploadProgress$() | number:'1.0-0' }}%</span>
+    </div>
+  </div>
+
+  <!-- Lista de documentos cargados -->
+  <div class="documents-list" *ngIf="hasDocuments()">
+    <div class="list-header">
+      <h4 class="list-title">
+        <i class="material-icons">folder_open</i>
+        Documentos cargados ({{ documents().length }})
+      </h4>
+      <div class="list-stats">
+        <span class="total-size">
+          Total: {{ (totalSize() / 1024 / 1024) | number:'1.1-1' }}MB
+        </span>
+      </div>
+    </div>
+
+    <div class="documents-grid">
+      <div class="document-item"
+           *ngFor="let document of documents(); let i = index; trackBy: trackByDocumentId"
+           [class.pending]="document.status === 'pending'"
+           [class.validated]="document.status === 'validated'"
+           [class.rejected]="document.status === 'rejected'">
+
+        <!-- Icono del documento -->
+        <div class="document-icon">
+          <i class="material-icons">
+            {{ getDocumentIcon(document.mimeType) }}
+          </i>
+          <div class="status-badge" [class]="document.status">
+            <i class="material-icons">
+              {{ getStatusIcon(document.status) }}
+            </i>
+          </div>
+        </div>
+
+        <!-- Información del documento -->
+        <div class="document-info">
+          <h5 class="document-name" [title]="document.originalName">
+            {{ document.originalName }}
+          </h5>
+          <div class="document-meta">
+            <span class="file-size">
+              {{ (document.fileSize / 1024 / 1024) | number:'1.1-1' }}MB
+            </span>
+            <span class="upload-date">
+              {{ document.uploadDate | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+          <div class="document-status">
+            <span class="status-text" [class]="document.status">
+              {{ getStatusText(document.status) }}
+            </span>
+          </div>
+          <div class="validation-notes" *ngIf="document.validationNotes">
+            <p class="notes-text">{{ document.validationNotes }}</p>
+          </div>
+        </div>
+
+        <!-- Acciones del documento -->
+        <div class="document-actions">
+          <button type="button"
+                  class="action-btn view-btn"
+                  [title]="'Ver documento'"
+                  (click)="viewDocument(document)">
+            <i class="material-icons">visibility</i>
+          </button>
+          
+          <button type="button"
+                  class="action-btn retry-btn"
+                  [title]="'Reintentar carga'"
+                  *ngIf="document.status === 'rejected'"
+                  (click)="retryUpload(document)">
+            <i class="material-icons">refresh</i>
+          </button>
+          
+          <button type="button"
+                  class="action-btn remove-btn"
+                  [title]="'Eliminar documento'"
+                  [disabled]="disabled"
+                  (click)="removeDocument(document)">
+            <i class="material-icons">delete</i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas de validación -->
+  <div class="validation-alerts" *ngIf="validationState().errors.length > 0 || validationState().warnings.length > 0">
+    
+    <!-- Errores -->
+    <div class="alert alert-error" *ngIf="validationState().errors.length > 0">
+      <div class="alert-icon">
+        <i class="material-icons">error</i>
+      </div>
+      <div class="alert-content">
+        <h5 class="alert-title">Documentos requeridos</h5>
+        <ul class="alert-list">
+          <li *ngFor="let error of validationState().errors">{{ error }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Advertencias -->
+    <div class="alert alert-warning" *ngIf="validationState().warnings.length > 0">
+      <div class="alert-icon">
+        <i class="material-icons">warning</i>
+      </div>
+      <div class="alert-content">
+        <h5 class="alert-title">Información importante</h5>
+        <ul class="alert-list">
+          <li *ngFor="let warning of validationState().warnings">{{ warning }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información de ayuda -->
+  <div class="help-section" *ngIf="required">
+    <div class="help-content">
+      <div class="help-icon">
+        <i class="material-icons">info</i>
+      </div>
+      <div class="help-text">
+        <h5>¿Qué documentos debo subir?</h5>
+        <div class="help-list" *ngIf="documentType === 'work_experience'">
+          <p>Para acreditar tu experiencia laboral, puedes subir:</p>
+          <ul>
+            <li>Certificados laborales</li>
+            <li>Cartas de recomendación</li>
+            <li>Contratos de trabajo</li>
+            <li>Recibos de sueldo</li>
+            <li>Constancias de trabajo</li>
+          </ul>
+        </div>
+        <div class="help-list" *ngIf="documentType === 'education'">
+          <p>Para acreditar tu formación académica, puedes subir:</p>
+          <ul>
+            <li>Títulos universitarios</li>
+            <li>Certificados de cursos</li>
+            <li>Diplomas de especialización</li>
+            <li>Constancias de estudios</li>
+            <li>Certificaciones profesionales</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

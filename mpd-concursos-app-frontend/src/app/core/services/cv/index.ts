@@ -1,13 +1,22 @@
 /**
  * Barrel Export para Servicios del Sistema CV
- * 
+ *
  * @description Exportación centralizada de todos los servicios del CV
  * @author Augment Agent
- * @date 2025-06-20
- * @version 2.0.0
+ * @date 2025-06-22
+ * @version 3.0.0
  */
 
-// ===== SERVICIOS PRINCIPALES =====
+// ===== SERVICIOS HTTP REALES =====
+export { ExperienceCvService } from './experience-cv.service';
+export { EducationCvService } from './education-cv.service';
+export { CvStateService } from './cv-state.service';
+
+export type { ExperienceApiResponse } from './experience-cv.service';
+export type { EducationApiResponse } from './education-cv.service';
+export type { CvState, CvLoadingState, CvErrorState } from './cv-state.service';
+
+// ===== SERVICIOS DE UTILIDAD =====
 export { CvValidationService } from './cv-validation.service';
 export { CvTransformService } from './cv-transform.service';
 export { CvNotificationService, CvNotificationType } from './cv-notification.service';

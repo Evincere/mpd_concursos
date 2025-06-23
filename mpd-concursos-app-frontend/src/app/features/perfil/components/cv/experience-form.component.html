@@ -1,8 +1,8 @@
 <!-- Formulario Inteligente de Experiencia Laboral -->
 <div class="experience-form">
-  
-  <!-- Header del formulario -->
-  <div class="form-header">
+
+  <!-- Header del formulario (solo si no está en modal) -->
+  <div class="form-header" *ngIf="!isInModal">
     <h3 class="form-title">
       <i class="material-icons">work</i>
       {{ mode === 'create' ? 'Agregar Experiencia Laboral' : 'Editar Experiencia Laboral' }}
@@ -47,7 +47,16 @@
   </div>
 
   <!-- Formulario -->
+<<<<<<< HEAD
   <form *ngIf="form()" [formGroup]="form()!" (ngSubmit)="onSave()" class="dynamic-form">
+=======
+  <form
+    id="experience-form"
+    [formGroup]="form()"
+    (ngSubmit)="onSave()"
+    class="dynamic-form"
+    novalidate>
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
     
     <!-- Campos dinámicos -->
     <div class="form-grid">
@@ -63,6 +72,7 @@
             [label]="field.label"
             [placeholder]="field.placeholder || ''"
             [required]="field.required"
+<<<<<<< HEAD
             [formControlName]="field.name">
           </app-custom-form-field>
           
@@ -75,13 +85,44 @@
             [formControlName]="field.name"
             [type]="'textarea'">
           </app-custom-form-field>
+=======
+            [formControlName]="field.name"
+            [hint]="field.helpText || ''">
+          </app-custom-form-field>
+          
+          <!-- Campo de área de texto -->
+          <div *ngIf="field.type === 'textarea'" class="form-field">
+            <label class="field-label" [class.required]="field.required">
+              {{ field.label }}
+            </label>
+            <textarea
+              [formControlName]="field.name"
+              [placeholder]="field.placeholder || ''"
+              [required]="field.required"
+              class="field-textarea"
+              rows="4">
+            </textarea>
+            <div *ngIf="field.helpText" class="field-help">{{ field.helpText }}</div>
+            <div class="field-errors" *ngIf="getFieldErrors(field.name).length > 0">
+              <p class="error-message" *ngFor="let error of getFieldErrors(field.name)">
+                {{ error }}
+              </p>
+            </div>
+          </div>
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
           
           <!-- Campo de fecha -->
           <app-custom-datepicker
             *ngIf="field.type === 'date'"
             [label]="field.label"
             [required]="field.required"
+<<<<<<< HEAD
             [formControlName]="field.name">
+=======
+            [formControlName]="field.name"
+            [hint]="field.helpText || ''"
+            [disabled]="isLoading">
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
           </app-custom-datepicker>
           
           <!-- Campo de checkbox -->
@@ -103,15 +144,20 @@
               {{ field.label }}
               <span class="required-indicator" *ngIf="field.required">*</span>
             </label>
-            
+
             <!-- Input para agregar chips -->
             <div class="chips-input-container">
               <input
                 type="text"
                 class="chips-input"
                 [placeholder]="field.placeholder || 'Escribe y presiona Enter'"
+<<<<<<< HEAD
                 [attr.disabled]="isLoading ? '' : null"
                 (keydown.enter)="handleChipInput($event, field.name)"
+=======
+                [disabled]="isLoading"
+                (keydown.enter)="onChipInputEnter($any($event), field.name, chipInput)"
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
                 #chipInput>
               <button
                 type="button"
@@ -121,7 +167,7 @@
                 <i class="material-icons">add</i>
               </button>
             </div>
-            
+
             <!-- Lista de chips -->
             <div class="chips-list" *ngIf="form()?.get(field.name)?.value?.length > 0">
               <div
@@ -143,9 +189,9 @@
             <div class="chips-counter" *ngIf="form()?.get(field.name)?.value?.length > 0">
               {{ form()?.get(field.name)?.value?.length }} / {{ field.name === 'technologies' ? 20 : 10 }}
             </div>
-            
+
             <p class="field-help" *ngIf="field.helpText">{{ field.helpText }}</p>
-            
+
             <!-- Errores del campo -->
             <div class="field-errors" *ngIf="getFieldErrors(field.name).length > 0">
               <p class="error-message" *ngFor="let error of getFieldErrors(field.name)">
@@ -157,6 +203,31 @@
         </div>
       </ng-container>
     </div>
+
+    <!-- Sección de Documentación Requerida -->
+    <div class="documentation-section">
+      <div class="section-header">
+        <h4 class="section-title">
+          <i class="material-icons">description</i>
+          Documentación de Experiencia Laboral
+          <span class="required-indicator">*</span>
+        </h4>
+        <p class="section-subtitle">
+          Es obligatorio adjuntar documentos que acrediten tu experiencia laboral (certificados laborales, cartas de recomendación, contratos, etc.)
+        </p>
+      </div>
+
+      <app-cv-document-uploader
+        [documentType]="'work_experience'"
+        [entityId]="experience?.id || null"
+        [required]="true"
+        [maxFiles]="3"
+        [acceptedFormats]="['pdf', 'jpg', 'jpeg', 'png']"
+        [maxFileSize]="10"
+        (documentsChange)="onDocumentsChange($event)"
+        (validationChange)="onDocumentValidationChange($event)">
+      </app-cv-document-uploader>
+    </div>
     
     <!-- Campo de comentarios adicionales -->
     <div class="form-field full-width">
@@ -165,7 +236,11 @@
         placeholder="Información adicional que consideres relevante..."
         [required]="false"
         formControlName="comments"
+<<<<<<< HEAD
         type="textarea">
+=======
+        hint="Comentarios opcionales (máximo 500 caracteres)">
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
       </app-custom-form-field>
     </div>
   </form>
@@ -178,6 +253,7 @@
     </div>
   </div>
 
+<<<<<<< HEAD
   <!-- SECCIÓN CRÍTICA: Documentación de Respaldo Obligatoria -->
   <div class="form-section document-section">
     <h4 class="section-title required">
@@ -240,22 +316,40 @@
         label="Resetear"
         variant="text"
         icon="refresh"
+=======
+  <!-- Acciones del formulario (solo si no está en modal) -->
+  <div class="form-actions" *ngIf="!isInModal">
+    <div class="actions-left">
+      <app-custom-button
+        [label]="'Resetear'"
+        [variant]="'stroked'"
+        [icon]="'refresh'"
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
         [disabled]="isLoading || !isDirty()"
         (buttonClick)="onReset()">
       </app-custom-button>
     </div>
-    
+
     <div class="actions-right">
       <app-custom-button
+<<<<<<< HEAD
         label="Cancelar"
         variant="stroked"
+=======
+        [label]="'Cancelar'"
+        [variant]="'stroked'"
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
         [disabled]="isLoading"
         (buttonClick)="onCancel()">
       </app-custom-button>
 
       <app-custom-button
         [label]="mode === 'create' ? 'Guardar Experiencia' : 'Actualizar Experiencia'"
+<<<<<<< HEAD
         variant="primary"
+=======
+        [variant]="'primary'"
+>>>>>>> cfc12a5924c8c10406711fb0fe3fd2c552777b57
         [icon]="mode === 'create' ? 'save' : 'update'"
         [loading]="isLoading"
         [disabled]="!canSave()"
@@ -264,8 +358,8 @@
     </div>
   </div>
 
-  <!-- Información de ayuda -->
-  <div class="form-help">
+  <!-- Información de ayuda (solo si no está en modal) -->
+  <div class="form-help" *ngIf="!isInModal">
     <div class="help-section">
       <h4 class="help-title">
         <i class="material-icons">help</i>
@@ -279,7 +373,7 @@
         <li>Mantén la información actualizada y relevante</li>
       </ul>
     </div>
-    
+
     <div class="help-section">
       <h4 class="help-title">
         <i class="material-icons">security</i>

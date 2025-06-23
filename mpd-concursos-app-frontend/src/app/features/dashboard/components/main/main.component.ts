@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from  '@angular/common';
+import { CommonModule } from '@angular/common';
 
 import { CardsComponent } from './cards/cards.component';
 import { RecentSectionComponent } from './recent-section/recent-section.component';
@@ -46,7 +46,7 @@ export class MainComponent implements OnInit, OnDestroy {
     private dashboardWidgetsService: DashboardWidgetsService,
     private inscriptionService: InscriptionService,
     private inscriptionRecoveryService: InscriptionRecoveryService
-  ) {}
+  ) { }
 
 
   private lastDataLoadTimestamp = 0;
@@ -122,10 +122,15 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   private convertToSimpleDashboardData(dashboardData: DashboardData): SimpleDashboardData {
+    // Calcular documentos pendientes reales basado en las secciones que requieren documentos
+    const documentosPendientes = dashboardData.estadoPerfil?.seccionesPendientes?.filter(
+      seccion => seccion.nombre === 'Documentación' || seccion.icono === 'fa-file-alt'
+    ).length || 0;
+
     return {
       profileCompletion: dashboardData.estadoPerfil?.completitud || 0,
       activeApplications: dashboardData.metricas?.inscripcionesActivas || 0,
-      pendingDocuments: dashboardData.estadoPerfil?.seccionesPendientes?.length || 0,
+      pendingDocuments: documentosPendientes,
       availableExams: 0, // Por ahora no hay exámenes disponibles
       upcomingDeadlines: dashboardData.proximosVencimientos?.map(vencimiento => ({
         title: vencimiento.titulo,
