@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
 import ar.gov.mpd.concursobackend.education.domain.model.Education;
 import ar.gov.mpd.concursobackend.education.domain.model.EducationStatus;
 import ar.gov.mpd.concursobackend.education.domain.model.EducationType;
@@ -15,6 +17,7 @@ import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityRole;
 import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityType;
 import ar.gov.mpd.concursobackend.education.domain.repository.EducationRepository;
 import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationRecordEntity;
+import ar.gov.mpd.concursobackend.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -23,8 +26,9 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class EducationRepositoryAdapter implements EducationRepository {
-    
+
     private final JpaEducationRepository jpaRepository;
+    private final IUserSpringRepository userRepository;
     
     @Override
     public Education save(Education education) {
@@ -65,8 +69,16 @@ public class EducationRepositoryAdapter implements EducationRepository {
             return null;
         }
 
+        // Buscar el usuario por ID
+        UserEntity userEntity = null;
+        if (education.getUserId() != null) {
+            userEntity = userRepository.findById(education.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + education.getUserId()));
+        }
+
         EducationRecordEntity.EducationRecordEntityBuilder builder = EducationRecordEntity.builder()
                 .id(education.getId())
+                .user(userEntity)  // Asignar la entidad de usuario
                 .programTitle(education.getTitle())
                 .institutionName(education.getInstitution())
                 .issueDate(education.getIssueDate())
