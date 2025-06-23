@@ -22,6 +22,7 @@ import {
   EducationEntry,
   EducationDto,
   EducationType,
+  EducationStatus,
   CurriculumVitae,
   CvSearchFilters,
   LoadingState,
