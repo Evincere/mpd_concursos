@@ -983,7 +983,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   /**
    * Obtiene información específica de educación
    */
-  getEducationSpecificInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> | null {
+  getEducationSpecificInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
     return this.transformService.getEducationSpecificInfo(education);
   }
 

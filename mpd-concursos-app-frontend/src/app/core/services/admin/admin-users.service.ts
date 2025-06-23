@@ -3,6 +3,8 @@ import { LoggingService } from '@core/services/logging/logging.service';
 import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { catchError } from 'rxjs/operators';
 
 import { UserProfile } from '@shared/interfaces/user/user-profile.interface';
 
@@ -124,8 +126,7 @@ export interface ResetPasswordRequest {
 })
 export class AdminUsersService {
   private apiUrl = `${environment.apiUrl}/admin/users`;
-
-
+  constructor(private http: HttpClient) {}
 
   // Mock data for development
   private mockUsers: AdminUser[] = Array.from({ length: 50 }, (_, i) => ({
@@ -144,93 +145,23 @@ export class AdminUsersService {
     direccion: i % 2 === 0 ? `Calle ${i + 1}, Ciudad` : undefined
   }));
 
-
-
   /**
    * Get users with filters and pagination
    * @param filters Filters to apply
    */
   getUsers(filters?: UserFilter): Observable<{ users: AdminUser[], total: number }> {
-    // In a real app, this would call the API
-    // return this.http.get<{ users: AdminUser[], total: number }>(
-    //   this.apiUrl,
-    //   { params: this.buildParams(filters), headers: this.getHeaders() }
-    // ).pipe(
-    //   catchError(error => {
-    //     console.error('Error fetching users:', error);
-    //     return of({ users: [], total: 0 });
-    //   })
-    // );
-
+    return this.http.get<{ users: AdminUser[], total: number }>(
+      this.apiUrl,
+      { params: this.buildParams(filters), headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error fetching users:', error);
+        return of({ users: [], total: 0 });
+      })
+    );
     // Mock implementation
-    let filteredUsers = [...this.mockUsers];
-
-    if (filters) {
-      if (filters.role) {
-        filteredUsers = filteredUsers.filter(user => user.roles.includes(filters.role!));
-      }
-
-      if (filters.status) {
-        filteredUsers = filteredUsers.filter(user => user.status === filters.status);
-      }
-
-      if (filters.search) {
-        const search = filters.search.toLowerCase();
-        filteredUsers = filteredUsers.filter(user =>
-          user.username.toLowerCase().includes(search) ||
-          user.email.toLowerCase().includes(search) ||
-          user.firstName.toLowerCase().includes(search) ||
-          user.lastName.toLowerCase().includes(search) ||
-          user.dni.includes(search)
-        );
-      }
-
-      if (filters.startDate) {
-        const startDate = new Date(filters.startDate);
-        filteredUsers = filteredUsers.filter(user => new Date(user.createdAt) >= startDate);
-      }
-
-      if (filters.endDate) {
-        const endDate = new Date(filters.endDate);
-        filteredUsers = filteredUsers.filter(user => new Date(user.createdAt) <= endDate);
-      }
-
-      // Sort
-      if (filters.sort) {
-        filteredUsers.sort((a, b) => {
-          const aValue = a[filters.sort! as keyof AdminUser];
-          const bValue = b[filters.sort! as keyof AdminUser];
-
-          if (aValue === undefined && bValue === undefined) return 0;
-          if (aValue === undefined) return 1;
-          if (bValue === undefined) return -1;
-
-          if (typeof aValue === 'string' && typeof bValue === 'string') {
-            return filters.direction === 'desc'
-              ? bValue.localeCompare(aValue)
-              : aValue.localeCompare(bValue);
-          }
-
-          // Convertir a números para comparación numérica
-          const aNum = typeof aValue === 'number' ? aValue : 0;
-          const bNum = typeof bValue === 'number' ? bValue : 0;
-
-          return filters.direction === 'desc' ? bNum - aNum : aNum - bNum;
-        });
-      }
-    }
-
-    // Pagination
-    const page = filters?.page || 0;
-    const size = filters?.size || 5; // Cambiado de 10 a 5 para coincidir con la configuración del paginador
-    const start = page * size;
-    const end = start + size;
-    const paginatedUsers = filteredUsers.slice(start, end);
-
-    return of({
-      users: paginatedUsers,
-      total: filteredUsers.length
-    });
+    // let filteredUsers = [...this.mockUsers];
+    // ... lógica mock comentada ...
   }
 
   /**
@@ -238,23 +169,21 @@ export class AdminUsersService {
    * @param userId User ID
    */
   getUserById(userId: string): Observable<AdminUser> {
-    // In a real app, this would call the API
-    // return this.http.get<AdminUser>(
-    //   `${this.apiUrl}/${userId}`,
-    //   { headers: this.getHeaders() }
-    // ).pipe(
-    //   catchError(error => {
-    //     console.error(`Error fetching user with ID ${userId}:`, error);
-    //     return throwError(() => new Error('Error al obtener el usuario'));
-    //   })
-    // );
-
+    return this.http.get<AdminUser>(
+      `${this.apiUrl}/${userId}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error(`Error fetching user with ID ${userId}:`, error);
+        return throwError(() => new Error('Error al obtener el usuario'));
+      })
+    );
     // Mock implementation
-    const user = this.mockUsers.find(u => u.id === userId);
-    if (!user) {
-      return throwError(() => new Error(`Usuario con ID ${userId} no encontrado`));
-    }
-    return of(user);
+    // const user = this.mockUsers.find(u => u.id === userId);
+    // if (!user) {
+    //   return throwError(() => new Error(`Usuario con ID ${userId} no encontrado`));
+    // }
+    // return of(user);
   }
 
   /**
@@ -262,37 +191,35 @@ export class AdminUsersService {
    * @param user User data
    */
   createUser(user: CreateUserRequest): Observable<AdminUser> {
-    // In a real app, this would call the API
-    // return this.http.post<AdminUser>(
-    //   this.apiUrl,
-    //   user,
-    //   { headers: this.getHeaders() }
-    // ).pipe(
-    //   catchError(error => {
-    //     console.error('Error creating user:', error);
-    //     return throwError(() => new Error('Error al crear el usuario'));
-    //   })
-    // );
-
+    return this.http.post<AdminUser>(
+      this.apiUrl,
+      user,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error('Error creating user:', error);
+        return throwError(() => new Error('Error al crear el usuario'));
+      })
+    );
     // Mock implementation
-    const newId = (Math.max(...this.mockUsers.map(u => parseInt(u.id))) + 1).toString();
-    const newUser: AdminUser = {
-      id: newId,
-      username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      dni: user.dni,
-      cuit: user.cuit || '',
-      roles: user.roles,
-      status: 'ACTIVE',
-      createdAt: new Date().toISOString(),
-      telefono: user.telefono,
-      direccion: user.direccion
-    };
-
-    this.mockUsers.push(newUser);
-    return of(newUser);
+    // const newId = (Math.max(...this.mockUsers.map(u => parseInt(u.id))) + 1).toString();
+    // const newUser: AdminUser = {
+    //   id: newId,
+    //   username: user.username,
+    //   email: user.email,
+    //   firstName: user.firstName,
+    //   lastName: user.lastName,
+    //   dni: user.dni,
+    //   cuit: user.cuit || '',
+    //   roles: user.roles,
+    //   status: 'ACTIVE',
+    //   createdAt: new Date().toISOString(),
+    //   telefono: user.telefono,
+    //   direccion: user.direccion
+    // };
+    //
+    // this.mockUsers.push(newUser);
+    // return of(newUser);
   }
 
   /**
@@ -300,32 +227,30 @@ export class AdminUsersService {
    * @param user User data to update
    */
   updateUser(user: UpdateUserRequest): Observable<AdminUser> {
-    // In a real app, this would call the API
-    // return this.http.put<AdminUser>(
-    //   `${this.apiUrl}/${user.id}`,
-    //   user,
-    //   { headers: this.getHeaders() }
-    // ).pipe(
-    //   catchError(error => {
-    //     console.error(`Error updating user with ID ${user.id}:`, error);
-    //     return throwError(() => new Error('Error al actualizar el usuario'));
-    //   })
-    // );
-
+    return this.http.put<AdminUser>(
+      `${this.apiUrl}/${user.id}`,
+      user,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error(`Error updating user with ID ${user.id}:`, error);
+        return throwError(() => new Error('Error al actualizar el usuario'));
+      })
+    );
     // Mock implementation
-    const index = this.mockUsers.findIndex(u => u.id === user.id);
-    if (index === -1) {
-      return throwError(() => new Error(`Usuario con ID ${user.id} no encontrado`));
-    }
-
-    const updatedUser = {
-      ...this.mockUsers[index],
-      ...user,
-      lastModified: new Date().toISOString()
-    };
-
-    this.mockUsers[index] = updatedUser;
-    return of(updatedUser);
+    // const index = this.mockUsers.findIndex(u => u.id === user.id);
+    // if (index === -1) {
+    //   return throwError(() => new Error(`Usuario con ID ${user.id} no encontrado`));
+    // }
+    //
+    // const updatedUser = {
+    //   ...this.mockUsers[index],
+    //   ...user,
+    //   lastModified: new Date().toISOString()
+    // };
+    //
+    // this.mockUsers[index] = updatedUser;
+    // return of(updatedUser);
   }
 
   /**
@@ -430,25 +355,23 @@ export class AdminUsersService {
    * @param userId User ID to delete
    */
   deleteUser(userId: string): Observable<{ success: boolean }> {
-    // In a real app, this would call the API
-    // return this.http.delete<{ success: boolean }>(
-    //   `${this.apiUrl}/${userId}`,
-    //   { headers: this.getHeaders() }
-    // ).pipe(
-    //   catchError(error => {
-    //     console.error(`Error deleting user with ID ${userId}:`, error);
-    //     return throwError(() => new Error('Error al eliminar el usuario'));
-    //   })
-    // );
-
+    return this.http.delete<{ success: boolean }>(
+      `${this.apiUrl}/${userId}`,
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(error => {
+        console.error(`Error deleting user with ID ${userId}:`, error);
+        return of({ success: false });
+      })
+    );
     // Mock implementation
-    const index = this.mockUsers.findIndex(u => u.id === userId);
-    if (index === -1) {
-      return throwError(() => new Error(`Usuario con ID ${userId} no encontrado`));
-    }
-
-    this.mockUsers.splice(index, 1);
-    return of({ success: true });
+    // const index = this.mockUsers.findIndex(u => u.id === userId);
+    // if (index === -1) {
+    //   return throwError(() => new Error(`Usuario con ID ${userId} no encontrado`));
+    // }
+    //
+    // this.mockUsers.splice(index, 1);
+    // return of({ success: true });
   }
 
   /**

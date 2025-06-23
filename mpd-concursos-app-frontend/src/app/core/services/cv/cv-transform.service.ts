@@ -540,13 +540,55 @@ export class CvTransformService implements ICvTransformService {
   /**
    * Obtiene información específica de educación
    */
-  public getEducationSpecificInfo(education: EducationEntry): any {
-    return {
-      type: this.getEducationTypeLabel(education.type),
-      status: this.getEducationStatusLabel(education.status),
-      duration: this.calculateDuration(education.startDate, education.endDate),
-      isOngoing: education.isOngoing || false
-    };
+  public getEducationSpecificInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
+    const info: Array<{icon: string, label: string, value: string}> = [];
+
+    // Tipo de educación
+    if (education.type) {
+      info.push({
+        icon: 'school',
+        label: 'Tipo',
+        value: this.getEducationTypeLabel(education.type)
+      });
+    }
+
+    // Estado
+    if (education.status) {
+      info.push({
+        icon: 'info',
+        label: 'Estado',
+        value: this.getEducationStatusLabel(education.status)
+      });
+    }
+
+    // Duración
+    const duration = this.calculateDuration(education.startDate, education.endDate);
+    if (duration) {
+      info.push({
+        icon: 'schedule',
+        label: 'Duración',
+        value: duration
+      });
+    }
+
+    // Información específica según el tipo
+    if (education.type === 'UNIVERSITY_DEGREE' && (education as any).average) {
+      info.push({
+        icon: 'grade',
+        label: 'Promedio',
+        value: (education as any).average.toString()
+      });
+    }
+
+    if ((education.type === 'DIPLOMA' || education.type === 'CERTIFICATION') && (education as any).hourlyLoad) {
+      info.push({
+        icon: 'access_time',
+        label: 'Carga Horaria',
+        value: `${(education as any).hourlyLoad} horas`
+      });
+    }
+
+    return info;
   }
 
   /**
