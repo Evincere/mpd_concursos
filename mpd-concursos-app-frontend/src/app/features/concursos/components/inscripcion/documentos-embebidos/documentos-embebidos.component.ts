@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
 import { FormsModule } from '@angular/forms';
-import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
 
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { NotificationService } from '@shared/services/notification.service';
@@ -9,7 +9,7 @@ import { NotificationService } from '@shared/services/notification.service';
 import { DocumentoUsuario, TipoDocumento, EstadoDocumento } from '@core/models/documento.model'; // Import EstadoDocumento
 import { DocumentoUploadDialogComponent } from './documento-upload-dialog/documento-upload-dialog.component';
 import { DocumentoMultipleUploadDialogComponent } from './documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
-import { DocumentoViewerComponent } from '../../../../perfil/components/documento-viewer/documento-viewer.component';
+import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { LoggingService } from '@core/services/logging/logging.service';
 
@@ -73,6 +73,8 @@ import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
           </span>
         </div>
       </div>
+
+
 
       <!-- NUEVA FUNCIONALIDAD: Información de plazos perentorios -->
       <div class="deadline-info" *ngIf="documentationDeadline && documentosFaltantes > 0">
@@ -925,7 +927,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   public readonly EstadoDocumento = EstadoDocumento;
 
   constructor(
-    private dialog: CustomDialogService,
+    private dialog: UnifiedDialogService,
     private notificationService: NotificationService,
     private documentosService: DocumentosService,
     private loggingService: LoggingService,
@@ -1015,12 +1017,33 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
    * @returns A consolidated and cleaned list of required documents.
    */
   private processRequiredDocumentTypes(rawTipos: TipoDocumento[]): { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] {
+
+    // 🔍 DEBUGGING: Log de tipos de documento recibidos del backend
+    this.loggingService.debug('[DocumentosEmbebidos] === TIPOS DE DOCUMENTO DEL BACKEND ===', {
+      totalTipos: rawTipos.length,
+      tiposRecibidos: rawTipos.map(tipo => ({
+        id: tipo.id,
+        code: tipo.code,
+        nombre: tipo.nombre,
+        requerido: tipo.requerido,
+        activo: tipo.activo
+      }))
+    }, 'DocumentosEmbebidos');
+
     let documentosFinal: { title: string; description?: string; required: boolean; completed: boolean; tipoDocumentoId: string; }[] = [];
 
     // Prioritize getting DNI consolidated entry
     const dniFrente = rawTipos.find(tipo => tipo.id === 'dni-frente' || tipo.code === 'dni-frente' || (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('frente')));
     const dniDorso = rawTipos.find(tipo => tipo.id === 'dni-dorso' || tipo.code === 'dni-dorso' || (tipo.nombre.toLowerCase().includes('dni') && tipo.nombre.toLowerCase().includes('dorso')));
-    const dniGeneral = rawTipos.find(tipo => (tipo.id === 'dni' || tipo.code === 'dni' || tipo.nombre.toLowerCase().includes('dni') || tipo.nombre.toLowerCase().includes('documento nacional de identidad')) && !tipo.nombre.toLowerCase().includes('frente') && !tipo.nombre.toLowerCase().includes('dorso'));
+
+    // ✅ CORRECCIÓN: Identificación más específica del documento DNI general para evitar que aparezca en la interfaz
+    const dniGeneral = rawTipos.find(tipo =>
+      (tipo.id === 'dni' || tipo.code === 'dni' ||
+       tipo.nombre.toLowerCase() === 'documento nacional de identidad' ||
+       tipo.nombre.toLowerCase() === 'dni') &&
+      !tipo.nombre.toLowerCase().includes('frente') &&
+      !tipo.nombre.toLowerCase().includes('dorso')
+    );
 
     const processedIds = new Set<string>();
 
@@ -1029,14 +1052,14 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       documentosFinal.push({
         title: 'DNI (Frente)',
         description: 'Lado frontal de su Documento Nacional de Identidad.',
-        required: true,
+        required: dniFrente.requerido, // ✅ Usar la propiedad del backend
         completed: false,
         tipoDocumentoId: dniFrente.id
       });
       documentosFinal.push({
         title: 'DNI (Dorso)',
         description: 'Lado posterior de su Documento Nacional de Identidad.',
-        required: true,
+        required: dniDorso.requerido, // ✅ Usar la propiedad del backend
         completed: false,
         tipoDocumentoId: dniDorso.id
       });
@@ -1044,16 +1067,35 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       processedIds.add(dniDorso.id);
     }
 
-    // ELIMINADO: La lógica del DNI general para evitar card innecesaria
+    // ✅ CORRECCIÓN CRÍTICA: Siempre marcar el DNI general como procesado para evitar que aparezca
     // El DNI siempre debe manejarse como frente y dorso separados
     if (dniGeneral) {
       processedIds.add(dniGeneral.id); // Marcar como procesado para evitar que aparezca
+      this.loggingService.debug('[DocumentosEmbebidos] DNI general encontrado y marcado como procesado para evitar duplicación', {
+        dniGeneralId: dniGeneral.id,
+        dniGeneralNombre: dniGeneral.nombre
+      }, 'DocumentosEmbebidos');
     }
 
     // Add all other documents that were not part of the DNI consolidation
     // CRITICAL FIX: Usar la propiedad 'requerido' del backend para determinar si es obligatorio
     rawTipos.forEach(tipo => {
       if (!processedIds.has(tipo.id)) {
+        // ✅ FILTRO ADICIONAL: Evitar que aparezcan documentos DNI generales que no fueron detectados anteriormente
+        const esDniGeneral = (
+          tipo.nombre.toLowerCase() === 'documento nacional de identidad' ||
+          tipo.nombre.toLowerCase() === 'dni' ||
+          (tipo.id === 'dni' || tipo.code === 'dni')
+        ) && !tipo.nombre.toLowerCase().includes('frente') && !tipo.nombre.toLowerCase().includes('dorso');
+
+        if (esDniGeneral) {
+          this.loggingService.debug('[DocumentosEmbebidos] Documento DNI general detectado en segunda pasada y filtrado', {
+            tipoId: tipo.id,
+            tipoNombre: tipo.nombre
+          }, 'DocumentosEmbebidos');
+          return; // Saltar este documento
+        }
+
         documentosFinal.push({
           title: tipo.nombre,
           description: tipo.descripcion,
@@ -1070,6 +1112,26 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       this.notificationService.error('Error de configuración de documentos. Se usarán documentos básicos obligatorios.');
       documentosFinal = this.getEmergencyBaseDocuments();
     }
+
+    // 🔍 DEBUGGING: Log de documentos finales procesados
+    const obligatorios = documentosFinal.filter(doc => doc.required);
+    const opcionales = documentosFinal.filter(doc => !doc.required);
+
+    this.loggingService.debug('[DocumentosEmbebidos] === DOCUMENTOS FINALES PROCESADOS ===', {
+      totalDocumentos: documentosFinal.length,
+      obligatoriosCount: obligatorios.length,
+      opcionalesCount: opcionales.length,
+      documentosObligatorios: obligatorios.map(doc => ({
+        title: doc.title,
+        tipoDocumentoId: doc.tipoDocumentoId,
+        required: doc.required
+      })),
+      documentosOpcionales: opcionales.map(doc => ({
+        title: doc.title,
+        tipoDocumentoId: doc.tipoDocumentoId,
+        required: doc.required
+      }))
+    }, 'DocumentosEmbebidos');
 
     return documentosFinal;
   }
@@ -1088,24 +1150,11 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
   /**
    * Calculates the progress of document completion and updates related state variables.
-   * CRITICAL FIX: Solo considera documentos marcados como 'required: true'
+   * CRITICAL FIX: Solo considera documentos marcados como 'required: true' para el progreso
    */
   calcularProgreso(): void {
+    console.log('🔥 MÉTODO calcularProgreso() EJECUTÁNDOSE - CORRECCIÓN APLICADA');
     this.loggingService.debug('[DocumentosEmbebidos] Recalculando progreso de documentos...', undefined, 'DocumentosEmbebidos');
-
-    // ✅ FILTRAR SOLO DOCUMENTOS OBLIGATORIOS
-    const documentosObligatorios = this.documentosRequeridos.filter(doc => doc.required === true);
-
-    if (!documentosObligatorios || documentosObligatorios.length === 0) {
-      this.documentosFaltantes = 0;
-      this.progresoDocumentacion = 100;
-      this.todosDocumentosCompletos = true;
-      this.loggingService.debug('[DocumentosEmbebidos] No hay documentos obligatorios, progreso 100%.', undefined, 'DocumentosEmbebidos');
-      this.emitirEstadoDocumentos();
-      return;
-    }
-
-    let documentosCompletadosCount = 0;
 
     // ✅ ACTUALIZAR ESTADO DE COMPLETITUD PARA TODOS LOS DOCUMENTOS (obligatorios y opcionales)
     this.documentosRequeridos.forEach(tipoDoc => {
@@ -1128,21 +1177,40 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       }
     });
 
+    // ✅ FILTRAR SOLO DOCUMENTOS OBLIGATORIOS PARA EL CÁLCULO DE PROGRESO
+    const documentosObligatorios = this.documentosRequeridos.filter(doc => doc.required === true);
+
+    if (!documentosObligatorios || documentosObligatorios.length === 0) {
+      this.documentosFaltantes = 0;
+      this.progresoDocumentacion = 100;
+      this.todosDocumentosCompletos = true;
+      this.loggingService.debug('[DocumentosEmbebidos] No hay documentos obligatorios, progreso 100%.', undefined, 'DocumentosEmbebidos');
+      this.emitirEstadoDocumentos();
+      return;
+    }
+
     // ✅ CONTAR SOLO DOCUMENTOS OBLIGATORIOS COMPLETADOS
+    let documentosObligatoriosCompletados = 0;
     documentosObligatorios.forEach(tipoDoc => {
       if (tipoDoc.completed) {
-        documentosCompletadosCount++;
+        documentosObligatoriosCompletados++;
       }
     });
 
     // ✅ CALCULAR PROGRESO BASADO SOLO EN DOCUMENTOS OBLIGATORIOS
-    this.documentosFaltantes = documentosObligatorios.length - documentosCompletadosCount;
-    this.progresoDocumentacion = Math.round((documentosCompletadosCount / documentosObligatorios.length) * 100);
+    this.documentosFaltantes = documentosObligatorios.length - documentosObligatoriosCompletados;
+    this.progresoDocumentacion = Math.round((documentosObligatoriosCompletados / documentosObligatorios.length) * 100);
     this.todosDocumentosCompletos = this.documentosFaltantes === 0;
 
-    this.loggingService.debug(`[DocumentosEmbebidos] Progreso: ${this.progresoDocumentacion}%, Obligatorios faltantes: ${this.documentosFaltantes}/${documentosObligatorios.length}`, undefined, 'DocumentosEmbebidos');
+    this.loggingService.debug(`[DocumentosEmbebidos] Progreso CORREGIDO: ${this.progresoDocumentacion}%, Obligatorios: ${documentosObligatoriosCompletados}/${documentosObligatorios.length}, Faltantes: ${this.documentosFaltantes}`, {
+      documentosObligatorios: documentosObligatorios.length,
+      documentosObligatoriosCompletados,
+      documentosFaltantes: this.documentosFaltantes,
+      progresoDocumentacion: this.progresoDocumentacion,
+      todosDocumentosCompletos: this.todosDocumentosCompletos
+    }, 'DocumentosEmbebidos');
 
-    // Notificar cuando se complete toda la documentación OBLIGATORIA
+    // ✅ SOLO NOTIFICAR SI REALMENTE TODOS LOS DOCUMENTOS OBLIGATORIOS ESTÁN COMPLETOS
     if (this.todosDocumentosCompletos) {
       this.notificationService.success('¡Has completado toda la documentación obligatoria!');
     }
@@ -1223,6 +1291,9 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
     this.dialog.open(DocumentoUploadDialogComponent, {
       title: `Cargar ${tipoDoc.title}`,
+      showFooter: false, // Disable external footer buttons
+      showCancelButton: false, // Disable external cancel button
+      showConfirmButton: false, // Disable external confirm button
       data: { tipoDocumentoId: tipoDoc.tipoDocumentoId }
     }).afterClosed().subscribe((result: any) => {
       if (result && result.success) {
@@ -1248,12 +1319,13 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       next: (tiposDocumento) => {
         this.dialog.open(DocumentoMultipleUploadDialogComponent, {
           title: 'Carga Múltiple de Documentos',
+          showFooter: false, // Disable external footer buttons
+          showCancelButton: false, // Disable external cancel button
+          showConfirmButton: false, // Disable external confirm button
           data: {
             tiposDocumento: tiposDocumento, // Pass the complete TipoDocumento array
             concursoId: this.concursoId // Pass contest ID if needed by multi-upload
-          },
-          width: '600px', // Example width
-          height: '80vh' // Example height
+          }
         }).afterClosed().subscribe((result: any) => {
           if (result && result.success) {
             // CRITICAL FIX: Eliminar notificación duplicada
@@ -1281,17 +1353,21 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
    * @param documento The DocumentoUsuario object to view.
    */
   verDocumento(documento: DocumentoUsuario | undefined): void {
-    if (!documento || (!documento.url && !documento.archivoUrl)) {
+    if (!documento || !documento.id) {
       this.notificationService.warning('Documento no disponible para ver.');
       return;
     }
-    const documentUrl = documento.url || documento.archivoUrl;
     this.loggingService.debug(`[DocumentosEmbebidos] Abriendo visor para documento: ${documento.nombreArchivo}`, undefined, 'DocumentosEmbebidos');
     this.dialog.open(DocumentoViewerComponent, {
-      title: `Ver Documento: ${documento.nombreArchivo}`,
-      data: { documentUrl: documentUrl, fileName: documento.nombreArchivo },
-      width: '90vw', // Example width
-      height: '90vh' // Example height
+      title: 'Visualizador de documento',
+      icon: 'file-pdf',
+      size: 'large',
+      data: { documentoId: documento.id },
+      showFooter: true,
+      showCancelButton: false,
+      showConfirmButton: true,
+      confirmButtonText: 'Cerrar',
+      panelClass: 'documento-viewer-dialog'
     });
   }
 

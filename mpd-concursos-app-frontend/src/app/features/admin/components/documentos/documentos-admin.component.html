@@ -100,7 +100,9 @@
       <!-- Nombre Archivo Column -->
       <ng-container matColumnDef="nombreArchivo">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Archivo </th>
-        <td mat-cell *matCellDef="let documento"> {{documento?.nombreArchivo || 'Sin nombre'}} </td>
+        <td mat-cell *matCellDef="let documento">
+          {{(documento?.tipoDocumento?.nombre || 'Documento') + '.pdf'}}
+        </td>
       </ng-container>
 
       <!-- Tipo Documento Column -->

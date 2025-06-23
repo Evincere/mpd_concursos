@@ -193,3 +193,18 @@
   font-size: 16px !important;
   margin-top: 8px !important;
 }
+
+/* Estilos específicos para el diálogo del visualizador de documentos */
+.documento-viewer-dialog {
+  .dialog-container {
+    width: 95vw !important;
+    height: 95vh !important;
+    max-width: 1600px !important;
+    max-height: 1200px !important;
+  }
+
+  .dialog-content {
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+}

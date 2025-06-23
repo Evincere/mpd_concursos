@@ -52,10 +52,10 @@
             <!-- CV Tab -->
             <ng-container *ngSwitchCase="'cv'">
               <div class="cv-section">
-                <app-cv-simple
+                <app-cv-container
                   [userProfile]="userProfile"
                   [isLoading]="isLoading">
-                </app-cv-simple>
+                </app-cv-container>
               </div>
             </ng-container>
 

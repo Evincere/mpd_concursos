@@ -14,7 +14,6 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.lang.NonNull;
 
 @Getter
 @Setter
@@ -22,7 +21,6 @@ import org.springframework.lang.NonNull;
 @AllArgsConstructor
 @Builder(builderMethodName = "builder")
 public class Inscription {
-    @NonNull
     private final InscriptionId id;
     private final ContestId contestId;
     private final UserId userId;

@@ -111,18 +111,23 @@
   }
 
   &.active {
-    color: var(--user-text-tab-active);
+    color: #ffffff !important; /* Forzar blanco para máximo contraste */
     font-weight: 600;
     background: rgba(96, 165, 250, 0.15); /* Subtle background for active state */
     border-bottom: 2px solid var(--user-border-tab-active);
 
     i {
       opacity: 1;
-      color: var(--user-text-tab-active);
+      color: #ffffff !important; /* Forzar blanco en iconos */
     }
 
     span {
-      color: var(--user-text-tab-active);
+      color: #ffffff !important; /* Forzar blanco en texto */
+    }
+
+    /* Additional specificity for stubborn blue text */
+    * {
+      color: #ffffff !important;
     }
   }
 
@@ -314,17 +319,17 @@
     color: var(--user-text-tab-inactive, #d1d5db) !important;
 
     &.active {
-      color: var(--user-text-tab-active, #ffffff) !important;
+      color: #ffffff !important; /* Forzar blanco - máxima prioridad */
       background: rgba(96, 165, 250, 0.15) !important;
       border-bottom: 2px solid var(--user-border-tab-active, rgba(96, 165, 250, 0.6)) !important;
       font-weight: 600 !important;
 
       i {
-        color: var(--user-text-tab-active, #ffffff) !important;
+        color: #ffffff !important; /* Forzar blanco en iconos */
       }
 
       span {
-        color: var(--user-text-tab-active, #ffffff) !important;
+        color: #ffffff !important; /* Forzar blanco en texto */
       }
     }
 

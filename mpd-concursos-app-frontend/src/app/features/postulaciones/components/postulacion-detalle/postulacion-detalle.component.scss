@@ -242,9 +242,46 @@
     }
   }
 
-  .doc-actions {
-    display: flex;
-    gap: var(--user-spacing-xs);
+  .doc-status {
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: var(--user-spacing-xs);
+      padding: var(--user-spacing-xs) var(--user-spacing-sm);
+      border-radius: var(--user-border-radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+
+      &.status-approved {
+        background-color: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+
+        i {
+          color: #16a34a;
+        }
+      }
+
+      &.status-rejected {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+
+        i {
+          color: #dc2626;
+        }
+      }
+
+      &.status-pending {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+
+        i {
+          color: #d97706;
+        }
+      }
+    }
   }
 }
 
@@ -256,6 +293,23 @@
   i {
     margin-bottom: var(--user-spacing-md);
     opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+.loading-documents {
+  text-align: center;
+  padding: var(--user-spacing-xl);
+  color: var(--user-text-secondary);
+
+  i {
+    margin-bottom: var(--user-spacing-md);
+    font-size: 1.5rem;
+    color: var(--user-primary-color);
   }
 
   p {

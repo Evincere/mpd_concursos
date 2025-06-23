@@ -1,4 +1,5 @@
 import { Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
+import { environment } from '../../../environments/environment';
 
 /**
  * Directiva para cargar imágenes de forma perezosa
@@ -115,15 +116,18 @@ export class LazyLoadImageDirective implements OnInit {
     if (!this.src) {
       return;
     }
-    
+
+    // Procesar la URL para manejar desarrollo vs producción
+    const processedSrc = this.processImageUrl(this.src);
+
     const img = new Image();
-    
+
     img.onload = () => {
       this.renderer.removeClass(this.el.nativeElement, this.loadingClass);
       this.renderer.addClass(this.el.nativeElement, this.loadedClass);
-      this.renderer.setAttribute(this.el.nativeElement, 'src', this.src);
+      this.renderer.setAttribute(this.el.nativeElement, 'src', processedSrc);
       this.isLoaded = true;
-      
+
       // Desconectar el observer
       this.disconnectObserver();
     };
@@ -141,7 +145,7 @@ export class LazyLoadImageDirective implements OnInit {
       this.disconnectObserver();
     };
     
-    img.src = this.src;
+    img.src = processedSrc;
   }
 
   /**
@@ -152,5 +156,32 @@ export class LazyLoadImageDirective implements OnInit {
       this.intersectionObserver.disconnect();
       this.intersectionObserver = undefined;
     }
+  }
+
+  /**
+   * Procesa la URL de la imagen para manejar desarrollo vs producción
+   */
+  private processImageUrl(url: string): string {
+    if (!url) return url;
+
+    // Si ya es una URL completa, devolverla tal como está
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    // En desarrollo, convertir URL relativa a absoluta para evitar problemas de proxy
+    if (this.isDevelopment() && url.startsWith('/api/')) {
+      return `http://localhost:8080${url}`;
+    }
+
+    // Si es una URL relativa, devolverla tal como está para que el proxy la maneje
+    return url;
+  }
+
+  /**
+   * Detecta si está en modo desarrollo
+   */
+  private isDevelopment(): boolean {
+    return !environment.production && window.location.hostname === 'localhost';
   }
 }

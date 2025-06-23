@@ -106,6 +106,36 @@ canProceedWithDocumentation(): boolean {
 canProceedWithProvisional: allObligatoryDocumentsComplete || provisionalAccepted
 ```
 
+## 🔧 **CORRECCIÓN CRÍTICA - 19/06/2025**
+
+### **Problema Identificado**
+La sección de inscripción provisional se mostraba incluso cuando todos los documentos requeridos estaban subidos.
+
+### **Causa Raíz**
+En `InscriptionDocumentationService.updateDocumentCompletionStatus()`, la condición para marcar un documento como completado era:
+```typescript
+// ❌ INCORRECTO
+userDoc.estado !== 'pendiente'
+```
+
+Esto significaba que un documento solo se consideraba "completado" si había sido **aprobado** o **rechazado** por un administrador, no simplemente por haber sido subido.
+
+### **Solución Implementada**
+Cambio en `inscription-documentation.service.ts` línea 220:
+```typescript
+// ✅ CORRECTO - Un documento se considera completado simplemente por existir
+const isUploaded = userDocuments.some(userDoc =>
+  userDoc.tipoDocumento?.id === requiredDoc.tipoDocumentoId
+  // Eliminada condición: && userDoc.estado !== 'pendiente'
+);
+```
+
+### **Resultado**
+- ✅ Cuando todos los documentos requeridos están subidos: `allDocumentsComplete = true`
+- ✅ La sección de inscripción provisional se oculta automáticamente
+- ✅ El botón "Siguiente" se habilita sin necesidad de tildar checkbox
+- ✅ El flujo UX funciona correctamente según especificaciones
+
 ## 📋 **Archivos Modificados**
 
 1. **`inscripcion-process-page.component.scss`**

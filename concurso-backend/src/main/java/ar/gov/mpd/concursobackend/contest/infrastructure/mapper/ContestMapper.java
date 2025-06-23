@@ -14,7 +14,6 @@ import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestUpdateReques
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 @Component

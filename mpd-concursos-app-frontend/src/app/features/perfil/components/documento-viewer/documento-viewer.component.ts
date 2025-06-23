@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // Custom Components
-import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
@@ -284,7 +284,7 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
       margin: 0;
       overflow: hidden;
       position: relative;
-      min-height: 80vh;
+      min-height: 85vh;
     }
 
     .viewer-container {
@@ -294,7 +294,7 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
       /* Simplified background for dialog content */
       background: rgba(31, 41, 55, 0.3);
       border-radius: 8px;
-      min-height: 80vh;
+      min-height: 85vh;
     }
 
     .loading-container {
@@ -382,7 +382,7 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
       /* Simplified document background */
       background: rgba(17, 24, 39, 0.2);
       border-radius: 8px;
-      min-height: 75vh;
+      min-height: 80vh;
     }
 
     .pdf-container {
@@ -392,7 +392,7 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
       padding: 0.5rem;
       background: transparent;
       position: relative;
-      min-height: 70vh;
+      min-height: 75vh;
 
       .pdf-status {
         position: absolute;
@@ -632,8 +632,8 @@ export class DocumentoViewerComponent implements OnInit {
   constructor(
     private documentosService: DocumentosService,
     private sanitizer: DomSanitizer,
-    public dialogRef: CustomDialogRef<DocumentoViewerComponent>,
-    @Inject(CUSTOM_DIALOG_DATA) public data: { documentoId: string }
+    public dialogRef: UnifiedDialogRef<any>,
+    @Inject(DIALOG_DATA) public data: { documentoId: string }
   ) {}
 
   ngOnInit(): void {

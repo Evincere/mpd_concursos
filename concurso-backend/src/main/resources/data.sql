@@ -88,9 +88,9 @@ VALUES
 -- No asignar roles aquí para evitar conflictos
 
 -- Datos iniciales para tipos de documento
--- Primero, insertar el documento de identidad como documento padre
+-- Primero, insertar el documento de identidad como documento padre (NO OBLIGATORIO - solo contenedor)
 INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General)', TRUE, 1, TRUE);
+(0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General) - Solo contenedor, no obligatorio', FALSE, 1, TRUE);
 
 -- Insertar los tipos de documentos para DNI frente y dorso
 INSERT IGNORE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES

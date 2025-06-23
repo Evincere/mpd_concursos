@@ -1,0 +1,151 @@
+/**
+ * Estilos para Modal de Educación
+ * 
+ * @description Estilos específicos para el modal de gestión de educación
+ * @author Augment Agent
+ * @date 2025-06-22
+ */
+
+// ===== MODAL CONTENT =====
+.education-modal-content {
+  min-height: 400px;
+  
+  // Asegurar que el formulario ocupe todo el espacio disponible
+  app-education-form {
+    display: block;
+    width: 100%;
+  }
+}
+
+// ===== MODAL ICON =====
+.modal-icon {
+  margin-right: 8px;
+  vertical-align: middle;
+  color: #3b82f6;
+  font-size: 20px;
+}
+
+// ===== FOOTER =====
+.education-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+  
+  .footer-left {
+    flex: 0 0 auto;
+  }
+  
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 0 0 auto;
+  }
+}
+
+// ===== BOTÓN PERSONALIZADO =====
+.custom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  min-height: 40px;
+
+  &.primary {
+    background-color: #3b82f6;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: #2563eb;
+    }
+
+    &:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+  }
+
+  &.loading {
+    pointer-events: none;
+
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+}
+
+// ===== ANIMACIÓN DE CARGA =====
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ===== RESPONSIVE =====
+@media (max-width: 768px) {
+  .education-modal-footer {
+    flex-direction: column;
+    gap: 12px;
+    
+    .footer-left,
+    .footer-right {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .footer-right {
+      flex-direction: column;
+      gap: 8px;
+      
+      .custom-button,
+      app-custom-button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// ===== ESTADOS DE CARGA =====
+:host {
+  &.loading {
+    .education-modal-content {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+  }
+}
+
+// ===== ANIMACIONES =====
+.education-modal-content {
+  transition: opacity 0.2s ease;
+}
+
+// ===== CUSTOMIZACIÓN DEL MODAL BASE =====
+:host ::ng-deep {
+  .education-modal {
+    .modal-container {
+      max-width: 900px;
+    }
+    
+    .modal-body {
+      padding-top: 0;
+    }
+  }
+}

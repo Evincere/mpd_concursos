@@ -3,8 +3,6 @@ package ar.gov.mpd.concursobackend.auth.application.service;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.ProfileImageUrl;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.application.service.UserService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,14 +88,14 @@ public class ProfileImageService {
         
         // Procesar y guardar archivo (con redimensionamiento si es necesario)
         processAndSaveImage(file, filePath);
-        
-        // Generar URL absoluta usando configuración
-        String imageUrl = baseUrl + "/api/files/profile-images/" + user.getId().value() + "/" + fileName;
-        
+
+        // Generar URL relativa (funciona tanto en desarrollo como en producción)
+        String imageUrl = "/api/files/profile-images/" + user.getId().value() + "/" + fileName;
+
         // Actualizar usuario con nueva URL
         user.setProfileImageUrl(ProfileImageUrl.of(imageUrl));
         userService.updateUser(user);
-        
+
         log.info("Imagen de perfil subida exitosamente para usuario {}: {}", username, imageUrl);
         return imageUrl;
     }

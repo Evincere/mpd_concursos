@@ -1,10 +1,18 @@
-# Redireccionar todas las solicitudes a index.html
+# Configuración para Angular SPA - Redireccionar todas las solicitudes a index.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Manejar archivos estáticos directamente
   RewriteRule ^index\.html$ - [L]
+  RewriteRule ^favicon\.ico$ - [L]
+  RewriteRule ^assets/ - [L]
+  RewriteRule ^.*\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ - [L]
+
+  # Redireccionar todas las rutas de la aplicación a index.html
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/api/
   RewriteRule . /index.html [L]
 </IfModule>
 

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEventType, HttpEvent, HttpResponse } from '@angular/common/http';
 import { Observable, throwError, Subject, forkJoin, of } from 'rxjs'; // Import 'of' for returning observables
 import { environment } from '../../../../environments/environment';
 import { DocumentoUsuario, TipoDocumento, DocumentoResponse } from '../../models/documento.model';
@@ -48,8 +48,14 @@ export class DocumentosService {
 
     // Si no hay caché o ha expirado, obtener del servidor
     // Usar el endpoint correcto: /api/documentos/usuario
+    console.log('[DocumentosService] 🔍 Solicitando documentos del usuario desde:', `${this.apiUrl}/usuario`);
     return this.http.get<DocumentoUsuario[]>(`${this.apiUrl}/usuario`).pipe(
       tap(documentos => {
+        console.log('[DocumentosService] ✅ Respuesta del backend:', documentos);
+        console.log('[DocumentosService] 📊 Cantidad de documentos recibidos:', documentos.length);
+        if (documentos.length > 0) {
+          console.log('[DocumentosService] 📄 Primer documento:', documentos[0]);
+        }
         this.documentosCache = documentos;
         this.ultimaActualizacion = Date.now();
       }),
@@ -325,9 +331,30 @@ export class DocumentosService {
         observe: 'events',
         responseType: 'blob'
       }).pipe(
+        map(event => {
+          // Validar que la respuesta final sea un blob válido
+          if (event instanceof HttpResponse && event.body) {
+            if (!(event.body instanceof Blob) || event.body.size === 0) {
+              throw new Error('Response is not a valid Blob.');
+            }
+          }
+          return event;
+        }),
         catchError(error => {
           console.error('[DocumentosService] ❌ Error al obtener el archivo del documento con progreso:', error);
-          return throwError(() => new Error('Error al obtener el archivo del documento'));
+          let errorMessage = 'Error al obtener el archivo del documento';
+
+          if (error.status === 404) {
+            errorMessage = 'El documento no fue encontrado';
+          } else if (error.status === 403) {
+            errorMessage = 'No tiene permisos para acceder a este documento';
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor al obtener el documento';
+          } else if (error.message?.includes('not a valid Blob')) {
+            errorMessage = 'El archivo del documento no está disponible o está corrupto';
+          }
+
+          return throwError(() => new Error(errorMessage));
         })
       );
     } else {
@@ -335,9 +362,56 @@ export class DocumentosService {
       return this.http.get(`${this.apiUrl}/${documentoId}/file`, {
         responseType: 'blob'
       }).pipe(
+        tap(response => {
+          // Debug: Log información detallada sobre la respuesta
+          console.log('[DocumentosService] 🔍 Respuesta recibida:', {
+            type: typeof response,
+            constructor: response?.constructor?.name,
+            isBlob: response instanceof Blob,
+            size: response instanceof Blob ? response.size : 'N/A',
+            response: response
+          });
+        }),
+        map(blob => {
+          // Validar que la respuesta sea un blob válido
+          if (!(blob instanceof Blob)) {
+            console.error('[DocumentosService] ❌ Respuesta no es un Blob:', {
+              type: typeof blob,
+              constructor: (blob as any)?.constructor?.name,
+              value: blob
+            });
+            throw new Error('Response is not a Blob.');
+          }
+
+          if (blob.size === 0) {
+            console.error('[DocumentosService] ❌ Blob está vacío:', blob);
+            throw new Error('Response is an empty Blob.');
+          }
+
+          console.log('[DocumentosService] ✅ Blob válido recibido:', {
+            size: blob.size,
+            type: blob.type
+          });
+
+          return blob;
+        }),
         catchError(error => {
           console.error('[DocumentosService] ❌ Error al obtener archivo de documento:', error);
-          return throwError(() => new Error('Error al obtener el archivo del documento'));
+          let errorMessage = 'Error al obtener el archivo del documento';
+
+          if (error.status === 404) {
+            errorMessage = 'El documento no fue encontrado';
+          } else if (error.status === 403) {
+            errorMessage = 'No tiene permisos para acceder a este documento';
+          } else if (error.status === 500) {
+            errorMessage = 'Error interno del servidor al obtener el documento';
+          } else if (error.message?.includes('not a Blob')) {
+            errorMessage = 'El archivo del documento no está disponible o está corrupto';
+          } else if (error.message?.includes('empty Blob')) {
+            errorMessage = 'El archivo del documento está vacío';
+          }
+
+          return throwError(() => new Error(errorMessage));
         })
       );
     }

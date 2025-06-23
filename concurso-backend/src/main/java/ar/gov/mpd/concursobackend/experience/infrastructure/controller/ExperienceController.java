@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceRequestDto;
 import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
 import ar.gov.mpd.concursobackend.experience.application.service.ExperienceService;
+import ar.gov.mpd.concursobackend.shared.application.dto.DeletionResponseDto;
 import ar.gov.mpd.concursobackend.shared.domain.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -98,23 +99,38 @@ public class ExperienceController {
     }
 
     /**
-     * Delete an experience
+     * Delete an experience (soft delete)
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<Void> deleteExperience(@PathVariable UUID id) {
+    public ResponseEntity<DeletionResponseDto> deleteExperience(@PathVariable UUID id) {
         log.info("Request to delete experience: {}", id);
 
         try {
             experienceService.deleteExperience(id);
-            log.info("Experiencia con ID: {} eliminada exitosamente por el controlador", id);
-            return ResponseEntity.noContent().build();
+
+            DeletionResponseDto response = DeletionResponseDto.success(
+                id,
+                "WorkExperience",
+                "Work experience deleted successfully. You can recover it within 24 hours."
+            );
+
+            log.info("Work experience with ID: {} deleted successfully", id);
+            return ResponseEntity.ok(response);
+
         } catch (ResourceNotFoundException ex) {
-            log.warn("No se pudo eliminar la experiencia porque no existe: {}", id);
-            return ResponseEntity.notFound().build();
+            log.warn("Work experience not found for deletion: {}", id);
+            DeletionResponseDto response = DeletionResponseDto.failure(
+                "Work experience not found with id: " + id
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+
         } catch (Exception ex) {
-            log.error("Error inesperado al eliminar experiencia con ID: {}", id, ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            log.error("Unexpected error deleting work experience with ID: {}", id, ex);
+            DeletionResponseDto response = DeletionResponseDto.failure(
+                "Failed to delete work experience: " + ex.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

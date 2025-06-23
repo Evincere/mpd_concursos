@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Custom Components
@@ -8,12 +8,13 @@ import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-sp
 import { CustomTableComponent, TableColumn } from '@shared/components/custom-table/custom-table.component';
 
 // Services
-import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
+import { ConfirmationService } from '@shared/services/confirmation.service';
 
 import { DocumentoUsuario, TipoDocumento } from '../../../../core/models/documento.model';
 import { DocumentoUploadComponent } from '../documento-upload/documento-upload.component';
-import { DocumentoViewerComponent } from '../documento-viewer/documento-viewer.component';
+import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { finalize } from 'rxjs/operators';
@@ -22,6 +23,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-documentacion-tab',
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [
     CommonModule,
     CustomButtonComponent,
@@ -85,75 +87,177 @@ import { Subscription } from 'rxjs';
           </div>
         </div>
 
-      <!-- Sección de documentos requeridos -->
-      <div class="documentos-requeridos">
-        <h4>Documentos requeridos</h4>
+      <!-- Sección de documentos obligatorios -->
+      <div class="documentos-requeridos" *ngIf="getDocumentosObligatorios().length > 0">
+        <h4>Documentos obligatorios</h4>
         <div class="documentos-grid">
-          <div *ngFor="let tipo of documentosRequeridos" class="documento-card"
-               [class.completo]="isDocumentoSubido(tipo.id)">
-            <div class="documento-icon">
-              <i class="fas fa-file-pdf"
-                 [class.documento-completo]="isDocumentoSubido(tipo.id)"
-                 [class.documento-pendiente]="!isDocumentoSubido(tipo.id)"></i>
-              <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.id)">
-                <i class="fas fa-check"></i>
+          <div *ngFor="let tipo of getDocumentosObligatorios()" class="documento-card"
+               [class.completo]="isDocumentoSubido(tipo.id)"
+               [class.obligatorio]="tipo.requerido">
+            <!-- Badge de tipo en esquina superior derecha -->
+            <div class="estado-badge estado-bloqueado badge-posicion">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>Obligatorio</span>
+            </div>
+
+            <!-- Contenido principal de la card -->
+            <div class="documento-content">
+              <div class="documento-icon">
+                <i class="fas fa-file-pdf"
+                   [class.documento-completo]="isDocumentoSubido(tipo.id)"
+                   [class.documento-pendiente]="!isDocumentoSubido(tipo.id)"></i>
+                <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.id)">
+                  <i class="fas fa-check"></i>
+                </div>
+              </div>
+              <div class="documento-info">
+                <div>
+                  <h5>{{tipo.nombre}}</h5>
+                  <p *ngIf="tipo.descripcion">{{tipo.descripcion}}</p>
+                </div>
+                <div class="documento-estado">
+                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else pendiente">
+                    <span class="estado-texto aprobado" *ngIf="getEstadoDocumento(tipo.id) === 'aprobado'">
+                      <i class="fas fa-check-circle"></i> Aprobado
+                    </span>
+                    <span class="estado-texto pendiente" *ngIf="getEstadoDocumento(tipo.id) === 'pendiente'">
+                      <i class="fas fa-clock"></i> Pendiente de revisión
+                    </span>
+                    <span class="estado-texto rechazado" *ngIf="getEstadoDocumento(tipo.id) === 'rechazado'">
+                      <i class="fas fa-times-circle"></i> Rechazado
+                    </span>
+                  </ng-container>
+                  <ng-template #pendiente>
+                    <span class="estado-texto faltante">
+                      <i class="fas fa-exclamation-triangle"></i> Pendiente de carga
+                    </span>
+                  </ng-template>
+                </div>
+                <div class="documento-actions">
+                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else botonCargar">
+                    <app-custom-button
+                      variant="icon"
+                      color="primary"
+                      icon="eye"
+                      [tooltip]="'Ver documento'"
+                      (buttonClick)="verDocumento(getDocumentoByTipo(tipo.id))">
+                    </app-custom-button>
+                    <app-custom-button
+                      variant="icon"
+                      color="success"
+                      icon="sync-alt"
+                      [tooltip]="'Reemplazar documento'"
+                      (buttonClick)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
+                    </app-custom-button>
+                    <app-custom-button
+                      variant="icon"
+                      color="danger"
+                      icon="trash"
+                      [tooltip]="'Eliminar documento'"
+                      (buttonClick)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
+                    </app-custom-button>
+                  </ng-container>
+                  <ng-template #botonCargar>
+                    <app-custom-button
+                      variant="stroked"
+                      color="primary"
+                      icon="upload"
+                      label="Cargar"
+                      (buttonClick)="cargarDocumentoTipo(tipo.id)">
+                    </app-custom-button>
+                  </ng-template>
+                </div>
               </div>
             </div>
-            <div class="documento-info">
-              <h5>{{tipo.nombre}}</h5>
-              <p *ngIf="tipo.descripcion">{{tipo.descripcion}}</p>
-              <div class="documento-estado">
-                <ng-container *ngIf="isDocumentoSubido(tipo.id); else pendiente">
-                  <span class="estado-texto aprobado" *ngIf="getEstadoDocumento(tipo.id) === 'aprobado'">
-                    <i class="fas fa-check-circle"></i> Aprobado
-                  </span>
-                  <span class="estado-texto pendiente" *ngIf="getEstadoDocumento(tipo.id) === 'pendiente'">
-                    <i class="fas fa-clock"></i> Pendiente de revisión
-                  </span>
-                  <span class="estado-texto rechazado" *ngIf="getEstadoDocumento(tipo.id) === 'rechazado'">
-                    <i class="fas fa-times-circle"></i> Rechazado
-                  </span>
-                </ng-container>
-                <ng-template #pendiente>
-                  <span class="estado-texto faltante">
-                    <i class="fas fa-exclamation-triangle"></i> Pendiente de carga
-                  </span>
-                </ng-template>
-              </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección de documentos opcionales -->
+      <div class="documentos-opcionales" *ngIf="getDocumentosOpcionales().length > 0">
+        <h4>Documentos opcionales</h4>
+        <p class="seccion-descripcion">
+          <i class="fas fa-info-circle"></i>
+          Estos documentos pueden mejorar tu perfil profesional, pero no son obligatorios para completar tu inscripción.
+        </p>
+        <div class="documentos-grid">
+          <div *ngFor="let tipo of getDocumentosOpcionales()" class="documento-card"
+               [class.completo]="isDocumentoSubido(tipo.id)"
+               [class.opcional]="!tipo.requerido">
+            <!-- Badge de tipo en esquina superior derecha -->
+            <div class="estado-badge estado-activo badge-posicion">
+              <i class="fas fa-plus-circle"></i>
+              <span>Opcional</span>
             </div>
-            <div class="documento-actions">
-              <ng-container *ngIf="isDocumentoSubido(tipo.id); else botonCargar">
-                <app-custom-button
-                  variant="icon"
-                  color="primary"
-                  icon="eye"
-                  [tooltip]="'Ver documento'"
-                  (buttonClick)="verDocumento(getDocumentoByTipo(tipo.id))">
-                </app-custom-button>
-                <app-custom-button
-                  variant="icon"
-                  color="success"
-                  icon="sync-alt"
-                  [tooltip]="'Reemplazar documento'"
-                  (buttonClick)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
-                </app-custom-button>
-                <app-custom-button
-                  variant="icon"
-                  color="danger"
-                  icon="trash"
-                  [tooltip]="'Eliminar documento'"
-                  (buttonClick)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
-                </app-custom-button>
-              </ng-container>
-              <ng-template #botonCargar>
-                <app-custom-button
-                  variant="stroked"
-                  color="primary"
-                  icon="upload"
-                  label="Cargar"
-                  (buttonClick)="cargarDocumentoTipo(tipo.id)">
-                </app-custom-button>
-              </ng-template>
+
+            <!-- Contenido principal de la card -->
+            <div class="documento-content">
+              <div class="documento-icon">
+                <i class="fas fa-file-pdf"
+                   [class.documento-completo]="isDocumentoSubido(tipo.id)"
+                   [class.documento-pendiente]="!isDocumentoSubido(tipo.id)"></i>
+                <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.id)">
+                  <i class="fas fa-check"></i>
+                </div>
+              </div>
+              <div class="documento-info">
+                <div>
+                  <h5>{{tipo.nombre}}</h5>
+                  <p *ngIf="tipo.descripcion">{{tipo.descripcion}}</p>
+                </div>
+                <div class="documento-estado">
+                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else pendienteOpcional">
+                    <span class="estado-texto aprobado" *ngIf="getEstadoDocumento(tipo.id) === 'aprobado'">
+                      <i class="fas fa-check-circle"></i> Aprobado
+                    </span>
+                    <span class="estado-texto pendiente" *ngIf="getEstadoDocumento(tipo.id) === 'pendiente'">
+                      <i class="fas fa-clock"></i> Pendiente de revisión
+                    </span>
+                    <span class="estado-texto rechazado" *ngIf="getEstadoDocumento(tipo.id) === 'rechazado'">
+                      <i class="fas fa-times-circle"></i> Rechazado
+                    </span>
+                  </ng-container>
+                  <ng-template #pendienteOpcional>
+                    <span class="estado-texto opcional-pendiente">
+                      <i class="fas fa-plus"></i> Disponible para cargar
+                    </span>
+                  </ng-template>
+                </div>
+                <div class="documento-actions">
+                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else botonCargarOpcional">
+                    <app-custom-button
+                      variant="icon"
+                      color="primary"
+                      icon="eye"
+                      [tooltip]="'Ver documento'"
+                      (buttonClick)="verDocumento(getDocumentoByTipo(tipo.id))">
+                    </app-custom-button>
+                    <app-custom-button
+                      variant="icon"
+                      color="success"
+                      icon="sync-alt"
+                      [tooltip]="'Reemplazar documento'"
+                      (buttonClick)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
+                    </app-custom-button>
+                    <app-custom-button
+                      variant="icon"
+                      color="danger"
+                      icon="trash"
+                      [tooltip]="'Eliminar documento'"
+                      (buttonClick)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
+                    </app-custom-button>
+                  </ng-container>
+                  <ng-template #botonCargarOpcional>
+                    <app-custom-button
+                      variant="stroked"
+                      color="accent"
+                      icon="plus"
+                      label="Agregar"
+                      (buttonClick)="cargarDocumentoTipo(tipo.id)">
+                    </app-custom-button>
+                  </ng-template>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -336,7 +440,8 @@ import { Subscription } from 'rxjs';
       }
     }
 
-    .documentos-requeridos {
+    .documentos-requeridos,
+    .documentos-opcionales {
       margin-bottom: 2rem;
 
       h4 {
@@ -344,6 +449,23 @@ import { Subscription } from 'rxjs';
         font-weight: 500;
         margin-bottom: 1rem;
         color: #f9fafb;
+      }
+
+      .seccion-descripcion {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        border-radius: 8px;
+        color: #93c5fd;
+        font-size: 0.9rem;
+
+        i {
+          color: #3b82f6;
+        }
       }
     }
 
@@ -354,8 +476,9 @@ import { Subscription } from 'rxjs';
     }
 
     .documento-card {
+      position: relative;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       padding: 1.5rem;
       background: rgba(55, 65, 81, 0.8);
       backdrop-filter: blur(12px);
@@ -363,6 +486,8 @@ import { Subscription } from 'rxjs';
       border-radius: 12px;
       transition: all 0.3s ease;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      min-height: 220px;
+      overflow: hidden;
 
       &:hover {
         transform: translateY(-2px);
@@ -374,15 +499,59 @@ import { Subscription } from 'rxjs';
         border-left: 4px solid #4CAF50;
         background: rgba(76, 175, 80, 0.05);
       }
+
+      &.obligatorio {
+        border-left: 4px solid #f59e0b;
+
+        &.completo {
+          border-left: 4px solid #4CAF50;
+        }
+      }
+
+      &.opcional {
+        border-left: 4px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.03);
+
+        &.completo {
+          border-left: 4px solid #4CAF50;
+          background: rgba(76, 175, 80, 0.05);
+        }
+      }
+
+      // Contenido principal de la card
+      .documento-content {
+        display: flex;
+        align-items: flex-start;
+        flex: 1;
+        gap: 1rem;
+        margin-top: 0.5rem;
+      }
+    }
+
+    // Badge de posicionamiento para esquina superior derecha
+    // Usando las clases globales existentes con solo ajustes de posición
+    .badge-posicion {
+      position: absolute !important;
+      top: 12px !important;
+      right: 12px !important;
+      z-index: 10 !important;
+      font-size: 0.65rem !important;
+      padding: 0.25rem 0.5rem !important;
+      border-radius: 12px !important;
+      margin: 0 !important;
     }
 
     .documento-icon {
       position: relative;
-      margin-right: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
 
       i {
-        font-size: 2rem;
+        font-size: 2.5rem;
         transition: color 0.3s ease;
+        margin-bottom: 0.5rem;
 
         &.documento-completo {
           color: #4CAF50;
@@ -395,71 +564,94 @@ import { Subscription } from 'rxjs';
 
       .estado-badge {
         position: absolute;
-        bottom: -5px;
+        bottom: 0;
         right: -5px;
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         background-color: #4CAF50;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        border: 2px solid rgba(55, 65, 81, 0.8);
 
         i {
           font-size: 0.7rem;
           color: white;
+          margin-bottom: 0;
         }
       }
     }
 
     .documento-info {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 120px;
 
       h5 {
-        margin: 0 0 0.25rem 0;
-        font-size: 1rem;
-        font-weight: 500;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
         color: #f9fafb;
+        line-height: 1.3;
       }
 
       p {
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 1rem 0;
         font-size: 0.85rem;
         color: #d1d5db;
+        line-height: 1.4;
+        flex: 1;
       }
     }
 
     .documento-estado {
+      margin-bottom: 1rem;
+
       .estado-texto {
         display: inline-flex;
         align-items: center;
-        font-size: 0.85rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-weight: 500;
 
         i {
-          margin-right: 0.25rem;
+          margin-right: 0.4rem;
+          font-size: 0.75rem;
         }
 
         &.aprobado {
-          background-color: rgba(76, 175, 80, 0.15);
+          background-color: rgba(76, 175, 80, 0.2);
           color: #4caf50;
+          border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         &.pendiente {
-          background-color: rgba(255, 152, 0, 0.15);
+          background-color: rgba(255, 152, 0, 0.2);
           color: #ff9800;
+          border: 1px solid rgba(255, 152, 0, 0.3);
         }
 
         &.rechazado {
-          background-color: rgba(244, 67, 54, 0.15);
+          background-color: rgba(244, 67, 54, 0.2);
           color: #f44336;
+          border: 1px solid rgba(244, 67, 54, 0.3);
         }
 
         &.faltante {
-          background-color: rgba(158, 158, 158, 0.15);
+          background-color: rgba(158, 158, 158, 0.2);
           color: #9e9e9e;
+          border: 1px solid rgba(158, 158, 158, 0.3);
+        }
+
+        &.opcional-pendiente {
+          background-color: rgba(59, 130, 246, 0.2);
+          color: #3b82f6;
+          border: 1px solid rgba(59, 130, 246, 0.3);
         }
       }
     }
@@ -467,6 +659,9 @@ import { Subscription } from 'rxjs';
     .documento-actions {
       display: flex;
       gap: 0.5rem;
+      align-items: center;
+      justify-content: flex-end;
+      margin-top: auto;
     }
 
     .documentos-tabla {
@@ -654,7 +849,17 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   // Table configuration for custom table component
   tableColumns: TableColumn[] = [
     { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
-    { key: 'nombreArchivo', label: 'Nombre del archivo', sortable: true },
+    {
+      key: 'nombreArchivo',
+      label: 'Nombre del archivo',
+      sortable: true,
+      type: 'custom',
+      render: (doc: DocumentoUsuario) => {
+        // Mostrar nombre basado en el tipo de documento en lugar del nombre original
+        const nombreTipoDocumento = doc.tipoDocumento?.nombre || 'Documento';
+        return `${nombreTipoDocumento}.pdf`;
+      }
+    },
     { key: 'fechaCarga', label: 'Fecha de carga', sortable: true, type: 'date' },
     {
       key: 'estado',
@@ -676,9 +881,11 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   private subscription: Subscription | undefined;
 
   constructor(
-    private dialog: CustomDialogService,
+    private dialog: UnifiedDialogService,
     private notification: CustomNotificationService,
-    private documentosService: DocumentosService
+    private documentosService: DocumentosService,
+    private cdr: ChangeDetectorRef,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -710,6 +917,8 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (tipos) => {
           this.tiposDocumento = tipos; // Store all available document types
+          // Update required documents from backend data
+          this.actualizarDocumentosRequeridos(tipos);
           this.cargarDocumentosUsuario(forzarRecarga); // Then load user documents
         },
         error: (error: unknown) => {
@@ -718,6 +927,59 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           this.notification.error('Error al cargar los tipos de documento');
         }
       });
+  }
+
+  /**
+   * Actualiza la lista de documentos disponibles basándose en los tipos de documento del backend.
+   * Ahora incluye tanto documentos obligatorios como opcionales para consistencia con el proceso de inscripción.
+   * @param tipos Lista de tipos de documento del backend.
+   */
+  private actualizarDocumentosRequeridos(tipos: TipoDocumento[]): void {
+    // NUEVA IMPLEMENTACIÓN: Mostrar TODOS los documentos activos (obligatorios y opcionales)
+    // para ser consistente con el paso 3 del proceso de inscripción
+    const documentosDisponibles = tipos.filter(tipo => {
+      if (!tipo.activo) return false;
+
+      // FILTRAR documentos específicos que no deben aparecer:
+      // 1. "Documento Nacional de Identidad" genérico (ya se maneja con DNI Frente y Dorso)
+      // 2. "Curriculum Vitae" (tiene su propia mecánica en otra pestaña)
+      const nombreLower = tipo.nombre.toLowerCase();
+      const codeLower = tipo.code?.toLowerCase() || '';
+
+      // Excluir DNI genérico
+      const esDNIGenerico = (
+        nombreLower === 'documento nacional de identidad' ||
+        nombreLower === 'dni' ||
+        codeLower === 'dni'
+      ) && !nombreLower.includes('frente') && !nombreLower.includes('dorso');
+
+      // Excluir Curriculum Vitae
+      const esCurriculumVitae = (
+        nombreLower.includes('curriculum') ||
+        nombreLower.includes('cv') ||
+        codeLower === 'curriculum-vitae' ||
+        codeLower === 'cv'
+      );
+
+      return !esDNIGenerico && !esCurriculumVitae;
+    });
+
+    if (documentosDisponibles.length > 0) {
+      // Use backend data as the source of truth - incluye tanto obligatorios como opcionales
+      this.documentosRequeridos = documentosDisponibles;
+
+      const obligatorios = documentosDisponibles.filter(d => d.requerido);
+      const opcionales = documentosDisponibles.filter(d => !d.requerido);
+
+      console.log('[DocumentacionTab] Documentos actualizados desde backend:');
+      console.log(`- Total: ${documentosDisponibles.length}`);
+      console.log(`- Obligatorios: ${obligatorios.length}`);
+      console.log(`- Opcionales: ${opcionales.length}`);
+      console.log('- Documentos filtrados:', documentosDisponibles.map(d => d.nombre));
+    } else {
+      // Fallback to hardcoded list if backend doesn't have documents
+      console.log('[DocumentacionTab] No se encontraron documentos en backend, usando lista hardcodeada');
+    }
   }
 
   /**
@@ -735,6 +997,15 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (documentos: DocumentoUsuario[]) => {
           this.documentosUsuario = documentos;
+          console.log('[DocumentacionTab] Documentos del usuario cargados:', documentos.length);
+          console.log('[DocumentacionTab] Documentos requeridos configurados:', this.documentosRequeridos.length);
+
+          // SOLUCIÓN: Limpiar la caché de documentos subidos para forzar recálculo
+          this.documentoSubidoCache = {};
+
+          // Forzar detección de cambios para actualizar la interfaz
+          this.cdr.detectChanges();
+
           // Actualizar el estado de los documentos en la interfaz (cards, progress)
           this.actualizarEstadoDocumentos();
           // Calcular el progreso después de actualizar el estado
@@ -760,30 +1031,42 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Calcula el progreso de la documentación cargada por el usuario
-   * y el número de documentos faltantes.
+   * Calcula el progreso de documentación basándose en los documentos obligatorios cargados.
+   * Los documentos opcionales no afectan el progreso de completitud.
    */
   calcularProgreso(): void {
     if (!this.documentosRequeridos || this.documentosRequeridos.length === 0) {
+      console.log('[DocumentacionTab] No hay documentos configurados');
       this.progresoDocumentacion = 100;
       this.documentosFaltantes = 0;
       return;
     }
 
-    let documentosRequeridosCargados = 0;
-    const documentosRequeridosActivos = this.documentosRequeridos.filter(d => d.requerido && d.activo);
+    let documentosObligatoriosCargados = 0;
+    const documentosObligatorios = this.getDocumentosObligatorios().filter(d => d.activo);
 
-    for (const tipoDoc of documentosRequeridosActivos) {
-      if (this.isDocumentoSubido(tipoDoc.id)) {
-        documentosRequeridosCargados++;
+    console.log('[DocumentacionTab] Calculando progreso:');
+    console.log('- Documentos totales:', this.documentosRequeridos.length);
+    console.log('- Documentos obligatorios:', documentosObligatorios.length);
+    console.log('- Documentos opcionales:', this.getDocumentosOpcionales().length);
+    console.log('- Documentos del usuario:', this.documentosUsuario.length);
+
+    for (const tipoDoc of documentosObligatorios) {
+      const isSubido = this.isDocumentoSubido(tipoDoc.id);
+      console.log(`- ${tipoDoc.nombre} (${tipoDoc.id}): ${isSubido ? 'SUBIDO' : 'FALTANTE'}`);
+      if (isSubido) {
+        documentosObligatoriosCargados++;
       }
     }
 
-    this.progresoDocumentacion = Math.round(
-      (documentosRequeridosCargados / documentosRequeridosActivos.length) * 100
-    );
+    this.progresoDocumentacion = documentosObligatorios.length > 0 ? Math.round(
+      (documentosObligatoriosCargados / documentosObligatorios.length) * 100
+    ) : 100;
 
-    this.documentosFaltantes = documentosRequeridosActivos.length - documentosRequeridosCargados;
+    this.documentosFaltantes = documentosObligatorios.length - documentosObligatoriosCargados;
+
+    console.log(`[DocumentacionTab] Progreso calculado: ${this.progresoDocumentacion}% (${documentosObligatoriosCargados}/${documentosObligatorios.length})`);
+    console.log(`[DocumentacionTab] Documentos obligatorios faltantes: ${this.documentosFaltantes}`);
   }
 
   /**
@@ -792,6 +1075,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
    */
   abrirDialogoCargaDocumento(tipoDocumentoId?: string): void {
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
+      title: 'Cargar Documento',
+      showFooter: false, // Disable external footer buttons
+      showCancelButton: false, // Disable external cancel button
+      showConfirmButton: false, // Disable external confirm button
       data: { tipoDocumentoId: tipoDocumentoId }
     });
 
@@ -809,10 +1096,30 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Obtiene la lista de documentos obligatorios.
+   * @returns Array de documentos obligatorios.
+   */
+  getDocumentosObligatorios(): TipoDocumento[] {
+    return this.documentosRequeridos.filter(doc => doc.requerido);
+  }
+
+  /**
+   * Obtiene la lista de documentos opcionales.
+   * @returns Array de documentos opcionales.
+   */
+  getDocumentosOpcionales(): TipoDocumento[] {
+    return this.documentosRequeridos.filter(doc => !doc.requerido);
+  }
+
+  /**
    * Abre el diálogo para la carga múltiple de documentos.
    */
   abrirDialogoCargaMultiple(): void {
     const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
+      title: 'Carga Múltiple de Documentos',
+      showFooter: false, // Disable external footer buttons
+      showCancelButton: false, // Disable external cancel button
+      showConfirmButton: false, // Disable external confirm button
       data: { /* any data needed for multiple upload component */ }
     });
 
@@ -838,7 +1145,15 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
 
     this.dialog.open(DocumentoViewerComponent, {
-      data: { documentoId: documento.id }
+      title: 'Visualizador de documento',
+      icon: 'file-pdf',
+      size: 'large',
+      data: { documentoId: documento.id },
+      showFooter: true,
+      showCancelButton: false,
+      showConfirmButton: true,
+      confirmButtonText: 'Cerrar',
+      panelClass: 'documento-viewer-dialog'
     });
   }
 
@@ -853,6 +1168,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
 
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
+      title: 'Reemplazar Documento',
+      showFooter: false, // Disable external footer buttons
+      showCancelButton: false, // Disable external cancel button
+      showConfirmButton: false, // Disable external confirm button
       data: { tipoDocumentoId: documento.tipoDocumentoId, documentoIdAEditar: documento.id }
     });
 
@@ -875,19 +1194,28 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (confirm('¿Estás seguro de que deseas eliminar este documento?')) {
-      this.documentosService.deleteDocumento(documento.id).subscribe({
-        next: () => {
-          this.notification.success('Documento eliminado correctamente');
-          this.cargarDocumentosUsuario(true); // Force reload
-          this.documentosService.notificarDocumentoActualizado();
-        },
-        error: (error: unknown) => {
-          console.error('Error al eliminar documento:', error);
-          this.notification.error('Error al eliminar el documento');
-        }
-      });
-    }
+    // Usar el servicio de confirmación que funciona correctamente
+    this.confirmationService.danger(
+      'Eliminar Documento',
+      `¿Estás seguro de que deseas eliminar el documento "${documento.nombreArchivo}"?`,
+      'Esta acción no se puede deshacer.',
+      'Eliminar',
+      'Cancelar'
+    ).subscribe(confirmed => {
+      if (confirmed) {
+        this.documentosService.deleteDocumento(documento.id!).subscribe({
+          next: () => {
+            this.notification.success('Documento eliminado correctamente');
+            this.cargarDocumentosUsuario(true); // Force reload
+            this.documentosService.notificarDocumentoActualizado();
+          },
+          error: (error: unknown) => {
+            console.error('Error al eliminar documento:', error);
+            this.notification.error('Error al eliminar el documento');
+          }
+        });
+      }
+    });
   }
 
   /**
@@ -929,6 +1257,9 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       return this.documentoSubidoCache[tipoDocumentoId];
     }
 
+    // SOLUCIÓN: Buscar el tipo de documento requerido para obtener su información
+    const tipoRequerido = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
+
     // Buscar si hay algún documento que coincida exactamente con el id proporcionado
     const documentoExacto = this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId);
     if (documentoExacto) {
@@ -941,6 +1272,23 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     );
     if (documentoPorCodigo) {
       return this.documentoSubidoCache[tipoDocumentoId] = true;
+    }
+
+    // NUEVA LÓGICA: Buscar por nombre del tipo de documento si tenemos la información del tipo requerido
+    if (tipoRequerido) {
+      const documentoPorNombre = this.documentosUsuario.find(doc => {
+        if (!doc.tipoDocumento || !doc.tipoDocumento.nombre) return false;
+
+        // Comparación exacta de nombres (case insensitive)
+        const nombreDocumento = doc.tipoDocumento.nombre.toLowerCase().trim();
+        const nombreRequerido = tipoRequerido.nombre.toLowerCase().trim();
+
+        return nombreDocumento === nombreRequerido;
+      });
+
+      if (documentoPorNombre) {
+        return this.documentoSubidoCache[tipoDocumentoId] = true;
+      }
     }
 
     // Caso especial para DNI (frente y dorso) si la lógica de IDs es genérica o combinada
@@ -964,8 +1312,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Buscar por coincidencia parcial en el nombre del tipo de documento
-    const tipoRequerido = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
+    // Buscar por coincidencia parcial en el nombre del tipo de documento (usando tipoRequerido ya declarado)
     if (tipoRequerido) {
       const nombreTipoRequeridoLower = tipoRequerido.nombre.toLowerCase();
 

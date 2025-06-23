@@ -5,8 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.util.UUID;
-
 /**
  * Controlador para manejar documentos de concursos
  */

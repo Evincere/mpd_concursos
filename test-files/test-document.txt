@@ -1,0 +1,2 @@
+Este es un archivo de prueba para testing de validación de formatos.
+No es un PDF, por lo que debería ser rechazado por el sistema.

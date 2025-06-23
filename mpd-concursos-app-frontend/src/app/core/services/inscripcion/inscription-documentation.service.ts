@@ -206,6 +206,8 @@ export class InscriptionDocumentationService {
 
   /**
    * SIMPLIFICADO: Actualiza el estado de completitud de documentos requeridos basado en documentos del usuario
+   * CRITICAL FIX: Un documento se considera completado simplemente por haber sido subido,
+   * independientemente de su estado de aprobación administrativa
    * @param requiredDocuments Documentos requeridos
    * @param userDocuments Documentos del usuario
    * @returns Documentos requeridos con estado actualizado
@@ -214,17 +216,52 @@ export class InscriptionDocumentationService {
     requiredDocuments: RequiredDocument[],
     userDocuments: DocumentoUsuario[]
   ): RequiredDocument[] {
-    return requiredDocuments.map(requiredDoc => {
-      // Verificación directa para todos los documentos (incluidos DNI frente y dorso por separado)
+
+    // 🔍 DEBUGGING: Log detallado de documentos del usuario
+    this.loggingService.debug('[InscriptionDocumentationService] === DOCUMENTOS DEL USUARIO ===', {
+      userDocumentsCount: userDocuments.length,
+      userDocuments: userDocuments.map(doc => ({
+        tipoDocumentoId: doc.tipoDocumentoId,
+        tipoDocumentoName: doc.tipoDocumento?.nombre,
+        nombreArchivo: doc.nombreArchivo,
+        estado: doc.estado
+      }))
+    }, 'InscriptionDocumentationService');
+
+    const updatedDocuments = requiredDocuments.map(requiredDoc => {
+      // ✅ CRITICAL FIX: Verificación directa para todos los documentos (incluidos DNI frente y dorso por separado)
+      // Un documento se considera completado si existe, independientemente de su estado de aprobación
       const isUploaded = userDocuments.some(userDoc =>
-        userDoc.tipoDocumento?.id === requiredDoc.tipoDocumentoId &&
-        userDoc.estado !== 'pendiente'
+        userDoc.tipoDocumento?.id === requiredDoc.tipoDocumentoId
       );
+
+      // 🔍 DEBUGGING: Log de cada documento individual
+      this.loggingService.debug(`[InscriptionDocumentationService] Documento: ${requiredDoc.title}`, {
+        tipoDocumentoId: requiredDoc.tipoDocumentoId,
+        required: requiredDoc.required,
+        wasCompleted: requiredDoc.completed,
+        nowCompleted: isUploaded,
+        matchingUserDoc: userDocuments.find(userDoc => userDoc.tipoDocumento?.id === requiredDoc.tipoDocumentoId)?.nombreArchivo || 'No encontrado'
+      }, 'InscriptionDocumentationService');
 
       return {
         ...requiredDoc,
         completed: isUploaded
       };
     });
+
+    // 🔍 DEBUGGING: Resumen final
+    const obligatoryDocs = updatedDocuments.filter(doc => doc.required);
+    const completedObligatory = obligatoryDocs.filter(doc => doc.completed);
+
+    this.loggingService.debug('[InscriptionDocumentationService] === RESUMEN FINAL ===', {
+      totalRequired: requiredDocuments.length,
+      obligatoryCount: obligatoryDocs.length,
+      completedObligatoryCount: completedObligatory.length,
+      allObligatoryComplete: completedObligatory.length === obligatoryDocs.length,
+      missingObligatory: obligatoryDocs.filter(doc => !doc.completed).map(doc => doc.title)
+    }, 'InscriptionDocumentationService');
+
+    return updatedDocuments;
   }
 }

@@ -1,4 +1,4 @@
-import { ApplicationConfig, isDevMode } from '@angular/core';
+import { ApplicationConfig, isDevMode, APP_INITIALIZER } from '@angular/core';
 import { provideRouter, withInMemoryScrolling, withRouterConfig } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -8,6 +8,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { IndexedDBService } from './core/services/storage/indexed-db.service';
 import { CSPService } from './core/services/security/csp.service';
 import { AuthService } from './core/services/auth/auth.service';
+import { AppInitializationService } from './core/services/app-initialization.service';
 import { ProfileService } from './core/services/profile/profile.service';
 // Legacy ExperienceService removed - using ExperienceSimpleService
 import { TokenService } from './core/services/auth/token.service';
@@ -15,7 +16,8 @@ import { DocumentosService } from './core/services/documentos/documentos.service
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { ErrorInterceptor } from './core/interceptors/error-interceptor.function';
 import { debugInterceptor } from './core/interceptors/debug.interceptor';
-import { cvMockInterceptor } from './core/interceptors/cv-mock.interceptor';
+// CV Mock interceptor removed - CV functionality will be reimplemented
+import { urlTransformInterceptor } from './core/interceptors/url-transform.interceptor';
 import { environment } from '../environments/environment';
 // Legacy EducacionService removed - using EducationSimpleService
 import { ArgentinaDataService } from './core/services/argentina-data.service';
@@ -45,6 +47,14 @@ export const appConfig: ApplicationConfig = {
     ArgentinaDataService,
     IndexedDBService,
     CSPService,
+    AppInitializationService,
+    // Inicialización de la aplicación
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (appInit: AppInitializationService) => () => appInit.initializeApp(),
+      deps: [AppInitializationService],
+      multi: true
+    },
     // Proveedores de servicios de responsividad
     ResponsiveService,
     // Proveedores de tokens para inyección
@@ -72,21 +82,13 @@ export const appConfig: ApplicationConfig = {
 };
 
 /**
- * Configuración condicional de interceptores basada en environment
- * ✅ Mock interceptor solo en desarrollo
- * ❌ Mock interceptor deshabilitado en producción
+ * Configuración de interceptores
  */
 function getInterceptors() {
-  const baseInterceptors = [
+  return [
     AuthInterceptor,
     ErrorInterceptor,
-    debugInterceptor
+    debugInterceptor,
+    urlTransformInterceptor
   ];
-
-  // Solo agregar mock interceptor en desarrollo
-  if (environment.features?.enableCvMockInterceptor) {
-    baseInterceptors.splice(2, 0, cvMockInterceptor);
-  }
-
-  return baseInterceptors;
 }

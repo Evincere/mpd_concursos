@@ -33,24 +33,31 @@ import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enu
          role="button"
          [attr.aria-label]="'Ver detalles de concurso: ' + concurso.title">
 
+      <!-- Header: Estado del concurso -->
       <div class="card-header">
         <app-contest-status-badge
           [status]="concurso.status"
           [showIcon]="true">
         </app-contest-status-badge>
-        <div class="fecha">
-          <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-          <span>{{ concurso.startDate | date:'dd/MM/yyyy' }} - {{ concurso.endDate | date:'dd/MM/yyyy' }}</span>
+      </div>
+
+      <!-- Content: Información principal distribuida horizontalmente -->
+      <div class="card-content">
+        <div class="content-info">
+          <h3>{{ concurso.title }}</h3>
+          <p class="cargo">{{ concurso.position }}</p>
+          <p class="dependencia">{{ concurso.department }}</p>
+        </div>
+        <div class="content-date">
+          <div class="fecha">
+            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+            <span>{{ concurso.startDate | date:'dd/MM/yyyy' }} - {{ concurso.endDate | date:'dd/MM/yyyy' }}</span>
+          </div>
         </div>
       </div>
 
-      <div class="card-content">
-        <h3>{{ concurso.title }}</h3>
-        <p class="cargo">{{ concurso.position }}</p>
-        <p class="dependencia">{{ concurso.department }}</p>
-      </div>
-
-      <div class="card-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="0" role="group" aria-label="Acciones del concurso">
+      <!-- Footer: Acciones -->
+      <div class="card-footer" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="0" role="group" aria-label="Acciones del concurso">
         <app-custom-button
           [variant]="'stroked'"
           [color]="'primary'"

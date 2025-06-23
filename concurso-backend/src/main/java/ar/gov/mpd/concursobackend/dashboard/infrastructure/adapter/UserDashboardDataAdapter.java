@@ -7,8 +7,8 @@ import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEnti
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.InscriptionEntity;
-import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationEntity;
-import ar.gov.mpd.concursobackend.experience.infrastructure.persistence.ExperienceEntity;
+import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationRecordEntity;
+import ar.gov.mpd.concursobackend.experience.infrastructure.persistence.WorkExperienceEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -246,7 +246,7 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
         // Contar educación (con manejo de errores)
         Long educationCount = 0L;
         try {
-            String educationCountQuery = "SELECT COUNT(e) FROM EducationEntity e WHERE e.userId = :userId";
+            String educationCountQuery = "SELECT COUNT(e) FROM EducationRecordEntity e WHERE e.user.id = :userId";
             Query educationQuery = entityManager.createQuery(educationCountQuery);
             educationQuery.setParameter("userId", userUuid);
             educationCount = (Long) educationQuery.getSingleResult();
@@ -254,10 +254,10 @@ public class UserDashboardDataAdapter implements LoadUserDashboardDataPort {
             log.warn("Error contando educación para usuario {}: {}", userId, e.getMessage());
         }
 
-        // Contar experiencia (ExperienceEntity usa relación @ManyToOne con UserEntity)
+        // Contar experiencia (WorkExperienceEntity usa relación @ManyToOne con UserEntity)
         Long experienceCount = 0L;
         try {
-            String experienceCountQuery = "SELECT COUNT(ex) FROM ExperienceEntity ex WHERE ex.user.id = :userId";
+            String experienceCountQuery = "SELECT COUNT(ex) FROM WorkExperienceEntity ex WHERE ex.user.id = :userId";
             Query experienceQuery = entityManager.createQuery(experienceCountQuery);
             experienceQuery.setParameter("userId", userUuid);
             experienceCount = (Long) experienceQuery.getSingleResult();

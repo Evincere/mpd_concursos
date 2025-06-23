@@ -4,10 +4,10 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { finalize } from 'rxjs/operators';
 
 // Custom Components
-import { CustomDialogRef, CUSTOM_DIALOG_DATA } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
+import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
 
 // Services
-import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
+import { UnifiedNotificationService } from '@shared/components/unified-notification/unified-notification.service';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { TipoDocumento, DocumentoResponse } from '../../../../core/models/documento.model';
 
@@ -30,13 +30,14 @@ export class DocumentoUploadComponent implements OnInit {
   isUploading = false;
   uploadProgress = 0;
   esDNIGenerico = false;
+  isEditMode = false; // Indica si estamos editando un documento existente
 
   constructor(
     private fb: FormBuilder,
     private documentosService: DocumentosService,
-    private notification: CustomNotificationService,
-    public dialogRef: CustomDialogRef<DocumentoUploadComponent>,
-    @Inject(CUSTOM_DIALOG_DATA) public data: { tipoDocumentoId?: string }
+    private notification: UnifiedNotificationService,
+    public dialogRef: UnifiedDialogRef<any>,
+    @Inject(DIALOG_DATA) public data: { tipoDocumentoId?: string; documentoIdAEditar?: string }
   ) {
     // Inicializar el formulario en el constructor
     this.documentoForm = this.fb.group({
@@ -48,6 +49,8 @@ export class DocumentoUploadComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Detectar si estamos en modo edición
+    this.isEditMode = !!this.data.documentoIdAEditar;
     this.loadTiposDocumento();
   }
 
@@ -323,7 +326,12 @@ export class DocumentoUploadComponent implements OnInit {
         }
       }
 
-      this.documentosService.uploadDocumento(formData) // Asumimos que este método ya está configurado para reportar progreso
+      // Usar el método correcto según el modo (crear vs actualizar)
+      const serviceCall = this.isEditMode && this.data.documentoIdAEditar
+        ? this.documentosService.updateDocumento(this.data.documentoIdAEditar, formData)
+        : this.documentosService.uploadDocumento(formData);
+
+      serviceCall
         .pipe(
           finalize(() => {
             this.isUploading = false;
@@ -332,10 +340,9 @@ export class DocumentoUploadComponent implements OnInit {
         )
         .subscribe({
           next: (_response: DocumentoResponse) => {
-            // El servicio uploadDocumento retorna directamente DocumentoResponse
-            // no HttpEvent, por lo que no necesitamos manejar progreso aquí
-            this.notification.success('Documento cargado correctamente.');
-            this.dialogRef.close(); // Cerrar sin parámetros
+            const mensaje = this.isEditMode ? 'Documento actualizado correctamente.' : 'Documento cargado correctamente.';
+            this.notification.success(mensaje);
+            this.dialogRef.close(true); // Cerrar con resultado exitoso
           },
           error: (error) => {
             console.error('[DocumentoUpload] Error al cargar documento:', error);

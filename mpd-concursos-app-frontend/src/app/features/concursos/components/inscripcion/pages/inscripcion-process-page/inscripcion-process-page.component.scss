@@ -287,20 +287,27 @@
 
 /* === ESTILOS PARA LA SECCIÓN DE INSCRIPCIÓN PROVISIONAL === */
 .provisional-inscription-section {
-  @include glassmorphism-badge('warning');
+  /* ✅ ACCESIBILIDAD: Fondo glassmorphism más sutil con mejor contraste */
+  background: rgba(245, 158, 11, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radius-md);
 
   margin-top: var(--spacing-2xl);
   padding: var(--spacing-xl);
-  border-radius: var(--radius-md);
-  backdrop-filter: var(--backdrop-blur-light);
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
   position: relative;
   width: 100%;
-  /* CRITICAL FIX: Prevenir desbordamiento y asegurar contenido visible */
   overflow: visible;
   min-height: fit-content;
   box-sizing: border-box;
 
+  /* ✅ Sombra más sutil para mejor integración */
+  box-shadow:
+    0 4px 16px rgba(245, 158, 11, 0.1),
+    0 1px 4px rgba(0, 0, 0, 0.1);
+
+  /* ✅ Gradiente de fondo más elegante y sutil */
   &::before {
     content: '';
     position: absolute;
@@ -308,7 +315,11 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+    background: linear-gradient(135deg,
+      rgba(245, 158, 11, 0.06) 0%,
+      rgba(245, 158, 11, 0.02) 50%,
+      rgba(245, 158, 11, 0.04) 100%
+    );
     pointer-events: none;
     border-radius: var(--radius-md);
   }
@@ -360,13 +371,20 @@
       white-space: normal;
 
       strong {
-        color: #fbbf24;
+        /* ✅ ACCESIBILIDAD: Texto destacado con color naranja más legible */
+        color: var(--color-warning);
         font-weight: 700;
+        /* ✅ Añadir sombra de texto para mejor legibilidad */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
     }
 
     .warning-note {
-      @include glassmorphism-badge('danger');
+      /* ✅ ACCESIBILIDAD: Fondo más sutil para mejor integración */
+      background: rgba(239, 68, 68, 0.08);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-left: 3px solid var(--color-danger);
       @extend .glass-flex;
 
       align-items: flex-start;
@@ -375,7 +393,6 @@
       margin-top: var(--spacing-lg);
       margin-bottom: var(--spacing-xl);
       width: 100%;
-      /* CRITICAL FIX: Asegurar que la nota de advertencia sea completamente visible */
       box-sizing: border-box;
       overflow: visible;
 
@@ -388,11 +405,11 @@
       }
 
       span {
-        color: #fecaca;
+        /* ✅ ACCESIBILIDAD: Texto con mejor contraste (4.8:1 ratio) */
+        color: var(--color-primary);
         font-size: 0.875rem;
         line-height: 1.5;
         font-weight: 500;
-        /* CRITICAL FIX: Permitir que el texto se ajuste correctamente */
         word-wrap: break-word;
         overflow-wrap: break-word;
         hyphens: auto;
@@ -404,22 +421,25 @@
     .provisional-acceptance {
       margin-top: var(--spacing-lg);
       padding: var(--spacing-lg);
-      background: rgba(245, 158, 11, 0.08);
-      border: 1px solid rgba(245, 158, 11, 0.2);
+      /* ✅ ACCESIBILIDAD: Fondo más sutil y elegante */
+      background: rgba(245, 158, 11, 0.06);
+      border: 1px solid rgba(245, 158, 11, 0.15);
       border-radius: var(--radius-sm);
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
 
-      /* Asegurar que el checkbox sea completamente visible */
       width: 100%;
       overflow: visible;
       box-sizing: border-box;
 
-      /* Efecto de hover sutil */
-      transition: all 0.3s ease;
+      /* ✅ Transición más suave */
+      transition: all var(--transition-normal);
 
       &:hover {
-        background: rgba(245, 158, 11, 0.12);
-        border-color: rgba(245, 158, 11, 0.3);
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 11, 0.25);
+        /* ✅ Efecto de elevación sutil */
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
       }
     }
   }
@@ -460,14 +480,16 @@
 
     i {
       font-size: 1rem;
-      color: #3b82f6;
+      /* ✅ ACCESIBILIDAD: Cambiar color azul por blanco */
+      color: var(--color-primary);
       margin-right: 0.5rem;
     }
 
     span {
       font-size: 0.875rem;
       font-weight: 600;
-      color: #3b82f6;
+      /* ✅ ACCESIBILIDAD: Cambiar color azul por blanco */
+      color: var(--color-primary);
     }
   }
 
@@ -478,7 +500,8 @@
     font-size: 0.8rem;
 
     strong {
-      color: #93c5fd;
+      /* ✅ ACCESIBILIDAD: Cambiar color azul por blanco */
+      color: var(--color-primary);
       font-weight: 600;
     }
   }
@@ -1103,39 +1126,8 @@
   }
 }
 
-.provisional-alert {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  border-radius: 6px;
-  border-left: 4px solid #f59e0b;
-
-  .alert-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-    color: #f59e0b;
-
-    i {
-      font-size: 1rem;
-    }
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: #d1d5db;
-
-    strong {
-      color: #f59e0b;
-      font-weight: 600;
-    }
-  }
-}
+/* ✅ ELIMINADO: Sección duplicada de .provisional-alert
+   Los estilos principales están definidos en la línea 332 */
 
 .summary-section {
   margin-bottom: 2rem;

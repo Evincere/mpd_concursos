@@ -21,7 +21,13 @@ export function translateContestStatus(status: string | undefined | null): strin
     'DRAFT': 'Borrador',
     'CANCELLED': 'Cancelado',
     'ARCHIVED': 'Archivado',
-    'IN_PROGRESS': 'En Proceso'
+    'IN_PROGRESS': 'En Proceso',
+    // Estados dinámicos específicos
+    'INSCRIPTION_PENDING': 'Próximamente',
+    'INSCRIPTION_OPEN': 'Inscripciones Abiertas',
+    'INSCRIPTION_CLOSED': 'Inscripciones Cerradas',
+    'IN_EVALUATION': 'En Evaluación',
+    'RESULTS_PUBLISHED': 'Resultados Publicados'
   };
 
   return estados[status] || status;

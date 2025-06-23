@@ -9,6 +9,7 @@ import { UserProfileService } from '../../../core/services/user/user-profile.ser
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { UnifiedNotificationService } from '../unified-notification/unified-notification.service';
 import { ImagePreviewDialogComponent, ImagePreviewData, ImagePreviewResult } from '../image-preview-dialog/image-preview-dialog.component';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Componente unificado para gestión de imágenes de perfil
@@ -41,16 +42,16 @@ import { ImagePreviewDialogComponent, ImagePreviewData, ImagePreviewResult } fro
         <!-- Current Image or Placeholder -->
         <div class="image-wrapper">
           <img
-            *ngIf="currentImageUrl()"
+            *ngIf="currentImageUrl() && !imageLoadError()"
             [src]="currentImageUrl()"
             [alt]="imageAlt"
             class="profile-image"
             (error)="onImageError()"
             (load)="onImageLoad()">
-          
-          <div *ngIf="!currentImageUrl()" class="image-placeholder">
+
+          <div *ngIf="!currentImageUrl() || imageLoadError()" class="image-placeholder">
             <mat-icon class="placeholder-icon">person</mat-icon>
-            <span class="placeholder-text">Sin imagen</span>
+            <span class="placeholder-text">{{ imageLoadError() ? 'Error al cargar imagen' : 'Sin imagen' }}</span>
           </div>
           
           <!-- Loading Overlay -->
@@ -141,12 +142,13 @@ export class ProfileImageManagerComponent {
   // === SIGNALS ===
   private _currentImageUrl = signal<string | null>(null);
   private _isUploading = signal(false);
-  private _imageLoadError = signal(false);
+  imageLoadError = signal(false);
   
   // === COMPUTED SIGNALS ===
   currentImageUrl = computed(() => {
-    if (this._imageLoadError()) return null;
-    return this._currentImageUrl() || this.initialImageUrl;
+    if (this.imageLoadError()) return null;
+    const url = this._currentImageUrl() || this.initialImageUrl;
+    return this.processImageUrl(url);
   });
   
   isUploading = computed(() => this._isUploading());
@@ -220,17 +222,44 @@ export class ProfileImageManagerComponent {
    * Handle image load error
    */
   onImageError(): void {
-    this._imageLoadError.set(true);
+    this.imageLoadError.set(true);
   }
-  
+
   /**
    * Handle image load success
    */
   onImageLoad(): void {
-    this._imageLoadError.set(false);
+    this.imageLoadError.set(false);
   }
   
   // === PRIVATE METHODS ===
+
+  /**
+   * Procesa la URL de la imagen para manejar desarrollo vs producción
+   */
+  private processImageUrl(url: string | null): string | null {
+    if (!url) return null;
+
+    // Si ya es una URL completa, devolverla tal como está
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    // En desarrollo, convertir URL relativa a absoluta para evitar problemas de proxy
+    if (this.isDevelopment() && url.startsWith('/api/')) {
+      return `http://localhost:8080${url}`;
+    }
+
+    // Si es una URL relativa, devolverla tal como está para que el proxy la maneje
+    return url;
+  }
+
+  /**
+   * Detecta si está en modo desarrollo
+   */
+  private isDevelopment(): boolean {
+    return !environment.production && window.location.hostname === 'localhost';
+  }
 
   /**
    * Show preview dialog for image editing

@@ -76,12 +76,16 @@ export class AuthService {
   }
 
   public isAuthenticated(): boolean {
+    console.log('[AuthService] 🔍 Verificando autenticación...');
     const token = this.tokenService.getToken();
     if (!token) {
-      console.warn('[AuthService] No hay token disponible');
+      console.warn('[AuthService] ❌ No hay token disponible');
       return false;
     }
-    return this.tokenService.validateToken(token);
+    console.log('[AuthService] ✅ Token encontrado, validando...');
+    const isValid = this.tokenService.validateToken(token);
+    console.log(`[AuthService] ${isValid ? '✅' : '❌'} Token ${isValid ? 'válido' : 'inválido'}`);
+    return isValid;
   }
 
   public hasRole(role: string): boolean {

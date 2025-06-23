@@ -13,9 +13,9 @@ import { LazyLoadImageDirective } from '../../../../../shared/directives/lazy-lo
 })
 export class UserInfoComponent {
   private authService = inject(AuthService);
-  
+
   protected readonly userInfo = this.authService.userInfo;
-  
+
   protected readonly hasProfileImage = computed(() => {
     const profileImage = this.userInfo().profileImage;
     return !!profileImage && profileImage.trim().length > 0;

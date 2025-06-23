@@ -74,6 +74,18 @@ export class DocumentoValidationService {
     provisionalAccepted: boolean = false
   ): DocumentationCompletenessResult {
 
+    // 🔍 DEBUGGING: Log detallado de todos los documentos recibidos
+    this.loggingService.debug('[DocumentoValidationService] === ANÁLISIS DE DOCUMENTACIÓN ===', {
+      totalDocuments: requiredDocuments?.length || 0,
+      provisionalAccepted,
+      allDocuments: requiredDocuments?.map(doc => ({
+        title: doc.title,
+        required: doc.required,
+        completed: doc.completed,
+        tipoDocumentoId: doc.tipoDocumentoId
+      }))
+    }, 'DocumentoValidationService');
+
     if (!requiredDocuments || requiredDocuments.length === 0) {
       this.loggingService.warn('[DocumentoValidationService] No hay documentos requeridos para validar', undefined, 'DocumentoValidationService');
       return {
@@ -87,6 +99,16 @@ export class DocumentoValidationService {
 
     // ✅ CRITICAL FIX: Filtrar SOLO documentos obligatorios (required: true)
     const obligatoryDocuments = requiredDocuments.filter(doc => doc.required === true);
+
+    // 🔍 DEBUGGING: Log detallado de documentos obligatorios
+    this.loggingService.debug('[DocumentoValidationService] === DOCUMENTOS OBLIGATORIOS ===', {
+      totalObligatory: obligatoryDocuments.length,
+      obligatoryDocuments: obligatoryDocuments.map(doc => ({
+        title: doc.title,
+        completed: doc.completed,
+        tipoDocumentoId: doc.tipoDocumentoId
+      }))
+    }, 'DocumentoValidationService');
 
     if (obligatoryDocuments.length === 0) {
       this.loggingService.debug('[DocumentoValidationService] No hay documentos obligatorios definidos', undefined, 'DocumentoValidationService');
@@ -103,6 +125,15 @@ export class DocumentoValidationService {
     const completedObligatoryDocuments = obligatoryDocuments.filter(doc => doc.completed);
     const missingObligatoryDocuments = obligatoryDocuments.filter(doc => !doc.completed);
     const allObligatoryDocumentsComplete = missingObligatoryDocuments.length === 0;
+
+    // 🔍 DEBUGGING: Log del resultado de completitud
+    this.loggingService.debug('[DocumentoValidationService] === RESULTADO DE COMPLETITUD ===', {
+      completedCount: completedObligatoryDocuments.length,
+      totalCount: obligatoryDocuments.length,
+      allComplete: allObligatoryDocumentsComplete,
+      missingCount: missingObligatoryDocuments.length,
+      missingDocuments: missingObligatoryDocuments.map(doc => doc.title)
+    }, 'DocumentoValidationService');
 
     const result: DocumentationCompletenessResult = {
       allDocumentsComplete: allObligatoryDocumentsComplete,

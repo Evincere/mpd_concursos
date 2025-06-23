@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { LoggingService } from '@core/services/logging/logging.service';
@@ -187,11 +187,11 @@ export class UserDashboardService {
         this.statsSubject.next(stats);
       }),
       catchError(error => {
-        this.loggingService.error(`[${this.LOG_TAG}] Error fetching user stats:`, error, this.LOG_TAG);
-        // En caso de error, devolver datos mock
+        this.loggingService.error(`[${this.LOG_TAG}] Error fetching user stats - backend may be offline:`, error, this.LOG_TAG);
+        // En caso de error, devolver datos mock con valores por defecto
         const mockStats = this.getMockStats();
         this.statsSubject.next(mockStats);
-        return throwError(() => error);
+        return of(mockStats); // Retornar observable con datos mock en lugar de error
       })
     );
   }
@@ -289,37 +289,38 @@ export class UserDashboardService {
   }
 
   private getMockStats(): UserStats {
+    this.loggingService.warn(`[${this.LOG_TAG}] Using mock stats - backend connection failed`, undefined, this.LOG_TAG);
     return {
       profileStats: {
-        completionPercentage: 65,
+        completionPercentage: 0,
         totalFields: 7,
-        completedFields: 4,
-        pendingFields: 3,
+        completedFields: 0,
+        pendingFields: 7,
         hasProfileImage: false,
-        hasBasicInfo: true,
-        hasContactInfo: true,
+        hasBasicInfo: false,
+        hasContactInfo: false,
         hasEducation: false,
         hasExperience: false,
         lastUpdated: new Date().toISOString()
       },
       inscriptionStats: {
-        totalInscriptions: 2,
-        activeInscriptions: 1,
+        totalInscriptions: 0,
+        activeInscriptions: 0,
         completedInscriptions: 0,
-        pendingInscriptions: 1,
+        pendingInscriptions: 0,
         cancelledInscriptions: 0,
         frozenInscriptions: 0,
-        byStatus: { active: 1, pending: 1 },
-        byContest: { 'Concurso Ejemplo': 1, 'Otro Concurso': 1 }
+        byStatus: {},
+        byContest: {}
       },
       documentStats: {
-        totalDocuments: 3,
-        pendingDocuments: 2,
-        approvedDocuments: 1,
+        totalDocuments: 0,
+        pendingDocuments: 0,
+        approvedDocuments: 0,
         rejectedDocuments: 0,
         expiredDocuments: 0,
-        byType: { 'DNI': 1, 'CV': 1, 'Título': 1 },
-        byStatus: { pending: 2, approved: 1 }
+        byType: {},
+        byStatus: {}
       },
       examStats: {
         availableExams: 0,

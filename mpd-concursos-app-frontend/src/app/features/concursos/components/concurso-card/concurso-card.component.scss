@@ -15,13 +15,14 @@
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
 
-  /* Layout and interaction */
+  /* Layout and interaction - LAYOUT VERTICAL CON FONDOS EXTENDIDOS */
   display: flex !important;
   flex-direction: column !important;
   cursor: pointer !important;
   overflow: hidden !important;
-  height: 100% !important;
+  min-height: 140px !important;
   position: relative !important;
+  padding: 0 !important; /* Sin padding para permitir fondos extendidos */
 
   /* Premium shadows */
   box-shadow:
@@ -83,87 +84,114 @@
     transform: translateY(-1px) !important;
   }
 
-  /* Card header with glassmorphism */
+  /* ESTRUCTURA VERTICAL TRADICIONAL CON CONTENIDO DISTRIBUIDO */
+
+  /* Header: Estado del concurso - FONDO EXTENDIDO */
   .card-header {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    padding: 1rem 1.25rem 0.75rem 1.25rem !important;
+    margin: 0 !important;
+    width: 100% !important;
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 100%) !important;
+    backdrop-filter: blur(8px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Content: Información distribuida horizontalmente */
+  .card-content {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 1.25rem !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.02) 100%) !important;
-    backdrop-filter: blur(8px) !important;
-
-    .fecha {
-      font-size: 0.875rem !important;
-      color: #d1d5db !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 0.5rem !important;
-      font-weight: 500 !important;
-      transition: color 0.3s ease !important;
-
-      i {
-        color: #60a5fa !important;
-        opacity: 0.9 !important;
-        font-size: 1rem !important;
-        transition: all 0.3s ease !important;
-      }
-    }
-  }
-
-  /* Card content with premium typography */
-  .card-content {
-    padding: 1.25rem !important;
+    padding: 1rem 1.25rem !important;
     flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.75rem !important;
+    gap: 1rem !important;
     background: linear-gradient(135deg,
       rgba(255, 255, 255, 0.02) 0%,
       rgba(255, 255, 255, 0.01) 100%) !important;
 
-    h3 {
-      margin: 0 !important;
-      font-size: 1.25rem !important;
-      font-weight: 600 !important;
-      color: #f9fafb !important;
-      transition: all 0.3s ease !important;
-      line-height: 1.4 !important;
-      letter-spacing: -0.025em !important;
+    .content-info {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+      flex: 1 !important;
+      min-width: 0 !important; /* Para permitir text-overflow */
+
+      h3 {
+        margin: 0 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        color: #f9fafb !important;
+        transition: all 0.3s ease !important;
+        line-height: 1.4 !important;
+        letter-spacing: -0.025em !important;
+      }
+
+      .cargo {
+        margin: 0 !important;
+        font-size: 1rem !important;
+        color: #d1d5db !important;
+        font-weight: 500 !important;
+        transition: color 0.3s ease !important;
+      }
+
+      .dependencia {
+        margin: 0 !important;
+        font-size: 0.875rem !important;
+        color: #9ca3af !important;
+        font-weight: 400 !important;
+        transition: color 0.3s ease !important;
+      }
     }
 
-    .cargo {
-      margin: 0 !important;
-      font-size: 1rem !important;
-      color: #d1d5db !important;
-      font-weight: 500 !important;
-      transition: color 0.3s ease !important;
-    }
+    .content-date {
+      display: flex !important;
+      align-items: center !important;
+      flex-shrink: 0 !important;
 
-    .dependencia {
-      margin: 0 !important;
-      font-size: 0.875rem !important;
-      color: #9ca3af !important;
-      font-weight: 400 !important;
-      transition: color 0.3s ease !important;
+      .fecha {
+        font-size: 0.875rem !important;
+        color: #d1d5db !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        font-weight: 500 !important;
+        transition: color 0.3s ease !important;
+        white-space: nowrap !important;
+
+        i {
+          color: #60a5fa !important;
+          opacity: 0.9 !important;
+          font-size: 1rem !important;
+          transition: all 0.3s ease !important;
+        }
+      }
     }
   }
 
-  /* Card actions with glassmorphism */
-  .card-actions {
+  /* Footer: Acciones - FONDO EXTENDIDO CON MEJOR DISTRIBUCIÓN */
+  .card-footer {
     display: flex !important;
-    justify-content: space-between !important;
+    justify-content: flex-end !important;
     align-items: center !important;
-    padding: 1.25rem !important;
+    padding: 0.75rem 1.25rem 1.25rem 1.25rem !important;
+    margin: 0 !important;
+    width: 100% !important;
     border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
     background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(255, 255, 255, 0.02) 100%) !important;
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 100%) !important;
     backdrop-filter: blur(8px) !important;
-    gap: 0.75rem !important;
+    gap: 1rem !important;
+    box-sizing: border-box !important;
+  }
 
+  /* Estilos para los botones en el footer */
+  .card-footer {
     /* OVERRIDE ESPECÍFICO PARA BOTÓN VER DETALLES */
     /* Estos estilos tienen máxima prioridad para sobrescribir glassmorphism global */
     ::ng-deep app-custom-button.details-button {
@@ -181,7 +209,7 @@
         box-shadow:
           0 2px 8px rgba(0, 0, 0, 0.25),
           inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
-        
+
         /* Estados interactivos específicos */
         &:hover {
           background: rgba(55, 65, 81, 0.85) !important;
@@ -192,18 +220,18 @@
             0 4px 12px rgba(0, 0, 0, 0.35),
             inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
         }
-        
+
         &:active {
           transform: translateY(0) !important;
         }
-        
+
         /* Icono del botón */
         .button-icon {
           color: inherit !important;
           margin-right: 0.5rem !important;
           font-size: 0.875rem !important;
         }
-        
+
         /* Texto del botón */
         .button-label {
           color: inherit !important;
@@ -236,22 +264,27 @@
 @media (max-width: 768px) {
   .concurso-card {
     .card-header {
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 0.75rem !important;
       padding: 1rem !important;
     }
 
     .card-content {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 1rem !important;
       padding: 1rem !important;
-      gap: 0.5rem !important;
 
-      h3 {
-        font-size: 1.125rem !important;
+      .content-info {
+        h3 {
+          font-size: 1.125rem !important;
+        }
+      }
+
+      .content-date {
+        align-self: flex-start !important;
       }
     }
 
-    .card-actions {
+    .card-footer {
       flex-direction: column !important;
       gap: 0.75rem !important;
       padding: 1rem !important;
@@ -276,7 +309,7 @@
 
 @media (max-width: 480px) {
   .concurso-card {
-    .card-actions {
+    .card-footer {
       ::ng-deep app-custom-button.details-button {
         .custom-button {
           padding: 0.625rem 1rem !important;
@@ -300,7 +333,7 @@
       transform: none !important;
     }
 
-    .card-actions ::ng-deep app-custom-button .custom-button:hover {
+    .card-footer ::ng-deep app-custom-button .custom-button:hover {
       transform: none !important;
     }
   }
@@ -322,7 +355,7 @@
     border-width: 2px !important;
     border-color: rgba(255, 255, 255, 0.4) !important;
 
-    .card-actions ::ng-deep app-custom-button.details-button .custom-button {
+    .card-footer ::ng-deep app-custom-button.details-button .custom-button {
       border-width: 2px !important;
       border-color: rgba(255, 255, 255, 0.4) !important;
     }

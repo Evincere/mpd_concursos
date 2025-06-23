@@ -7,6 +7,16 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Fixed
+- **Dashboard**: Corregido el cálculo de documentos pendientes en la card "Estado del Perfil"
+- **Dashboard**: Mejorado el manejo de errores cuando el backend no está disponible
+- **CV**: Eliminado el indicador de progreso innecesario del curriculum vitae
+- **Dashboard**: Los datos mock ahora muestran valores por defecto más realistas (0% completitud)
+
+### Changed
+- **Dashboard**: Mejorado el cálculo de documentos pendientes para mostrar solo documentos reales
+- **Dashboard**: El servicio UserDashboardService ahora retorna observables con datos mock en lugar de errores cuando el backend falla
+
 ## [2.0.0] - 2025-06-18
 
 ### ✅ IMPLEMENTACIÓN COMPLETA CV INLINE - SISTEMA OPERATIVO

@@ -1,4 +1,4 @@
-import { Injectable, ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Type, Injector, Renderer2, RendererFactory2 } from '@angular/core';
+import { Injectable, ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Type, Injector, Renderer2, RendererFactory2, InjectionToken } from '@angular/core';
 import { Observable, Subject, firstValueFrom } from 'rxjs';
 import { LoggingService } from '../../../core/services/logging/logging.service';
 
@@ -64,7 +64,7 @@ export class UnifiedDialogRef<T = unknown> {
 /**
  * Injection token for dialog data
  */
-export const DIALOG_DATA = 'DIALOG_DATA';
+export const DIALOG_DATA = new InjectionToken<any>('DIALOG_DATA');
 
 /**
  * Configuration for a unified dialog

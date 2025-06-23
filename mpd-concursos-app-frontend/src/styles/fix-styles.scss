@@ -272,17 +272,22 @@ app-custom-form-field {
       min-height: 52px !important;
 
       &.active {
-        color: var(--user-text-tab-active, #ffffff) !important;
+        color: #ffffff !important; /* FORCE WHITE - MAXIMUM PRIORITY */
         background: rgba(96, 165, 250, 0.15) !important;
         border-bottom: 2px solid var(--user-border-tab-active, rgba(96, 165, 250, 0.6)) !important;
         font-weight: 600 !important;
 
         i {
-          color: var(--user-text-tab-active, #ffffff) !important;
+          color: #ffffff !important; /* FORCE WHITE ICONS */
         }
 
         span {
-          color: var(--user-text-tab-active, #ffffff) !important;
+          color: #ffffff !important; /* FORCE WHITE TEXT */
+        }
+
+        /* Nuclear option - force all children to white */
+        * {
+          color: #ffffff !important;
         }
       }
 
@@ -312,6 +317,50 @@ app-custom-form-field {
       .tab-button {
         font-size: var(--user-font-size-tab-mobile, 0.9375rem) !important;
         min-height: 48px !important;
+      }
+    }
+  }
+}
+
+/* ===== SIDEBAR ACCESSIBILITY OVERRIDES ===== */
+/* Force white text for active sidebar items for WCAG AA compliance */
+.sidebar {
+  .nav-item {
+    a.active {
+      color: #ffffff !important; /* FORCE WHITE TEXT FOR ACCESSIBILITY */
+
+      i {
+        color: #ffffff !important; /* FORCE WHITE ICONS */
+      }
+
+      span {
+        color: #ffffff !important; /* FORCE WHITE SPAN TEXT */
+      }
+
+      /* Nuclear option - force all children to white */
+      * {
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .nav-menu {
+    .nav-item {
+      a.active {
+        color: #ffffff !important; /* FORCE WHITE TEXT FOR ACCESSIBILITY */
+
+        i {
+          color: #ffffff !important; /* FORCE WHITE ICONS */
+        }
+
+        span {
+          color: #ffffff !important; /* FORCE WHITE SPAN TEXT */
+        }
+
+        /* Nuclear option - force all children to white */
+        * {
+          color: #ffffff !important;
+        }
       }
     }
   }
