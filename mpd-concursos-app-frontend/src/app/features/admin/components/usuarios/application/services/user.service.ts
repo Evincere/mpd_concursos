@@ -13,7 +13,8 @@ import {
   UserRoleChangeRequest,
   ResetPasswordRequest,
   UserAuditLog,
-  UserStats
+  UserStats,
+  UserStatus
 } from '../../domain/models/user.model';
 
 /**
@@ -168,5 +169,13 @@ export class UserService {
    */
   checkDniExists(dni: string): Observable<boolean> {
     return this.userRepository.checkDniExists(dni);
+  }
+
+  updateUserStatus(userId: string, status: UserStatus): Observable<User> {
+    return this.userRepository.updateUserStatus(userId, status);
+  }
+
+  updateUserRoles(userId: string, roles: string[]): Observable<User> {
+    return this.userRepository.updateUserRoles(userId, roles);
   }
 }

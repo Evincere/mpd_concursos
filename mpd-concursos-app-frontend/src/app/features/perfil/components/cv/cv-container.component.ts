@@ -281,76 +281,29 @@ export class CvContainerComponent implements OnInit, OnDestroy {
    * Exporta el CV completo a PDF
    */
   async exportCv(): Promise<void> {
-    if (!this.userProfile?.id) {
-      this.notificationService.showError('No se puede exportar el CV sin datos de usuario');
-      return;
-    }
-
-    this.updateState(state => ({
-      ...state,
-      isExporting: true
-    }));
-
+    this.updateState(state => ({ ...state, isExporting: true }));
     try {
-      // Usar el servicio de estado para exportar con fallback al servicio local
-      this.cvStateService.exportCv(this.userProfile.id, {
-        format: 'PDF',
-        template: 'modern',
-        includePhoto: true,
-        includePersonalInfo: true,
-        includeWorkExperience: true,
-        includeEducation: true
-      }).subscribe({
-        next: (result) => {
-          if (result.success && result.downloadUrl) {
-            // Descargar el archivo
-            const link = document.createElement('a');
-            link.href = result.downloadUrl;
-            link.download = result.fileName || 'cv.pdf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+      this.notificationService.showInfo('Iniciando exportación de CV...');
 
-            this.notificationService.showSuccess('CV exportado exitosamente');
-          } else {
-            throw new Error(result.error || 'Error desconocido en la exportación');
-          }
-        },
-        error: async (error) => {
-          console.warn('[CvContainerComponent] Error with state service, trying local export:', error);
+      const result = await this.pdfExportService.exportToPdf(
+        this.userProfile!,
+        this.cvState().experiences.data,
+        this.cvState().education.data
+      );
 
-          // Fallback al servicio local de PDF
-          try {
-            const result = await this.pdfExportService.exportToPdf(
-              this.userProfile!,
-              this.cvState().experiences.data,
-              this.cvState().education.data
-            );
-
-            if (result.success) {
-              this.notificationService.showCvExported('PDF');
-            } else {
-              this.notificationService.showError(result.error || 'Error al exportar el CV');
-            }
-          } catch (localError) {
-            this.notificationService.showError('Error al exportar el CV');
-            console.error('[CvContainerComponent] Error with local export:', localError);
-          }
-        },
-        complete: () => {
-          this.updateState(state => ({
-            ...state,
-            isExporting: false
-          }));
-        }
-      });
-    } catch (error) {
-      this.notificationService.showError('Error al exportar el CV');
-      console.error('[CvContainerComponent] Error exporting CV:', error);
-      this.updateState(state => ({
-        ...state,
-        isExporting: false
-      }));
+      if (result.success && result.blob) {
+        this.notificationService.showSuccess('CV exportado exitosamente. Abriendo en una nueva pestaña...');
+        const fileUrl = URL.createObjectURL(result.blob);
+        window.open(fileUrl, '_blank');
+        // Opcional: revocar la URL del objeto después de un tiempo para liberar memoria
+        setTimeout(() => URL.revokeObjectURL(fileUrl), 10000);
+      } else {
+        throw new Error(result.error || 'No se pudo obtener el PDF generado.');
+      }
+    } catch (error: any) {
+      this.notificationService.showError(`Error al exportar CV: ${error.message}`);
+    } finally {
+      this.updateState(state => ({ ...state, isExporting: false }));
     }
   }
 
@@ -395,10 +348,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       }
     }, 100);
   }
-
-
-
-
 
   /**
    * Edita una experiencia laboral
@@ -524,8 +473,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-
 
   // ===== MODAL EVENT HANDLERS =====
 
@@ -774,8 +721,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     });
   }
 
-
-
   /**
    * Actualiza el estado general
    */
@@ -901,10 +846,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   isEducationExpanded(educationId: string): boolean {
     return this.expandedEducation().has(educationId);
   }
-
-
-
-
 
   /**
    * Convierte las tabs a TabItems para el componente de tabs

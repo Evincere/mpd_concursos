@@ -99,8 +99,7 @@
             [label]="field.label"
             [required]="field.required"
             [formControlName]="field.name"
-            [hint]="field.helpText || ''"
-            [disabled]="isLoading">
+            [hint]="field.helpText || ''">
           </app-custom-datepicker>
           
           <!-- Campo de checkbox -->
@@ -129,7 +128,7 @@
                 type="text"
                 class="chips-input"
                 [placeholder]="field.placeholder || 'Escribe y presiona Enter'"
-                [disabled]="isLoading"
+                [attr.disabled]="isLoading ? '' : null"
                 (keydown.enter)="onChipInputEnter($any($event), field.name, chipInput)"
                 #chipInput>
               <button

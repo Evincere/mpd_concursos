@@ -170,14 +170,14 @@ export class UsuarioFormComponent implements OnInit {
         Validators.maxLength(50),
         this.validationService.nameValidator()
       ]],
-      dni: ['', {
-        validators: [
-          Validators.required,
-          this.validationService.dniValidator()
-        ],
-        asyncValidators: this.isEditMode && this.usuario ? null : [this.validationService.dniExistsValidator()],
-        updateOn: 'blur' // Trigger async validation on blur
-      }],
+      dni: [
+        this.usuario ? this.usuario.dni : '',
+        {
+          validators: [Validators.required, Validators.pattern('^[0-9]*$')],
+          asyncValidators: [this.validationService.dniExistsValidator()],
+          updateOn: 'blur'
+        }
+      ],
       cuit: ['', [
         Validators.pattern(/^\d{11}$/) // 11 numeric digits pattern
       ]],
@@ -187,14 +187,14 @@ export class UsuarioFormComponent implements OnInit {
       ]],
 
       // Contact Data
-      email: ['', {
-        validators: [
-          Validators.required,
-          Validators.email // Basic email format validation
-        ],
-        asyncValidators: this.isEditMode && this.usuario ? null : [this.validationService.emailExistsValidator()],
-        updateOn: 'blur' // Trigger async validation on blur
-      }],
+      email: [
+        this.usuario ? this.usuario.email : '',
+        {
+          validators: [Validators.required, Validators.email],
+          asyncValidators: [this.validationService.emailExistsValidator()],
+          updateOn: 'blur'
+        }
+      ],
       telefono: ['', [
         this.validationService.phoneValidator() // Custom phone format validation
       ]],
@@ -224,7 +224,17 @@ export class UsuarioFormComponent implements OnInit {
       ]],
       confirmPassword: ['', this.isEditMode ? [] : [ // Confirm password is required only in create mode
         Validators.required
-      ]]
+      ]],
+
+      // New fields for username
+      username: [
+        this.usuario ? this.usuario.username : '',
+        {
+          validators: [Validators.required, Validators.minLength(3)],
+          asyncValidators: [this.validationService.usernameExistsValidator()],
+          updateOn: 'blur'
+        }
+      ]
     }, {
       // Cross-field validation for password match, only in create mode
       validators: this.isEditMode ? [] : this.validationService.passwordMatchValidator('password', 'confirmPassword')

@@ -35,6 +35,9 @@ import ar.gov.mpd.concursobackend.auth.domain.exception.InactiveAccountException
 import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCredentialsException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidPasswordException;
 import jakarta.transaction.Transactional;
+import ar.gov.mpd.concursobackend.audit.application.service.AuditService;
+import ar.gov.mpd.concursobackend.audit.domain.model.AuditEventType;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -70,6 +73,8 @@ public class UserService implements IUserService, IUserRoleManager {
   private final PasswordEncoder passwordEncoder;
   private final RoleGetByRole findByRole;
   private final IUserRepository userRepository;
+  private final AuditService auditService;
+  private final HttpServletRequest request;
 
   @Autowired
   private AuthenticationManager authenticationManager;
@@ -81,13 +86,17 @@ public class UserService implements IUserService, IUserRoleManager {
       @Autowired UserGetByUsername getByUserName,
       @Autowired PasswordEncoder passwordEncoder,
       @Autowired RoleGetByRole findByRole,
-      @Autowired IUserRepository userRepository) {
+      @Autowired IUserRepository userRepository,
+      @Autowired AuditService auditService,
+      @Autowired HttpServletRequest request) {
     this.userCreate = userCreate;
     this.getByUsername = getByUserName;
     this.userExists = userExists;
     this.passwordEncoder = passwordEncoder;
     this.findByRole = findByRole;
     this.userRepository = userRepository;
+    this.auditService = auditService;
+    this.request = request;
   }
 
   @Override
@@ -277,10 +286,23 @@ public class UserService implements IUserService, IUserRoleManager {
       String jwt = jwtProvider.generateToken(authentication, user);
       logger.info("Token generado exitosamente para el usuario: {}", userDetails.getUsername());
 
+      auditService.logEvent(
+          AuditEventType.LOGIN_SUCCESS,
+          userLogin.getUsername(),
+          "User logged in successfully.",
+          "SUCCESS"
+      );
+
       // Manejar el caso cuando el CUIT es null
       String cuitValue = user.getCuit() != null ? user.getCuit().value() : null;
       return new JwtDto(jwt, userDetails.getUsername(), userDetails.getAuthorities(), cuitValue);
     } catch (InvalidCredentialsException | BlockedAccountException | InactiveAccountException | ExpiredAccountException e) {
+      auditService.logEvent(
+          AuditEventType.LOGIN_FAILURE,
+          userLogin.getUsername(),
+          e.getMessage(),
+          "FAILURE"
+      );
       throw e; // Re-lanzar excepciones específicas
     } catch (Exception e) {
       logger.error("Error inesperado durante el login: {}", e.getMessage(), e);

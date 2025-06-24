@@ -13,6 +13,8 @@ import ar.gov.mpd.concursobackend.auth.application.dto.UpdateUserRequest;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileResponse;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileUpdateRequest;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
+import ar.gov.mpd.concursobackend.auth.application.dto.UserStatusUpdateRequest;
+import ar.gov.mpd.concursobackend.auth.application.dto.UserRolesUpdateRequest;
 import ar.gov.mpd.concursobackend.auth.application.service.RolService;
 import ar.gov.mpd.concursobackend.auth.application.service.UserService;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
@@ -35,6 +37,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -515,5 +518,127 @@ public class UserController {
             String errorMsg = e.getMessage() != null ? e.getMessage() : "Error interno al crear usuario";
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMsg);
         }
+    }
+
+    /**
+     * Cambia el estado de un usuario (solo admin)
+     * @param userId ID del usuario
+     * @param statusUpdateRequest DTO con el nuevo estado
+     * @return Usuario actualizado
+     */
+    @PutMapping("/{userId}/status")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> changeUserStatus(
+            @PathVariable String userId,
+            @Valid @RequestBody UserStatusUpdateRequest statusUpdateRequest) {
+        
+        log.debug("Cambiando estado para usuario con ID: {}", userId);
+        
+        try {
+            UUID userUuid = UUID.fromString(userId);
+            User updatedUser = userService.getById(userUuid)
+                .map(user -> {
+                    user.setStatus(statusUpdateRequest.getStatus());
+                    return userService.updateUser(user);
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+            
+            UserProfileResponse response = mapToProfileResponse(updatedUser);
+            return ResponseEntity.ok(response);
+            
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid user ID format: {}", userId);
+            return ResponseEntity.badRequest().body("Formato de ID de usuario inválido");
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            log.error("Error cambiando el estado del usuario {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno al cambiar el estado del usuario");
+        }
+    }
+
+    /**
+     * Cambia los roles de un usuario (solo admin)
+     * @param userId ID del usuario
+     * @param rolesUpdateRequest DTO con la nueva lista de roles
+     * @return Usuario actualizado
+     */
+    @PutMapping("/{userId}/roles")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> changeUserRoles(
+            @PathVariable String userId,
+            @Valid @RequestBody UserRolesUpdateRequest rolesUpdateRequest) {
+        
+        log.debug("Cambiando roles para usuario con ID: {}", userId);
+
+        try {
+            UUID userUuid = UUID.fromString(userId);
+
+            Set<Rol> newRoles = rolesUpdateRequest.getRoles().stream()
+                .<Rol>map(roleName -> {
+                    try {
+                        return rolService.findByRole(RoleEnum.valueOf(roleName.toUpperCase()))
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol no encontrado: " + roleName));
+                    } catch (IllegalArgumentException e) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nombre de rol inválido: " + roleName);
+                    }
+                })
+                .collect(Collectors.toSet());
+
+            User updatedUser = userService.getById(userUuid)
+                .map(user -> {
+                    user.setRoles(newRoles);
+                    return userService.updateUser(user);
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+            
+            UserProfileResponse response = mapToProfileResponse(updatedUser);
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid user ID format: {}", userId);
+            return ResponseEntity.badRequest().body("Formato de ID de usuario inválido");
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
+        } catch (Exception e) {
+            log.error("Error cambiando los roles del usuario {}: {}", userId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno al cambiar los roles del usuario");
+        }
+    }
+
+    /**
+     * Verifica si un nombre de usuario ya existe
+     * @param username Nombre de usuario a verificar
+     * @return Objeto con la clave 'exists' y valor booleano
+     */
+    @GetMapping("/check-username")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Boolean>> checkUsernameExists(@RequestParam String username) {
+        boolean exists = userService.existsByUsername(new UserUsername(username));
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
+    /**
+     * Verifica si un email ya existe
+     * @param email Email a verificar
+     * @return Objeto con la clave 'exists' y valor booleano
+     */
+    @GetMapping("/check-email")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Boolean>> checkEmailExists(@RequestParam String email) {
+        boolean exists = userService.existsByEmail(new UserEmail(email));
+        return ResponseEntity.ok(Map.of("exists", exists));
+    }
+
+    /**
+     * Verifica si un DNI ya existe
+     * @param dni DNI a verificar
+     * @return Objeto con la clave 'exists' y valor booleano
+     */
+    @GetMapping("/check-dni")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Boolean>> checkDniExists(@RequestParam String dni) {
+        boolean exists = userService.existsByDni(new UserDni(dni));
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 }

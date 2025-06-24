@@ -18,9 +18,9 @@ Este documento detalla los sprints, historias de usuario (HU), tareas y subtarea
 ### HU2: Como administrador, quiero poder crear usuarios desde el panel admin.
 
 #### Tareas:
-- [ ] Implementar endpoint `POST /api/users` en el backend (`UserController`).
-  - [ ] Reutilizar lógica de `UserService`.
-  - [ ] Proteger con rol admin.
+- [x] Implementar endpoint `POST /api/users` en el backend (`UserController`).
+  - [x] Reutilizar lógica de `UserService`.
+  - [x] Proteger con rol admin.
 - [ ] Adaptar el frontend para consumir el nuevo endpoint.
   - [ ] Ajustar formularios y validaciones.
   - [ ] Probar creación de usuario desde la UI.
@@ -32,8 +32,8 @@ Este documento detalla los sprints, historias de usuario (HU), tareas y subtarea
 ### HU3: Como administrador, quiero poder cambiar roles y estado de los usuarios desde el panel admin.
 
 #### Tareas:
-- [ ] Implementar endpoint `PUT /api/users/{userId}/roles` en backend.
-- [ ] Implementar endpoint `PUT /api/users/{userId}/status` en backend.
+- [x] Implementar endpoint `PUT /api/users/{userId}/roles` en backend.
+- [x] Implementar endpoint `PUT /api/users/{userId}/status` en backend.
 - [ ] Adaptar el frontend para consumir estos endpoints.
   - [ ] Añadir controles en la UI para roles y estado.
   - [ ] Probar flujos completos.

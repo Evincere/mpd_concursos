@@ -9,7 +9,8 @@ import {
   UserRoleChangeRequest,
   ResetPasswordRequest,
   UserAuditLog,
-  UserStats
+  UserStats,
+  UserStatus
 } from '../../domain/models/user.model';
 
 /**
@@ -105,4 +106,23 @@ export interface UserRepositoryPort {
    * @returns Observable con true si existe, false si no
    */
   checkDniExists(dni: string): Observable<boolean>;
+
+  /**
+   * Actualiza el estado de un usuario
+   * @param userId ID del usuario
+   * @param status Nuevo estado del usuario
+   */
+  updateUserStatus(userId: string, status: UserStatus): Observable<User>;
+
+  /**
+   * Actualiza los roles de un usuario
+   * @param userId ID del usuario
+   * @param roles Nuevos roles del usuario
+   */
+  updateUserRoles(userId: string, roles: string[]): Observable<User>;
+
+  /**
+   * Invalida el caché del repositorio
+   */
+  invalidateCache(): void;
 }

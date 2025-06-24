@@ -73,7 +73,7 @@ export class ExamenActivityLoggerService {
 
   private activityLogs: ActivityLog[] = [];
   private pendingLogs$ = new BehaviorSubject<ActivityLog[]>([]);
-  private resourceMonitoringInterval: number | null = null;
+  private resourceMonitoringInterval: any | null = null;
   private performanceObserver!: PerformanceObserver;
   private mouseEvents$ = new Subject<MouseEvent>();
   private keyboardEvents$ = new Subject<KeyboardEvent>();

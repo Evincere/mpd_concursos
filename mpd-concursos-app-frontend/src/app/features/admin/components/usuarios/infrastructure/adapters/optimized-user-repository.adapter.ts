@@ -605,15 +605,10 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
    * @param username Username to check.
    */
   checkUsernameExists(username: string): Observable<boolean> {
-    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Checking if username exists: ${username}`, undefined, 'UserRepository');
-    return this.apiService.get<{ exists: boolean }>(`${this.API_BASE_PATH}/check-username`, {
-      params: { username }
-    }).pipe(
-      map(response => (response as { exists: boolean }).exists),
-      catchError(error => {
-        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error checking if username ${username} exists:`, error, 'UserRepository');
-        return of(false);
-      })
+    const url = `${this.API_BASE_PATH}/check-username`;
+    return this.apiService.get<{ exists: boolean }>(url, { params: { username } }).pipe(
+      map(response => response.exists),
+      catchError(() => of(false)) // Devuelve false en caso de error para no bloquear el formulario
     );
   }
 
@@ -622,15 +617,10 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
    * @param email Email to check.
    */
   checkEmailExists(email: string): Observable<boolean> {
-    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Checking if email exists: ${email}`, undefined, 'UserRepository');
-    return this.apiService.get<{ exists: boolean }>(`${this.API_BASE_PATH}/check-email`, {
-      params: { email }
-    }).pipe(
-      map(response => (response as { exists: boolean }).exists),
-      catchError(error => {
-        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error checking if email ${email} exists:`, error, 'UserRepository');
-        return of(false);
-      })
+    const url = `${this.API_BASE_PATH}/check-email`;
+    return this.apiService.get<{ exists: boolean }>(url, { params: { email } }).pipe(
+      map(response => response.exists),
+      catchError(() => of(false))
     );
   }
 
@@ -639,15 +629,38 @@ export class OptimizedUserRepositoryAdapter implements UserRepositoryPort {
    * @param dni DNI to check.
    */
   checkDniExists(dni: string): Observable<boolean> {
-    this.loggingService.debug(`[OptimizedUserRepositoryAdapter] Checking if DNI exists: ${dni}`, undefined, 'UserRepository');
-    return this.apiService.get<{ exists: boolean }>(`${this.API_BASE_PATH}/check-dni`, {
-      params: { dni }
-    }).pipe(
-      map(response => (response as { exists: boolean }).exists),
+    const url = `${this.API_BASE_PATH}/check-dni`;
+    return this.apiService.get<{ exists: boolean }>(url, { params: { dni } }).pipe(
+      map(response => response.exists),
+      catchError(() => of(false))
+    );
+  }
+
+  updateUserStatus(userId: string, status: UserStatus): Observable<User> {
+    const url = `${this.API_BASE_PATH}/${userId}/status`;
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Updating user status for ID: ${userId}`, { status }, 'UserRepository');
+    this.loadingSubject.next(true);
+    return this.apiService.put<User>(url, { status }).pipe(
+      tap(() => this.invalidateCache()),
       catchError(error => {
-        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error checking if DNI ${dni} exists:`, error, 'UserRepository');
-        return of(false);
-      })
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error updating user status for ID: ${userId}`, error, 'UserRepository');
+        throw error;
+      }),
+      finalize(() => this.loadingSubject.next(false))
+    );
+  }
+
+  updateUserRoles(userId: string, roles: string[]): Observable<User> {
+    const url = `${this.API_BASE_PATH}/${userId}/roles`;
+    this.loggingService.info(`[OptimizedUserRepositoryAdapter] Updating user roles for ID: ${userId}`, { roles }, 'UserRepository');
+    this.loadingSubject.next(true);
+    return this.apiService.put<User>(url, { roles }).pipe(
+      tap(() => this.invalidateCache()),
+      catchError(error => {
+        this.loggingService.error(`[OptimizedUserRepositoryAdapter] Error updating user roles for ID: ${userId}`, error, 'UserRepository');
+        throw error;
+      }),
+      finalize(() => this.loadingSubject.next(false))
     );
   }
 }

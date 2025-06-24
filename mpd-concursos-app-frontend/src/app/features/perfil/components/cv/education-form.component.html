@@ -87,8 +87,7 @@
             [label]="field.label"
             [required]="field.required"
             [formControlName]="field.name"
-            [hint]="field.helpText || ''"
-            [disabled]="isLoading">
+            [hint]="field.helpText || ''">
           </app-custom-datepicker>
 
           <!-- Campo de select -->
@@ -99,8 +98,7 @@
             [control]="getFormControl(field.name)"
             [required]="field.required"
             [placeholder]="field.placeholder || 'Selecciona una opción'"
-            [hint]="field.helpText || ''"
-            [disabled]="isLoading">
+            [hint]="field.helpText || ''">
           </app-custom-select>
 
           <!-- Campo de número -->
@@ -122,7 +120,7 @@
               <input
                 type="checkbox"
                 [formControlName]="field.name"
-                [disabled]="isLoading"
+                [attr.disabled]="isLoading ? '' : null"
                 class="checkbox-input">
               <span class="checkbox-custom"></span>
               <span class="checkbox-text">{{ field.label }}</span>
@@ -143,13 +141,13 @@
                 type="text"
                 class="chips-input"
                 [placeholder]="field.placeholder || 'Escribe y presiona Enter'"
-                [disabled]="isLoading"
+                [attr.disabled]="isLoading ? '' : null"
                 (keydown.enter)="onChipInputEnter($any($event), field.name, chipInput)"
                 #chipInput>
               <button
                 type="button"
                 class="add-chip-btn"
-                [disabled]="isLoading"
+                [attr.disabled]="isLoading ? '' : null"
                 (click)="onAddChip(field.name, chipInput.value); chipInput.value = ''">
                 <i class="material-icons">add</i>
               </button>
@@ -164,7 +162,7 @@
                 <button
                   type="button"
                   class="chip-remove"
-                  [disabled]="isLoading"
+                  [attr.disabled]="isLoading ? '' : null"
                   (click)="onRemoveChip(field.name, i)"
                   [title]="'Eliminar'">
                   <i class="material-icons">close</i>

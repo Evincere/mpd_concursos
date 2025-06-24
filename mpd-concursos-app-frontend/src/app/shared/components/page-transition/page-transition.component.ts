@@ -52,7 +52,7 @@ export class PageTransitionComponent implements OnInit, OnDestroy {
 
   private subscription: Subscription = new Subscription();
   private startTime = 0;
-  private progressInterval: number | null = null;
+  private progressInterval: any | null = null;
 
   constructor(private router: Router) {}
 

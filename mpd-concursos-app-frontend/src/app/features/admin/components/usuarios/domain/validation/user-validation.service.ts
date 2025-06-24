@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LoggingService } from '@core/services/logging/logging.service';
-import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, AsyncValidatorFn } from '@angular/forms';
 import { Observable, of } from 'rxjs';
 import { map, catchError, debounceTime, switchMap } from 'rxjs/operators';
 
@@ -16,6 +16,7 @@ import {
   ADDRESS_VALIDATION
 } from './user-validation.constants';
 import { ROLES_VALIDATION } from './validation-messages';
+import { UserRepositoryPort } from '../../application/ports/user-repository.port';
 
 /**
  * Servicio para validar datos de usuario
@@ -439,4 +440,6 @@ export class UserValidationService {
       return null;
     };
   }
+
+
 }

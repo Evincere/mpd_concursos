@@ -30,7 +30,7 @@ export const routes: Routes = [
       {
         path: 'perfil',
         loadChildren: () => import('./features/perfil/perfil.module')
-          .then(m => m.PerfilModule)
+          .then(m => m.PERFIL_ROUTES)
       },
       {
         path: 'examples',
