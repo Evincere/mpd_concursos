@@ -8,7 +8,7 @@
  */
 
 import { Injectable } from '@angular/core';
-import { TDocumentDefinitions, Content, Style } from 'pdfmake/interfaces';
+import type { TDocumentDefinitions, Content, Style } from 'pdfmake/interfaces';
 
 import {
   WorkExperience,
@@ -64,8 +64,8 @@ export class CvPdfExportService {
 
     try {
       // Importación dinámica para evitar problemas de carga
-      const pdfMakeModule = await import('pdfmake/build/pdfmake');
-      const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
+      const pdfMakeModule = await import('pdfmake/build/pdfmake') as any;
+      const pdfFontsModule = await import('pdfmake/build/vfs_fonts') as any;
 
       this.pdfMake = pdfMakeModule.default || pdfMakeModule;
 
@@ -154,7 +154,7 @@ export class CvPdfExportService {
         fontSize: 10,
         color: '#333333'
       },
-      footer: (currentPage, pageCount) => ({
+      footer: (currentPage: number, pageCount: number) => ({
         text: `Página ${currentPage.toString()} de ${pageCount}`,
         alignment: 'center',
         fontSize: 8,

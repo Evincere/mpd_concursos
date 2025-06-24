@@ -63,6 +63,7 @@
     "ng-apexcharts": "^1.15.0",
     "ng2-pdf-viewer": "^10.4.0",
     "ngx-markdown": "^18.0.0",
+    "pdfmake": "^0.2.20",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.10"
@@ -73,6 +74,7 @@
     "@angular/compiler-cli": "^18.2.13",
     "@types/crypto-js": "^4.2.2",
     "@types/jasmine": "~5.1.0",
+    "@types/pdfmake": "^0.2.11",
     "angular-eslint": "19.2.1",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
