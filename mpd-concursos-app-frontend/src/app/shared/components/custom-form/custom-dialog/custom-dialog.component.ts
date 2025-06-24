@@ -56,9 +56,16 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
     </div>
   `,
   styles: [`
-    /* Estilos mínimos - Los estilos principales están en styles.scss */
+    /* ESTILOS CRÍTICOS PARA MODAL CORRECTO */
     :host {
-      display: contents;
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1000;
+      pointer-events: auto;
     }
 
     .dialog-backdrop {
@@ -70,11 +77,12 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 1001;
       animation: fadeIn 0.2s ease-in-out;
       /* Fondo base para asegurar visibilidad */
       background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(4px);
+      pointer-events: auto;
     }
 
     .dialog-container {
@@ -82,6 +90,8 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
       flex-direction: column;
       animation: slideIn 0.3s ease-in-out;
       overflow: hidden;
+      position: relative;
+      z-index: 1002;
       /* Usar variables CSS para permitir personalización glassmorphism */
       background: var(--background-color, white);
       border: 1px solid var(--card-border, #e0e0e0);
@@ -93,6 +103,7 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
       min-width: 300px;
       max-width: 90vw;
       max-height: 90vh;
+      pointer-events: auto;
     }
 
     .dialog-container.small {

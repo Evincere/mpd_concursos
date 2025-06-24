@@ -197,8 +197,8 @@ export class ExperienceCvService {
       position: response.position,
       company: response.company,
       description: response.description || '',
-      startDate: new Date(response.startDate),
-      endDate: response.endDate ? new Date(response.endDate) : undefined,
+      startDate: this.parseApiDate(response.startDate),
+      endDate: response.endDate ? this.parseApiDate(response.endDate) : undefined,
       isCurrentJob: !response.endDate, // Si no hay fecha fin, es trabajo actual
       location: '', // Campo no disponible en API actual
       achievements: [], // Campo no disponible en API actual
@@ -238,6 +238,15 @@ export class ExperienceCvService {
 
     console.log('[ExperienceCvService] API payload:', payload);
     return payload;
+  }
+
+  /**
+   * Parsea una fecha que viene del backend (YYYY-MM-DD) evitando problemas de zona horaria
+   */
+  private parseApiDate(dateString: string): Date {
+    // Crear fecha usando los componentes individuales para evitar problemas de zona horaria
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day); // month - 1 porque Date usa índices 0-11 para meses
   }
 
   /**

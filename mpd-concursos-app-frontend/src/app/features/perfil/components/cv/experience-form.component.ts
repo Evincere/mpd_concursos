@@ -4,7 +4,7 @@
  * @description Formulario adaptativo con validación en tiempo real y sanitización XSS
  * @author Augment Agent
  * @date 2025-06-20
- * @version 2.0.0
+ * @version 2.1.0
  */
 
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
@@ -19,13 +19,15 @@ import {
   WorkExperienceDto,
   ICvFormComponent,
   FormMode,
-  FormValidationResult
+  FormValidationResult,
+  ValidationResult,
+  CvValidationService,
+  CvTransformService,
+  CvNotificationService
 } from '@core/services/cv';
 
 // Servicios
-import { CvValidationService, ValidationResult } from '@core/services/cv/cv-validation.service';
-import { CvTransformService } from '@core/services/cv/cv-transform.service';
-import { CvNotificationService } from '@core/services/cv/cv-notification.service';
+import { DocumentosService } from '@core/services/documentos/documentos.service';
 
 // Componentes compartidos
 import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
@@ -34,7 +36,7 @@ import { CustomButtonComponent } from '@shared/components/custom-form/custom-but
 import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
 
 // Componente uploader CV
-import { CvDocumentUploaderComponent, CvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
+import { CvDocumentUploaderComponent, CvDocument as UploaderCvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
 
 /**
  * Configuración de campo dinámico
@@ -46,9 +48,7 @@ interface DynamicField {
   required: boolean;
   placeholder?: string;
   helpText?: string;
-  validation?: any;
   showWhen?: (formValue: any) => boolean;
-  options?: { value: any; label: string }[];
 }
 
 @Component({
@@ -85,7 +85,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   public validationErrors: string[] = [];
 
   // ===== PROPIEDADES DEL UPLOADER =====
-  public documents: CvDocument[] = [];
+  public documents: UploaderCvDocument[] = [];
   public documentValidation: DocumentValidationState = {
     isValid: false,
     hasRequiredDocuments: false,
@@ -94,9 +94,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   };
 
   // ===== SIGNALS =====
-  public readonly form = signal<FormGroup>(new FormGroup({}));
-  public readonly isFormValid = signal<boolean>(false);
-  public readonly isDirty = signal<boolean>(false);
+  public readonly form = signal<FormGroup | null>(null);
   public readonly validationState = signal<ValidationResult>({
     isValid: true,
     errors: [],
@@ -104,17 +102,22 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   });
 
   // ===== COMPUTED SIGNALS =====
-  public readonly canSave = computed(() =>
-    this.isFormValid() && !this.isLoading && this.isDirty() && this.documentValidation.isValid
-  );
+  public readonly canSave = computed(() => {
+    const form = this.form();
+    if (!form) return false;
+    return form.valid && form.dirty && !this.isLoading && this.documentValidation.isValid;
+  });
 
-  public readonly hasErrors = computed(() =>
-    this.validationState().errors.length > 0
-  );
+  public readonly hasErrors = computed(() => {
+    const form = this.form();
+    if (!form) return false;
+    return form.invalid && (form.dirty || form.touched);
+  });
 
-  public readonly hasWarnings = computed(() =>
-    this.validationState().warnings.length > 0
-  );
+  public readonly hasWarnings = computed(() => {
+    const state = this.validationState();
+    return state.warnings.length > 0 && (this.form()?.dirty || this.form()?.touched);
+  });
 
   // ===== CONFIGURACIÓN DE CAMPOS DINÁMICOS =====
   public readonly dynamicFields: DynamicField[] = [
@@ -170,10 +173,11 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     },
     {
       name: 'technologies',
-      label: 'Tecnologías Utilizadas',
+      label: 'Herramientas y Sistemas Jurídicos',
       type: 'chips',
       required: false,
-      helpText: 'Tecnologías, herramientas o lenguajes que usaste (máximo 20)'
+      helpText: 'Sistemas jurídicos, software legal, bases de datos o herramientas especializadas (máximo 20)',
+      placeholder: 'Ej: Lex Doctor, Themis, SAE, etc.'
     },
     {
       name: 'achievements',
@@ -193,13 +197,13 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     private readonly cdr: ChangeDetectorRef,
     private readonly validationService: CvValidationService,
     private readonly transformService: CvTransformService,
-    private readonly notificationService: CvNotificationService
-  ) { }
+    private readonly notificationService: CvNotificationService,
+    private readonly documentosService: DocumentosService
+  ) {}
 
   // ===== LIFECYCLE =====
   ngOnInit(): void {
     this.initializeForm();
-    this.setupValidation();
     this.setupFormWatchers();
   }
 
@@ -214,32 +218,35 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Guarda la experiencia
    */
   onSave(): void {
-    if (!this.validateForm()) {
-      this.notificationService.showValidationErrors(this.validationState().errors);
-      return;
+    const form = this.form();
+    if (!form) return;
+
+    form.markAllAsTouched();
+    this.runValidation(form.getRawValue());
+
+    if (form.valid && this.documentValidation.isValid) {
+      const validationResult = this.validationState();
+      if (validationResult.isValid && validationResult.sanitizedData) {
+        this.save.emit(validationResult.sanitizedData as WorkExperienceDto);
+      } else {
+        this.notificationService.showError('Error de validación inesperado al guardar.');
+        this.cdr.markForCheck();
+      }
+    } else {
+      this.notificationService.showError('Por favor, corrige los errores y adjunta la documentación requerida.');
+      this.cdr.markForCheck();
     }
-
-    const formValue = this.form().value;
-    const validationResult = this.validationService.validateWorkExperience(formValue);
-
-    if (!validationResult.isValid) {
-      this.notificationService.showValidationErrors(validationResult.errors);
-      return;
-    }
-
-    // Usar datos sanitizados
-    const sanitizedData = validationResult.sanitizedData as WorkExperienceDto;
-    this.formData = sanitizedData;
-    this.save.emit(sanitizedData);
   }
 
   /**
    * Cancela la edición
    */
   onCancel(): void {
-    if (this.isDirty() && !confirm('¿Estás seguro de cancelar? Se perderán los cambios no guardados.')) {
+    const form = this.form();
+    if (form && form.dirty && !confirm('¿Estás seguro de cancelar? Se perderán los cambios no guardados.')) {
       return;
     }
+    this.resetForm();
     this.cancel.emit();
   }
 
@@ -247,31 +254,56 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Resetea el formulario
    */
   onReset(): void {
-    if (!confirm('¿Estás seguro de resetear el formulario?')) {
-      return;
+    this.resetForm();
+  }
+
+  public resetForm(): void {
+    const form = this.form();
+    if (form) {
+      form.reset({
+        position: '',
+        company: '',
+        location: '',
+        startDate: '',
+        endDate: '',
+        isCurrentJob: false,
+        description: ''
+      }, { emitEvent: false });
+
+      // Limpiar los FormArray
+      const technologiesArray = form.get('technologies') as FormArray;
+      const achievementsArray = form.get('achievements') as FormArray;
+
+      technologiesArray.clear();
+      achievementsArray.clear();
+
+      form.markAsPristine();
+      form.markAsUntouched();
+
+      this.validationState.set({ isValid: true, errors: [], warnings: [] });
+      this.validationErrors = [];
+      this.documents = [];
+      this.documentValidation = { isValid: false, hasRequiredDocuments: false, errors: [], warnings: [] };
+
+      this.cdr.markForCheck();
     }
-    this.form().reset();
-    this.initializeForm();
   }
 
   /**
    * Valida el formulario completo
+   * @returns {boolean} - True si el formulario es válido
    */
   validateForm(): boolean {
-    const formValue = this.form().value;
-    const validationResult = this.validationService.validateWorkExperience(formValue);
+    const form = this.form();
+    if (!form) {
+      this.validationState.set({ isValid: false, errors: ['Formulario no inicializado.'], warnings: [] });
+      return false;
+    }
 
-    this.validationState.set(validationResult);
-    this.validationErrors = validationResult.errors;
-
-    // Emitir cambio de validación
-    this.validationChange.emit({
-      isValid: validationResult.isValid,
-      errors: this.groupErrorsByField(validationResult.errors),
-      warnings: this.groupErrorsByField(validationResult.warnings)
-    });
-
-    return validationResult.isValid;
+    this.runValidation(form.getRawValue());
+    
+    // El estado de validez del formulario es la combinación de sus controles Y la validación de documentos.
+    return form.valid && this.documentValidation.isValid;
   }
 
   /**
@@ -279,15 +311,20 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    */
   shouldShowField(field: DynamicField): boolean {
     if (!field.showWhen) return true;
-    return field.showWhen(this.form().value);
+    const form = this.form();
+    return form ? field.showWhen(form.value) : true;
   }
 
   /**
    * Obtiene los errores de un campo específico
    */
   getFieldErrors(fieldName: string): string[] {
-    const control = this.form().get(fieldName);
-    if (!control || !control.errors || !control.touched) return [];
+    const form = this.form();
+    if (!form) return [];
+
+    const control = form.get(fieldName);
+    // Solo mostrar errores si el campo ha sido tocado Y tiene errores Y el formulario está dirty
+    if (!control || !control.errors || (!control.touched && !form.dirty)) return [];
 
     const errors: string[] = [];
     const fieldErrors = control.errors;
@@ -320,7 +357,10 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Maneja el cambio en el checkbox de trabajo actual
    */
   onCurrentJobChange(isCurrentJob: boolean): void {
-    const endDateControl = this.form().get('endDate');
+    const form = this.form();
+    if (!form) return;
+
+    const endDateControl = form.get('endDate');
 
     if (isCurrentJob) {
       endDateControl?.setValue(null);
@@ -329,7 +369,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       endDateControl?.setValidators([Validators.required]);
     }
 
-    endDateControl?.updateValueAndValidity();
+    endDateControl?.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
   }
 
@@ -339,8 +379,13 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   onAddChip(fieldName: string, value: string): void {
     if (!value.trim()) return;
 
-    const control = this.form().get(fieldName);
-    const currentValues = control?.value || [];
+    const form = this.form();
+    if (!form) return;
+
+    const control = form.get(fieldName) as FormArray;
+    if (!control) return;
+
+    const currentValues = control.value || [];
 
     // Validar límites
     const maxItems = fieldName === 'technologies' ? 20 : 10;
@@ -351,8 +396,11 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
 
     // Sanitizar y agregar
     const sanitizedValue = this.validationService.sanitizeInput(value.trim());
+
     if (sanitizedValue && !currentValues.includes(sanitizedValue)) {
-      control?.setValue([...currentValues, sanitizedValue]);
+      control.push(this.fb.control(sanitizedValue));
+      control.markAsTouched();
+      this.cdr.markForCheck();
     }
   }
 
@@ -360,10 +408,15 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Maneja la eliminación de chips
    */
   onRemoveChip(fieldName: string, index: number): void {
-    const control = this.form().get(fieldName);
-    const currentValues = control?.value || [];
-    currentValues.splice(index, 1);
-    control?.setValue([...currentValues]);
+    const form = this.form();
+    if (!form) return;
+
+    const control = form.get(fieldName) as FormArray;
+    if (!control) return;
+
+    control.removeAt(index);
+    control.markAsTouched();
+    this.cdr.markForCheck();
   }
 
   /**
@@ -378,10 +431,38 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    */
   onChipInputEnter(event: KeyboardEvent, fieldName: string, inputElement: HTMLInputElement): void {
     event.preventDefault();
-    if (inputElement && inputElement.value.trim()) {
-      this.onAddChip(fieldName, inputElement.value.trim());
+    const value = inputElement.value.trim();
+    if (value) {
+      this.onAddChip(fieldName, value);
       inputElement.value = '';
     }
+  }
+
+  /**
+   * Maneja el clic del botón de agregar chip
+   */
+  handleChipButtonClick(input: HTMLInputElement, fieldName: string): void {
+    const value = input.value.trim();
+    if (value) {
+      this.onAddChip(fieldName, value);
+      input.value = '';
+    }
+  }
+
+  /**
+   * Verifica si el formulario está sucio
+   */
+  isDirty(): boolean {
+    const form = this.form();
+    return form ? form.dirty : false;
+  }
+
+  /**
+   * Verifica si el formulario es válido
+   */
+  isFormValid(): boolean {
+    const form = this.form();
+    return form ? form.valid : false;
   }
 
   // ===== MÉTODOS PRIVADOS =====
@@ -390,15 +471,70 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
    * Inicializa el formulario
    */
   private initializeForm(): void {
-    const formGroup = this.createForm();
+    this.isEditing = this.mode === 'edit' && !!this.experience;
+    const newForm = this.createForm();
+    
+    if (this.isEditing && this.experience) {
+      const formData = this.transformService.workExperienceEntityToDto(this.experience);
 
-    if (this.experience && this.mode !== 'create') {
-      const dto = this.transformService.workExperienceEntityToDto(this.experience);
-      formGroup.patchValue(dto);
-      this.isEditing = true;
+      // Poblar campos básicos
+      newForm.patchValue({
+        position: formData.position,
+        company: formData.company,
+        location: formData.location,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        isCurrentJob: formData.isCurrentJob,
+        description: formData.description
+      }, { emitEvent: false });
+
+      // Poblar FormArray de technologies
+      const technologiesArray = newForm.get('technologies') as FormArray;
+      if (formData.technologies && Array.isArray(formData.technologies)) {
+        formData.technologies.forEach(tech => {
+          technologiesArray.push(this.fb.control(tech));
+        });
+      }
+
+      // Poblar FormArray de achievements
+      const achievementsArray = newForm.get('achievements') as FormArray;
+      if (formData.achievements && Array.isArray(formData.achievements)) {
+        formData.achievements.forEach(achievement => {
+          achievementsArray.push(this.fb.control(achievement));
+        });
+      }
+
+      if (this.experience.document) {
+        const modelDoc = this.experience.document;
+        const uploaderDoc: UploaderCvDocument = {
+          id: modelDoc.id,
+          fileName: modelDoc.fileName,
+          originalName: modelDoc.originalFileName,
+          fileSize: modelDoc.fileSize,
+          mimeType: modelDoc.mimeType,
+          documentType: 'work_experience',
+          uploadDate: modelDoc.uploadDate,
+          status: modelDoc.isValidated ? 'validated' : 'pending',
+          entityId: this.experience.id
+        };
+        this.documents = [uploaderDoc];
+      }
+
+      if (this.documents.length > 0) {
+        this.documentValidation = { isValid: true, hasRequiredDocuments: true, errors: [], warnings: [] };
+      }
     }
-
-    this.form.set(formGroup);
+    
+    newForm.markAsPristine();
+    newForm.markAsUntouched();
+    this.form.set(newForm);
+    
+    if (this.isEditing) {
+      this.runValidation(newForm.getRawValue());
+    } else {
+      this.validationState.set({ isValid: true, errors: [], warnings: [] });
+    }
+    
     this.cdr.markForCheck();
   }
 
@@ -414,83 +550,101 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       endDate: [''],
       isCurrentJob: [false],
       description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
-      technologies: [[]],
-      achievements: [[]],
-      comments: ['', [Validators.maxLength(500)]]
+      technologies: this.fb.array([]),
+      achievements: this.fb.array([])
     });
   }
 
   /**
-   * Configura la validación en tiempo real
-   */
-  private setupValidation(): void {
-    this.form().statusChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(status => {
-      this.isFormValid.set(status === 'VALID');
-      this.cdr.markForCheck();
-    });
-  }
-
-  /**
-   * Configura los watchers del formulario
+   * Configura los observadores del formulario
    */
   private setupFormWatchers(): void {
-    // Watcher para detectar cambios
-    this.form().valueChanges.pipe(
+    const form = this.form();
+    if (!form) return;
+
+    form.valueChanges.pipe(
       takeUntil(this.destroy$),
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(() => {
-      this.isDirty.set(this.form().dirty);
-      this.validateForm();
+      debounceTime(400),
+      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
+    ).subscribe(value => {
+      this.runValidation(value);
     });
 
-    // Watcher específico para trabajo actual
-    this.form().get('isCurrentJob')?.valueChanges.pipe(
+    form.get('isCurrentJob')?.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(isCurrentJob => {
-      this.onCurrentJobChange(isCurrentJob);
+        const endDateControl = form.get('endDate');
+        if (isCurrentJob) {
+            endDateControl?.setValue(null, { emitEvent: false });
+            endDateControl?.clearValidators();
+        } else {
+            endDateControl?.setValidators([Validators.required]);
+        }
+        endDateControl?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
   /**
-   * Agrupa errores por campo
+   * Ejecuta la validación y actualiza el estado.
+   */
+  private runValidation(value: any): void {
+    const form = this.form();
+    if (!form) return;
+
+    const validationResult = this.validationService.validateWorkExperience(value);
+    this.validationState.set(validationResult);
+    this.validationErrors = validationResult.errors;
+
+    if (!validationResult.isValid) {
+      form.setErrors({ customValidation: true });
+    } else {
+      form.setErrors(null);
+    }
+    
+    const errors = this.groupErrorsByField(validationResult.errors);
+    const warnings = this.groupErrorsByField(validationResult.warnings);
+    this.validationChange.emit({ isValid: form.valid, errors, warnings });
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Agrupa los errores por campo
    */
   private groupErrorsByField(errors: string[]): Record<string, string[]> {
-    const grouped: Record<string, string[]> = {};
+    const errorMap: Record<string, string[]> = {};
+    this.dynamicFields.forEach(field => errorMap[field.name] = []);
+    errorMap['general'] = [];
 
     errors.forEach(error => {
-      // Extraer el nombre del campo del mensaje de error
-      const fieldMatch = error.match(/^([^:]+):/);
-      const fieldName = fieldMatch ? fieldMatch[1].toLowerCase() : 'general';
-
-      if (!grouped[fieldName]) {
-        grouped[fieldName] = [];
+      let assigned = false;
+      for (const fieldName of this.dynamicFields.map(f => f.name)) {
+        if (error.toLowerCase().includes(fieldName.toLowerCase())) {
+          errorMap[fieldName].push(error);
+          assigned = true;
+          break;
+        }
       }
-      grouped[fieldName].push(error);
+      if (!assigned) {
+        errorMap['general'].push(error);
+      }
     });
-
-    return grouped;
+    return errorMap;
   }
-
-  // ===== MÉTODOS DEL UPLOADER =====
-
+  
   /**
-   * Maneja el cambio de documentos
+   * Gestiona el cambio en los documentos
    */
-  onDocumentsChange(documents: CvDocument[]): void {
+  onDocumentsChange(documents: UploaderCvDocument[]): void {
     this.documents = documents;
     this.cdr.markForCheck();
   }
 
   /**
-   * Maneja el cambio de validación de documentos
+   * Gestiona el cambio en la validación de documentos
    */
   onDocumentValidationChange(validation: DocumentValidationState): void {
     this.documentValidation = validation;
+    this.form()?.updateValueAndValidity();
     this.cdr.markForCheck();
   }
-
-
 }

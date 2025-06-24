@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -34,6 +34,9 @@ import { CustomButtonComponent } from '@shared/components/custom-form/custom-but
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExperienceModalComponent implements OnInit, OnDestroy {
+
+  // ===== VIEW CHILD =====
+  @ViewChild('experienceForm') experienceFormComponent!: ExperienceFormComponent;
 
   // ===== INPUTS =====
   @Input() isOpen = false;
@@ -159,6 +162,15 @@ export class ExperienceModalComponent implements OnInit, OnDestroy {
    */
   onFormDirtyChange(isDirty: boolean): void {
     this.formDirty.set(isDirty);
+  }
+
+  /**
+   * Resetea el formulario (para uso externo)
+   */
+  public resetForm(): void {
+    if (this.experienceFormComponent) {
+      this.experienceFormComponent.resetForm();
+    }
   }
 
   // ===== PRIVATE METHODS =====

@@ -1,51 +1,55 @@
 /**
  * Componente de Formulario de Educación
- * 
+ *
  * @description Formulario inteligente y reactivo para gestionar información educativa
  * @author Augment Agent
  * @date 2025-06-22
- * @version 1.0.0
+ * @version 2.1.0
  */
 
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-// Modelos y servicios del CV
 import {
   EducationEntry,
   EducationDto,
+  EducationType,
+  EducationStatus,
+  ICvFormComponent,
   FormMode,
+  FormValidationResult,
   ValidationResult,
   CvValidationService,
   CvTransformService,
-  CvNotificationService
+  CvNotificationService,
+  ScientificActivityType,
+  ScientificActivityRole
 } from '@core/services/cv';
+import { DocumentosService } from '@core/services/documentos/documentos.service';
 
-/**
- * Configuración de campo dinámico
- */
-interface DynamicField {
+import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
+import { CustomSelectComponent } from '@shared/components/custom-form/custom-select/custom-select.component';
+import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
+import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
+import { CustomNumberInputComponent } from '@shared/components/custom-form/custom-number-input/custom-number-input.component';
+import { CvDocumentUploaderComponent, CvDocument as UploaderCvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
+
+interface EducationDynamicField {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'date' | 'checkbox' | 'select' | 'chips';
+  type: 'text' | 'textarea' | 'date' | 'checkbox' | 'select' | 'number' | 'chips';
   required: boolean;
   placeholder?: string;
   helpText?: string;
-  validation?: any;
+  showForTypes?: EducationType[];
   showWhen?: (formValue: any) => boolean;
   options?: { value: any; label: string }[];
+  min?: number;
+  max?: number;
 }
-
-// Componentes compartidos
-import { CustomFormFieldComponent } from '@shared/components/custom-form/custom-form-field/custom-form-field.component';
-import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
-import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
-
-// Componente uploader CV
-import { CvDocumentUploaderComponent, CvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
 
 @Component({
   selector: 'app-education-form',
@@ -54,17 +58,18 @@ import { CvDocumentUploaderComponent, CvDocument, DocumentValidationState } from
     CommonModule,
     ReactiveFormsModule,
     CustomFormFieldComponent,
-    CustomDatepickerComponent,
+    CustomSelectComponent,
     CustomButtonComponent,
+    CustomDatepickerComponent,
+    CustomNumberInputComponent,
     CvDocumentUploaderComponent
   ],
   templateUrl: './education-form.component.html',
   styleUrls: ['./education-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class EducationFormComponent implements OnInit, OnDestroy {
+export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICvFormComponent<EducationDto> {
 
-  // ===== INPUTS Y OUTPUTS =====
   @Input() education: EducationEntry | null = null;
   @Input() mode: FormMode = 'create';
   @Input() isLoading = false;
@@ -72,15 +77,13 @@ export class EducationFormComponent implements OnInit, OnDestroy {
 
   @Output() save = new EventEmitter<EducationDto>();
   @Output() cancel = new EventEmitter<void>();
-  @Output() validationChange = new EventEmitter<any>();
+  @Output() validationChange = new EventEmitter<FormValidationResult>();
 
-  // ===== PROPIEDADES PÚBLICAS =====
-  public formData: EducationDto | null = null;
+  public formData: EducationDto = {} as EducationDto;
   public isEditing = false;
   public validationErrors: string[] = [];
 
-  // ===== PROPIEDADES DEL UPLOADER =====
-  public documents: CvDocument[] = [];
+  public documents: UploaderCvDocument[] = [];
   public documentValidation: DocumentValidationState = {
     isValid: false,
     hasRequiredDocuments: false,
@@ -88,114 +91,91 @@ export class EducationFormComponent implements OnInit, OnDestroy {
     warnings: []
   };
 
-  // ===== SIGNALS =====
-  public readonly form = signal<FormGroup>(new FormGroup({}));
-  public readonly isFormValid = signal<boolean>(false);
-  public readonly isDirty = signal<boolean>(false);
+  public readonly form = signal<FormGroup | null>(null);
+  public readonly selectedType = signal<EducationType>(EducationType.UNIVERSITY_DEGREE);
   public readonly validationState = signal<ValidationResult>({
     isValid: true,
     errors: [],
     warnings: []
   });
 
-  // ===== COMPUTED SIGNALS =====
-  public readonly canSave = computed(() =>
-    this.isFormValid() && !this.isLoading && this.isDirty() && this.documentValidation.isValid
+  public readonly canSave = computed(() => {
+    const form = this.form();
+    if (!form) return false;
+    return form.valid && form.dirty && !this.isLoading && this.documentValidation.isValid;
+  });
+
+  public readonly hasErrors = computed(() => {
+    const form = this.form();
+    if (!form) return false;
+    return form.invalid && (form.dirty || form.touched);
+  });
+
+  public readonly hasWarnings = computed(() => {
+    const state = this.validationState();
+    return state.warnings.length > 0 && (this.form()?.dirty || this.form()?.touched);
+  });
+
+  public readonly visibleFields = computed(() =>
+    this.dynamicFields.filter(field => this.shouldShowField(field))
   );
 
-  public readonly hasErrors = computed(() =>
-    this.validationState().errors.length > 0
-  );
-
-  public readonly hasWarnings = computed(() =>
-    this.validationState().warnings.length > 0
-  );
-
-  // ===== CONFIGURACIÓN DE CAMPOS DINÁMICOS =====
-  public readonly dynamicFields: DynamicField[] = [
-    {
-      name: 'institution',
-      label: 'Institución Educativa',
-      type: 'text',
-      required: true,
-      helpText: 'Nombre completo de la institución educativa'
-    },
-    {
-      name: 'degree',
-      label: 'Título/Grado',
-      type: 'text',
-      required: true,
-      helpText: 'Título, grado o certificación obtenida'
-    },
-    {
-      name: 'fieldOfStudy',
-      label: 'Campo de Estudio',
-      type: 'text',
-      required: false,
-      helpText: 'Área o especialización de estudio'
-    },
-    {
-      name: 'startDate',
-      label: 'Fecha de Inicio',
-      type: 'date',
-      required: true,
-      helpText: 'Fecha en que comenzaste los estudios'
-    },
-    {
-      name: 'isCurrentStudy',
-      label: 'Estudio Actual',
-      type: 'checkbox',
-      required: false,
-      helpText: 'Marca si actualmente estás cursando'
-    },
-    {
-      name: 'endDate',
-      label: 'Fecha de Finalización',
-      type: 'date',
-      required: false,
-      helpText: 'Fecha en que completaste los estudios',
-      showWhen: (formValue: any) => !formValue.isCurrentStudy
-    },
-    {
-      name: 'grade',
-      label: 'Calificación/Promedio',
-      type: 'text',
-      required: false,
-      helpText: 'Calificación final o promedio obtenido'
-    },
-    {
-      name: 'description',
-      label: 'Descripción',
-      type: 'textarea',
-      required: false,
-      helpText: 'Información adicional sobre tus estudios (máximo 1000 caracteres)'
-    },
-    {
-      name: 'skills',
-      label: 'Habilidades Adquiridas',
-      type: 'chips',
-      required: false,
-      helpText: 'Habilidades y conocimientos adquiridos (máximo 15)'
-    }
+  public readonly educationTypeOptions = [
+    { value: EducationType.UNIVERSITY_DEGREE, label: 'Título Universitario' },
+    { value: EducationType.POSTGRADUATE_SPECIALIZATION, label: 'Especialización' },
+    { value: EducationType.MASTER_DEGREE, label: 'Maestría' },
+    { value: EducationType.DOCTORATE, label: 'Doctorado' },
+    { value: EducationType.DIPLOMA, label: 'Diplomatura' },
+    { value: EducationType.CERTIFICATION, label: 'Curso de Capacitación' },
+    { value: EducationType.SCIENTIFIC_ACTIVITY, label: 'Actividad Científica' }
   ];
 
-  // ===== SUBJECTS =====
+  public readonly educationStatusOptions = [
+    { value: EducationStatus.IN_PROGRESS, label: 'En Curso' },
+    { value: EducationStatus.COMPLETED, label: 'Completado' }
+  ];
+  
+  public readonly scientificActivityTypeOptions = Object.values(ScientificActivityType).map(v => ({ value: v, label: v }));
+  public readonly scientificActivityRoleOptions = Object.values(ScientificActivityRole).map(v => ({ value: v, label: v }));
+
+  public readonly dynamicFields: EducationDynamicField[] = [
+      { name: 'type', label: 'Tipo de Educación', type: 'select', required: true, helpText: 'Selecciona el tipo de educación', options: this.educationTypeOptions },
+      { name: 'title', label: 'Título o Nombre', type: 'text', required: true, placeholder: 'Ej: Abogacía', helpText: 'Nombre completo del título' },
+      { name: 'institution', label: 'Institución', type: 'text', required: true, placeholder: 'Ej: Universidad de Buenos Aires', helpText: 'Nombre de la institución' },
+      { name: 'status', label: 'Estado', type: 'select', required: true, helpText: 'Estado actual', options: this.educationStatusOptions },
+      { name: 'startDate', label: 'Fecha de Inicio', type: 'date', required: true, helpText: 'Fecha de comienzo' },
+      { name: 'isOngoing', label: 'En Curso', type: 'checkbox', required: false, helpText: 'Marcar si está en curso' },
+      { name: 'endDate', label: 'Fecha de Fin', type: 'date', required: true, helpText: 'Fecha de finalización', showWhen: form => !form.isOngoing },
+      { name: 'durationYears', label: 'Duración (años)', type: 'number', required: false, placeholder: '5', helpText: 'Duración de la carrera', showForTypes: [EducationType.UNIVERSITY_DEGREE] },
+      { name: 'average', label: 'Promedio', type: 'number', required: false, min: 1, max: 10, placeholder: '8.50', helpText: 'Promedio general', showForTypes: [EducationType.UNIVERSITY_DEGREE] },
+      { name: 'thesisTopic', label: 'Tema de Tesis', type: 'text', required: false, placeholder: 'Tema de tesis', helpText: 'Tema de la tesis o trabajo final', showForTypes: [EducationType.POSTGRADUATE_SPECIALIZATION, EducationType.MASTER_DEGREE, EducationType.DOCTORATE] },
+      { name: 'hourlyLoad', label: 'Carga Horaria (hs)', type: 'number', required: false, placeholder: '120', helpText: 'Carga horaria total', showForTypes: [EducationType.DIPLOMA, EducationType.CERTIFICATION] },
+      { name: 'activityType', label: 'Tipo de Actividad', type: 'select', required: true, helpText: 'Tipo de actividad científica', showForTypes: [EducationType.SCIENTIFIC_ACTIVITY], options: this.scientificActivityTypeOptions },
+      { name: 'role', label: 'Rol', type: 'select', required: true, helpText: 'Rol en la actividad', showForTypes: [EducationType.SCIENTIFIC_ACTIVITY], options: this.scientificActivityRoleOptions },
+      { name: 'comments', label: 'Comentarios', type: 'textarea', required: false, helpText: 'Información adicional' }
+  ];
+  
   private readonly destroy$ = new Subject<void>();
 
-  // ===== CONSTRUCTOR =====
   constructor(
     private readonly fb: FormBuilder,
     private readonly cdr: ChangeDetectorRef,
     private readonly validationService: CvValidationService,
     private readonly transformService: CvTransformService,
-    private readonly notificationService: CvNotificationService
-  ) { }
+    private readonly notificationService: CvNotificationService,
+    private readonly documentosService: DocumentosService
+  ) {}
 
-  // ===== LIFECYCLE =====
   ngOnInit(): void {
     this.initializeForm();
-    this.setupValidation();
     this.setupFormWatchers();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['education'] && !changes['education'].firstChange) {
+      this.resetForm();
+      this.initializeForm();
+    }
   }
 
   ngOnDestroy(): void {
@@ -203,85 +183,84 @@ export class EducationFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ===== MÉTODOS PÚBLICOS =====
-
-  /**
-   * Guarda la educación
-   */
   onSave(): void {
-    if (!this.validateForm()) {
-      this.notificationService.showValidationErrors(this.validationState().errors);
-      return;
+    const form = this.form();
+    if (!form) return;
+
+    form.markAllAsTouched();
+    this.runValidation(form.getRawValue());
+
+    if (form.valid && this.documentValidation.isValid) {
+      const validationResult = this.validationState();
+      if (validationResult.isValid && validationResult.sanitizedData) {
+        this.save.emit(validationResult.sanitizedData as EducationDto);
+      } else {
+        this.notificationService.showError('Error de validación inesperado al guardar.');
+        this.cdr.markForCheck();
+      }
+    } else {
+      this.notificationService.showError('Por favor, corrige los errores y adjunta la documentación requerida.');
+      this.cdr.markForCheck();
     }
-
-    const formValue = this.form().value;
-    const validationResult = this.validationService.validateEducation(formValue);
-
-    if (!validationResult.isValid) {
-      this.notificationService.showValidationErrors(validationResult.errors);
-      return;
-    }
-
-    // Usar datos sanitizados
-    const sanitizedData = validationResult.sanitizedData as EducationDto;
-    this.formData = sanitizedData;
-    this.save.emit(sanitizedData);
   }
 
-  /**
-   * Cancela la edición
-   */
   onCancel(): void {
-    if (this.isDirty() && !confirm('¿Estás seguro de cancelar? Se perderán los cambios no guardados.')) {
+    const form = this.form();
+    if (form && form.dirty && !confirm('¿Estás seguro de cancelar? Se perderán los cambios no guardados.')) {
       return;
     }
+    this.resetForm();
     this.cancel.emit();
   }
 
-  /**
-   * Resetea el formulario
-   */
-  onReset(): void {
-    if (!confirm('¿Estás seguro de resetear el formulario?')) {
-      return;
+  public resetForm(): void {
+    const form = this.form();
+    if (form) {
+      form.reset({ type: EducationType.UNIVERSITY_DEGREE, status: EducationStatus.IN_PROGRESS }, { emitEvent: false });
+      form.markAsPristine();
+      form.markAsUntouched();
+      this.validationState.set({ isValid: true, errors: [], warnings: [] });
+      this.validationErrors = [];
+      this.documents = [];
+      this.documentValidation = { isValid: false, hasRequiredDocuments: false, errors: [], warnings: [] };
+      this.cdr.markForCheck();
     }
-    this.form().reset();
-    this.initializeForm();
   }
 
-  /**
-   * Valida el formulario completo
-   */
   validateForm(): boolean {
-    const formValue = this.form().value;
-    const validationResult = this.validationService.validateEducation(formValue);
+    const form = this.form();
+    if (!form) {
+      this.validationState.set({ isValid: false, errors: ['Formulario no inicializado.'], warnings: [] });
+      return false;
+    }
+    this.runValidation(form.getRawValue());
+    return form.valid && this.documentValidation.isValid;
+  }
 
-    this.validationState.set(validationResult);
-    this.validationErrors = validationResult.errors;
-
-    // Emitir cambio de validación
-    this.validationChange.emit({
-      isValid: validationResult.isValid,
-      errors: this.groupErrorsByField(validationResult.errors),
-      warnings: this.groupErrorsByField(validationResult.warnings)
-    });
-
-    return validationResult.isValid;
+  shouldShowField(field: EducationDynamicField): boolean {
+    const form = this.form();
+    if (!form) return false;
+    const formValue = form.value;
+    if (field.showForTypes && !field.showForTypes.includes(formValue.type)) return false;
+    if (field.showWhen && !field.showWhen(formValue)) return false;
+    return true;
   }
 
   /**
-   * Verifica si un campo debe mostrarse
+   * TrackBy function para campos dinámicos
    */
-  shouldShowField(field: DynamicField): boolean {
-    if (!field.showWhen) return true;
-    return field.showWhen(this.form().value);
+  trackByFieldName = (index: number, field: EducationDynamicField): string => {
+    return field.name;
   }
 
   /**
    * Obtiene los errores de un campo específico
    */
   getFieldErrors(fieldName: string): string[] {
-    const control = this.form().get(fieldName);
+    const form = this.form();
+    if (!form) return [];
+
+    const control = form.get(fieldName);
     if (!control || !control.errors || !control.touched) return [];
 
     const errors: string[] = [];
@@ -296,6 +275,12 @@ export class EducationFormComponent implements OnInit, OnDestroy {
     if (fieldErrors['maxlength']) {
       errors.push(`${this.getFieldLabel(fieldName)} no puede exceder ${fieldErrors['maxlength'].requiredLength} caracteres`);
     }
+    if (fieldErrors['min']) {
+      errors.push(`${this.getFieldLabel(fieldName)} debe ser mayor a ${fieldErrors['min'].min}`);
+    }
+    if (fieldErrors['max']) {
+      errors.push(`${this.getFieldLabel(fieldName)} debe ser menor a ${fieldErrors['max'].max}`);
+    }
 
     return errors;
   }
@@ -309,177 +294,273 @@ export class EducationFormComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Maneja el cambio en el checkbox de estudio actual
+   * Obtiene las opciones para un campo select
    */
-  onCurrentStudyChange(isCurrentStudy: boolean): void {
-    const endDateControl = this.form().get('endDate');
-
-    if (isCurrentStudy) {
-      endDateControl?.setValue(null);
-      endDateControl?.clearValidators();
-    } else {
-      endDateControl?.setValidators([Validators.required]);
-    }
-
-    endDateControl?.updateValueAndValidity();
-    this.cdr.markForCheck();
+  getSelectOptions(fieldName: string): { value: any; label: string }[] {
+    const field = this.dynamicFields.find(f => f.name === fieldName);
+    return field?.options || [];
   }
 
   /**
-   * Maneja la adición de chips (habilidades)
+   * Obtiene un FormControl de forma segura
    */
-  onAddChip(fieldName: string, value: string): void {
-    if (!value.trim()) return;
-
-    const control = this.form().get(fieldName);
-    const currentValues = control?.value || [];
-
-    // Validar límites
-    const maxItems = 15;
-    if (currentValues.length >= maxItems) {
-      this.notificationService.showWarning(`Máximo ${maxItems} elementos permitidos`);
-      return;
-    }
-
-    // Sanitizar y agregar
-    const sanitizedValue = this.validationService.sanitizeInput(value.trim());
-    if (sanitizedValue && !currentValues.includes(sanitizedValue)) {
-      control?.setValue([...currentValues, sanitizedValue]);
-    }
-  }
-
-  /**
-   * Maneja la eliminación de chips
-   */
-  onRemoveChip(fieldName: string, index: number): void {
-    const control = this.form().get(fieldName);
-    const currentValues = control?.value || [];
-    currentValues.splice(index, 1);
-    control?.setValue([...currentValues]);
-  }
-
-  /**
-   * TrackBy function para campos dinámicos
-   */
-  trackByFieldName(_index: number, field: DynamicField): string {
-    return field.name;
+  getFormControl(fieldName: string): any {
+    const form = this.form();
+    return form?.get(fieldName) || null;
   }
 
   /**
    * Maneja el evento Enter en el input de chips
    */
-  onChipInputEnter(event: KeyboardEvent, fieldName: string, inputElement: HTMLInputElement): void {
+  onChipInputEnter(event: KeyboardEvent, fieldName: string, input: HTMLInputElement): void {
     event.preventDefault();
-    if (inputElement && inputElement.value.trim()) {
-      this.onAddChip(fieldName, inputElement.value.trim());
-      inputElement.value = '';
+    const value = input.value.trim();
+    if (value) {
+      this.onAddChip(fieldName, value);
+      input.value = '';
     }
   }
 
-  // ===== MÉTODOS PRIVADOS =====
+  /**
+   * Agrega un chip al campo especificado
+   */
+  onAddChip(fieldName: string, value: string): void {
+    const form = this.form();
+    if (!form || !value.trim()) return;
+
+    const control = form.get(fieldName);
+    if (!control) return;
+
+    const currentValues = control.value || [];
+    const trimmedValue = value.trim();
+
+    // Evitar duplicados
+    if (!currentValues.includes(trimmedValue) && currentValues.length < 15) {
+      const newValues = [...currentValues, trimmedValue];
+      control.setValue(newValues);
+      control.markAsTouched();
+      this.cdr.markForCheck();
+    }
+  }
 
   /**
-   * Inicializa el formulario
+   * Remueve un chip del campo especificado
    */
-  private initializeForm(): void {
-    const formGroup = this.createForm();
+  onRemoveChip(fieldName: string, index: number): void {
+    const form = this.form();
+    if (!form) return;
 
-    if (this.education && this.mode !== 'create') {
-      const dto = this.transformService.educationEntityToDto(this.education);
-      formGroup.patchValue(dto);
-      this.isEditing = true;
-    }
+    const control = form.get(fieldName);
+    if (!control) return;
 
-    this.form.set(formGroup);
+    const currentValues = control.value || [];
+    const newValues = currentValues.filter((_: any, i: number) => i !== index);
+    control.setValue(newValues);
+    control.markAsTouched();
     this.cdr.markForCheck();
   }
 
   /**
-   * Crea el FormGroup
+   * Resetea el formulario
    */
-  private createForm(): FormGroup {
-    return this.fb.group({
-      institution: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-      degree: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
-      fieldOfStudy: ['', [Validators.maxLength(200)]],
-      startDate: ['', [Validators.required]],
-      endDate: [''],
-      isCurrentStudy: [false],
-      grade: ['', [Validators.maxLength(50)]],
-      description: ['', [Validators.maxLength(1000)]],
-      skills: [[]]
-    });
+  onReset(): void {
+    if (!confirm('¿Estás seguro de resetear el formulario?')) {
+      return;
+    }
+    this.resetForm();
   }
 
   /**
-   * Configura la validación en tiempo real
+   * Verifica si el formulario está sucio
    */
-  private setupValidation(): void {
-    this.form().statusChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(status => {
-      this.isFormValid.set(status === 'VALID');
-      this.cdr.markForCheck();
-    });
+  isDirty(): boolean {
+    const form = this.form();
+    return form ? form.dirty : false;
   }
 
   /**
-   * Configura los watchers del formulario
+   * Verifica si el formulario es válido
    */
-  private setupFormWatchers(): void {
-    // Watcher para detectar cambios
-    this.form().valueChanges.pipe(
-      takeUntil(this.destroy$),
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(() => {
-      this.isDirty.set(this.form().dirty);
-      this.validateForm();
-    });
-
-    // Watcher específico para estudio actual
-    this.form().get('isCurrentStudy')?.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(isCurrentStudy => {
-      this.onCurrentStudyChange(isCurrentStudy);
-    });
+  isFormValid(): boolean {
+    const form = this.form();
+    return form ? form.valid : false;
   }
-
-  /**
-   * Agrupa errores por campo
-   */
-  private groupErrorsByField(errors: string[]): Record<string, string[]> {
-    const grouped: Record<string, string[]> = {};
-
-    errors.forEach(error => {
-      // Extraer el nombre del campo del mensaje de error
-      const fieldMatch = error.match(/^([^:]+):/);
-      const fieldName = fieldMatch ? fieldMatch[1].toLowerCase() : 'general';
-
-      if (!grouped[fieldName]) {
-        grouped[fieldName] = [];
-      }
-      grouped[fieldName].push(error);
-    });
-
-    return grouped;
-  }
-
-  // ===== MÉTODOS DEL UPLOADER =====
-
-  /**
-   * Maneja el cambio de documentos
-   */
-  onDocumentsChange(documents: CvDocument[]): void {
+  
+  onDocumentsChange(documents: UploaderCvDocument[]): void {
     this.documents = documents;
     this.cdr.markForCheck();
   }
 
-  /**
-   * Maneja el cambio de validación de documentos
-   */
   onDocumentValidationChange(validation: DocumentValidationState): void {
     this.documentValidation = validation;
+    this.form()?.updateValueAndValidity();
     this.cdr.markForCheck();
+  }
+
+  private initializeForm(): void {
+    this.isEditing = this.mode === 'edit' && !!this.education;
+    const newForm = this.createForm();
+
+    if (this.isEditing && this.education) {
+      const formData = this.transformService.educationEntityToDto(this.education);
+      newForm.patchValue(formData, { emitEvent: false });
+      this.selectedType.set(formData.type);
+
+      if (this.education.document) {
+        const modelDoc = this.education.document;
+        const uploaderDoc: UploaderCvDocument = {
+          id: modelDoc.id,
+          fileName: modelDoc.fileName,
+          originalName: modelDoc.originalFileName,
+          fileSize: modelDoc.fileSize,
+          mimeType: modelDoc.mimeType,
+          documentType: 'education',
+          uploadDate: modelDoc.uploadDate,
+          status: modelDoc.isValidated ? 'validated' : 'pending',
+          entityId: this.education.id
+        };
+        this.documents = [uploaderDoc];
+      }
+      if (this.documents.length > 0) {
+        this.documentValidation = { isValid: true, hasRequiredDocuments: true, errors: [], warnings: [] };
+      }
+    }
+
+    newForm.markAsPristine();
+    newForm.markAsUntouched();
+    this.form.set(newForm);
+    this.updateFormValidators();
+
+    if (this.isEditing) {
+      this.runValidation(newForm.getRawValue());
+    } else {
+      this.validationState.set({ isValid: true, errors: [], warnings: [] });
+    }
+    this.cdr.markForCheck();
+  }
+
+  private createForm(): FormGroup {
+    return this.fb.group({
+      type: [EducationType.UNIVERSITY_DEGREE, Validators.required],
+      title: ['', [Validators.required, Validators.maxLength(255)]],
+      institution: ['', [Validators.required, Validators.maxLength(255)]],
+      status: [EducationStatus.IN_PROGRESS, Validators.required],
+      startDate: ['', Validators.required],
+      endDate: [''],
+      isOngoing: [true],
+      comments: ['', [Validators.maxLength(2000)]],
+      durationYears: [null],
+      average: [null],
+      thesisTopic: [''],
+      hourlyLoad: [null],
+      activityType: [null],
+      role: [null],
+    });
+  }
+
+  private setupFormWatchers(): void {
+    const form = this.form();
+    if (!form) return;
+
+    form.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      debounceTime(400),
+      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
+    ).subscribe(value => {
+      this.runValidation(value);
+    });
+
+    form.get('type')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(type => {
+      this.selectedType.set(type);
+      this.updateFormValidators();
+    });
+    
+    form.get('isOngoing')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(isOngoing => {
+        const endDateControl = form.get('endDate');
+        if(isOngoing) {
+            endDateControl?.setValue(null, { emitEvent: false });
+        }
+        this.updateFormValidators();
+    });
+  }
+
+  private runValidation(value: any): void {
+    const form = this.form();
+    if (!form) return;
+
+    const validationResult = this.validationService.validateEducation(value);
+    this.validationState.set(validationResult);
+    this.validationErrors = validationResult.errors;
+
+    if (!validationResult.isValid) {
+      form.setErrors({ customValidation: true });
+    } else {
+      form.setErrors(null);
+    }
+    
+    const errors = this.groupErrorsByField(validationResult.errors);
+    const warnings = this.groupErrorsByField(validationResult.warnings);
+    this.validationChange.emit({ isValid: form.valid, errors, warnings });
+    this.cdr.markForCheck();
+  }
+  
+  private updateFormValidators(): void {
+    const form = this.form();
+    if (!form) return;
+    
+    const type = form.get('type')?.value;
+    const isOngoing = form.get('isOngoing')?.value;
+    
+    this.clearConditionalValidators();
+
+    form.get('endDate')?.setValidators(!isOngoing ? [Validators.required] : null);
+
+    if (type === EducationType.UNIVERSITY_DEGREE) {
+        form.get('durationYears')?.setValidators([Validators.required, Validators.min(1), Validators.max(10)]);
+        form.get('average')?.setValidators([Validators.min(1), Validators.max(10)]);
+    } else if (type === EducationType.DIPLOMA || type === EducationType.CERTIFICATION) {
+        form.get('hourlyLoad')?.setValidators([Validators.required, Validators.min(1)]);
+    } else if (type === EducationType.SCIENTIFIC_ACTIVITY) {
+        form.get('activityType')?.setValidators(Validators.required);
+        form.get('role')?.setValidators(Validators.required);
+    }
+    
+    Object.keys(form.controls).forEach(key => {
+        form.get(key)?.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+  
+  private clearConditionalValidators(): void {
+      const form = this.form();
+      if (!form) return;
+      
+      form.get('durationYears')?.clearValidators();
+      form.get('average')?.clearValidators();
+      form.get('hourlyLoad')?.clearValidators();
+      form.get('activityType')?.clearValidators();
+      form.get('role')?.clearValidators();
+      form.get('endDate')?.clearValidators();
+  }
+
+  private groupErrorsByField(errors: string[]): Record<string, string[]> {
+    const errorMap: Record<string, string[]> = {};
+    this.dynamicFields.forEach(field => errorMap[field.name] = []);
+    errorMap['general'] = [];
+
+    errors.forEach(error => {
+      let assigned = false;
+      for (const fieldName of this.dynamicFields.map(f => f.name)) {
+        if (error.toLowerCase().includes(fieldName.toLowerCase())) {
+          errorMap[fieldName].push(error);
+          assigned = true;
+          break;
+        }
+      }
+      if (!assigned) {
+        errorMap['general'].push(error);
+      }
+    });
+
+    return errorMap;
   }
 }

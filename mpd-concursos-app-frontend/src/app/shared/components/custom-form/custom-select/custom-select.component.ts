@@ -39,7 +39,15 @@ export interface SelectOption {
         <i class="fas fa-chevron-down select-arrow" [class.open]="isOpen" aria-hidden="true"></i>
       </div>
 
-      <div class="select-dropdown" *ngIf="isOpen" #dropdown role="listbox" [attr.id]="getDropdownId()" [attr.aria-label]="(label || 'Seleccionar') + ' opciones'">
+      <div class="select-dropdown"
+           *ngIf="isOpen"
+           #dropdown
+           role="listbox"
+           [attr.id]="getDropdownId()"
+           [attr.aria-label]="(label || 'Seleccionar') + ' opciones'"
+           [style.top.px]="dropdownTop"
+           [style.left.px]="dropdownLeft"
+           [style.width.px]="dropdownWidth">
         <div
           *ngFor="let option of options; let i = index"
           class="select-option"
@@ -180,28 +188,27 @@ export interface SelectOption {
     }
 
     .select-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      margin-top: 0.25rem;
+      position: fixed;
+      z-index: 999999;
+      /* top, left, width se establecen dinámicamente via [style] */
 
-      /* Enhanced glassmorphism for dropdown */
-      background: linear-gradient(135deg,
-        rgba(55, 65, 81, 0.95) 0%,
-        rgba(75, 85, 99, 0.9) 100%);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 6px;
+      /* Fondo completamente sólido para evitar bleeding */
+      background: #374151;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
       box-shadow:
-        0 8px 24px rgba(0, 0, 0, 0.25),
-        0 4px 12px rgba(0, 0, 0, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 20px 40px rgba(0, 0, 0, 0.8),
+        0 10px 20px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
 
-      max-height: 200px;
+      /* Crear nuevo stacking context */
+      isolation: isolate;
+      contain: layout style paint;
+
+      max-height: 300px;
       overflow-y: auto;
+      padding: 0.5rem 0;
+      min-width: 200px;
 
       /* Custom scrollbar */
       scrollbar-width: thin;
@@ -258,12 +265,10 @@ export interface SelectOption {
     }
 
     .select-option:hover:not(.disabled) {
-      background: linear-gradient(135deg,
-        rgba(59, 130, 246, 0.15) 0%,
-        rgba(59, 130, 246, 0.1) 100%);
-      color: #f9fafb;
+      background: #4f46e5;
+      color: #ffffff;
       transform: translateX(2px);
-      border-left: 2px solid #3b82f6;
+      border-left: 2px solid #6366f1;
     }
 
     .select-option:hover:not(.disabled)::before {
@@ -271,13 +276,11 @@ export interface SelectOption {
     }
 
     .select-option.selected {
-      background: linear-gradient(135deg,
-        rgba(59, 130, 246, 0.25) 0%,
-        rgba(59, 130, 246, 0.15) 100%);
-      color: #f9fafb;
+      background: #3b82f6;
+      color: #ffffff;
       font-weight: 600;
-      border-left: 3px solid #3b82f6;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border-left: 3px solid #60a5fa;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .select-option.disabled {
@@ -418,6 +421,11 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
   isDisabled = false;
   showError = false;
 
+  // Propiedades para posicionamiento dinámico
+  dropdownTop = 0;
+  dropdownLeft = 0;
+  dropdownWidth = 0;
+
 
   get selectedLabel(): string {
     const selected = this.options.find(option => option.value === this.value);
@@ -475,6 +483,7 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
     this.isFocused = this.isOpen;
 
     if (this.isOpen) {
+      this.calculateDropdownPosition();
       this.onTouched();
     }
   }
@@ -484,7 +493,23 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
 
     this.isOpen = true;
     this.isFocused = true;
+    this.calculateDropdownPosition();
     this.onTouched();
+  }
+
+  /**
+   * Calcula la posición del dropdown para evitar problemas de z-index
+   */
+  private calculateDropdownPosition(): void {
+    setTimeout(() => {
+      const selectContainer = this.elementRef.nativeElement.querySelector('.select-container');
+      if (selectContainer) {
+        const rect = selectContainer.getBoundingClientRect();
+        this.dropdownTop = rect.bottom + window.scrollY + 4; // 4px de margen
+        this.dropdownLeft = rect.left + window.scrollX;
+        this.dropdownWidth = rect.width;
+      }
+    }, 0);
   }
 
   selectOption(option: SelectOption): void {
@@ -500,6 +525,14 @@ export class CustomSelectComponent implements OnInit, ControlValueAccessor {
     if (this.elementRef && !this.elementRef.nativeElement.contains(event.target)) {
       this.isOpen = false;
       this.isFocused = false;
+    }
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  @HostListener('window:resize', ['$event'])
+  onWindowChange(): void {
+    if (this.isOpen) {
+      this.calculateDropdownPosition();
     }
   }
 

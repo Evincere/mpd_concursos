@@ -26,6 +26,8 @@ public class EducationResponseDto {
     private String status;
     private String title;
     private String institution;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private LocalDate issueDate;
     private String documentUrl;
     

@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 public class EducationRequestDto {
 
     @NotBlank(message = "El tipo de educación es obligatorio")
-    @Pattern(regexp = "^(Título Terciario|Título Universitario|Especialización|Maestría|Doctorado|Diplomatura|Curso de Capacitación|Actividad Científica)$", message = "Tipo de educación inválido")
+    @Pattern(regexp = "^(Educación Secundaria|Título Terciario|Título Universitario|Especialización|Maestría|Doctorado|Diplomatura|Curso de Capacitación|Actividad Científica)$", message = "Tipo de educación inválido")
     private String type;
 
     @NotBlank(message = "El estado es obligatorio")
@@ -37,6 +37,11 @@ public class EducationRequestDto {
 
     @NotBlank(message = "La institución es obligatoria")
     private String institution;
+
+    // Fechas del programa educativo
+    private LocalDate startDate;
+
+    private LocalDate endDate;
 
     @Past(message = "La fecha de emisión debe ser en el pasado")
     private LocalDate issueDate;

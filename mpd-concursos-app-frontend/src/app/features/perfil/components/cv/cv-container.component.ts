@@ -7,11 +7,13 @@
  * @version 2.0.0
  */
 
-import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BehaviorSubject, Subject, combineLatest, Observable } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Subject, Observable } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, map, catchError, timeout, retry } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 // Modelos y servicios del CV
 import {
@@ -20,11 +22,19 @@ import {
   EducationEntry,
   EducationDto,
   EducationType,
+  EducationStatus,
   CurriculumVitae,
   CvSearchFilters,
   LoadingState,
   ComponentState,
   CV_DEFAULTS,
+  FormMode,
+  UniversityEducation,
+  DiplomaEducation,
+  PostgraduateEducation,
+  ScientificActivity,
+  ScientificActivityType,
+  ScientificActivityRole,
   // Servicios HTTP reales
   ExperienceCvService,
   EducationCvService,
@@ -36,6 +46,10 @@ import {
 import { CvValidationService } from '@core/services/cv/cv-validation.service';
 import { CvTransformService } from '@core/services/cv/cv-transform.service';
 import { CvNotificationService } from '@core/services/cv/cv-notification.service';
+import { CvPdfExportService } from '@core/services/cv/cv-pdf-export.service';
+import { CvSearchService } from '@core/services/cv/cv-search.service';
+import { CvDragDropService } from '@core/services/cv/cv-drag-drop.service';
+import { CvBackendIntegrationService } from '@core/services/cv/cv-backend-integration.service';
 
 // Modelos de usuario
 import { UserProfile } from '@core/models/perfil.model';
@@ -46,9 +60,17 @@ import { CustomButtonComponent } from '@shared/components/custom-form/custom-but
 import { CustomSpinnerComponent } from '@shared/components/custom-spinner/custom-spinner.component';
 import { CustomTabsComponent, TabItem } from '@shared/components/custom-tabs/custom-tabs.component';
 
+// Componentes del CV
+import { CvSearchComponent, FilterChangeEvent } from './cv-search.component';
+import { EducationModalWrapperComponent, EducationModalResult } from './education-modal-wrapper.component';
+import { ExperienceModalWrapperComponent, ExperienceModalResult } from './experience-modal-wrapper.component';
+
 // Componentes de modales
 import { ExperienceModalComponent } from './experience-modal/experience-modal.component';
 import { EducationModalComponent } from './education-modal/education-modal.component';
+
+// Angular CDK para drag & drop
+import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 
 /**
  * Estado del componente CV
@@ -80,14 +102,22 @@ interface CvTab {
     CustomButtonComponent,
     CustomSpinnerComponent,
     CustomTabsComponent,
+    CvSearchComponent,
+    EducationModalWrapperComponent,
+    ExperienceModalWrapperComponent,
     ExperienceModalComponent,
-    EducationModalComponent
+    EducationModalComponent,
+    DragDropModule
   ],
   templateUrl: './cv-container.component.html',
   styleUrls: ['./cv-container.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CvContainerComponent implements OnInit, OnDestroy {
+
+  // ===== VIEW CHILDREN =====
+  @ViewChild('experienceModal') experienceModalComponent!: ExperienceModalComponent;
+  @ViewChild('educationModal') educationModalComponent!: EducationModalComponent;
 
   // ===== INPUTS =====
   @Input() userProfile: UserProfile | null = null;
@@ -152,8 +182,10 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   public readonly activeTab = signal<string>('experience');
   public readonly searchTerm = signal<string>('');
   public readonly showFilters = signal<boolean>(false);
+  public readonly expandedExperiences = signal<Set<string>>(new Set());
+  public readonly expandedEducation = signal<Set<string>>(new Set());
 
-  // ===== MODAL STATE =====
+  // ===== MODAL STATES =====
   public readonly showExperienceModal = signal<boolean>(false);
   public readonly selectedExperience = signal<WorkExperience | null>(null);
   public readonly experienceModalMode = signal<'create' | 'edit' | 'view'>('create');
@@ -175,6 +207,11 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     private readonly validationService: CvValidationService,
     private readonly transformService: CvTransformService,
     private readonly notificationService: CvNotificationService,
+    private readonly pdfExportService: CvPdfExportService,
+    private readonly searchService: CvSearchService,
+    private readonly dragDropService: CvDragDropService,
+    private readonly backendService: CvBackendIntegrationService,
+    private readonly http: HttpClient,
     // Servicios HTTP reales
     private readonly experienceService: ExperienceCvService,
     private readonly educationService: EducationCvService,
@@ -223,6 +260,15 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Maneja el cambio de filtros
+   */
+  onFiltersChange(filters: any): void {
+    // Implementar lógica de filtros según sea necesario
+    console.log('[CvContainerComponent] Filters changed:', filters);
+    this.cdr.markForCheck();
+  }
+
+  /**
    * Refresca los datos del CV
    */
   refreshData(): void {
@@ -232,62 +278,32 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Exporta el CV completo
+   * Exporta el CV completo a PDF
    */
   async exportCv(): Promise<void> {
-    if (!this.userProfile?.id) {
-      this.notificationService.showError('No se puede exportar el CV sin datos de usuario');
-      return;
-    }
-
-    this.updateState(state => ({
-      ...state,
-      isExporting: true
-    }));
-
+    this.updateState(state => ({ ...state, isExporting: true }));
     try {
-      // Usar el servicio de estado para exportar
-      this.cvStateService.exportCv(this.userProfile.id, {
-        format: 'PDF',
-        template: 'modern',
-        includePhoto: true,
-        includePersonalInfo: true,
-        includeWorkExperience: true,
-        includeEducation: true
-      }).subscribe({
-        next: (result) => {
-          if (result.success && result.downloadUrl) {
-            // Descargar el archivo
-            const link = document.createElement('a');
-            link.href = result.downloadUrl;
-            link.download = result.fileName || 'cv.pdf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+      this.notificationService.showInfo('Iniciando exportación de CV...');
 
-            this.notificationService.showSuccess('CV exportado exitosamente');
-          } else {
-            throw new Error(result.error || 'Error desconocido en la exportación');
-          }
-        },
-        error: (error) => {
-          this.notificationService.showError('Error al exportar el CV');
-          console.error('[CvContainerComponent] Error exporting CV:', error);
-        },
-        complete: () => {
-          this.updateState(state => ({
-            ...state,
-            isExporting: false
-          }));
-        }
-      });
-    } catch (error) {
-      this.notificationService.showError('Error al exportar el CV');
-      console.error('[CvContainerComponent] Error exporting CV:', error);
-      this.updateState(state => ({
-        ...state,
-        isExporting: false
-      }));
+      const result = await this.pdfExportService.exportToPdf(
+        this.userProfile!,
+        this.cvState().experiences.data,
+        this.cvState().education.data
+      );
+
+      if (result.success && result.blob) {
+        this.notificationService.showSuccess('CV exportado exitosamente. Abriendo en una nueva pestaña...');
+        const fileUrl = URL.createObjectURL(result.blob);
+        window.open(fileUrl, '_blank');
+        // Opcional: revocar la URL del objeto después de un tiempo para liberar memoria
+        setTimeout(() => URL.revokeObjectURL(fileUrl), 10000);
+      } else {
+        throw new Error(result.error || 'No se pudo obtener el PDF generado.');
+      }
+    } catch (error: any) {
+      this.notificationService.showError(`Error al exportar CV: ${error.message}`);
+    } finally {
+      this.updateState(state => ({ ...state, isExporting: false }));
     }
   }
 
@@ -303,6 +319,13 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     this.selectedExperience.set(null);
     this.experienceModalMode.set('create');
     this.showExperienceModal.set(true);
+
+    // Resetear el formulario cuando se abre en modo crear
+    setTimeout(() => {
+      if (this.experienceModalComponent) {
+        this.experienceModalComponent.resetForm();
+      }
+    }, 100);
   }
 
   /**
@@ -317,11 +340,14 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     this.selectedEducation.set(null);
     this.educationModalMode.set('create');
     this.showEducationModal.set(true);
+
+    // Resetear el formulario cuando se abre en modo crear
+    setTimeout(() => {
+      if (this.educationModalComponent) {
+        this.educationModalComponent.resetForm();
+      }
+    }, 100);
   }
-
-
-
-
 
   /**
    * Edita una experiencia laboral
@@ -387,8 +413,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     this.showEducationModal.set(true);
   }
 
-
-
   /**
    * Elimina una educación
    */
@@ -398,7 +422,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!confirm(`¿Está seguro de eliminar ${education.title}?`)) {
+    if (!confirm(`¿Está seguro de eliminar "${education.title}"?`)) {
       return;
     }
 
@@ -425,6 +449,31 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ===== PRIVATE METHODS =====
+
+  /**
+   * Carga los datos iniciales
+   */
+  private loadInitialData(): void {
+    if (!this.userProfile?.id) {
+      console.warn('[CvContainerComponent] No user profile ID available for loading CV data');
+      return;
+    }
+
+    console.log(`[CvContainerComponent] Loading CV data for user: ${this.userProfile.id}`);
+
+    // Cargar datos usando el servicio de estado centralizado
+    this.cvStateService.loadCvData(this.userProfile.id).subscribe({
+      next: (cvState) => {
+        console.log('[CvContainerComponent] CV data loaded successfully:', cvState);
+      },
+      error: (error) => {
+        console.error('[CvContainerComponent] Error loading CV data:', error);
+        this.notificationService.showError('Error al cargar los datos del CV');
+      }
+    });
+  }
+
   // ===== MODAL EVENT HANDLERS =====
 
   /**
@@ -433,6 +482,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   onExperienceModalClose(): void {
     this.showExperienceModal.set(false);
     this.selectedExperience.set(null);
+    this.experienceModalMode.set('create'); // Resetear modo al cerrar
     this.isExperienceLoading.set(false);
   }
 
@@ -459,6 +509,12 @@ export class CvContainerComponent implements OnInit, OnDestroy {
           : 'Experiencia laboral agregada exitosamente';
 
         this.notificationService.showSuccess(message);
+
+        // Resetear el formulario solo si es modo crear
+        if (!isEditing && this.experienceModalComponent) {
+          this.experienceModalComponent.resetForm();
+        }
+
         this.onExperienceModalClose();
         this.refreshData(); // Recargar datos
       },
@@ -507,6 +563,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   onEducationModalClose(): void {
     this.showEducationModal.set(false);
     this.selectedEducation.set(null);
+    this.educationModalMode.set('create'); // Resetear modo al cerrar
     this.isEducationLoading.set(false);
   }
 
@@ -533,6 +590,12 @@ export class CvContainerComponent implements OnInit, OnDestroy {
           : 'Educación agregada exitosamente';
 
         this.notificationService.showSuccess(message);
+
+        // Resetear el formulario solo si es modo crear
+        if (!isEditing && this.educationModalComponent) {
+          this.educationModalComponent.resetForm();
+        }
+
         this.onEducationModalClose();
         this.refreshData(); // Recargar datos
       },
@@ -574,29 +637,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   // ===== PRIVATE METHODS =====
-
-  /**
-   * Carga los datos iniciales usando servicios HTTP reales
-   */
-  private loadInitialData(): void {
-    if (!this.userProfile?.id) {
-      console.warn('[CvContainerComponent] No user profile ID available for loading CV data');
-      return;
-    }
-
-    console.log(`[CvContainerComponent] Loading CV data for user: ${this.userProfile.id}`);
-
-    // Cargar datos usando el servicio de estado centralizado
-    this.cvStateService.loadCvData(this.userProfile.id).subscribe({
-      next: (cvState) => {
-        console.log('[CvContainerComponent] CV data loaded successfully:', cvState);
-      },
-      error: (error) => {
-        console.error('[CvContainerComponent] Error loading CV data:', error);
-        this.notificationService.showError('Error al cargar los datos del CV');
-      }
-    });
-  }
 
   /**
    * Configura la suscripción al estado del CV
@@ -681,8 +721,6 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     });
   }
 
-
-
   /**
    * Actualiza el estado general
    */
@@ -741,56 +779,73 @@ export class CvContainerComponent implements OnInit, OnDestroy {
    * Formatea las fechas de experiencia para mostrar
    */
   formatExperienceDates(experience: WorkExperience): string {
-    return this.transformService.formatDateRangeForDisplay(
-      experience.startDate,
-      experience.endDate,
-      experience.isCurrentJob
-    );
+    try {
+      // Validar fechas antes de formatear
+      if (!experience.startDate || isNaN(experience.startDate.getTime())) {
+        return 'Fecha de inicio no válida';
+      }
+
+      if (experience.endDate && isNaN(experience.endDate.getTime())) {
+        // Si la fecha de fin es inválida pero hay fecha de inicio válida
+        return this.formatSingleDate(experience.startDate) + ' - Fecha de fin no válida';
+      }
+
+      return this.transformService.formatDateRangeForDisplay(
+        experience.startDate,
+        experience.endDate,
+        experience.isCurrentJob
+      );
+    } catch (error) {
+      console.warn('Error formatting experience dates:', error, experience);
+      return 'Fechas no disponibles';
+    }
   }
 
   /**
-   * Formatea las fechas de educación para mostrar
+   * Alterna el estado expandido de una experiencia
    */
-  formatEducationDates(education: EducationEntry): string {
-    return this.transformService.formatDateRangeForDisplay(
-      education.startDate,
-      education.endDate,
-      education.isOngoing
-    );
+  toggleExperienceExpanded(experienceId: string): void {
+    const expanded = this.expandedExperiences();
+    const newExpanded = new Set(expanded);
+
+    if (newExpanded.has(experienceId)) {
+      newExpanded.delete(experienceId);
+    } else {
+      newExpanded.add(experienceId);
+    }
+
+    this.expandedExperiences.set(newExpanded);
   }
 
   /**
-   * Obtiene la etiqueta del tipo de educación
+   * Verifica si una experiencia está expandida
    */
-  getEducationTypeLabel(type: any): string {
-    const labels: Record<string, string> = {
-      'SECONDARY': 'Educación Secundaria',
-      'TECHNICAL': 'Educación Técnica',
-      'UNIVERSITY_DEGREE': 'Carrera Universitaria',
-      'POSTGRADUATE_SPECIALIZATION': 'Especialización',
-      'MASTER_DEGREE': 'Maestría',
-      'DOCTORATE': 'Doctorado',
-      'DIPLOMA': 'Diplomatura',
-      'CERTIFICATION': 'Certificación',
-      'SCIENTIFIC_ACTIVITY': 'Actividad Científica'
-    };
-    return labels[type] || type;
+  isExperienceExpanded(experienceId: string): boolean {
+    return this.expandedExperiences().has(experienceId);
   }
 
   /**
-   * Obtiene la etiqueta del estado de educación
+   * Alterna el estado expandido de una educación
    */
-  getEducationStatusLabel(status: any): string {
-    const labels: Record<string, string> = {
-      'IN_PROGRESS': 'En Curso',
-      'COMPLETED': 'Completado',
-      'SUSPENDED': 'Suspendido',
-      'ABANDONED': 'Abandonado'
-    };
-    return labels[status] || status;
+  toggleEducationExpanded(educationId: string): void {
+    const expanded = this.expandedEducation();
+    const newExpanded = new Set(expanded);
+
+    if (newExpanded.has(educationId)) {
+      newExpanded.delete(educationId);
+    } else {
+      newExpanded.add(educationId);
+    }
+
+    this.expandedEducation.set(newExpanded);
   }
 
-
+  /**
+   * Verifica si una educación está expandida
+   */
+  isEducationExpanded(educationId: string): boolean {
+    return this.expandedEducation().has(educationId);
+  }
 
   /**
    * Convierte las tabs a TabItems para el componente de tabs
@@ -821,6 +876,34 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ===== DRAG & DROP METHODS =====
+
+  /**
+   * Maneja el drop de experiencias laborales
+   */
+  onExperienceDrop(event: CdkDragDrop<WorkExperience[]>): void {
+    const currentExperiences = this.cvState().experiences.data;
+    const updatedExperiences = this.dragDropService.handleExperienceDrop(event, currentExperiences);
+
+    this.updateExperienceState(state => ({
+      ...state,
+      data: updatedExperiences
+    }));
+  }
+
+  /**
+   * Maneja el drop de educación
+   */
+  onEducationDrop(event: CdkDragDrop<EducationEntry[]>): void {
+    const currentEducation = this.cvState().education.data;
+    const updatedEducation = this.dragDropService.handleEducationDrop(event, currentEducation);
+
+    this.updateEducationState(state => ({
+      ...state,
+      data: updatedEducation
+    }));
+  }
+
   // ===== MÉTODOS AUXILIARES =====
 
   /**
@@ -839,6 +922,62 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     return state.experiences.data.length + state.education.data.length;
   }
 
+  /**
+   * Formatea las fechas de educación para mostrar
+   */
+  formatEducationDates(education: EducationEntry): string {
+    return this.transformService.formatDateRangeForDisplay(
+      education.startDate,
+      education.endDate,
+      education.isOngoing
+    );
+  }
 
+  /**
+   * Obtiene la duración de una experiencia
+   */
+  getExperienceDuration(experience: WorkExperience): string | null {
+    return this.transformService.calculateDuration(
+      experience.startDate,
+      experience.endDate
+    );
+  }
 
+  /**
+   * Obtiene la duración de una educación
+   */
+  getEducationDuration(education: EducationEntry): string | null {
+    return this.transformService.calculateDuration(
+      education.startDate,
+      education.endDate
+    );
+  }
+
+  /**
+   * Obtiene información adicional específica de educación (sin duplicar tipo, estado, duración)
+   */
+  getEducationAdditionalInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
+    return this.transformService.getEducationAdditionalInfo(education);
+  }
+
+  /**
+   * Obtiene la etiqueta del tipo de educación
+   */
+  getEducationTypeLabel(type: EducationType): string {
+    return this.transformService.getEducationTypeLabel(type);
+  }
+
+  /**
+   * Obtiene la etiqueta del estado de educación
+   */
+  getEducationStatusLabel(status: EducationStatus): string {
+    return this.transformService.getEducationStatusLabel(status);
+  }
+
+  /**
+   * Formatea una fecha individual
+   */
+  private formatSingleDate(date: Date): string {
+    return this.transformService.formatSingleDate(date);
+  }
 }

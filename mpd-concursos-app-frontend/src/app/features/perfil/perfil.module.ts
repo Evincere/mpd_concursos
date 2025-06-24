@@ -1,20 +1,8 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
-import { PerfilComponent } from './perfil.component';
+import { Routes } from '@angular/router';
 
-const routes: Routes = [
+export const PERFIL_ROUTES: Routes = [
   {
     path: '',
-    component: PerfilComponent
+    loadComponent: () => import('./perfil.component').then(m => m.PerfilComponent)
   }
 ];
-
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    RouterModule.forChild(routes)
-  ]
-})
-export class PerfilModule { }

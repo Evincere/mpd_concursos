@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.experience.application.service;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -47,12 +48,13 @@ public class ExperienceServiceImpl implements ExperienceService {
     public List<ExperienceResponseDto> getAllExperiencesByUserId(UUID userId) {
         log.info("Getting all experiences for user: {}", userId);
 
-        UserEntity userEntity = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        // Use findAllByUserId and filter manually to avoid issues with JPA soft delete queries
+        List<WorkExperienceEntity> allExperienceEntities = experienceRepository.findAllByUserId(userId);
+        List<WorkExperienceEntity> experienceEntities = allExperienceEntities.stream()
+                .filter(entity -> entity.getIsDeleted() == null || !entity.getIsDeleted())
+                .collect(Collectors.toList());
 
-        List<WorkExperienceEntity> experienceEntities = experienceRepository.findByUser(userEntity);
         List<Experience> experiences = entityMapper.toDomainList(experienceEntities);
-
         return experienceMapper.toResponseDtoList(experiences);
     }
 

@@ -410,96 +410,51 @@ export class UsuariosAdminComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Changes the status of a user.
-   * @param user The user whose status is to be changed.
-   * @param newStatus The new status to set.
+   * Cambia el estado de un usuario.
+   * @param user El usuario a modificar.
+   * @param newStatus El nuevo estado.
    */
   changeUserStatus(user: User, newStatus: UserStatus): void {
-    this.isLoading = true;
-    this.loggingService.info(`[UsuariosAdminComponent] Attempting to change status for user ${user.id} to ${newStatus}`, undefined, 'UsersAdmin');
+    if (!user || !user.id) {
+      this.notificationService.error('Error: Usuario o ID de usuario no válido.');
+      return;
+    }
+    const userId = user.id;
+    this.loggingService.info(`[UsuariosAdminComponent] Changing status for user ${userId} to ${newStatus}`, undefined, 'UsersAdmin');
+    
+    this.userService.updateUserStatus(userId, newStatus).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.notificationService.success(`Estado del usuario ${user.username} actualizado a ${this.getStatusText(newStatus)}.`);
+        this.loadUsers();
+      },
+      error: (error) => {
+        this.loggingService.error(`[UsuariosAdminComponent] Error changing status for user ${userId}:`, error, 'UsersAdmin');
+        this.notificationService.error('Error al cambiar el estado del usuario.');
+      }
+    });
+  }
 
-    const statusChangeRequest: UserStatusChangeRequest = {
-      userId: user.id,
-      status: newStatus
-    };
-
-    this.userService.changeUserStatus(statusChangeRequest)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (updatedUser) => {
-          this.loggingService.info(`[UsuariosAdminComponent] User ${user.id} status changed successfully to ${newStatus}.`, updatedUser, 'UsersAdmin');
-          this.notificationService.success(`Estado del usuario cambiado a ${this.getStatusText(newStatus)}`);
-
-          // Determine what to do based on the current status filter
-          const currentStatusFilter = this.currentFilters.status;
-
-          if (!currentStatusFilter) {
-            // If no status filter (showing all), simply reload
-            this.loggingService.debug('[UsuariosAdminComponent] No status filter active, reloading all users.', undefined, 'UsersAdmin');
-            this.loadUsers();
-          } else if (currentStatusFilter === newStatus) {
-            // If filtering by the same status we changed to, reload
-            this.loggingService.debug(`[UsuariosAdminComponent] Status filter matches new status (${newStatus}), reloading users.`, undefined, 'UsersAdmin');
-            this.loadUsers();
-          } else {
-            // If filtering by a different status, the user should no longer appear in this view
-            this.loggingService.debug(`[UsuariosAdminComponent] User's new status (${newStatus}) does not match current filter (${currentStatusFilter}). Removing from local view.`, undefined, 'UsersAdmin');
-
-            if (this.usuarios && this.usuarios.length > 0) {
-              const index = this.usuarios.findIndex(u => u.id === user.id);
-              if (index !== -1) {
-                // Remove the user from the local list
-                this.usuarios = [
-                  ...this.usuarios.slice(0, index),
-                  ...this.usuarios.slice(index + 1)
-                ];
-
-                // Update total users count
-                this.totalUsuarios--;
-
-                // Show notification
-                this.notificationService.info(
-                  `El usuario ha sido eliminado de esta vista porque su estado ha cambiado a ${this.getStatusText(newStatus)}`
-                );
-              }
-            }
-            // Optional: If you prefer to automatically switch filter to new status:
-            /*
-            this.currentFilters.status = newStatus;
-            setTimeout(() => {
-              const statusSelect = document.getElementById('status-select') as HTMLSelectElement;
-              if (statusSelect) {
-                statusSelect.value = newStatus;
-              }
-            }, 100);
-            this.loadUsers();
-            this.notificationService.info(
-              `Filtro cambiado a "${this.getStatusText(newStatus)}" para seguir viendo el usuario actualizado`
-            );
-            */
-          }
-          this.isLoading = false; // Ensure loading state is reset
-        },
-        error: (error) => {
-          this.loggingService.error(`[UsuariosAdminComponent] Error changing status for user ${user.id}:`, error, 'UsersAdmin');
-          console.error('Error cambiando estado del usuario:', error);
-
-          let errorMessage = 'Error al cambiar el estado del usuario.';
-
-          if (error.status === 404) {
-            errorMessage = 'No se encontró el usuario o el endpoint para cambiar el estado.';
-          } else if (error.status === 403) {
-            errorMessage = 'No tiene permisos para cambiar el estado de este usuario.';
-          } else if (error.status === 400) {
-            errorMessage = 'Datos inválidos para cambiar el estado del usuario. Verifique la solicitud.';
-          } else if (error.status === 500) {
-            errorMessage = 'Error interno del servidor al cambiar el estado del usuario. Intente más tarde.';
-          }
-
-          this.notificationService.error(errorMessage);
-          this.isLoading = false;
-        }
-      });
+  /**
+   * Abre el diálogo para cambiar los roles de un usuario.
+   * @param user El usuario a modificar.
+   */
+  changeUserRoles(user: User): void {
+    if (!user || !user.id) {
+      this.notificationService.error('Error: Usuario o ID de usuario no válido.');
+      return;
+    }
+    // Lógica para abrir un diálogo de selección de roles y luego llamar al servicio
+    // Por ahora, un placeholder:
+    const newRoles = ['ROLE_USER', 'ROLE_EDITOR']; // Esto debería venir de un diálogo
+    this.userService.updateUserRoles(user.id, newRoles).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.notificationService.success(`Roles del usuario ${user.username} actualizados.`);
+        this.loadUsers();
+      },
+      error: (error) => {
+        this.notificationService.error('Error al cambiar los roles del usuario.');
+      }
+    });
   }
 
   /**

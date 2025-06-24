@@ -1,0 +1,463 @@
+/**
+ * Estilos de Accesibilidad para el Sistema CV
+ * 
+ * @description Estilos para mejorar accesibilidad, contraste y navegación por teclado
+ * @author Augment Agent
+ * @date 2025-06-21
+ * @version 1.0.0
+ */
+
+// ===== VARIABLES DE ACCESIBILIDAD =====
+:root {
+  // Colores de alto contraste
+  --a11y-high-contrast-bg: #000000;
+  --a11y-high-contrast-text: #ffffff;
+  --a11y-high-contrast-primary: #ffff00;
+  --a11y-high-contrast-secondary: #00ffff;
+  --a11y-high-contrast-error: #ff0000;
+  --a11y-high-contrast-success: #00ff00;
+  --a11y-high-contrast-warning: #ff8800;
+  
+  // Focus styles
+  --a11y-focus-color: #005fcc;
+  --a11y-focus-width: 3px;
+  --a11y-focus-offset: 2px;
+  --a11y-focus-style: solid;
+  
+  // Tamaños de fuente
+  --a11y-font-small: 0.875rem;
+  --a11y-font-medium: 1rem;
+  --a11y-font-large: 1.25rem;
+  --a11y-font-extra-large: 1.5rem;
+  
+  // Espaciado para touch targets
+  --a11y-touch-target-min: 44px;
+  --a11y-spacing-small: 0.5rem;
+  --a11y-spacing-medium: 1rem;
+  --a11y-spacing-large: 1.5rem;
+}
+
+// ===== UTILIDADES DE ACCESIBILIDAD =====
+
+// Screen reader only content
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+// Screen reader only content that becomes visible on focus
+.sr-only-focusable {
+  @extend .sr-only;
+  
+  &:focus,
+  &:active {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    padding: var(--a11y-spacing-small) !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: normal !important;
+    background: var(--a11y-focus-color) !important;
+    color: white !important;
+    text-decoration: none !important;
+    border-radius: 4px !important;
+    z-index: 10000 !important;
+  }
+}
+
+// Skip links
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--a11y-focus-color);
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 10000;
+  font-weight: 600;
+  
+  &:focus {
+    top: 6px;
+  }
+}
+
+// ===== FOCUS STYLES =====
+
+// Base focus style
+.focus-visible,
+*:focus-visible {
+  outline: var(--a11y-focus-width) var(--a11y-focus-style) var(--a11y-focus-color) !important;
+  outline-offset: var(--a11y-focus-offset) !important;
+  box-shadow: 0 0 0 var(--a11y-focus-offset) rgba(0, 95, 204, 0.2) !important;
+}
+
+// Enhanced focus for interactive elements
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: var(--a11y-focus-width) var(--a11y-focus-style) var(--a11y-focus-color) !important;
+  outline-offset: var(--a11y-focus-offset) !important;
+  box-shadow: 
+    0 0 0 var(--a11y-focus-offset) rgba(0, 95, 204, 0.2),
+    0 0 0 calc(var(--a11y-focus-offset) + var(--a11y-focus-width)) rgba(0, 95, 204, 0.1) !important;
+}
+
+// Remove default focus for mouse users
+*:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+// ===== TAMAÑOS DE FUENTE =====
+.font-small {
+  font-size: var(--a11y-font-small) !important;
+  
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.25rem !important; }
+  h3 { font-size: 1.125rem !important; }
+  h4 { font-size: 1rem !important; }
+  h5 { font-size: 0.875rem !important; }
+  h6 { font-size: 0.75rem !important; }
+}
+
+.font-medium {
+  font-size: var(--a11y-font-medium) !important;
+  
+  h1 { font-size: 2rem !important; }
+  h2 { font-size: 1.5rem !important; }
+  h3 { font-size: 1.25rem !important; }
+  h4 { font-size: 1.125rem !important; }
+  h5 { font-size: 1rem !important; }
+  h6 { font-size: 0.875rem !important; }
+}
+
+.font-large {
+  font-size: var(--a11y-font-large) !important;
+  
+  h1 { font-size: 2.5rem !important; }
+  h2 { font-size: 2rem !important; }
+  h3 { font-size: 1.5rem !important; }
+  h4 { font-size: 1.25rem !important; }
+  h5 { font-size: 1.125rem !important; }
+  h6 { font-size: 1rem !important; }
+}
+
+.font-extra-large {
+  font-size: var(--a11y-font-extra-large) !important;
+  
+  h1 { font-size: 3rem !important; }
+  h2 { font-size: 2.5rem !important; }
+  h3 { font-size: 2rem !important; }
+  h4 { font-size: 1.5rem !important; }
+  h5 { font-size: 1.25rem !important; }
+  h6 { font-size: 1.125rem !important; }
+}
+
+// ===== ALTO CONTRASTE =====
+.high-contrast {
+  background: var(--a11y-high-contrast-bg) !important;
+  color: var(--a11y-high-contrast-text) !important;
+  
+  // Elementos básicos
+  * {
+    background: var(--a11y-high-contrast-bg) !important;
+    color: var(--a11y-high-contrast-text) !important;
+    border-color: var(--a11y-high-contrast-text) !important;
+  }
+  
+  // Enlaces
+  a {
+    color: var(--a11y-high-contrast-primary) !important;
+    text-decoration: underline !important;
+    
+    &:hover,
+    &:focus {
+      color: var(--a11y-high-contrast-secondary) !important;
+      background: var(--a11y-high-contrast-text) !important;
+    }
+  }
+  
+  // Botones
+  button,
+  .btn {
+    background: var(--a11y-high-contrast-text) !important;
+    color: var(--a11y-high-contrast-bg) !important;
+    border: 2px solid var(--a11y-high-contrast-text) !important;
+    
+    &:hover,
+    &:focus {
+      background: var(--a11y-high-contrast-primary) !important;
+      color: var(--a11y-high-contrast-bg) !important;
+      border-color: var(--a11y-high-contrast-primary) !important;
+    }
+    
+    &:disabled {
+      background: var(--a11y-high-contrast-bg) !important;
+      color: var(--a11y-high-contrast-text) !important;
+      border-color: var(--a11y-high-contrast-text) !important;
+      opacity: 0.5 !important;
+    }
+  }
+  
+  // Formularios
+  input,
+  select,
+  textarea {
+    background: var(--a11y-high-contrast-bg) !important;
+    color: var(--a11y-high-contrast-text) !important;
+    border: 2px solid var(--a11y-high-contrast-text) !important;
+    
+    &:focus {
+      border-color: var(--a11y-high-contrast-primary) !important;
+      box-shadow: 0 0 0 2px var(--a11y-high-contrast-primary) !important;
+    }
+  }
+  
+  // Estados
+  .text-primary { color: var(--a11y-high-contrast-primary) !important; }
+  .text-secondary { color: var(--a11y-high-contrast-secondary) !important; }
+  .text-success { color: var(--a11y-high-contrast-success) !important; }
+  .text-warning { color: var(--a11y-high-contrast-warning) !important; }
+  .text-error { color: var(--a11y-high-contrast-error) !important; }
+  
+  // Iconos
+  i,
+  .icon {
+    color: inherit !important;
+  }
+  
+  // Imágenes
+  img {
+    filter: contrast(1.2) brightness(1.1) !important;
+  }
+}
+
+// ===== NAVEGACIÓN POR TECLADO =====
+.keyboard-navigation {
+  // Indicadores visuales mejorados para navegación por teclado
+  .keyboard-focused {
+    outline: 3px solid var(--a11y-focus-color) !important;
+    outline-offset: 2px !important;
+    background: rgba(0, 95, 204, 0.1) !important;
+  }
+  
+  // Elementos de lista navegables
+  .keyboard-list-item {
+    position: relative;
+    
+    &:focus,
+    &.keyboard-focused {
+      background: rgba(0, 95, 204, 0.1) !important;
+      
+      &::before {
+        content: '▶';
+        position: absolute;
+        left: -20px;
+        color: var(--a11y-focus-color);
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+// ===== TOUCH TARGETS =====
+.touch-target {
+  min-height: var(--a11y-touch-target-min) !important;
+  min-width: var(--a11y-touch-target-min) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+// ===== MOVIMIENTO REDUCIDO =====
+.reduced-motion,
+.reduced-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+// ===== ARIA LIVE REGIONS =====
+[aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+// ===== ESTADOS ARIA =====
+[aria-expanded="false"] .expandable-content {
+  display: none !important;
+}
+
+[aria-expanded="true"] .expandable-content {
+  display: block !important;
+}
+
+[aria-hidden="true"] {
+  display: none !important;
+}
+
+[aria-disabled="true"] {
+  opacity: 0.6 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+
+[aria-selected="true"] {
+  background: rgba(0, 95, 204, 0.1) !important;
+  border-left: 4px solid var(--a11y-focus-color) !important;
+}
+
+// ===== INDICADORES DE ESTADO =====
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  .reduced-motion &::before {
+    animation: none;
+    border-top-color: currentColor;
+  }
+}
+
+// ===== TOOLTIPS ACCESIBLES =====
+.tooltip-accessible {
+  position: relative;
+  
+  &:hover .tooltip-content,
+  &:focus .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .tooltip-content {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--a11y-high-contrast-bg);
+    color: var(--a11y-high-contrast-text);
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+    border: 1px solid var(--a11y-focus-color);
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--a11y-high-contrast-bg);
+    }
+  }
+}
+
+// ===== RESPONSIVE ACCESIBILIDAD =====
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 48px !important;
+    min-width: 48px !important;
+  }
+  
+  .font-small { font-size: 1rem !important; }
+  .font-medium { font-size: 1.125rem !important; }
+  .font-large { font-size: 1.25rem !important; }
+  .font-extra-large { font-size: 1.5rem !important; }
+}
+
+// ===== PRINT STYLES =====
+@media print {
+  .sr-only {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    clip: auto !important;
+    overflow: visible !important;
+  }
+  
+  .high-contrast {
+    background: white !important;
+    color: black !important;
+    
+    * {
+      background: white !important;
+      color: black !important;
+    }
+  }
+}
+
+// ===== ANIMACIONES ACCESIBLES =====
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-accessible {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+// ===== UTILIDADES ADICIONALES =====
+.visually-hidden {
+  @extend .sr-only;
+}
+
+.focus-trap {
+  position: relative;
+  
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.keyboard-only {
+  .no-js &,
+  .mouse-user & {
+    display: none !important;
+  }
+}

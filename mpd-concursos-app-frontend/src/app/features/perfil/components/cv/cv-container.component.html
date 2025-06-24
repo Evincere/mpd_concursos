@@ -28,7 +28,17 @@
     </div>
   </div>
 
-  <!-- Contenido principal simplificado -->
+  <!-- Componente de búsqueda avanzada -->
+  <div *ngIf="hasData()">
+    <app-cv-search
+      [experiences]="cvState().experiences.data"
+      [education]="cvState().education.data"
+      [isLoading]="isAnyLoading()"
+      (filtersChange)="onFiltersChange($event)">
+    </app-cv-search>
+  </div>
+
+  <!-- Contenido principal con funcionalidades avanzadas -->
   <div class="cv-content">
 
     <!-- Estado vacío -->
@@ -66,175 +76,292 @@
         </button>
       </div>
 
-      <!-- Contenido de las pestañas -->
+      <!-- Contenido con drag & drop mejorado -->
       <div class="cv-tab-content">
-
-        <!-- Pestaña de Experiencia Laboral -->
-        <div *ngIf="activeTab() === 'experience'" class="tab-panel">
-          <div class="tab-panel-header">
-            <h3 class="panel-title">
-              <i class="material-icons">work</i>
-              Experiencia Laboral
-            </h3>
-            <app-custom-button
-              [label]="'Agregar Experiencia'"
-              [variant]="'primary'"
-              [icon]="'add'"
-              (buttonClick)="addExperience()">
-            </app-custom-button>
-          </div>
-
-          <!-- Lista de experiencias -->
-          <div class="experience-cards" *ngIf="cvState().experiences.data.length > 0; else emptyExperiences">
-            <div class="section-header">
-              <h4>Experiencias cargadas: {{ cvState().experiences.data.length }}</h4>
+        <!-- Tab de Experiencia Laboral con Drag & Drop -->
+        <div *ngIf="activeTab() === 'experience'">
+          <app-custom-card>
+            <div class="tab-header">
+              <h3>Experiencia Laboral</h3>
+              <div class="tab-actions">
+                <span class="item-count">{{ cvState().experiences.data.length }} experiencias</span>
+                <app-custom-button
+                  [label]="'Agregar Experiencia'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addExperience()">
+                </app-custom-button>
+              </div>
             </div>
 
-            <!-- Tarjetas de experiencia simplificadas -->
-            <div class="experience-card"
-                 *ngFor="let experience of cvState().experiences.data; trackBy: trackByExperienceId">
+            <!-- Lista con drag & drop -->
+            <div
+              class="drag-drop-list"
+              cdkDropList
+              [cdkDropListData]="cvState().experiences.data"
+              (cdkDropListDropped)="onExperienceDrop($event)">
 
-              <div class="card-header">
-                <div class="card-title">
-                  <h5>{{ experience.position }}</h5>
-                  <span class="company-name">{{ experience.company }}</span>
+              <div
+                class="drag-drop-item experience-item"
+                *ngFor="let experience of cvState().experiences.data; trackBy: trackByExperienceId"
+                cdkDrag>
+
+                <!-- Handle de arrastre -->
+                <div class="drag-handle" cdkDragHandle>
+                  <i class="material-icons">drag_indicator</i>
                 </div>
-                <div class="card-actions">
-                  <button type="button"
-                          class="action-btn edit-btn"
-                          (click)="editExperience(experience)"
-                          title="Editar experiencia">
-                    <i class="material-icons">edit</i>
-                  </button>
-                  <button type="button"
-                          class="action-btn delete-btn"
-                          (click)="deleteExperience(experience)"
-                          title="Eliminar experiencia">
-                    <i class="material-icons">delete</i>
-                  </button>
+
+                <!-- Contenido de la experiencia -->
+                <div class="item-content">
+                  <div class="item-header">
+                    <div class="title-section">
+                      <h4>{{ experience.position || 'Sin título' }}</h4>
+                      <!-- Indicador de estado de validación de documentos -->
+                      <div class="validation-status">
+                        <span class="status-badge status-pending"
+                              title="Documentación pendiente de validación administrativa">
+                          <i class="material-icons">schedule</i>
+                          Pendiente de validación
+                        </span>
+                      </div>
+                    </div>
+                    <div class="item-actions">
+                      <button class="btn btn-icon btn-secondary" (click)="editExperience(experience)">
+                        <i class="material-icons">edit</i>
+                      </button>
+                      <button class="btn btn-icon btn-error" (click)="deleteExperience(experience)">
+                        <i class="material-icons">delete</i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="item-details">
+                    <div class="company-info">
+                      <p class="company">
+                        <i class="material-icons">business</i>
+                        {{ experience.company || 'Sin empresa' }}
+                      </p>
+                      <p class="location" *ngIf="experience.location">
+                        <i class="material-icons">location_on</i>
+                        {{ experience.location }}
+                      </p>
+                    </div>
+
+                    <div class="dates-section">
+                      <div class="dates-info">
+                        <i class="material-icons">schedule</i>
+                        <span class="date-range">{{ formatExperienceDates(experience) }}</span>
+                        <span class="duration" *ngIf="getExperienceDuration(experience)">
+                          • {{ getExperienceDuration(experience) }}
+                        </span>
+                      </div>
+                      <div class="current-job-badge" *ngIf="experience.isCurrentJob">
+                        <i class="material-icons">work</i>
+                        <span>Trabajo Actual</span>
+                      </div>
+                    </div>
+
+                    <div class="description-section" *ngIf="experience.description">
+                      <p class="description">{{ experience.description }}</p>
+                      <button
+                        class="btn btn-link expand-btn"
+                        *ngIf="experience.description && experience.description.length > 150 && experience.id"
+                        (click)="toggleExperienceExpanded(experience.id!)">
+                        <i class="material-icons">{{ isExperienceExpanded(experience.id!) ? 'expand_less' : 'expand_more' }}</i>
+                        {{ isExperienceExpanded(experience.id!) ? 'Ver menos' : 'Ver más' }}
+                      </button>
+                    </div>
+
+                    <!-- Logros y tecnologías -->
+                    <div class="additional-info" *ngIf="experience.achievements?.length || experience.technologies?.length">
+                      <div class="achievements" *ngIf="experience.achievements?.length">
+                        <h5>
+                          <i class="material-icons">star</i>
+                          Logros principales
+                        </h5>
+                        <ul class="achievements-list">
+                          <li *ngFor="let achievement of experience.achievements">{{ achievement }}</li>
+                        </ul>
+                      </div>
+
+                      <div class="technologies" *ngIf="experience.technologies?.length">
+                        <h5>
+                          <i class="material-icons">code</i>
+                          Tecnologías
+                        </h5>
+                        <div class="tech-badges">
+                          <span class="tech-badge" *ngFor="let tech of experience.technologies">{{ tech }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Preview personalizado para drag -->
+                <div class="drag-preview" *cdkDragPreview>
+                  <div class="preview-content">
+                    <h4>{{ experience.position || 'Sin título' }}</h4>
+                    <p>{{ experience.company || 'Sin empresa' }}</p>
+                  </div>
                 </div>
               </div>
 
-              <div class="card-content">
-                <div class="experience-dates">
-                  <i class="material-icons">date_range</i>
-                  <span>{{ formatExperienceDates(experience) }}</span>
-                  <span class="current-job" *ngIf="experience.isCurrentJob">
-                    <i class="material-icons">work</i>
-                    Trabajo Actual
-                  </span>
-                </div>
-
-                <div class="experience-description" *ngIf="experience.description">
-                  <p>{{ experience.description }}</p>
-                </div>
+              <!-- Placeholder cuando está vacío -->
+              <div class="empty-drop-zone" *ngIf="cvState().experiences.data.length === 0">
+                <i class="material-icons">work_off</i>
+                <p>No hay experiencias laborales</p>
+                <app-custom-button
+                  [label]="'Agregar Primera Experiencia'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addExperience()">
+                </app-custom-button>
               </div>
             </div>
-          </div>
-
-          <!-- Estado vacío para experiencias -->
-          <ng-template #emptyExperiences>
-            <div class="empty-experiences">
-              <i class="material-icons">work_off</i>
-              <h4>No hay experiencias laborales</h4>
-              <p>Agrega tu primera experiencia laboral para comenzar a construir tu CV profesional.</p>
-              <app-custom-button
-                [label]="'Agregar Primera Experiencia'"
-                [variant]="'primary'"
-                [icon]="'add'"
-                (buttonClick)="addExperience()">
-              </app-custom-button>
-            </div>
-          </ng-template>
+          </app-custom-card>
         </div>
 
-        <!-- Pestaña de Educación -->
-        <div *ngIf="activeTab() === 'education'" class="tab-panel">
-          <div class="tab-panel-header">
-            <h3 class="panel-title">
-              <i class="material-icons">school</i>
-              Formación Académica
-            </h3>
-            <app-custom-button
-              [label]="'Agregar Educación'"
-              [variant]="'primary'"
-              [icon]="'add'"
-              (buttonClick)="addEducation()">
-            </app-custom-button>
-          </div>
-
-          <!-- Lista de educación -->
-          <div class="education-cards" *ngIf="cvState().education.data.length > 0; else emptyEducation">
-            <div class="section-header">
-              <h4>Educación registrada: {{ cvState().education.data.length }}</h4>
+        <!-- Tab de Educación con Drag & Drop -->
+        <div *ngIf="activeTab() === 'education'">
+          <app-custom-card>
+            <div class="tab-header">
+              <h3>Educación</h3>
+              <div class="tab-actions">
+                <span class="item-count">{{ cvState().education.data.length }} estudios</span>
+                <app-custom-button
+                  [label]="'Agregar Educación'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addEducation()">
+                </app-custom-button>
+              </div>
             </div>
 
-            <!-- Tarjetas de educación simplificadas -->
-            <div class="education-card"
-                 *ngFor="let education of cvState().education.data; trackBy: trackByEducationId">
+            <!-- Lista con drag & drop -->
+            <div
+              class="drag-drop-list"
+              cdkDropList
+              [cdkDropListData]="cvState().education.data"
+              (cdkDropListDropped)="onEducationDrop($event)">
 
-              <div class="card-header">
-                <div class="card-title">
-                  <h5>{{ education.title }}</h5>
-                  <span class="institution-name">{{ education.institution }}</span>
+              <div
+                class="drag-drop-item education-item"
+                *ngFor="let education of cvState().education.data; trackBy: trackByEducationId"
+                cdkDrag>
+
+                <!-- Handle de arrastre -->
+                <div class="drag-handle" cdkDragHandle>
+                  <i class="material-icons">drag_indicator</i>
                 </div>
-                <div class="card-actions">
-                  <button type="button"
-                          class="action-btn edit-btn"
-                          (click)="editEducation(education)"
-                          title="Editar educación">
-                    <i class="material-icons">edit</i>
-                  </button>
-                  <button type="button"
-                          class="action-btn delete-btn"
-                          (click)="deleteEducation(education)"
-                          title="Eliminar educación">
-                    <i class="material-icons">delete</i>
-                  </button>
+
+                <!-- Contenido de la educación -->
+                <div class="item-content">
+                  <div class="item-header">
+                    <div class="title-section">
+                      <h4>{{ education.title || 'Sin título' }}</h4>
+                      <!-- Indicador de estado de validación de documentos -->
+                      <div class="validation-status">
+                        <span class="status-badge status-pending"
+                              title="Documentación pendiente de validación administrativa">
+                          <i class="material-icons">schedule</i>
+                          Pendiente de validación
+                        </span>
+                      </div>
+                    </div>
+                    <div class="item-actions">
+                      <button class="btn btn-icon btn-secondary" (click)="editEducation(education)">
+                        <i class="material-icons">edit</i>
+                      </button>
+                      <button class="btn btn-icon btn-error" (click)="deleteEducation(education)">
+                        <i class="material-icons">delete</i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="item-details">
+                    <div class="institution-info">
+                      <p class="institution">
+                        <i class="material-icons">school</i>
+                        {{ education.institution || 'Sin institución' }}
+                      </p>
+                    </div>
+
+                    <div class="dates-section">
+                      <div class="dates-info">
+                        <i class="material-icons">schedule</i>
+                        <span class="date-range">{{ formatEducationDates(education) }}</span>
+                        <span class="duration" *ngIf="getEducationDuration(education)">
+                          • {{ getEducationDuration(education) }}
+                        </span>
+                      </div>
+                      <div class="ongoing-badge" *ngIf="education.isOngoing">
+                        <i class="material-icons">school</i>
+                        <span>En Curso</span>
+                      </div>
+                    </div>
+
+                    <!-- Información adicional específica por tipo de educación -->
+                    <div class="education-additional-info" *ngIf="getEducationAdditionalInfo(education)">
+                      <div class="additional-details">
+                        <div class="detail-item" *ngFor="let detail of getEducationAdditionalInfo(education)">
+                          <i class="material-icons">{{ detail.icon }}</i>
+                          <span class="detail-label">{{ detail.label }}:</span>
+                          <span class="detail-value">{{ detail.value }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Descripción o comentarios -->
+                    <div class="description-section" *ngIf="education.comments">
+                      <p class="description">{{ education.comments }}</p>
+                      <button
+                        class="btn btn-link expand-btn"
+                        *ngIf="education.comments && education.comments.length > 150 && education.id"
+                        (click)="toggleEducationExpanded(education.id!)">
+                        <i class="material-icons">{{ isEducationExpanded(education.id!) ? 'expand_less' : 'expand_more' }}</i>
+                        {{ isEducationExpanded(education.id!) ? 'Ver menos' : 'Ver más' }}
+                      </button>
+                    </div>
+
+                    <div class="badges">
+                      <span class="type-badge">{{ getEducationTypeLabel(education.type) }}</span>
+                      <span class="status-badge" [class]="'status-' + (education.status.toLowerCase() || 'unknown')">
+                        {{ getEducationStatusLabel(education.status) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Preview personalizado para drag -->
+                <div class="drag-preview" *cdkDragPreview>
+                  <div class="preview-content">
+                    <h4>{{ education.title || 'Sin título' }}</h4>
+                    <p>{{ education.institution || 'Sin institución' }}</p>
+                  </div>
                 </div>
               </div>
 
-              <div class="card-content">
-                <div class="education-type-status">
-                  <span class="education-type">{{ getEducationTypeLabel(education.type) }}</span>
-                  <span class="education-status" [class]="'status-' + (education.status || 'unknown').toLowerCase()">
-                    {{ getEducationStatusLabel(education.status) }}
-                  </span>
-                </div>
-
-                <div class="education-dates">
-                  <i class="material-icons">date_range</i>
-                  <span>{{ formatEducationDates(education) }}</span>
-                  <span class="ongoing" *ngIf="education.isOngoing">
-                    <i class="material-icons">school</i>
-                    En Curso
-                  </span>
-                </div>
+              <!-- Placeholder cuando está vacío -->
+              <div class="empty-drop-zone" *ngIf="cvState().education.data.length === 0">
+                <i class="material-icons">school_off</i>
+                <p>No hay educación registrada</p>
+                <app-custom-button
+                  [label]="'Agregar Primera Educación'"
+                  [variant]="'primary'"
+                  [icon]="'add'"
+                  (buttonClick)="addEducation()">
+                </app-custom-button>
               </div>
             </div>
-          </div>
-
-          <!-- Estado vacío para educación -->
-          <ng-template #emptyEducation>
-            <div class="empty-education">
-              <i class="material-icons">school</i>
-              <h4>No hay formación académica registrada</h4>
-              <p>Agrega tu formación académica para completar tu perfil profesional.</p>
-              <app-custom-button
-                [label]="'Agregar Primera Educación'"
-                [variant]="'primary'"
-                [icon]="'add'"
-                (buttonClick)="addEducation()">
-              </app-custom-button>
-            </div>
-          </ng-template>
+          </app-custom-card>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Experience Modal -->
+  <!-- Modales con funcionalidad mejorada -->
   <app-experience-modal
+    #experienceModal
     [isOpen]="showExperienceModal()"
     [experience]="selectedExperience()"
     [mode]="experienceModalMode()"
@@ -244,8 +371,8 @@
     (delete)="onExperienceDelete($event)">
   </app-experience-modal>
 
-  <!-- Education Modal -->
   <app-education-modal
+    #educationModal
     [isOpen]="showEducationModal()"
     [education]="selectedEducation()"
     [mode]="educationModalMode()"
