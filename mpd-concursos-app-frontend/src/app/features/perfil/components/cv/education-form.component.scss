@@ -85,6 +85,49 @@
     line-height: 1.4;
   }
 
+  // ===== TEXTAREA GLASSMORPHISM =====
+  .field-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: vertical;
+    transition: all 0.3s ease;
+
+    &::placeholder {
+      color: transparent !important;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    &.error {
+      border-color: var(--error-color);
+
+      &:focus {
+        border-color: var(--error-color);
+        box-shadow: 0 0 0 3px rgba(var(--error-color-rgb), 0.1);
+      }
+    }
+  }
+
   .field-errors {
     margin-top: 6px;
 
@@ -281,6 +324,195 @@
 
         .material-icons {
           color: #f59e0b;
+        }
+      }
+    }
+  }
+
+  // ===== INDICADOR DE ESTADO MEJORADO =====
+  .form-status {
+    margin: 1.5rem 0;
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid;
+      position: relative;
+      overflow: hidden;
+
+      // Efecto de brillo sutil
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+      }
+
+      &.enhanced:hover::before {
+        left: 100%;
+      }
+
+      .status-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+
+        .material-icons {
+          font-size: 1.5rem;
+          transition: transform 0.3s ease;
+        }
+      }
+
+      .status-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        .status-text {
+          font-weight: 600;
+          font-size: 1rem;
+          line-height: 1.2;
+        }
+
+        .status-description {
+          font-size: 0.8rem;
+          opacity: 0.8;
+          line-height: 1.3;
+        }
+      }
+
+      // Estado válido
+      &.valid {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        border-color: rgba(16, 185, 129, 0.3);
+        color: #059669;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+
+        .status-icon {
+          background: rgba(16, 185, 129, 0.15);
+          color: #059669;
+
+          .material-icons {
+            color: #10b981;
+          }
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(16, 185, 129, 0.2);
+        }
+      }
+
+      // Estado inválido
+      &.invalid {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+        border-color: rgba(245, 158, 11, 0.3);
+        color: #d97706;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+
+        .status-icon {
+          background: rgba(245, 158, 11, 0.15);
+          color: #d97706;
+
+          .material-icons {
+            color: #f59e0b;
+            animation: pulse 2s infinite;
+          }
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(245, 158, 11, 0.2);
+        }
+      }
+
+      // Animación para el icono de advertencia
+      @keyframes pulse {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+
+      // Responsive
+      @media (max-width: 640px) {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+        padding: 1rem;
+
+        .status-icon {
+          width: 2rem;
+          height: 2rem;
+
+          .material-icons {
+            font-size: 1.25rem;
+          }
+        }
+
+        .status-content {
+          align-items: center;
+        }
+      }
+    }
+  }
+
+  // ===== INFORMACIÓN DE DOCUMENTOS MEJORADA =====
+  .document-upload-info {
+    margin-bottom: 1.5rem;
+
+    .info-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04));
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      color: #ffffff;
+
+      .material-icons {
+        font-size: 1.5rem;
+        color: #60a5fa;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+      }
+
+      .info-content {
+        flex: 1;
+
+        p {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.875rem;
+          line-height: 1.4;
+          color: #ffffff;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          strong {
+            font-weight: 600;
+            color: #ffffff;
+          }
         }
       }
     }

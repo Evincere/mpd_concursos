@@ -300,10 +300,10 @@
                       </div>
                     </div>
 
-                    <!-- Información específica por tipo de educación -->
-                    <div class="education-specific-info" *ngIf="getEducationSpecificInfo(education)">
-                      <div class="specific-details">
-                        <div class="detail-item" *ngFor="let detail of getEducationSpecificInfo(education)">
+                    <!-- Información adicional específica por tipo de educación -->
+                    <div class="education-additional-info" *ngIf="getEducationAdditionalInfo(education)">
+                      <div class="additional-details">
+                        <div class="detail-item" *ngFor="let detail of getEducationAdditionalInfo(education)">
                           <i class="material-icons">{{ detail.icon }}</i>
                           <span class="detail-label">{{ detail.label }}:</span>
                           <span class="detail-value">{{ detail.value }}</span>
@@ -361,6 +361,7 @@
 
   <!-- Modales con funcionalidad mejorada -->
   <app-experience-modal
+    #experienceModal
     [isOpen]="showExperienceModal()"
     [experience]="selectedExperience()"
     [mode]="experienceModalMode()"
@@ -371,6 +372,7 @@
   </app-experience-modal>
 
   <app-education-modal
+    #educationModal
     [isOpen]="showEducationModal()"
     [education]="selectedEducation()"
     [mode]="educationModalMode()"

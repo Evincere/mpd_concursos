@@ -304,7 +304,9 @@ export class CvTransformService implements ICvTransformService {
   /**
    * Formatea una fecha para mostrar en la UI
    */
-  formatDateForDisplay(date: Date, format: 'short' | 'long' = 'short'): string {
+  formatDateForDisplay(date: Date | undefined, format: 'short' | 'long' = 'short'): string {
+    if (!date) return 'Sin fecha';
+
     // Usar UTC para evitar problemas de zona horaria
     const options: Intl.DateTimeFormatOptions = format === 'short'
       ? { year: 'numeric', month: 'short', timeZone: 'UTC' }
@@ -317,22 +319,27 @@ export class CvTransformService implements ICvTransformService {
    * Formatea un rango de fechas para mostrar en la UI
    */
   formatDateRangeForDisplay(
-    startDate: Date, 
-    endDate?: Date, 
+    startDate: Date | undefined,
+    endDate?: Date | undefined,
     isOngoing?: boolean,
     format: 'short' | 'long' = 'short'
   ): string {
+    // Si no hay fechas, mostrar mensaje apropiado
+    if (!startDate && !endDate) {
+      return isOngoing ? 'En curso' : 'Sin fechas';
+    }
+
     const start = this.formatDateForDisplay(startDate, format);
-    
+
     if (isOngoing) {
       return `${start} - Presente`;
     }
-    
+
     if (endDate) {
       const end = this.formatDateForDisplay(endDate, format);
       return `${start} - ${end}`;
     }
-    
+
     return start;
   }
 
@@ -440,7 +447,7 @@ export class CvTransformService implements ICvTransformService {
       dateRange: this.formatDateRangeForDisplay(ed.startDate, ed.endDate, ed.isOngoing),
       status: this.getEducationStatusLabel(ed.status),
       duration: `${this.calculateEducationDurationInYears(ed)} años`,
-      additionalInfo: this.getEducationAdditionalInfo(ed)
+      additionalInfo: this.getEducationAdditionalInfo(ed).map(info => `${info.label}: ${info.value}`).join(' | ')
     }));
 
     return {
@@ -457,8 +464,8 @@ export class CvTransformService implements ICvTransformService {
   public getEducationTypeLabel(type: EducationType): string {
     const labels = {
       [EducationType.SECONDARY]: 'Educación Secundaria',
-      [EducationType.TECHNICAL]: 'Educación Técnica',
-      [EducationType.UNIVERSITY_DEGREE]: 'Carrera Universitaria',
+      [EducationType.TECHNICAL]: 'Título Terciario',
+      [EducationType.UNIVERSITY_DEGREE]: 'Título Universitario',
       [EducationType.POSTGRADUATE_SPECIALIZATION]: 'Especialización',
       [EducationType.MASTER_DEGREE]: 'Maestría',
       [EducationType.DOCTORATE]: 'Doctorado',
@@ -467,6 +474,27 @@ export class CvTransformService implements ICvTransformService {
       [EducationType.SCIENTIFIC_ACTIVITY]: 'Actividad Científica'
     };
     return labels[type] || type;
+  }
+
+  /**
+   * Formatea un número decimal usando coma como separador decimal
+   */
+  public formatDecimalNumber(value: number | string): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+
+    if (isNaN(numValue)) {
+      return '';
+    }
+
+    // Formatear con coma decimal (estilo argentino/español)
+    return numValue.toLocaleString('es-AR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2
+    });
   }
 
   /**
@@ -482,42 +510,14 @@ export class CvTransformService implements ICvTransformService {
     return labels[status] || status;
   }
 
-  /**
-   * Obtiene información adicional de educación según el tipo
-   */
-  private getEducationAdditionalInfo(education: EducationEntry): string {
-    const info: string[] = [];
 
-    switch (education.type) {
-      case EducationType.UNIVERSITY_DEGREE:
-        const universityEd = education as UniversityEducation;
-        if (universityEd.average) info.push(`Promedio: ${universityEd.average}`);
-        if (universityEd.durationYears) info.push(`Duración: ${universityEd.durationYears} años`);
-        break;
-
-      case EducationType.POSTGRADUATE_SPECIALIZATION:
-      case EducationType.MASTER_DEGREE:
-      case EducationType.DOCTORATE:
-        const postgraduateEd = education as PostgraduateEducation;
-        if (postgraduateEd.thesisTopic) info.push(`Tesis: ${postgraduateEd.thesisTopic}`);
-        if (postgraduateEd.advisor) info.push(`Director: ${postgraduateEd.advisor}`);
-        break;
-
-      case EducationType.SCIENTIFIC_ACTIVITY:
-        const scientificActivity = education as ScientificActivity;
-        info.push(`Tipo: ${scientificActivity.activityType}`);
-        info.push(`Rol: ${scientificActivity.role}`);
-        if (scientificActivity.venue) info.push(`Lugar: ${scientificActivity.venue}`);
-        break;
-    }
-
-    return info.join(' | ');
-  }
 
   /**
    * Calcula la duración entre dos fechas
    */
-  public calculateDuration(startDate: string | Date, endDate?: string | Date | null): string {
+  public calculateDuration(startDate: string | Date | undefined, endDate?: string | Date | null | undefined): string {
+    if (!startDate) return 'Sin duración';
+
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : new Date();
 
@@ -587,6 +587,68 @@ export class CvTransformService implements ICvTransformService {
         label: 'Carga Horaria',
         value: `${(education as any).hourlyLoad} horas`
       });
+    }
+
+    return info;
+  }
+
+  /**
+   * Obtiene información adicional específica de educación (sin duplicar tipo, estado, duración)
+   */
+  public getEducationAdditionalInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
+    const info: Array<{icon: string, label: string, value: string}> = [];
+
+    // Solo información específica según el tipo, sin duplicar lo que ya se muestra en badges
+    switch (education.type) {
+      case 'UNIVERSITY_DEGREE':
+        if ((education as any).average) {
+          info.push({
+            icon: 'grade',
+            label: 'Promedio',
+            value: this.formatDecimalNumber((education as any).average)
+          });
+        }
+        break;
+
+      case 'POSTGRADUATE_SPECIALIZATION':
+      case 'MASTER_DEGREE':
+      case 'DOCTORATE':
+        if ((education as any).thesisTopic) {
+          info.push({
+            icon: 'description',
+            label: 'Tema de Tesis',
+            value: (education as any).thesisTopic
+          });
+        }
+        break;
+
+      case 'DIPLOMA':
+      case 'CERTIFICATION':
+        if ((education as any).hourlyLoad) {
+          info.push({
+            icon: 'access_time',
+            label: 'Carga Horaria',
+            value: `${(education as any).hourlyLoad} horas`
+          });
+        }
+        break;
+
+      case 'SCIENTIFIC_ACTIVITY':
+        if ((education as any).topic) {
+          info.push({
+            icon: 'science',
+            label: 'Tema',
+            value: (education as any).topic
+          });
+        }
+        if ((education as any).activityType) {
+          info.push({
+            icon: 'category',
+            label: 'Tipo de Actividad',
+            value: (education as any).activityType
+          });
+        }
+        break;
     }
 
     return info;

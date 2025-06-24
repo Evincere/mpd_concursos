@@ -16,22 +16,73 @@ import { EducationEntry, EducationDto, EducationType, EducationStatus } from '@c
 
 export interface EducationApiResponse {
   id: string;
-  type: string;
-  status: string;
-  title: string;
-  institution: string;
+  // Campos principales
+  education_type?: string;  // Nuevo campo de la tabla real
+  type?: string;            // Campo legacy para compatibilidad
+  education_status?: string; // Nuevo campo de la tabla real
+  status?: string;          // Campo legacy para compatibilidad
+  program_title?: string;   // Nuevo campo de la tabla real
+  title?: string;           // Campo legacy para compatibilidad
+  institution_name?: string; // Nuevo campo de la tabla real
+  institution?: string;     // Campo legacy para compatibilidad
+
+  // Fechas - campos reales de la tabla
+  start_date?: string;
+  end_date?: string;
+  issue_date?: string;
+  graduation_date?: string;
+
+  // Campos legacy para compatibilidad
   issueDate?: string;
-  documentUrl?: string;
-  durationYears?: number;
-  average?: number;
-  thesisTopic?: string;
-  hourlyLoad?: number;
+
+  // Documentación
+  supporting_document_url?: string; // Nuevo campo de la tabla real
+  documentUrl?: string;             // Campo legacy para compatibilidad
+
+  // Campos académicos
+  duration_years?: number;    // Nuevo campo de la tabla real
+  durationYears?: number;     // Campo legacy para compatibilidad
+  final_grade?: number;       // Nuevo campo de la tabla real
+  average?: number;           // Campo legacy para compatibilidad
+  grade_scale?: string;
+  academic_honors?: string;
+
+  // Campos específicos por tipo
+  thesis_title?: string;      // Nuevo campo de la tabla real
+  thesis_topic?: string;      // Nuevo campo de la tabla real
+  thesisTopic?: string;       // Campo legacy para compatibilidad
+  thesis_advisor?: string;
+
+  duration_hours?: number;    // Nuevo campo de la tabla real
+  hourlyLoad?: number;        // Campo legacy para compatibilidad
+  credit_hours?: number;
   hadFinalEvaluation?: boolean;
-  activityType?: string;
+
+  // Actividades científicas
+  activity_type?: string;     // Nuevo campo de la tabla real
+  activityType?: string;      // Campo legacy para compatibilidad
   topic?: string;
-  activityRole?: string;
-  expositionPlaceDate?: string;
+  activity_role?: string;     // Nuevo campo de la tabla real
+  activityRole?: string;      // Campo legacy para compatibilidad
+  presentation_location?: string; // Nuevo campo de la tabla real
+  expositionPlaceDate?: string;   // Campo legacy para compatibilidad
+  presentation_date?: string;
+
+  // Otros campos
+  field_of_study?: string;
+  certification_number?: string;
+  issuing_authority?: string;
+  expiration_date?: string;
+  is_ongoing?: boolean;
+  verification_status?: string;
+  verification_notes?: string;
   comments?: string;
+
+  // Campos de auditoría
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
 }
 
 @Injectable({
@@ -199,31 +250,59 @@ export class EducationCvService {
    * Mapea la respuesta de la API a EducationEntry
    */
   private mapApiResponseToEducationEntry(response: EducationApiResponse): EducationEntry {
-    // Calcular fechas basándose en issueDate y durationYears
-    const endDate = response.issueDate ? this.parseApiDate(response.issueDate) : undefined;
-    let startDate: Date | undefined;
+    console.log('[EducationCvService] Raw API response:', response);
+    console.log('[EducationCvService] Available fields:', Object.keys(response));
 
-    if (endDate && response.durationYears && response.durationYears > 0) {
-      // Si tenemos fecha de finalización y duración, calcular fecha de inicio
-      startDate = new Date(endDate);
-      startDate.setFullYear(startDate.getFullYear() - response.durationYears);
-    } else if (endDate) {
-      // Si no hay duración específica, usar la fecha de emisión como inicio (para cursos cortos)
-      startDate = new Date(endDate);
-    } else {
-      // Si no hay fecha de emisión, usar fecha actual como fallback
-      startDate = new Date();
+    // Usar campos que realmente vienen del backend (con fallback para compatibilidad)
+    const educationType = response.type;
+    const educationStatus = response.status;
+    const programTitle = response.title;
+    const institutionName = response.institution;
+
+    // Fechas - usar lo que realmente viene del backend
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
+    // Si vienen fechas específicas de la tabla nueva, usarlas
+    if (response.start_date) {
+      startDate = this.parseApiDate(response.start_date);
+    }
+    if (response.end_date) {
+      endDate = this.parseApiDate(response.end_date);
     }
 
-    return {
+    // Si no vienen fechas específicas, usar issueDate como fallback
+    const issueDate = response.issueDate;
+    if (!startDate && !endDate && issueDate) {
+      const parsedIssueDate = this.parseApiDate(issueDate);
+      if (response.status === 'En Curso') {
+        // Para estudios en curso, issueDate podría ser fecha de inicio
+        startDate = parsedIssueDate;
+      } else {
+        // Para estudios completados, issueDate es fecha de finalización
+        endDate = parsedIssueDate;
+        // Estimar fecha de inicio si hay duración
+        if (response.durationYears && response.durationYears > 0) {
+          startDate = new Date(parsedIssueDate);
+          startDate.setFullYear(startDate.getFullYear() - response.durationYears);
+        }
+      }
+    }
+
+    // Determinar si está en curso
+    const isOngoing = response.status === 'En Curso' || response.status === 'IN_PROGRESS';
+
+    console.log('[EducationCvService] Mapped dates:', { startDate, endDate, issueDate, isOngoing });
+
+    const mappedEntry = {
       id: response.id,
-      type: this.mapStringToEducationType(response.type) as any,
-      status: this.mapStringToEducationStatus(response.status),
-      title: response.title,
-      institution: response.institution,
+      type: this.mapStringToEducationType(educationType || 'Curso de Capacitación') as any,
+      status: this.mapStringToEducationStatus(educationStatus || 'En Curso'),
+      title: programTitle || 'Sin título',
+      institution: institutionName || 'Sin institución',
       startDate: startDate,
       endDate: endDate,
-      isOngoing: response.status === 'En Curso',
+      isOngoing: isOngoing,
       document: response.documentUrl ? {
         id: response.id + '_doc',
         fileName: response.documentUrl.split('/').pop() || 'documento.pdf',
@@ -232,7 +311,7 @@ export class EducationCvService {
         fileSize: 0, // No disponible en API actual
         mimeType: 'application/pdf' // Valor por defecto
       } : undefined,
-      // Campos específicos según el tipo (solo los que existen en la interfaz)
+      // Campos específicos según el tipo
       durationYears: response.durationYears,
       average: response.average,
       thesisTopic: response.thesisTopic,
@@ -241,6 +320,9 @@ export class EducationCvService {
       topic: response.topic || '',
       comments: response.comments
     } as unknown as EducationEntry;
+
+    console.log('[EducationCvService] Final mapped entry:', mappedEntry);
+    return mappedEntry;
   }
 
   /**
@@ -253,9 +335,18 @@ export class EducationCvService {
     const typeString = this.mapEducationTypeToString(dto.type);
     const statusString = this.mapEducationStatusToString(dto.status);
 
-    // El backend solo maneja issueDate (fecha de finalización/emisión)
-    // Mapear endDate del frontend a issueDate del backend
-    const issueDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
+    // El backend solo maneja issueDate (fecha de emisión/finalización)
+    // Para estudios en curso: usar startDate como issueDate (fecha de inicio)
+    // Para estudios completados: usar endDate como issueDate (fecha de finalización)
+    let issueDate: string | null = null;
+
+    if (statusString === 'En Curso') {
+      // Para estudios en curso, usar la fecha de inicio
+      issueDate = dto.startDate ? this.formatDateForBackend(dto.startDate) : null;
+    } else {
+      // Para estudios completados, usar la fecha de finalización
+      issueDate = dto.endDate ? this.formatDateForBackend(dto.endDate) : null;
+    }
 
     const payload = {
       type: typeString,
@@ -352,16 +443,22 @@ export class EducationCvService {
   }
 
   /**
-   * Formatea fecha para el backend (YYYY-MM-DD)
+   * Formatea fecha para el backend (YYYY-MM-DD) evitando problemas de zona horaria
    */
   private formatDateForBackend(dateString: string): string {
     try {
+      // Si ya está en formato YYYY-MM-DD, devolverlo tal como está
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
         console.warn('[EducationCvService] Invalid date string:', dateString);
         return dateString;
       }
 
+      // Usar getFullYear, getMonth, getDate para evitar problemas de zona horaria
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');

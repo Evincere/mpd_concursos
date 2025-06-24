@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ar.gov.mpd.concursobackend.auth.application.dto.UpdateUserRequest;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileResponse;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileUpdateRequest;
+import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
 import ar.gov.mpd.concursobackend.auth.application.service.RolService;
 import ar.gov.mpd.concursobackend.auth.application.service.UserService;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
@@ -37,6 +38,8 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.BindingResult;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -486,6 +489,31 @@ public class UserController {
         } catch (Exception e) {
             log.error("Error updating user with ID {}: {}", userId, e.getMessage(), e);
             return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
+     * Crea un nuevo usuario (solo admin)
+     * @param userCreateDto Datos del usuario a crear
+     * @param bindingResult Resultado de la validación
+     * @return Usuario creado
+     */
+    @PostMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
+        log.debug("Creando nuevo usuario desde el panel admin: {}", userCreateDto.getUsername());
+        if (bindingResult.hasErrors()) {
+            log.warn("Errores de validación al crear usuario: {}", bindingResult.getAllErrors());
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
+        try {
+            User createdUser = userService.createUser(userCreateDto);
+            UserProfileResponse response = mapToProfileResponse(createdUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            log.error("Error al crear usuario: {}", e.getMessage(), e);
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "Error interno al crear usuario";
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMsg);
         }
     }
 }

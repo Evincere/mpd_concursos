@@ -21,7 +21,7 @@ export class ProfileService {
   ) {}
 
   getUserProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.apiUrl}/me`)
+    return this.http.get<UserProfile>(`${this.apiUrl}/profile`)
       .pipe(
         catchError(error => {
           // Solo loggear el error, no relanzarlo para evitar notificaciones automáticas
@@ -46,7 +46,7 @@ export class ProfileService {
   }
 
   updateUserProfile(profile: Partial<UserProfile>): Observable<UserProfile> {
-    return this.http.put<UserProfile>(`${this.apiUrl}/me`, profile)
+    return this.http.put<UserProfile>(`${this.apiUrl}/profile`, profile)
       .pipe(catchError(this.handleError));
   }
 

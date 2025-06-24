@@ -672,6 +672,9 @@ export class CvSearchService {
    */
   private buildYearFacet(items: (WorkExperience | EducationEntry)[]): FacetItem[] {
     const years = items.flatMap(item => {
+      // Verificar que startDate existe antes de usar getFullYear()
+      if (!item.startDate) return [];
+
       const startYear = item.startDate.getFullYear();
       const endYear = item.endDate ? item.endDate.getFullYear() : new Date().getFullYear();
 
@@ -763,7 +766,9 @@ export class CvSearchService {
   /**
    * Calcula la duración en meses
    */
-  private calculateDuration(startDate: Date, endDate?: Date): number {
+  private calculateDuration(startDate: Date | undefined, endDate?: Date): number {
+    if (!startDate) return 0;
+
     const end = endDate || new Date();
     const diffTime = Math.abs(end.getTime() - startDate.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30));

@@ -179,10 +179,14 @@ export class CvValidationService implements ICvValidationService {
     // Validar campos base
     if (!education.type) {
       errors.push('El tipo de educación es obligatorio');
+    } else {
+      sanitizedData.type = education.type;
     }
 
     if (!education.status) {
       errors.push('El estado de la educación es obligatorio');
+    } else {
+      sanitizedData.status = education.status;
     }
 
     // Validar y sanitizar título
@@ -192,7 +196,7 @@ export class CvValidationService implements ICvValidationService {
 
     // Validar y sanitizar institución
     const institutionResult = this.validateAndSanitizeText(education.institution, 'Institución', true, 3, 200);
-    if (!institutionResult.isValid) errors.push(...institutionResult.errors);
+    if (!titleResult.isValid) errors.push(...institutionResult.errors);
     sanitizedData.institution = institutionResult.sanitizedValue;
 
     // Validar fechas
@@ -200,10 +204,43 @@ export class CvValidationService implements ICvValidationService {
     if (!dateValidation.isValid) errors.push(...dateValidation.errors);
     warnings.push(...dateValidation.warnings);
 
+    // Agregar fechas a sanitizedData si son válidas
+    if (education.startDate) {
+      sanitizedData.startDate = education.startDate;
+    }
+    if (education.endDate) {
+      sanitizedData.endDate = education.endDate;
+    }
+    // Siempre incluir isOngoing, con valor por defecto false si no está definido
+    sanitizedData.isOngoing = education.isOngoing ?? false;
+
     // Validaciones específicas por tipo
     const typeValidation = this.validateEducationByType(education);
     if (!typeValidation.isValid) errors.push(...typeValidation.errors);
     warnings.push(...typeValidation.warnings);
+
+    // Agregar campos específicos por tipo a sanitizedData
+    if (education.durationYears !== undefined) {
+      sanitizedData.durationYears = education.durationYears;
+    }
+    if (education.average !== undefined) {
+      sanitizedData.average = education.average;
+    }
+    if (education.thesisTopic) {
+      sanitizedData.thesisTopic = education.thesisTopic;
+    }
+    if (education.hourlyLoad !== undefined) {
+      sanitizedData.hourlyLoad = education.hourlyLoad;
+    }
+    if (education.activityType) {
+      sanitizedData.activityType = education.activityType;
+    }
+    if (education.topic) {
+      sanitizedData.topic = education.topic;
+    }
+    if (education.comments) {
+      sanitizedData.comments = education.comments;
+    }
 
     return {
       isValid: errors.length === 0,

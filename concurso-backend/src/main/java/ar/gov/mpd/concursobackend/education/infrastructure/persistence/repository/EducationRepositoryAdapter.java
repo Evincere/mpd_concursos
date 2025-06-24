@@ -81,6 +81,8 @@ public class EducationRepositoryAdapter implements EducationRepository {
                 .user(userEntity)  // Asignar la entidad de usuario
                 .programTitle(education.getTitle())
                 .institutionName(education.getInstitution())
+                .startDate(education.getStartDate())
+                .endDate(education.getEndDate())
                 .issueDate(education.getIssueDate())
                 .supportingDocumentUrl(education.getDocumentUrl())
                 .durationYears(education.getDurationYears())
@@ -129,6 +131,8 @@ public class EducationRepositoryAdapter implements EducationRepository {
                 .status(status)
                 .title(entity.getProgramTitle())
                 .institution(entity.getInstitutionName())
+                .startDate(entity.getStartDate())
+                .endDate(entity.getEndDate())
                 .issueDate(entity.getIssueDate())
                 .documentUrl(entity.getSupportingDocumentUrl())
                 .durationYears(entity.getDurationYears())
@@ -167,6 +171,8 @@ public class EducationRepositoryAdapter implements EducationRepository {
         }
 
         switch (domainType) {
+            case SECONDARY:
+                return EducationRecordEntity.EducationType.SECONDARY_EDUCATION;
             case HIGHER_EDUCATION_DEGREE:
                 return EducationRecordEntity.EducationType.TECHNICAL_DEGREE;
             case UNDERGRADUATE_DEGREE:
@@ -217,6 +223,8 @@ public class EducationRepositoryAdapter implements EducationRepository {
         }
 
         switch (entityType) {
+            case SECONDARY_EDUCATION:
+                return EducationType.SECONDARY;
             case TECHNICAL_DEGREE:
                 return EducationType.HIGHER_EDUCATION_DEGREE;
             case UNIVERSITY_DEGREE:
@@ -235,7 +243,6 @@ public class EducationRepositoryAdapter implements EducationRepository {
                 return EducationType.SCIENTIFIC_ACTIVITY;
             // For entity types that don't have direct domain equivalents, map to closest match
             case PRIMARY_EDUCATION:
-            case SECONDARY_EDUCATION:
             case CERTIFICATION:
                 return EducationType.TRAINING_COURSE; // Default mapping
             default:

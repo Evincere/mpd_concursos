@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -82,7 +82,7 @@ interface EducationDynamicField {
   styleUrls: ['./education-form.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class EducationFormComponent implements OnInit, OnDestroy, ICvFormComponent<EducationDto> {
+export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICvFormComponent<EducationDto> {
 
   // ===== INPUTS Y OUTPUTS =====
   @Input() education: EducationEntry | null = null;
@@ -128,11 +128,11 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   });
 
   public readonly hasErrors = computed(() =>
-    this.validationState().errors.length > 0
+    !this.isInitializing && this.validationState().errors.length > 0
   );
 
   public readonly hasWarnings = computed(() =>
-    this.validationState().warnings.length > 0
+    !this.isInitializing && this.validationState().warnings.length > 0
   );
 
   public readonly visibleFields = computed(() =>
@@ -142,13 +142,13 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   // ===== OPCIONES DE SELECCIÓN =====
   public readonly educationTypeOptions = [
     { value: EducationType.SECONDARY, label: 'Educación Secundaria' },
-    { value: EducationType.TECHNICAL, label: 'Educación Técnica' },
-    { value: EducationType.UNIVERSITY_DEGREE, label: 'Carrera Universitaria' },
+    { value: EducationType.TECHNICAL, label: 'Título Terciario' },
+    { value: EducationType.UNIVERSITY_DEGREE, label: 'Título Universitario' },
     { value: EducationType.POSTGRADUATE_SPECIALIZATION, label: 'Especialización' },
     { value: EducationType.MASTER_DEGREE, label: 'Maestría' },
     { value: EducationType.DOCTORATE, label: 'Doctorado' },
     { value: EducationType.DIPLOMA, label: 'Diplomatura' },
-    { value: EducationType.CERTIFICATION, label: 'Certificación' },
+    { value: EducationType.CERTIFICATION, label: 'Curso de Capacitación' },
     { value: EducationType.SCIENTIFIC_ACTIVITY, label: 'Actividad Científica' }
   ];
 
@@ -248,8 +248,8 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       label: 'Promedio Académico',
       type: 'number',
       required: false,
-      placeholder: '8.5',
-      helpText: 'Promedio académico (1-10)',
+      placeholder: '8,5',
+      helpText: 'Promedio académico (1-10). Usar coma para decimales',
       showForTypes: [EducationType.UNIVERSITY_DEGREE],
       min: 1,
       max: 10,
@@ -342,6 +342,9 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   // ===== SUBJECTS =====
   private readonly destroy$ = new Subject<void>();
 
+  // ===== CONTROL DE INICIALIZACIÓN =====
+  private isInitializing = true;
+
   // ===== CONSTRUCTOR =====
   constructor(
     private readonly fb: FormBuilder,
@@ -354,9 +357,24 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
 
   // ===== LIFECYCLE =====
   ngOnInit(): void {
+    this.isInitializing = true;
     this.initializeForm();
     this.setupValidation();
     this.setupFormWatchers();
+
+    // Marcar como inicializado después de un breve delay para permitir que el formulario se estabilice
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 100);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Si cambia el modo o la educación, reinicializar el formulario
+    if (changes['mode'] || changes['education']) {
+      if (this.form()) {
+        this.initializeForm();
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -434,11 +452,51 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
     if (!confirm('¿Estás seguro de resetear el formulario?')) {
       return;
     }
+    this.resetForm();
+  }
+
+  /**
+   * Resetea el formulario sin confirmación (para uso interno)
+   */
+  public resetForm(): void {
+    // Marcar como inicializando para evitar validación prematura
+    this.isInitializing = true;
+
     const form = this.form();
     if (form) {
+      // Resetear valores pero mantener el estado pristine/untouched
       form.reset();
+      form.markAsUntouched();
+      form.markAsPristine();
     }
+
+    // Resetear también el estado de documentos
+    this.documentValidation = {
+      isValid: false,
+      hasRequiredDocuments: false,
+      errors: [],
+      warnings: []
+    };
+
+    this.documents = [];
+    this.uploadedDocument.set(null);
+
+    // Resetear estado de validación
+    this.validationState.set({
+      isValid: false,
+      errors: [],
+      warnings: []
+    });
+
+    // Reinicializar el formulario
     this.initializeForm();
+
+    // Marcar como inicializado después de un breve delay
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 100);
+
+    this.cdr.markForCheck();
   }
 
   /**
@@ -447,6 +505,11 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
   validateForm(): boolean {
     const form = this.form();
     if (!form) {
+      return false;
+    }
+
+    // No validar durante la inicialización
+    if (this.isInitializing) {
       return false;
     }
 
@@ -491,7 +554,8 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
     if (!form) return [];
 
     const control = form.get(fieldName);
-    if (!control || !control.errors || !control.touched) return [];
+    // Solo mostrar errores si el campo ha sido tocado Y tiene errores Y el formulario está dirty
+    if (!control || !control.errors || (!control.touched && !form.dirty)) return [];
 
     const errors: string[] = [];
     const fieldErrors = control.errors;
@@ -695,7 +759,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       this.updateEndDateValidators();
     }
 
-    endDateControl?.updateValueAndValidity();
+    endDateControl?.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
   }
 
@@ -741,7 +805,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       this.updateEndDateValidators();
     }
 
-    endDateControl?.updateValueAndValidity();
+    endDateControl?.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
   }
 
@@ -776,7 +840,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
         break;
     }
 
-    endDateControl?.updateValueAndValidity();
+    endDateControl?.updateValueAndValidity({ emitEvent: false });
   }
 
 
@@ -795,10 +859,30 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       this.selectedType.set(this.education.type);
       this.isEditing = true;
     } else {
-      // Para nuevas educaciones, establecer valores por defecto coherentes
+      // Para nuevas educaciones, resetear completamente el estado
+      this.selectedType.set(EducationType.UNIVERSITY_DEGREE);
+      this.isEditing = false;
+      this.uploadedDocument.set(null);
+
+      // Establecer valores por defecto coherentes
       formGroup.patchValue({
+        type: EducationType.UNIVERSITY_DEGREE,
         status: EducationStatus.COMPLETED,
-        isOngoing: false
+        isOngoing: false,
+        title: '',
+        institution: '',
+        startDate: '',
+        endDate: '',
+        durationYears: '',
+        average: '',
+        thesisTopic: '',
+        advisor: '',
+        hourlyLoad: '',
+        activityType: '',
+        role: '',
+        topic: '',
+        venue: '',
+        comments: ''
       });
     }
 
@@ -875,7 +959,10 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
       const currentForm = this.form();
       if (currentForm) {
         this.isDirty.set(currentForm.dirty);
-        this.validateForm();
+        // Solo validar si no estamos inicializando
+        if (!this.isInitializing) {
+          this.validateForm();
+        }
       }
     });
 
@@ -939,9 +1026,9 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
         break;
     }
 
-    // Actualizar validación
+    // Actualizar validación sin emitir eventos para evitar recursión
     Object.keys(form.controls).forEach(key => {
-      form.get(key)?.updateValueAndValidity();
+      form.get(key)?.updateValueAndValidity({ emitEvent: false });
     });
   }
 
@@ -959,7 +1046,7 @@ export class EducationFormComponent implements OnInit, OnDestroy, ICvFormCompone
 
     conditionalFields.forEach(field => {
       form.get(field)?.clearValidators();
-      form.get(field)?.updateValueAndValidity();
+      form.get(field)?.updateValueAndValidity({ emitEvent: false });
     });
   }
 

@@ -120,11 +120,11 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   });
 
   public readonly hasErrors = computed(() =>
-    this.validationState().errors.length > 0
+    !this.isInitializing && this.validationState().errors.length > 0
   );
 
   public readonly hasWarnings = computed(() =>
-    this.validationState().warnings.length > 0
+    !this.isInitializing && this.validationState().warnings.length > 0
   );
 
   // ===== CONFIGURACIÓN DE CAMPOS DINÁMICOS =====
@@ -181,10 +181,11 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     },
     {
       name: 'technologies',
-      label: 'Tecnologías Utilizadas',
+      label: 'Herramientas y Sistemas Jurídicos',
       type: 'chips',
       required: false,
-      helpText: 'Tecnologías, herramientas o lenguajes que usaste (máximo 20)'
+      helpText: 'Sistemas jurídicos, software legal, bases de datos o herramientas especializadas (máximo 20)',
+      placeholder: 'Ej: Lex Doctor, Themis, SAE, etc.'
     },
     {
       name: 'achievements',
@@ -198,6 +199,9 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   // ===== SUBJECTS =====
   private readonly destroy$ = new Subject<void>();
 
+  // ===== CONTROL DE INICIALIZACIÓN =====
+  private isInitializing = true;
+
   // ===== CONSTRUCTOR =====
   constructor(
     private readonly fb: FormBuilder,
@@ -210,9 +214,15 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
 
   // ===== LIFECYCLE =====
   ngOnInit(): void {
+    this.isInitializing = true;
     this.initializeForm();
     this.setupValidation();
     this.setupFormWatchers();
+
+    // Marcar como inicializado después de un breve delay para permitir que el formulario se estabilice
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -295,11 +305,51 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     if (!confirm('¿Estás seguro de resetear el formulario?')) {
       return;
     }
+    this.resetForm();
+  }
+
+  /**
+   * Resetea el formulario sin confirmación (para uso interno)
+   */
+  public resetForm(): void {
+    // Marcar como inicializando para evitar validación prematura
+    this.isInitializing = true;
+
     const form = this.form();
     if (form) {
+      // Resetear valores pero mantener el estado pristine/untouched
       form.reset();
+      form.markAsUntouched();
+      form.markAsPristine();
     }
+
+    // Resetear también el estado de documentos
+    this.documentValidation = {
+      isValid: false,
+      hasRequiredDocuments: false,
+      errors: [],
+      warnings: []
+    };
+
+    this.documents = [];
+    this.uploadedDocument.set(null);
+
+    // Resetear estado de validación
+    this.validationState.set({
+      isValid: false,
+      errors: [],
+      warnings: []
+    });
+
+    // Reinicializar el formulario
     this.initializeForm();
+
+    // Marcar como inicializado después de un breve delay
+    setTimeout(() => {
+      this.isInitializing = false;
+    }, 100);
+
+    this.cdr.markForCheck();
   }
 
   /**
@@ -308,6 +358,11 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
   validateForm(): boolean {
     const form = this.form();
     if (!form) {
+      return false;
+    }
+
+    // No validar durante la inicialización
+    if (this.isInitializing) {
       return false;
     }
 
@@ -345,7 +400,8 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
     if (!form) return [];
 
     const control = form.get(fieldName);
-    if (!control || !control.errors || !control.touched) return [];
+    // Solo mostrar errores si el campo ha sido tocado Y tiene errores Y el formulario está dirty
+    if (!control || !control.errors || (!control.touched && !form.dirty)) return [];
 
     const errors: string[] = [];
     const fieldErrors = control.errors;
@@ -390,7 +446,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       endDateControl?.setValidators([Validators.required]);
     }
 
-    endDateControl?.updateValueAndValidity();
+    endDateControl?.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
   }
 
@@ -521,7 +577,10 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       const currentForm = this.form();
       if (currentForm) {
         this.isDirty.set(currentForm.dirty);
-        this.validateForm();
+        // Solo validar si no estamos inicializando
+        if (!this.isInitializing) {
+          this.validateForm();
+        }
       }
     });
 

@@ -7,7 +7,7 @@
  * @version 2.0.0
  */
 
-import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, Subject, Observable } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged, map, catchError, timeout, retry } from 'rxjs/operators';
@@ -114,6 +114,10 @@ interface CvTab {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CvContainerComponent implements OnInit, OnDestroy {
+
+  // ===== VIEW CHILDREN =====
+  @ViewChild('experienceModal') experienceModalComponent!: ExperienceModalComponent;
+  @ViewChild('educationModal') educationModalComponent!: EducationModalComponent;
 
   // ===== INPUTS =====
   @Input() userProfile: UserProfile | null = null;
@@ -362,6 +366,13 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     this.selectedExperience.set(null);
     this.experienceModalMode.set('create');
     this.showExperienceModal.set(true);
+
+    // Resetear el formulario cuando se abre en modo crear
+    setTimeout(() => {
+      if (this.experienceModalComponent) {
+        this.experienceModalComponent.resetForm();
+      }
+    }, 100);
   }
 
   /**
@@ -376,6 +387,13 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     this.selectedEducation.set(null);
     this.educationModalMode.set('create');
     this.showEducationModal.set(true);
+
+    // Resetear el formulario cuando se abre en modo crear
+    setTimeout(() => {
+      if (this.educationModalComponent) {
+        this.educationModalComponent.resetForm();
+      }
+    }, 100);
   }
 
 
@@ -517,6 +535,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   onExperienceModalClose(): void {
     this.showExperienceModal.set(false);
     this.selectedExperience.set(null);
+    this.experienceModalMode.set('create'); // Resetear modo al cerrar
     this.isExperienceLoading.set(false);
   }
 
@@ -543,6 +562,12 @@ export class CvContainerComponent implements OnInit, OnDestroy {
           : 'Experiencia laboral agregada exitosamente';
 
         this.notificationService.showSuccess(message);
+
+        // Resetear el formulario solo si es modo crear
+        if (!isEditing && this.experienceModalComponent) {
+          this.experienceModalComponent.resetForm();
+        }
+
         this.onExperienceModalClose();
         this.refreshData(); // Recargar datos
       },
@@ -591,6 +616,7 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   onEducationModalClose(): void {
     this.showEducationModal.set(false);
     this.selectedEducation.set(null);
+    this.educationModalMode.set('create'); // Resetear modo al cerrar
     this.isEducationLoading.set(false);
   }
 
@@ -617,6 +643,12 @@ export class CvContainerComponent implements OnInit, OnDestroy {
           : 'Educación agregada exitosamente';
 
         this.notificationService.showSuccess(message);
+
+        // Resetear el formulario solo si es modo crear
+        if (!isEditing && this.educationModalComponent) {
+          this.educationModalComponent.resetForm();
+        }
+
         this.onEducationModalClose();
         this.refreshData(); // Recargar datos
       },
@@ -981,10 +1013,10 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene información específica de educación
+   * Obtiene información adicional específica de educación (sin duplicar tipo, estado, duración)
    */
-  getEducationSpecificInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
-    return this.transformService.getEducationSpecificInfo(education);
+  getEducationAdditionalInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
+    return this.transformService.getEducationAdditionalInfo(education);
   }
 
   /**

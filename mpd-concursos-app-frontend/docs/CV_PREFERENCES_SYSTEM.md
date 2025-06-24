@@ -10,7 +10,7 @@
 6. [Persistencia](#persistencia)
 7. [Migración de Datos](#migración-de-datos)
 8. [Mejores Prácticas](#mejores-prácticas)
-
+ 
 ## 🎯 Visión General
 
 El Sistema de Preferencias del CV permite a los usuarios personalizar completamente su experiencia de búsqueda, visualización y exportación de currículums. Todas las configuraciones se persisten automáticamente en localStorage y se sincronizan en tiempo real.

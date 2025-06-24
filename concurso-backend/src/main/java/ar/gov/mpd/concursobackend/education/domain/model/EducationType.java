@@ -4,6 +4,7 @@ package ar.gov.mpd.concursobackend.education.domain.model;
  * Enumeración para tipos de educación
  */
 public enum EducationType {
+    SECONDARY("Educación Secundaria"),
     HIGHER_EDUCATION_DEGREE("Título Terciario"),
     UNDERGRADUATE_DEGREE("Título Universitario"),
     POSTGRADUATE_SPECIALIZATION("Especialización"),

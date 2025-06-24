@@ -34,29 +34,35 @@ public class EducationMapper {
                 .status(education.getStatus().getDisplayName())
                 .title(education.getTitle())
                 .institution(education.getInstitution())
+                .startDate(education.getStartDate())
+                .endDate(education.getEndDate())
                 .issueDate(education.getIssueDate())
                 .documentUrl(education.getDocumentUrl());
         
         // Set fields based on education type
         switch (education.getType()) {
+            case SECONDARY:
+                // Educación secundaria no requiere campos adicionales específicos
+                break;
+
             case HIGHER_EDUCATION_DEGREE:
             case UNDERGRADUATE_DEGREE:
                 builder.durationYears(education.getDurationYears())
                        .average(education.getAverage());
                 break;
-                
+
             case POSTGRADUATE_SPECIALIZATION:
             case POSTGRADUATE_MASTERS:
             case POSTGRADUATE_DOCTORATE:
                 builder.thesisTopic(education.getThesisTopic());
                 break;
-                
+
             case DIPLOMA:
             case TRAINING_COURSE:
                 builder.hourlyLoad(education.getHourlyLoad())
                        .hadFinalEvaluation(education.getHadFinalEvaluation());
                 break;
-                
+
             case SCIENTIFIC_ACTIVITY:
                 if (education.getActivityType() != null) {
                     builder.activityType(education.getActivityType().getDisplayName());
@@ -103,22 +109,28 @@ public class EducationMapper {
                 .status(status)
                 .title(dto.getTitle())
                 .institution(dto.getInstitution())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
                 .issueDate(dto.getIssueDate());
         
         // Set fields based on education type
         switch (type) {
+            case SECONDARY:
+                // Educación secundaria no requiere campos adicionales específicos
+                break;
+
             case HIGHER_EDUCATION_DEGREE:
             case UNDERGRADUATE_DEGREE:
                 builder.durationYears(dto.getDurationYears())
                       .average(dto.getAverage());
                 break;
-                
+
             case POSTGRADUATE_SPECIALIZATION:
             case POSTGRADUATE_MASTERS:
             case POSTGRADUATE_DOCTORATE:
                 builder.thesisTopic(dto.getThesisTopic());
                 break;
-                
+
             case DIPLOMA:
             case TRAINING_COURSE:
                 builder.hourlyLoad(dto.getHourlyLoad())
@@ -163,22 +175,28 @@ public class EducationMapper {
                 .status(status)
                 .title(dto.getTitle())
                 .institution(dto.getInstitution())
+                .startDate(dto.getStartDate())
+                .endDate(dto.getEndDate())
                 .issueDate(dto.getIssueDate());
         
         // Set fields based on education type
         switch (type) {
+            case SECONDARY:
+                // Educación secundaria no requiere campos adicionales específicos
+                break;
+
             case HIGHER_EDUCATION_DEGREE:
             case UNDERGRADUATE_DEGREE:
                 builder.durationYears(dto.getDurationYears())
                       .average(dto.getAverage());
                 break;
-                
+
             case POSTGRADUATE_SPECIALIZATION:
             case POSTGRADUATE_MASTERS:
             case POSTGRADUATE_DOCTORATE:
                 builder.thesisTopic(dto.getThesisTopic());
                 break;
-                
+
             case DIPLOMA:
             case TRAINING_COURSE:
                 builder.hourlyLoad(dto.getHourlyLoad())

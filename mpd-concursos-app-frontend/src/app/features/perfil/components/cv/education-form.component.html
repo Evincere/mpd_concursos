@@ -193,23 +193,26 @@
 
     <!-- Sección de Documentación Requerida -->
     <div class="documentation-section">
-      <div class="section-header">
-        <h4 class="section-title">
-          <i class="material-icons">school</i>
-          Documentación de Formación Académica
-          <span class="required-indicator">*</span>
-        </h4>
-        <p class="section-subtitle">
-          Es obligatorio adjuntar documentos que acrediten tu formación académica (títulos, certificados, diplomas, etc.)
-        </p>
+
+      <div class="document-upload-info">
+        <div class="info-box">
+          <i class="material-icons">info</i>
+          <div class="info-content">
+            <p><strong>Documentación obligatoria:</strong> Debes subir un documento que respalde tu educación</p>
+            <p><strong>Formato requerido:</strong> Solo archivos PDF</p>
+            <p><strong>Cantidad máxima:</strong> 1 archivo por educación</p>
+            <p><strong>Importante:</strong> Si tienes múltiples documentos, combínalos en un solo PDF</p>
+            <p><strong>Nota:</strong> El botón "Guardar" se habilitará después de subir el documento</p>
+          </div>
+        </div>
       </div>
 
       <app-cv-document-uploader
         [documentType]="'education'"
         [entityId]="education?.id || null"
         [required]="true"
-        [maxFiles]="3"
-        [acceptedFormats]="['pdf', 'jpg', 'jpeg', 'png']"
+        [maxFiles]="1"
+        [acceptedFormats]="['pdf']"
         [maxFileSize]="10"
         (documentsChange)="onDocumentsChange($event)"
         (validationChange)="onDocumentValidationChange($event)">
@@ -217,11 +220,21 @@
     </div>
   </form>
 
-  <!-- Indicador de estado del formulario -->
+  <!-- Indicador de estado del formulario mejorado -->
   <div class="form-status" *ngIf="isDirty()">
-    <div class="status-indicator" [class.valid]="isFormValid()" [class.invalid]="!isFormValid()">
-      <i class="material-icons">{{ isFormValid() ? 'check_circle' : 'error' }}</i>
-      <span>{{ isFormValid() ? 'Formulario válido' : 'Formulario incompleto' }}</span>
+    <div class="status-indicator enhanced" [class.valid]="isFormValid()" [class.invalid]="!isFormValid()">
+      <div class="status-icon">
+        <i class="material-icons">{{ isFormValid() ? 'check_circle' : 'warning' }}</i>
+      </div>
+      <div class="status-content">
+        <span class="status-text">{{ isFormValid() ? 'Formulario válido' : 'Formulario incompleto' }}</span>
+        <span class="status-description" *ngIf="!isFormValid()">
+          Completa todos los campos requeridos para continuar
+        </span>
+        <span class="status-description" *ngIf="isFormValid()">
+          Todos los campos están correctamente completados
+        </span>
+      </div>
     </div>
   </div>
 

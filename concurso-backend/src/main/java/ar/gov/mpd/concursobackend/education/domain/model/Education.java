@@ -15,6 +15,8 @@ public class Education {
     private EducationStatus status;
     private String title;
     private String institution;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private LocalDate issueDate;
     private String documentUrl;
     
@@ -41,17 +43,19 @@ public class Education {
     }
     
     // Constructor completo
-    public Education(UUID id, UUID userId, EducationType type, EducationStatus status, String title, 
-                    String institution, LocalDate issueDate, String documentUrl, Integer durationYears, 
-                    Double average, String thesisTopic, Integer hourlyLoad, Boolean hadFinalEvaluation, 
-                    ScientificActivityType activityType, String topic, ScientificActivityRole activityRole, 
-                    String expositionPlaceDate, String comments) {
+    public Education(UUID id, UUID userId, EducationType type, EducationStatus status, String title,
+                    String institution, LocalDate startDate, LocalDate endDate, LocalDate issueDate,
+                    String documentUrl, Integer durationYears, Double average, String thesisTopic,
+                    Integer hourlyLoad, Boolean hadFinalEvaluation, ScientificActivityType activityType,
+                    String topic, ScientificActivityRole activityRole, String expositionPlaceDate, String comments) {
         this.id = id;
         this.userId = userId;
         this.type = type;
         this.status = status;
         this.title = title;
         this.institution = institution;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.issueDate = issueDate;
         this.documentUrl = documentUrl;
         this.durationYears = durationYears;
@@ -120,7 +124,23 @@ public class Education {
     public void setInstitution(String institution) {
         this.institution = institution;
     }
-    
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
     public LocalDate getIssueDate() {
         return issueDate;
     }
@@ -225,6 +245,8 @@ public class Education {
         private EducationStatus status;
         private String title;
         private String institution;
+        private LocalDate startDate;
+        private LocalDate endDate;
         private LocalDate issueDate;
         private String documentUrl;
         private Integer durationYears;
@@ -270,7 +292,17 @@ public class Education {
             this.institution = institution;
             return this;
         }
-        
+
+        public EducationBuilder startDate(LocalDate startDate) {
+            this.startDate = startDate;
+            return this;
+        }
+
+        public EducationBuilder endDate(LocalDate endDate) {
+            this.endDate = endDate;
+            return this;
+        }
+
         public EducationBuilder issueDate(LocalDate issueDate) {
             this.issueDate = issueDate;
             return this;
@@ -332,8 +364,8 @@ public class Education {
         }
         
         public Education build() {
-            return new Education(id, userId, type, status, title, institution, issueDate, documentUrl, 
-                                durationYears, average, thesisTopic, hourlyLoad, hadFinalEvaluation, 
+            return new Education(id, userId, type, status, title, institution, startDate, endDate, issueDate,
+                                documentUrl, durationYears, average, thesisTopic, hourlyLoad, hadFinalEvaluation,
                                 activityType, topic, activityRole, expositionPlaceDate, comments);
         }
     }

@@ -54,20 +54,19 @@
           margin: 0 0 var(--spacing-xs) 0;
           font-size: clamp(1.5rem, 4vw, 2rem);
           font-weight: 700;
-          color: var(--text-primary);
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          color: #f9fafb; // Color sólido y visible
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); // Sombra más fuerte para mejor legibilidad
 
-          // Gradient text effect mejorado
-          background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          // Remover gradient que causa el efecto difuminado
+          // background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+          // -webkit-background-clip: text;
+          // -webkit-text-fill-color: transparent;
+          // background-clip: text;
 
           .material-icons {
             font-size: clamp(1.5rem, 4vw, 2rem);
             color: var(--primary-color);
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-            -webkit-text-fill-color: var(--primary-color); // Override gradient for icon
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
           }
         }
 
@@ -1223,14 +1222,12 @@
 }
 
 /* Mejoras para textos glassmorphism */
-.cv-title,
 .card-title,
 h1, h2, h3, h4, h5, h6 {
   &:not(.no-glassmorphism) {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
-    // Gradient text effect para títulos principales
-    &.cv-title,
+    // Gradient text effect solo para card-title, NO para cv-title
     &.card-title {
       background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
       -webkit-background-clip: text;
@@ -1238,6 +1235,12 @@ h1, h2, h3, h4, h5, h6 {
       background-clip: text;
     }
   }
+}
+
+/* CV Title específico - sin gradient para mejor legibilidad */
+.cv-title {
+  color: #f9fafb !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Mejoras para párrafos y texto secundario */
