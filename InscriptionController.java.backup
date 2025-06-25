@@ -79,8 +79,9 @@ public class InscriptionController {
     }
 
     /**
-     * Gets all inscriptions for the current user - alias endpoint
+     * Gets all inscriptions for the current user
      */
+    @GetMapping("/user")
     @GetMapping("/me")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<Page<InscriptionResponse>> getMyInscriptionsAlias(
@@ -91,10 +92,6 @@ public class InscriptionController {
         return getUserInscriptions(page, size, sort, direction);
     }
 
-    /**
-     * Gets all inscriptions for the current user
-     */
-    @GetMapping("/user")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<Page<InscriptionResponse>> getUserInscriptions(
             @RequestParam(defaultValue = "0") int page,

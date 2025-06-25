@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AccountExpiredException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -77,8 +78,10 @@ public class UserService implements IUserService, IUserRoleManager {
   private final HttpServletRequest request;
 
   @Autowired
+  @Lazy
   private AuthenticationManager authenticationManager;
   @Autowired
+  @Lazy
   private JwtProvider jwtProvider;
 
   public UserService(@Autowired UserExists userExists,
