@@ -2,8 +2,8 @@ export const environment = {
   production: true,
 
   // API Configuration - PRODUCTION READY
-  apiUrl: 'http://149.50.132.23:8080/api',
-  wsUrl: 'ws://149.50.132.23:8080/ws',
+  apiUrl: '/api',
+  wsUrl: 'ws://vps-4778464-x.dattaweb.com/ws',
 
   // Security Configuration
   enableCSP: true,
