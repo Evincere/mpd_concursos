@@ -27,7 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users/profile")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com"})
 @Slf4j
 public class UserProfileController {
 
