@@ -326,7 +326,7 @@ public class UserController {
      * @param userId User ID
      * @return User profile response
      */
-    @GetMapping("/{userId}")
+    @GetMapping("/id/{userId}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserProfileResponse> getUserById(@PathVariable String userId) {
         log.debug("Getting user by ID: {}", userId);
@@ -402,7 +402,7 @@ public class UserController {
         }
     }
 
-    @PutMapping("/{userId}")
+    @PutMapping("/id/{userId}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<UserProfileResponse> updateUser(
             @PathVariable String userId,
@@ -563,7 +563,7 @@ public class UserController {
      * @param rolesUpdateRequest DTO con la nueva lista de roles
      * @return Usuario actualizado
      */
-    @PutMapping("/{userId}/roles")
+    @PutMapping("/id/{userId}/roles")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> changeUserRoles(
             @PathVariable String userId,
