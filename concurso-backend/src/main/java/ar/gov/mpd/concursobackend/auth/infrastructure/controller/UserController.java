@@ -67,11 +67,7 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/profile")
-    @PreAuthorize("hasRole('ROLE_USER')")
-    public ResponseEntity<UserProfileResponse> getCurrentUserProfileAlias() {
-        return getCurrentUserProfile();
-    }
+
 
     @PutMapping("/me")
     @PreAuthorize("hasRole('ROLE_USER')")
