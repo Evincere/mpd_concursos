@@ -550,6 +550,7 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       endDate: [''],
       isCurrentJob: [false],
       description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(2000)]],
+      comments: ['', [Validators.maxLength(500)]], // AGREGADO: Control para comentarios adicionales
       technologies: this.fb.array([]),
       achievements: this.fb.array([])
     });
