@@ -30,7 +30,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping({"/api/inscriptions", "/api/inscripciones"})
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com"}, allowCredentials = "true")
 @Slf4j
 public class InscriptionUserStatusController {
     private final UpdateInscriptionStatusUseCase updateInscriptionStatusUseCase;

@@ -23,7 +23,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/cv/documentos")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com"}, allowCredentials = "true")
 public class CvDocumentController {
 
     private static final Logger logger = LoggerFactory.getLogger(CvDocumentController.class);

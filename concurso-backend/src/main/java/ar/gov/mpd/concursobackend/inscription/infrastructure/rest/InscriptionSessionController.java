@@ -26,7 +26,7 @@ import java.util.UUID;
 // @RestController
 // @RequestMapping("/api/inscription-sessions")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com"}, allowCredentials = "true")
 public class InscriptionSessionController {
     private final SaveInscriptionSessionUseCase saveInscriptionSessionUseCase;
     private final GetInscriptionSessionUseCase getInscriptionSessionUseCase;

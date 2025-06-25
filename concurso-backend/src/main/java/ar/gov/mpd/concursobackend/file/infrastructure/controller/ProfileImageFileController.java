@@ -27,7 +27,7 @@ import java.nio.file.Paths;
  */
 @RestController
 @RequestMapping("/api/files/profile-images")
-@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:8000", "http://149.50.132.23:8000"})
+@CrossOrigin(origins = {"http://localhost:4200", "https://vps-4778464-x.dattaweb.com"}, allowCredentials = "true")
 @Slf4j
 public class ProfileImageFileController {
 
