@@ -38,10 +38,10 @@ export class CSPService {
   private getCSPValue(): string {
     const csp = "default-src 'self' app:; " +
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // 'unsafe-eval' for JIT compilation, 'unsafe-inline' for inline scripts/styles (Angular might add these)
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // 'unsafe-inline' for Angular's inline styles
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " + // 'unsafe-inline' for Angular's inline styles + external CDNs
               "img-src 'self' data: https: app: blob:; " +
               "connect-src 'self' * ws: wss: blob: chrome-extension:; " + // '*' for broad API calls, restrict this in production
-              "font-src 'self' https://fonts.gstatic.com; " +
+              "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " + // Allow Google Fonts and FontAwesome
               "worker-src 'self' blob:;";
     this.loggingService.debug('[CSPService] Generated CSP value:', csp, 'CSPService');
     return csp;

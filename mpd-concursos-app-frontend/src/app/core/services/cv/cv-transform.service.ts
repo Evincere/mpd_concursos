@@ -331,7 +331,9 @@ export class CvTransformService implements ICvTransformService {
 
     const start = this.formatDateForDisplay(startDate, format);
 
-    if (isOngoing) {
+    // Solo mostrar "Presente" si realmente está en curso (isOngoing = true)
+    // y no hay fecha de fin
+    if (isOngoing && !endDate) {
       return `${start} - Presente`;
     }
 
@@ -521,19 +523,35 @@ export class CvTransformService implements ICvTransformService {
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : new Date();
 
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const diffMonths = Math.floor(diffDays / 30);
+    // Calcular diferencia en meses de forma más precisa
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth();
+    const endYear = end.getFullYear();
+    const endMonth = end.getMonth();
+
+    let diffMonths = (endYear - startYear) * 12 + (endMonth - startMonth);
+
+    // Ajustar si el día de fin es menor que el día de inicio
+    if (end.getDate() < start.getDate()) {
+      diffMonths--;
+    }
+
+    // Asegurar que no sea negativo
+    diffMonths = Math.max(0, diffMonths);
+
     const diffYears = Math.floor(diffMonths / 12);
+    const remainingMonths = diffMonths % 12;
 
     if (diffYears > 0) {
-      const remainingMonths = diffMonths % 12;
       return remainingMonths > 0
         ? `${diffYears} año${diffYears > 1 ? 's' : ''} y ${remainingMonths} mes${remainingMonths > 1 ? 'es' : ''}`
         : `${diffYears} año${diffYears > 1 ? 's' : ''}`;
     } else if (diffMonths > 0) {
       return `${diffMonths} mes${diffMonths > 1 ? 'es' : ''}`;
     } else {
+      // Si es menos de un mes, calcular días
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return `${diffDays} día${diffDays > 1 ? 's' : ''}`;
     }
   }

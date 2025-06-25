@@ -289,8 +289,8 @@ export class EducationCvService {
       }
     }
 
-    // Determinar si está en curso
-    const isOngoing = response.status === 'En Curso' || response.status === 'IN_PROGRESS';
+    // Determinar si está en curso basado en el estado y la presencia de fecha de fin
+    const isOngoing = (response.status === 'En Curso' || response.status === 'IN_PROGRESS') && !endDate;
 
     console.log('[EducationCvService] Mapped dates:', { startDate, endDate, issueDate, isOngoing });
 

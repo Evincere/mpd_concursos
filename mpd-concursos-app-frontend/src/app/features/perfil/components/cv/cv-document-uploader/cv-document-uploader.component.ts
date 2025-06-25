@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, SimpleChanges, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject } from 'rxjs';
 
@@ -50,7 +50,7 @@ export interface DocumentValidationState {
   styleUrls: ['./cv-document-uploader.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CvDocumentUploaderComponent implements OnInit, OnDestroy {
+export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy {
 
   // ===== INPUTS =====
   @Input() documentType: 'work_experience' | 'education' = 'work_experience';
@@ -99,14 +99,31 @@ export class CvDocumentUploaderComponent implements OnInit, OnDestroy {
 
   // ===== PROPIEDADES PRIVADAS =====
   private readonly destroy$ = new Subject<void>();
+  private previousEntityId: string | null = null;
 
   constructor(
     private notificationService: CvNotificationService
   ) { }
 
   ngOnInit(): void {
+    this.previousEntityId = this.entityId;
     this.loadExistingDocuments();
     this.validateDocuments();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['entityId']) {
+      const currentEntityId = changes['entityId'].currentValue;
+      const previousEntityId = changes['entityId'].previousValue;
+
+      // Si el entityId cambió de un valor a null (nuevo formulario) o a otro valor diferente
+      if (previousEntityId !== undefined && currentEntityId !== previousEntityId) {
+        this.clearDocuments();
+        this.loadExistingDocuments();
+      }
+
+      this.previousEntityId = currentEntityId;
+    }
   }
 
   ngOnDestroy(): void {
@@ -196,6 +213,26 @@ export class CvDocumentUploaderComponent implements OnInit, OnDestroy {
   retryUpload(document: CvDocument): void {
     // Implementar lógica de reintento
     this.notificationService.showInfo('Reintentando carga del documento...');
+  }
+
+  /**
+   * Limpia todos los documentos del componente
+   */
+  clearDocuments(): void {
+    this.documents.set([]);
+    this.isUploading.set(false);
+    this.uploadProgress$.set(0);
+    this.isDragging.set(false);
+    this.validationState.set({
+      isValid: false,
+      hasRequiredDocuments: false,
+      errors: [],
+      warnings: []
+    });
+
+    // Emitir cambios
+    this.documentsChange.emit([]);
+    this.validationChange.emit(this.validationState());
   }
 
   // ===== MÉTODOS PRIVADOS =====

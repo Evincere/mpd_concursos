@@ -199,13 +199,19 @@ export class ProfileImageManagerComponent {
    */
   removeImage(): void {
     if (!this.currentImageUrl()) return;
-    
+
     this._isUploading.set(true);
-    
+
     this.userProfileService.removeProfileImage().subscribe({
       next: () => {
+        // Forzar actualización inmediata del estado
         this._currentImageUrl.set(null);
+        this.imageLoadError.set(false);
         this.authService.updateProfileImage('');
+
+        // Limpiar caché del navegador forzando re-render
+        this.clearImageCache();
+
         this.imageRemoved.emit();
         this.notificationService.success('Imagen de perfil eliminada exitosamente', 'Éxito');
         this._isUploading.set(false);
@@ -369,5 +375,15 @@ export class ProfileImageManagerComponent {
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
+  }
+
+  /**
+   * Clear image cache to force immediate UI update
+   */
+  private clearImageCache(): void {
+    // Force Angular change detection
+    setTimeout(() => {
+      this._currentImageUrl.set(null);
+    }, 0);
   }
 }

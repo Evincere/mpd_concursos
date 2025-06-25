@@ -7,7 +7,7 @@
  * @version 2.1.0
  */
 
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -68,6 +68,8 @@ interface DynamicField {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormComponent<WorkExperienceDto> {
+
+  @ViewChild(CvDocumentUploaderComponent) documentUploader!: CvDocumentUploaderComponent;
 
   // ===== INPUTS Y OUTPUTS =====
   @Input() experience: WorkExperience | null = null;
@@ -284,6 +286,11 @@ export class ExperienceFormComponent implements OnInit, OnDestroy, ICvFormCompon
       this.validationErrors = [];
       this.documents = [];
       this.documentValidation = { isValid: false, hasRequiredDocuments: false, errors: [], warnings: [] };
+
+      // Limpiar también el componente de documentos
+      if (this.documentUploader) {
+        this.documentUploader.clearDocuments();
+      }
 
       this.cdr.markForCheck();
     }
