@@ -123,9 +123,9 @@ export class IconConverterService {
   public convertMaterialIcons(): void {
     console.log('[IconConverter] 🔄 Convirtiendo iconos de Material a Font Awesome...');
 
-    // Buscar elementos con clases de Material Icons
-    const materialIconElements = document.querySelectorAll('.material-icons, .material-symbols-outlined');
-    
+    // Buscar elementos con clases de Material Icons que no hayan sido convertidos
+    const materialIconElements = document.querySelectorAll('.material-icons:not([data-icon-converted]), .material-symbols-outlined:not([data-icon-converted])');
+
     materialIconElements.forEach(element => {
       const iconName = element.textContent?.trim();
       if (iconName && this.materialToFontAwesome[iconName]) {
@@ -145,19 +145,27 @@ export class IconConverterService {
   private convertElement(element: HTMLElement, iconName: string): void {
     const fontAwesomeClass = this.materialToFontAwesome[iconName];
     if (fontAwesomeClass) {
+      // Verificar si ya tiene clases de Font Awesome para evitar duplicación
+      if (element.classList.contains('fas') || element.classList.contains('far') || element.classList.contains('fab')) {
+        return; // Ya está convertido, no hacer nada
+      }
+
       // Limpiar clases de Material Icons
       element.classList.remove('material-icons', 'material-symbols-outlined');
-      
+
       // Agregar clases de Font Awesome
       const classes = fontAwesomeClass.split(' ');
       element.classList.add(...classes);
-      
+
       // Limpiar el contenido de texto
       element.textContent = '';
-      
+
       // Agregar atributo aria-hidden para accesibilidad
       element.setAttribute('aria-hidden', 'true');
-      
+
+      // Marcar como convertido para evitar reconversión
+      element.setAttribute('data-icon-converted', 'true');
+
       console.log(`[IconConverter] Convertido: ${iconName} → ${fontAwesomeClass}`);
     }
   }
@@ -198,13 +206,20 @@ export class IconConverterService {
   private replaceTextWithIcon(textNode: Text, iconName: string): void {
     const fontAwesomeClass = this.materialToFontAwesome[iconName];
     if (fontAwesomeClass && textNode.parentElement) {
+      // Verificar si el padre ya tiene iconos de Font Awesome para evitar duplicación
+      const existingIcon = textNode.parentElement.querySelector('.fas, .far, .fab');
+      if (existingIcon) {
+        return; // Ya hay un icono, no duplicar
+      }
+
       const iconElement = document.createElement('i');
       const classes = fontAwesomeClass.split(' ');
       iconElement.classList.add(...classes);
       iconElement.setAttribute('aria-hidden', 'true');
-      
+      iconElement.setAttribute('data-icon-converted', 'true');
+
       textNode.parentElement.replaceChild(iconElement, textNode);
-      
+
       console.log(`[IconConverter] Texto convertido: ${iconName} → ${fontAwesomeClass}`);
     }
   }

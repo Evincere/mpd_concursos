@@ -48,24 +48,16 @@ export class FontLoaderService {
   private async loadAndVerifyFonts(): Promise<void> {
     console.log('[FontLoader] 🔍 Verificando carga de fuentes...');
 
-    // Verificar Font Awesome
+    // Verificar Font Awesome (único sistema de iconos necesario)
     const fontAwesomeLoaded = await this.checkFontAwesome();
-    
-    // Verificar Material Icons
-    const materialIconsLoaded = await this.checkMaterialIcons();
 
     if (!fontAwesomeLoaded) {
       console.warn('[FontLoader] ⚠️ Font Awesome no detectado, aplicando solución...');
       await this.reloadFontAwesome();
     }
 
-    if (!materialIconsLoaded) {
-      console.warn('[FontLoader] ⚠️ Material Icons no detectado, aplicando solución...');
-      await this.reloadMaterialIcons();
-    }
-
-    if (fontAwesomeLoaded && materialIconsLoaded) {
-      console.log('[FontLoader] ✅ Todas las fuentes cargadas correctamente');
+    if (fontAwesomeLoaded) {
+      console.log('[FontLoader] ✅ Font Awesome cargado correctamente');
       this.fontsLoaded = true;
     }
   }
