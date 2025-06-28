@@ -3,6 +3,8 @@ import { RouterOutlet } from '@angular/router';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { ResponsiveTestRunnerService } from './shared/services/responsive-test-runner.service';
 import { AccessibilityPreferencesService } from './core/services/accessibility/accessibility-preferences.service';
+import { FontLoaderService } from './core/services/font-loader.service';
+import { IconConverterService } from './core/services/icon-converter.service';
 
 // Componentes cargados de forma perezosa
 import { PageTransitionComponent } from './shared/components/page-transition/page-transition.component';
@@ -32,7 +34,9 @@ export class AppComponent implements OnInit {
 
   constructor(
     private responsiveTestRunner: ResponsiveTestRunnerService,
-    private accessibilityPreferences: AccessibilityPreferencesService
+    private accessibilityPreferences: AccessibilityPreferencesService,
+    private fontLoader: FontLoaderService,
+    private iconConverter: IconConverterService
   ) {}
 
   ngOnInit(): void {
@@ -42,5 +46,9 @@ export class AppComponent implements OnInit {
     // Inicializar preferencias de accesibilidad
     // El servicio se auto-inicializa, pero lo inyectamos para asegurar que se cargue
     console.log('Accessibility preferences initialized:', this.accessibilityPreferences.preferences());
+
+    // Inicializar carga de fuentes y conversión de iconos
+    // Los servicios FontLoaderService e IconConverterService se auto-inicializan
+    // y detectan/solucionan automáticamente problemas de fuentes e iconos
   }
 }

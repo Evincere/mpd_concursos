@@ -1,6 +1,14 @@
 @use '@angular/material' as mat;
 @use 'sass:map';
 
+/* === FUENTES LOCALES === */
+/* Importar fuentes desde node_modules para evitar dependencias externas */
+@import '@fontsource/roboto/300.css';
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/500.css';
+@import '@fontsource/material-icons';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+
 /* === UNIFIED GLASSMORPHISM SYSTEM === */
 /* Sistema glassmorphism unificado que reemplaza todos los sistemas anteriores */
 @import './styles/unified-glassmorphism-system';
@@ -97,7 +105,6 @@ pdf-viewer {
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
-@import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Definición de paletas compatible con Angular Material
 $custom-primary: mat.define-palette(mat.$indigo-palette);

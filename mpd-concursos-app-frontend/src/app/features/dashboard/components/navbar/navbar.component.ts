@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { NotificationsComponent } from '../../../../shared/components/notifications/notifications.component';
 import { SectionNavigationService } from '../../../../core/services/navigation/section-navigation.service';
 
+
 @Component({
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
@@ -82,4 +83,6 @@ export class NavbarComponent implements OnInit {
     // TODO: Usar this.authService.logout cuando TypeScript lo reconozca
     (this.authService as any).logout();
   }
+
+
 }
