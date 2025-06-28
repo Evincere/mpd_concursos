@@ -7,6 +7,7 @@ import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-d
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
+import { TempDocumentCacheService } from '@core/services/cv/temp-document-cache.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { finalize } from 'rxjs/operators';
 import { PdfViewerModule } from 'ng2-pdf-viewer';
@@ -150,15 +151,16 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
                 [src]="pdfSrc"
                 [render-text]="true"
                 [original-size]="false"
-                [show-all]="false"
+                [show-all]="true"
                 [zoom]="zoom"
                 [rotation]="rotation"
                 [page]="currentPage"
                 [fit-to-page]="true"
+                [external-link-target]="'blank'"
                 (after-load-complete)="onPdfLoaded($event)"
                 (error)="onPdfError($event)"
                 (page-rendered)="onPageRendered($event)"
-                style="width: 100%; height: 100%; display: block;"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;"
               ></pdf-viewer>
             </div>
 
@@ -210,7 +212,7 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
     .documento-viewer-content {
       display: flex;
       flex-direction: column;
-      height: 95vh;
+      height: 100%;
       width: 100%;
       overflow: hidden;
       /* Remove dialog-specific styles since we're inside a dialog */
@@ -284,7 +286,7 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
       margin: 0;
       overflow: hidden;
       position: relative;
-      min-height: 85vh;
+      height: 100%;
     }
 
     .viewer-container {
@@ -294,7 +296,6 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
       /* Simplified background for dialog content */
       background: rgba(31, 41, 55, 0.3);
       border-radius: 8px;
-      min-height: 85vh;
     }
 
     .loading-container {
@@ -382,17 +383,17 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
       /* Simplified document background */
       background: rgba(17, 24, 39, 0.2);
       border-radius: 8px;
-      min-height: 80vh;
     }
 
     .pdf-container {
       height: 100%;
       width: 100%;
-      overflow: auto;
-      padding: 0.5rem;
+      overflow: hidden;
+      padding: 0;
       background: transparent;
-      position: relative;
-      min-height: 75vh;
+      position: relative; /* ✅ Contenedor padre relativo */
+      display: flex;
+      flex-direction: column;
 
       .pdf-status {
         position: absolute;
@@ -415,29 +416,52 @@ import { HttpEventType, HttpResponse, HttpDownloadProgressEvent, HttpEvent } fro
           font-size: 1rem;
         }
       }
+    }
 
-      ::ng-deep .ng2-pdf-viewer-container {
-        background: rgba(255, 255, 255, 0.98) !important;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        overflow: hidden;
-      }
+    /* ✅ ESTILOS CRÍTICOS PARA ng2-pdf-viewer - POSICIONAMIENTO ABSOLUTO REQUERIDO */
+    :host ::ng-deep .ng2-pdf-viewer-container {
+      position: absolute !important; /* ✅ CRÍTICO: ng2-pdf-viewer requiere position: absolute */
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important; /* ✅ Scroll vertical habilitado */
+      background: #f5f5f5 !important;
+      border-radius: 8px !important;
+      z-index: 1 !important;
+    }
 
-      ::ng-deep .pdfViewer {
-        padding: 1rem !important;
-      }
+    :host ::ng-deep pdf-viewer {
+      position: absolute !important; /* ✅ CRÍTICO: pdf-viewer también necesita posicionamiento absoluto */
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
+    }
 
-      ::ng-deep .pdfViewer .page {
-        margin: 1rem auto !important;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
-        border-radius: 8px !important;
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
-      }
+    :host ::ng-deep .pdfViewer {
+      padding: 20px !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 100% !important;
+      overflow: visible !important;
+    }
 
-      ::ng-deep .pdfViewer .textLayer {
-        opacity: 0.8;
-      }
+    :host ::ng-deep .pdfViewer .textLayer {
+      opacity: 0.8;
+    }
+
+    :host ::ng-deep .pdfViewer .page {
+      margin: 0 auto 20px auto !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
     }
 
     .image-container {
@@ -609,9 +633,9 @@ export class DocumentoViewerComponent implements OnInit {
 
   // Propiedades para el visor de PDF
   pdfSrc: Uint8Array | undefined = undefined;
-  zoom = 1;
+  zoom = 1; // Zoom inicial
   rotation = 0;
-  originalSize = true;
+  originalSize = false;
   showAll = true;
   currentPage = 1;
   totalPages = 0;
@@ -631,6 +655,7 @@ export class DocumentoViewerComponent implements OnInit {
 
   constructor(
     private documentosService: DocumentosService,
+    private tempDocumentCache: TempDocumentCacheService,
     private sanitizer: DomSanitizer,
     public dialogRef: UnifiedDialogRef<any>,
     @Inject(DIALOG_DATA) public data: { documentoId: string }
@@ -650,6 +675,19 @@ export class DocumentoViewerComponent implements OnInit {
     this.fileSize = 0;
     this.loadedSize = 0;
 
+    // ✅ Verificar si es un documento temporal
+    console.log(`[DocumentoViewer] 🔍 Verificando documento ID: ${this.data.documentoId}`);
+    const isTemp = this.tempDocumentCache.isTempDocument(this.data.documentoId);
+    console.log(`[DocumentoViewer] 📋 Es documento temporal: ${isTemp}`);
+
+    if (isTemp) {
+      console.log(`[DocumentoViewer] 📁 Cargando documento temporal desde cache`);
+      this.cargarDocumentoTemporal();
+      return;
+    }
+
+    // ✅ Si no es temporal, usar el servicio normal
+    console.log(`[DocumentoViewer] 🌐 Cargando documento desde servidor`);
     this.documentosService.getDocumentoFile(this.data.documentoId, true)
       .pipe(
         finalize(() => {
@@ -746,6 +784,32 @@ export class DocumentoViewerComponent implements OnInit {
     this.isLoading = false; // Ensure loading is false
     this.error = null; // Clear any previous errors related to loading
     this.debugInfo = `PDF cargado exitosamente. Páginas: ${this.totalPages}`;
+
+    // Debugging profundo
+    console.log('[DocumentoViewer] 🔍 PDF cargado, iniciando debugging...');
+    this.debugPdfViewer();
+
+    // Múltiples intentos de redimensionamiento
+    setTimeout(() => {
+      this.forceResizePdfViewer();
+      this.debugPdfViewer();
+    }, 100);
+
+    setTimeout(() => {
+      this.forceResizePdfViewer();
+      this.debugPdfViewer();
+    }, 500);
+
+    setTimeout(() => {
+      this.forceResizePdfViewer();
+      this.debugPdfViewer();
+    }, 1000);
+
+    // Forzar evento resize del window
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+      console.log('[DocumentoViewer] 🔄 Evento resize disparado');
+    }, 1500);
   }
 
   // Método para manejar errores del PDF
@@ -870,5 +934,337 @@ export class DocumentoViewerComponent implements OnInit {
     if (this.currentPage > 1) {
       this.currentPage--;
     }
+  }
+
+  /**
+   * Carga un documento temporal desde cache
+   */
+  private cargarDocumentoTemporal(): void {
+    console.log(`[DocumentoViewer] 📁 Cargando documento temporal: ${this.data.documentoId}`);
+
+    try {
+      const tempDoc = this.tempDocumentCache.getDocument(this.data.documentoId);
+
+      if (!tempDoc) {
+        this.error = 'Documento temporal no encontrado en cache';
+        this.debugInfo = `ID: ${this.data.documentoId}`;
+        this.isLoading = false;
+        this.showProgress = false;
+        return;
+      }
+
+      // Simular progreso para UX consistente
+      this.simulateLoadProgress(() => {
+        // Convertir base64 a blob
+        const blob = this.base64ToBlob(tempDoc.base64, tempDoc.mimeType);
+        this.procesarBlob(blob);
+
+        console.log(`[DocumentoViewer] ✅ Documento temporal cargado exitosamente`);
+      });
+
+    } catch (error) {
+      console.error('[DocumentoViewer] ❌ Error cargando documento temporal:', error);
+      this.error = 'Error al cargar documento temporal';
+      this.debugInfo = `Error: ${error}`;
+      this.isLoading = false;
+      this.showProgress = false;
+    }
+  }
+
+  /**
+   * Simula progreso de carga para documentos temporales
+   */
+  private simulateLoadProgress(onComplete: () => void): void {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 25;
+      if (progress >= 100) {
+        progress = 100;
+        this.loadProgress = progress;
+        clearInterval(interval);
+        setTimeout(() => {
+          onComplete();
+          this.isLoading = false;
+          this.showProgress = false;
+        }, 200);
+      } else {
+        this.loadProgress = Math.round(progress);
+      }
+    }, 100);
+  }
+
+  /**
+   * Convierte base64 a Blob
+   */
+  private base64ToBlob(base64: string, mimeType: string): Blob {
+    const byteCharacters = atob(base64.split(',')[1]);
+    const byteNumbers = new Array(byteCharacters.length);
+
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+  }
+
+  /**
+   * Fuerza el redimensionamiento del PDF viewer con scroll vertical funcional
+   */
+  private forceResizePdfViewer(): void {
+    try {
+      console.log('[DocumentoViewer] 🔧 Iniciando configuración de scroll vertical...');
+
+      // ✅ PASO 1: Configurar contenedor principal del modal
+      const modalContainer = document.querySelector('.documento-viewer-dialog .dialog-content') as HTMLElement;
+      if (modalContainer) {
+        modalContainer.style.height = '80vh';
+        modalContainer.style.minHeight = '600px';
+        modalContainer.style.maxHeight = '90vh';
+        modalContainer.style.display = 'flex';
+        modalContainer.style.flexDirection = 'column';
+        modalContainer.style.overflow = 'hidden';
+        console.log('[DocumentoViewer] ✅ Modal container configurado');
+      }
+
+      // ✅ PASO 2: Configurar contenedor del PDF
+      const pdfContainer = document.querySelector('.pdf-container') as HTMLElement;
+      if (pdfContainer) {
+        pdfContainer.style.height = '100%';
+        pdfContainer.style.minHeight = '600px';
+        pdfContainer.style.flex = '1';
+        pdfContainer.style.display = 'flex';
+        pdfContainer.style.flexDirection = 'column';
+        pdfContainer.style.overflow = 'hidden'; // El scroll lo maneja ng2-pdf-viewer
+        console.log('[DocumentoViewer] ✅ PDF container configurado');
+      }
+
+      // ✅ PASO 3: Configurar ng2-pdf-viewer-container (CRÍTICO - POSICIONAMIENTO ABSOLUTO)
+      const ng2Container = document.querySelector('.ng2-pdf-viewer-container') as HTMLElement;
+      if (ng2Container) {
+        ng2Container.style.position = 'absolute'; // ✅ CRÍTICO: ng2-pdf-viewer requiere position: absolute
+        ng2Container.style.top = '0';
+        ng2Container.style.left = '0';
+        ng2Container.style.right = '0';
+        ng2Container.style.bottom = '0';
+        ng2Container.style.width = '100%';
+        ng2Container.style.height = '100%';
+        ng2Container.style.overflowX = 'hidden';
+        ng2Container.style.overflowY = 'auto'; // ✅ SCROLL VERTICAL HABILITADO
+        ng2Container.style.backgroundColor = '#f5f5f5';
+        ng2Container.style.borderRadius = '8px';
+        ng2Container.style.zIndex = '1';
+        console.log('[DocumentoViewer] ✅ ng2-pdf-viewer-container configurado con posicionamiento absoluto');
+      }
+
+      // ✅ PASO 4: Configurar pdf-viewer principal (POSICIONAMIENTO ABSOLUTO)
+      const pdfViewer = document.querySelector('pdf-viewer') as HTMLElement;
+      if (pdfViewer) {
+        pdfViewer.style.position = 'absolute'; // ✅ CRÍTICO: pdf-viewer también necesita posicionamiento absoluto
+        pdfViewer.style.top = '0';
+        pdfViewer.style.left = '0';
+        pdfViewer.style.right = '0';
+        pdfViewer.style.bottom = '0';
+        pdfViewer.style.width = '100%';
+        pdfViewer.style.height = '100%';
+        pdfViewer.style.display = 'block';
+        console.log('[DocumentoViewer] ✅ pdf-viewer configurado con posicionamiento absoluto');
+      }
+
+      // ✅ PASO 5: Configurar contenedor de páginas
+      const pdfViewerPages = document.querySelector('.pdfViewer') as HTMLElement;
+      if (pdfViewerPages) {
+        pdfViewerPages.style.padding = '20px';
+        pdfViewerPages.style.width = '100%';
+        pdfViewerPages.style.height = 'auto'; // ✅ ALTURA AUTOMÁTICA PARA SCROLL
+        pdfViewerPages.style.minHeight = '100%';
+        pdfViewerPages.style.display = 'block';
+        pdfViewerPages.style.overflow = 'visible';
+        console.log('[DocumentoViewer] ✅ pdfViewer configurado para scroll');
+      }
+
+      // ✅ PASO 6: Disparar eventos de redimensionamiento
+      window.dispatchEvent(new Event('resize'));
+
+      console.log('[DocumentoViewer] ✅ Configuración de scroll vertical completada');
+
+      // Verificar configuración después de un momento
+      setTimeout(() => {
+        this.verifyScrollConfiguration();
+      }, 500);
+
+    } catch (error) {
+      console.warn('[DocumentoViewer] ⚠️ Error al configurar scroll:', error);
+    }
+  }
+
+  /**
+   * Verifica que la configuración de scroll y posicionamiento esté aplicada correctamente
+   */
+  private verifyScrollConfiguration(): void {
+    const ng2Container = document.querySelector('.ng2-pdf-viewer-container') as HTMLElement;
+    if (ng2Container) {
+      const computedStyle = window.getComputedStyle(ng2Container);
+      console.log('[DocumentoViewer] 🔍 Verificación de configuración:', {
+        position: computedStyle.position,
+        overflowY: computedStyle.overflowY,
+        height: computedStyle.height,
+        width: computedStyle.width,
+        scrollHeight: ng2Container.scrollHeight,
+        clientHeight: ng2Container.clientHeight,
+        canScroll: ng2Container.scrollHeight > ng2Container.clientHeight
+      });
+
+      // Verificar posicionamiento absoluto
+      if (computedStyle.position !== 'absolute') {
+        console.warn('[DocumentoViewer] ⚠️ position no está configurado como absolute, reintentando...');
+        ng2Container.style.position = 'absolute';
+        ng2Container.style.top = '0';
+        ng2Container.style.left = '0';
+        ng2Container.style.right = '0';
+        ng2Container.style.bottom = '0';
+      }
+
+      // Verificar scroll vertical
+      if (computedStyle.overflowY !== 'auto') {
+        console.warn('[DocumentoViewer] ⚠️ overflowY no está configurado como auto, reintentando...');
+        ng2Container.style.overflowY = 'auto';
+      }
+    }
+  }
+
+  /**
+   * Fuerza la re-renderización del PDF cuando las páginas no aparecen
+   */
+  private forceRerender(): void {
+    try {
+      // Verificar si hay páginas visibles
+      const pdfPages = document.querySelectorAll('.pdfViewer .page');
+
+      if (pdfPages.length === 0) {
+        console.log('[DocumentoViewer] 🔄 No hay páginas visibles, intentando forzar re-renderización...');
+
+        // Método 1: Cambiar zoom temporalmente
+        const originalZoom = this.zoom;
+        this.zoom = originalZoom + 0.01;
+
+        setTimeout(() => {
+          this.zoom = originalZoom;
+          console.log('[DocumentoViewer] 🔄 Zoom reset completado');
+        }, 100);
+
+        // Método 2: Forzar cambio de página
+        setTimeout(() => {
+          const currentPage = this.currentPage;
+          if (this.totalPages > 1) {
+            this.currentPage = currentPage === 1 ? 2 : 1;
+            setTimeout(() => {
+              this.currentPage = currentPage;
+              console.log('[DocumentoViewer] 🔄 Page reset completado');
+            }, 200);
+          }
+        }, 300);
+
+        // Método 3: Disparar eventos de redimensionamiento múltiples
+        setTimeout(() => {
+          for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+              window.dispatchEvent(new Event('resize'));
+            }, i * 100);
+          }
+          console.log('[DocumentoViewer] 🔄 Eventos resize múltiples disparados');
+        }, 500);
+      } else {
+        console.log('[DocumentoViewer] ✅ Páginas PDF visibles, no se requiere re-renderización');
+      }
+    } catch (error) {
+      console.warn('[DocumentoViewer] ⚠️ Error en forceRerender:', error);
+    }
+  }
+
+  /**
+   * Debugging profundo para identificar problemas de dimensionamiento
+   */
+  private debugPdfViewer(): void {
+    console.log('[DocumentoViewer] 🔍 === DEBUGGING PDF VIEWER ===');
+
+    // Verificar contenedor del modal
+    const dialogContainer = document.querySelector('.documento-viewer-dialog .dialog-container');
+    if (dialogContainer) {
+      const rect = dialogContainer.getBoundingClientRect();
+      console.log('[DocumentoViewer] 📐 Modal container:', {
+        width: rect.width,
+        height: rect.height,
+        computedStyle: window.getComputedStyle(dialogContainer as Element)
+      });
+    }
+
+    // Verificar contenedor del PDF
+    const pdfContainer = document.querySelector('.pdf-container');
+    if (pdfContainer) {
+      const rect = pdfContainer.getBoundingClientRect();
+      console.log('[DocumentoViewer] 📐 PDF container:', {
+        width: rect.width,
+        height: rect.height,
+        computedStyle: window.getComputedStyle(pdfContainer as Element)
+      });
+    }
+
+    // Verificar pdf-viewer
+    const pdfViewer = document.querySelector('pdf-viewer');
+    if (pdfViewer) {
+      const rect = pdfViewer.getBoundingClientRect();
+      console.log('[DocumentoViewer] 📐 pdf-viewer element:', {
+        width: rect.width,
+        height: rect.height,
+        computedStyle: window.getComputedStyle(pdfViewer as Element)
+      });
+    }
+
+    // Verificar ng2-pdf-viewer-container
+    const ng2Container = document.querySelector('.ng2-pdf-viewer-container');
+    if (ng2Container) {
+      const rect = ng2Container.getBoundingClientRect();
+      console.log('[DocumentoViewer] 📐 ng2-pdf-viewer-container:', {
+        width: rect.width,
+        height: rect.height,
+        computedStyle: window.getComputedStyle(ng2Container as Element)
+      });
+    }
+
+    // Verificar páginas del PDF
+    const pdfPages = document.querySelectorAll('.pdfViewer .page');
+    console.log('[DocumentoViewer] 📄 PDF pages found:', pdfPages.length);
+
+    if (pdfPages.length === 0) {
+      console.warn('[DocumentoViewer] ⚠️ NO SE ENCONTRARON PÁGINAS PDF - Este es el problema principal');
+
+      // Buscar elementos alternativos
+      const pdfViewerElement = document.querySelector('.pdfViewer');
+      if (pdfViewerElement) {
+        console.log('[DocumentoViewer] 📄 Contenido de .pdfViewer:', pdfViewerElement.innerHTML.substring(0, 500));
+      }
+
+      const allPdfElements = document.querySelectorAll('[class*="pdf"], [class*="page"]');
+      console.log('[DocumentoViewer] 📄 Elementos relacionados con PDF encontrados:', allPdfElements.length);
+      allPdfElements.forEach((el, i) => {
+        console.log(`[DocumentoViewer] 📄 Elemento ${i}:`, el.className, el.getBoundingClientRect());
+      });
+    } else {
+      pdfPages.forEach((page, index) => {
+        const rect = page.getBoundingClientRect();
+        const style = window.getComputedStyle(page as Element);
+        console.log(`[DocumentoViewer] 📄 Page ${index + 1}:`, {
+          width: rect.width,
+          height: rect.height,
+          visibility: style.visibility,
+          display: style.display,
+          opacity: style.opacity,
+          position: style.position
+        });
+      });
+    }
+
+    console.log('[DocumentoViewer] 🔍 === FIN DEBUGGING ===');
   }
 }

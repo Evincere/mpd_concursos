@@ -7,7 +7,7 @@
 .notifications-container {
     position: relative;
     display: inline-block;
-    z-index: var(--z-dropdown);
+    z-index: 99999998; // Z-index alto para el contenedor
     // Permitir que el badge se muestre fuera del contenedor
     overflow: visible;
 }
@@ -22,6 +22,8 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    // ✅ UX/UI: Permitir que el badge se muestre fuera del botón
+    overflow: visible !important;
 
     &:focus {
         outline: 2px solid var(--color-focus);
@@ -63,26 +65,59 @@
 }
 
 .notifications-panel {
-    @include glassmorphism-base('primary', 'strong');
-    position: fixed !important;
-    top: calc(var(--header-height) + 8px) !important;
-    right: var(--spacing-lg) !important;
-    width: 350px;
-    z-index: 9999 !important; // Z-index muy alto para asegurar visibilidad
-    max-height: 500px;
-    overflow-y: auto;
-    margin-top: 0;
-    border: 1px solid var(--border-primary);
-    box-shadow:
-        var(--shadow-xl),
-        0 20px 40px rgba(0, 0, 0, 0.4) !important,
-        0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-    animation: slideIn 0.3s ease-out;
-    transform: translateZ(0);
-    // Asegurar que se muestre por encima de todo
-    will-change: transform, opacity;
+    // Estilos glassmorphism implementados directamente
+    background: rgba(30, 30, 30, 0.95) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
 
-    @include glassmorphism-scrollbar;
+    // Posicionamiento forzado - MÁXIMA PRIORIDAD
+    position: fixed !important;
+    top: calc(var(--user-header-height, 70px) + 8px) !important;
+    right: 24px !important;
+    width: 350px !important;
+    max-height: 500px !important;
+    z-index: var(--user-z-notifications) !important; // Usar variable del sistema
+
+    // Forzar visibilidad y crear nuevo stacking context
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateZ(0) !important; // Crear nuevo stacking context
+    isolation: isolate !important; // Aislar el stacking context
+
+    // Layout interno
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+
+    // Efectos visuales
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+
+    // Animación de entrada
+    animation: slideIn 0.3s ease-out;
+
+    // Scrollbar personalizada
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    }
 }
 
 .notifications-header {

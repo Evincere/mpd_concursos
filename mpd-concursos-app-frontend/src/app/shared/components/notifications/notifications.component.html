@@ -21,18 +21,17 @@
         </div>
 
         <div class="notifications-list">
-            @for (notification of notifications; track notification.id) {
-                <app-notification-item
-                    [notification]="notification"
-                    (read)="onNotificationRead($event)"
-                    (acknowledge)="onNotificationAcknowledge($event)">
-                </app-notification-item>
-            } @empty {
-                <div class="no-notifications">
-                    <i class="fas fa-bell-slash" aria-hidden="true"></i>
-                    <p>No hay notificaciones</p>
-                </div>
-            }
+            <app-notification-item
+                *ngFor="let notification of notifications; trackBy: trackByNotificationId"
+                [notification]="notification"
+                (read)="onNotificationRead($event)"
+                (acknowledge)="onNotificationAcknowledge($event)">
+            </app-notification-item>
+
+            <div class="no-notifications" *ngIf="notifications.length === 0">
+                <i class="fas fa-bell-slash" aria-hidden="true"></i>
+                <p>No hay notificaciones</p>
+            </div>
         </div>
     </div>
 </div>

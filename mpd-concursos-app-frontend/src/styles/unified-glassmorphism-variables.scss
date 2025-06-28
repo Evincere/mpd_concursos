@@ -263,6 +263,12 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-toast: 1080;
+  --z-notifications: 1090;
+  --z-header: 1100;
+
+  /* User Interface Z-Index */
+  --user-z-header: var(--z-header);
+  --user-z-notifications: var(--z-notifications);
 }
 
 /* === SCOPING PARA LAYOUTS ESPECÍFICOS === */

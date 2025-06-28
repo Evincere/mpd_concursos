@@ -99,7 +99,7 @@
     height: calc(var(--header-height) - 20px);
     max-height: calc(var(--header-height) - 20px);
     align-self: center;
-    overflow: hidden;
+    overflow: visible; // ✅ UX/UI: Permitir que el badge de notificaciones se muestre completamente
     box-sizing: border-box;
 
     > * {

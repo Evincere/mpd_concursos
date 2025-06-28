@@ -210,6 +210,24 @@ public class CvDocumentService {
     }
 
     /**
+     * Obtiene la ruta completa de un documento
+     */
+    public Path getDocumentPath(String relativePath) {
+        if (relativePath == null || relativePath.trim().isEmpty()) {
+            throw new IllegalArgumentException("La ruta relativa no puede estar vacía");
+        }
+
+        // Si la ruta ya es absoluta, usarla directamente
+        Path path = Paths.get(relativePath);
+        if (path.isAbsolute()) {
+            return path;
+        }
+
+        // Si es relativa, combinarla con el directorio base
+        return Paths.get(cvDocumentPath).resolve(relativePath);
+    }
+
+    /**
      * Limpia archivos temporales antiguos
      */
     public void cleanupTempFiles() {

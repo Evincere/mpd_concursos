@@ -4,12 +4,14 @@ import { Observable, throwError, Subject, forkJoin, of } from 'rxjs'; // Import 
 import { environment } from '../../../../environments/environment';
 import { DocumentoUsuario, TipoDocumento, DocumentoResponse } from '../../models/documento.model';
 import { map, catchError, tap } from 'rxjs/operators';
+import { TempDocumentCacheService } from '../cv/temp-document-cache.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DocumentosService {
   private readonly http = inject(HttpClient);
+  private readonly tempDocumentCache = inject(TempDocumentCacheService);
   private readonly apiUrl = `${environment.apiUrl}/documentos`;
 
   // Subject para notificar cuando se sube un nuevo documento
@@ -325,6 +327,11 @@ export class DocumentosService {
       return throwError(() => new Error('ID de documento no proporcionado para obtener el archivo.'));
     }
 
+    // ✅ Detectar si es un documento de CV y usar el endpoint correcto
+    if (this.isCvDocument(documentoId)) {
+      return this.getCvDocumentoFile(documentoId, reportProgress);
+    }
+
     if (reportProgress) {
       return this.http.get(`${this.apiUrl}/${documentoId}/file`, {
         reportProgress: true,
@@ -403,13 +410,28 @@ export class DocumentosService {
             errorMessage = 'El documento no fue encontrado';
           } else if (error.status === 403) {
             errorMessage = 'No tiene permisos para acceder a este documento';
+          } else if (error.status === 401) {
+            errorMessage = 'Debe iniciar sesión para acceder al documento';
           } else if (error.status === 500) {
-            errorMessage = 'Error interno del servidor al obtener el documento';
+            errorMessage = 'Error interno del servidor. Verifique que el documento existe y que tiene permisos para accederlo.';
+          } else if (error.status === 400) {
+            errorMessage = 'ID de documento inválido';
+          } else if (error.status === 0) {
+            errorMessage = 'No se pudo conectar con el servidor. Verifique su conexión a internet.';
           } else if (error.message?.includes('not a Blob')) {
             errorMessage = 'El archivo del documento no está disponible o está corrupto';
           } else if (error.message?.includes('empty Blob')) {
             errorMessage = 'El archivo del documento está vacío';
           }
+
+          // Log adicional para debugging
+          console.error('[DocumentosService] 🔍 Detalles del error:', {
+            status: error.status,
+            statusText: error.statusText,
+            url: error.url,
+            message: error.message,
+            error: error.error
+          });
 
           return throwError(() => new Error(errorMessage));
         })
@@ -603,5 +625,192 @@ export class DocumentosService {
         );
       })
     );
+  }
+
+  // ===== MÉTODOS ESPECÍFICOS PARA DOCUMENTOS DE CV =====
+
+  /**
+   * Detecta si un documento pertenece al sistema de CV
+   * Los documentos de CV suelen tener IDs más largos o patrones específicos
+   */
+  private isCvDocument(documentoId: string): boolean {
+    // Los documentos de CV suelen tener IDs más largos o contener ciertos patrones
+    // También pueden ser URLs relativas del sistema de CV
+    return documentoId.length > 20 ||
+           documentoId.includes('doc_') ||
+           documentoId.includes('cv_') ||
+           documentoId.includes('cv-documents/') ||
+           documentoId.includes('experiences/') ||
+           documentoId.includes('education/');
+  }
+
+  /**
+   * Obtiene el archivo de un documento de CV específico
+   * @param documentoId ID o ruta del documento de CV
+   * @param reportProgress Si es true, reporta el progreso de la descarga
+   */
+  private getCvDocumentoFile(documentoId: string, reportProgress = false): Observable<Blob | HttpEvent<Blob>> {
+    console.log(`[DocumentosService] 🔍 Descargando documento de CV con ID/ruta: ${documentoId}`);
+
+    // ✅ Si es un documento temporal, cargar desde cache
+    if (this.tempDocumentCache.isTempDocument(documentoId)) {
+      console.log(`[DocumentosService] 📁 Documento temporal detectado, cargando desde cache`);
+      return this.loadTempDocumentFromCache(documentoId);
+    }
+
+    // ✅ Si es una ruta relativa de CV, usar el endpoint específico de CV
+    if (this.isCvDocumentPath(documentoId)) {
+      return this.downloadCvDocumentByPath(documentoId, reportProgress);
+    }
+
+    // ✅ Si es un ID tradicional, usar el endpoint de documentos generales
+    if (reportProgress) {
+      // Con progreso, retorna HttpEvent<Blob>
+      return this.http.get(`${this.apiUrl}/${documentoId}/file`, {
+        responseType: 'blob',
+        reportProgress: true,
+        observe: 'events'
+      }).pipe(
+        tap(event => {
+          if (event.type === HttpEventType.DownloadProgress && event.total) {
+            const progress = Math.round(100 * event.loaded / event.total);
+            console.log(`[DocumentosService] 📥 Progreso descarga CV: ${progress}%`);
+          }
+        }),
+        catchError(error => {
+          console.error('[DocumentosService] ❌ Error descargando documento de CV:', error);
+          return throwError(() => new Error(`Error al descargar documento de CV: ${error.message}`));
+        })
+      );
+    } else {
+      // Sin progreso, retorna directamente el blob
+      return this.http.get(`${this.apiUrl}/${documentoId}/file`, {
+        responseType: 'blob'
+      }).pipe(
+        tap(response => {
+          console.log('[DocumentosService] 🔍 Documento de CV descargado exitosamente:', {
+            type: typeof response,
+            isBlob: response instanceof Blob,
+            size: response instanceof Blob ? response.size : 'N/A'
+          });
+        }),
+        catchError(error => {
+          console.error('[DocumentosService] ❌ Error descargando documento de CV:', error);
+          // ✅ Intentar con endpoint alternativo si falla el principal
+          return this.tryAlternativeEndpoint(documentoId);
+        })
+      );
+    }
+  }
+
+  /**
+   * Detecta si es una ruta de documento de CV
+   */
+  private isCvDocumentPath(path: string): boolean {
+    return path.includes('/') && (
+      path.includes('cv-documents/') ||
+      path.includes('experiences/') ||
+      path.includes('education/') ||
+      path.startsWith('uploads/')
+    );
+  }
+
+  /**
+   * Descarga un documento de CV usando su ruta relativa
+   */
+  private downloadCvDocumentByPath(path: string, reportProgress = false): Observable<Blob | HttpEvent<Blob>> {
+    console.log(`[DocumentosService] 🔍 Descargando documento de CV por ruta: ${path}`);
+
+    const url = `${environment.apiUrl}/cv/documentos/file?path=${encodeURIComponent(path)}`;
+
+    if (reportProgress) {
+      return this.http.get(url, {
+        responseType: 'blob',
+        reportProgress: true,
+        observe: 'events'
+      }).pipe(
+        tap(event => {
+          if (event.type === HttpEventType.DownloadProgress && event.total) {
+            const progress = Math.round(100 * event.loaded / event.total);
+            console.log(`[DocumentosService] 📥 Progreso descarga CV por ruta: ${progress}%`);
+          }
+        }),
+        catchError(error => {
+          console.error('[DocumentosService] ❌ Error descargando documento de CV por ruta:', error);
+          return throwError(() => new Error(`Error al descargar documento de CV: ${error.message}`));
+        })
+      );
+    } else {
+      return this.http.get(url, {
+        responseType: 'blob'
+      }).pipe(
+        tap(response => {
+          console.log('[DocumentosService] ✅ Documento de CV descargado por ruta exitosamente');
+        }),
+        catchError(error => {
+          console.error('[DocumentosService] ❌ Error descargando documento de CV por ruta:', error);
+          return throwError(() => new Error(`No se pudo descargar el documento con ruta: ${path}`));
+        })
+      );
+    }
+  }
+
+  /**
+   * Intenta descargar el documento usando endpoints alternativos
+   */
+  private tryAlternativeEndpoint(documentoId: string): Observable<Blob> {
+    console.log(`[DocumentosService] 🔄 Intentando endpoint alternativo para documento: ${documentoId}`);
+
+    // Intentar con el endpoint de archivos estáticos
+    return this.http.get(`${environment.apiUrl}/files/cv-documents/${documentoId}`, {
+      responseType: 'blob'
+    }).pipe(
+      tap(response => {
+        console.log('[DocumentosService] ✅ Documento descargado con endpoint alternativo');
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error con endpoint alternativo:', error);
+        return throwError(() => new Error(`No se pudo descargar el documento con ID: ${documentoId}`));
+      })
+    );
+  }
+
+  /**
+   * Carga un documento temporal desde cache
+   */
+  private loadTempDocumentFromCache(documentoId: string): Observable<Blob> {
+    try {
+      const tempDoc = this.tempDocumentCache.getDocument(documentoId);
+
+      if (!tempDoc) {
+        console.error(`[DocumentosService] ❌ Documento temporal no encontrado: ${documentoId}`);
+        return throwError(() => new Error(`Documento temporal no encontrado: ${documentoId}`));
+      }
+
+      // Convertir base64 a blob
+      const blob = this.base64ToBlob(tempDoc.base64, tempDoc.mimeType);
+      console.log(`[DocumentosService] ✅ Documento temporal cargado desde cache: ${documentoId}`);
+
+      return of(blob);
+
+    } catch (error) {
+      console.error(`[DocumentosService] ❌ Error cargando documento temporal: ${documentoId}`, error);
+      return throwError(() => new Error(`Error al cargar documento temporal: ${error}`));
+    }
+  }
+
+  /**
+   * Convierte base64 a Blob
+   */
+  private base64ToBlob(base64: string, mimeType: string): Blob {
+    const byteCharacters = atob(base64.split(',')[1]);
+    const byteNumbers = new Array(byteCharacters.length);
+
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
   }
 }

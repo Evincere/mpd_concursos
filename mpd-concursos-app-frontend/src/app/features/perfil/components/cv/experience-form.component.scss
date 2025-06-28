@@ -491,7 +491,7 @@
           border-radius: 20px;
           padding: 0.5rem 0.875rem;
           font-size: 0.875rem;
-          color: var(--primary-color);
+          color: #ffffff; // ✅ ACCESIBILIDAD: Cambio a blanco para mejor contraste sobre fondo oscuro
           font-weight: 500;
           backdrop-filter: blur(8px);
           box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.1);
@@ -725,12 +725,46 @@
     padding: 1.5rem 0;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 2rem;
-    
+
     .actions-left,
     .actions-right {
       display: flex;
       gap: 1rem;
       align-items: center;
+    }
+
+    // ===== ESTILO ESPECIAL PARA BOTÓN GUARDAR VÁLIDO =====
+    ::ng-deep .save-button-valid {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(16, 185, 129, 0.7)) !important;
+      border: 1px solid rgba(16, 185, 129, 0.4) !important;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+      color: #ffffff !important;
+      transition: all 0.3s ease !important;
+
+      &:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(16, 185, 129, 0.8)) !important;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+        transform: translateY(-2px) !important;
+      }
+
+      &:active {
+        transform: translateY(0) !important;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+      }
+
+      // Efecto de pulso sutil para indicar que está listo
+      &::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.1));
+        border-radius: inherit;
+        z-index: -1;
+        animation: validButtonGlow 2s ease-in-out infinite alternate;
+      }
     }
   }
   
@@ -910,6 +944,17 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes validButtonGlow {
+  0% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1.02);
   }
 }
 

@@ -91,7 +91,7 @@
   // Etiqueta del checkbox
   .checkbox-label {
     font-size: 0.875rem;
-    color: var(--color-text-primary, vars.$color-text-primary) !important;
+    color: #ffffff !important; /* ✅ UX/UI: Color blanco forzado para todos los labels */
     margin-left: 0.5rem;
     user-select: none;
   }

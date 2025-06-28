@@ -62,24 +62,16 @@
           </app-custom-form-field>
           
           <!-- Campo de área de texto -->
-          <div *ngIf="field.type === 'textarea'" class="form-field">
-            <label class="field-label" [class.required]="field.required">
-              {{ field.label }}
-            </label>
-            <textarea
-              [formControlName]="field.name"
-              [placeholder]="field.placeholder || ''"
-              [required]="field.required"
-              class="field-textarea"
-              rows="4">
-            </textarea>
-            <div *ngIf="field.helpText" class="field-help">{{ field.helpText }}</div>
-            <div class="field-errors" *ngIf="getFieldErrors(field.name).length > 0">
-              <p class="error-message" *ngFor="let error of getFieldErrors(field.name)">
-                {{ error }}
-              </p>
-            </div>
-          </div>
+          <app-custom-form-field
+            *ngIf="field.type === 'textarea'"
+            [label]="field.label"
+            [required]="field.required"
+            [placeholder]="field.placeholder || ''"
+            [formControlName]="field.name"
+            [hint]="field.helpText || ''"
+            type="textarea"
+            rows="4">
+          </app-custom-form-field>
           
           <!-- Campo de fecha -->
           <app-custom-datepicker

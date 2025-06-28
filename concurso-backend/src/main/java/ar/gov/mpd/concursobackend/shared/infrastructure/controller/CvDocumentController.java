@@ -3,12 +3,19 @@ package ar.gov.mpd.concursobackend.shared.infrastructure.controller;
 import ar.gov.mpd.concursobackend.shared.infrastructure.service.CvDocumentService;
 import ar.gov.mpd.concursobackend.shared.infrastructure.service.CvDocumentService.CvDocumentStats;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -141,6 +148,49 @@ public class CvDocumentController {
             logger.error("Error durante la limpieza manual de archivos temporales", e);
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Error durante la limpieza de archivos temporales"));
+        }
+    }
+
+    /**
+     * Descarga un documento de CV por su ruta relativa
+     */
+    @GetMapping("/file")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<Resource> downloadDocumentByPath(@RequestParam String path) {
+        logger.info("Descargando documento de CV por ruta: {}", path);
+
+        try {
+            // Obtener el archivo usando el servicio
+            Path filePath = cvDocumentService.getDocumentPath(path);
+
+            if (!Files.exists(filePath)) {
+                logger.warn("Archivo no encontrado: {}", filePath);
+                return ResponseEntity.notFound().build();
+            }
+
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                logger.warn("Archivo no legible: {}", filePath);
+                return ResponseEntity.notFound().build();
+            }
+
+            // Determinar el tipo de contenido
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null) {
+                contentType = "application/pdf"; // Default para documentos CV
+            }
+
+            String filename = filePath.getFileName().toString();
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            logger.error("Error descargando documento de CV: {}", path, e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 

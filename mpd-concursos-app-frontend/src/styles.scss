@@ -45,6 +45,49 @@
 @import './styles/dialog-styles';
 @import './styles/global';
 @import './styles/fix-styles';
+
+/* === PDF VIEWER GLOBAL STYLES === */
+/* Estilos globales para ng2-pdf-viewer con posicionamiento absoluto requerido */
+.ng2-pdf-viewer-container {
+  position: absolute !important; /* ✅ CRÍTICO: ng2-pdf-viewer requiere position: absolute */
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important; /* ✅ Scroll vertical habilitado */
+  background: #f5f5f5 !important;
+  border-radius: 8px !important;
+  z-index: 1 !important;
+}
+
+pdf-viewer {
+  position: absolute !important; /* ✅ CRÍTICO: pdf-viewer también necesita posicionamiento absoluto */
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+.pdfViewer {
+  padding: 20px !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+}
+
+.pdfViewer .page {
+  margin: 0 auto 20px auto !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
 /* Importaciones corregidas para los estilos de usuarios */
 @import './app/features/admin/components/usuarios/styles/user-dialog-button-fixes';
 @import './app/features/admin/components/usuarios/styles/user-select-fixes';
@@ -3023,3 +3066,185 @@ app-stats-chart {
     height: 100%;
   }
 }
+
+/* === DOCUMENTO VIEWER MODAL - FULL SIZE PDF === */
+/* Solución basada en investigación de ng2-pdf-viewer issues y StackOverflow */
+.documento-viewer-dialog {
+  /* Forzar que el modal use dimensiones completas */
+  .dialog-container {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    height: 95vh !important;
+    max-height: 95vh !important;
+    margin: 0 auto !important;
+  }
+
+  /* Asegurar que el contenido del modal sea flexible */
+  .dialog-content {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Contenedor del PDF a pantalla completa */
+  .pdf-container {
+    flex: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    position: relative !important;
+  }
+
+  /* Estilos específicos para ng2-pdf-viewer - Solución de GitHub Issue #493 */
+  pdf-viewer {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+}
+
+/* === ESTILOS GLOBALES PARA NG2-PDF-VIEWER === */
+/* Solución basada en StackOverflow y GitHub Issues */
+.ng2-pdf-viewer-container {
+  overflow: hidden !important;
+  position: absolute !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  background-color: #f5f5f5 !important;
+}
+
+.pdfViewer {
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.pdfViewer .page {
+  margin: 10px auto !important;
+  border: 1px solid #ccc !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* SOLUCIÓN ESPECÍFICA PARA ALTURA 0 - Basada en debugging */
+.documento-viewer-dialog {
+  /* Forzar altura en el contenedor del modal */
+  .dialog-content {
+    height: 80vh !important;
+    min-height: 600px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Forzar altura en el contenedor del PDF */
+  .pdf-container {
+    height: 100% !important;
+    min-height: 500px !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Forzar altura en pdf-viewer */
+  ::ng-deep pdf-viewer {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 500px !important;
+    flex: 1 !important;
+  }
+
+  /* Forzar altura en ng2-pdf-viewer-container con scroll vertical */
+  ::ng-deep .ng2-pdf-viewer-container {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 500px !important;
+    max-height: 70vh !important;
+    background-color: #f5f5f5 !important;
+
+    /* Scroll suave y estilos personalizados */
+    scroll-behavior: smooth !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #888 #f1f1f1 !important;
+  }
+
+  /* Estilos para la barra de scroll en navegadores WebKit */
+  ::ng-deep .ng2-pdf-viewer-container::-webkit-scrollbar {
+    width: 12px !important;
+  }
+
+  ::ng-deep .ng2-pdf-viewer-container::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 6px !important;
+  }
+
+  ::ng-deep .ng2-pdf-viewer-container::-webkit-scrollbar-thumb {
+    background: #888 !important;
+    border-radius: 6px !important;
+    border: 2px solid #f1f1f1 !important;
+  }
+
+  ::ng-deep .ng2-pdf-viewer-container::-webkit-scrollbar-thumb:hover {
+    background: #555 !important;
+  }
+
+  /* Forzar altura en pdfViewer con scroll optimizado */
+  ::ng-deep .pdfViewer {
+    padding: 20px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 500px !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  /* Forzar dimensiones correctas en las páginas con scroll suave */
+  ::ng-deep .pdfViewer .page {
+    margin: 20px auto !important;
+    border: 1px solid #ccc !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    max-width: 90% !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 400px !important;
+    display: block !important;
+    visibility: visible !important;
+
+    /* Transición suave para mejor experiencia */
+    transition: box-shadow 0.2s ease !important;
+  }
+
+  /* Efecto hover en las páginas */
+  ::ng-deep .pdfViewer .page:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  /* Forzar dimensiones en canvas */
+  ::ng-deep .pdfViewer .page canvas {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 400px !important;
+    max-width: 100% !important;
+    display: block !important;
+  }
+
+  /* Asegurar que el contenido sea visible */
+  ::ng-deep .pdfViewer > * {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+

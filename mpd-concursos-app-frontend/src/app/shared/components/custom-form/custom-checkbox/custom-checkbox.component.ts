@@ -90,6 +90,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
 
     .checkbox-label {
       margin-left: 5px;
+      color: #ffffff; /* ✅ UX/UI: Color blanco por defecto para labels */
     }
 
     .disabled {
@@ -114,6 +115,10 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
       .custom-checkbox input:checked ~ .checkmark {
         background-color: var(--color-primary-dark, #7986cb);
         border-color: var(--color-primary-dark, #7986cb);
+      }
+
+      .checkbox-label {
+        color: #ffffff !important; /* ✅ UX/UI: Color blanco para tema oscuro */
       }
     }
   `],

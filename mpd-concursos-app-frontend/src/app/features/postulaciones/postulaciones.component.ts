@@ -256,6 +256,26 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.postulacionSeleccionada = null;
   }
 
+  /**
+   * Formatea una fecha para mostrar en formato dd/MM/yyyy
+   */
+  formatDate(date: string | Date | null | undefined): string {
+    if (!date) return 'No especificada';
+
+    try {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      return dateObj.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return 'Fecha inválida';
+    }
+  }
+
+
+
   retomarInscripcion(postulacion: Postulacion): void {
     if (postulacion.contestId) {
       // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
@@ -324,45 +344,22 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   getActionsForPostulacion(postulacion: Postulacion): ActionMenuItem[] {
     const actions: ActionMenuItem[] = [];
 
-    // Solo mostrar acciones adicionales (no "ver detalle" ya que tiene su propio botón)
-    if (this.puedesCancelarPostulacion(postulacion)) {
-      actions.push({
-        id: 'cancel',
-        label: 'Cancelar postulación',
-        icon: 'fas fa-times',
-        variant: 'danger'
-      });
-    }
+    // Ya no agregamos ninguna acción aquí porque:
+    // - El botón de cancelar está en la esquina superior derecha
+    // - El botón de ver detalle está en la esquina superior derecha
+    // - No hay otras acciones necesarias por ahora
 
-    // Si no hay acciones disponibles, agregar una acción de información
-    if (actions.length === 0) {
-      actions.push({
-        id: 'info',
-        label: 'Información',
-        icon: 'fas fa-info-circle',
-        variant: 'secondary'
-      });
-    }
-
-    return actions;
+    return actions; // Retorna array vacío para que no se muestre el menú
   }
 
   getPrimaryActionId(postulacion: Postulacion): string {
-    if (this.puedesCancelarPostulacion(postulacion)) {
-      return 'cancel';
-    }
-    return 'info';
+    // No hay acciones primarias en el menú
+    return '';
   }
 
   onActionClick(action: ActionMenuItem, postulacion: Postulacion): void {
-    switch (action.id) {
-      case 'cancel':
-        this.cancelarPostulacion(postulacion);
-        break;
-      case 'info':
-        // Mostrar información adicional - funcionalidad futura
-        break;
-    }
+    // No hay acciones que manejar ya que el array está vacío
+    console.log('No hay acciones disponibles en el menú');
   }
 
   puedesCancelarPostulacion(postulacion: Postulacion): boolean {

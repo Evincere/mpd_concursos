@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.controller;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -28,11 +29,11 @@ import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentTypeDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
+import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentValidationResult;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentTypeService;
 import ar.gov.mpd.concursobackend.document.application.service.DocumentValidationService;
-import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -234,11 +235,27 @@ public class DocumentController {
     @GetMapping("/{id}/file")
     @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<InputStreamResource> getDocumentFile(@PathVariable("id") String documentId) {
+        log.debug("🔍 [DocumentController] Solicitando archivo de documento: {}", documentId);
+
         try {
-            UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
+            // Obtener ID del usuario actual
+            String currentUserIdStr = securityUtils.getCurrentUserId();
+            if (currentUserIdStr == null) {
+                log.error("❌ [DocumentController] No se pudo obtener el ID del usuario actual");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            UUID userId = UUID.fromString(currentUserIdStr);
+            log.debug("🔍 [DocumentController] ID del usuario obtenido: {}", userId);
+
+            // Obtener metadatos del documento
             DocumentDto document = documentService.getDocumentMetadata(documentId, userId);
-            InputStreamResource resource = new InputStreamResource(
-                    documentService.getDocumentFile(documentId, userId));
+            log.debug("🔍 [DocumentController] Metadatos del documento obtenidos: {}", document.getNombreArchivo());
+
+            // Obtener el archivo
+            InputStream fileStream = documentService.getDocumentFile(documentId, userId);
+            InputStreamResource resource = new InputStreamResource(fileStream);
+            log.debug("✅ [DocumentController] Archivo del documento obtenido exitosamente");
 
             // Usar 'inline' para permitir visualización en el navegador
             // en lugar de 'attachment' que fuerza descarga
@@ -247,8 +264,24 @@ public class DocumentController {
                             "inline; filename=\"" + document.getNombreArchivo() + "\"")
                     .contentType(MediaType.parseMediaType(document.getContentType()))
                     .body(resource);
+
+        } catch (IllegalArgumentException e) {
+            log.error("❌ [DocumentController] ID de documento inválido: {}", documentId, e);
+            return ResponseEntity.badRequest().build();
+        } catch (DocumentException e) {
+            log.error("❌ [DocumentController] Error de documento: {}", e.getMessage(), e);
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            } else if (e.getMessage().contains("does not belong")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } catch (IOException e) {
+            log.error("❌ [DocumentController] Error de E/S al leer archivo: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         } catch (Exception e) {
-            log.error("Error getting document file", e);
+            log.error("❌ [DocumentController] Error inesperado al obtener archivo de documento: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

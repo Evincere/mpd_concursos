@@ -1,6 +1,6 @@
 /**
  * Estilos para Modal de Experiencias
- * 
+ *
  * @description Estilos específicos para el modal de gestión de experiencias laborales
  * @author Augment Agent
  * @date 2025-06-22
@@ -9,11 +9,153 @@
 // ===== MODAL CONTENT =====
 .experience-modal-content {
   min-height: 400px;
-  
+
   // Asegurar que el formulario ocupe todo el espacio disponible
   app-experience-form {
     display: block;
     width: 100%;
+  }
+}
+
+// ===== MODAL FOOTER =====
+.experience-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+
+  .footer-left {
+    flex: 0 0 auto;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  // ===== ESTILOS ESPECÍFICOS PARA EL BOTÓN GUARDAR/AGREGAR =====
+  .custom-button.primary {
+    position: relative; // ✅ CRÍTICO: Necesario para que ::before se posicione correctamente
+    min-width: 120px;
+    height: 44px;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    overflow: hidden; // ✅ Evitar que el ::before se desborde
+
+    // Estado normal
+    background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.8) 0%,
+      rgba(37, 99, 235, 0.9) 100%);
+    color: white;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg,
+        rgba(59, 130, 246, 0.9) 0%,
+        rgba(37, 99, 235, 1) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      background: rgba(107, 114, 128, 0.6);
+      border-color: rgba(107, 114, 128, 0.3);
+
+      // ✅ Asegurar que no hay efectos cuando está deshabilitado
+      &::before {
+        display: none;
+      }
+    }
+
+    // ===== ESTADO VÁLIDO CON EFECTO ESPECIAL =====
+    &:not(:disabled) {
+      // Cuando el formulario es válido, aplicar estilo verde especial
+      background: linear-gradient(135deg,
+        rgba(16, 185, 129, 0.9) 0%,
+        rgba(16, 185, 129, 0.7) 100%) !important;
+      border: 1px solid rgba(16, 185, 129, 0.4) !important;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+
+      // ✅ Efecto de pulso sutil CONTENIDO dentro del botón
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 8px;
+        background: linear-gradient(135deg,
+          rgba(16, 185, 129, 0.2) 0%,
+          rgba(16, 185, 129, 0.05) 100%);
+        animation: validButtonGlow 2s ease-in-out infinite alternate;
+        pointer-events: none;
+        z-index: 0; // ✅ Mantener detrás del contenido del botón
+      }
+
+      // ✅ Asegurar que el contenido del botón esté por encima del ::before
+      .material-icons,
+      span {
+        position: relative;
+        z-index: 1;
+      }
+
+      &:hover {
+        background: linear-gradient(135deg,
+          rgba(16, 185, 129, 1) 0%,
+          rgba(16, 185, 129, 0.8) 100%) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+
+        // ✅ Reducir el efecto en hover para mejor UX
+        &::before {
+          opacity: 0.1;
+        }
+      }
+    }
+
+    // Iconos
+    .material-icons {
+      font-size: 1.125rem;
+
+      &.spinning {
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+}
+
+// ===== ANIMACIONES =====
+@keyframes validButtonGlow {
+  0% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

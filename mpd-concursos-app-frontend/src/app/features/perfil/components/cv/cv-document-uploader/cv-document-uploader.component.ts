@@ -14,24 +14,50 @@ import { Subject } from 'rxjs';
 
 // Servicios
 import { CvNotificationService } from '@core/services/cv/cv-notification.service';
+import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
+import { TempDocumentCacheService, TempDocument } from '@core/services/cv/temp-document-cache.service';
 
-// Modelos
-export interface CvDocument {
-  id?: string;
+// Componentes
+import { DocumentoViewerComponent } from '../../documento-viewer/documento-viewer.component';
+
+// Modelos para el uploader de documentos
+
+/**
+ * Interfaz base para documentos en el uploader
+ * Usada tanto para documentos temporales como existentes
+ */
+export interface CvDocumentBase {
+  id: string;
   fileName: string;
-  originalName: string;
+  originalFileName: string;
   fileSize: number;
   mimeType: string;
   documentType: 'work_experience' | 'education';
-  entityId?: string;
   uploadDate: Date;
   status: 'pending' | 'validated' | 'rejected';
   validationNotes?: string;
+  entityId?: string;
+}
+
+/**
+ * Interfaz para documentos temporales (en cache)
+ * Extiende CvDocumentBase con propiedades específicas del cache
+ */
+export interface CvDocument extends CvDocumentBase, Omit<TempDocument, 'entityType' | 'id' | 'fileName' | 'originalFileName' | 'fileSize' | 'mimeType' | 'uploadDate'> {
+  // Hereda todas las propiedades de TempDocument excepto las que ya están en CvDocumentBase
+}
+
+/**
+ * Interfaz para documentos existentes (del servidor)
+ * Solo las propiedades básicas sin cache
+ */
+export interface ExistingCvDocument extends CvDocumentBase {
+  // Solo las propiedades básicas para documentos que ya existen en el servidor
 }
 
 export interface DocumentUploadResult {
   success: boolean;
-  document?: CvDocument;
+  document?: CvDocumentBase;
   error?: string;
 }
 
@@ -62,12 +88,12 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
   @Input() disabled = false;
 
   // ===== OUTPUTS =====
-  @Output() documentsChange = new EventEmitter<CvDocument[]>();
+  @Output() documentsChange = new EventEmitter<CvDocumentBase[]>();
   @Output() validationChange = new EventEmitter<DocumentValidationState>();
   @Output() uploadProgress = new EventEmitter<number>();
 
   // ===== SIGNALS =====
-  public readonly documents = signal<CvDocument[]>([]);
+  public readonly documents = signal<CvDocumentBase[]>([]);
   public readonly isUploading = signal(false);
   public readonly uploadProgress$ = signal(0);
   public readonly isDragging = signal(false);
@@ -102,7 +128,9 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
   private previousEntityId: string | null = null;
 
   constructor(
-    private notificationService: CvNotificationService
+    private notificationService: CvNotificationService,
+    private dialog: UnifiedDialogService,
+    private tempDocumentCache: TempDocumentCacheService
   ) { }
 
   ngOnInit(): void {
@@ -189,7 +217,7 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
   /**
    * Elimina un documento
    */
-  removeDocument(document: CvDocument): void {
+  removeDocument(document: CvDocumentBase): void {
     if (this.disabled) return;
 
     const currentDocs = this.documents();
@@ -210,7 +238,7 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
   /**
    * Reintenta la carga de un documento
    */
-  retryUpload(document: CvDocument): void {
+  retryUpload(document: CvDocumentBase): void {
     // Implementar lógica de reintento
     this.notificationService.showInfo('Reintentando carga del documento...');
   }
@@ -286,77 +314,110 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
   }
 
   /**
-   * Sube un archivo al servidor
+   * Procesa un archivo y lo guarda en cache temporal
    */
-  private uploadFile(file: File): void {
+  private async uploadFile(file: File): Promise<void> {
     this.isUploading.set(true);
     this.uploadProgress$.set(0);
 
-    // Crear documento temporal
-    const tempDocument: CvDocument = {
-      fileName: `temp_${Date.now()}`,
-      originalName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-      documentType: this.documentType,
-      entityId: this.entityId || undefined,
-      uploadDate: new Date(),
-      status: 'pending'
-    };
+    try {
+      console.log(`[CvDocumentUploader] 📁 Guardando archivo en cache temporal: ${file.name}`);
 
-    // Agregar a la lista temporalmente
-    const currentDocs = this.documents();
-    this.documents.set([...currentDocs, tempDocument]);
+      // Guardar en cache temporal
+      const tempDoc = await this.tempDocumentCache.saveDocument(
+        file,
+        this.documentType === 'work_experience' ? 'experience' : 'education',
+        this.entityId || undefined
+      );
 
-    // Simular progreso de carga (reemplazar con llamada real al servicio)
-    this.simulateUploadProgress(tempDocument, file);
+      // Convertir a CvDocumentBase para compatibilidad
+      const cvDocument: CvDocumentBase = {
+        id: tempDoc.id,
+        fileName: tempDoc.fileName,
+        originalFileName: tempDoc.originalFileName,
+        fileSize: tempDoc.fileSize,
+        mimeType: tempDoc.mimeType,
+        documentType: this.documentType,
+        uploadDate: tempDoc.uploadDate,
+        status: 'pending',
+        entityId: tempDoc.entityId
+      };
+
+      // Agregar a la lista
+      const currentDocs = this.documents();
+      this.documents.set([...currentDocs, cvDocument]);
+      this.documentsChange.emit([...currentDocs, cvDocument]);
+      this.validateDocuments();
+
+      // Simular progreso para UX
+      this.simulateProgress();
+
+      this.notificationService.showSuccess(
+        `Documento "${file.name}" cargado en cache. Listo para previsualización.`
+      );
+
+    } catch (error) {
+      console.error('[CvDocumentUploader] ❌ Error guardando archivo en cache:', error);
+      this.notificationService.showError(
+        `Error al cargar el documento "${file.name}": ${error}`
+      );
+    } finally {
+      this.isUploading.set(false);
+      this.uploadProgress$.set(0);
+    }
   }
 
+
+
   /**
-   * Simula el progreso de carga (temporal)
+   * Simula progreso de carga para mejor UX
    */
-  private simulateUploadProgress(document: CvDocument, file: File): void {
+  private simulateProgress(): void {
     let progress = 0;
     const interval = setInterval(() => {
-      progress += Math.random() * 20;
+      progress += Math.random() * 30;
       if (progress >= 100) {
         progress = 100;
         clearInterval(interval);
-        this.completeUpload(document, file);
       }
       this.uploadProgress$.set(progress);
       this.uploadProgress.emit(progress);
-    }, 200);
+    }, 100);
   }
 
   /**
-   * Completa la carga del archivo
+   * Obtiene todos los documentos temporales para envío al servidor
+   * Este método será llamado por el formulario principal al enviar
    */
-  private completeUpload(tempDocument: CvDocument, file: File): void {
-    // Actualizar documento con datos reales del servidor
-    const completedDocument: CvDocument = {
-      ...tempDocument,
-      id: `doc_${Date.now()}`, // En producción, esto vendría del servidor
-      fileName: `cv_${this.documentType}_${Date.now()}.${file.name.split('.').pop()}`,
-      status: 'pending'
-    };
-
-    // Actualizar en la lista
+  getTempDocuments(): TempDocument[] {
     const currentDocs = this.documents();
-    const updatedDocs = currentDocs.map(doc =>
-      doc.fileName === tempDocument.fileName ? completedDocument : doc
-    );
+    return currentDocs
+      .filter(doc => this.tempDocumentCache.isTempDocument(doc.id || ''))
+      .map(doc => {
+        const tempDoc = this.tempDocumentCache.getDocument(doc.id || '');
+        return tempDoc;
+      })
+      .filter(doc => doc !== null) as TempDocument[];
+  }
 
-    this.documents.set(updatedDocs);
-    this.documentsChange.emit(updatedDocs);
+  /**
+   * Limpia documentos temporales después del envío exitoso
+   */
+  clearTempDocuments(): void {
+    const currentDocs = this.documents();
+    const tempDocIds = currentDocs
+      .filter(doc => this.tempDocumentCache.isTempDocument(doc.id || ''))
+      .map(doc => doc.id || '');
+
+    // Eliminar del cache
+    tempDocIds.forEach(id => this.tempDocumentCache.removeDocument(id));
+
+    // Limpiar la lista local
+    this.documents.set([]);
+    this.documentsChange.emit([]);
     this.validateDocuments();
 
-    this.isUploading.set(false);
-    this.uploadProgress$.set(0);
-
-    this.notificationService.showSuccess(
-      `Documento "${file.name}" cargado correctamente. Pendiente de validación.`
-    );
+    console.log('[CvDocumentUploader] 🧹 Documentos temporales limpiados');
   }
 
   /**
@@ -441,7 +502,7 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
   /**
    * TrackBy function para la lista de documentos
    */
-  trackByDocumentId(index: number, document: CvDocument): string {
+  trackByDocumentId(index: number, document: CvDocumentBase): string {
     return document.id || document.fileName;
   }
 
@@ -480,10 +541,24 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
   }
 
   /**
-   * Visualiza un documento
+   * Visualiza un documento usando el selector de visualizadores
    */
-  viewDocument(document: CvDocument): void {
-    // Implementar visualización del documento
-    this.notificationService.showInfo('Abriendo documento...');
+  viewDocument(document: CvDocumentBase): void {
+    if (!document.id) {
+      this.notificationService.showError('No se puede visualizar el documento: ID no disponible');
+      return;
+    }
+
+    // Usar el visualizador de documentos directamente
+    this.dialog.open(DocumentoViewerComponent, {
+      title: 'Visualizador de documento',
+      icon: 'file-pdf',
+      size: 'large',
+      data: { documentoId: document.id },
+      showFooter: false,
+      showCancelButton: false,
+      showConfirmButton: false,
+      panelClass: 'documento-viewer-selector-dialog'
+    });
   }
 }

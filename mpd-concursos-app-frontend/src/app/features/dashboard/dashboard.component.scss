@@ -42,6 +42,7 @@
         width: 100%;
         overflow: hidden;
         position: relative;
+        z-index: 1; // Z-index bajo para no interferir con notificaciones
         /* Transparent background to let the main background show through */
         background: transparent;
 

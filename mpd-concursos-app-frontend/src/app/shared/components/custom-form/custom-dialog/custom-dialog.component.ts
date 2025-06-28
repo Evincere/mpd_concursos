@@ -112,6 +112,7 @@ import { CustomButtonComponent } from '../custom-button/custom-button.component'
 
     .dialog-container.large {
       width: 800px;
+      height: 85vh;
     }
 
     .dialog-container.fullscreen {

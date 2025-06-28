@@ -33,34 +33,32 @@
   }
 }
 
-/* === LISTA DE POSTULACIONES === */
+/* === LISTA DE POSTULACIONES EN FILAS === */
 .postulaciones-list {
-  @extend .glass-grid;
   @include glassmorphism-scrollbar;
 
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
   width: 100%;
   min-height: 300px;
-
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-    gap: var(--spacing-xl);
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-  }
-
-  @media (max-width: 480px) {
-    gap: var(--spacing-sm);
-  }
 
   &.blurred {
     filter: blur(2px);
     pointer-events: none;
+  }
+}
+
+/* === RESPONSIVE PARA CARDS EN FILAS === */
+@media (max-width: 768px) {
+  .postulaciones-list {
+    gap: var(--spacing-sm);
+  }
+
+  .postulacion-item {
+    .postulacion-info {
+      gap: var(--spacing-sm);
+    }
   }
 }
 
@@ -122,6 +120,29 @@
   }
 }
 
+.alert-banner-compact {
+  @include glassmorphism-badge('warning');
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 6px 0;
+  width: fit-content; /* Solo ocupa el espacio necesario */
+  border-radius: 6px;
+
+  i {
+    color: var(--color-warning);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  span {
+    line-height: 1.3;
+  }
+}
+
 .postulacion-item {
   @include glassmorphism-card('primary', 'normal', true);
   @include glassmorphism-focus;
@@ -129,15 +150,24 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  min-height: auto;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  }
 
   &:active {
     transform: var(--transform-active);
   }
 
   .postulacion-info {
-    @extend .glass-flex;
-    @extend .flex-col;
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-md);
+    width: 100%;
+    padding: var(--spacing-md);
   }
 }
 
@@ -156,11 +186,12 @@
 
     h3 {
       margin: 0 0 var(--spacing-xs) 0;
-      color: var(--color-primary);
+      color: #ffffff; /* Cambio a blanco bold */
       font-size: 1.25rem;
-      font-weight: 600;
+      font-weight: 700; /* Bold */
       line-height: 1.4;
       word-wrap: break-word;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .categoria {
@@ -170,6 +201,7 @@
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      color: #ffffff !important; /* Forzar color blanco */
     }
   }
 
@@ -178,6 +210,23 @@
     align-items: center;
     gap: var(--spacing-sm);
     flex-shrink: 0;
+
+    /* Estilo específico para el botón de cancelar */
+    ::ng-deep app-custom-button:last-child .custom-button {
+      background: rgba(220, 53, 69, 0.2) !important;
+      border: 1px solid rgba(220, 53, 69, 0.4) !important;
+      color: #dc3545 !important;
+
+      &:hover {
+        background: rgba(220, 53, 69, 0.3) !important;
+        border-color: rgba(220, 53, 69, 0.6) !important;
+        color: #ffffff !important;
+      }
+
+      &:active {
+        background: rgba(220, 53, 69, 0.4) !important;
+      }
+    }
   }
 }
 
@@ -190,79 +239,111 @@
 }
 
 .detalle-item {
+  @include glassmorphism-card;
   @extend .glass-flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+  }
 
   i {
-    color: var(--color-info);
-    font-size: 1rem;
-    width: 16px;
+    color: var(--color-primary);
+    font-size: 1.4rem;
+    width: 24px;
     text-align: center;
     flex-shrink: 0;
+    opacity: 0.9;
   }
 
   .detalle-content {
     @extend .glass-flex;
     @extend .flex-col;
     min-width: 0;
+    flex: 1;
 
     .label {
       font-size: 0.75rem;
-      color: var(--color-muted);
+      color: #ffffff;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 500;
-      margin-bottom: 2px;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-bottom: 4px;
+      opacity: 0.8;
     }
 
     .value {
-      color: var(--color-secondary);
-      font-size: 0.875rem;
-      font-weight: 500;
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 700;
       word-wrap: break-word;
+      line-height: 1.3;
     }
   }
 }
 
 .fechas-grid {
   @extend .glass-grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
 }
 
 .fecha-item {
+  @include glassmorphism-card;
   @extend .glass-flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
 
   i {
-    color: var(--color-success);
-    font-size: 0.875rem;
-    width: 14px;
+    color: var(--color-accent);
+    font-size: 1.2rem;
+    width: 20px;
     text-align: center;
     flex-shrink: 0;
+    opacity: 0.9;
   }
 
   .fecha-content {
     @extend .glass-flex;
     @extend .flex-col;
     min-width: 0;
+    flex: 1;
 
     .label {
       font-size: 0.75rem;
-      color: var(--color-muted);
+      color: #ffffff;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-weight: 500;
-      margin-bottom: 2px;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-bottom: 4px;
+      opacity: 0.8;
     }
 
     .value {
-      color: var(--color-secondary);
-      font-size: 0.875rem;
-      font-weight: 500;
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.3;
     }
   }
 }
@@ -295,9 +376,7 @@
   @include glassmorphism-empty-state;
   max-width: 500px;
 
-  &.glassmorphism {
-    /* Ya incluido en el mixin */
-  }
+  /* Glassmorphism ya incluido en el mixin */
 
   .empty-icon {
     color: var(--color-muted);
@@ -528,6 +607,52 @@ app-filtros-postulaciones {
   50% {
     opacity: 0.7;
     transform: scale(1.1);
+  }
+}
+
+/* === CONTENEDOR DE ACCIONES === */
+.acciones-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+  }
+}
+
+/* === INFORMACIÓN DE DOCUMENTOS === */
+.documentos-info {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--border-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  .documentos-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+
+    i {
+      color: #ffffff;
+      opacity: 0.8;
+      font-size: 0.875rem;
+    }
+
+    span {
+      color: #ffffff;
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0.9;
+    }
   }
 }
 

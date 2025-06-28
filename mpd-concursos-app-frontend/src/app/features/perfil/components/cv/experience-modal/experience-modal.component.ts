@@ -108,6 +108,12 @@ export class ExperienceModalComponent implements OnInit, OnDestroy {
 
   // ===== LIFECYCLE =====
   ngOnInit(): void {
+    console.log('[ExperienceModal] 🔧 Inicializando modal:', {
+      isOpen: this.isOpen,
+      mode: this.mode,
+      hasExperience: !!this.experience,
+      experienceData: this.experience
+    });
     this.updateModalConfig();
   }
 

@@ -6,8 +6,8 @@
 // Asegurar que las variables globales estén correctamente definidas
 :root {
   // Colores principales
-  --color-primary: #1976D2;
-  --color-primary-dark: #1565C0;
+  --color-primary: #f1f6fa;
+  --color-primary-dark: #d1dae4;
   --color-primary-light: rgba(25, 118, 210, 0.15);
   --color-secondary: #424242;
   --color-accent: #4CAF50;
@@ -59,42 +59,6 @@ body, html {
     background-color: var(--color-background);
   }
 }
-
-// Correcciones para la barra lateral
-// COMENTADO: Estas reglas interfieren con el sistema glassmorphism de usuario
-// El sistema glassmorphism maneja estos estilos automáticamente
-/*
-.sidebar {
-  background-color: var(--color-background-dark);
-  border-right: 1px solid var(--card-border);
-
-  .nav-item {
-    a {
-      color: var(--color-text-secondary);
-
-      &.active {
-        background-color: var(--color-primary-light);
-        color: var(--color-primary);
-      }
-
-      &:hover:not(.active) {
-        background-color: rgba(255, 255, 255, 0.05);
-      }
-    }
-  }
-}
-*/
-
-// Correcciones para la barra de navegación
-// COMENTADO: Estas reglas interfieren con el sistema glassmorphism de usuario
-// El sistema glassmorphism maneja estos estilos automáticamente
-/*
-.navbar {
-  background-color: var(--color-background-dark);
-  border-bottom: 1px solid var(--card-border);
-  color: var(--color-text-primary);
-}
-*/
 
 // Correcciones para tarjetas
 .card, mat-card {

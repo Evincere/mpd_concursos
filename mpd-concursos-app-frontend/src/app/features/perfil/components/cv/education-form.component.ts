@@ -35,7 +35,7 @@ import { CustomSelectComponent } from '@shared/components/custom-form/custom-sel
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomDatepickerComponent } from '@shared/components/custom-form/custom-datepicker/custom-datepicker.component';
 import { CustomNumberInputComponent } from '@shared/components/custom-form/custom-number-input/custom-number-input.component';
-import { CvDocumentUploaderComponent, CvDocument as UploaderCvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
+import { CvDocumentUploaderComponent, ExistingCvDocument as UploaderCvDocument, DocumentValidationState } from './cv-document-uploader/cv-document-uploader.component';
 
 interface EducationDynamicField {
   name: string;
@@ -154,7 +154,7 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
       { name: 'isOngoing', label: 'En Curso', type: 'checkbox', required: false, helpText: 'Marcar si está en curso', showWhen: form => form.status === EducationStatus.IN_PROGRESS },
       { name: 'endDate', label: 'Fecha de Fin', type: 'date', required: true, helpText: 'Fecha de finalización', showWhen: form => form.status === EducationStatus.COMPLETED || form.status === EducationStatus.SUSPENDED || form.status === EducationStatus.ABANDONED || (form.status === EducationStatus.IN_PROGRESS && !form.isOngoing) },
       { name: 'durationYears', label: 'Duración (años)', type: 'number', required: false, placeholder: '5', helpText: 'Duración de la carrera', showForTypes: [EducationType.UNIVERSITY_DEGREE] },
-      { name: 'average', label: 'Promedio', type: 'number', required: false, min: 1, max: 10, placeholder: '8,50', helpText: 'Promedio general', showForTypes: [EducationType.UNIVERSITY_DEGREE] },
+      { name: 'average', label: 'Promedio', type: 'number', required: false, min: 1, max: 10, placeholder: '8,50', helpText: 'Promedio general (usar coma como separador decimal)', showForTypes: [EducationType.UNIVERSITY_DEGREE] },
       { name: 'thesisTopic', label: 'Tema de Tesis', type: 'text', required: false, placeholder: 'Tema de tesis', helpText: 'Tema de la tesis o trabajo final', showForTypes: [EducationType.POSTGRADUATE_SPECIALIZATION, EducationType.MASTER_DEGREE, EducationType.DOCTORATE] },
       { name: 'hourlyLoad', label: 'Carga Horaria (hs)', type: 'number', required: false, placeholder: '120', helpText: 'Carga horaria total', showForTypes: [EducationType.DIPLOMA, EducationType.CERTIFICATION] },
       { name: 'activityType', label: 'Tipo de Actividad', type: 'select', required: true, helpText: 'Tipo de actividad científica', showForTypes: [EducationType.SCIENTIFIC_ACTIVITY], options: this.scientificActivityTypeOptions },
@@ -253,7 +253,7 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
   shouldShowField(field: EducationDynamicField): boolean {
     const form = this.form();
     if (!form) return false;
-    const formValue = form.value;
+    const formValue = form.getRawValue();
     if (field.showForTypes && !field.showForTypes.includes(formValue.type)) return false;
     if (field.showWhen && !field.showWhen(formValue)) return false;
     return true;
@@ -422,9 +422,9 @@ export class EducationFormComponent implements OnInit, OnChanges, OnDestroy, ICv
       if (this.education.document) {
         const modelDoc = this.education.document;
         const uploaderDoc: UploaderCvDocument = {
-          id: modelDoc.id,
+          id: modelDoc.id || `doc_${Date.now()}`, // Proporcionar ID por defecto si no existe
           fileName: modelDoc.fileName,
-          originalName: modelDoc.originalFileName,
+          originalFileName: modelDoc.originalFileName,
           fileSize: modelDoc.fileSize,
           mimeType: modelDoc.mimeType,
           documentType: 'education',

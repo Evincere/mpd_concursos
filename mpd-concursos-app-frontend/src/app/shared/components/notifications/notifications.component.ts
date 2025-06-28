@@ -67,6 +67,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.showNotifications = !this.showNotifications;
     }
 
+    trackByNotificationId(index: number, notification: Notification): string {
+        return notification.id;
+    }
+
     onNotificationRead(notification: Notification): void {
         if (!notification.readAt) {
             // Usar el método correcto del servicio

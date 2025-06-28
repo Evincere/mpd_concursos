@@ -36,7 +36,7 @@
 
     <!-- Contenido cuando no hay errores de conexión -->
     <ng-container *ngIf="!loading && error !== 'connection'">
-      <!-- Lista de postulaciones -->
+      <!-- Lista de postulaciones en filas -->
       <div class="postulaciones-list" *ngIf="paginatedPostulaciones.length > 0" [ngClass]="{'blurred': postulacionSeleccionada}">
         <div class="postulacion-item"
              *ngFor="let postulacion of paginatedPostulaciones">
@@ -65,14 +65,20 @@
                   [ariaLabel]="'Ver detalle de postulación: ' + (postulacion.concurso?.title || 'Sin título')"
                   (buttonClick)="verDetalle(postulacion)">
                 </app-custom-button>
+
+                <!-- Botón para cancelar postulación -->
+                <app-custom-button
+                  *ngIf="postulacion.estado !== 'CANCELLED'"
+                  [variant]="'icon'"
+                  [icon]="'times'"
+                  [tooltip]="'Cancelar postulación'"
+                  [ariaLabel]="'Cancelar postulación: ' + (postulacion.concurso?.title || 'Sin título')"
+                  (buttonClick)="cancelarPostulacion(postulacion)">
+                </app-custom-button>
               </div>
             </div>
 
-            <!-- Mensaje descriptivo del estado -->
-            <div class="status-message" [class.urgent]="requiresUrgentAction(postulacion)">
-              <i class="fas fa-info-circle" aria-hidden="true"></i>
-              <span>{{ getStatusMessage(postulacion) }}</span>
-            </div>
+            <!-- Mensaje descriptivo del estado eliminado por redundancia -->
 
             <!-- Botón para retomar proceso interrumpido -->
             <app-custom-button
@@ -97,9 +103,9 @@
             </app-custom-button>
 
             <!-- Alerta para documentación pendiente -->
-            <div class="alert-banner" *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'" role="alert" aria-live="polite">
+            <div class="alert-banner-compact" *ngIf="postulacion.estado === 'COMPLETED_PENDING_DOCS'" role="alert" aria-live="polite">
               <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-              <span>Documentación pendiente - Tienes 3 días hábiles para completarla</span>
+              <span>Documentación pendiente - Tienes 3 días hábiles luego de finalizada la inscripción el {{ formatDate(postulacion.concurso?.endDate) }} para completarla, caso contrario se dará de baja automáticamente</span>
             </div>
 
             <!-- Información principal -->
@@ -152,6 +158,8 @@
                 <span>{{ postulacion.attachedDocuments?.length }} documento(s) adjunto(s)</span>
               </div>
             </div>
+
+            <!-- Acciones adicionales eliminadas - todas las acciones están en la esquina superior derecha -->
           </div>
         </div>
       </div>

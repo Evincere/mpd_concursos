@@ -1742,8 +1742,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
 
   // Load terms and conditions content (assuming from a static file or API)
   loadTermsAndConditions(): void {
-    // Example: Fetch from a static file in assets or an API endpoint
-    this.http.get('assets/terms-and-conditions.html', { responseType: 'text' }).pipe(
+    // ✅ UX/UI: Usar archivo sin estilos CSS inline para permitir personalización
+    this.http.get('assets/terminos-y-condiciones.html', { responseType: 'text' }).pipe(
       takeUntil(this.destroy$),
       catchError(error => {
         console.error('[InscripcionProcess] Error loading terms and conditions:', error);

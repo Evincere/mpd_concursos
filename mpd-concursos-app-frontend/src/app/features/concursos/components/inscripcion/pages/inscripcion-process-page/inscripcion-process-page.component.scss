@@ -307,6 +307,18 @@
     0 4px 16px rgba(245, 158, 11, 0.1),
     0 1px 4px rgba(0, 0, 0, 0.1);
 
+  /* ✅ UX/UI: Headers de inscripción provisional en blanco */
+  .alert-header span,
+  .info-header span {
+    color: #ffffff !important;
+  }
+
+  /* ✅ UX/UI: Texto resaltado en color naranja en lugar de azul */
+  strong {
+    color: #fbbf24 !important; // Color naranja/amarillo en lugar de azul
+    font-weight: 600;
+  }
+
   /* ✅ Gradiente de fondo más elegante y sutil */
   &::before {
     content: '';
@@ -360,7 +372,7 @@
     }
 
     p {
-      color: var(--color-primary);
+      color: #ffffff !important; // ✅ UX/UI: Forzar color blanco en lugar de var(--color-primary)
       line-height: 1.6;
       margin: 0 0 var(--spacing-lg) 0;
       font-size: 0.95rem;
@@ -405,8 +417,8 @@
       }
 
       span {
-        /* ✅ ACCESIBILIDAD: Texto con mejor contraste (4.8:1 ratio) */
-        color: var(--color-primary);
+        /* ✅ UX/UI: Texto blanco para mejor visibilidad en fondo oscuro */
+        color: #ffffff !important;
         font-size: 0.875rem;
         line-height: 1.5;
         font-weight: 500;
@@ -473,6 +485,17 @@
     z-index: 1;
   }
 
+  /* ✅ UX/UI: Header de inscripción provisional en blanco */
+  .info-header span {
+    color: #ffffff !important;
+  }
+
+  /* ✅ UX/UI: Texto resaltado en color naranja en lugar de azul */
+  strong {
+    color: #fbbf24 !important; // Color naranja/amarillo en lugar de azul
+    font-weight: 600;
+  }
+
   .info-header {
     display: flex;
     align-items: center;
@@ -521,10 +544,24 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(12px);
 
-  // Contenido HTML dinámico
+  // ✅ UX/UI: FORZAR COLOR BLANCO CON MÁXIMA ESPECIFICIDAD
+  &.terms-container {
+    color: #ffffff !important;
+
+    * {
+      color: #ffffff !important;
+    }
+  }
+
+  // ✅ UX/UI: FORZAR COLOR BLANCO PARA TODO EL CONTENIDO
+  :deep(*) {
+    color: #ffffff !important;
+  }
+
+  // Contenido HTML dinámico - FORZAR COLOR BLANCO
   :deep(p) {
     margin: 0 0 var(--spacing-lg) 0;
-    color: #f9fafb; // Color primario con alto contraste
+    color: #ffffff !important; // ✅ UX/UI: Color blanco forzado para términos y condiciones
     line-height: 1.7;
     font-size: 1rem;
     font-weight: 400;
@@ -537,6 +574,11 @@
     &:last-child {
       margin-bottom: 0;
     }
+  }
+
+  // ✅ UX/UI: Sobrescribir estilos específicos del HTML
+  :deep(body) {
+    color: #ffffff !important;
   }
 
   :deep(ol), :deep(ul) {
@@ -558,7 +600,7 @@
   }
 
   :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
-    color: #3b82f6;
+    color: #ffffff !important; // ✅ UX/UI: Cambiar encabezados de azul a blanco
     font-weight: 700;
     margin: var(--spacing-xl) 0 var(--spacing-lg) 0;
 
@@ -568,13 +610,43 @@
   }
 
   :deep(strong), :deep(b) {
-    color: #e5e7eb;
+    color: #ffffff !important; // ✅ UX/UI: Texto en negrita blanco
     font-weight: 700;
   }
 
   :deep(em), :deep(i) {
-    color: #d1d5db;
+    color: #ffffff !important; // ✅ UX/UI: Texto en cursiva blanco
     font-style: italic;
+  }
+
+  // ✅ UX/UI: Sobrescribir estilos inline específicos del archivo HTML
+  :deep([style*="color"]) {
+    color: #ffffff !important;
+  }
+
+  // ✅ UX/UI: Estilos específicos para elementos del HTML de términos
+  :deep(li) {
+    color: #ffffff !important;
+  }
+
+  // ✅ UX/UI: Sobrescribir TODAS las referencias a var(--color-primary) dentro de términos
+  :deep(*) {
+    --color-primary: #ffffff !important;
+  }
+}
+
+// ✅ UX/UI: Regla específica para sobrescribir .glass-layout dentro de términos
+.inscripcion-process-container .terms-container {
+  color: #ffffff !important;
+
+  * {
+    color: #ffffff !important;
+  }
+
+  // Sobrescribir específicamente la regla de glass-layout
+  &.glass-layout,
+  .glass-layout {
+    color: #ffffff !important;
   }
 }
 
@@ -850,6 +922,18 @@
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+
+  /* ✅ UX/UI: Labels de checkboxes de circunscripciones en blanco */
+  ::ng-deep app-custom-checkbox .checkbox-label {
+    color: #ffffff !important;
+  }
+}
+
+/* ✅ UX/UI: Estilos globales para checkboxes en el proceso de inscripción */
+::ng-deep app-custom-checkbox {
+  .checkbox-label {
+    color: #ffffff !important;
+  }
 }
 
 .circunscripcion-item {
