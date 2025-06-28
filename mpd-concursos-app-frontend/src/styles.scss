@@ -8,6 +8,9 @@
 @import '@fontsource/roboto/500.css';
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
+/* === ANIMACIONES DE ICONOS === */
+@import 'styles/icon-animations.scss';
+
 /* === UNIFIED GLASSMORPHISM SYSTEM === */
 /* Sistema glassmorphism unificado que reemplaza todos los sistemas anteriores */
 @import './styles/unified-glassmorphism-system';

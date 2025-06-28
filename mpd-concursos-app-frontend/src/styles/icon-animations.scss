@@ -1,0 +1,304 @@
+/* ===== ANIMACIONES DE ICONOS MEJORADAS ===== */
+
+/* Asegurar que las animaciones de Font Awesome funcionen correctamente */
+.fas, .far, .fab, .fal, .fad, .fat {
+  /* Optimización para animaciones */
+  will-change: transform;
+  backface-visibility: hidden;
+  
+  /* Animaciones de Font Awesome mejoradas */
+  &.fa-spin {
+    animation: fa-spin 2s infinite linear;
+    transform-origin: center;
+  }
+  
+  &.fa-pulse {
+    animation: fa-spin 1s infinite steps(8);
+    transform-origin: center;
+  }
+  
+  &.fa-beat {
+    animation: fa-beat 1s infinite linear;
+    transform-origin: center;
+  }
+  
+  &.fa-fade {
+    animation: fa-fade 1s infinite linear;
+  }
+  
+  &.fa-beat-fade {
+    animation: fa-beat-fade 1s infinite linear;
+    transform-origin: center;
+  }
+  
+  &.fa-bounce {
+    animation: fa-bounce 1s infinite linear;
+    transform-origin: center;
+  }
+  
+  &.fa-flip {
+    animation: fa-flip 1s infinite ease-in-out;
+    transform-origin: center;
+  }
+  
+  &.fa-shake {
+    animation: fa-shake 1s infinite linear;
+    transform-origin: center;
+  }
+  
+  &.fa-spin-pulse {
+    animation: fa-spin 1s infinite steps(8);
+    transform-origin: center;
+  }
+}
+
+/* Animaciones personalizadas adicionales */
+.icon-hover-spin {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: rotate(180deg);
+  }
+}
+
+.icon-hover-bounce {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    animation: bounce 0.6s ease;
+  }
+}
+
+.icon-hover-pulse {
+  &:hover {
+    animation: pulse 1s ease-in-out;
+  }
+}
+
+/* Animaciones de contexto específico */
+.loading .fas,
+.loading .far,
+.loading .fab,
+.spinner .fas,
+.spinner .far,
+.spinner .fab,
+[data-loading="true"] .fas,
+[data-loading="true"] .far,
+[data-loading="true"] .fab {
+  &.fa-cog,
+  &.fa-gear,
+  &.fa-sync,
+  &.fa-refresh,
+  &.fa-spinner {
+    animation: fa-spin 1s infinite linear;
+  }
+}
+
+/* Animaciones para botones interactivos */
+button .fas,
+button .far,
+button .fab,
+.btn .fas,
+.btn .far,
+.btn .fab,
+a .fas,
+a .far,
+a .fab,
+[role="button"] .fas,
+[role="button"] .far,
+[role="button"] .fab {
+  transition: transform 0.2s ease, color 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Animaciones para iconos de notificación */
+.notification-icon,
+.alert-icon,
+.fa-bell,
+.fa-exclamation-triangle,
+.fa-exclamation-circle {
+  &.animate {
+    animation: fa-shake 0.5s ease-in-out;
+  }
+  
+  &.pulse {
+    animation: fa-pulse 2s infinite;
+  }
+}
+
+/* Animaciones para iconos de éxito */
+.success-icon,
+.fa-check,
+.fa-check-circle {
+  &.animate {
+    animation: fa-bounce 0.6s ease;
+  }
+}
+
+/* Animaciones para iconos de carga */
+.loading-icon,
+.fa-spinner,
+.fa-circle-notch {
+  animation: fa-spin 1s infinite linear;
+}
+
+/* Animaciones para iconos de búsqueda */
+.search-icon,
+.fa-search {
+  &.searching {
+    animation: fa-pulse 1.5s infinite;
+  }
+}
+
+/* Keyframes personalizados para mejor rendimiento */
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fa-beat {
+  0%, 90% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.25);
+  }
+}
+
+@keyframes fa-fade {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes fa-beat-fade {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.125);
+  }
+}
+
+@keyframes fa-bounce {
+  0%, 10%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40%, 60% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes fa-flip {
+  50% {
+    transform: rotate3d(0, 1, 0, -180deg);
+  }
+}
+
+@keyframes fa-shake {
+  0% {
+    transform: rotate(-15deg);
+  }
+  4% {
+    transform: rotate(15deg);
+  }
+  8%, 24% {
+    transform: rotate(-18deg);
+  }
+  12%, 28% {
+    transform: rotate(18deg);
+  }
+  16% {
+    transform: rotate(-22deg);
+  }
+  20% {
+    transform: rotate(22deg);
+  }
+  32% {
+    transform: rotate(-12deg);
+  }
+  36% {
+    transform: rotate(12deg);
+  }
+  40%, 100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Soporte para movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .fas, .far, .fab, .fal, .fad, .fat {
+    &.fa-spin,
+    &.fa-pulse,
+    &.fa-beat,
+    &.fa-fade,
+    &.fa-beat-fade,
+    &.fa-bounce,
+    &.fa-flip,
+    &.fa-shake,
+    &.fa-spin-pulse {
+      animation: none !important;
+    }
+  }
+  
+  .icon-hover-spin,
+  .icon-hover-bounce,
+  .icon-hover-pulse {
+    &:hover {
+      animation: none !important;
+      transform: none !important;
+    }
+  }
+  
+  button .fas,
+  button .far,
+  button .fab,
+  .btn .fas,
+  .btn .far,
+  .btn .fab {
+    &:hover,
+    &:active {
+      transform: none !important;
+    }
+  }
+}

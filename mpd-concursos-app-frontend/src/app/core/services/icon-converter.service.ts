@@ -150,12 +150,23 @@ export class IconConverterService {
         return; // Ya está convertido, no hacer nada
       }
 
+      // Preservar clases de animación y utilidad existentes
+      const preservedClasses = this.getPreservedClasses(element);
+
       // Limpiar clases de Material Icons
       element.classList.remove('material-icons', 'material-symbols-outlined');
 
       // Agregar clases de Font Awesome
       const classes = fontAwesomeClass.split(' ');
       element.classList.add(...classes);
+
+      // Restaurar clases preservadas (animaciones, utilidades, etc.)
+      if (preservedClasses.length > 0) {
+        element.classList.add(...preservedClasses);
+      }
+
+      // Restaurar animaciones comunes basadas en el contexto
+      this.restoreCommonAnimations(element, iconName);
 
       // Limpiar el contenido de texto
       element.textContent = '';
@@ -166,7 +177,7 @@ export class IconConverterService {
       // Marcar como convertido para evitar reconversión
       element.setAttribute('data-icon-converted', 'true');
 
-      console.log(`[IconConverter] Convertido: ${iconName} → ${fontAwesomeClass}`);
+      console.log(`[IconConverter] Convertido: ${iconName} → ${fontAwesomeClass}${preservedClasses.length > 0 ? ' (con animaciones preservadas)' : ''}`);
     }
   }
 
@@ -254,6 +265,117 @@ export class IconConverterService {
    */
   public convertIcon(iconName: string): string {
     return this.materialToFontAwesome[iconName] || `fas fa-question-circle`;
+  }
+
+  /**
+   * Obtiene las clases que deben preservarse durante la conversión
+   */
+  private getPreservedClasses(element: HTMLElement): string[] {
+    const preservedClasses: string[] = [];
+    const classList = Array.from(element.classList);
+
+    // Clases de animación de Font Awesome
+    const fontAwesomeAnimations = [
+      'fa-spin', 'fa-pulse', 'fa-beat', 'fa-fade', 'fa-beat-fade',
+      'fa-bounce', 'fa-flip', 'fa-shake', 'fa-spin-pulse'
+    ];
+
+    // Clases de animación personalizadas del proyecto
+    const customAnimations = [
+      'animate-spin', 'animate-pulse', 'animate-bounce', 'animate-fade-in',
+      'animate-slide-in-up', 'animate-slide-in-down', 'animate-slide-in-left',
+      'animate-slide-in-right', 'hover-lift', 'hover-scale', 'spinning'
+    ];
+
+    // Clases de utilidad que deben preservarse
+    const utilityClasses = [
+      // Tamaños de Font Awesome
+      'fa-xs', 'fa-sm', 'fa-lg', 'fa-xl', 'fa-2x', 'fa-3x', 'fa-4x', 'fa-5x', 'fa-6x', 'fa-7x', 'fa-8x', 'fa-9x', 'fa-10x',
+      // Rotación
+      'fa-rotate-90', 'fa-rotate-180', 'fa-rotate-270', 'fa-flip-horizontal', 'fa-flip-vertical', 'fa-flip-both',
+      // Posicionamiento
+      'fa-fw', 'fa-pull-left', 'fa-pull-right',
+      // Bordes y efectos
+      'fa-border', 'fa-inverse',
+      // Clases de estado
+      'active', 'disabled', 'loading', 'hidden', 'visible',
+      // Clases de color
+      'text-primary', 'text-secondary', 'text-success', 'text-warning', 'text-danger',
+      // Clases de tamaño genéricas
+      'small', 'large', 'xl', 'xs', 'sm', 'md', 'lg'
+    ];
+
+    const allPreservedPatterns = [
+      ...fontAwesomeAnimations,
+      ...customAnimations,
+      ...utilityClasses
+    ];
+
+    // Preservar todas las clases relevantes
+    classList.forEach(className => {
+      // Verificar coincidencias exactas
+      if (allPreservedPatterns.includes(className)) {
+        preservedClasses.push(className);
+      }
+
+      // Verificar patrones con prefijos comunes
+      if (className.startsWith('fa-') ||
+          className.startsWith('animate-') ||
+          className.startsWith('hover-') ||
+          className.startsWith('text-') ||
+          className.startsWith('bg-') ||
+          className.startsWith('border-') ||
+          className.includes('spin') ||
+          className.includes('pulse') ||
+          className.includes('bounce') ||
+          className.includes('fade') ||
+          className.includes('transition') ||
+          className.includes('duration') ||
+          className.includes('ease')) {
+        preservedClasses.push(className);
+      }
+    });
+
+    return preservedClasses;
+  }
+
+
+
+  /**
+   * Restaura animaciones comunes basadas en el contexto del icono
+   */
+  private restoreCommonAnimations(element: HTMLElement, iconName: string): void {
+    // Mapeo de iconos que comúnmente tienen animaciones específicas
+    const animationMappings: Record<string, string[]> = {
+      'refresh': ['fa-spin'],
+      'sync': ['fa-spin'],
+      'loading': ['fa-spin'],
+      'spinner': ['fa-spin'],
+      'cog': ['fa-spin'],
+      'gear': ['fa-spin'],
+      'settings': ['fa-spin'],
+      'search': ['fa-pulse'],
+      'heart': ['fa-beat'],
+      'bell': ['fa-shake'],
+      'notification': ['fa-shake'],
+      'warning': ['fa-bounce'],
+      'error': ['fa-shake'],
+      'check': ['fa-bounce'],
+      'success': ['fa-bounce']
+    };
+
+    // Verificar si el icono tiene animaciones predefinidas
+    const animations = animationMappings[iconName];
+    if (animations) {
+      // Solo agregar si el elemento está en un contexto que sugiere animación
+      const isInLoadingContext = element.closest('.loading, .spinner, [data-loading="true"]');
+      const isInInteractiveContext = element.closest('button, .btn, a, [role="button"]');
+
+      if (isInLoadingContext || isInInteractiveContext) {
+        element.classList.add(...animations);
+        console.log(`[IconConverter] Animación restaurada: ${iconName} → ${animations.join(', ')}`);
+      }
+    }
   }
 
   /**
