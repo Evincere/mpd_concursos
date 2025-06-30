@@ -23,7 +23,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 0;
+  padding: 0.75rem 0;
 
   .footer-left {
     flex: 0 0 auto;
@@ -107,7 +107,7 @@
       }
 
       // ✅ Asegurar que el contenido del botón esté por encima del ::before
-      .material-icons,
+      .fas,
       span {
         position: relative;
         z-index: 1;
@@ -128,7 +128,7 @@
     }
 
     // Iconos
-    .material-icons {
+    .fas {
       font-size: 1.125rem;
 
       &.spinning {
@@ -167,25 +167,7 @@
   font-size: 20px;
 }
 
-// ===== FOOTER =====
-.experience-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 16px;
-  
-  .footer-left {
-    flex: 0 0 auto;
-  }
-  
-  .footer-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 0 0 auto;
-  }
-}
+
 
 // ===== RESPONSIVE =====
 @media (max-width: 768px) {
@@ -231,9 +213,14 @@
     .modal-container {
       max-width: 900px;
     }
-    
+
     .modal-body {
       padding-top: 0;
+    }
+
+    .modal-footer {
+      min-height: 50px;
+      padding: 12px 24px;
     }
   }
 }

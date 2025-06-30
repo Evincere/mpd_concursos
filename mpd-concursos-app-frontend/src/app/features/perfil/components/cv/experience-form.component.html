@@ -4,7 +4,7 @@
   <!-- Header del formulario (solo si no está en modal) -->
   <div class="form-header" *ngIf="!isInModal">
     <h3 class="form-title">
-      <i class="material-icons">work</i>
+      <i class="fas fa-briefcase"></i>
       {{ mode === 'create' ? 'Agregar Experiencia Laboral' : 'Editar Experiencia Laboral' }}
     </h3>
     <p class="form-subtitle">
@@ -14,7 +14,7 @@
     <!-- ADVERTENCIA CRÍTICA sobre documentación obligatoria -->
     <div class="document-requirement-alert">
       <div class="alert alert-warning">
-        <i class="material-icons">warning</i>
+        <i class="fas fa-exclamation-triangle"></i>
         <div class="alert-content">
           <strong>Documentación Obligatoria:</strong>
           <p>Es <strong>obligatorio</strong> adjuntar un documento que respalde esta experiencia laboral (certificado de trabajo, carta de recomendación, contrato, etc.). Sin este documento no podrás guardar la experiencia.</p>
@@ -26,7 +26,7 @@
   <!-- Alertas de validación -->
   <div class="validation-alerts" *ngIf="hasErrors() || hasWarnings()">
     <div class="alert alert-error" *ngIf="hasErrors()">
-      <i class="material-icons">error</i>
+      <i class="fas fa-exclamation-circle"></i>
       <div class="alert-content">
         <strong>Errores de validación:</strong>
         <ul>
@@ -34,9 +34,9 @@
         </ul>
       </div>
     </div>
-    
+
     <div class="alert alert-warning" *ngIf="hasWarnings()">
-      <i class="material-icons">warning</i>
+      <i class="fas fa-exclamation-triangle"></i>
       <div class="alert-content">
         <strong>Advertencias:</strong>
         <ul>
@@ -128,7 +128,7 @@
                 class="add-chip-btn"
                 [attr.disabled]="isLoading ? '' : null"
                 (click)="handleChipButtonClick(chipInput, field.name)">
-                <i class="material-icons">add</i>
+                <i class="fas fa-plus"></i>
               </button>
             </div>
 
@@ -144,7 +144,7 @@
                   [attr.disabled]="isLoading ? '' : null"
                   (click)="onRemoveChip(field.name, i)"
                   [title]="'Eliminar'">
-                  <i class="material-icons">close</i>
+                  <i class="fas fa-times"></i>
                 </button>
               </div>
             </div>
@@ -173,7 +173,7 @@
 
       <div class="document-upload-info">
         <div class="info-box">
-          <i class="material-icons">info</i>
+          <i class="fas fa-info-circle"></i>
           <div class="info-content">
             <p><strong>Documentación obligatoria:</strong> Debes subir un documento que respalde tu experiencia</p>
             <p><strong>Formato requerido:</strong> Solo archivos PDF</p>
@@ -213,7 +213,7 @@
   <div class="form-status" *ngIf="isDirty()">
     <div class="status-indicator enhanced" [class.valid]="isFormValid()" [class.invalid]="!isFormValid()">
       <div class="status-icon">
-        <i class="material-icons">{{ isFormValid() ? 'check_circle' : 'warning' }}</i>
+        <i class="fas fa-{{ isFormValid() ? 'check-circle' : 'exclamation-triangle' }}"></i>
       </div>
       <div class="status-content">
         <span class="status-text">{{ isFormValid() ? 'Formulario válido' : 'Formulario incompleto' }}</span>

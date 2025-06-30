@@ -4,19 +4,15 @@ package ar.gov.mpd.concursobackend.education.domain.model;
  * Enumeración para roles en actividades científicas
  */
 public enum ScientificActivityRole {
-    AUTHOR("Autor"),
-    CO_AUTHOR("Co-autor"),
-    PRESENTER("Expositor"),
-    ORGANIZER("Organizador"),
-    COORDINATOR("Coordinador"),
-    PARTICIPANT("Participante");
-    
+    ASSISTANT_PARTICIPANT("ayudante-participante"),
+    AUTHOR_SPEAKER_PANELIST_PRESENTER("autor-disertante-panelista-exponente");
+
     private final String displayName;
-    
+
     ScientificActivityRole(String displayName) {
         this.displayName = displayName;
     }
-    
+
     public String getDisplayName() {
         return displayName;
     }

@@ -31,7 +31,7 @@
       background: rgba(var(--primary-color-rgb), 0.1);
       transform: scale(1.02);
       
-      .upload-icon .material-icons {
+      .upload-icon .fas {
         animation: bounce 0.6s ease-in-out infinite;
         color: var(--primary-color);
       }
@@ -56,11 +56,11 @@
       .upload-icon {
         margin-bottom: 1rem;
         
-        .material-icons {
+        .fas {
           font-size: 3rem;
           color: var(--text-secondary);
           transition: all 0.3s ease;
-          
+
           &.animate {
             animation: pulse 1s ease-in-out infinite;
           }
@@ -113,7 +113,7 @@
             font-size: 0.875rem;
             color: var(--text-secondary);
             
-            .material-icons {
+            .fas {
               font-size: 1rem;
             }
           }
@@ -127,13 +127,13 @@
       .disabled-icon {
         margin-bottom: 1rem;
         
-        .material-icons {
+        .fas {
           font-size: 3rem;
           color: var(--success-color);
         }
       }
-      
-      .disabled-icon .material-icons {
+
+      .disabled-icon .fas {
         color: var(--text-secondary);
       }
       
@@ -201,7 +201,7 @@
         color: var(--text-primary);
         margin: 0;
         
-        .material-icons {
+        .fas {
           color: var(--primary-color);
         }
       }
@@ -249,7 +249,7 @@
           position: relative;
           flex-shrink: 0;
           
-          .material-icons {
+          .fas {
             font-size: 2.5rem;
             color: var(--primary-color);
           }
@@ -266,7 +266,7 @@
             justify-content: center;
             border: 2px solid var(--color-background);
             
-            .material-icons {
+            .fas {
               font-size: 0.875rem;
               color: white;
             }
@@ -363,7 +363,7 @@
             cursor: pointer;
             transition: all 0.2s ease;
             
-            .material-icons {
+            .fas {
               font-size: 1.125rem;
             }
             
@@ -422,7 +422,7 @@
       .alert-icon {
         flex-shrink: 0;
         
-        .material-icons {
+        .fas {
           font-size: 1.25rem;
         }
       }
@@ -479,7 +479,7 @@
       .help-icon {
         flex-shrink: 0;
         
-        .material-icons {
+        .fas {
           font-size: 1.5rem;
           color: var(--primary-color);
         }
@@ -603,7 +603,7 @@
       padding: 1rem;
       
       .upload-content {
-        .upload-icon .material-icons {
+        .upload-icon .fas {
           font-size: 2.5rem;
         }
         
@@ -617,7 +617,7 @@
       .document-item {
         padding: 0.75rem;
         
-        .document-icon .material-icons {
+        .document-icon .fas {
           font-size: 2rem;
         }
         
@@ -626,7 +626,7 @@
             width: 2rem;
             height: 2rem;
             
-            .material-icons {
+            .fas {
               font-size: 1rem;
             }
           }

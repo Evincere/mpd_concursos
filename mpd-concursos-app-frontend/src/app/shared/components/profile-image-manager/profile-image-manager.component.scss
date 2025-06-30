@@ -140,6 +140,12 @@
   border-radius: var(--radius-full);
   gap: var(--spacing-sm);
   
+  .loading-spinner {
+    font-size: 2rem;
+    color: var(--color-primary);
+    animation: spin 1s linear infinite;
+  }
+
   .loading-text {
     font-size: 0.75rem;
     font-weight: 500;
@@ -320,6 +326,17 @@
 .glass-btn:focus-visible {
   outline: 2px solid var(--focus-primary);
   outline-offset: 2px;
+}
+
+/* === ANIMATIONS === */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* === LOADING STATES === */

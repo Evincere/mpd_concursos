@@ -6,7 +6,7 @@
   
   <!-- Modal Title -->
   <div slot="title">
-    <i class="material-icons modal-icon">work</i>
+    <i class="fas fa-briefcase modal-icon"></i>
     {{ modalTitle() }}
   </div>
   
@@ -64,8 +64,8 @@
         class="custom-button primary"
         [disabled]="!canSave()"
         [class.loading]="isLoading">
-        <i *ngIf="!isLoading" class="material-icons">save</i>
-        <i *ngIf="isLoading" class="material-icons spinning">refresh</i>
+        <i *ngIf="!isLoading" class="fas fa-save"></i>
+        <i *ngIf="isLoading" class="fas fa-sync-alt spinning"></i>
         {{ mode === 'create' ? 'Agregar' : 'Guardar' }}
       </button>
 

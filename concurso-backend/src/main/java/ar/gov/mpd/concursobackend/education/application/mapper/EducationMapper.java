@@ -45,8 +45,8 @@ public class EducationMapper {
                 // Educación secundaria no requiere campos adicionales específicos
                 break;
 
-            case HIGHER_EDUCATION_DEGREE:
-            case UNDERGRADUATE_DEGREE:
+            case HIGHER_EDUCATION_CAREER:
+            case UNDERGRADUATE_CAREER:
                 builder.durationYears(education.getDurationYears())
                        .average(education.getAverage());
                 break;
@@ -119,8 +119,8 @@ public class EducationMapper {
                 // Educación secundaria no requiere campos adicionales específicos
                 break;
 
-            case HIGHER_EDUCATION_DEGREE:
-            case UNDERGRADUATE_DEGREE:
+            case HIGHER_EDUCATION_CAREER:
+            case UNDERGRADUATE_CAREER:
                 builder.durationYears(dto.getDurationYears())
                       .average(dto.getAverage());
                 break;
@@ -185,8 +185,8 @@ public class EducationMapper {
                 // Educación secundaria no requiere campos adicionales específicos
                 break;
 
-            case HIGHER_EDUCATION_DEGREE:
-            case UNDERGRADUATE_DEGREE:
+            case HIGHER_EDUCATION_CAREER:
+            case UNDERGRADUATE_CAREER:
                 builder.durationYears(dto.getDurationYears())
                       .average(dto.getAverage());
                 break;

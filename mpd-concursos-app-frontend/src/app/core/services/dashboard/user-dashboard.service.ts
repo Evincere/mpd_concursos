@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { LoggingService } from '@core/services/logging/logging.service';
+import { AuthService } from '@core/services/auth/auth.service';
 
 /**
  * Interfaces para los datos del dashboard de usuario
@@ -107,7 +108,8 @@ export class UserDashboardService {
 
   constructor(
     private http: HttpClient,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private authService: AuthService
   ) {
     this.loggingService.debug(`[${this.LOG_TAG}] Initializing UserDashboardService.`, undefined, this.LOG_TAG);
   }
@@ -188,7 +190,14 @@ export class UserDashboardService {
       }),
       catchError(error => {
         this.loggingService.error(`[${this.LOG_TAG}] Error fetching user stats - backend may be offline:`, error, this.LOG_TAG);
-        // En caso de error, devolver datos mock con valores por defecto
+
+        // ✅ SEGURIDAD: Validar autenticación antes de retornar datos mock
+        if (!this.authService.isAuthenticated()) {
+          this.loggingService.warn(`[${this.LOG_TAG}] Usuario no autenticado, no se retornan datos mock`, undefined, this.LOG_TAG);
+          return throwError(() => new Error('Usuario no autenticado'));
+        }
+
+        // En caso de error, devolver datos mock con valores por defecto solo si está autenticado
         const mockStats = this.getMockStats();
         this.statsSubject.next(mockStats);
         return of(mockStats); // Retornar observable con datos mock en lugar de error
@@ -289,6 +298,12 @@ export class UserDashboardService {
   }
 
   private getMockStats(): UserStats {
+    // ✅ SEGURIDAD: Validación adicional de autenticación para datos mock
+    if (!this.authService.isAuthenticated()) {
+      this.loggingService.error(`[${this.LOG_TAG}] Intento de acceso a datos mock sin autenticación`, undefined, this.LOG_TAG);
+      throw new Error('Acceso no autorizado a datos mock');
+    }
+
     this.loggingService.warn(`[${this.LOG_TAG}] Using mock stats - backend connection failed`, undefined, this.LOG_TAG);
     return {
       profileStats: {

@@ -40,7 +40,7 @@ export interface ExperienceModalResult {
             <p class="modal-subtitle">Completa la información sobre tu experiencia profesional y adjunta un documento que la respalde</p>
           </div>
           <button type="button" class="close-button" (click)="onClose()" aria-label="Cerrar modal">
-            <i class="material-icons">close</i>
+            <i class="fas fa-times"></i>
           </button>
         </div>
 

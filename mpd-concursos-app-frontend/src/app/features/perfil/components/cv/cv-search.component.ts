@@ -118,21 +118,19 @@ export class CvSearchComponent implements OnInit, OnDestroy {
   // ===== OPCIONES DE FILTROS =====
   public readonly educationTypeOptions = [
     { value: EducationType.SECONDARY, label: 'Educación Secundaria' },
-    { value: EducationType.TECHNICAL, label: 'Educación Técnica' },
-    { value: EducationType.UNIVERSITY_DEGREE, label: 'Carrera Universitaria' },
-    { value: EducationType.POSTGRADUATE_SPECIALIZATION, label: 'Especialización' },
-    { value: EducationType.MASTER_DEGREE, label: 'Maestría' },
-    { value: EducationType.DOCTORATE, label: 'Doctorado' },
+    { value: EducationType.HIGHER_EDUCATION_CAREER, label: 'Carrera de Nivel Superior' },
+    { value: EducationType.UNDERGRADUATE_CAREER, label: 'Carrera de grado' },
+    { value: EducationType.POSTGRADUATE_SPECIALIZATION, label: 'Posgrado: especialización' },
+    { value: EducationType.POSTGRADUATE_MASTERS, label: 'Posgrado: maestría' },
+    { value: EducationType.POSTGRADUATE_DOCTORATE, label: 'Posgrado: doctorado' },
     { value: EducationType.DIPLOMA, label: 'Diplomatura' },
-    { value: EducationType.CERTIFICATION, label: 'Certificación' },
-    { value: EducationType.SCIENTIFIC_ACTIVITY, label: 'Actividad Científica' }
+    { value: EducationType.TRAINING_COURSE, label: 'Curso de Capacitación' },
+    { value: EducationType.SCIENTIFIC_ACTIVITY, label: 'Actividad Científica (investigación y/o difusión)' }
   ];
 
   public readonly educationStatusOptions = [
-    { value: EducationStatus.IN_PROGRESS, label: 'En Curso' },
-    { value: EducationStatus.COMPLETED, label: 'Completado' },
-    { value: EducationStatus.SUSPENDED, label: 'Suspendido' },
-    { value: EducationStatus.ABANDONED, label: 'Abandonado' }
+    { value: EducationStatus.IN_PROGRESS, label: 'en proceso' },
+    { value: EducationStatus.COMPLETED, label: 'finalizado' }
   ];
 
   public readonly sortOptions = [

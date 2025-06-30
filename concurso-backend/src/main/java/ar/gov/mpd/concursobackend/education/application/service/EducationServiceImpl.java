@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Implementación del servicio de educación
+ * Education service implementation
  */
 @Service
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ public class EducationServiceImpl implements EducationService {
     @Override
     @Transactional(readOnly = true)
     public List<EducationResponseDto> getAllEducationByUserId(UUID userId) {
-        log.info("Obteniendo todos los registros de educación para el usuario: {}", userId);
+        log.info("Getting all education records for user: {}", userId);
         List<Education> educationList = educationRepository.findAllByUserId(userId);
         return educationList.stream()
                 .map(educationMapper::toResponseDto)
@@ -54,11 +54,11 @@ public class EducationServiceImpl implements EducationService {
 
     @Override
     public EducationResponseDto createEducation(UUID userId, EducationRequestDto educationDto) {
-        log.info("Creando registro de educación para el usuario: {}", userId);
+        log.info("Creating education record for user: {}", userId);
         Education education = educationMapper.toDomainEntity(educationDto, userId);
 
         Education savedEducation = educationRepository.save(education);
-        log.info("Registro de educación creado con ID: {}", savedEducation.getId());
+        log.info("Education record created with ID: {}", savedEducation.getId());
         return educationMapper.toResponseDto(savedEducation);
     }
 

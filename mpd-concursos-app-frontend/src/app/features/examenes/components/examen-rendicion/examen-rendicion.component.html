@@ -82,7 +82,7 @@
           <!-- Ordenamiento -->
           <div *ngSwitchCase="TIPO_PREGUNTA.ORDENAMIENTO" cdkDropList (cdkDropListDropped)="drop($event)">
             <div *ngFor="let opcion of opcionesOrdenadas; trackBy: trackByOpcion" cdkDrag class="opcion-ordenable">
-              <mat-icon cdkDragHandle>drag_indicator</mat-icon>
+              <i class="fas fa-grip-vertical" cdkDragHandle></i>
               {{ opcion.texto }}
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
+import { sanitizeForLogging, SECURE_LOGGING_CONFIG } from '../../config/security.config';
 
 /**
  * Niveles de logging disponibles
@@ -53,51 +54,82 @@ export class LoggingService {
    * Log de debug (solo en desarrollo)
    */
   debug(message: string, data?: any, source?: string): void {
-    this.log(LogLevel.DEBUG, message, data, source);
+    this.logInternal(LogLevel.DEBUG, message, data, source);
   }
 
   /**
    * Log de información
    */
   info(message: string, data?: any, source?: string): void {
-    this.log(LogLevel.INFO, message, data, source);
+    this.logInternal(LogLevel.INFO, message, data, source);
   }
 
   /**
    * Log de advertencia
    */
   warn(message: string, data?: any, source?: string): void {
-    this.log(LogLevel.WARN, message, data, source);
+    this.logInternal(LogLevel.WARN, message, data, source);
   }
 
   /**
    * Log de error
    */
   error(message: string, data?: any, source?: string): void {
-    this.log(LogLevel.ERROR, message, data, source);
+    this.logInternal(LogLevel.ERROR, message, data, source);
   }
 
   /**
    * Log crítico (equivalente a error pero con énfasis)
    */
   critical(message: string, data?: any, source?: string): void {
-    this.log(LogLevel.ERROR, message, data, source);
+    this.logInternal(LogLevel.ERROR, message, data, source);
+  }
+
+  /**
+   * Log específico para operaciones CV (compatibilidad con versión anterior)
+   */
+  cvLog(operation: string, data?: any): void {
+    this.info(`[CV] ${operation}`, data, 'cv');
+  }
+
+  /**
+   * Log general (compatibilidad con versión anterior)
+   */
+  log(levelOrMessage: LogLevel | string, messageOrData?: string | any, dataOrSource?: any, source?: string): void {
+    if (typeof levelOrMessage === 'string') {
+      // Llamada estilo anterior: log(message, data)
+      this.info(levelOrMessage, messageOrData, 'general');
+    } else {
+      // Llamada estilo nuevo: log(level, message, data, source)
+      this.logInternal(levelOrMessage, messageOrData, dataOrSource, source);
+    }
   }
 
   /**
    * Método principal de logging
+   * ✅ SEGURIDAD: Sanitiza datos sensibles antes de loggear
    */
-  private log(level: LogLevel, message: string, data?: any, source?: string): void {
+  private logInternal(level: LogLevel, message: string, data?: any, source?: string): void {
     // Verificar si el nivel actual permite este log
     if (level < this.currentLogLevel) {
       return;
     }
 
+    // ✅ SEGURIDAD: Verificar si el nivel está permitido en el ambiente actual
+    const levelName = LogLevel[level].toLowerCase();
+    if (!SECURE_LOGGING_CONFIG.allowedLevels.includes(levelName)) {
+      return;
+    }
+
+    // ✅ SEGURIDAD: Sanitizar mensaje y datos antes de crear la entrada
+    const sanitizedMessage = sanitizeForLogging(message);
+    const sanitizedData = sanitizeForLogging(data);
+
     const logEntry: LogEntry = {
       level,
-      message,
+      message: sanitizedMessage,
       timestamp: new Date(),
-      data,
+      data: sanitizedData,
       source,
       sessionId: this.sessionId,
       userId: this.getCurrentUserId()
@@ -106,7 +138,7 @@ export class LoggingService {
     // Agregar a la cola de logs
     this.addLogEntry(logEntry);
 
-    // En desarrollo, también mostrar en consola
+    // En desarrollo, también mostrar en consola (con datos sanitizados)
     if (!environment.production) {
       this.logToConsole(logEntry);
     }

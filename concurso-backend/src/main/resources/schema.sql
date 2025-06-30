@@ -1,4 +1,3 @@
-mysqldump: [Warning] Using a password on the command line interface can be insecure.
 -- MySQL dump 10.13  Distrib 8.0.42, for Linux (x86_64)
 --
 -- Host: localhost    Database: mpd_concursos
@@ -219,33 +218,10 @@ CREATE TABLE `documents` (
 -- Table structure for table `education`
 --
 
-DROP TABLE IF EXISTS `education`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `education` (
-  `id` binary(16) NOT NULL,
-  `user_id` binary(16) NOT NULL,
-  `type` varchar(255) NOT NULL,
-  `status` varchar(50) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `institution` varchar(255) NOT NULL,
-  `issue_date` date DEFAULT NULL,
-  `document_url` varchar(500) DEFAULT NULL,
-  `duration_years` int DEFAULT NULL,
-  `average` double DEFAULT NULL,
-  `thesis_topic` varchar(255) DEFAULT NULL,
-  `hourly_load` int DEFAULT NULL,
-  `had_final_evaluation` tinyint(1) DEFAULT NULL,
-  `activity_type` varchar(50) DEFAULT NULL,
-  `topic` varchar(255) DEFAULT NULL,
-  `activity_role` varchar(100) DEFAULT NULL,
-  `exposition_place_date` varchar(255) DEFAULT NULL,
-  `comments` text,
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `education_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user_entity` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- TABLA EDUCATION LEGACY ELIMINADA
+-- Esta tabla fue reemplazada por education_record
+-- Fecha de eliminación: 2025-06-30
+-- Motivo: Unificación del sistema de educación
 
 --
 -- Table structure for table `education_record`
@@ -407,73 +383,20 @@ CREATE TABLE `examinations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Table structure for table `experience`
---
+-- TABLA EXPERIENCE LEGACY ELIMINADA
+-- Esta tabla fue reemplazada por work_experience
+-- Fecha de eliminación: 2025-06-30
+-- Motivo: Unificación del sistema de experiencia laboral
 
-DROP TABLE IF EXISTS `experience`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `experience` (
-  `id` binary(16) NOT NULL,
-  `user_id` binary(16) NOT NULL,
-  `company` varchar(255) NOT NULL,
-  `position` varchar(255) NOT NULL,
-  `start_date` date NOT NULL,
-  `end_date` date DEFAULT NULL,
-  `description` text,
-  `comments` text,
-  `document_url` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_experience_user_id` (`user_id`),
-  CONSTRAINT `fk_experience_user` FOREIGN KEY (`user_id`) REFERENCES `user_entity` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- TABLA EXPERIENCIA LEGACY ELIMINADA
+-- Esta tabla fue reemplazada por work_experience
+-- Fecha de eliminación: 2025-06-30
+-- Motivo: Unificación del sistema de experiencia laboral
 
---
--- Table structure for table `experiencia`
---
-
-DROP TABLE IF EXISTS `experiencia`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `experiencia` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `empresa` varchar(255) NOT NULL,
-  `cargo` varchar(255) NOT NULL,
-  `fechaInicio` date NOT NULL,
-  `fechaFin` date DEFAULT NULL,
-  `descripcion` text,
-  `comentario` text,
-  `user_id` binary(16) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_experiencia_user_id` (`user_id`),
-  CONSTRAINT `fk_experiencia_user` FOREIGN KEY (`user_id`) REFERENCES `user_entity` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `experiencias`
---
-
-DROP TABLE IF EXISTS `experiencias`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `experiencias` (
-  `id` binary(16) NOT NULL,
-  `userId` binary(16) NOT NULL,
-  `empresa` varchar(255) NOT NULL,
-  `cargo` varchar(255) NOT NULL,
-  `fechaInicio` date NOT NULL,
-  `fechaFin` date DEFAULT NULL,
-  `descripcion` text,
-  `comentario` text,
-  `documentUrl` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_experiencias_user_id` (`userId`),
-  CONSTRAINT `fk_experiencias_user` FOREIGN KEY (`userId`) REFERENCES `user_entity` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+-- TABLA EXPERIENCIAS LEGACY ELIMINADA
+-- Esta tabla fue reemplazada por work_experience
+-- Fecha de eliminación: 2025-06-30
+-- Motivo: Unificación del sistema de experiencia laboral
 
 --
 -- Table structure for table `inscription_circunscripciones`

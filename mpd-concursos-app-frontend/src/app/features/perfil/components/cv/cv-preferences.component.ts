@@ -337,22 +337,22 @@ import { CvNotificationService } from '@core/services/cv/cv-notification.service
       <!-- Acciones globales -->
       <div class="preferences-actions">
         <button class="btn-secondary" (click)="exportPreferences()">
-          <i class="material-icons">download</i>
+          <i class="fas fa-download"></i>
           Exportar Preferencias
         </button>
-        
+
         <button class="btn-secondary" (click)="importPreferences()">
-          <i class="material-icons">upload</i>
+          <i class="fas fa-upload"></i>
           Importar Preferencias
         </button>
-        
+
         <button class="btn-danger" (click)="resetToDefaults()">
-          <i class="material-icons">restore</i>
+          <i class="fas fa-undo"></i>
           Restaurar Valores por Defecto
         </button>
-        
+
         <button class="btn-primary" (click)="saveAllPreferences()">
-          <i class="material-icons">save</i>
+          <i class="fas fa-save"></i>
           Guardar Cambios
         </button>
       </div>

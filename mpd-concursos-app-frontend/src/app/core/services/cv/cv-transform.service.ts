@@ -107,10 +107,11 @@ export class CvTransformService implements ICvTransformService {
 
     // Crear entidad específica según el tipo
     switch (dto.type) {
-      case EducationType.UNIVERSITY_DEGREE:
+      case EducationType.HIGHER_EDUCATION_CAREER:
+      case EducationType.UNDERGRADUATE_CAREER:
         return {
           ...baseEducation,
-          type: EducationType.UNIVERSITY_DEGREE,
+          type: dto.type,
           durationYears: dto.durationYears,
           average: dto.average,
           graduationDate: dto.endDate ? new Date(dto.endDate) : undefined,
@@ -118,8 +119,8 @@ export class CvTransformService implements ICvTransformService {
         } as UniversityEducation;
 
       case EducationType.POSTGRADUATE_SPECIALIZATION:
-      case EducationType.MASTER_DEGREE:
-      case EducationType.DOCTORATE:
+      case EducationType.POSTGRADUATE_MASTERS:
+      case EducationType.POSTGRADUATE_DOCTORATE:
         return {
           ...baseEducation,
           type: dto.type,
@@ -130,7 +131,7 @@ export class CvTransformService implements ICvTransformService {
         } as PostgraduateEducation;
 
       case EducationType.DIPLOMA:
-      case EducationType.CERTIFICATION:
+      case EducationType.TRAINING_COURSE:
         return {
           ...baseEducation,
           type: dto.type,
@@ -143,8 +144,8 @@ export class CvTransformService implements ICvTransformService {
         return {
           ...baseEducation,
           type: EducationType.SCIENTIFIC_ACTIVITY,
-          activityType: dto.activityType || ScientificActivityType.CONFERENCE,
-          role: dto.role || ScientificActivityRole.ATTENDEE,
+          activityType: dto.activityType || ScientificActivityType.RESEARCH,
+          role: dto.role || ScientificActivityRole.ASSISTANT_PARTICIPANT,
           topic: dto.topic || '',
           venue: dto.venue,
           presentationDate: dto.presentationDate ? new Date(dto.presentationDate) : undefined,
@@ -173,7 +174,8 @@ export class CvTransformService implements ICvTransformService {
 
     // Agregar campos específicos según el tipo
     switch (entity.type) {
-      case EducationType.UNIVERSITY_DEGREE:
+      case EducationType.HIGHER_EDUCATION_CAREER:
+      case EducationType.UNDERGRADUATE_CAREER:
         const universityEd = entity as UniversityEducation;
         return {
           ...baseDto,
@@ -182,8 +184,8 @@ export class CvTransformService implements ICvTransformService {
         };
 
       case EducationType.POSTGRADUATE_SPECIALIZATION:
-      case EducationType.MASTER_DEGREE:
-      case EducationType.DOCTORATE:
+      case EducationType.POSTGRADUATE_MASTERS:
+      case EducationType.POSTGRADUATE_DOCTORATE:
         const postgraduateEd = entity as PostgraduateEducation;
         return {
           ...baseDto,
@@ -192,7 +194,7 @@ export class CvTransformService implements ICvTransformService {
         };
 
       case EducationType.DIPLOMA:
-      case EducationType.CERTIFICATION:
+      case EducationType.TRAINING_COURSE:
         const diplomaEd = entity as DiplomaEducation;
         return {
           ...baseDto,
@@ -396,13 +398,13 @@ export class CvTransformService implements ICvTransformService {
     // Determinar el nivel más alto de educación
     const levelHierarchy = [
       EducationType.SECONDARY,
-      EducationType.TECHNICAL,
       EducationType.DIPLOMA,
-      EducationType.CERTIFICATION,
-      EducationType.UNIVERSITY_DEGREE,
+      EducationType.TRAINING_COURSE,
+      EducationType.HIGHER_EDUCATION_CAREER,
+      EducationType.UNDERGRADUATE_CAREER,
       EducationType.POSTGRADUATE_SPECIALIZATION,
-      EducationType.MASTER_DEGREE,
-      EducationType.DOCTORATE,
+      EducationType.POSTGRADUATE_MASTERS,
+      EducationType.POSTGRADUATE_DOCTORATE,
       EducationType.SCIENTIFIC_ACTIVITY
     ];
     
@@ -462,18 +464,20 @@ export class CvTransformService implements ICvTransformService {
 
   /**
    * Obtiene la etiqueta de tipo de educación
+   * @deprecated Use EducationDisplayService.getEducationTypeLabel() instead
+   * @see EducationDisplayService
    */
   public getEducationTypeLabel(type: EducationType): string {
     const labels = {
       [EducationType.SECONDARY]: 'Educación Secundaria',
-      [EducationType.TECHNICAL]: 'Título Terciario',
-      [EducationType.UNIVERSITY_DEGREE]: 'Título Universitario',
-      [EducationType.POSTGRADUATE_SPECIALIZATION]: 'Especialización',
-      [EducationType.MASTER_DEGREE]: 'Maestría',
-      [EducationType.DOCTORATE]: 'Doctorado',
+      [EducationType.HIGHER_EDUCATION_CAREER]: 'Carrera de Nivel Superior',
+      [EducationType.UNDERGRADUATE_CAREER]: 'Carrera de grado',
+      [EducationType.POSTGRADUATE_SPECIALIZATION]: 'Posgrado: especialización',
+      [EducationType.POSTGRADUATE_MASTERS]: 'Posgrado: maestría',
+      [EducationType.POSTGRADUATE_DOCTORATE]: 'Posgrado: doctorado',
       [EducationType.DIPLOMA]: 'Diplomatura',
-      [EducationType.CERTIFICATION]: 'Certificación',
-      [EducationType.SCIENTIFIC_ACTIVITY]: 'Actividad Científica'
+      [EducationType.TRAINING_COURSE]: 'Curso de Capacitación',
+      [EducationType.SCIENTIFIC_ACTIVITY]: 'Actividad Científica (investigación y/o difusión)'
     };
     return labels[type] || type;
   }
@@ -501,13 +505,13 @@ export class CvTransformService implements ICvTransformService {
 
   /**
    * Obtiene la etiqueta de estado de educación
+   * @deprecated Use EducationDisplayService.getEducationStatusLabel() instead
+   * @see EducationDisplayService
    */
   public getEducationStatusLabel(status: EducationStatus): string {
     const labels = {
-      [EducationStatus.IN_PROGRESS]: 'En Curso',
-      [EducationStatus.COMPLETED]: 'Completado',
-      [EducationStatus.SUSPENDED]: 'Suspendido',
-      [EducationStatus.ABANDONED]: 'Abandonado'
+      [EducationStatus.IN_PROGRESS]: 'en proceso',
+      [EducationStatus.COMPLETED]: 'finalizado'
     };
     return labels[status] || status;
   }
@@ -558,6 +562,8 @@ export class CvTransformService implements ICvTransformService {
 
   /**
    * Obtiene información específica de educación
+   * @deprecated Use EducationDisplayService.getEducationAdditionalInfo() instead
+   * @see EducationDisplayService
    */
   public getEducationSpecificInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
     const info: Array<{icon: string, label: string, value: string}> = [];
@@ -565,7 +571,7 @@ export class CvTransformService implements ICvTransformService {
     // Tipo de educación
     if (education.type) {
       info.push({
-        icon: 'school',
+        icon: 'graduation-cap',
         label: 'Tipo',
         value: this.getEducationTypeLabel(education.type)
       });
@@ -574,7 +580,7 @@ export class CvTransformService implements ICvTransformService {
     // Estado
     if (education.status) {
       info.push({
-        icon: 'info',
+        icon: 'info-circle',
         label: 'Estado',
         value: this.getEducationStatusLabel(education.status)
       });
@@ -584,24 +590,24 @@ export class CvTransformService implements ICvTransformService {
     const duration = this.calculateDuration(education.startDate, education.endDate);
     if (duration) {
       info.push({
-        icon: 'schedule',
+        icon: 'calendar-alt',
         label: 'Duración',
         value: duration
       });
     }
 
     // Información específica según el tipo
-    if (education.type === 'UNIVERSITY_DEGREE' && (education as any).average) {
+    if ((education.type === EducationType.HIGHER_EDUCATION_CAREER || education.type === EducationType.UNDERGRADUATE_CAREER) && (education as any).average) {
       info.push({
-        icon: 'grade',
+        icon: 'star',
         label: 'Promedio',
         value: (education as any).average.toString()
       });
     }
 
-    if ((education.type === 'DIPLOMA' || education.type === 'CERTIFICATION') && (education as any).hourlyLoad) {
+    if ((education.type === EducationType.DIPLOMA || education.type === EducationType.TRAINING_COURSE) && (education as any).hourlyLoad) {
       info.push({
-        icon: 'access_time',
+        icon: 'clock',
         label: 'Carga Horaria',
         value: `${(education as any).hourlyLoad} horas`
       });
@@ -612,39 +618,42 @@ export class CvTransformService implements ICvTransformService {
 
   /**
    * Obtiene información adicional específica de educación (sin duplicar tipo, estado, duración)
+   * @deprecated Use EducationDisplayService.getEducationAdditionalInfo() instead
+   * @see EducationDisplayService
    */
   public getEducationAdditionalInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
     const info: Array<{icon: string, label: string, value: string}> = [];
 
     // Solo información específica según el tipo, sin duplicar lo que ya se muestra en badges
     switch (education.type) {
-      case 'UNIVERSITY_DEGREE':
+      case EducationType.HIGHER_EDUCATION_CAREER:
+      case EducationType.UNDERGRADUATE_CAREER:
         if ((education as any).average) {
           info.push({
-            icon: 'grade',
+            icon: 'star',
             label: 'Promedio',
             value: this.formatDecimalNumber((education as any).average)
           });
         }
         break;
 
-      case 'POSTGRADUATE_SPECIALIZATION':
-      case 'MASTER_DEGREE':
-      case 'DOCTORATE':
+      case EducationType.POSTGRADUATE_SPECIALIZATION:
+      case EducationType.POSTGRADUATE_MASTERS:
+      case EducationType.POSTGRADUATE_DOCTORATE:
         if ((education as any).thesisTopic) {
           info.push({
-            icon: 'description',
+            icon: 'file-alt',
             label: 'Tema de Tesis',
             value: (education as any).thesisTopic
           });
         }
         break;
 
-      case 'DIPLOMA':
-      case 'CERTIFICATION':
+      case EducationType.DIPLOMA:
+      case EducationType.TRAINING_COURSE:
         if ((education as any).hourlyLoad) {
           info.push({
-            icon: 'access_time',
+            icon: 'clock',
             label: 'Carga Horaria',
             value: `${(education as any).hourlyLoad} horas`
           });
@@ -654,14 +663,14 @@ export class CvTransformService implements ICvTransformService {
       case 'SCIENTIFIC_ACTIVITY':
         if ((education as any).topic) {
           info.push({
-            icon: 'science',
+            icon: 'flask',
             label: 'Tema',
             value: (education as any).topic
           });
         }
         if ((education as any).activityType) {
           info.push({
-            icon: 'category',
+            icon: 'tags',
             label: 'Tipo de Actividad',
             value: (education as any).activityType
           });

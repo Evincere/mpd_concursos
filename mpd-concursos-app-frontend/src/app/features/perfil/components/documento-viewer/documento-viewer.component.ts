@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 // Custom Components
-import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
+import { BASIC_DIALOG_DATA } from '@shared/services/dialog/basic-dialog.service';
 import { CustomButtonComponent } from '@shared/components/custom-form/custom-button/custom-button.component';
 import { CustomSpinnerComponent } from '@shared/components/custom-form/custom-spinner/custom-spinner.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
@@ -657,8 +657,7 @@ export class DocumentoViewerComponent implements OnInit {
     private documentosService: DocumentosService,
     private tempDocumentCache: TempDocumentCacheService,
     private sanitizer: DomSanitizer,
-    public dialogRef: UnifiedDialogRef<any>,
-    @Inject(DIALOG_DATA) public data: { documentoId: string }
+    @Inject(BASIC_DIALOG_DATA) public data: { documentoId: string }
   ) {}
 
   ngOnInit(): void {
@@ -892,7 +891,8 @@ export class DocumentoViewerComponent implements OnInit {
     if (this.blobUrl) {
       URL.revokeObjectURL(this.blobUrl);
     }
-    this.dialogRef.close();
+    // El diálogo se cerrará automáticamente cuando se haga clic en el botón de cerrar
+    console.log('Cerrando visor de documento');
   }
 
   // Métodos para controlar el zoom

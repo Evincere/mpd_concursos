@@ -48,6 +48,8 @@ import { CvTransformService } from '@core/services/cv/cv-transform.service';
 import { CvNotificationService } from '@core/services/cv/cv-notification.service';
 import { CvPdfExportService } from '@core/services/cv/cv-pdf-export.service';
 import { CvSearchService } from '@core/services/cv/cv-search.service';
+// Servicios especializados de educación
+import { EducationDisplayService, FormattedDateInfo } from '@core/services/cv/education-display.service';
 import { CvDragDropService } from '@core/services/cv/cv-drag-drop.service';
 import { CvBackendIntegrationService } from '@core/services/cv/cv-backend-integration.service';
 
@@ -152,14 +154,14 @@ export class CvContainerComponent implements OnInit, OnDestroy {
       {
         id: 'experience',
         label: 'Experiencia Laboral',
-        icon: 'work',
+        icon: 'briefcase',
         count: state.experiences.data.length,
         isActive: this.activeTab() === 'experience'
       },
       {
         id: 'education',
         label: 'Educación',
-        icon: 'school',
+        icon: 'graduation-cap',
         count: state.education.data.length,
         isActive: this.activeTab() === 'education'
       }
@@ -215,7 +217,9 @@ export class CvContainerComponent implements OnInit, OnDestroy {
     // Servicios HTTP reales
     private readonly experienceService: ExperienceCvService,
     private readonly educationService: EducationCvService,
-    private readonly cvStateService: CvStateService
+    private readonly cvStateService: CvStateService,
+    // Servicios especializados de educación
+    private readonly educationDisplayService: EducationDisplayService
   ) {
     this.setupSearchSubscription();
     this.setupRefreshSubscription();
@@ -923,14 +927,18 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Formatea las fechas de educación para mostrar
+   * Formatea las fechas de educación para mostrar según el tipo y estado
    */
   formatEducationDates(education: EducationEntry): string {
-    return this.transformService.formatDateRangeForDisplay(
-      education.startDate,
-      education.endDate,
-      education.isOngoing
-    );
+    const dateInfo = this.educationDisplayService.formatEducationDates(education);
+    return dateInfo.primary;
+  }
+
+  /**
+   * Obtiene información completa de fechas formateadas
+   */
+  getEducationDateInfo(education: EducationEntry): FormattedDateInfo {
+    return this.educationDisplayService.formatEducationDates(education);
   }
 
   /**
@@ -944,34 +952,38 @@ export class CvContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene la duración de una educación
+   * Obtiene la duración de una educación según las reglas específicas del tipo
    */
   getEducationDuration(education: EducationEntry): string | null {
-    return this.transformService.calculateDuration(
-      education.startDate,
-      education.endDate
-    );
+    return this.educationDisplayService.calculateDuration(education);
   }
 
   /**
-   * Obtiene información adicional específica de educación (sin duplicar tipo, estado, duración)
+   * Determina si debe mostrar la duración para un tipo de educación específico
+   */
+  shouldShowEducationDuration(education: EducationEntry): boolean {
+    return this.educationDisplayService.shouldShowDuration(education);
+  }
+
+  /**
+   * Obtiene información adicional específica de educación según el tipo y estado
    */
   getEducationAdditionalInfo(education: EducationEntry): Array<{icon: string, label: string, value: string}> {
-    return this.transformService.getEducationAdditionalInfo(education);
+    return this.educationDisplayService.getEducationAdditionalInfo(education);
   }
 
   /**
    * Obtiene la etiqueta del tipo de educación
    */
   getEducationTypeLabel(type: EducationType): string {
-    return this.transformService.getEducationTypeLabel(type);
+    return this.educationDisplayService.getEducationTypeLabel(type);
   }
 
   /**
    * Obtiene la etiqueta del estado de educación
    */
   getEducationStatusLabel(status: EducationStatus): string {
-    return this.transformService.getEducationStatusLabel(status);
+    return this.educationDisplayService.getEducationStatusLabel(status);
   }
 
   /**

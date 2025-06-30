@@ -275,7 +275,10 @@ export class EducationCvService {
     const issueDate = response.issueDate;
     if (!startDate && !endDate && issueDate) {
       const parsedIssueDate = this.parseApiDate(issueDate);
-      if (response.status === 'En Curso') {
+      // Mapear el estado para determinar el comportamiento
+      const tempMappedStatus = this.mapStringToEducationStatus(educationStatus || 'En Curso');
+
+      if (tempMappedStatus === EducationStatus.IN_PROGRESS) {
         // Para estudios en curso, issueDate podría ser fecha de inicio
         startDate = parsedIssueDate;
       } else {
@@ -289,15 +292,16 @@ export class EducationCvService {
       }
     }
 
-    // Determinar si está en curso basado en el estado y la presencia de fecha de fin
-    const isOngoing = (response.status === 'En Curso' || response.status === 'IN_PROGRESS') && !endDate;
+    // Mapear el estado primero para determinar isOngoing correctamente
+    const mappedStatus = this.mapStringToEducationStatus(educationStatus || 'En Curso');
+    const isOngoing = mappedStatus === EducationStatus.IN_PROGRESS && !endDate;
 
     console.log('[EducationCvService] Mapped dates:', { startDate, endDate, issueDate, isOngoing });
 
     const mappedEntry = {
       id: response.id,
       type: this.mapStringToEducationType(educationType || 'Curso de Capacitación') as any,
-      status: this.mapStringToEducationStatus(educationStatus || 'En Curso'),
+      status: mappedStatus,
       title: programTitle || 'Sin título',
       institution: institutionName || 'Sin institución',
       startDate: startDate,
@@ -373,14 +377,14 @@ export class EducationCvService {
   private mapEducationTypeToString(type: EducationType): string {
     const typeMap: { [key in EducationType]: string } = {
       [EducationType.SECONDARY]: 'Educación Secundaria',
-      [EducationType.TECHNICAL]: 'Título Terciario',
-      [EducationType.UNIVERSITY_DEGREE]: 'Título Universitario',
-      [EducationType.POSTGRADUATE_SPECIALIZATION]: 'Especialización',
-      [EducationType.MASTER_DEGREE]: 'Maestría',
-      [EducationType.DOCTORATE]: 'Doctorado',
+      [EducationType.HIGHER_EDUCATION_CAREER]: 'Carrera de Nivel Superior',
+      [EducationType.UNDERGRADUATE_CAREER]: 'Carrera de grado',
+      [EducationType.POSTGRADUATE_SPECIALIZATION]: 'Posgrado: especialización',
+      [EducationType.POSTGRADUATE_MASTERS]: 'Posgrado: maestría',
+      [EducationType.POSTGRADUATE_DOCTORATE]: 'Posgrado: doctorado',
       [EducationType.DIPLOMA]: 'Diplomatura',
-      [EducationType.CERTIFICATION]: 'Curso de Capacitación',
-      [EducationType.SCIENTIFIC_ACTIVITY]: 'Actividad Científica'
+      [EducationType.TRAINING_COURSE]: 'Curso de Capacitación',
+      [EducationType.SCIENTIFIC_ACTIVITY]: 'Actividad Científica (investigación y/o difusión)'
     };
 
     return typeMap[type] || 'Curso de Capacitación';
@@ -391,13 +395,11 @@ export class EducationCvService {
    */
   private mapEducationStatusToString(status: EducationStatus): string {
     const statusMap: { [key in EducationStatus]: string } = {
-      [EducationStatus.IN_PROGRESS]: 'En Curso',
-      [EducationStatus.COMPLETED]: 'Completado',
-      [EducationStatus.SUSPENDED]: 'Suspendido',
-      [EducationStatus.ABANDONED]: 'Abandonado'
+      [EducationStatus.IN_PROGRESS]: 'en proceso',
+      [EducationStatus.COMPLETED]: 'finalizado'
     };
 
-    return statusMap[status] || 'En Curso';
+    return statusMap[status] || 'en proceso';
   }
 
   /**
@@ -406,31 +408,43 @@ export class EducationCvService {
   private mapStringToEducationType(type: string): EducationType {
     const typeMap: { [key: string]: EducationType } = {
       'Educación Secundaria': EducationType.SECONDARY,
-      'Título Terciario': EducationType.TECHNICAL,
-      'Título Universitario': EducationType.UNIVERSITY_DEGREE,
-      'Especialización': EducationType.POSTGRADUATE_SPECIALIZATION,
-      'Maestría': EducationType.MASTER_DEGREE,
-      'Doctorado': EducationType.DOCTORATE,
+      'Carrera de Nivel Superior': EducationType.HIGHER_EDUCATION_CAREER,
+      'Carrera de grado': EducationType.UNDERGRADUATE_CAREER,
+      'Posgrado: especialización': EducationType.POSTGRADUATE_SPECIALIZATION,
+      'Posgrado: maestría': EducationType.POSTGRADUATE_MASTERS,
+      'Posgrado: doctorado': EducationType.POSTGRADUATE_DOCTORATE,
       'Diplomatura': EducationType.DIPLOMA,
-      'Curso de Capacitación': EducationType.CERTIFICATION,
-      'Actividad Científica': EducationType.SCIENTIFIC_ACTIVITY
+      'Curso de Capacitación': EducationType.TRAINING_COURSE,
+      'Actividad Científica (investigación y/o difusión)': EducationType.SCIENTIFIC_ACTIVITY
     };
 
-    return typeMap[type] || EducationType.CERTIFICATION;
+    return typeMap[type] || EducationType.TRAINING_COURSE;
   }
 
   /**
    * Mapea string de la API a EducationStatus
    */
   private mapStringToEducationStatus(status: string): EducationStatus {
+    const normalizedStatus = status.toLowerCase().trim();
+
     const statusMap: { [key: string]: EducationStatus } = {
-      'En Curso': EducationStatus.IN_PROGRESS,
-      'Completado': EducationStatus.COMPLETED,
-      'Suspendido': EducationStatus.SUSPENDED,
-      'Abandonado': EducationStatus.ABANDONED
+      // Variaciones en español (minúsculas)
+      'en proceso': EducationStatus.IN_PROGRESS,
+      'en curso': EducationStatus.IN_PROGRESS,
+      'finalizado': EducationStatus.COMPLETED,
+      'completado': EducationStatus.COMPLETED,
+      'terminado': EducationStatus.COMPLETED,
+      // Variaciones en inglés (por si acaso)
+      'in_progress': EducationStatus.IN_PROGRESS,
+      'in progress': EducationStatus.IN_PROGRESS,
+      'completed': EducationStatus.COMPLETED,
+      'finished': EducationStatus.COMPLETED
     };
 
-    return statusMap[status] || EducationStatus.IN_PROGRESS;
+    const mappedStatus = statusMap[normalizedStatus];
+    console.log(`[EducationCvService] Mapping status: "${status}" -> "${normalizedStatus}" -> ${mappedStatus || 'DEFAULT_IN_PROGRESS'}`);
+
+    return mappedStatus || EducationStatus.IN_PROGRESS;
   }
 
   /**

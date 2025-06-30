@@ -170,6 +170,8 @@ export class CvValidationService implements ICvValidationService {
 
   /**
    * Valida una entrada de educación completa
+   * @deprecated Use EducationValidationService.validateEducationDto() instead
+   * @see EducationValidationService
    */
   validateEducation(education: EducationDto): ValidationResult {
     const errors: string[] = [];
@@ -252,6 +254,7 @@ export class CvValidationService implements ICvValidationService {
 
   /**
    * Valida fechas de educación
+   * @deprecated Use EducationValidationService.validateEducationDto() instead
    */
   private validateEducationDates(education: EducationDto): ValidationResult {
     const errors: string[] = [];
@@ -294,13 +297,15 @@ export class CvValidationService implements ICvValidationService {
 
   /**
    * Validaciones específicas por tipo de educación
+   * @deprecated Use EducationValidationService.validateEducationDto() instead
    */
   private validateEducationByType(education: EducationDto): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
     switch (education.type) {
-      case EducationType.UNIVERSITY_DEGREE:
+      case EducationType.HIGHER_EDUCATION_CAREER:
+      case EducationType.UNDERGRADUATE_CAREER:
         if (education.average && (education.average < 1 || education.average > 10)) {
           errors.push('El promedio debe estar entre 1 y 10');
         }
@@ -310,8 +315,8 @@ export class CvValidationService implements ICvValidationService {
         break;
 
       case EducationType.POSTGRADUATE_SPECIALIZATION:
-      case EducationType.MASTER_DEGREE:
-      case EducationType.DOCTORATE:
+      case EducationType.POSTGRADUATE_MASTERS:
+      case EducationType.POSTGRADUATE_DOCTORATE:
         if (education.thesisTopic) {
           const topicResult = this.validateAndSanitizeText(education.thesisTopic, 'Tema de tesis', false, 10, 500);
           if (!topicResult.isValid) warnings.push(...topicResult.errors);
@@ -331,7 +336,7 @@ export class CvValidationService implements ICvValidationService {
         break;
 
       case EducationType.DIPLOMA:
-      case EducationType.CERTIFICATION:
+      case EducationType.TRAINING_COURSE:
         if (education.hourlyLoad && education.hourlyLoad < 1) {
           warnings.push('La carga horaria debe ser positiva');
         }

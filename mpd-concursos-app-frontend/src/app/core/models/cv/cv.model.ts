@@ -23,13 +23,13 @@ export enum CvEntryStatus {
  */
 export enum EducationType {
   SECONDARY = 'SECONDARY',
-  TECHNICAL = 'TECHNICAL',
-  UNIVERSITY_DEGREE = 'UNIVERSITY_DEGREE',
+  HIGHER_EDUCATION_CAREER = 'HIGHER_EDUCATION_CAREER',
+  UNDERGRADUATE_CAREER = 'UNDERGRADUATE_CAREER',
   POSTGRADUATE_SPECIALIZATION = 'POSTGRADUATE_SPECIALIZATION',
-  MASTER_DEGREE = 'MASTER_DEGREE',
-  DOCTORATE = 'DOCTORATE',
+  POSTGRADUATE_MASTERS = 'POSTGRADUATE_MASTERS',
+  POSTGRADUATE_DOCTORATE = 'POSTGRADUATE_DOCTORATE',
   DIPLOMA = 'DIPLOMA',
-  CERTIFICATION = 'CERTIFICATION',
+  TRAINING_COURSE = 'TRAINING_COURSE',
   SCIENTIFIC_ACTIVITY = 'SCIENTIFIC_ACTIVITY'
 }
 
@@ -38,20 +38,15 @@ export enum EducationType {
  */
 export enum EducationStatus {
   IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  SUSPENDED = 'SUSPENDED',
-  ABANDONED = 'ABANDONED'
+  COMPLETED = 'COMPLETED'
 }
 
 /**
  * Tipos de actividad científica
  */
 export enum ScientificActivityType {
-  CONFERENCE = 'CONFERENCE',
-  WORKSHOP = 'WORKSHOP',
-  SEMINAR = 'SEMINAR',
-  CONGRESS = 'CONGRESS',
-  SYMPOSIUM = 'SYMPOSIUM',
+  RESEARCH = 'RESEARCH',
+  PRESENTATION = 'PRESENTATION',
   PUBLICATION = 'PUBLICATION'
 }
 
@@ -59,12 +54,8 @@ export enum ScientificActivityType {
  * Roles en actividades científicas
  */
 export enum ScientificActivityRole {
-  SPEAKER = 'SPEAKER',
-  ATTENDEE = 'ATTENDEE',
-  ORGANIZER = 'ORGANIZER',
-  MODERATOR = 'MODERATOR',
-  AUTHOR = 'AUTHOR',
-  CO_AUTHOR = 'CO_AUTHOR'
+  ASSISTANT_PARTICIPANT = 'ASSISTANT_PARTICIPANT',
+  AUTHOR_SPEAKER_PANELIST_PRESENTER = 'AUTHOR_SPEAKER_PANELIST_PRESENTER'
 }
 
 // ===== INTERFACES BASE =====
@@ -169,7 +160,7 @@ export interface Education extends Omit<CvEntry, 'status'> {
  * Educación universitaria (grado y nivel superior)
  */
 export interface UniversityEducation extends Education {
-  type: EducationType.UNIVERSITY_DEGREE;
+  type: EducationType.HIGHER_EDUCATION_CAREER | EducationType.UNDERGRADUATE_CAREER;
   durationYears?: number;
   average?: number; // Promedio académico (1-10)
   graduationDate?: Date;
@@ -180,7 +171,7 @@ export interface UniversityEducation extends Education {
  * Educación de posgrado
  */
 export interface PostgraduateEducation extends Education {
-  type: EducationType.POSTGRADUATE_SPECIALIZATION | EducationType.MASTER_DEGREE | EducationType.DOCTORATE;
+  type: EducationType.POSTGRADUATE_SPECIALIZATION | EducationType.POSTGRADUATE_MASTERS | EducationType.POSTGRADUATE_DOCTORATE;
   thesisTopic?: string;
   advisor?: string;
   defenseDate?: Date;
@@ -191,7 +182,7 @@ export interface PostgraduateEducation extends Education {
  * Diplomatura o curso de capacitación
  */
 export interface DiplomaEducation extends Education {
-  type: EducationType.DIPLOMA | EducationType.CERTIFICATION;
+  type: EducationType.DIPLOMA | EducationType.TRAINING_COURSE;
   hourlyLoad?: number;
   certificateNumber?: string;
   expirationDate?: Date;

@@ -4,7 +4,7 @@
   <!-- Header del formulario (solo si no está en modal) -->
   <div class="form-header" *ngIf="!isInModal">
     <h3 class="form-title">
-      <i class="material-icons">school</i>
+      <i class="fas fa-graduation-cap"></i>
       {{ mode === 'create' ? 'Agregar Educación' : 'Editar Educación' }}
     </h3>
     <p class="form-subtitle">
@@ -15,7 +15,7 @@
   <!-- Alertas de validación -->
   <div class="validation-alerts" *ngIf="hasErrors() || hasWarnings()">
     <div class="alert alert-error" *ngIf="hasErrors()">
-      <i class="material-icons">error</i>
+      <i class="fas fa-exclamation-circle"></i>
       <div class="alert-content">
         <strong>Errores de validación:</strong>
         <ul>
@@ -45,11 +45,10 @@
     
     <!-- Campos dinámicos -->
     <div class="form-grid">
-      <ng-container *ngFor="let field of dynamicFields; trackBy: trackByFieldName">
-        <div 
+      <ng-container *ngFor="let field of visibleFields(); trackBy: trackByFieldName">
+        <div
           class="form-field"
-          [class.full-width]="field.type === 'textarea' || field.type === 'chips'"
-          *ngIf="shouldShowField(field)">
+          [class.full-width]="field.type === 'textarea' || field.type === 'chips'">
           
           <!-- Campo de texto -->
           <app-custom-form-field
@@ -186,7 +185,7 @@
 
       <div class="document-upload-info">
         <div class="info-box">
-          <i class="material-icons">info</i>
+          <i class="fas fa-info-circle"></i>
           <div class="info-content">
             <p><strong>Documentación obligatoria:</strong> Debes subir un documento que respalde tu educación</p>
             <p><strong>Formato requerido:</strong> Solo archivos PDF</p>

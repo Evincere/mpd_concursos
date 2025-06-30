@@ -14,7 +14,7 @@ import { Subject } from 'rxjs';
 
 // Servicios
 import { CvNotificationService } from '@core/services/cv/cv-notification.service';
-import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
+import { BasicDialogService } from '@shared/services/dialog/basic-dialog.service';
 import { TempDocumentCacheService, TempDocument } from '@core/services/cv/temp-document-cache.service';
 
 // Componentes
@@ -129,7 +129,7 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
 
   constructor(
     private notificationService: CvNotificationService,
-    private dialog: UnifiedDialogService,
+    private dialog: BasicDialogService,
     private tempDocumentCache: TempDocumentCacheService
   ) { }
 
@@ -510,10 +510,10 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
    * Obtiene el icono según el tipo MIME
    */
   getDocumentIcon(mimeType: string): string {
-    if (mimeType.includes('pdf')) return 'picture_as_pdf';
-    if (mimeType.includes('image')) return 'image';
-    if (mimeType.includes('word')) return 'description';
-    return 'insert_drive_file';
+    if (mimeType.includes('pdf')) return 'file-pdf';
+    if (mimeType.includes('image')) return 'file-image';
+    if (mimeType.includes('word')) return 'file-word';
+    return 'file';
   }
 
   /**
@@ -521,10 +521,10 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
    */
   getStatusIcon(status: string): string {
     switch (status) {
-      case 'pending': return 'schedule';
-      case 'validated': return 'check_circle';
-      case 'rejected': return 'cancel';
-      default: return 'help';
+      case 'pending': return 'clock';
+      case 'validated': return 'check-circle';
+      case 'rejected': return 'times-circle';
+      default: return 'question-circle';
     }
   }
 
@@ -549,16 +549,12 @@ export class CvDocumentUploaderComponent implements OnInit, OnChanges, OnDestroy
       return;
     }
 
-    // Usar el visualizador de documentos directamente
+    // Usar el visualizador de documentos con el servicio básico
     this.dialog.open(DocumentoViewerComponent, {
       title: 'Visualizador de documento',
-      icon: 'file-pdf',
       size: 'large',
       data: { documentoId: document.id },
-      showFooter: false,
-      showCancelButton: false,
-      showConfirmButton: false,
-      panelClass: 'documento-viewer-selector-dialog'
+      showCloseButton: true
     });
   }
 }

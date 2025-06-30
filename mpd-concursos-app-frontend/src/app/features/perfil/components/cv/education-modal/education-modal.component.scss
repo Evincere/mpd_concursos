@@ -143,9 +143,14 @@
     .modal-container {
       max-width: 900px;
     }
-    
+
     .modal-body {
       padding-top: 0;
+    }
+
+    .modal-footer {
+      min-height: 50px;
+      padding: 12px 24px;
     }
   }
 }

@@ -163,112 +163,66 @@ public class EducationRepositoryAdapter implements EducationRepository {
     }
 
     /**
-     * Map domain EducationType to entity EducationType
+     * Map domain EducationType to entity EducationType using unified mapping
      */
     private EducationRecordEntity.EducationType mapToEntityEducationType(EducationType domainType) {
         if (domainType == null) {
             return null;
         }
-
-        switch (domainType) {
-            case SECONDARY:
-                return EducationRecordEntity.EducationType.SECONDARY_EDUCATION;
-            case HIGHER_EDUCATION_DEGREE:
-                return EducationRecordEntity.EducationType.TECHNICAL_DEGREE;
-            case UNDERGRADUATE_DEGREE:
-                return EducationRecordEntity.EducationType.UNIVERSITY_DEGREE;
-            case POSTGRADUATE_SPECIALIZATION:
-                return EducationRecordEntity.EducationType.POSTGRADUATE_DEGREE;
-            case POSTGRADUATE_MASTERS:
-                return EducationRecordEntity.EducationType.MASTER_DEGREE;
-            case POSTGRADUATE_DOCTORATE:
-                return EducationRecordEntity.EducationType.DOCTORAL_DEGREE;
-            case DIPLOMA:
-                return EducationRecordEntity.EducationType.DIPLOMA;
-            case TRAINING_COURSE:
-                return EducationRecordEntity.EducationType.TRAINING_COURSE;
-            case SCIENTIFIC_ACTIVITY:
-                return EducationRecordEntity.EducationType.SCIENTIFIC_ACTIVITY;
-            default:
-                throw new IllegalArgumentException("Unknown education type: " + domainType);
-        }
+        return domainType.getPersistenceType();
     }
 
     /**
-     * Map domain EducationStatus to entity EducationStatus
+     * Map domain EducationStatus to entity EducationStatus using unified mapping
      */
     private EducationRecordEntity.EducationStatus mapToEntityEducationStatus(EducationStatus domainStatus) {
         if (domainStatus == null) {
             return null;
         }
-
-        switch (domainStatus) {
-            case IN_PROGRESS:
-                return EducationRecordEntity.EducationStatus.IN_PROGRESS;
-            case COMPLETED:
-                return EducationRecordEntity.EducationStatus.COMPLETED;
-            case ABANDONED:
-                return EducationRecordEntity.EducationStatus.ABANDONED;
-            default:
-                throw new IllegalArgumentException("Unknown education status: " + domainStatus);
-        }
+        return domainStatus.getPersistenceStatus();
     }
 
     /**
-     * Map entity EducationType to domain EducationType
+     * Map entity EducationType to domain EducationType using unified mapping
      */
     private EducationType mapFromEntityEducationType(EducationRecordEntity.EducationType entityType) {
         if (entityType == null) {
             return null;
         }
 
-        switch (entityType) {
-            case SECONDARY_EDUCATION:
-                return EducationType.SECONDARY;
-            case TECHNICAL_DEGREE:
-                return EducationType.HIGHER_EDUCATION_DEGREE;
-            case UNIVERSITY_DEGREE:
-                return EducationType.UNDERGRADUATE_DEGREE;
-            case POSTGRADUATE_DEGREE:
-                return EducationType.POSTGRADUATE_SPECIALIZATION;
-            case MASTER_DEGREE:
-                return EducationType.POSTGRADUATE_MASTERS;
-            case DOCTORAL_DEGREE:
-                return EducationType.POSTGRADUATE_DOCTORATE;
-            case DIPLOMA:
-                return EducationType.DIPLOMA;
-            case TRAINING_COURSE:
-                return EducationType.TRAINING_COURSE;
-            case SCIENTIFIC_ACTIVITY:
-                return EducationType.SCIENTIFIC_ACTIVITY;
+        try {
+            return EducationType.fromPersistenceType(entityType);
+        } catch (IllegalArgumentException e) {
             // For entity types that don't have direct domain equivalents, map to closest match
-            case PRIMARY_EDUCATION:
-            case CERTIFICATION:
-                return EducationType.TRAINING_COURSE; // Default mapping
-            default:
-                throw new IllegalArgumentException("Unknown entity education type: " + entityType);
+            switch (entityType) {
+                case PRIMARY_EDUCATION:
+                case CERTIFICATION:
+                    return EducationType.TRAINING_COURSE; // Default mapping
+                default:
+                    throw new IllegalArgumentException("Unknown entity education type: " + entityType);
+            }
         }
     }
 
     /**
-     * Map entity EducationStatus to domain EducationStatus
+     * Map entity EducationStatus to domain EducationStatus using unified mapping
      */
     private EducationStatus mapFromEntityEducationStatus(EducationRecordEntity.EducationStatus entityStatus) {
         if (entityStatus == null) {
             return null;
         }
 
-        switch (entityStatus) {
-            case IN_PROGRESS:
-                return EducationStatus.IN_PROGRESS;
-            case COMPLETED:
-                return EducationStatus.COMPLETED;
-            case ABANDONED:
-                return EducationStatus.ABANDONED;
-            case SUSPENDED:
-                return EducationStatus.ABANDONED; // Map SUSPENDED to ABANDONED as closest match
-            default:
-                throw new IllegalArgumentException("Unknown entity education status: " + entityStatus);
+        try {
+            return EducationStatus.fromPersistenceStatus(entityStatus);
+        } catch (IllegalArgumentException e) {
+            // Map legacy statuses to closest match
+            switch (entityStatus) {
+                case ABANDONED:
+                case SUSPENDED:
+                    return EducationStatus.IN_PROGRESS; // Map legacy statuses to IN_PROGRESS as closest match
+                default:
+                    throw new IllegalArgumentException("Unknown entity education status: " + entityStatus);
+            }
         }
     }
 }

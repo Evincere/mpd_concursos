@@ -1,7 +1,5 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -30,8 +28,6 @@ import { environment } from '../../../../environments/environment';
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
     MatButtonModule
   ],
   template: `
@@ -50,13 +46,13 @@ import { environment } from '../../../../environments/environment';
             (load)="onImageLoad()">
 
           <div *ngIf="!currentImageUrl() || imageLoadError()" class="image-placeholder">
-            <mat-icon class="placeholder-icon">person</mat-icon>
+            <i class="fas fa-user placeholder-icon"></i>
             <span class="placeholder-text">{{ imageLoadError() ? 'Error al cargar imagen' : 'Sin imagen' }}</span>
           </div>
           
           <!-- Loading Overlay -->
           <div *ngIf="isUploading()" class="loading-overlay">
-            <mat-spinner diameter="40" color="primary"></mat-spinner>
+            <i class="fas fa-spinner fa-spin loading-spinner"></i>
             <span class="loading-text">Subiendo imagen...</span>
           </div>
         </div>
@@ -69,7 +65,7 @@ import { environment } from '../../../../environments/environment';
             (click)="triggerFileInput()"
             [disabled]="isUploading()"
             [attr.aria-label]="currentImageUrl() ? 'Cambiar imagen de perfil' : 'Subir imagen de perfil'">
-            <mat-icon>{{ currentImageUrl() ? 'edit' : 'add_a_photo' }}</mat-icon>
+            <i class="fas {{ currentImageUrl() ? 'fa-edit' : 'fa-camera' }}"></i>
             {{ currentImageUrl() ? 'Cambiar' : 'Subir' }}
           </button>
           
@@ -80,7 +76,7 @@ import { environment } from '../../../../environments/environment';
             (click)="removeImage()"
             [disabled]="isUploading()"
             aria-label="Eliminar imagen de perfil">
-            <mat-icon>delete</mat-icon>
+            <i class="fas fa-trash"></i>
             Eliminar
           </button>
         </div>
@@ -98,15 +94,15 @@ import { environment } from '../../../../environments/environment';
       <!-- Upload Info -->
       <div class="upload-info" *ngIf="showUploadInfo">
         <div class="info-item">
-          <mat-icon class="info-icon">info</mat-icon>
+          <i class="fas fa-info-circle info-icon"></i>
           <span>Formatos: JPG, PNG, GIF</span>
         </div>
         <div class="info-item">
-          <mat-icon class="info-icon">storage</mat-icon>
+          <i class="fas fa-hdd info-icon"></i>
           <span>Tamaño máximo: 5MB</span>
         </div>
         <div class="info-item">
-          <mat-icon class="info-icon">aspect_ratio</mat-icon>
+          <i class="fas fa-expand-arrows-alt info-icon"></i>
           <span>Se redimensiona automáticamente a 256x256</span>
         </div>
       </div>

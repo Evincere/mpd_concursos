@@ -6,7 +6,7 @@
     <div class="cv-header-content">
       <div class="cv-title-section">
         <h2 class="cv-title">
-          <i class="material-icons">description</i>
+          <i class="fas fa-file-alt"></i>
           Curriculum Vitae
         </h2>
         <p class="cv-subtitle" *ngIf="userProfile">
@@ -16,12 +16,12 @@
 
       <div class="cv-actions">
         <button class="btn btn-primary" (click)="exportCv()" [disabled]="!hasData()">
-          <i class="material-icons">download</i>
+          <i class="fas fa-download"></i>
           Exportar CV
         </button>
 
         <button class="btn btn-secondary" (click)="refreshData()">
-          <i class="material-icons">refresh</i>
+          <i class="fas fa-sync-alt"></i>
           Actualizar
         </button>
       </div>
@@ -44,18 +44,18 @@
     <!-- Estado vacío -->
     <div *ngIf="!hasData() && !isAnyLoading()" class="cv-empty-state">
       <div class="empty-state-content">
-          <i class="material-icons empty-icon">description</i>
+          <i class="fas fa-file-alt empty-icon"></i>
           <h3>Tu CV está vacío</h3>
           <p>Comienza agregando tu experiencia laboral y educación para crear un CV completo.</p>
 
           <div class="empty-state-actions">
             <button class="btn btn-primary" (click)="addExperience()">
-              <i class="material-icons">work</i>
+              <i class="fas fa-briefcase"></i>
               Agregar Experiencia
             </button>
 
             <button class="btn btn-secondary" (click)="addEducation()">
-              <i class="material-icons">school</i>
+              <i class="fas fa-graduation-cap"></i>
               Agregar Educación
             </button>
           </div>
@@ -70,7 +70,7 @@
           class="cv-tab-button"
           [class.active]="tab.isActive"
           (click)="onTabChange(tab.id)">
-          <i class="material-icons">{{ tab.icon }}</i>
+          <i class="fas fa-{{ tab.icon }}"></i>
           <span>{{ tab.label }}</span>
           <span class="tab-count" *ngIf="tab.count > 0">{{ tab.count }}</span>
         </button>
@@ -108,7 +108,7 @@
 
                 <!-- Handle de arrastre -->
                 <div class="drag-handle" cdkDragHandle>
-                  <i class="material-icons">drag_indicator</i>
+                  <i class="fas fa-grip-vertical"></i>
                 </div>
 
                 <!-- Contenido de la experiencia -->
@@ -120,17 +120,17 @@
                       <div class="validation-status">
                         <span class="status-badge status-pending"
                               title="Documentación pendiente de validación administrativa">
-                          <i class="material-icons">schedule</i>
+                          <i class="fas fa-clock"></i>
                           Pendiente de validación
                         </span>
                       </div>
                     </div>
                     <div class="item-actions">
                       <button class="btn btn-icon btn-secondary" (click)="editExperience(experience)">
-                        <i class="material-icons">edit</i>
+                        <i class="fas fa-edit"></i>
                       </button>
                       <button class="btn btn-icon btn-error" (click)="deleteExperience(experience)">
-                        <i class="material-icons">delete</i>
+                        <i class="fas fa-trash"></i>
                       </button>
                     </div>
                   </div>
@@ -138,25 +138,25 @@
                   <div class="item-details">
                     <div class="company-info">
                       <p class="company">
-                        <i class="material-icons">business</i>
+                        <i class="fas fa-building"></i>
                         {{ experience.company || 'Sin empresa' }}
                       </p>
                       <p class="location" *ngIf="experience.location">
-                        <i class="material-icons">location_on</i>
+                        <i class="fas fa-map-marker-alt"></i>
                         {{ experience.location }}
                       </p>
                     </div>
 
                     <div class="dates-section">
                       <div class="dates-info">
-                        <i class="material-icons">schedule</i>
+                        <i class="fas fa-calendar-alt"></i>
                         <span class="date-range">{{ formatExperienceDates(experience) }}</span>
                         <span class="duration" *ngIf="getExperienceDuration(experience)">
                           • {{ getExperienceDuration(experience) }}
                         </span>
                       </div>
                       <div class="current-job-badge" *ngIf="experience.isCurrentJob">
-                        <i class="material-icons">work</i>
+                        <i class="fas fa-briefcase"></i>
                         <span>Trabajo Actual</span>
                       </div>
                     </div>
@@ -167,7 +167,7 @@
                         class="btn btn-link expand-btn"
                         *ngIf="experience.description && experience.description.length > 150 && experience.id"
                         (click)="toggleExperienceExpanded(experience.id!)">
-                        <i class="material-icons">{{ isExperienceExpanded(experience.id!) ? 'expand_less' : 'expand_more' }}</i>
+                        <i class="fas fa-{{ isExperienceExpanded(experience.id!) ? 'chevron-up' : 'chevron-down' }}"></i>
                         {{ isExperienceExpanded(experience.id!) ? 'Ver menos' : 'Ver más' }}
                       </button>
                     </div>
@@ -176,7 +176,7 @@
                     <div class="additional-info" *ngIf="experience.achievements?.length || experience.technologies?.length">
                       <div class="achievements" *ngIf="experience.achievements?.length">
                         <h5>
-                          <i class="material-icons">star</i>
+                          <i class="fas fa-star"></i>
                           Logros principales
                         </h5>
                         <ul class="achievements-list">
@@ -186,7 +186,7 @@
 
                       <div class="technologies" *ngIf="experience.technologies?.length">
                         <h5>
-                          <i class="material-icons">code</i>
+                          <i class="fas fa-code"></i>
                           Tecnologías
                         </h5>
                         <div class="tech-badges">
@@ -208,7 +208,7 @@
 
               <!-- Placeholder cuando está vacío -->
               <div class="empty-drop-zone" *ngIf="cvState().experiences.data.length === 0">
-                <i class="material-icons">work_off</i>
+                <i class="fas fa-briefcase"></i>
                 <p>No hay experiencias laborales</p>
                 <app-custom-button
                   [label]="'Agregar Primera Experiencia'"
@@ -251,7 +251,7 @@
 
                 <!-- Handle de arrastre -->
                 <div class="drag-handle" cdkDragHandle>
-                  <i class="material-icons">drag_indicator</i>
+                  <i class="fas fa-grip-vertical"></i>
                 </div>
 
                 <!-- Contenido de la educación -->
@@ -263,17 +263,17 @@
                       <div class="validation-status">
                         <span class="status-badge status-pending"
                               title="Documentación pendiente de validación administrativa">
-                          <i class="material-icons">schedule</i>
+                          <i class="fas fa-clock"></i>
                           Pendiente de validación
                         </span>
                       </div>
                     </div>
                     <div class="item-actions">
                       <button class="btn btn-icon btn-secondary" (click)="editEducation(education)">
-                        <i class="material-icons">edit</i>
+                        <i class="fas fa-edit"></i>
                       </button>
                       <button class="btn btn-icon btn-error" (click)="deleteEducation(education)">
-                        <i class="material-icons">delete</i>
+                        <i class="fas fa-trash"></i>
                       </button>
                     </div>
                   </div>
@@ -281,16 +281,21 @@
                   <div class="item-details">
                     <div class="institution-info">
                       <p class="institution">
-                        <i class="material-icons">school</i>
+                        <i class="fas fa-university"></i>
                         {{ education.institution || 'Sin institución' }}
                       </p>
                     </div>
 
                     <div class="dates-section">
                       <div class="dates-info">
-                        <i class="material-icons">schedule</i>
+                        <i class="fas fa-calendar-alt"></i>
                         <span class="date-range">{{ formatEducationDates(education) }}</span>
-                        <span class="duration" *ngIf="getEducationDuration(education)">
+                        <!-- Información secundaria de fechas (ej: "En curso") -->
+                        <span class="date-secondary" *ngIf="getEducationDateInfo(education).secondary">
+                          • {{ getEducationDateInfo(education).secondary }}
+                        </span>
+                        <!-- Duración solo si debe mostrarse según el tipo -->
+                        <span class="duration" *ngIf="shouldShowEducationDuration(education) && getEducationDuration(education)">
                           • {{ getEducationDuration(education) }}
                         </span>
                       </div>
@@ -300,7 +305,7 @@
                     <div class="education-additional-info" *ngIf="getEducationAdditionalInfo(education)">
                       <div class="additional-details">
                         <div class="detail-item" *ngFor="let detail of getEducationAdditionalInfo(education)">
-                          <i class="material-icons">{{ detail.icon }}</i>
+                          <i class="fas fa-{{ detail.icon }}"></i>
                           <span class="detail-label">{{ detail.label }}:</span>
                           <span class="detail-value">{{ detail.value }}</span>
                         </div>
@@ -314,14 +319,15 @@
                         class="btn btn-link expand-btn"
                         *ngIf="education.comments && education.comments.length > 150 && education.id"
                         (click)="toggleEducationExpanded(education.id!)">
-                        <i class="material-icons">{{ isEducationExpanded(education.id!) ? 'expand_less' : 'expand_more' }}</i>
+                        <i class="fas fa-{{ isEducationExpanded(education.id!) ? 'chevron-up' : 'chevron-down' }}"></i>
                         {{ isEducationExpanded(education.id!) ? 'Ver menos' : 'Ver más' }}
                       </button>
                     </div>
 
                     <div class="badges">
                       <span class="type-badge">{{ getEducationTypeLabel(education.type) }}</span>
-                      <span class="status-badge" [class]="'status-' + (education.status.toLowerCase() || 'unknown')">
+                      <span class="status-badge"
+                            [class]="'status-' + (education.status === 'COMPLETED' ? 'completed' : 'in-progress')">
                         {{ getEducationStatusLabel(education.status) }}
                       </span>
                     </div>
@@ -339,7 +345,7 @@
 
               <!-- Placeholder cuando está vacío -->
               <div class="empty-drop-zone" *ngIf="cvState().education.data.length === 0">
-                <i class="material-icons">school_off</i>
+                <i class="fas fa-graduation-cap"></i>
                 <p>No hay educación registrada</p>
                 <app-custom-button
                   [label]="'Agregar Primera Educación'"

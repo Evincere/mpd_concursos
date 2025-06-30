@@ -2,7 +2,7 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080/api',
   wsUrl: 'ws://localhost:3000',
-  enableCSP: false, // Deshabilitar CSP en desarrollo
+  enableCSP: true, // ✅ SEGURIDAD: CSP habilitado en desarrollo para detectar problemas temprano
   indexedDBEnabled: true,
   mockData: false,
   logLevel: 'debug',

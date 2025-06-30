@@ -40,6 +40,7 @@ export class IconConverterService {
     'sort': 'fas fa-sort',
     'more_vert': 'fas fa-ellipsis-v',
     'more_horiz': 'fas fa-ellipsis-h',
+    'drag_indicator': 'fas fa-grip-vertical',
     
     // Interfaz
     'touch_app': 'fas fa-hand-pointer',
@@ -91,6 +92,7 @@ export class IconConverterService {
     
     // Otros comunes
     'star': 'fas fa-star',
+    'code': 'fas fa-code',
     'favorite': 'fas fa-heart',
     'bookmark': 'fas fa-bookmark',
     'share': 'fas fa-share',

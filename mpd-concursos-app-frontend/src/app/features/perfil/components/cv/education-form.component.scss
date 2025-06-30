@@ -26,7 +26,7 @@
       font-weight: 600;
       color: var(--color-text-primary);
 
-      .material-icons {
+      .fas {
         font-size: var(--font-size-2xl);
         color: var(--color-primary);
       }
@@ -247,7 +247,7 @@
       padding-bottom: var(--spacing-xs);
       border-bottom: 2px solid var(--color-primary);
 
-      .material-icons {
+      .fas {
         font-size: var(--font-size-lg);
         color: var(--color-primary);
       }
@@ -489,7 +489,7 @@
       border-radius: 12px;
       color: #ffffff;
 
-      .material-icons {
+      .fas {
         font-size: 1.5rem;
         color: #60a5fa;
         flex-shrink: 0;

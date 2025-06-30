@@ -87,30 +87,26 @@ VALUES
 -- ASIGNACIÓN DE ROLES MANEJADA POR CreateTestData.java
 -- No asignar roles aquí para evitar conflictos
 
--- Datos iniciales para tipos de documento
--- Primero, insertar el documento de identidad como documento padre (NO OBLIGATORIO - solo contenedor)
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General) - Solo contenedor, no obligatorio', FALSE, 1, TRUE);
+-- =====================================================
+-- DATOS INICIALES PARA TIPOS DE DOCUMENTO
+-- Consolidado en una sola transacción para evitar warnings
+-- =====================================================
 
--- Insertar los tipos de documentos para DNI frente y dorso
+-- Insertar todos los tipos de documentos en una sola declaración
 INSERT IGNORE INTO document_types (id, code, name, description, parent_id, required, `order`, is_active) VALUES
+-- Documento padre DNI (contenedor)
+(0x11111111111111111111111111111111, 'dni', 'Documento Nacional de Identidad', 'Documento Nacional de Identidad (General) - Solo contenedor, no obligatorio', NULL, FALSE, 1, TRUE),
+-- DNI frente y dorso
 (0xAAAAAAAAAAAAAAAAAAAAAAAAAAAA, 'dni-frente', 'DNI (Frente)', 'Documento Nacional de Identidad - Lado frontal', 0x11111111111111111111111111111111, TRUE, 1, TRUE),
-(0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB, 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', 0x11111111111111111111111111111111, TRUE, 2, TRUE);
-
--- Insertar otros tipos de documentos
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(0x22222222222222222222222222222222, 'titulo-universitario', 'Titulo Universitario', 'Titulo de grado universitario', TRUE, 3, TRUE),
-(0x33333333333333333333333333333333, 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', TRUE, 4, TRUE),
-(0x44444444444444444444444444444444, 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', FALSE, 5, TRUE);
-
--- Insertar nuevos tipos de documentos requeridos
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(0x55555555555555555555555555555555, 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', TRUE, 6, TRUE),
-(0x66666666666666666666666666666666, 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', TRUE, 7, TRUE),
-(0x77777777777777777777777777777777, 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', TRUE, 8, TRUE),
-(0x88888888888888888888888888888888, 'certificado-sanciones', 'Certificado de Sanciones Disciplinarias', 'Certificado que acredita la ausencia de sanciones disciplinarias', TRUE, 9, TRUE),
-(0x99999999999999999999999999999999, 'certificado-ley-micaela', 'Certificado Ley Micaela', 'Certificado de capacitacion en Ley Micaela', FALSE, 10, TRUE);
-
--- CRITICAL FIX: Insertar tipo de documento genérico para casos de fallback
-INSERT IGNORE INTO document_types (id, code, name, description, required, `order`, is_active) VALUES
-(0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1, 'documento-generico', 'Documento Genérico', 'Tipo de documento genérico para casos no especificados', FALSE, 999, TRUE);
+(0xBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB, 'dni-dorso', 'DNI (Dorso)', 'Documento Nacional de Identidad - Lado posterior', 0x11111111111111111111111111111111, TRUE, 2, TRUE),
+-- Otros documentos requeridos
+(0x22222222222222222222222222222222, 'titulo-universitario', 'Titulo Universitario', 'Titulo de grado universitario', NULL, TRUE, 3, TRUE),
+(0x33333333333333333333333333333333, 'certificado-buena-conducta', 'Certificado de Buena Conducta', 'Certificado de antecedentes penales', NULL, TRUE, 4, TRUE),
+(0x44444444444444444444444444444444, 'curriculum-vitae', 'Curriculum Vitae', 'CV actualizado', NULL, FALSE, 5, TRUE),
+(0x55555555555555555555555555555555, 'cuil', 'Constancia de CUIL', 'Constancia de CUIL actualizada', NULL, TRUE, 6, TRUE),
+(0x66666666666666666666666666666666, 'antecedentes-penales', 'Certificado de Antecedentes Penales', 'Certificado de Antecedentes Penales actualizado', NULL, TRUE, 7, TRUE),
+(0x77777777777777777777777777777777, 'certificado-profesional', 'Certificado de Ejercicio Profesional', 'Certificado de Ejercicio Profesional actualizado', NULL, TRUE, 8, TRUE),
+(0x88888888888888888888888888888888, 'certificado-sanciones', 'Certificado de Sanciones Disciplinarias', 'Certificado que acredita la ausencia de sanciones disciplinarias', NULL, TRUE, 9, TRUE),
+(0x99999999999999999999999999999999, 'certificado-ley-micaela', 'Certificado Ley Micaela', 'Certificado de capacitacion en Ley Micaela', NULL, FALSE, 10, TRUE),
+-- Documento genérico para casos de fallback
+(0xDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD, 'documento-generico', 'Documento Genérico', 'Tipo de documento genérico para casos no especificados', NULL, FALSE, 999, TRUE);

@@ -4,19 +4,16 @@ package ar.gov.mpd.concursobackend.education.domain.model;
  * Enumeración para tipos de actividades científicas
  */
 public enum ScientificActivityType {
-    RESEARCH("Investigación"),
-    PUBLICATION("Publicación"),
-    CONFERENCE("Conferencia"),
-    WORKSHOP("Taller"),
-    SEMINAR("Seminario"),
-    OTHER("Otro");
-    
+    RESEARCH("investigación"),
+    PRESENTATION("ponencia"),
+    PUBLICATION("publicación");
+
     private final String displayName;
-    
+
     ScientificActivityType(String displayName) {
         this.displayName = displayName;
     }
-    
+
     public String getDisplayName() {
         return displayName;
     }

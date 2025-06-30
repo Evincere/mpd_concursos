@@ -4,13 +4,13 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Modelo de dominio para registros de educación
+ * Domain model for education records
  */
 public class Education {
     private UUID id;
     private UUID userId;
     
-    // Campos comunes para todos los tipos de educación
+    // Common fields for all education types
     private EducationType type;
     private EducationStatus status;
     private String title;
@@ -20,18 +20,18 @@ public class Education {
     private LocalDate issueDate;
     private String documentUrl;
     
-    // Campos para educación superior y grados universitarios
+    // Fields for higher education and university degrees
     private Integer durationYears;
     private Double average;
     
-    // Campos para estudios de posgrado
+    // Fields for postgraduate studies
     private String thesisTopic;
     
-    // Campos para diplomas y cursos de capacitación
+    // Fields for diplomas and training courses
     private Integer hourlyLoad;
     private Boolean hadFinalEvaluation;
     
-    // Campos para actividades científicas
+    // Fields for scientific activities
     private ScientificActivityType activityType;
     private String topic;
     private ScientificActivityRole activityRole;
@@ -42,7 +42,7 @@ public class Education {
     public Education() {
     }
     
-    // Constructor completo
+    // Full constructor
     public Education(UUID id, UUID userId, EducationType type, EducationStatus status, String title,
                     String institution, LocalDate startDate, LocalDate endDate, LocalDate issueDate,
                     String documentUrl, Integer durationYears, Double average, String thesisTopic,
@@ -237,7 +237,7 @@ public class Education {
         this.comments = comments;
     }
     
-    // Clase Builder interna
+    // Inner Builder class
     public static class EducationBuilder {
         private UUID id;
         private UUID userId;
@@ -371,7 +371,7 @@ public class Education {
     }
     
     /**
-     * Método de fábrica para crear una instancia de educación basada en el tipo
+     * Factory method to create an education instance based on type
      */
     public static Education createForType(EducationType type) {
         return Education.builder()

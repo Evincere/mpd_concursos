@@ -4,7 +4,7 @@
   <!-- Búsqueda rápida -->
   <div class="quick-search">
     <div class="search-input-container">
-      <i class="material-icons search-icon">search</i>
+      <i class="fas fa-search search-icon"></i>
       <input
         type="text"
         class="search-input"
@@ -18,13 +18,13 @@
         *ngIf="searchForm()?.get('searchTerm')?.value"
         (click)="clearSearch()"
         title="Limpiar búsqueda">
-        <i class="material-icons">clear</i>
+        <i class="fas fa-times"></i>
       </button>
     </div>
 
     <!-- Indicador de búsqueda activa -->
     <div class="search-status" *ngIf="isSearching()">
-      <i class="material-icons spinning">search</i>
+      <i class="fas fa-search spinning"></i>
       <span>Buscando...</span>
     </div>
   </div>
@@ -36,7 +36,7 @@
       [class.active]="showAdvancedFilters()"
       (click)="toggleAdvancedFilters()"
       [disabled]="isLoading">
-      <i class="material-icons">tune</i>
+      <i class="fas fa-sliders-h"></i>
       <span>Filtros Avanzados</span>
       <span class="filter-count" *ngIf="activeFiltersCount() > 0">{{ activeFiltersCount() }}</span>
     </button>
@@ -47,7 +47,7 @@
       (click)="resetFilters()"
       [disabled]="isLoading"
       title="Limpiar todos los filtros">
-      <i class="material-icons">clear_all</i>
+      <i class="fas fa-broom"></i>
       <span>Limpiar</span>
     </button>
   </div>

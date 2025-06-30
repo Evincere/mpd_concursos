@@ -3,9 +3,11 @@ import { Observable, tap } from 'rxjs';
 import { LoginUser } from '../../models/login-user.model';
 import { TokenService } from './token.service';
 import { LoginService } from './login.service';
+import { LoggingService } from '../logging/logging.service';
 
 import { JwtDto } from '../../dtos/jwt-dto';
 import { jwtDecode } from 'jwt-decode';
+import { environment } from '../../../../environments/environment';
 
 export interface UserInfo {
   username: string;
@@ -27,7 +29,8 @@ export class AuthService {
 
   constructor(
     private loginService: LoginService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private loggingService: LoggingService
   ) {
     // Limpiar imagen legacy al inicializar (migración)
     this.cleanupLegacyProfileImage();
@@ -49,7 +52,9 @@ export class AuthService {
   }
 
   public handleLogin(loginUser: LoginUser): Observable<JwtDto> {
-    // Logging implementado con LoggingService;
+    // ✅ SEGURIDAD: Login con logging seguro
+    this.loggingService.info('[AuthService] Iniciando proceso de login', { username: loginUser.username }, 'AuthService');
+
     return this.loginService.login(loginUser).pipe(
       tap((jwtDto: JwtDto) => {
         if (jwtDto && jwtDto.token) {
@@ -57,13 +62,17 @@ export class AuthService {
           const decodedToken = this.tokenService.decodeToken(jwtDto.token);
           if (decodedToken) {
             this.loadUserInfo();
+            // ✅ SEGURIDAD: Log exitoso sin exponer token
+            this.loggingService.info('[AuthService] Login exitoso', { username: loginUser.username }, 'AuthService');
           } else {
-            console.error('[AuthService] No se pudo decodificar el token');
+            // ✅ SEGURIDAD: Error sin exponer información del token
+            this.loggingService.error('[AuthService] No se pudo decodificar el token de autenticación', undefined, 'AuthService');
             this.logout();
             throw new Error('Token inválido');
           }
         } else {
-          console.error('[AuthService] Respuesta de login vacía o sin token');
+          // ✅ SEGURIDAD: Error sin exponer detalles de la respuesta
+          this.loggingService.error('[AuthService] Respuesta de login inválida del servidor', undefined, 'AuthService');
           throw new Error('Respuesta inválida del servidor');
         }
       })
@@ -71,7 +80,8 @@ export class AuthService {
   }
 
   public logout(): void {
-    // Logging implementado con LoggingService;
+    // ✅ SEGURIDAD: Logout con logging seguro
+    this.loggingService.info('[AuthService] Usuario cerrando sesión', undefined, 'AuthService');
     this.tokenService.signOut();
   }
 
@@ -148,6 +158,9 @@ export class AuthService {
         cuit,
         profileImage
       });
+
+      // Cargar imagen de perfil desde el servidor para sincronizar
+      setTimeout(() => this.loadProfileImageFromServer(), 100);
     } else {
       console.warn('[AuthService] Información del usuario incompleta');
       this.clearUserInfo();
@@ -189,5 +202,51 @@ export class AuthService {
       ...current,
       profileImage: imageUrl
     }));
+  }
+
+  /**
+   * Carga la imagen de perfil desde el servidor
+   * Se llama después de cargar la información básica del usuario
+   */
+  public loadProfileImageFromServer(): void {
+    const username = this.userInfo().username;
+    console.log('[AuthService] Intentando cargar imagen de perfil para usuario:', username);
+
+    if (!username) {
+      console.warn('[AuthService] No hay username disponible para cargar imagen de perfil');
+      return;
+    }
+
+    // Usar fetch para evitar dependencias circulares con ProfileService
+    const token = this.tokenService.getToken();
+    if (!token) {
+      console.warn('[AuthService] No hay token disponible para cargar imagen de perfil');
+      return;
+    }
+
+    console.log('[AuthService] Realizando petición a:', `${environment.apiUrl}/users/profile`);
+
+    fetch(`${environment.apiUrl}/users/profile`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      console.log('[AuthService] Respuesta del servidor:', response.status, response.statusText);
+      if (response.ok) {
+        return response.json();
+      }
+      throw new Error(`Error al cargar perfil: ${response.status} ${response.statusText}`);
+    })
+    .then(profile => {
+      if (profile && profile.profileImageUrl) {
+        console.log('[AuthService] Imagen de perfil cargada desde servidor:', profile.profileImageUrl);
+        this.updateProfileImage(profile.profileImageUrl);
+      }
+    })
+    .catch(error => {
+      console.warn('[AuthService] No se pudo cargar la imagen de perfil desde el servidor:', error);
+    });
   }
 }

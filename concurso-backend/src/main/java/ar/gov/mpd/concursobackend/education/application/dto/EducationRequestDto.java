@@ -4,6 +4,10 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import ar.gov.mpd.concursobackend.education.application.validation.ValidEducationType;
+import ar.gov.mpd.concursobackend.education.application.validation.ValidEducationStatus;
+import ar.gov.mpd.concursobackend.education.application.validation.ValidScientificActivityType;
+import ar.gov.mpd.concursobackend.education.application.validation.ValidScientificActivityRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
@@ -24,18 +28,18 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EducationRequestDto {
 
-    @NotBlank(message = "El tipo de educación es obligatorio")
-    @Pattern(regexp = "^(Educación Secundaria|Título Terciario|Título Universitario|Especialización|Maestría|Doctorado|Diplomatura|Curso de Capacitación|Actividad Científica)$", message = "Tipo de educación inválido")
+    @NotBlank(message = "Education type is required")
+    @ValidEducationType
     private String type;
 
-    @NotBlank(message = "El estado es obligatorio")
-    @Pattern(regexp = "^(En Curso|Completado|Abandonado)$", message = "Estado inválido")
+    @NotBlank(message = "Status is required")
+    @ValidEducationStatus
     private String status;
 
-    @NotBlank(message = "El título es obligatorio")
+    @NotBlank(message = "Title is required")
     private String title;
 
-    @NotBlank(message = "La institución es obligatoria")
+    @NotBlank(message = "Institution is required")
     private String institution;
 
     // Fechas del programa educativo
@@ -47,28 +51,28 @@ public class EducationRequestDto {
     private LocalDate issueDate;
 
     // Fields for higher education and undergraduate degrees
-    @Positive(message = "La duración debe ser un número positivo")
+    @Positive(message = "Duration must be a positive number")
     private Integer durationYears;
 
-    @PositiveOrZero(message = "El promedio debe ser un número positivo o cero")
+    @PositiveOrZero(message = "Average must be a positive number or zero")
     private Double average;
 
     // Fields for postgraduate studies
     private String thesisTopic;
 
     // Fields for diplomas and training courses
-    @Positive(message = "La carga horaria debe ser un número positivo")
+    @Positive(message = "Hourly load must be a positive number")
     private Integer hourlyLoad;
 
     private Boolean hadFinalEvaluation;
 
     // Fields for scientific activities
-    @Pattern(regexp = "^(Investigación|Publicación|Conferencia|Taller|Seminario|Otro)$", message = "Tipo de actividad científica inválido")
+    @ValidScientificActivityType
     private String activityType;
 
     private String topic;
 
-    @Pattern(regexp = "^(Autor|Co-autor|Expositor|Organizador|Coordinador|Participante)$", message = "Rol en la actividad científica inválido")
+    @ValidScientificActivityRole
     private String activityRole;
 
     private String expositionPlaceDate;

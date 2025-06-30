@@ -243,17 +243,18 @@ export class CvPdfExportService {
   private getEducationDetails(edu: EducationEntry): string[] {
     const details: string[] = [];
     switch (edu.type) {
-      case EducationType.UNIVERSITY_DEGREE:
+      case EducationType.HIGHER_EDUCATION_CAREER:
+      case EducationType.UNDERGRADUATE_CAREER:
         if ((edu as UniversityEducation).honors) details.push(`Honores: ${(edu as UniversityEducation).honors}`);
         if ((edu as UniversityEducation).average) details.push(`Promedio: ${(edu as UniversityEducation).average}`);
         break;
       case EducationType.POSTGRADUATE_SPECIALIZATION:
-      case EducationType.MASTER_DEGREE:
-      case EducationType.DOCTORATE:
+      case EducationType.POSTGRADUATE_MASTERS:
+      case EducationType.POSTGRADUATE_DOCTORATE:
         if ((edu as PostgraduateEducation).thesisTopic) details.push(`Tesis: ${(edu as PostgraduateEducation).thesisTopic}`);
         break;
       case EducationType.DIPLOMA:
-      case EducationType.CERTIFICATION:
+      case EducationType.TRAINING_COURSE:
         if ((edu as DiplomaEducation).hourlyLoad) details.push(`Carga horaria: ${(edu as DiplomaEducation).hourlyLoad}hs`);
         break;
       case EducationType.SCIENTIFIC_ACTIVITY:

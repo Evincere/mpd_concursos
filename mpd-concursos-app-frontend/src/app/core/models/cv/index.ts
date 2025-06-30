@@ -49,6 +49,30 @@ export type {
   PaginatedResult
 } from './cv.model';
 
+// ===== REGLAS DE EDUCACIÓN =====
+export type {
+  EducationFieldConfig,
+  EducationDateValidation,
+  EducationDisplayConfig,
+  EducationTypeRules
+} from './education-rules.model';
+
+export {
+  EDUCATION_STATUS_LABELS,
+  EDUCATION_TYPE_LABELS,
+  EDUCATION_RULES_REGISTRY,
+  getEducationRules,
+  getEducationConfig,
+  UNDERGRADUATE_CAREER_RULES,
+  HIGHER_EDUCATION_CAREER_RULES,
+  POSTGRADUATE_SPECIALIZATION_RULES,
+  POSTGRADUATE_MASTERS_RULES,
+  POSTGRADUATE_DOCTORATE_RULES,
+  DIPLOMA_RULES,
+  TRAINING_COURSE_RULES,
+  SCIENTIFIC_ACTIVITY_RULES
+} from './education-rules.model';
+
 // ===== CONTRATOS E INTERFACES =====
 export {
   // Eventos del sistema
