@@ -300,3 +300,50 @@ AND upload_date < NOW() - INTERVAL 1 HOUR;
 El problema de cuelgue con documentos PENDING requiere una investigación más profunda del flujo backend-frontend y posiblemente una refactorización del sistema de monitoreo de documentos. Las correcciones implementadas han mejorado la gestión de memoria y el comportamiento general, pero no han resuelto la causa raíz del cuelgue.
 
 **Recomendación inmediata**: Implementar el circuit breaker para evitar cuelgues indefinidos y permitir que los usuarios continúen usando la aplicación.
+
+---
+
+## ✅ SOLUCIÓN IMPLEMENTADA (2025-07-01)
+
+### **Causa Raíz Identificada**
+El cuelgue era causado por **doble recarga concurrente** de documentos:
+
+1. **Recarga automática**: `uploadDocumento()` → `notificarDocumentoActualizado()` → `documentoActualizado$` → `cargarDocumentosUsuario(true)`
+2. **Recarga manual**: `dialogRef.close()` → `afterClosed()` → `cargarDocumentosUsuario(true)`
+
+### **Solución Aplicada**
+**Eliminadas llamadas manuales redundantes** en `DocumentacionTabComponent`:
+
+```typescript
+// ANTES (causaba cuelgue)
+dialogRef.afterClosed().subscribe((result: unknown) => {
+  if (result) {
+    this.cargarDocumentosUsuario(true); // ❌ REDUNDANTE
+  }
+});
+
+// DESPUÉS (solucionado)
+dialogRef.afterClosed().subscribe((result: unknown) => {
+  if (result) {
+    // ✅ Solo log - recarga automática por documentoActualizado$
+    console.log('[DocumentacionTab] 📄 Recarga automática en progreso');
+  }
+});
+```
+
+### **Archivos Modificados**
+- `mpd-concursos-app-frontend/src/app/features/perfil/components/documentacion-tab/documentacion-tab.component.ts`
+  - `abrirDialogoCargaMultiple()`
+  - `cargarDocumentoTipo()`
+  - `reemplazarDocumento()`
+  - `eliminarDocumento()`
+
+### **Resultado**
+- ✅ **Cuelgue eliminado**: Ya no hay condiciones de carrera
+- ✅ **Recarga automática**: Funciona correctamente por `documentoActualizado$`
+- ✅ **Rendimiento mejorado**: Una sola llamada HTTP en lugar de dos concurrentes
+- ✅ **Logs informativos**: Para debugging futuro
+
+---
+
+**Estado**: ✅ **RESUELTO** - 2025-07-01
