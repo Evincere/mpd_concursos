@@ -193,8 +193,9 @@
 
 /* ===== SOLUCIÓN DEFINITIVA PARA DROPDOWNS EN MODALES ===== */
 
-/* PASO 1: Crear nuevo stacking context para el modal */
-:host .modal-container {
+/* PASO 1: Crear nuevo stacking context solo para modales de CV */
+.education-modal .modal-container,
+.experience-modal .modal-container {
   overflow: visible !important;
   /* Crear nuevo stacking context aislado */
   isolation: isolate !important;
@@ -202,16 +203,18 @@
   contain: layout style !important;
 }
 
-/* PASO 2: Configurar contenedor de dropdowns con portal approach */
-:host .modal-content {
+/* PASO 2: Configurar contenedor de dropdowns con portal approach solo para modales de CV */
+.education-modal .modal-content,
+.experience-modal .modal-content {
   /* Crear stacking context específico para dropdowns */
   position: relative !important;
   z-index: 1 !important;
   isolation: isolate !important;
 }
 
-/* PASO 3: Configurar custom-select con backdrop sólido */
-:host .modal-content app-custom-select {
+/* PASO 3: Configurar custom-select con backdrop sólido solo para modales de CV */
+.education-modal .modal-content app-custom-select,
+.experience-modal .modal-content app-custom-select {
   position: relative;
   z-index: 10;
 
@@ -303,8 +306,9 @@
   }
 }
 
-/* Reducir z-index de elementos que pueden interferir */
-:host .modal-content .form-field {
+/* CORRECCIÓN ESPECÍFICA: Solo aplicar a modales de CV para evitar romper otros componentes */
+.education-modal .modal-content .form-field,
+.experience-modal .modal-content .form-field {
   .field-label,
   .field-hint,
   .field-placeholder {
@@ -320,23 +324,30 @@
   }
 }
 
-/* CRÍTICO: Asegurar que los labels no interfieran con dropdowns */
-:host .modal-content label {
+/* CORRECCIÓN ESPECÍFICA: Solo aplicar a modales de CV */
+.education-modal .modal-content label,
+.experience-modal .modal-content label {
   pointer-events: none !important;
   z-index: 1 !important;
 }
 
-/* Permitir clics en elementos interactivos dentro de labels */
-:host .modal-content label input,
-:host .modal-content label button,
-:host .modal-content label select {
+/* Permitir clics en elementos interactivos dentro de labels en modales de CV */
+.education-modal .modal-content label input,
+.education-modal .modal-content label button,
+.education-modal .modal-content label select,
+.experience-modal .modal-content label input,
+.experience-modal .modal-content label button,
+.experience-modal .modal-content label select {
   pointer-events: auto !important;
 }
 
-/* Asegurar que otros elementos no interfieran */
-:host .modal-content .form-section,
-:host .modal-content .form-row,
-:host .modal-content .form-field {
+/* Asegurar que otros elementos no interfieran solo en modales de CV */
+.education-modal .modal-content .form-section,
+.education-modal .modal-content .form-row,
+.education-modal .modal-content .form-field,
+.experience-modal .modal-content .form-section,
+.experience-modal .modal-content .form-row,
+.experience-modal .modal-content .form-field {
   overflow: visible !important;
   position: relative;
   z-index: 1;

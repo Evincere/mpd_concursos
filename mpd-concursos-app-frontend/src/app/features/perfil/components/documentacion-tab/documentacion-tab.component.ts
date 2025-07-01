@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Custom Components
@@ -16,7 +16,7 @@ import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento }
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
-import { finalize } from 'rxjs/operators';
+import { debounceTime, throttleTime, finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
 interface DocumentoCardViewModel {
@@ -874,7 +874,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     private dialog: UnifiedDialogService,
     private notification: CustomNotificationService,
     private documentosService: DocumentosService,
-    private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationService
   ) {}
 
@@ -884,14 +883,17 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     // CRITICAL FIX: Cargar datos sin forzar recarga para usar cache
     this.cargarDatos(false);
 
-    // CRITICAL FIX: Suscripción más robusta con protección contra bucles
+    // CRITICAL FIX: Suscripción más robusta con debounce y throttle para evitar race conditions
     this.subscription = this.documentosService.documentoActualizado$
+      .pipe(
+        debounceTime(1000), // Aumentado a 1000ms para dar tiempo a que el backend procese
+        throttleTime(3000, undefined, { leading: true, trailing: true }) // Permitir emisión inmediata y luego esperar
+      )
       .subscribe((timestamp) => {
         console.log('[DocumentacionTab] 🔄 Recargando documentos por actualización...', timestamp);
 
-        // CRITICAL FIX: Solo recargar si no estamos ya cargando
         if (!this.isLoading) {
-          this.cargarDocumentosUsuario(true); // Recargar documentos cuando se notifica una actualización
+          this.cargarDocumentosUsuario(true);
         } else {
           console.log('[DocumentacionTab] ⏳ Recarga ignorada - ya hay una carga en progreso');
         }
@@ -1012,7 +1014,8 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           this.documentosUsuario = documentos;
           this.buildViewModel();
           this.calcularProgreso();
-          this.cdr.detectChanges();
+          // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+          // Angular manejará automáticamente la detección de cambios
         },
         error: (error: unknown) => {
           console.error('[DocumentacionTab] Error al cargar documentos del usuario:', error);

@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpEventType, HttpEvent, HttpResponse } from 
 import { Observable, throwError, Subject, forkJoin, of } from 'rxjs'; // Import 'of' for returning observables
 import { environment } from '../../../../environments/environment';
 import { DocumentoUsuario, TipoDocumento, DocumentoResponse, EstadoDocumento, EstadoColaDocumento, EstadoProcesamiento } from '../../models/documento.model';
-import { map, catchError, tap, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { map, catchError, tap, debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { TempDocumentCacheService } from '../cv/temp-document-cache.service';
 
 @Injectable({
@@ -31,6 +31,10 @@ export class DocumentosService {
   // CRITICAL FIX: Control de notificaciones para evitar bucles
   private ultimaNotificacion = 0;
   private readonly MIN_INTERVALO_NOTIFICACION = 5000; // 5 segundos mínimo entre notificaciones
+
+  // CRITICAL FIX: Control de concurrencia para evitar condiciones de carrera
+  private loadingMutex = false;
+  private pendingRequest: Observable<DocumentoUsuario[]> | null = null;
 
   constructor() {
     this.ultimaActualizacion = 0; // Initialize to 0 so it fetches on first load
@@ -61,15 +65,24 @@ export class DocumentosService {
    */
   getDocumentosUsuario(forzarRecarga = false): Observable<DocumentoUsuario[]> {
     const ahora = Date.now();
-    if (!forzarRecarga && this.documentosCache.length > 0 && (ahora - this.ultimaActualizacion < this.CACHE_TIMEOUT)) {
-      // Retornar de la caché
-      return of(this.documentosCache); // Use 'of' to return an observable from a value
+
+    // CRITICAL FIX: Control de concurrencia para evitar condiciones de carrera
+    if (this.loadingMutex && this.pendingRequest) {
+      console.log('[DocumentosService] ⏳ Solicitud en progreso, retornando request pendiente');
+      return this.pendingRequest;
     }
 
-    // Si no hay caché o ha expirado, obtener del servidor
-    // Usar el endpoint correcto: /api/documentos/usuario
+    if (!forzarRecarga && this.documentosCache.length > 0 && (ahora - this.ultimaActualizacion < this.CACHE_TIMEOUT)) {
+      // Retornar de la caché
+      console.log('[DocumentosService] 📁 Retornando documentos desde cache');
+      return of(this.documentosCache);
+    }
+
+    // CRITICAL FIX: Activar mutex antes de hacer la solicitud HTTP
+    this.loadingMutex = true;
     console.log('[DocumentosService] 🔍 Solicitando documentos del usuario desde:', `${this.apiUrl}/usuario`);
-    return this.http.get<DocumentoUsuario[]>(`${this.apiUrl}/usuario`).pipe(
+
+    this.pendingRequest = this.http.get<DocumentoUsuario[]>(`${this.apiUrl}/usuario`).pipe(
       tap(documentos => {
         console.log('[DocumentosService] ✅ Respuesta del backend:', documentos);
         console.log('[DocumentosService] 📊 Cantidad de documentos recibidos:', documentos.length);
@@ -78,6 +91,12 @@ export class DocumentosService {
         }
         this.documentosCache = documentos;
         this.ultimaActualizacion = Date.now();
+      }),
+      finalize(() => {
+        // CRITICAL FIX: Liberar mutex al finalizar (éxito o error)
+        this.loadingMutex = false;
+        this.pendingRequest = null;
+        console.log('[DocumentosService] 🔓 Mutex liberado');
       }),
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al obtener documentos del usuario:', error);
@@ -92,6 +111,8 @@ export class DocumentosService {
         return of([]); // Return an observable of an empty array
       })
     );
+
+    return this.pendingRequest;
   }
 
   /**

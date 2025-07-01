@@ -75,7 +75,7 @@ public class DocumentEntity {
     private String errorMessage;
 
     public enum DocumentStatusEnum {
-        PENDING, APPROVED, REJECTED
+        PENDING, APPROVED, REJECTED, PROCESSING, ERROR
     }
 
     public enum ProcessingStatusEnum {

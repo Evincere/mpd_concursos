@@ -849,7 +849,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
   mostrarSelectorDocumento = true; // Controla si se muestra el selector de documentos
 
   // Propiedades para manejo de timeouts y limpieza de recursos
-  private autoCloseTimeout: any = null;
+  // CRITICAL FIX: autoCloseTimeout eliminado - ya no se usa auto-close automático
 
   constructor(
     private dialogRef: UnifiedDialogRef<any>,
@@ -877,16 +877,18 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
   ngOnDestroy(): void {
     console.log('[DocumentoMultipleUpload] 🧹 Limpiando recursos en ngOnDestroy');
 
-    // Limpiar timeout de auto-close
-    if (this.autoCloseTimeout) {
-      clearTimeout(this.autoCloseTimeout);
-      this.autoCloseTimeout = null;
-    }
+    // CRITICAL FIX: autoCloseTimeout eliminado - ya no se usa auto-close automático
 
     // Limpiar intervalo de monitoreo
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
+    }
+
+    // CRITICAL FIX: Limpiar timeout de actualización de progreso
+    if (this.progresoUpdateTimeout) {
+      clearTimeout(this.progresoUpdateTimeout);
+      this.progresoUpdateTimeout = null;
     }
   }
 
@@ -1345,7 +1347,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
         // Actualizar estado a 'subiendo'
         doc.estado = 'subiendo';
         doc.progreso = 20;
-        this.actualizarProgresoGlobal();
+        // CRITICAL FIX: Eliminar llamada redundante - se actualiza al final del bucle
 
         console.log(`[DocumentoMultipleUpload] 📄 Subiendo documento ${i + 1}/${totalDocumentos}: ${doc.nombreEstandarizado}`);
 
@@ -1370,9 +1372,11 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
           doc.mensajeError = 'Error al subir el documento: ' + (error instanceof Error ? error.message : 'Error desconocido');
         }
 
-        // Actualizar progreso global después de cada documento
-        this.actualizarProgresoGlobal();
+        // CRITICAL FIX: No actualizar progreso después de cada documento para evitar congelamiento
       }
+
+      // Actualizar progreso global una sola vez al final
+      this.actualizarProgresoGlobal();
 
       // Finalizar proceso
       console.log('[DocumentoMultipleUpload] 🏁 Proceso de carga completado');
@@ -1660,50 +1664,65 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       totalDocumentos
     });
 
-    // CRITICAL FIX: Auto-close when all documents are successfully uploaded
-    if (documentosCompletados === totalDocumentos && documentosCompletados > 0) {
-      // Todos los documentos se completaron exitosamente
-      this.documentosSubidosExitosamente = true;
-      console.log('[DocumentoMultipleUpload] ✅ Todos los documentos subidos exitosamente, iniciando cierre automático...');
+    // CRITICAL FIX: Aumentar delay para evitar conflictos con múltiples operaciones concurrentes
+    setTimeout(() => {
+      if (documentosCompletados === totalDocumentos && documentosCompletados > 0) {
+        // Todos los documentos se completaron exitosamente
+        this.documentosSubidosExitosamente = true;
+        console.log('[DocumentoMultipleUpload] ✅ Todos los documentos subidos exitosamente');
 
-      // Mostrar notificación de éxito
-      this.notificationService.success('Documentación subida exitosamente', 'Éxito');
+        // CRITICAL FIX: Diferir notificación significativamente para evitar conflictos con detección de cambios
+        setTimeout(() => {
+          this.notificationService.success('Documentación subida exitosamente', 'Éxito');
+        }, 500); // Aumentado de 100ms a 500ms
 
-      // CRITICAL FIX: Eliminar emisión duplicada - uploadDocumento() ya emite automáticamente
-      // this.documentosService.notificarDocumentoActualizado();
+        // CRITICAL FIX: Eliminar emisión duplicada - uploadDocumento() ya emite automáticamente
+        // this.documentosService.notificarDocumentoActualizado();
 
-      // Auto-close después de 2 segundos para dar tiempo a ver la notificación
-      this.autoCloseTimeout = setTimeout(() => {
-        console.log('[DocumentoMultipleUpload] 🚪 Cerrando diálogo automáticamente...');
-        this.dialogRef.close({ success: true, confirmed: true });
-      }, 2000);
+        console.log('[DocumentoMultipleUpload] ✅ Proceso finalizado - esperando confirmación del usuario');
 
-    } else if (documentosCompletados > 0 && documentosConError === 0) {
-      // Algunos documentos se completaron, pero no hay errores explícitos
-      this.documentosSubidosExitosamente = true;
-    } else if (documentosCompletados > 0 && documentosConError > 0) {
-      // Algunos documentos se completaron, pero otros tuvieron errores
-      this.documentosSubidosExitosamente = true;
-      this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos. ${documentosConError} documentos tuvieron errores.`);
-    } else if (documentosConError > 0) {
-      // Solo hay documentos con error
-      this.mostrarError(`No se pudo subir ningún documento. ${documentosConError} documentos tuvieron errores.`);
-    } else {
-      // Caso por defecto - no hay documentos completados ni con error explícito
-      this.mostrarError('No se pudo completar la subida de documentos');
-    }
+      } else if (documentosCompletados > 0 && documentosConError === 0) {
+        // Algunos documentos se completaron, pero no hay errores explícitos
+        this.documentosSubidosExitosamente = true;
+      } else if (documentosCompletados > 0 && documentosConError > 0) {
+        // Algunos documentos se completaron, pero otros tuvieron errores
+        this.documentosSubidosExitosamente = true;
+        this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos. ${documentosConError} documentos tuvieron errores.`);
+      } else if (documentosConError > 0) {
+        // Solo hay documentos con error
+        this.mostrarError(`No se pudo subir ningún documento. ${documentosConError} documentos tuvieron errores.`);
+      } else {
+        // Caso por defecto - no hay documentos completados ni con error explícito
+        this.mostrarError('No se pudo completar la subida de documentos');
+      }
+    }, 200); // CRITICAL FIX: Aumentado de 50ms a 200ms para evitar conflictos
   }
 
+  private progresoUpdateTimeout: any = null;
+
   actualizarProgresoGlobal(): void {
-    // Calcular progreso global basado en el progreso individual de cada documento
-    const documentosValidos = this.documentosParaSubir.filter(doc => doc.estado !== 'error');
-    if (documentosValidos.length === 0) {
-      this.progresoGlobal = 0;
-      return;
+    // CRITICAL FIX: Debounce para evitar actualizaciones excesivas que causan congelamiento
+    if (this.progresoUpdateTimeout) {
+      clearTimeout(this.progresoUpdateTimeout);
     }
 
-    const sumaProgresos = documentosValidos.reduce((sum, doc) => sum + doc.progreso, 0);
-    this.progresoGlobal = Math.round(sumaProgresos / documentosValidos.length);
+    this.progresoUpdateTimeout = setTimeout(() => {
+      // Calcular progreso global basado en el progreso individual de cada documento
+      const documentosValidos = this.documentosParaSubir.filter(doc => doc.estado !== 'error');
+      if (documentosValidos.length === 0) {
+        this.progresoGlobal = 0;
+        return;
+      }
+
+      const nuevoProgreso = Math.round(
+        documentosValidos.reduce((sum, doc) => sum + doc.progreso, 0) / documentosValidos.length
+      );
+
+      // Solo actualizar si realmente cambió para evitar detección de cambios innecesaria
+      if (this.progresoGlobal !== nuevoProgreso) {
+        this.progresoGlobal = nuevoProgreso;
+      }
+    }, 100); // Debounce de 100ms
   }
 
   getFileIcon(file: File): string {
@@ -1858,8 +1877,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
    */
   handleUploadAction(): void {
     if (this.procesoFinalizado) {
-      // Process completed - confirm and close with auto-close
-      this.confirmarYCerrarConAutoClose();
+      // Process completed - close manually without auto-close
+      this.confirmarYCerrar();
     } else {
       // Start upload process
       this.uploadDocuments();
@@ -1896,7 +1915,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
    */
   getUploadButtonIcon(): string {
     if (this.procesoFinalizado) {
-      return 'fa-check';
+      return 'fa-times';
     }
 
     if (this.uploading) {
@@ -1911,7 +1930,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
    */
   getUploadButtonText(): string {
     if (this.procesoFinalizado) {
-      return 'Documentación Subida';
+      return 'Cerrar';
     }
 
     if (this.uploading) {
@@ -1978,13 +1997,14 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     // Disable both buttons
     this.procesoFinalizado = true;
 
-    // Show success message
-    this.notificationService.success('Documentación subida exitosamente', 'Éxito');
-
-    // Auto-close after 3 seconds
+    // CRITICAL FIX: Diferir notificación para evitar conflictos con detección de cambios
     setTimeout(() => {
-      this.confirmarYCerrar();
-    }, 3000);
+      this.notificationService.success('Documentación subida exitosamente. Presiona "Cerrar" para continuar.', 'Éxito');
+    }, 500);
+
+    // CRITICAL FIX: Eliminar auto-close automático para evitar congelamiento
+    // El usuario debe cerrar manualmente presionando el botón "Cerrar"
+    console.log('[DocumentoMultipleUpload] ✅ Documentación subida exitosamente - esperando que el usuario presione "Cerrar"');
   }
 
   private finalizarPorTimeout(): void {

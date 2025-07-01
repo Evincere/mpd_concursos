@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
 import { FormsModule } from '@angular/forms';
 import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
@@ -931,8 +931,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     private dialog: UnifiedDialogService,
     private notificationService: NotificationService,
     private documentosService: DocumentosService,
-    private loggingService: LoggingService,
-    private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -1010,7 +1009,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.loggingService.debug('[DocumentosEmbebidos] Carga de datos finalizada. Calculando progreso...', undefined, 'DocumentosEmbebidos');
         this.calcularProgreso(); // Calculate progress after both lists are loaded and caches updated
-        this.cdr.detectChanges(); // Ensure UI updates
+        // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+        // Angular manejará automáticamente la detección de cambios
       }),
       catchError(error => {
         console.error('[DocumentosEmbebidos] Error al cargar datos combinados:', error);
@@ -1446,7 +1446,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       // Set warning if less than 48 hours (or any threshold)
       this.showDeadlineWarning = this.hoursUntilDeadline <= 48;
     }
-    this.cdr.detectChanges(); // Ensure UI updates
+    // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+    // Angular manejará automáticamente la detección de cambios
 
     this.loggingService.debug(`[DocumentosEmbebidos] Plazo límite: ${this.documentationDeadline.toISOString()}, Horas restantes: ${this.hoursUntilDeadline}, Expirado: ${this.isDeadlineExpired}`, undefined, 'DocumentosEmbebidos');
   }
@@ -1483,7 +1484,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       this.hoursUntilDeadline = remainingHours;
       this.showDeadlineWarning = this.hoursUntilDeadline <= 48; // Adjust warning threshold as needed
     }
-    this.cdr.detectChanges(); // Update UI
+    // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+    // Angular manejará automáticamente la detección de cambios
   }
 
   /**

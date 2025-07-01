@@ -108,6 +108,8 @@ public class DocumentEntityMapper {
             case PENDING -> DocumentStatus.PENDING;
             case APPROVED -> DocumentStatus.APPROVED;
             case REJECTED -> DocumentStatus.REJECTED;
+            case PROCESSING -> DocumentStatus.PROCESSING;
+            case ERROR -> DocumentStatus.ERROR;
         };
     }
 
@@ -120,6 +122,8 @@ public class DocumentEntityMapper {
             case PENDING -> DocumentEntity.DocumentStatusEnum.PENDING;
             case APPROVED -> DocumentEntity.DocumentStatusEnum.APPROVED;
             case REJECTED -> DocumentEntity.DocumentStatusEnum.REJECTED;
+            case PROCESSING -> DocumentEntity.DocumentStatusEnum.PROCESSING;
+            case ERROR -> DocumentEntity.DocumentStatusEnum.ERROR;
         };
     }
 

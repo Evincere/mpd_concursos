@@ -30,6 +30,8 @@ import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.scheduling.annotation.Async;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -43,14 +45,10 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     @Transactional
-    public DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream fileContent, UUID userId)
-            throws IOException {
+    public DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream fileContent, UUID userId) {
         log.debug("Uploading document for user: {}", userId);
 
-        // Try to find document type by ID or code
         DocumentType documentType = findDocumentType(request.getDocumentTypeId());
-
-        // Generar nombre de archivo basado en el tipo de documento
         String displayFileName = documentType.getName() + ".pdf";
 
         Document document = Document.create(
@@ -61,27 +59,46 @@ public class DocumentServiceImpl implements DocumentService {
                 null,
                 request.getComments());
 
-        // Get user DNI for storage organization
-        log.info("=== DEBUG: userId recibido en DocumentServiceImpl: '{}'", userId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new DocumentException("User not found"));
-        String userDni = user.getDni().value();
-        String documentTypeName = documentType.getName();
-
-        // Store the file
-        String filePath = documentStorageService.storeFile(fileContent, request.getFileName(), userId,
-                document.getId().value(), userDni, documentTypeName);
-        document.setFilePath(filePath);
-
-        // Save document metadata
+        document.setStatus(DocumentStatus.PROCESSING);
         Document savedDocument = documentRepository.save(document);
-        log.debug("Document saved: {}", savedDocument);
+
+        storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
 
         return DocumentResponse.builder()
                 .id(savedDocument.getId().value().toString())
-                .mensaje("Document uploaded successfully")
+                .mensaje("Document upload started")
                 .documento(documentMapper.toDto(savedDocument))
                 .build();
+    }
+
+    @Async
+    public void storeFileAsync(InputStream fileContent, String originalFilename, UUID userId, UUID documentId, String documentTypeName) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new DocumentException("User not found"));
+            String userDni = user.getDni().value();
+
+            String filePath = documentStorageService.storeFile(fileContent, originalFilename, userId, documentId, userDni, documentTypeName);
+
+            Document document = documentRepository.findById(new DocumentId(documentId))
+                    .orElseThrow(() -> new DocumentException("Document not found"));
+
+            document.setFilePath(filePath);
+            document.setStatus(DocumentStatus.PENDING);
+            documentRepository.save(document);
+        } catch (DocumentException e) {
+            log.error("Error storing file asynchronously", e);
+            Document document = documentRepository.findById(new DocumentId(documentId))
+                    .orElseThrow(() -> new DocumentException("Document not found"));
+            document.setStatus(DocumentStatus.ERROR);
+            documentRepository.save(document);
+        } catch (Exception e) {
+            log.error("Unexpected error storing file asynchronously", e);
+            Document document = documentRepository.findById(new DocumentId(documentId))
+                    .orElseThrow(() -> new DocumentException("Document not found"));
+            document.setStatus(DocumentStatus.ERROR);
+            documentRepository.save(document);
+        }
     }
 
     @Override
