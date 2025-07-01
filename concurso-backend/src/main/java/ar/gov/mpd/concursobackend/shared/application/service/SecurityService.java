@@ -26,9 +26,13 @@ public class SecurityService {
     public UUID getCurrentUserId() {
         try {
             String token = getTokenFromRequest();
+            logger.info("=== DEBUG SecurityService: token obtenido: '{}'", token != null ? "TOKEN_PRESENTE" : "TOKEN_NULL");
             if (token != null) {
                 String userIdStr = jwtProvider.getUserIdFromToken(token);
-                return UUID.fromString(userIdStr);
+                logger.info("=== DEBUG SecurityService: userIdStr del token: '{}'", userIdStr);
+                UUID userId = UUID.fromString(userIdStr);
+                logger.info("=== DEBUG SecurityService: UUID final: '{}'", userId);
+                return userId;
             }
             
             // Si no hay token, intentar obtener el ID del usuario del contexto de seguridad

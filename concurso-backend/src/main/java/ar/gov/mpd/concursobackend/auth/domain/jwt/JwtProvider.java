@@ -95,7 +95,8 @@ public class JwtProvider {
                     .getPayload();
 
             String userId = claims.get("userId", String.class);
-            logger.debug("ID de usuario extraído del token: {}", userId);
+            logger.info("=== DEBUG JwtProvider: ID de usuario extraído del token: '{}'", userId);
+            logger.info("=== DEBUG JwtProvider: Claims completos: {}", claims);
             return userId;
         } catch (Exception e) {
             logger.error("Error al extraer userId del token: {}", e.getMessage());

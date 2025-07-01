@@ -13,10 +13,9 @@ import { CustomNotificationService } from '@shared/components/custom-notificatio
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
 import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento } from '../../../../core/models/documento.model';
-import { DocumentoUploadComponent } from '../documento-upload/documento-upload.component';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
-import { ProfileDocumentMultipleUploadDialogComponent } from '../profile-document-multiple-upload-dialog/profile-document-multiple-upload-dialog.component';
+import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -39,8 +38,7 @@ interface DocumentoCardViewModel {
     CustomCardComponent,
     CustomSpinnerComponent,
     CustomTableComponent,
-    DocumentoUploadComponent,
-    ProfileDocumentMultipleUploadDialogComponent,
+    DocumentoMultipleUploadDialogComponent,
     DocumentoViewerComponent
   ],
   template: `
@@ -871,7 +869,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   ];
 
   private subscription: Subscription | undefined;
-  private calculandoProgreso = false; // Flag para evitar cálculos duplicados
 
   constructor(
     private dialog: UnifiedDialogService,
@@ -887,12 +884,17 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     // CRITICAL FIX: Cargar datos sin forzar recarga para usar cache
     this.cargarDatos(false);
 
-    // Suscribirse a las actualizaciones de documentos
-    // El debounce ya está aplicado en el servicio
+    // CRITICAL FIX: Suscripción más robusta con protección contra bucles
     this.subscription = this.documentosService.documentoActualizado$
-      .subscribe(() => {
-        console.log('[DocumentacionTab] 🔄 Recargando documentos por actualización...');
-        this.cargarDocumentosUsuario(true); // Recargar documentos cuando se notifica una actualización
+      .subscribe((timestamp) => {
+        console.log('[DocumentacionTab] 🔄 Recargando documentos por actualización...', timestamp);
+
+        // CRITICAL FIX: Solo recargar si no estamos ya cargando
+        if (!this.isLoading) {
+          this.cargarDocumentosUsuario(true); // Recargar documentos cuando se notifica una actualización
+        } else {
+          console.log('[DocumentacionTab] ⏳ Recarga ignorada - ya hay una carga en progreso');
+        }
       });
   }
 
@@ -990,14 +992,23 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
    * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
    */
   cargarDocumentosUsuario(forzarRecarga = false): void {
+    // CRITICAL FIX: Evitar llamadas concurrentes
+    if (this.isLoading) {
+      console.log('[DocumentacionTab] ⏳ Carga ya en progreso, ignorando nueva solicitud');
+      return;
+    }
+
     this.isLoading = true;
+    console.log('[DocumentacionTab] 📥 Iniciando carga de documentos del usuario...', { forzarRecarga });
 
     this.documentosService.getDocumentosUsuario(forzarRecarga)
       .pipe(finalize(() => {
         this.isLoading = false;
+        console.log('[DocumentacionTab] ✅ Carga de documentos finalizada');
       }))
       .subscribe({
         next: (documentos: DocumentoUsuario[]) => {
+          console.log('[DocumentacionTab] 📄 Documentos recibidos:', documentos.length);
           this.documentosUsuario = documentos;
           this.buildViewModel();
           this.calcularProgreso();
@@ -1011,6 +1022,11 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 
   buildViewModel(): void {
+    console.log('[DocumentacionTab] 🏗️ Construyendo ViewModel...');
+    console.log(`- Documentos requeridos: ${this.documentosRequeridos.length}`);
+    console.log(`- Documentos del usuario: ${this.documentosUsuario.length}`);
+    console.log('- Documentos del usuario IDs:', this.documentosUsuario.map(d => `${d.tipoDocumentoId} (${d.nombreArchivo})`));
+
     const viewModel: DocumentoCardViewModel[] = [];
 
     for (const tipo of this.documentosRequeridos) {
@@ -1019,6 +1035,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       let estado: 'aprobado' | 'pendiente' | 'rechazado' | 'faltante' = 'faltante';
       let estadoTexto = 'Pendiente de carga';
       let estadoIcon = 'fa-exclamation-triangle';
+
+      console.log(`[DocumentacionTab] 📋 Procesando tipo: ${tipo.nombre} (ID: ${tipo.id}, requerido: ${tipo.requerido})`);
+      console.log(`  - Documento encontrado: ${documento ? 'SÍ' : 'NO'}`);
+      console.log(`  - Subido: ${subido}`);
 
       if (documento) {
         // Verificar primero el estado de procesamiento técnico
@@ -1102,10 +1122,18 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     }
 
     this.documentosViewModel = viewModel;
+    console.log('[DocumentacionTab] ✅ ViewModel construido:');
+    console.log(`- Total items en ViewModel: ${viewModel.length}`);
+    console.log(`- Documentos subidos: ${viewModel.filter(vm => vm.subido).length}`);
+    console.log(`- Documentos obligatorios: ${viewModel.filter(vm => vm.tipo.requerido).length}`);
+    console.log(`- Documentos obligatorios subidos: ${viewModel.filter(vm => vm.tipo.requerido && vm.subido).length}`);
   }
 
   calcularProgreso(): void {
+    console.log('[DocumentacionTab] 📊 Calculando progreso de documentación...');
+
     if (!this.documentosViewModel || this.documentosViewModel.length === 0) {
+      console.log('[DocumentacionTab] ⚠️ No hay documentos en ViewModel, estableciendo progreso a 100%');
       this.progresoDocumentacion = 100;
       this.documentosFaltantes = 0;
       return;
@@ -1114,15 +1142,23 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     const documentosObligatorios = this.documentosViewModel.filter(vm => vm.tipo.requerido);
     const documentosObligatoriosCargados = documentosObligatorios.filter(vm => vm.subido).length;
 
+    console.log('[DocumentacionTab] 📈 Estadísticas de progreso:');
+    console.log(`- Total documentos en ViewModel: ${this.documentosViewModel.length}`);
+    console.log(`- Documentos obligatorios: ${documentosObligatorios.length}`);
+    console.log(`- Documentos obligatorios cargados: ${documentosObligatoriosCargados}`);
+    console.log('- Documentos obligatorios:', documentosObligatorios.map(d => `${d.tipo.nombre} (subido: ${d.subido})`));
+
     this.progresoDocumentacion = documentosObligatorios.length > 0
       ? Math.round((documentosObligatoriosCargados / documentosObligatorios.length) * 100)
       : 100;
 
     this.documentosFaltantes = documentosObligatorios.length - documentosObligatoriosCargados;
+
+    console.log(`[DocumentacionTab] 🎯 Progreso calculado: ${this.progresoDocumentacion}% (faltan ${this.documentosFaltantes} documentos)`);
   }
 
   abrirDialogoCargaMultiple(): void {
-    const dialogRef = this.dialog.open(ProfileDocumentMultipleUploadDialogComponent, {
+    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
       title: 'Carga Múltiple de Documentos',
       showFooter: false,
       showCancelButton: false,
@@ -1131,25 +1167,41 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
+      // CRITICAL FIX: Eliminar recarga manual redundante
+      // uploadDocumento() ya emite documentoActualizado$ que dispara la recarga automática
+      // Mantener solo para logging/debugging si es necesario
       if (result) {
-        this.cargarDocumentosUsuario(true);
+        console.log('[DocumentacionTab] 📄 Diálogo de carga múltiple cerrado exitosamente - recarga automática en progreso');
       }
     });
   }
 
   cargarDocumentoTipo(tipoDocumentoId: string): void {
-    const dialogRef = this.dialog.open(DocumentoUploadComponent, {
+    // Buscar el tipo de documento para obtener su información
+    const tipoDocumento = this.tiposDocumento.find(tipo => tipo.id === tipoDocumentoId);
+    if (!tipoDocumento) {
+      this.notification.error('Tipo de documento no encontrado');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
       title: 'Cargar Documento',
       showFooter: false,
       showCancelButton: false,
       showConfirmButton: false,
-      data: { tipoDocumentoId: tipoDocumentoId },
+      data: {
+        tiposDocumento: [tipoDocumento],
+        documentosExistentes: this.documentosUsuario.filter(doc => doc.tipoDocumentoId === tipoDocumentoId),
+        modoSingle: true
+      }
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
         this.notification.success('Documento cargado exitosamente');
-        this.cargarDocumentosUsuario(true);
+        // CRITICAL FIX: Eliminar recarga manual redundante
+        // uploadDocumento() ya emite documentoActualizado$ que dispara la recarga automática
+        console.log('[DocumentacionTab] 📄 Documento individual cargado exitosamente - recarga automática en progreso');
       }
     });
   }
@@ -1179,18 +1231,32 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const dialogRef = this.dialog.open(DocumentoUploadComponent, {
+    // Buscar el tipo de documento para obtener su información
+    const tipoDocumento = this.tiposDocumento.find(tipo => tipo.id === documento.tipoDocumentoId);
+    if (!tipoDocumento) {
+      this.notification.error('Tipo de documento no encontrado');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
       title: 'Reemplazar Documento',
       showFooter: false,
       showCancelButton: false,
       showConfirmButton: false,
-      data: { tipoDocumentoId: documento.tipoDocumentoId, documentoIdAEditar: documento.id },
+      data: {
+        tiposDocumento: [tipoDocumento],
+        documentosExistentes: [documento],
+        modoSingle: true,
+        modoReemplazo: true
+      }
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
         this.notification.success('Documento reemplazado exitosamente.');
-        this.cargarDocumentosUsuario(true);
+        // CRITICAL FIX: Eliminar recarga manual redundante
+        // uploadDocumento() ya emite documentoActualizado$ que dispara la recarga automática
+        console.log('[DocumentacionTab] 📄 Documento reemplazado exitosamente - recarga automática en progreso');
       }
     });
   }
@@ -1214,7 +1280,9 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           this.documentosService.deleteDocumento(documento.id!).subscribe({
             next: () => {
               this.notification.success('Documento eliminado correctamente');
-              this.cargarDocumentosUsuario(true);
+              // CRITICAL FIX: Eliminar recarga manual redundante
+              // deleteDocumento() ya emite documentoActualizado$ que dispara la recarga automática
+              console.log('[DocumentacionTab] 🗑️ Documento eliminado exitosamente - recarga automática en progreso');
             },
             error: (error: unknown) => {
               console.error('Error al eliminar documento:', error);

@@ -62,6 +62,7 @@ public class DocumentServiceImpl implements DocumentService {
                 request.getComments());
 
         // Get user DNI for storage organization
+        log.info("=== DEBUG: userId recibido en DocumentServiceImpl: '{}'", userId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new DocumentException("User not found"));
         String userDni = user.getDni().value();

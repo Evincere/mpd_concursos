@@ -20,7 +20,8 @@ public class SecurityUtils {
         try {
             return securityService.getCurrentUserId().toString();
         } catch (Exception e) {
-            return null;
+            log.error("Error al obtener el ID del usuario actual: {}", e.getMessage(), e);
+            throw new RuntimeException("No se pudo obtener el ID del usuario actual", e);
         }
     }
 

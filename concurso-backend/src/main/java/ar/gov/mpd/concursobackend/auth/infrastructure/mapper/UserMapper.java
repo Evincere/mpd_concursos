@@ -140,7 +140,10 @@ public class UserMapper {
         User user = new User();
 
         if (entity.getId() != null) {
+            logger.info("=== DEBUG UserMapper: entity.getId() desde DB: '{}'", entity.getId());
+            logger.info("=== DEBUG UserMapper: entity.getUsername(): '{}'", entity.getUsername());
             user.setId(new UserId(entity.getId()));
+            logger.info("=== DEBUG UserMapper: user.getId() después del mapeo: '{}'", user.getId().value());
         }
         if (entity.getUsername() != null) {
             user.setUsername(new UserUsername(entity.getUsername()));

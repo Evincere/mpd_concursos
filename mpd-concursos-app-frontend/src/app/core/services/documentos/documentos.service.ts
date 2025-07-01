@@ -15,10 +15,10 @@ export class DocumentosService {
   private readonly apiUrl = `${environment.apiUrl}/documentos`;
 
   // Subject para notificar cuando se sube un nuevo documento
-  private documentoActualizadoSource = new Subject<void>();
+  private documentoActualizadoSource = new Subject<number>();
   documentoActualizado$ = this.documentoActualizadoSource.asObservable().pipe(
-    debounceTime(2000), // CRITICAL FIX: Aumentar debounce para evitar emisiones múltiples
-    distinctUntilChanged() // Solo emitir si realmente cambió
+    debounceTime(3000), // CRITICAL FIX: Aumentar debounce para evitar emisiones múltiples
+    distinctUntilChanged() // Solo emitir si realmente cambió (ahora funciona con timestamp)
   );
 
   // Cache de documentos
@@ -28,6 +28,10 @@ export class DocumentosService {
   private ultimaActualizacionTipos = 0;
   private readonly CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
 
+  // CRITICAL FIX: Control de notificaciones para evitar bucles
+  private ultimaNotificacion = 0;
+  private readonly MIN_INTERVALO_NOTIFICACION = 5000; // 5 segundos mínimo entre notificaciones
+
   constructor() {
     this.ultimaActualizacion = 0; // Initialize to 0 so it fetches on first load
     // No need to call this.documentoActualizadoSource.next() here, as it's meant for updates.
@@ -35,10 +39,20 @@ export class DocumentosService {
 
   /**
    * Notifica a los suscriptores que un documento ha sido actualizado (subido, eliminado, reemplazado).
+   * CRITICAL FIX: Implementa throttling para evitar notificaciones excesivas
    */
   notificarDocumentoActualizado(): void {
+    const ahora = Date.now();
+
+    // CRITICAL FIX: Evitar notificaciones muy frecuentes
+    if (ahora - this.ultimaNotificacion < this.MIN_INTERVALO_NOTIFICACION) {
+      console.log('[DocumentosService] ⏳ Notificación ignorada - muy frecuente (throttling activo)');
+      return;
+    }
+
     console.log('[DocumentosService] 📢 Notificando actualización de documento...');
-    this.documentoActualizadoSource.next();
+    this.ultimaNotificacion = ahora;
+    this.documentoActualizadoSource.next(ahora);
   }
 
   /**
@@ -221,9 +235,10 @@ export class DocumentosService {
     );
 
     return forkJoin(uploads).pipe(
-      tap(() => {
-        this.notificarDocumentoActualizado(); // Notify listeners after all uploads are attempted
-      }),
+      // CRITICAL FIX: Eliminar notificación duplicada - uploadDocumento() ya notifica individualmente
+      // tap(() => {
+      //   this.notificarDocumentoActualizado(); // Notify listeners after all uploads are attempted
+      // }),
       map(responses => {
         return responses;
       }),
@@ -258,9 +273,10 @@ export class DocumentosService {
     }
 
     return this.http.post<string[]>(`${this.apiUrl}/queue/enqueue-multiple`, formData).pipe(
-      tap(queueIds => {
-        this.notificarDocumentoActualizado(); // Potentially notify, depending on backend's queue completion
-      }),
+      // CRITICAL FIX: Eliminar notificación aquí - se notificará cuando se procesen los documentos
+      // tap(queueIds => {
+      //   this.notificarDocumentoActualizado(); // Potentially notify, depending on backend's queue completion
+      // }),
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al encolar documentos para procesamiento:', error);
         return throwError(() => new Error('Error al encolar documentos para procesamiento: ' + (error.message || 'Error desconocido')));

@@ -295,7 +295,11 @@ public class DocumentController {
             @RequestParam(value = "comentarios", required = false) String comentarios) {
 
         try {
-            UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
+            String userIdString = securityUtils.getCurrentUserId();
+            log.info("=== DEBUG: userIdString obtenido de SecurityUtils: '{}'", userIdString);
+            UUID userId = UUID.fromString(userIdString);
+            log.info("=== DEBUG: UUID generado: '{}'", userId);
+            log.info("=== DEBUG: Llamando a documentService.uploadDocument con userId: '{}'", userId);
 
             // Crear request para actualización
             DocumentUploadRequest request = DocumentUploadRequest.builder()
