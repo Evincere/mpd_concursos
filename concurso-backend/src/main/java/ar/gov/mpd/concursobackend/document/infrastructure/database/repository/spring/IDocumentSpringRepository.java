@@ -13,4 +13,6 @@ public interface IDocumentSpringRepository extends JpaRepository<DocumentEntity,
     List<DocumentEntity> findByUserId(UUID userId);
 
     long countByStatus(String status);
+
+    long countByProcessingStatus(String processingStatus);
 }

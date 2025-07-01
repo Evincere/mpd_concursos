@@ -105,6 +105,9 @@ export class HttpErrorDisplayComponent implements OnInit, OnDestroy {
   /** Timer para auto-cierre */
   private autoDismissTimer?: number;
 
+  /** Timer para pulso del icono */
+  private iconPulseTimer?: number;
+
   /** Estado de animación */
   animationState = 'visible';
   iconState = 'normal';
@@ -126,6 +129,7 @@ export class HttpErrorDisplayComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.clearAutoDismissTimer();
+    this.clearIconPulseTimer();
   }
 
   /**
@@ -152,9 +156,20 @@ export class HttpErrorDisplayComponent implements OnInit, OnDestroy {
    * Inicia la animación de pulso del icono
    */
   private startIconPulse(): void {
-    setInterval(() => {
+    this.clearIconPulseTimer();
+    this.iconPulseTimer = window.setInterval(() => {
       this.iconState = this.iconState === 'normal' ? 'pulse' : 'normal';
     }, 1200);
+  }
+
+  /**
+   * Limpia el timer de pulso del icono
+   */
+  private clearIconPulseTimer(): void {
+    if (this.iconPulseTimer) {
+      clearInterval(this.iconPulseTimer);
+      this.iconPulseTimer = undefined;
+    }
   }
 
   /**

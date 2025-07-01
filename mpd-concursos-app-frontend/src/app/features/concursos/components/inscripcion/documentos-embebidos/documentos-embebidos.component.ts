@@ -912,6 +912,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   todosDocumentosCompletos = false;
 
   private subscription: Subscription | undefined;
+  private deadlineInterval: any; // Para limpiar el setInterval
 
   // NUEVA FUNCIONALIDAD: Plazos perentorios
   hoursUntilDeadline = -1;
@@ -942,21 +943,30 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     // Calculate deadline on init if available
     this.calculateDocumentationDeadline();
 
-    // Subscribe to document updates from the service
-    this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
-      this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Recargando datos.', undefined, 'DocumentosEmbebidos');
-      this.cargarDatos(true); // Force reload all data
-    });
+    // CRITICAL FIX: Eliminar suscripción duplicada que causa ciclo infinito
+    // Esta suscripción se elimina porque causa conflictos con documentacion-tab
+    // Los datos se actualizarán a través del cache del servicio
+    // this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
+    //   this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Recargando datos.', undefined, 'DocumentosEmbebidos');
+    //   this.cargarDatos(true); // Force reload all data
+    // });
 
     // Update deadlines every minute
-    setInterval(() => {
+    this.deadlineInterval = setInterval(() => {
       this.calculateTimeUntilDeadline();
     }, 60000); // Update every minute
   }
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
-    this.loggingService.debug('[DocumentosEmbebidos] Componente destruido. Suscripciones limpiadas.', undefined, 'DocumentosEmbebidos');
+
+    // CRITICAL FIX: Limpiar el setInterval para evitar memory leaks
+    if (this.deadlineInterval) {
+      clearInterval(this.deadlineInterval);
+      this.deadlineInterval = null;
+    }
+
+    this.loggingService.debug('[DocumentosEmbebidos] Componente destruido. Suscripciones y timers limpiados.', undefined, 'DocumentosEmbebidos');
   }
 
   /**

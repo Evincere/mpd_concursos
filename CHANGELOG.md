@@ -5,6 +5,45 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-07-01
+
+### 🔧 REFACTORIZACIÓN CRÍTICA - Estados de Documentos
+
+#### Agregado
+- **Nuevo enum `ProcessingStatus`** para estados técnicos de procesamiento
+- **Campo `processingStatus`** en entidad Document para separar estados técnicos
+- **Campo `errorMessage`** para mensajes de error en procesamiento técnico
+- **Migración DB** `V1_1__add_processing_status_to_documents.sql`
+- **Nuevos métodos** en Document: `startProcessing()`, `completeProcessing()`, `failProcessing()`
+- **Interface `EstadoColaDocumento`** en frontend para tipado fuerte
+- **Enum `EstadoProcesamiento`** en frontend para estados técnicos
+
+#### Cambiado
+- **DocumentQueueService** refactorizado para usar UN solo documento (elimina duplicación)
+- **Lógica de monitoreo** corregida para no incluir 'PENDING' como estado completado
+- **Estados de frontend** actualizados: 'validando' → 'procesando'
+- **Comparaciones de estado** migradas de strings literales a enums
+- **Campo `status`** en DocumentEntity ahora nullable durante procesamiento
+
+#### Corregido
+- **🚨 PROBLEMA CRÍTICO**: Eliminado bucle infinito de monitoreo en documentación
+- **🚨 VIOLACIÓN DE REGLAS DE NEGOCIO**: PENDING ahora solo para revisión administrativa
+- **Arquitectura inconsistente**: Separados estados técnicos de estados de negocio
+- **Documentos duplicados**: Eliminada creación de documentos temporales + reales
+- **Compilación**: Corregidos errores TypeScript en frontend y backend
+
+#### Eliminado
+- **Dependencia obsoleta** de DocumentServiceImpl en DocumentQueueService
+- **Estado 'validando'** reemplazado por 'procesando'
+- **Lógica de finalización prematura** con estado 'pendiente'
+- **Comparaciones con strings** reemplazadas por enums tipados
+
+### 📊 Impacto
+- ✅ **Eliminación completa** del cuelgue en documentación
+- ✅ **Arquitectura coherente** con reglas de negocio
+- ✅ **Experiencia de usuario** mejorada con estados claros
+- ✅ **Mantenibilidad** aumentada con separación de responsabilidades
+
 ## [2.0.0] - 2025-06-20
 
 ### ✨ Agregado

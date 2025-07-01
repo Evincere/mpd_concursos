@@ -161,9 +161,9 @@ export class DocumentosAdminComponent implements OnInit, AfterViewInit {
 
   calcularEstadisticasLocales(): void {
     this.estadisticas.totalDocumentos = this.documentos.length;
-    this.estadisticas.pendientes = this.documentos.filter(d => d.estado === 'pendiente').length;
-    this.estadisticas.aprobados = this.documentos.filter(d => d.estado === 'aprobado').length;
-    this.estadisticas.rechazados = this.documentos.filter(d => d.estado === 'rechazado').length;
+    this.estadisticas.pendientes = this.documentos.filter(d => d.estado === EstadoDocumento.PENDIENTE).length;
+    this.estadisticas.aprobados = this.documentos.filter(d => d.estado === EstadoDocumento.APROBADO).length;
+    this.estadisticas.rechazados = this.documentos.filter(d => d.estado === EstadoDocumento.RECHAZADO).length;
 
     // Calcular estadísticas por tipo de documento
     const porTipo: Record<string, number> = {};

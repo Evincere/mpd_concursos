@@ -25,4 +25,12 @@ public interface IDocumentRepository {
      * @return The number of documents with the given status
      */
     long countByStatus(String status);
+
+    /**
+     * Count documents by processing status
+     *
+     * @param processingStatus The processing status to count
+     * @return The number of documents with the given processing status
+     */
+    long countByProcessingStatus(String processingStatus);
 }

@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpEventType, HttpEvent, HttpResponse } from '@angular/common/http';
 import { Observable, throwError, Subject, forkJoin, of } from 'rxjs'; // Import 'of' for returning observables
 import { environment } from '../../../../environments/environment';
-import { DocumentoUsuario, TipoDocumento, DocumentoResponse } from '../../models/documento.model';
-import { map, catchError, tap } from 'rxjs/operators';
+import { DocumentoUsuario, TipoDocumento, DocumentoResponse, EstadoDocumento, EstadoColaDocumento, EstadoProcesamiento } from '../../models/documento.model';
+import { map, catchError, tap, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { TempDocumentCacheService } from '../cv/temp-document-cache.service';
 
 @Injectable({
@@ -16,7 +16,10 @@ export class DocumentosService {
 
   // Subject para notificar cuando se sube un nuevo documento
   private documentoActualizadoSource = new Subject<void>();
-  documentoActualizado$ = this.documentoActualizadoSource.asObservable();
+  documentoActualizado$ = this.documentoActualizadoSource.asObservable().pipe(
+    debounceTime(2000), // CRITICAL FIX: Aumentar debounce para evitar emisiones múltiples
+    distinctUntilChanged() // Solo emitir si realmente cambió
+  );
 
   // Cache de documentos
   private documentosCache: DocumentoUsuario[] = [];
@@ -34,6 +37,7 @@ export class DocumentosService {
    * Notifica a los suscriptores que un documento ha sido actualizado (subido, eliminado, reemplazado).
    */
   notificarDocumentoActualizado(): void {
+    console.log('[DocumentosService] 📢 Notificando actualización de documento...');
     this.documentoActualizadoSource.next();
   }
 
@@ -208,7 +212,7 @@ export class DocumentosService {
               tipoDocumentoId: '',
               nombreArchivo: '',
               fechaCarga: new Date(),
-              estado: 'pendiente' as const,
+              estado: EstadoDocumento.PENDIENTE,
               usuarioId: ''
             }
           } as DocumentoResponse);
@@ -269,10 +273,10 @@ export class DocumentosService {
    * @param queueIds Array de IDs de tareas en cola
    * @returns Observable con los estados de las tareas
    */
-  getMultipleDocumentosStatus(queueIds: string[]): Observable<Record<string, unknown>[]> {
+  getMultipleDocumentosStatus(queueIds: string[]): Observable<EstadoColaDocumento[]> {
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     // CRITICAL FIX: Corregir endpoint para múltiples estados
-    return this.http.post<Record<string, unknown>[]>(`${this.apiUrl}/queue/status-multiple`, queueIds, { headers }).pipe(
+    return this.http.post<EstadoColaDocumento[]>(`${this.apiUrl}/queue/status-multiple`, queueIds, { headers }).pipe(
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al consultar el estado de los documentos:', error);
 
@@ -308,8 +312,8 @@ export class DocumentosService {
    * @param queueId ID de la tarea en cola
    * @returns Observable con el estado de la tarea
    */
-  getDocumentoStatus(queueId: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.apiUrl}/queue/status/${queueId}`).pipe(
+  getDocumentoStatus(queueId: string): Observable<EstadoColaDocumento> {
+    return this.http.get<EstadoColaDocumento>(`${this.apiUrl}/queue/status/${queueId}`).pipe(
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al consultar el estado del documento:', error);
         return throwError(() => new Error('Error al consultar el estado del documento'));

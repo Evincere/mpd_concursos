@@ -34,13 +34,19 @@ public class QueuedDocumentStatus {
     private String userId;
     
     /**
-     * Estado actual del documento:
-     * - PENDING: En espera de procesamiento
-     * - PROCESSING: Procesamiento iniciado
-     * - VALIDATING: Validando documento
+     * Estado de procesamiento técnico:
      * - UPLOADING: Subiendo documento
-     * - COMPLETED: Procesamiento completado
-     * - ERROR: Error durante el procesamiento
+     * - PROCESSING: Procesamiento iniciado
+     * - UPLOAD_COMPLETE: Procesamiento completado exitosamente
+     * - UPLOAD_FAILED: Error durante el procesamiento
+     */
+    private String processingStatus;
+
+    /**
+     * Estado de negocio del documento:
+     * - PENDING: Esperando revisión administrativa
+     * - APPROVED: Aprobado por administrador
+     * - REJECTED: Rechazado por administrador
      */
     private String status;
     

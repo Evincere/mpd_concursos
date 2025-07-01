@@ -725,7 +725,8 @@ export class DocumentoUploadDialogComponent implements OnInit {
         next: (response) => {
           this.loggingService.info('[DocumentoUploadDialog] Document uploaded successfully.', { response }, 'DocumentoUploadDialog');
           this.notificationService.success('Documento cargado exitosamente.', 'Subida Exitosa');
-          this.documentosService.notificarDocumentoActualizado(); // Notify other components that a document was updated
+          // CRITICAL FIX: Eliminar emisión duplicada - uploadDocumento() ya emite automáticamente
+          // this.documentosService.notificarDocumentoActualizado();
           this.dialogRef.close({ success: true, document: response }); // Close dialog with success result
         },
         error: (err) => {

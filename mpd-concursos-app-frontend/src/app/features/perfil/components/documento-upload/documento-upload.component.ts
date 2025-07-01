@@ -342,7 +342,14 @@ export class DocumentoUploadComponent implements OnInit {
           next: (_response: DocumentoResponse) => {
             const mensaje = this.isEditMode ? 'Documento actualizado correctamente.' : 'Documento cargado correctamente.';
             this.notification.success(mensaje);
-            this.dialogRef.close(true); // Cerrar con resultado exitoso
+            console.log('[DocumentoUpload] ✅ Subida exitosa, cerrando diálogo...');
+
+            // Usar setTimeout para asegurar que la notificación se muestre antes de cerrar
+            setTimeout(() => {
+              console.log('[DocumentoUpload] 🔄 Ejecutando cierre del diálogo...');
+              this.dialogRef.close(true); // Cerrar con resultado exitoso
+              console.log('[DocumentoUpload] ✅ Diálogo cerrado');
+            }, 100);
           },
           error: (error) => {
             console.error('[DocumentoUpload] Error al cargar documento:', error);

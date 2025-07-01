@@ -72,4 +72,9 @@ public class DocumentRepositoryImpl implements IDocumentRepository {
     public long countByStatus(String status) {
         return documentSpringRepository.countByStatus(status);
     }
+
+    @Override
+    public long countByProcessingStatus(String processingStatus) {
+        return documentSpringRepository.countByProcessingStatus(processingStatus);
+    }
 }

@@ -12,13 +12,22 @@ import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.ser
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
-import { DocumentoUsuario, TipoDocumento } from '../../../../core/models/documento.model';
+import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento } from '../../../../core/models/documento.model';
 import { DocumentoUploadComponent } from '../documento-upload/documento-upload.component';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
-import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
+import { ProfileDocumentMultipleUploadDialogComponent } from '../profile-document-multiple-upload-dialog/profile-document-multiple-upload-dialog.component';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+
+interface DocumentoCardViewModel {
+  tipo: TipoDocumento;
+  documento: DocumentoUsuario | null;
+  subido: boolean;
+  estado: 'aprobado' | 'pendiente' | 'rechazado' | 'faltante';
+  estadoTexto: string;
+  estadoIcon: string;
+}
 
 @Component({
   selector: 'app-documentacion-tab',
@@ -29,7 +38,10 @@ import { Subscription } from 'rxjs';
     CustomButtonComponent,
     CustomCardComponent,
     CustomSpinnerComponent,
-    CustomTableComponent
+    CustomTableComponent,
+    DocumentoUploadComponent,
+    ProfileDocumentMultipleUploadDialogComponent,
+    DocumentoViewerComponent
   ],
   template: `
     <div class="documentacion-container">
@@ -88,12 +100,12 @@ import { Subscription } from 'rxjs';
         </div>
 
       <!-- Sección de documentos obligatorios -->
-      <div class="documentos-requeridos" *ngIf="getDocumentosObligatorios().length > 0">
+      <div class="documentos-requeridos" *ngIf="documentosObligatorios.length > 0">
         <h4>Documentos obligatorios</h4>
         <div class="documentos-grid">
-          <div *ngFor="let tipo of getDocumentosObligatorios()" class="documento-card"
-               [class.completo]="isDocumentoSubido(tipo.id)"
-               [class.obligatorio]="tipo.requerido">
+          <div *ngFor="let vm of documentosViewModel | slice:0:documentosObligatorios.length" class="documento-card"
+               [class.completo]="vm.subido"
+               [class.obligatorio]="vm.tipo.requerido">
             <!-- Badge de tipo en esquina superior derecha -->
             <div class="estado-badge estado-bloqueado badge-posicion">
               <i class="fas fa-exclamation-circle"></i>
@@ -104,57 +116,44 @@ import { Subscription } from 'rxjs';
             <div class="documento-content">
               <div class="documento-icon">
                 <i class="fas fa-file-pdf"
-                   [class.documento-completo]="isDocumentoSubido(tipo.id)"
-                   [class.documento-pendiente]="!isDocumentoSubido(tipo.id)"></i>
-                <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.id)">
+                   [class.documento-completo]="vm.subido"
+                   [class.documento-pendiente]="!vm.subido"></i>
+                <div class="estado-badge" *ngIf="vm.subido">
                   <i class="fas fa-check"></i>
                 </div>
               </div>
               <div class="documento-info">
                 <div>
-                  <h5>{{tipo.nombre}}</h5>
-                  <p *ngIf="tipo.descripcion">{{tipo.descripcion}}</p>
+                  <h5>{{vm.tipo.nombre}}</h5>
+                  <p *ngIf="vm.tipo.descripcion">{{vm.tipo.descripcion}}</p>
                 </div>
                 <div class="documento-estado">
-                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else pendiente">
-                    <span class="estado-texto aprobado" *ngIf="getEstadoDocumento(tipo.id) === 'aprobado'">
-                      <i class="fas fa-check-circle"></i> Aprobado
-                    </span>
-                    <span class="estado-texto pendiente" *ngIf="getEstadoDocumento(tipo.id) === 'pendiente'">
-                      <i class="fas fa-clock"></i> Pendiente de revisión
-                    </span>
-                    <span class="estado-texto rechazado" *ngIf="getEstadoDocumento(tipo.id) === 'rechazado'">
-                      <i class="fas fa-times-circle"></i> Rechazado
-                    </span>
-                  </ng-container>
-                  <ng-template #pendiente>
-                    <span class="estado-texto faltante">
-                      <i class="fas fa-exclamation-triangle"></i> Pendiente de carga
-                    </span>
-                  </ng-template>
+                  <span class="estado-texto {{vm.estado}}">
+                    <i class="fas {{vm.estadoIcon}}"></i> {{vm.estadoTexto}}
+                  </span>
                 </div>
                 <div class="documento-actions">
-                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else botonCargar">
+                  <ng-container *ngIf="vm.subido; else botonCargar">
                     <app-custom-button
                       variant="icon"
                       color="primary"
                       icon="eye"
                       [tooltip]="'Ver documento'"
-                      (buttonClick)="verDocumento(getDocumentoByTipo(tipo.id))">
+                      (buttonClick)="verDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
                       color="success"
                       icon="sync-alt"
                       [tooltip]="'Reemplazar documento'"
-                      (buttonClick)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
+                      (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
                       color="danger"
                       icon="trash"
                       [tooltip]="'Eliminar documento'"
-                      (buttonClick)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
+                      (buttonClick)="eliminarDocumento(vm.documento)">
                     </app-custom-button>
                   </ng-container>
                   <ng-template #botonCargar>
@@ -163,7 +162,7 @@ import { Subscription } from 'rxjs';
                       color="primary"
                       icon="upload"
                       label="Cargar"
-                      (buttonClick)="cargarDocumentoTipo(tipo.id)">
+                      (buttonClick)="cargarDocumentoTipo(vm.tipo.id)">
                     </app-custom-button>
                   </ng-template>
                 </div>
@@ -174,16 +173,16 @@ import { Subscription } from 'rxjs';
       </div>
 
       <!-- Sección de documentos opcionales -->
-      <div class="documentos-opcionales" *ngIf="getDocumentosOpcionales().length > 0">
+      <div class="documentos-opcionales" *ngIf="documentosOpcionales.length > 0">
         <h4>Documentos opcionales</h4>
         <p class="seccion-descripcion">
           <i class="fas fa-info-circle"></i>
           Estos documentos pueden mejorar tu perfil profesional, pero no son obligatorios para completar tu inscripción.
         </p>
         <div class="documentos-grid">
-          <div *ngFor="let tipo of getDocumentosOpcionales()" class="documento-card"
-               [class.completo]="isDocumentoSubido(tipo.id)"
-               [class.opcional]="!tipo.requerido">
+          <div *ngFor="let vm of documentosViewModel | slice:documentosObligatorios.length" class="documento-card"
+               [class.completo]="vm.subido"
+               [class.opcional]="!vm.tipo.requerido">
             <!-- Badge de tipo en esquina superior derecha -->
             <div class="estado-badge estado-activo badge-posicion">
               <i class="fas fa-plus-circle"></i>
@@ -194,57 +193,44 @@ import { Subscription } from 'rxjs';
             <div class="documento-content">
               <div class="documento-icon">
                 <i class="fas fa-file-pdf"
-                   [class.documento-completo]="isDocumentoSubido(tipo.id)"
-                   [class.documento-pendiente]="!isDocumentoSubido(tipo.id)"></i>
-                <div class="estado-badge" *ngIf="isDocumentoSubido(tipo.id)">
+                   [class.documento-completo]="vm.subido"
+                   [class.documento-pendiente]="!vm.subido"></i>
+                <div class="estado-badge" *ngIf="vm.subido">
                   <i class="fas fa-check"></i>
                 </div>
               </div>
               <div class="documento-info">
                 <div>
-                  <h5>{{tipo.nombre}}</h5>
-                  <p *ngIf="tipo.descripcion">{{tipo.descripcion}}</p>
+                  <h5>{{vm.tipo.nombre}}</h5>
+                  <p *ngIf="vm.tipo.descripcion">{{vm.tipo.descripcion}}</p>
                 </div>
                 <div class="documento-estado">
-                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else pendienteOpcional">
-                    <span class="estado-texto aprobado" *ngIf="getEstadoDocumento(tipo.id) === 'aprobado'">
-                      <i class="fas fa-check-circle"></i> Aprobado
-                    </span>
-                    <span class="estado-texto pendiente" *ngIf="getEstadoDocumento(tipo.id) === 'pendiente'">
-                      <i class="fas fa-clock"></i> Pendiente de revisión
-                    </span>
-                    <span class="estado-texto rechazado" *ngIf="getEstadoDocumento(tipo.id) === 'rechazado'">
-                      <i class="fas fa-times-circle"></i> Rechazado
-                    </span>
-                  </ng-container>
-                  <ng-template #pendienteOpcional>
-                    <span class="estado-texto opcional-pendiente">
-                      <i class="fas fa-plus"></i> Disponible para cargar
-                    </span>
-                  </ng-template>
+                  <span class="estado-texto {{vm.estado}}">
+                    <i class="fas {{vm.estadoIcon}}"></i> {{vm.estadoTexto}}
+                  </span>
                 </div>
                 <div class="documento-actions">
-                  <ng-container *ngIf="isDocumentoSubido(tipo.id); else botonCargarOpcional">
+                  <ng-container *ngIf="vm.subido; else botonCargarOpcional">
                     <app-custom-button
                       variant="icon"
                       color="primary"
                       icon="eye"
                       [tooltip]="'Ver documento'"
-                      (buttonClick)="verDocumento(getDocumentoByTipo(tipo.id))">
+                      (buttonClick)="verDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
                       color="success"
                       icon="sync-alt"
                       [tooltip]="'Reemplazar documento'"
-                      (buttonClick)="reemplazarDocumento(getDocumentoByTipo(tipo.id))">
+                      (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
                       variant="icon"
                       color="danger"
                       icon="trash"
                       [tooltip]="'Eliminar documento'"
-                      (buttonClick)="eliminarDocumento(getDocumentoByTipo(tipo.id))">
+                      (buttonClick)="eliminarDocumento(vm.documento)">
                     </app-custom-button>
                   </ng-container>
                   <ng-template #botonCargarOpcional>
@@ -253,7 +239,7 @@ import { Subscription } from 'rxjs';
                       color="accent"
                       icon="plus"
                       label="Agregar"
-                      (buttonClick)="cargarDocumentoTipo(tipo.id)">
+                      (buttonClick)="cargarDocumentoTipo(vm.tipo.id)">
                     </app-custom-button>
                   </ng-template>
                 </div>
@@ -846,6 +832,13 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   progresoDocumentacion = 0;
   documentosFaltantes = 0;
 
+  // Propiedades calculadas para evitar filtrado repetitivo en el template
+  documentosObligatorios: TipoDocumento[] = [];
+  documentosOpcionales: TipoDocumento[] = [];
+
+  // ViewModel para el template, para evitar llamadas a funciones
+  documentosViewModel: DocumentoCardViewModel[] = [];
+
   // Table configuration for custom table component
   tableColumns: TableColumn[] = [
     { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
@@ -867,11 +860,10 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       sortable: false,
       type: 'custom',
       render: (doc: DocumentoUsuario) => {
-        const estadoClass = this.getEstadoDocumento(doc.tipoDocumentoId);
-        const estadoText = this.getEstadoDocumentoTexto(doc.tipoDocumentoId); // Get text for badge
-        const iconClass = this.getEstadoDocumentoIcon(doc.tipoDocumentoId); // Get icon for badge
-        return `<span class="estado-badge-tabla ${estadoClass}">
-                  <i class="fas ${iconClass}"></i> ${estadoText}
+        const vm = this.documentosViewModel.find(vm => vm.documento?.id === doc.id);
+        if (!vm) return '';
+        return `<span class="estado-badge-tabla ${vm.estado}">
+                  <i class="fas ${vm.estadoIcon}"></i> ${vm.estadoTexto}
                 </span>`;
       }
     },
@@ -879,6 +871,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   ];
 
   private subscription: Subscription | undefined;
+  private calculandoProgreso = false; // Flag para evitar cálculos duplicados
 
   constructor(
     private dialog: UnifiedDialogService,
@@ -889,16 +882,22 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Forzar recarga de datos al inicializar
-    this.cargarDatos(true);
+    console.log('[DocumentacionTab] 🚀 Componente inicializado');
+
+    // CRITICAL FIX: Cargar datos sin forzar recarga para usar cache
+    this.cargarDatos(false);
 
     // Suscribirse a las actualizaciones de documentos
-    this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
-      this.cargarDocumentosUsuario(true); // Recargar documentos cuando se notifica una actualización
-    });
+    // El debounce ya está aplicado en el servicio
+    this.subscription = this.documentosService.documentoActualizado$
+      .subscribe(() => {
+        console.log('[DocumentacionTab] 🔄 Recargando documentos por actualización...');
+        this.cargarDocumentosUsuario(true); // Recargar documentos cuando se notifica una actualización
+      });
   }
 
   ngOnDestroy(): void {
+    console.log('[DocumentacionTab] 🔥 Componente destruido');
     this.subscription?.unsubscribe();
   }
 
@@ -968,17 +967,21 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       // Use backend data as the source of truth - incluye tanto obligatorios como opcionales
       this.documentosRequeridos = documentosDisponibles;
 
-      const obligatorios = documentosDisponibles.filter(d => d.requerido);
-      const opcionales = documentosDisponibles.filter(d => !d.requerido);
+      // Actualizar propiedades calculadas para evitar filtrado repetitivo en el template
+      this.documentosObligatorios = documentosDisponibles.filter(d => d.requerido);
+      this.documentosOpcionales = documentosDisponibles.filter(d => !d.requerido);
 
       console.log('[DocumentacionTab] Documentos actualizados desde backend:');
       console.log(`- Total: ${documentosDisponibles.length}`);
-      console.log(`- Obligatorios: ${obligatorios.length}`);
-      console.log(`- Opcionales: ${opcionales.length}`);
-      console.log('- Documentos filtrados:', documentosDisponibles.map(d => d.nombre));
+      console.log(`- Obligatorios: ${this.documentosObligatorios.length}`);
+      console.log(`- Opcionales: ${this.documentosOpcionales.length}`);
+      console.log('- Documentos con IDs:', documentosDisponibles.map(d => `${d.nombre} (${d.id})`));
     } else {
       // Fallback to hardcoded list if backend doesn't have documents
       console.log('[DocumentacionTab] No se encontraron documentos en backend, usando lista hardcodeada');
+      // También actualizar las propiedades calculadas para el fallback
+      this.documentosObligatorios = this.documentosRequeridos.filter(d => d.requerido);
+      this.documentosOpcionales = this.documentosRequeridos.filter(d => !d.requerido);
     }
   }
 
@@ -988,7 +991,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
    */
   cargarDocumentosUsuario(forzarRecarga = false): void {
     this.isLoading = true;
-    this.documentoSubidoCache = {}; // Clear cache when loading new data
 
     this.documentosService.getDocumentosUsuario(forzarRecarga)
       .pipe(finalize(() => {
@@ -997,19 +999,9 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (documentos: DocumentoUsuario[]) => {
           this.documentosUsuario = documentos;
-          console.log('[DocumentacionTab] Documentos del usuario cargados:', documentos.length);
-          console.log('[DocumentacionTab] Documentos requeridos configurados:', this.documentosRequeridos.length);
-
-          // SOLUCIÓN: Limpiar la caché de documentos subidos para forzar recálculo
-          this.documentoSubidoCache = {};
-
-          // Forzar detección de cambios para actualizar la interfaz
-          this.cdr.detectChanges();
-
-          // Actualizar el estado de los documentos en la interfaz (cards, progress)
-          this.actualizarEstadoDocumentos();
-          // Calcular el progreso después de actualizar el estado
+          this.buildViewModel();
           this.calcularProgreso();
+          this.cdr.detectChanges();
         },
         error: (error: unknown) => {
           console.error('[DocumentacionTab] Error al cargar documentos del usuario:', error);
@@ -1018,127 +1010,151 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * Actualiza el estado de los documentos en la interfaz (cards de requeridos y tabla).
-   */
-  actualizarEstadoDocumentos(): void {
-    // No es necesario un setTimeout aquí si los cambios se reflejan vía OnPush + detectChanges
-    // Si la tabla y las cards se actualizan de forma reactiva, esta función asegura la sincronización.
-    this.calcularProgreso(); // Recalcular progreso para asegurar la visualización
+  buildViewModel(): void {
+    const viewModel: DocumentoCardViewModel[] = [];
 
-    // Force change detection if needed for OnPush strategy
-    // this.cdr.detectChanges(); // Uncomment if you face update issues with OnPush
+    for (const tipo of this.documentosRequeridos) {
+      const documento = this.documentosUsuario.find(d => d.tipoDocumentoId === tipo.id) || null;
+      const subido = !!documento;
+      let estado: 'aprobado' | 'pendiente' | 'rechazado' | 'faltante' = 'faltante';
+      let estadoTexto = 'Pendiente de carga';
+      let estadoIcon = 'fa-exclamation-triangle';
+
+      if (documento) {
+        // Verificar primero el estado de procesamiento técnico
+        if (documento.estadoProcesamiento) {
+          switch (documento.estadoProcesamiento) {
+            case EstadoProcesamiento.SUBIENDO:
+              estado = 'pendiente';
+              estadoTexto = 'Subiendo documento...';
+              estadoIcon = 'fa-upload';
+              break;
+            case EstadoProcesamiento.PROCESANDO:
+              estado = 'pendiente';
+              estadoTexto = 'Procesando documento...';
+              estadoIcon = 'fa-cog fa-spin';
+              break;
+            case EstadoProcesamiento.ERROR:
+              estado = 'rechazado';
+              estadoTexto = 'Error en procesamiento';
+              estadoIcon = 'fa-exclamation-triangle';
+              break;
+            case EstadoProcesamiento.COMPLETADO:
+              // Procesamiento técnico completado, verificar estado de negocio
+              if (documento.estado) {
+                switch (documento.estado) {
+                  case EstadoDocumento.APROBADO:
+                    estado = 'aprobado';
+                    estadoTexto = 'Aprobado por administrador';
+                    estadoIcon = 'fa-check-circle';
+                    break;
+                  case EstadoDocumento.RECHAZADO:
+                    estado = 'rechazado';
+                    estadoTexto = 'Rechazado por administrador';
+                    estadoIcon = 'fa-times-circle';
+                    break;
+                  case EstadoDocumento.PENDIENTE:
+                  default:
+                    estado = 'pendiente';
+                    estadoTexto = 'Subido correctamente - En revisión';
+                    estadoIcon = 'fa-clock';
+                    break;
+                }
+              } else {
+                // Sin estado de negocio aún, asumir PENDING
+                estado = 'pendiente';
+                estadoTexto = 'Subido correctamente - En revisión';
+                estadoIcon = 'fa-clock';
+              }
+              break;
+          }
+        } else {
+          // Fallback para documentos sin estadoProcesamiento (compatibilidad)
+          switch (documento.estado) {
+            case EstadoDocumento.APROBADO:
+              estado = 'aprobado';
+              estadoTexto = 'Aprobado por administrador';
+              estadoIcon = 'fa-check-circle';
+              break;
+            case EstadoDocumento.RECHAZADO:
+              estado = 'rechazado';
+              estadoTexto = 'Rechazado por administrador';
+              estadoIcon = 'fa-times-circle';
+              break;
+            case EstadoDocumento.PENDIENTE:
+            default:
+              estado = 'pendiente';
+              estadoTexto = 'Subido correctamente - En revisión';
+              estadoIcon = 'fa-clock';
+              break;
+          }
+        }
+      }
+
+      viewModel.push({
+        tipo,
+        documento,
+        subido,
+        estado,
+        estadoTexto,
+        estadoIcon
+      });
+    }
+
+    this.documentosViewModel = viewModel;
   }
 
-  /**
-   * Calcula el progreso de documentación basándose en los documentos obligatorios cargados.
-   * Los documentos opcionales no afectan el progreso de completitud.
-   */
   calcularProgreso(): void {
-    if (!this.documentosRequeridos || this.documentosRequeridos.length === 0) {
-      console.log('[DocumentacionTab] No hay documentos configurados');
+    if (!this.documentosViewModel || this.documentosViewModel.length === 0) {
       this.progresoDocumentacion = 100;
       this.documentosFaltantes = 0;
       return;
     }
 
-    let documentosObligatoriosCargados = 0;
-    const documentosObligatorios = this.getDocumentosObligatorios().filter(d => d.activo);
+    const documentosObligatorios = this.documentosViewModel.filter(vm => vm.tipo.requerido);
+    const documentosObligatoriosCargados = documentosObligatorios.filter(vm => vm.subido).length;
 
-    console.log('[DocumentacionTab] Calculando progreso:');
-    console.log('- Documentos totales:', this.documentosRequeridos.length);
-    console.log('- Documentos obligatorios:', documentosObligatorios.length);
-    console.log('- Documentos opcionales:', this.getDocumentosOpcionales().length);
-    console.log('- Documentos del usuario:', this.documentosUsuario.length);
-
-    for (const tipoDoc of documentosObligatorios) {
-      const isSubido = this.isDocumentoSubido(tipoDoc.id);
-      console.log(`- ${tipoDoc.nombre} (${tipoDoc.id}): ${isSubido ? 'SUBIDO' : 'FALTANTE'}`);
-      if (isSubido) {
-        documentosObligatoriosCargados++;
-      }
-    }
-
-    this.progresoDocumentacion = documentosObligatorios.length > 0 ? Math.round(
-      (documentosObligatoriosCargados / documentosObligatorios.length) * 100
-    ) : 100;
+    this.progresoDocumentacion = documentosObligatorios.length > 0
+      ? Math.round((documentosObligatoriosCargados / documentosObligatorios.length) * 100)
+      : 100;
 
     this.documentosFaltantes = documentosObligatorios.length - documentosObligatoriosCargados;
-
-    console.log(`[DocumentacionTab] Progreso calculado: ${this.progresoDocumentacion}% (${documentosObligatoriosCargados}/${documentosObligatorios.length})`);
-    console.log(`[DocumentacionTab] Documentos obligatorios faltantes: ${this.documentosFaltantes}`);
   }
 
-  /**
-   * Abre el diálogo para cargar un único documento.
-   * @param tipoDocumentoId El ID del tipo de documento a cargar (opcional).
-   */
-  abrirDialogoCargaDocumento(tipoDocumentoId?: string): void {
-    const dialogRef = this.dialog.open(DocumentoUploadComponent, {
-      title: 'Cargar Documento',
-      showFooter: false, // Disable external footer buttons
-      showCancelButton: false, // Disable external cancel button
-      showConfirmButton: false, // Disable external confirm button
-      data: { tipoDocumentoId: tipoDocumentoId }
+  abrirDialogoCargaMultiple(): void {
+    const dialogRef = this.dialog.open(ProfileDocumentMultipleUploadDialogComponent, {
+      title: 'Carga Múltiple de Documentos',
+      showFooter: false,
+      showCancelButton: false,
+      showConfirmButton: false,
+      data: {},
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
-        this.notification.success('Documento cargado exitosamente');
-        this.cargarDocumentosUsuario(true); // Force reload
-        this.documentosService.notificarDocumentoActualizado();
+        this.cargarDocumentosUsuario(true);
       }
     });
   }
 
   cargarDocumentoTipo(tipoDocumentoId: string): void {
-    this.abrirDialogoCargaDocumento(tipoDocumentoId);
-  }
-
-  /**
-   * Obtiene la lista de documentos obligatorios.
-   * @returns Array de documentos obligatorios.
-   */
-  getDocumentosObligatorios(): TipoDocumento[] {
-    return this.documentosRequeridos.filter(doc => doc.requerido);
-  }
-
-  /**
-   * Obtiene la lista de documentos opcionales.
-   * @returns Array de documentos opcionales.
-   */
-  getDocumentosOpcionales(): TipoDocumento[] {
-    return this.documentosRequeridos.filter(doc => !doc.requerido);
-  }
-
-  /**
-   * Abre el diálogo para la carga múltiple de documentos.
-   */
-  abrirDialogoCargaMultiple(): void {
-    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
-      title: 'Carga Múltiple de Documentos',
-      showFooter: false, // Disable external footer buttons
-      showCancelButton: false, // Disable external cancel button
-      showConfirmButton: false, // Disable external confirm button
-      data: { /* any data needed for multiple upload component */ }
+    const dialogRef = this.dialog.open(DocumentoUploadComponent, {
+      title: 'Cargar Documento',
+      showFooter: false,
+      showCancelButton: false,
+      showConfirmButton: false,
+      data: { tipoDocumentoId: tipoDocumentoId },
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
-        // CRITICAL FIX: Eliminar notificación duplicada
-        // El componente hijo ya maneja las notificaciones en finalizarProceso()
-        // this.notification.success('Documentos cargados exitosamente');
-        this.cargarDocumentosUsuario(true); // Force reload
-        this.documentosService.notificarDocumentoActualizado();
+        this.notification.success('Documento cargado exitosamente');
+        this.cargarDocumentosUsuario(true);
       }
     });
   }
 
-  /**
-   * Abre el visor de documentos para un documento específico.
-   * @param documento El objeto DocumentoUsuario a visualizar.
-   */
-  verDocumento(documento: DocumentoUsuario | undefined): void {
+  verDocumento(documento: DocumentoUsuario | null): void {
     if (!documento || !documento.id) {
       this.notification.error('No se pudo encontrar el documento para visualizar');
       return;
@@ -1153,15 +1169,11 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       showCancelButton: false,
       showConfirmButton: true,
       confirmButtonText: 'Cerrar',
-      panelClass: 'documento-viewer-dialog'
+      panelClass: 'documento-viewer-dialog',
     });
   }
 
-  /**
-   * Permite reemplazar un documento existente abriendo el diálogo de carga.
-   * @param documento El documento a reemplazar.
-   */
-  reemplazarDocumento(documento: DocumentoUsuario | undefined): void {
+  reemplazarDocumento(documento: DocumentoUsuario | null): void {
     if (!documento || !documento.id || !documento.tipoDocumentoId) {
       this.notification.error('No se pudo encontrar el documento para reemplazar');
       return;
@@ -1169,62 +1181,52 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
 
     const dialogRef = this.dialog.open(DocumentoUploadComponent, {
       title: 'Reemplazar Documento',
-      showFooter: false, // Disable external footer buttons
-      showCancelButton: false, // Disable external cancel button
-      showConfirmButton: false, // Disable external confirm button
-      data: { tipoDocumentoId: documento.tipoDocumentoId, documentoIdAEditar: documento.id }
+      showFooter: false,
+      showCancelButton: false,
+      showConfirmButton: false,
+      data: { tipoDocumentoId: documento.tipoDocumentoId, documentoIdAEditar: documento.id },
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
         this.notification.success('Documento reemplazado exitosamente.');
-        this.cargarDocumentosUsuario(true); // Force reload
-        this.documentosService.notificarDocumentoActualizado();
+        this.cargarDocumentosUsuario(true);
       }
     });
   }
 
-  /**
-   * Elimina un documento del usuario.
-   * @param documento El documento a eliminar.
-   */
-  eliminarDocumento(documento: DocumentoUsuario | undefined): void {
+  eliminarDocumento(documento: DocumentoUsuario | null): void {
     if (!documento || !documento.id) {
       this.notification.error('No se pudo encontrar el documento para eliminar');
       return;
     }
 
-    // Usar el servicio de confirmación que funciona correctamente
-    this.confirmationService.danger(
-      'Eliminar Documento',
-      `¿Estás seguro de que deseas eliminar el documento "${documento.nombreArchivo}"?`,
-      'Esta acción no se puede deshacer.',
-      'Eliminar',
-      'Cancelar'
-    ).subscribe(confirmed => {
-      if (confirmed) {
-        this.documentosService.deleteDocumento(documento.id!).subscribe({
-          next: () => {
-            this.notification.success('Documento eliminado correctamente');
-            this.cargarDocumentosUsuario(true); // Force reload
-            this.documentosService.notificarDocumentoActualizado();
-          },
-          error: (error: unknown) => {
-            console.error('Error al eliminar documento:', error);
-            this.notification.error('Error al eliminar el documento');
-          }
-        });
-      }
-    });
+    this.confirmationService
+      .danger(
+        'Eliminar Documento',
+        `¿Estás seguro de que deseas eliminar el documento "${documento.nombreArchivo}"?`,
+        'Esta acción no se puede deshacer.',
+        'Eliminar',
+        'Cancelar'
+      )
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.documentosService.deleteDocumento(documento.id!).subscribe({
+            next: () => {
+              this.notification.success('Documento eliminado correctamente');
+              this.cargarDocumentosUsuario(true);
+            },
+            error: (error: unknown) => {
+              console.error('Error al eliminar documento:', error);
+              this.notification.error('Error al eliminar el documento');
+            },
+          });
+        }
+      });
   }
 
-  /**
-   * Maneja las acciones de la tabla.
-   * @param event Objeto con el `action` y el `data` de la fila.
-   */
-  onTableAction(event: { action: string, data?: DocumentoUsuario, row?: any }): void {
-    // Normalizar el evento para manejar tanto 'data' como 'row'
-    const documento = event.data || event.row as DocumentoUsuario;
+  onTableAction(event: { action: string; data?: DocumentoUsuario; row?: any }): void {
+    const documento = event.data || (event.row as DocumentoUsuario);
 
     switch (event.action) {
       case 'view':
@@ -1240,222 +1242,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
         console.warn(`Acción desconocida: ${event.action}`);
     }
   }
-
-  // Cache para evitar verificaciones repetidas
-  private documentoSubidoCache: Record<string, boolean> = {};
-
-  /**
-   * Verifica si un documento con un `tipoDocumentoId` específico ha sido subido.
-   * La lógica intenta ser flexible para cubrir IDs exactos, códigos y nombres.
-   * @param tipoDocumentoId El ID del tipo de documento a verificar.
-   * @returns `true` si el documento está subido, `false` en caso contrario.
-   */
-  isDocumentoSubido(tipoDocumentoId: string): boolean {
-    // Si ya verificamos este documento, devolver el resultado cacheado
-    // La caché se limpia al cargar nuevos documentos, lo que asegura que no esté rancia.
-    if (Object.prototype.hasOwnProperty.call(this.documentoSubidoCache, tipoDocumentoId)) {
-      return this.documentoSubidoCache[tipoDocumentoId];
-    }
-
-    // SOLUCIÓN: Buscar el tipo de documento requerido para obtener su información
-    const tipoRequerido = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
-
-    // Buscar si hay algún documento que coincida exactamente con el id proporcionado
-    const documentoExacto = this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId);
-    if (documentoExacto) {
-      return this.documentoSubidoCache[tipoDocumentoId] = true;
-    }
-
-    // Buscar si hay algún documento cuyo tipo tenga el 'code' que coincide con tipoDocumentoId
-    const documentoPorCodigo = this.documentosUsuario.find(doc =>
-      doc.tipoDocumento && doc.tipoDocumento.code === tipoDocumentoId
-    );
-    if (documentoPorCodigo) {
-      return this.documentoSubidoCache[tipoDocumentoId] = true;
-    }
-
-    // NUEVA LÓGICA: Buscar por nombre del tipo de documento si tenemos la información del tipo requerido
-    if (tipoRequerido) {
-      const documentoPorNombre = this.documentosUsuario.find(doc => {
-        if (!doc.tipoDocumento || !doc.tipoDocumento.nombre) return false;
-
-        // Comparación exacta de nombres (case insensitive)
-        const nombreDocumento = doc.tipoDocumento.nombre.toLowerCase().trim();
-        const nombreRequerido = tipoRequerido.nombre.toLowerCase().trim();
-
-        return nombreDocumento === nombreRequerido;
-      });
-
-      if (documentoPorNombre) {
-        return this.documentoSubidoCache[tipoDocumentoId] = true;
-      }
-    }
-
-    // Caso especial para DNI (frente y dorso) si la lógica de IDs es genérica o combinada
-    if (tipoDocumentoId === 'dni-frente' || tipoDocumentoId === 'dni-dorso') {
-      const dniEspecifico = this.documentosUsuario.some(doc => {
-        if (!doc.tipoDocumento) return false;
-
-        const nombre = doc.tipoDocumento.nombre?.toLowerCase() || '';
-        const esFrente = tipoDocumentoId === 'dni-frente' &&
-          (nombre.includes('dni') || nombre.includes('documento') || nombre.includes('identidad')) &&
-          (nombre.includes('frente') || nombre.includes('anverso'));
-        const esDorso = tipoDocumentoId === 'dni-dorso' &&
-          (nombre.includes('dni') || nombre.includes('documento') || nombre.includes('identidad')) &&
-          (nombre.includes('dorso') || nombre.includes('reverso'));
-
-        return esFrente || esDorso;
-      });
-
-      if (dniEspecifico) {
-        return this.documentoSubidoCache[tipoDocumentoId] = true;
-      }
-    }
-
-    // Buscar por coincidencia parcial en el nombre del tipo de documento (usando tipoRequerido ya declarado)
-    if (tipoRequerido) {
-      const nombreTipoRequeridoLower = tipoRequerido.nombre.toLowerCase();
-
-      for (const doc of this.documentosUsuario) {
-        let nombreDocTipoLower = '';
-        if (doc.tipoDocumento && doc.tipoDocumento.nombre) {
-          nombreDocTipoLower = doc.tipoDocumento.nombre.toLowerCase();
-        } else {
-          // Fallback: intentar encontrar el nombre del tipo de documento en la lista general de tipos
-          const matchingTipo = this.tiposDocumento.find(t => t.id === doc.tipoDocumentoId || t.code === doc.tipoDocumentoId);
-          if (matchingTipo && matchingTipo.nombre) {
-            nombreDocTipoLower = matchingTipo.nombre.toLowerCase();
-          }
-        }
-
-        if (nombreDocTipoLower &&
-            (nombreDocTipoLower.includes(nombreTipoRequeridoLower) || nombreTipoRequeridoLower.includes(nombreDocTipoLower))) {
-          return this.documentoSubidoCache[tipoDocumentoId] = true;
-        }
-      }
-    }
-
-    // Si no se encontró en ninguna de las comprobaciones
-    return this.documentoSubidoCache[tipoDocumentoId] = false;
-  }
-
-  /**
-   * Obtiene el objeto DocumentoUsuario subido que corresponde a un tipo de documento específico.
-   * Utiliza la misma lógica de búsqueda flexible que `isDocumentoSubido`.
-   * @param tipoDocumentoId El ID del tipo de documento a buscar.
-   * @returns El objeto `DocumentoUsuario` o `undefined` si no se encuentra.
-   */
-  getDocumentoByTipo(tipoDocumentoId: string): DocumentoUsuario | undefined {
-    // Buscar si hay algún documento que coincida exactamente con el id proporcionado
-    const documentoExacto = this.documentosUsuario.find(doc => doc.tipoDocumentoId === tipoDocumentoId);
-    if (documentoExacto) {
-      return documentoExacto;
-    }
-
-    // Buscar si hay algún documento cuyo tipo tenga el 'code' que coincide con tipoDocumentoId
-    const documentoPorCodigo = this.documentosUsuario.find(doc =>
-      doc.tipoDocumento && doc.tipoDocumento.code === tipoDocumentoId
-    );
-    if (documentoPorCodigo) {
-      return documentoPorCodigo;
-    }
-
-    // Caso especial para DNI (frente y dorso)
-    if (tipoDocumentoId === 'dni-frente' || tipoDocumentoId === 'dni-dorso') {
-      const dniEspecifico = this.documentosUsuario.find(doc => {
-        if (!doc.tipoDocumento) return false;
-
-        const nombre = doc.tipoDocumento.nombre?.toLowerCase() || '';
-        const esFrente = tipoDocumentoId === 'dni-frente' &&
-          (nombre.includes('dni') || nombre.includes('documento') || nombre.includes('identidad')) &&
-          (nombre.includes('frente') || nombre.includes('anverso'));
-        const esDorso = tipoDocumentoId === 'dni-dorso' &&
-          (nombre.includes('dni') || nombre.includes('documento') || nombre.includes('identidad')) &&
-          (nombre.includes('dorso') || nombre.includes('reverso'));
-
-        return esFrente || esDorso;
-      });
-      if (dniEspecifico) {
-        return dniEspecifico;
-      }
-    }
-
-    // Buscar por coincidencia parcial en el nombre
-    const tipoRequerido = this.documentosRequeridos.find(tipo => tipo.id === tipoDocumentoId);
-    if (tipoRequerido) {
-      const nombreTipoRequeridoLower = tipoRequerido.nombre.toLowerCase();
-
-      for (const doc of this.documentosUsuario) {
-        let nombreDocTipoLower = '';
-        if (doc.tipoDocumento && doc.tipoDocumento.nombre) {
-          nombreDocTipoLower = doc.tipoDocumento.nombre.toLowerCase();
-        } else {
-          const matchingTipo = this.tiposDocumento.find(t => t.id === doc.tipoDocumentoId || t.code === doc.tipoDocumentoId);
-          if (matchingTipo && matchingTipo.nombre) {
-            nombreDocTipoLower = matchingTipo.nombre.toLowerCase();
-          }
-        }
-
-        if (nombreDocTipoLower &&
-            (nombreDocTipoLower.includes(nombreTipoRequeridoLower) || nombreTipoRequeridoLower.includes(nombreDocTipoLower))) {
-          return doc;
-        }
-      }
-    }
-    return undefined; // Si no se encuentra ningún documento que coincida
-  }
-
-  /**
-   * Obtiene el estado del documento para su visualización en la UI.
-   * Retorna una cadena para usar como clase CSS ('aprobado', 'pendiente', 'rechazado', 'faltante').
-   * @param tipoDocumentoId El ID del tipo de documento.
-   * @returns El estado del documento.
-   */
-  getEstadoDocumento(tipoDocumentoId: string): 'aprobado' | 'pendiente' | 'rechazado' | 'faltante' {
-    const documento = this.getDocumentoByTipo(tipoDocumentoId);
-    if (documento) {
-      // Asumiendo que DocumentoUsuario tiene una propiedad 'estado'
-      switch (documento.estado?.toLowerCase()) {
-        case 'aprobado': return 'aprobado';
-        case 'pendiente': return 'pendiente';
-        case 'rechazado': return 'rechazado';
-        default: return 'pendiente'; // Estado por defecto si no es reconocido
-      }
-    }
-    return 'faltante';
-  }
-
-  /**
-   * Obtiene el texto del estado del documento para su visualización.
-   * @param tipoDocumentoId El ID del tipo de documento.
-   * @returns El texto del estado.
-   */
-  getEstadoDocumentoTexto(tipoDocumentoId: string): string {
-    const documento = this.getDocumentoByTipo(tipoDocumentoId);
-    if (documento) {
-      switch (documento.estado?.toLowerCase()) {
-        case 'aprobado': return 'Aprobado';
-        case 'pendiente': return 'Pendiente de revisión';
-        case 'rechazado': return 'Rechazado';
-        default: return 'Pendiente de revisión';
-      }
-    }
-    return 'Pendiente de carga';
-  }
-
-  /**
-   * Obtiene el ícono del estado del documento para su visualización.
-   * @param tipoDocumentoId El ID del tipo de documento.
-   * @returns La clase del ícono FontAwesome.
-   */
-  getEstadoDocumentoIcon(tipoDocumentoId: string): string {
-    const estado = this.getEstadoDocumento(tipoDocumentoId);
-    switch (estado) {
-      case 'aprobado': return 'fa-check-circle';
-      case 'pendiente': return 'fa-clock';
-      case 'rechazado': return 'fa-times-circle';
-      case 'faltante': return 'fa-exclamation-triangle';
-      default: return 'fa-question-circle';
-    }
-  }
 }
+
+  

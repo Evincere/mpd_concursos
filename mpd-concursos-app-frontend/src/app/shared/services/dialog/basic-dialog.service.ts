@@ -9,6 +9,7 @@ export interface BasicDialogConfig {
   size?: 'small' | 'medium' | 'large';
   data?: any;
   showCloseButton?: boolean;
+  providers?: any[];
 }
 
 export class BasicDialogRef<T = any> {
@@ -19,8 +20,10 @@ export class BasicDialogRef<T = any> {
   }
 
   close(result?: T) {
+    console.log('[BasicDialogRef] 🔄 Cerrando diálogo con resultado:', result);
     this._afterClosed.next(result);
     this._afterClosed.complete();
+    console.log('[BasicDialogRef] ✅ Diálogo cerrado, observable completado');
   }
 }
 
@@ -33,7 +36,8 @@ export class BasicDialogService {
   constructor(
     private environmentInjector: EnvironmentInjector,
     private appRef: ApplicationRef,
-    private loggingService: LoggingService
+    private loggingService: LoggingService,
+    private injector: Injector
   ) {}
 
   open<T>(component: Type<T>, config: BasicDialogConfig = {}): BasicDialogRef {
@@ -195,17 +199,20 @@ export class BasicDialogService {
 
       container.appendChild(content);
 
-      // Create component with data injection
-      const injector = Injector.create({
-        parent: this.environmentInjector,
-        providers: [
-          { provide: BASIC_DIALOG_DATA, useValue: config.data || {} }
-        ]
+      // Create component with data injection using the main injector
+      const providers = [
+        { provide: BASIC_DIALOG_DATA, useValue: config.data || {} },
+        ...(config.providers || [])
+      ];
+
+      const dataInjector = Injector.create({
+        parent: this.injector,
+        providers: providers
       });
 
       const componentRef = createComponent(component, {
         environmentInjector: this.environmentInjector,
-        elementInjector: injector
+        elementInjector: dataInjector
       });
 
       // Attach to app
@@ -242,30 +249,41 @@ export class BasicDialogService {
 
   private closeDialog(backdrop: HTMLElement, dialogRef: BasicDialogRef) {
     try {
+      console.log('[BasicDialogService] 🔄 Iniciando cierre de diálogo...');
+
       // Find and remove from active dialogs
       const index = this.activeDialogs.findIndex(d => d.element === backdrop);
+      console.log('[BasicDialogService] 📍 Índice del diálogo encontrado:', index);
+
       if (index >= 0) {
         const dialog = this.activeDialogs[index];
-        
+
         // Detach component
+        console.log('[BasicDialogService] 🗑️ Desvinculando y destruyendo componente...');
         this.appRef.detachView(dialog.componentRef.hostView);
         dialog.componentRef.destroy();
-        
+
         // Remove from array
         this.activeDialogs.splice(index, 1);
+        console.log('[BasicDialogService] 📝 Diálogo removido de la lista activa');
       }
 
       // Remove from DOM
       if (backdrop.parentNode) {
+        console.log('[BasicDialogService] 🗑️ Removiendo backdrop del DOM...');
         backdrop.parentNode.removeChild(backdrop);
+        console.log('[BasicDialogService] ✅ Backdrop removido del DOM');
       }
 
       // Close dialog ref
+      console.log('[BasicDialogService] 🔄 Cerrando referencia del diálogo...');
       dialogRef.close();
 
       this.loggingService.info('[BasicDialogService] Dialog closed successfully');
+      console.log('[BasicDialogService] ✅ Diálogo cerrado completamente');
 
     } catch (error) {
+      console.error('[BasicDialogService] ❌ Error cerrando diálogo:', error);
       this.loggingService.error('[BasicDialogService] Error closing dialog:', error);
     }
   }

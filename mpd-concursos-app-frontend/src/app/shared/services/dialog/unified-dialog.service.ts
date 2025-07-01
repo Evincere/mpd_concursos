@@ -82,19 +82,28 @@ export class UnifiedDialogService {
   open<T, D = any, R = any>(component: Type<T>, config?: UnifiedDialogConfig<D>): UnifiedDialogRef<R> {
     this.loggingService.info(`[UnifiedDialogService] Opening dialog with component: ${component.name}.`, config, 'DialogService');
 
-    // Convert UnifiedDialogConfig to BasicDialogConfig
+    // Create the UnifiedDialogRef first
+    const basicDialogRef = new BasicDialogRef<R>();
+    const unifiedDialogRef = new UnifiedDialogRef<R>(basicDialogRef, this.loggingService);
+
+    // Convert UnifiedDialogConfig to BasicDialogConfig with the dialog ref provider
     const basicConfig = {
       title: config?.title,
       size: config?.size,
       data: config?.data,
-      showCloseButton: config?.showCloseButton
+      showCloseButton: config?.showCloseButton,
+      providers: [
+        { provide: UnifiedDialogRef, useValue: unifiedDialogRef }
+      ]
     };
 
     // Use BasicDialogService to open the dialog
-    const basicDialogRef = this.basicDialogService.open(component, basicConfig);
+    const actualBasicDialogRef = this.basicDialogService.open(component, basicConfig);
 
-    // Wrap the BasicDialogRef in a UnifiedDialogRef
-    return new UnifiedDialogRef<R>(basicDialogRef as BasicDialogRef<R>, this.loggingService);
+    // Replace the placeholder with the actual dialog ref
+    (unifiedDialogRef as any).basicDialogRef = actualBasicDialogRef;
+
+    return unifiedDialogRef;
   }
 
   /**

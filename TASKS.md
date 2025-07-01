@@ -12,6 +12,14 @@
 - ✅ **Acceso web:** http://149.50.132.23:8000 funcionando
 - ⏳ **Pendiente:** Implementar Docker Hub para deploys más rápidos
 
+### 🔧 Refactorización Estados de Documentos (2025-07-01)
+- ✅ **Problema resuelto:** Eliminado cuelgue en documentación
+- ✅ **Arquitectura:** Separados estados técnicos de estados de negocio
+- ✅ **Backend:** Nuevo enum ProcessingStatus + migración DB
+- ✅ **Frontend:** Corregida lógica de monitoreo y estados
+- ✅ **Compilación:** Backend y Frontend sin errores
+- ✅ **Documentación:** Informe completo en `INFORME_REFACTORIZACION_ESTADOS_DOCUMENTOS.md`
+
 ## 🚀 PREPARACIÓN PARA PRODUCCIÓN - DEPLOYMENT DONWEB (Enero 2025)
 
 ### 🎯 OBJETIVO PRINCIPAL

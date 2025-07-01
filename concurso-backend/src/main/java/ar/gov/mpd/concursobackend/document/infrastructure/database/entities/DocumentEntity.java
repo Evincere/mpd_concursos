@@ -44,13 +44,16 @@ public class DocumentEntity {
     @Column(name = "content_type")
     private String contentType;
 
-    @NotNull
     @Column(name = "file_path")
-    private String filePath;
+    private String filePath; // Nullable durante el procesamiento en cola
+
+    @Enumerated(EnumType.STRING)
+    private DocumentStatusEnum status; // Puede ser null durante el procesamiento
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private DocumentStatusEnum status;
+    @Column(name = "processing_status")
+    private ProcessingStatusEnum processingStatus;
 
     @Column(name = "comments")
     private String comments;
@@ -68,7 +71,14 @@ public class DocumentEntity {
     @Column(name = "rejection_reason")
     private String rejectionReason;
 
+    @Column(name = "error_message")
+    private String errorMessage;
+
     public enum DocumentStatusEnum {
         PENDING, APPROVED, REJECTED
+    }
+
+    public enum ProcessingStatusEnum {
+        UPLOADING, PROCESSING, UPLOAD_COMPLETE, UPLOAD_FAILED
     }
 }
