@@ -27,6 +27,8 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { reducers } from './core/store';
 import { ResponsiveService } from './shared/services/responsive.service';
 import { provideServiceWorker } from '@angular/service-worker';
+import { GlobalErrorHandler } from './core/services/error/global-error-handler';
+import { ErrorHandler } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -74,10 +76,12 @@ export const appConfig: ApplicationConfig = {
       autoPause: true,
       trace: false,
       traceLimit: 75
-    }), provideServiceWorker('ngsw-worker.js', {
+    }),
+    provideServiceWorker('ngsw-worker.js', {
             enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'
-          })
+          }),
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
   ]
 };
 

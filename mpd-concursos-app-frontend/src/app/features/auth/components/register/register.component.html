@@ -28,13 +28,24 @@
       <h3>Datos de acceso</h3>
 
       <div class="user-box">
-        <input matInput formControlName="username" placeholder=" " required (focus)="onInputFocus($event)" appTouchFriendly id="username">
+        <input matInput
+               formControlName="username"
+               placeholder=" "
+               required
+               (focus)="onInputFocus($event)"
+               appTouchFriendly
+               appInputRestriction="username"
+               fieldName="nombre de usuario"
+               id="username">
         <label for="username">Nombre de usuario</label>
         <mat-error *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['required']">
           El nombre de usuario es requerido
         </mat-error>
         <mat-error *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['minlength']">
           El nombre de usuario debe tener al menos 4 caracteres
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.errors?.['invalidUsernameChars']">
+          {{ registerForm.get('username')?.errors?.['invalidUsernameChars']?.message }}
         </mat-error>
       </div>
 
@@ -50,6 +61,8 @@
                (focus)="onInputFocus($event)"
                [class.error-input]="hasFieldError('email')"
                appTouchFriendly
+               appInputRestriction="email"
+               fieldName="email"
                id="email">
         <label for="email">Correo electrónico</label>
         <div class="error-message"
@@ -74,8 +87,29 @@
           La contraseña es requerida
         </mat-error>
         <mat-error *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']">
-          La contraseña debe tener al menos 6 caracteres
+          La contraseña debe tener al menos 8 caracteres
         </mat-error>
+        <!-- Errores de fortaleza de contraseña -->
+        <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['passwordStrength']" class="password-strength-errors">
+          <mat-error *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.minLength">
+            {{ registerForm.get('password')?.errors?.['passwordStrength']?.minLength?.message }}
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.lowercase">
+            {{ registerForm.get('password')?.errors?.['passwordStrength']?.lowercase?.message }}
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.uppercase">
+            {{ registerForm.get('password')?.errors?.['passwordStrength']?.uppercase?.message }}
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.number">
+            {{ registerForm.get('password')?.errors?.['passwordStrength']?.number?.message }}
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.specialChar">
+            {{ registerForm.get('password')?.errors?.['passwordStrength']?.specialChar?.message }}
+          </mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.errors?.['passwordStrength']?.weakPattern">
+            {{ registerForm.get('password')?.errors?.['passwordStrength']?.weakPattern?.message }}
+          </mat-error>
+        </div>
       </div>
 
       <div class="user-box">
@@ -95,35 +129,84 @@
       <h3>Datos personales</h3>
 
       <div class="user-box">
-        <input matInput formControlName="firstName" placeholder=" " required (focus)="onInputFocus($event)" appTouchFriendly id="firstName">
+        <input matInput
+               formControlName="firstName"
+               placeholder=" "
+               required
+               (focus)="onInputFocus($event)"
+               appTouchFriendly
+               appInputRestriction="name"
+               fieldName="nombre"
+               id="firstName">
         <label for="firstName">Nombre</label>
         <mat-error *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.errors?.['required']">
           El nombre es requerido
         </mat-error>
         <mat-error *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.errors?.['minlength']">
-          El nombre debe tener al menos 3 caracteres
+          El nombre debe tener al menos 2 caracteres
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.errors?.['invalidSpanishName']">
+          {{ registerForm.get('firstName')?.errors?.['invalidSpanishName']?.message }}
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.errors?.['multipleSpaces']">
+          {{ registerForm.get('firstName')?.errors?.['multipleSpaces']?.message }}
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('firstName')?.touched && registerForm.get('firstName')?.errors?.['invalidNameFormat']">
+          {{ registerForm.get('firstName')?.errors?.['invalidNameFormat']?.message }}
         </mat-error>
       </div>
 
       <div class="user-box">
-        <input matInput formControlName="lastName" placeholder=" " required (focus)="onInputFocus($event)" appTouchFriendly id="lastName">
+        <input matInput
+               formControlName="lastName"
+               placeholder=" "
+               required
+               (focus)="onInputFocus($event)"
+               appTouchFriendly
+               appInputRestriction="name"
+               fieldName="apellido"
+               id="lastName">
         <label for="lastName">Apellido</label>
         <mat-error *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.errors?.['required']">
           El apellido es requerido
         </mat-error>
         <mat-error *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.errors?.['minlength']">
-          El apellido debe tener al menos 3 caracteres
+          El apellido debe tener al menos 2 caracteres
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.errors?.['invalidSpanishName']">
+          {{ registerForm.get('lastName')?.errors?.['invalidSpanishName']?.message }}
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.errors?.['multipleSpaces']">
+          {{ registerForm.get('lastName')?.errors?.['multipleSpaces']?.message }}
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('lastName')?.touched && registerForm.get('lastName')?.errors?.['invalidNameFormat']">
+          {{ registerForm.get('lastName')?.errors?.['invalidNameFormat']?.message }}
         </mat-error>
       </div>
 
       <div class="user-box">
-        <input matInput formControlName="dni" placeholder=" " required maxlength="8" (focus)="onInputFocus($event)" appTouchFriendly id="dni">
+        <input matInput
+               formControlName="dni"
+               placeholder=" "
+               required
+               maxlength="8"
+               (focus)="onInputFocus($event)"
+               appTouchFriendly
+               appInputRestriction="dni"
+               fieldName="DNI"
+               id="dni">
         <label for="dni">DNI</label>
         <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['required']">
           El DNI es requerido
         </mat-error>
-        <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['pattern']">
-          El DNI debe tener 8 dígitos
+        <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['invalidDniChars']">
+          {{ registerForm.get('dni')?.errors?.['invalidDniChars']?.message }}
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['invalidArgentineDni']">
+          {{ registerForm.get('dni')?.errors?.['invalidArgentineDni']?.message }}
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('dni')?.touched && registerForm.get('dni')?.errors?.['obviousDni']">
+          {{ registerForm.get('dni')?.errors?.['obviousDni']?.message }}
         </mat-error>
       </div>
 
@@ -165,10 +248,21 @@
       </div>
 
       <div class="user-box">
-        <input matInput formControlName="telefono" placeholder=" " (focus)="onInputFocus($event)" appTouchFriendly id="telefono">
+        <input matInput
+               formControlName="telefono"
+               placeholder=" "
+               (focus)="onInputFocus($event)"
+               appTouchFriendly
+               appInputRestriction="phone"
+               fieldName="teléfono"
+               maxlength="20"
+               id="telefono">
         <label for="telefono">Teléfono</label>
-        <mat-error *ngIf="registerForm.get('telefono')?.touched && registerForm.get('telefono')?.errors?.['pattern']">
-          El formato del teléfono no es válido
+        <mat-error *ngIf="registerForm.get('telefono')?.touched && registerForm.get('telefono')?.errors?.['invalidPhoneChars']">
+          {{ registerForm.get('telefono')?.errors?.['invalidPhoneChars']?.message }}
+        </mat-error>
+        <mat-error *ngIf="registerForm.get('telefono')?.touched && registerForm.get('telefono')?.errors?.['invalidArgentinePhone']">
+          {{ registerForm.get('telefono')?.errors?.['invalidArgentinePhone']?.message }}
         </mat-error>
       </div>
     </div>

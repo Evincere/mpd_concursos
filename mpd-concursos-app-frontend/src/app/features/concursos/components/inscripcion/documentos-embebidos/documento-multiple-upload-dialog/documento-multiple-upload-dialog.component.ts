@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, ViewChild, ElementRef, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UnifiedDialogRef, DIALOG_DATA } from '@shared/services/dialog/unified-dialog.service';
@@ -39,6 +39,7 @@ interface DocumentoEnSeleccion {
 @Component({
   selector: 'app-documento-multiple-upload-dialog',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     CustomButtonComponent,
@@ -67,20 +68,10 @@ interface DocumentoEnSeleccion {
         </p>
 
         <!-- Mensaje informativo cuando todos los documentos requeridos están completos -->
-        <div class="info-message" *ngIf="todosDocumentosRequeridosCompletos">
+        <div class="info-message" *ngIf="mensajeOptativos">
           <i class="fas fa-check-circle info-icon"></i>
           <div class="info-text">
-            <h3>¡Documentación requerida completa!</h3>
-            <p>Has subido todos los documentos requeridos para este concurso. Si deseas subir documentación adicional, puedes hacerlo a través de la pestaña de documentación en la vista de Mi Perfil.</p>
-            <div class="profile-link">
-              <app-custom-button
-                variant="stroked"
-                color="primary"
-                icon="fa-user"
-                label="Ir a Mi Perfil"
-                (buttonClick)="navegarAPerfil()">
-              </app-custom-button>
-            </div>
+            <h3>{{mensajeOptativos}}</h3>
           </div>
         </div>
 
@@ -194,6 +185,12 @@ interface DocumentoEnSeleccion {
               </app-custom-button>
             </div>
           </div>
+
+          <!-- Nueva función para advertencia inteligente -->
+          <div class="hint-message" *ngIf="esTipoGenericoSeleccionado()">
+            <i class="fas fa-info-circle"></i>
+            Puedes subir tantos documentos genéricos como necesites. Recuerda: los documentos obligatorios deben subirse en su tipo correspondiente, no como genéricos.
+          </div>
         </div>
 
         <!-- Lista de documentos configurados -->
@@ -273,7 +270,7 @@ interface DocumentoEnSeleccion {
           (click)="cancelarYCerrar()"
           class="cancel-button">
           <i class="fas fa-times"></i>
-          Cancelar
+          {{getTextoCancelButton()}}
         </app-custom-button>
 
         <!-- Upload Documentation Button - Moved from internal component -->
@@ -851,30 +848,98 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
   // Propiedades para manejo de timeouts y limpieza de recursos
   // CRITICAL FIX: autoCloseTimeout eliminado - ya no se usa auto-close automático
 
+  private progresoUpdateTimeout: any = null;
+
+  // Nuevo sistema de mensajes
+  mensajeOptativos = '';
+
   constructor(
     private dialogRef: UnifiedDialogRef<any>,
     @Inject(DIALOG_DATA) public data: any,
     private documentosService: DocumentosService,
     private documentoValidationService: DocumentoValidationService,
     private notificationService: UnifiedNotificationService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
+    console.log('[DocumentoMultipleUpload] 🚧 Constructor ejecutado');
+  }
 
   ngOnInit(): void {
-    // Si se proporcionaron tipos de documento en los datos, usarlos
-    if (this.data && this.data.tiposDocumento) {
-      // Logging implementado con LoggingService;
-      this.tiposDocumento = this.data.tiposDocumento;
+    // Inicialización robusta: cargar tipos y documentos, luego calcular estado
+    this.cargarTiposYDocumentos();
+  }
 
-      // Cargar los documentos del usuario para saber cuáles faltan
-      this.cargarDocumentosUsuario();
+  /**
+   * Carga ambos: tipos de documento y documentos del usuario, y luego calcula el estado real
+   */
+  private cargarTiposYDocumentos(): void {
+    this.tiposDocumento = [];
+    this.documentosUsuario = [];
+    this.documentosFaltantes = [];
+    this.tiposDocumentoOptions = [];
+    this.mostrarSelectorDocumento = false;
+    this.todosDocumentosRequeridosCompletos = false;
+
+    this.documentosService.getTiposDocumento().subscribe({
+      next: (tipos) => {
+        this.tiposDocumento = tipos;
+        this.documentosRequeridos = tipos.filter(tipo => tipo.requerido);
+        this.documentosService.getDocumentosUsuario().subscribe({
+          next: (documentos) => {
+            this.documentosUsuario = documentos;
+            this.calcularDocumentosFaltantes();
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.mostrarError('Error al cargar tus documentos');
+            this.cdr.markForCheck();
+          }
+        });
+      },
+      error: () => {
+        this.mostrarError('Error al cargar los tipos de documento');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  calcularDocumentosFaltantes(): void {
+    // Faltantes requeridos
+    const requeridosFaltantes = this.tiposDocumento.filter(tipo => tipo.requerido && !this.documentosUsuario.some(doc => doc.tipoDocumentoId === tipo.id));
+    // Faltantes opcionales
+    const opcionalesFaltantes = this.tiposDocumento.filter(tipo => !tipo.requerido && !this.documentosUsuario.some(doc => doc.tipoDocumentoId === tipo.id));
+
+    this.documentosFaltantes = [...requeridosFaltantes, ...opcionalesFaltantes];
+
+    // Opciones para el select
+    this.convertirTiposAOpciones();
+
+    // Mensaje de estado y control de UI según contexto de perfil
+    if (requeridosFaltantes.length === 0 && opcionalesFaltantes.length > 0) {
+      // Solo faltan optativos: mostrar mensaje informativo y permitir subir optativos
+      this.mostrarSelectorDocumento = true;
+      this.todosDocumentosRequeridosCompletos = false;
+      this.mensajeOptativos = '¡Documentación obligatoria completa! Puedes seguir subiendo documentación adicional optativa.';
+    } else if (requeridosFaltantes.length === 0 && opcionalesFaltantes.length === 0) {
+      // Todo completo: mostrar mensaje final
+      this.mostrarSelectorDocumento = false;
+      this.todosDocumentosRequeridosCompletos = true;
+      this.mensajeOptativos = '';
     } else {
-      // Si no, cargarlos desde el servicio
-      this.cargarTiposDocumento();
+      // Faltan requeridos
+      this.mostrarSelectorDocumento = true;
+      this.todosDocumentosRequeridosCompletos = false;
+      this.mensajeOptativos = '';
     }
   }
 
+  reintentarCarga(): void {
+    this.cargarTiposYDocumentos();
+  }
+
   ngOnDestroy(): void {
+    console.log('[DocumentoMultipleUpload] 🔥 Componente destruido (ngOnDestroy)');
     console.log('[DocumentoMultipleUpload] 🧹 Limpiando recursos en ngOnDestroy');
 
     // CRITICAL FIX: autoCloseTimeout eliminado - ya no se usa auto-close automático
@@ -892,103 +957,20 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     }
   }
 
-  /**
-   * Método para reintentar la carga de datos después de un error de autenticación
-   */
-  reintentarCarga(): void {
-    // Limpiar datos anteriores
-    this.tiposDocumento = [];
-    this.documentosUsuario = [];
-    this.documentosFaltantes = [];
-    this.tiposDocumentoOptions = [];
-
-    // Reintentar carga
-    if (this.data && this.data.tiposDocumento) {
-      this.tiposDocumento = this.data.tiposDocumento;
-      this.cargarDocumentosUsuario();
-    } else {
-      this.cargarTiposDocumento();
-    }
-  }
-
-  cargarDocumentosUsuario(): void {
-    this.documentosService.getDocumentosUsuario().subscribe({
-      next: (documentos) => {
-        // Logging implementado con LoggingService;
-        this.documentosUsuario = documentos;
-        this.calcularDocumentosFaltantes();
-      },
-      error: (error) => {
-        console.error('[DocumentoMultipleUpload] Error al cargar documentos del usuario:', error);
-
-        // CRITICAL FIX: No mostrar error si es un problema de autenticación (401)
-        // El interceptor ya maneja estos errores y redirige al login
-        if (error.status !== 401) {
-          this.mostrarError('Error al cargar tus documentos');
-        }
-
-        // En caso de error, mostrar todos los tipos de documento disponibles
-        this.convertirTiposAOpciones();
-      }
-    });
-  }
-
-  calcularDocumentosFaltantes(): void {
-    console.log('[DocumentoMultipleUpload] Calculando documentos faltantes...');
-    console.log('[DocumentoMultipleUpload] Tipos documento disponibles:', this.tiposDocumento.length);
-    console.log('[DocumentoMultipleUpload] Documentos usuario:', this.documentosUsuario.length);
-
-    // CRITICAL FIX: Filtrar TODOS los tipos de documento que aún no han sido subidos
-    // No solo los requeridos, sino todos los disponibles
-    this.documentosFaltantes = this.tiposDocumento.filter(tipoDoc => {
-      // Excluir documentos que ya están subidos
-      const yaSubido = this.documentosUsuario.some(doc => doc.tipoDocumentoId === tipoDoc.id);
-
-      // Excluir documentos específicos que se manejan por separado (como DNI consolidado)
-      const esDNIConsolidado = tipoDoc.id === 'documento-nacional-identidad' ||
-                               tipoDoc.nombre?.toLowerCase().includes('documento nacional de identidad');
-
-      return !yaSubido && !esDNIConsolidado;
-    });
-
-    console.log('[DocumentoMultipleUpload] Documentos faltantes calculados:', this.documentosFaltantes.length);
-
-    // Convertir a opciones para el select
-    this.convertirTiposAOpciones();
-  }
-
-  cargarTiposDocumento(): void {
-    this.documentosService.getTiposDocumento().subscribe({
-      next: (tipos) => {
-        console.log('[DocumentoMultipleUpload] Tipos de documento recibidos:', tipos);
-        // CRITICAL FIX: Guardar TODOS los tipos de documento, no solo los requeridos
-        this.tiposDocumento = tipos;
-        this.documentosRequeridos = tipos.filter(tipo => tipo.requerido);
-
-        // Cargar los documentos del usuario para saber cuáles faltan
-        this.cargarDocumentosUsuario();
-      },
-      error: (error) => {
-        console.error('[DocumentoMultipleUpload] Error al cargar tipos de documento:', error);
-
-        // CRITICAL FIX: No mostrar error si es un problema de autenticación (401)
-        // El interceptor ya maneja estos errores y redirige al login
-        if (error.status !== 401) {
-          this.mostrarError('Error al cargar los tipos de documento');
-        }
-      }
-    });
-  }
-
   convertirTiposAOpciones(): void {
     // Obtener los tipos de documento ya seleccionados en la sesión actual
     const tiposSeleccionados = this.documentosParaSubir.map(doc => doc.tipoDocumentoId);
 
-    // CRITICAL FIX: Simplificar la lógica para mostrar todos los documentos disponibles
-    // Mostrar todos los documentos faltantes (que incluye tanto requeridos como no requeridos)
-    // excepto los que ya están seleccionados en la sesión actual
+    // Permitir múltiples documentos genéricos: no filtrar el tipo genérico
     this.tiposDocumentoOptions = this.documentosFaltantes
-      .filter(tipo => !tiposSeleccionados.includes(tipo.id))
+      .filter(tipo => {
+        // Si es genérico, siempre permitir seleccionarlo
+        if (tipo.nombre.toLowerCase().includes('genérico') || tipo.nombre.toLowerCase().includes('generico')) {
+          return true;
+        }
+        // Para los demás, filtrar si ya están seleccionados
+        return !tiposSeleccionados.includes(tipo.id);
+      })
       .map(tipo => ({
         value: tipo.id,
         label: tipo.requerido ? `${tipo.nombre} (Requerido)` : tipo.nombre
@@ -997,7 +979,6 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
         // Ordenar: primero los requeridos, luego los opcionales
         const aEsRequerido = a.label.includes('(Requerido)');
         const bEsRequerido = b.label.includes('(Requerido)');
-
         if (aEsRequerido && !bEsRequerido) return -1;
         if (!aEsRequerido && bEsRequerido) return 1;
         return a.label.localeCompare(b.label);
@@ -1046,8 +1027,6 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     }
   }
 
-
-
   processSingleFile(file: File): void {
     // Verificar si el archivo ya está en la lista
     const isDuplicate = this.documentosParaSubir.some(doc =>
@@ -1093,6 +1072,11 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       return;
     }
 
+    // Advertencia inteligente: si es genérico y el nombre coincide con un obligatorio
+    if ((tipoDocumento.nombre.toLowerCase().includes('genérico') || tipoDocumento.nombre.toLowerCase().includes('generico')) && this.coincideConObligatorio(this.documentoActual.file?.name || '')) {
+      this.mostrarAdvertencia('Este archivo parece corresponder a un documento obligatorio. Por favor, súbelo en la categoría correspondiente.');
+    }
+
     // Crear un nuevo documento para subir
     const nuevoDocumento: DocumentoParaSubir = {
       file: this.documentoActual.file!,
@@ -1103,19 +1087,12 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       estado: 'pendiente',
       validationWarnings: [],
       configurado: true,
-      nombreEstandarizado: `${tipoDocumento.nombre}.pdf` // CRITICAL FIX: Nombre estandarizado para la interfaz
+      nombreEstandarizado: `${tipoDocumento.nombre}.pdf`
     };
 
-    // Añadir a la lista de documentos para subir
     this.documentosParaSubir.push(nuevoDocumento);
-
-    // Actualizar las opciones de tipos de documento disponibles
     this.actualizarTiposDocumentoDisponibles();
-
-    // Limpiar el documento actual para permitir seleccionar otro
     this.resetDocumentoActual();
-
-    // Mostrar mensaje de éxito
     this.mostrarExito('Documento agregado correctamente');
   }
 
@@ -1347,7 +1324,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
         // Actualizar estado a 'subiendo'
         doc.estado = 'subiendo';
         doc.progreso = 20;
-        // CRITICAL FIX: Eliminar llamada redundante - se actualiza al final del bucle
+        this.documentosParaSubir = [...this.documentosParaSubir];
+        this.cdr.markForCheck();
 
         console.log(`[DocumentoMultipleUpload] 📄 Subiendo documento ${i + 1}/${totalDocumentos}: ${doc.nombreEstandarizado}`);
 
@@ -1364,15 +1342,17 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
           // Marcar como completado
           doc.estado = 'completado';
           doc.progreso = 100;
+          this.documentosParaSubir = [...this.documentosParaSubir];
+          this.cdr.markForCheck();
           console.log(`[DocumentoMultipleUpload] ✅ Documento completado: ${doc.nombreEstandarizado}`);
 
         } catch (error) {
           console.error(`[DocumentoMultipleUpload] ❌ Error al subir documento ${doc.nombreEstandarizado}:`, error);
           doc.estado = 'error';
           doc.mensajeError = 'Error al subir el documento: ' + (error instanceof Error ? error.message : 'Error desconocido');
+          this.documentosParaSubir = [...this.documentosParaSubir];
+          this.cdr.markForCheck();
         }
-
-        // CRITICAL FIX: No actualizar progreso después de cada documento para evitar congelamiento
       }
 
       // Actualizar progreso global una sola vez al final
@@ -1389,317 +1369,6 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     }
   }
 
-  /**
-   * MÉTODO DESHABILITADO: Monitorea el estado de los documentos en cola
-   * Ya no se usa porque ahora subimos documentos directamente
-   * @param queueIds IDs de las tareas en cola
-   */
-  /*
-  monitorearEstadoDocumentos(queueIds: string[]): void {
-    console.log('[DocumentoMultipleUpload] 🔍 Iniciando monitoreo para queueIds:', queueIds);
-    this.currentAttempts = 0;
-
-    // CRITICAL FIX: Limpiar intervalo anterior si existe
-    if (this.monitoringInterval) {
-      clearInterval(this.monitoringInterval);
-      this.monitoringInterval = null;
-    }
-
-    // Crear un intervalo para consultar el estado
-    this.monitoringInterval = setInterval(() => {
-      this.currentAttempts++;
-      console.log(`[DocumentoMultipleUpload] ⏰ Verificando estado de documentos... (Intento ${this.currentAttempts}/${this.maxMonitoringAttempts})`);
-
-      if (this.currentAttempts >= this.maxMonitoringAttempts) {
-        console.warn('[DocumentoMultipleUpload] ⚠️ Timeout de monitoreo alcanzado');
-        this.finalizarPorTimeout();
-        return;
-      }
-
-      // Verificar si todos los documentos están completados o con error
-      // CORRECCIÓN CRÍTICA: No incluir 'pendiente' como estado completado
-      const todosCompletados = this.documentosParaSubir.every(doc =>
-        doc.estado === 'completado' || doc.estado === 'error'
-      );
-
-      console.log('[DocumentoMultipleUpload] 📊 Estado actual de documentos:', {
-        todosCompletados,
-        documentos: this.documentosParaSubir.map(doc => ({
-          nombre: doc.nombreEstandarizado,
-          estado: doc.estado,
-          progreso: doc.progreso,
-          queueId: doc.queueId
-        }))
-      });
-
-      if (todosCompletados) {
-        console.log('[DocumentoMultipleUpload] ✅ Todos los documentos completados, finalizando...');
-        // Detener el intervalo
-        clearInterval(this.monitoringInterval);
-        this.monitoringInterval = null;
-
-        // Finalizar proceso
-        if (!this.procesoFinalizado) {
-          this.finalizarProceso();
-        }
-        return;
-      }
-
-      // Obtener estado de los documentos en cola
-      console.log('[DocumentoMultipleUpload] 🔍 Consultando estado en el backend...');
-      this.documentosService.getMultipleDocumentosStatus(queueIds)
-        .subscribe({
-          next: (statuses) => {
-            console.log('[DocumentoMultipleUpload] 📥 Respuesta del backend:', statuses);
-            // CRITICAL FIX: Verificar si hay estados válidos
-            if (!statuses || statuses.length === 0) {
-              // Si no hay estados, asumir que los documentos están completados exitosamente
-              // Esto significa que llegaron al estado PENDING (esperando revisión administrativa)
-              this.documentosParaSubir.forEach(doc => {
-                if (doc.estado === 'subiendo' || doc.estado === 'procesando') {
-                  doc.estado = 'completado'; // Procesamiento técnico completado
-                  doc.progreso = 100;
-                }
-              });
-
-              // Detener el intervalo y finalizar
-              clearInterval(this.monitoringInterval);
-              this.monitoringInterval = null;
-              if (!this.procesoFinalizado) {
-                this.finalizarProceso();
-              }
-              return;
-            }
-
-            // Actualizar estado de los documentos basado en processingStatus
-            statuses.forEach(status => {
-              const doc = this.documentosParaSubir.find(d => d.queueId === status.queueId);
-              if (doc) {
-                // Actualizar progreso
-                doc.progreso = status.progress || 0;
-
-                // Actualizar estado basado en processingStatus (estado técnico)
-                const processingStatus = status.processingStatus;
-
-                switch (processingStatus) {
-                  case 'UPLOADING':
-                    doc.estado = 'subiendo';
-                    break;
-                  case 'PROCESSING':
-                    doc.estado = 'procesando';
-                    break;
-                  case 'UPLOAD_COMPLETE':
-                    // Procesamiento técnico completado exitosamente
-                    // El documento ahora está en estado PENDING (negocio) esperando revisión
-                    doc.estado = 'completado';
-                    doc.documentoId = status.documentId || '';
-                    doc.progreso = 100;
-                    break;
-                  case 'UPLOAD_FAILED':
-                    doc.estado = 'error';
-                    doc.mensajeError = status.errorMessage || 'Error durante el procesamiento';
-                    break;
-                  default:
-                    console.warn(`Estado de procesamiento desconocido: ${processingStatus}`);
-                }
-              }
-            });
-
-            // Actualizar progreso global
-            this.actualizarProgresoGlobal();
-
-            // Verificar si todos los documentos están completados o con error después de la actualización
-            const completadosDespuesDeActualizar = this.documentosParaSubir.every(doc =>
-              doc.estado === 'completado' || doc.estado === 'error' || doc.estado === 'pendiente'
-            );
-
-            if (completadosDespuesDeActualizar) {
-              // Detener el intervalo
-              clearInterval(this.monitoringInterval);
-              this.monitoringInterval = null;
-
-              // Finalizar proceso
-              if (!this.procesoFinalizado) {
-                this.finalizarProceso();
-              }
-            }
-          },
-          error: (error) => {
-            console.error('Error al obtener estado de documentos:', error);
-
-            // CRITICAL FIX: Manejo mejorado de errores en el monitoreo
-            // No mostrar múltiples notificaciones de error
-            // En su lugar, intentar finalizar el proceso de manera elegante
-
-            // Si es un error de autenticación, detener el monitoreo
-            if (error.status === 401 || error.status === 403) {
-              clearInterval(this.monitoringInterval);
-              this.monitoringInterval = null;
-              this.uploading = false;
-              // No mostrar error adicional, el interceptor ya maneja la redirección
-              return;
-            }
-
-            // Para otros errores de red o temporales, intentar una vez más antes de fallar
-            // Verificar si hay documentos que realmente se subieron consultando el backend
-            this.verificarDocumentosSubidos().then((documentosVerificados) => {
-              if (documentosVerificados > 0) {
-                // Si se verificó que algunos documentos se subieron, marcarlos como completados
-                this.documentosParaSubir.forEach(doc => {
-                  if (doc.estado === 'subiendo' || doc.estado === 'procesando') {
-                    doc.estado = 'completado';
-                    doc.progreso = 100;
-                  }
-                });
-                clearInterval(this.monitoringInterval);
-                this.monitoringInterval = null;
-                if (!this.procesoFinalizado) {
-                  this.finalizarProceso();
-                }
-              } else {
-                // Si no se pudo verificar, mantener el estado actual y continuar monitoreando
-                // pero limitar el número de reintentos
-                if (!this.monitoringRetries) {
-                  this.monitoringRetries = 0;
-                }
-                this.monitoringRetries++;
-
-                if (this.monitoringRetries >= 3) {
-                  // Después de 3 reintentos, asumir que los documentos se completaron
-                  this.documentosParaSubir.forEach(doc => {
-                    if (doc.estado === 'subiendo' || doc.estado === 'procesando') {
-                      doc.estado = 'completado';
-                      doc.progreso = 100;
-                    }
-                  });
-                  clearInterval(this.monitoringInterval);
-                  this.monitoringInterval = null;
-                  if (!this.procesoFinalizado) {
-                    this.finalizarProceso();
-                  }
-                }
-              }
-            }).catch(() => {
-              // Si la verificación también falla, asumir que se completaron
-              this.documentosParaSubir.forEach(doc => {
-                if (doc.estado === 'subiendo' || doc.estado === 'procesando') {
-                  doc.estado = 'completado';
-                  doc.progreso = 100;
-                }
-              });
-              clearInterval(this.monitoringInterval);
-              this.monitoringInterval = null;
-              if (!this.procesoFinalizado) {
-                this.finalizarProceso();
-              }
-            });
-          }
-        });
-    }, 5000); // Consultar cada 5 segundos
-  }
-  */
-
-  /**
-   * Verifica si los documentos realmente se subieron consultando el backend
-   * @returns Promise con el número de documentos verificados como subidos
-   */
-  async verificarDocumentosSubidos(): Promise<number> {
-    try {
-      // Obtener documentos del usuario desde el backend
-      const documentosUsuario = await this.documentosService.getDocumentosUsuario().toPromise();
-
-      if (!documentosUsuario) {
-        return 0;
-      }
-
-      // Contar cuántos de los documentos que estamos subiendo ya existen en el backend
-      let documentosVerificados = 0;
-
-      this.documentosParaSubir.forEach(doc => {
-        if (doc.estado === 'subiendo' || doc.estado === 'procesando') {
-          // Buscar si existe un documento del mismo tipo subido recientemente
-          const documentoExistente = documentosUsuario.find(docUsuario =>
-            docUsuario.tipoDocumentoId === doc.tipoDocumentoId &&
-            docUsuario.nombreArchivo === doc.file.name
-          );
-
-          if (documentoExistente) {
-            documentosVerificados++;
-          }
-        }
-      });
-
-      return documentosVerificados;
-    } catch (error) {
-      console.error('Error al verificar documentos subidos:', error);
-      return 0;
-    }
-  }
-
-  /**
-   * Finaliza el proceso de carga de documentos
-   */
-  finalizarProceso(): void {
-    // CRITICAL FIX: Evitar múltiples finalizaciones
-    if (this.procesoFinalizado) {
-      console.log('[DocumentoMultipleUpload] Proceso ya finalizado, evitando duplicación');
-      return;
-    }
-
-    console.log('[DocumentoMultipleUpload] 🏁 Finalizando proceso de carga de documentos');
-    this.procesoFinalizado = true;
-    this.uploading = false;
-
-    // Show document selector again after upload
-    this.mostrarSelectorDocumento = true;
-
-    // Contar documentos completados y totales
-    const documentosCompletados = this.documentosParaSubir.filter(doc => doc.estado === 'completado').length;
-    const documentosConError = this.documentosParaSubir.filter(doc => doc.estado === 'error').length;
-    const totalDocumentos = this.documentosParaSubir.filter(doc => doc.estado !== 'pendiente').length;
-
-    console.log('[DocumentoMultipleUpload] 📊 Resumen final:', {
-      documentosCompletados,
-      documentosConError,
-      totalDocumentos
-    });
-
-    // CRITICAL FIX: Aumentar delay para evitar conflictos con múltiples operaciones concurrentes
-    setTimeout(() => {
-      if (documentosCompletados === totalDocumentos && documentosCompletados > 0) {
-        // Todos los documentos se completaron exitosamente
-        this.documentosSubidosExitosamente = true;
-        console.log('[DocumentoMultipleUpload] ✅ Todos los documentos subidos exitosamente');
-
-        // CRITICAL FIX: Diferir notificación significativamente para evitar conflictos con detección de cambios
-        setTimeout(() => {
-          this.notificationService.success('Documentación subida exitosamente', 'Éxito');
-        }, 500); // Aumentado de 100ms a 500ms
-
-        // CRITICAL FIX: Eliminar emisión duplicada - uploadDocumento() ya emite automáticamente
-        // this.documentosService.notificarDocumentoActualizado();
-
-        console.log('[DocumentoMultipleUpload] ✅ Proceso finalizado - esperando confirmación del usuario');
-
-      } else if (documentosCompletados > 0 && documentosConError === 0) {
-        // Algunos documentos se completaron, pero no hay errores explícitos
-        this.documentosSubidosExitosamente = true;
-      } else if (documentosCompletados > 0 && documentosConError > 0) {
-        // Algunos documentos se completaron, pero otros tuvieron errores
-        this.documentosSubidosExitosamente = true;
-        this.mostrarAdvertencia(`Se han subido ${documentosCompletados} de ${totalDocumentos} documentos. ${documentosConError} documentos tuvieron errores.`);
-      } else if (documentosConError > 0) {
-        // Solo hay documentos con error
-        this.mostrarError(`No se pudo subir ningún documento. ${documentosConError} documentos tuvieron errores.`);
-      } else {
-        // Caso por defecto - no hay documentos completados ni con error explícito
-        this.mostrarError('No se pudo completar la subida de documentos');
-      }
-    }, 200); // CRITICAL FIX: Aumentado de 50ms a 200ms para evitar conflictos
-  }
-
-  private progresoUpdateTimeout: any = null;
-
   actualizarProgresoGlobal(): void {
     // CRITICAL FIX: Debounce para evitar actualizaciones excesivas que causan congelamiento
     if (this.progresoUpdateTimeout) {
@@ -1711,6 +1380,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       const documentosValidos = this.documentosParaSubir.filter(doc => doc.estado !== 'error');
       if (documentosValidos.length === 0) {
         this.progresoGlobal = 0;
+        this.documentosParaSubir = [...this.documentosParaSubir];
+        this.cdr.markForCheck();
         return;
       }
 
@@ -1721,6 +1392,8 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       // Solo actualizar si realmente cambió para evitar detección de cambios innecesaria
       if (this.progresoGlobal !== nuevoProgreso) {
         this.progresoGlobal = nuevoProgreso;
+        this.documentosParaSubir = [...this.documentosParaSubir];
+        this.cdr.markForCheck();
       }
     }, 100); // Debounce de 100ms
   }
@@ -1754,8 +1427,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
    * Determina el texto del botón según el estado actual
    */
   getTextoCancelButton(): string {
+    // Solo mostrar botón cancelar si no ha finalizado
     if (this.procesoFinalizado) {
-      return 'Cerrar';
+      return '';
     } else if (this.uploading) {
       return 'Cancelando...';
     } else {
@@ -1778,10 +1452,6 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
   confirmarYCerrar(): void {
     // Emitir evento de confirmación para que el componente padre actualice el estado
     this.documentosSubidos.emit(this.documentosParaSubir.filter(doc => doc.estado === 'completado'));
-
-    // CRITICAL FIX: Eliminar emisión duplicada - uploadDocumento() ya emite automáticamente
-    // this.documentosService.notificarDocumentoActualizado();
-
     // Cerrar con resultado de éxito para que el componente padre sepa que se confirmó la subida
     this.dialogRef.close({ success: true, confirmed: true });
   }
@@ -1802,8 +1472,6 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       this.cerrar();
     }
   }
-
-
 
   cerrar(): void {
     this.dialogRef.close(false as any);
@@ -1860,15 +1528,15 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
    * - When idle: Simply closes dialog (preserves user data for resume)
    */
   cancelarYCerrar(): void {
-    // If upload is in progress, abort it and clear data
+    if (this.procesoFinalizado) {
+      return; // No hacer nada si el proceso ya terminó
+    }
     if (this.uploading && !this.procesoFinalizado) {
       this.abortUpload();
-      this.clearAllData(); // Clear data when aborting upload
+      this.clearAllData();
       this.cerrar();
       return;
     }
-
-    // If no upload in progress, just close the dialog (preserve user data)
     this.cerrar();
   }
 
@@ -1877,10 +1545,17 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
    */
   handleUploadAction(): void {
     if (this.procesoFinalizado) {
-      // Process completed - close manually without auto-close
+      // Si quedan documentos opcionales, permitir seguir subiendo
+      if (this.tiposDocumentoOptions.length > 0) {
+        this.procesoFinalizado = false;
+        this.uploading = false;
+        this.mostrarSelectorDocumento = true;
+        this.cdr.markForCheck();
+        return;
+      }
+      // Si no quedan, cerrar
       this.confirmarYCerrar();
     } else {
-      // Start upload process
       this.uploadDocuments();
     }
   }
@@ -2021,5 +1696,51 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
     });
 
     this.finalizarProceso();
+  }
+
+  finalizarProceso(): void {
+    if (this.procesoFinalizado) {
+      console.log('[DocumentoMultipleUpload] Proceso ya finalizado, evitando duplicación');
+      return;
+    }
+    console.log('[DocumentoMultipleUpload] 🏁 Finalizando proceso de carga de documentos');
+    this.procesoFinalizado = true;
+    this.uploading = false;
+    // Recargar documentos del usuario y recalcular faltantes
+    this.documentosService.getDocumentosUsuario().subscribe({
+      next: (documentos) => {
+        this.documentosUsuario = documentos;
+        this.calcularDocumentosFaltantes();
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.notificationService.success('Documentación subida exitosamente', 'Éxito');
+          this.cdr.markForCheck();
+        }, 500);
+      },
+      error: () => {
+        setTimeout(() => {
+          this.notificationService.success('Documentación subida exitosamente', 'Éxito');
+          this.cdr.markForCheck();
+        }, 500);
+      }
+    });
+  }
+
+  // Nueva función para advertencia inteligente
+  coincideConObligatorio(fileName: string): boolean {
+    const lowerFileName = fileName.toLowerCase();
+    for (const tipo of this.tiposDocumento) {
+      if (tipo.requerido && lowerFileName.includes(tipo.nombre.toLowerCase())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Método para saber si el tipo seleccionado es genérico
+  esTipoGenericoSeleccionado(): boolean {
+    if (!this.documentoActual.tipoDocumentoId) return false;
+    const tipo = this.tiposDocumento.find(t => t.id === this.documentoActual.tipoDocumentoId);
+    return !!tipo && (tipo.nombre.toLowerCase().includes('genérico') || tipo.nombre.toLowerCase().includes('generico'));
   }
 }

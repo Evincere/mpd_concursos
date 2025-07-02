@@ -14,8 +14,10 @@ import { UserRegisterDTO } from '../../../../shared/interfaces/user/base-user.in
 import { Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { TouchFriendlyDirective } from '../../../../shared/directives/touch-friendly.directive';
+import { InputRestrictionDirective } from '../../../../shared/directives/input-restriction.directive';
 import { ErrorMappingService, MappedError, ErrorType, ErrorSeverity, FieldError, ValidationStatus } from '../../../../shared/services/error-mapping';
 import { HttpErrorDisplayComponent } from '../../../../shared/components/http-error-display';
+import { ValidationService } from '../../../../shared/services/validation.service';
 import { ErrorContextPanelComponent } from '../../../../shared/components/error-context-panel/error-context-panel.component';
 
 @Component({
@@ -31,6 +33,7 @@ import { ErrorContextPanelComponent } from '../../../../shared/components/error-
     MatButtonModule,
     MatSnackBarModule,
     TouchFriendlyDirective,
+    InputRestrictionDirective,
     HttpErrorDisplayComponent,
     ErrorContextPanelComponent
   ],
@@ -77,29 +80,66 @@ export class RegisterComponent implements OnInit, OnDestroy {
     private registerService: RegisterService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private errorMappingService: ErrorMappingService
+    private errorMappingService: ErrorMappingService,
+    private validationService: ValidationService
   ) {
     this.registerForm = fb.nonNullable.group({
       // Datos de acceso
-      username: ['', [Validators.required, Validators.minLength(4)]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      username: ['', [
+        Validators.required,
+        Validators.minLength(4),
+        Validators.maxLength(50),
+        this.validationService.usernameCharacterValidator()
+      ]],
+      email: ['', [
+        Validators.required,
+        Validators.email,
+        this.validationService.emailCharacterValidator()
+      ]],
+      password: ['', [
+        Validators.required,
+        Validators.minLength(8),
+        this.validationService.passwordStrengthValidator()
+      ]],
       confirmPassword: ['', Validators.required],
 
       // Datos personales
-      firstName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
-      lastName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(50)]],
-      dni: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-      cuit: ['', [Validators.required, Validators.pattern(/^\d{2}-\d{8}-\d{1}$/)]],
-      birthDate: [null, [Validators.required]],
+      firstName: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+        this.validationService.spanishNameValidator()
+      ]],
+      lastName: ['', [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(50),
+        this.validationService.spanishNameValidator()
+      ]],
+      dni: ['', [
+        Validators.required,
+        this.validationService.dniCharacterValidator(),
+        this.validationService.argentineDniValidator()
+      ]],
+      cuit: ['', [
+        Validators.required,
+        this.validationService.cuitFormatValidator()
+      ]],
+      birthDate: [null, [
+        Validators.required,
+        this.validationService.minAgeValidator(18)
+      ]],
 
       // Datos de ubicación
       country: ['Argentina', Validators.required],
       province: ['', Validators.required],
       municipality: ['', Validators.required],
-      legalAddress: ['', Validators.required],
-      residentialAddress: ['', Validators.required],
-      telefono: ['', Validators.pattern(/^[0-9\-\+\s\(\)]{7,15}$/)],
+      legalAddress: ['', [Validators.required, Validators.maxLength(200)]],
+      residentialAddress: ['', [Validators.required, Validators.maxLength(200)]],
+      telefono: ['', [
+        this.validationService.phoneCharacterValidator(),
+        this.validationService.argentinePhoneValidator()
+      ]],
 
       // Términos y condiciones
       termsAccepted: [false, Validators.requiredTrue]

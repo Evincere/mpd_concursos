@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Custom Components
@@ -32,6 +32,7 @@ interface DocumentoCardViewModel {
   selector: 'app-documentacion-tab',
   standalone: true,
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     CustomButtonComponent,
@@ -874,8 +875,11 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     private dialog: UnifiedDialogService,
     private notification: CustomNotificationService,
     private documentosService: DocumentosService,
-    private confirmationService: ConfirmationService
-  ) {}
+    private confirmationService: ConfirmationService,
+    private cdr: ChangeDetectorRef
+  ) {
+    console.log('[DocumentacionTab] 🚧 Constructor ejecutado');
+  }
 
   ngOnInit(): void {
     console.log('[DocumentacionTab] 🚀 Componente inicializado');
@@ -901,7 +905,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    console.log('[DocumentacionTab] 🔥 Componente destruido');
+    console.log('[DocumentacionTab] 🔥 Componente destruido (ngOnDestroy)');
     this.subscription?.unsubscribe();
   }
 
@@ -912,17 +916,13 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   cargarDatos(forzarRecarga = false): void {
     this.isLoading = true;
     this.documentosService.getTiposDocumento(forzarRecarga)
-      .pipe(
-        finalize(() => {
-          this.isLoading = false; // Set loading to false once all data is fetched or on error
-        })
-      )
       .subscribe({
         next: (tipos) => {
           this.tiposDocumento = tipos; // Store all available document types
           // Update required documents from backend data
           this.actualizarDocumentosRequeridos(tipos);
-          this.cargarDocumentosUsuario(forzarRecarga); // Then load user documents
+          // CRITICAL FIX: Llamar cargarDocumentosUsuario sin verificar isLoading
+          this.cargarDocumentosUsuarioInternal(forzarRecarga); // Then load user documents
         },
         error: (error: unknown) => {
           console.error('[DocumentacionTab] Error al cargar tipos de documento:', error);
@@ -1000,13 +1000,22 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isLoading = true;
+    this.cargarDocumentosUsuarioInternal(forzarRecarga);
+  }
+
+  /**
+   * Método interno para cargar documentos del usuario sin verificar isLoading
+   * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
+   */
+  private cargarDocumentosUsuarioInternal(forzarRecarga = false): void {
     console.log('[DocumentacionTab] 📥 Iniciando carga de documentos del usuario...', { forzarRecarga });
 
     this.documentosService.getDocumentosUsuario(forzarRecarga)
       .pipe(finalize(() => {
         this.isLoading = false;
         console.log('[DocumentacionTab] ✅ Carga de documentos finalizada');
+        // CRITICAL FIX: Forzar detección de cambios DESPUÉS de establecer isLoading = false
+        this.cdr.detectChanges();
       }))
       .subscribe({
         next: (documentos: DocumentoUsuario[]) => {
@@ -1014,8 +1023,6 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           this.documentosUsuario = documentos;
           this.buildViewModel();
           this.calcularProgreso();
-          // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
-          // Angular manejará automáticamente la detección de cambios
         },
         error: (error: unknown) => {
           console.error('[DocumentacionTab] Error al cargar documentos del usuario:', error);

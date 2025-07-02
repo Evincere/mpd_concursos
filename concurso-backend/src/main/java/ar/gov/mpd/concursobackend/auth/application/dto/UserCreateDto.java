@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 import lombok.Data;
 import ar.gov.mpd.concursobackend.auth.application.validation.PasswordMatches;
+import ar.gov.mpd.concursobackend.auth.application.validation.ValidSpanishName;
+import ar.gov.mpd.concursobackend.auth.application.validation.ValidArgentinePhone;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

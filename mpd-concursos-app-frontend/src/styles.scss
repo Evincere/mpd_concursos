@@ -15,6 +15,10 @@
 /* Sistema glassmorphism unificado que reemplaza todos los sistemas anteriores */
 @import './styles/unified-glassmorphism-system';
 
+/* === DIRECTIVAS DE VALIDACIÓN === */
+/* Estilos para directivas de restricción de entrada */
+@import './app/shared/directives/input-restriction.directive.scss';
+
 /* === SKIP LINKS PARA ACCESIBILIDAD === */
 .skip-links {
   position: absolute;
