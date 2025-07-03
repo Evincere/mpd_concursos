@@ -10,7 +10,7 @@ COPY pom.xml .
 COPY src ./src
 
 # Build
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -Dmaven.test.skip=true
 
 # Run stage
 FROM eclipse-temurin:21-jre
