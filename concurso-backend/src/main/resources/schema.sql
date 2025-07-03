@@ -1,3 +1,4 @@
+SET FOREIGN_KEY_CHECKS = 0;
 -- MySQL dump 10.13  Distrib 8.0.42, for Linux (x86_64)
 --
 -- Host: localhost    Database: mpd_concursos
@@ -694,3 +695,4 @@ CREATE TABLE `work_experience` (
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-06-24 21:57:56
+SET FOREIGN_KEY_CHECKS = 1;
