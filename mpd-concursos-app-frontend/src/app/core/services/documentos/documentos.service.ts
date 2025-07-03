@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpEventType, HttpEvent, HttpResponse } from '@angular/common/http';
 import { Observable, throwError, Subject, forkJoin, of } from 'rxjs'; // Import 'of' for returning observables
 import { environment } from '../../../../environments/environment';
-import { DocumentoUsuario, TipoDocumento, DocumentoResponse } from '../../models/documento.model';
-import { map, catchError, tap } from 'rxjs/operators';
+import { DocumentoUsuario, TipoDocumento, DocumentoResponse, EstadoDocumento, EstadoColaDocumento, EstadoProcesamiento } from '../../models/documento.model';
+import { map, catchError, tap, debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { TempDocumentCacheService } from '../cv/temp-document-cache.service';
 
 @Injectable({
@@ -15,8 +15,11 @@ export class DocumentosService {
   private readonly apiUrl = `${environment.apiUrl}/documentos`;
 
   // Subject para notificar cuando se sube un nuevo documento
-  private documentoActualizadoSource = new Subject<void>();
-  documentoActualizado$ = this.documentoActualizadoSource.asObservable();
+  private documentoActualizadoSource = new Subject<number>();
+  documentoActualizado$ = this.documentoActualizadoSource.asObservable().pipe(
+    debounceTime(3000), // CRITICAL FIX: Aumentar debounce para evitar emisiones múltiples
+    distinctUntilChanged() // Solo emitir si realmente cambió (ahora funciona con timestamp)
+  );
 
   // Cache de documentos
   private documentosCache: DocumentoUsuario[] = [];
@@ -25,6 +28,14 @@ export class DocumentosService {
   private ultimaActualizacionTipos = 0;
   private readonly CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos
 
+  // CRITICAL FIX: Control de notificaciones para evitar bucles
+  private ultimaNotificacion = 0;
+  private readonly MIN_INTERVALO_NOTIFICACION = 5000; // 5 segundos mínimo entre notificaciones
+
+  // CRITICAL FIX: Control de concurrencia para evitar condiciones de carrera
+  private loadingMutex = false;
+  private pendingRequest: Observable<DocumentoUsuario[]> | null = null;
+
   constructor() {
     this.ultimaActualizacion = 0; // Initialize to 0 so it fetches on first load
     // No need to call this.documentoActualizadoSource.next() here, as it's meant for updates.
@@ -32,9 +43,20 @@ export class DocumentosService {
 
   /**
    * Notifica a los suscriptores que un documento ha sido actualizado (subido, eliminado, reemplazado).
+   * CRITICAL FIX: Implementa throttling para evitar notificaciones excesivas
    */
   notificarDocumentoActualizado(): void {
-    this.documentoActualizadoSource.next();
+    const ahora = Date.now();
+
+    // CRITICAL FIX: Evitar notificaciones muy frecuentes
+    if (ahora - this.ultimaNotificacion < this.MIN_INTERVALO_NOTIFICACION) {
+      console.log('[DocumentosService] ⏳ Notificación ignorada - muy frecuente (throttling activo)');
+      return;
+    }
+
+    console.log('[DocumentosService] 📢 Notificando actualización de documento...');
+    this.ultimaNotificacion = ahora;
+    this.documentoActualizadoSource.next(ahora);
   }
 
   /**
@@ -43,15 +65,24 @@ export class DocumentosService {
    */
   getDocumentosUsuario(forzarRecarga = false): Observable<DocumentoUsuario[]> {
     const ahora = Date.now();
-    if (!forzarRecarga && this.documentosCache.length > 0 && (ahora - this.ultimaActualizacion < this.CACHE_TIMEOUT)) {
-      // Retornar de la caché
-      return of(this.documentosCache); // Use 'of' to return an observable from a value
+
+    // CRITICAL FIX: Control de concurrencia para evitar condiciones de carrera
+    if (this.loadingMutex && this.pendingRequest) {
+      console.log('[DocumentosService] ⏳ Solicitud en progreso, retornando request pendiente');
+      return this.pendingRequest;
     }
 
-    // Si no hay caché o ha expirado, obtener del servidor
-    // Usar el endpoint correcto: /api/documentos/usuario
+    if (!forzarRecarga && this.documentosCache.length > 0 && (ahora - this.ultimaActualizacion < this.CACHE_TIMEOUT)) {
+      // Retornar de la caché
+      console.log('[DocumentosService] 📁 Retornando documentos desde cache');
+      return of(this.documentosCache);
+    }
+
+    // CRITICAL FIX: Activar mutex antes de hacer la solicitud HTTP
+    this.loadingMutex = true;
     console.log('[DocumentosService] 🔍 Solicitando documentos del usuario desde:', `${this.apiUrl}/usuario`);
-    return this.http.get<DocumentoUsuario[]>(`${this.apiUrl}/usuario`).pipe(
+
+    this.pendingRequest = this.http.get<DocumentoUsuario[]>(`${this.apiUrl}/usuario`).pipe(
       tap(documentos => {
         console.log('[DocumentosService] ✅ Respuesta del backend:', documentos);
         console.log('[DocumentosService] 📊 Cantidad de documentos recibidos:', documentos.length);
@@ -60,6 +91,12 @@ export class DocumentosService {
         }
         this.documentosCache = documentos;
         this.ultimaActualizacion = Date.now();
+      }),
+      finalize(() => {
+        // CRITICAL FIX: Liberar mutex al finalizar (éxito o error)
+        this.loadingMutex = false;
+        this.pendingRequest = null;
+        console.log('[DocumentosService] 🔓 Mutex liberado');
       }),
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al obtener documentos del usuario:', error);
@@ -74,6 +111,8 @@ export class DocumentosService {
         return of([]); // Return an observable of an empty array
       })
     );
+
+    return this.pendingRequest;
   }
 
   /**
@@ -208,7 +247,7 @@ export class DocumentosService {
               tipoDocumentoId: '',
               nombreArchivo: '',
               fechaCarga: new Date(),
-              estado: 'pendiente' as const,
+              estado: EstadoDocumento.PENDIENTE,
               usuarioId: ''
             }
           } as DocumentoResponse);
@@ -217,9 +256,10 @@ export class DocumentosService {
     );
 
     return forkJoin(uploads).pipe(
-      tap(() => {
-        this.notificarDocumentoActualizado(); // Notify listeners after all uploads are attempted
-      }),
+      // CRITICAL FIX: Eliminar notificación duplicada - uploadDocumento() ya notifica individualmente
+      // tap(() => {
+      //   this.notificarDocumentoActualizado(); // Notify listeners after all uploads are attempted
+      // }),
       map(responses => {
         return responses;
       }),
@@ -254,9 +294,10 @@ export class DocumentosService {
     }
 
     return this.http.post<string[]>(`${this.apiUrl}/queue/enqueue-multiple`, formData).pipe(
-      tap(queueIds => {
-        this.notificarDocumentoActualizado(); // Potentially notify, depending on backend's queue completion
-      }),
+      // CRITICAL FIX: Eliminar notificación aquí - se notificará cuando se procesen los documentos
+      // tap(queueIds => {
+      //   this.notificarDocumentoActualizado(); // Potentially notify, depending on backend's queue completion
+      // }),
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al encolar documentos para procesamiento:', error);
         return throwError(() => new Error('Error al encolar documentos para procesamiento: ' + (error.message || 'Error desconocido')));
@@ -269,10 +310,10 @@ export class DocumentosService {
    * @param queueIds Array de IDs de tareas en cola
    * @returns Observable con los estados de las tareas
    */
-  getMultipleDocumentosStatus(queueIds: string[]): Observable<Record<string, unknown>[]> {
+  getMultipleDocumentosStatus(queueIds: string[]): Observable<EstadoColaDocumento[]> {
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     // CRITICAL FIX: Corregir endpoint para múltiples estados
-    return this.http.post<Record<string, unknown>[]>(`${this.apiUrl}/queue/status-multiple`, queueIds, { headers }).pipe(
+    return this.http.post<EstadoColaDocumento[]>(`${this.apiUrl}/queue/status-multiple`, queueIds, { headers }).pipe(
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al consultar el estado de los documentos:', error);
 
@@ -308,8 +349,8 @@ export class DocumentosService {
    * @param queueId ID de la tarea en cola
    * @returns Observable con el estado de la tarea
    */
-  getDocumentoStatus(queueId: string): Observable<Record<string, unknown>> {
-    return this.http.get<Record<string, unknown>>(`${this.apiUrl}/queue/status/${queueId}`).pipe(
+  getDocumentoStatus(queueId: string): Observable<EstadoColaDocumento> {
+    return this.http.get<EstadoColaDocumento>(`${this.apiUrl}/queue/status/${queueId}`).pipe(
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al consultar el estado del documento:', error);
         return throwError(() => new Error('Error al consultar el estado del documento'));

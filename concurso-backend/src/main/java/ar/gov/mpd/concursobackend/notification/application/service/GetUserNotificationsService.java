@@ -1,14 +1,14 @@
 package ar.gov.mpd.concursobackend.notification.application.service;
 
+import ar.gov.mpd.concursobackend.auth.application.service.UserService;
+import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtProvider;
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationResponse;
 import ar.gov.mpd.concursobackend.notification.application.mapper.NotificationMapper;
 import ar.gov.mpd.concursobackend.notification.application.port.in.GetUserNotificationsUseCase;
 import ar.gov.mpd.concursobackend.notification.application.port.out.INotificationRepository;
 import ar.gov.mpd.concursobackend.shared.security.IAuthenticationFacade;
-import ar.gov.mpd.concursobackend.auth.application.service.UserService;
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

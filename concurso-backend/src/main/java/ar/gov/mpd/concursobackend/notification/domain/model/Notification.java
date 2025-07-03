@@ -1,9 +1,9 @@
 package ar.gov.mpd.concursobackend.notification.domain.model;
 
-import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
-import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
 import lombok.Builder;
 import lombok.Getter;
 

@@ -1,19 +1,18 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.mapper;
 
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.RoleEntity;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.ProfileImageUrl;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IRoleSpringRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -140,7 +139,10 @@ public class UserMapper {
         User user = new User();
 
         if (entity.getId() != null) {
+            logger.info("=== DEBUG UserMapper: entity.getId() desde DB: '{}'", entity.getId());
+            logger.info("=== DEBUG UserMapper: entity.getUsername(): '{}'", entity.getUsername());
             user.setId(new UserId(entity.getId()));
+            logger.info("=== DEBUG UserMapper: user.getId() después del mapeo: '{}'", user.getId().value());
         }
         if (entity.getUsername() != null) {
             user.setUsername(new UserUsername(entity.getUsername()));

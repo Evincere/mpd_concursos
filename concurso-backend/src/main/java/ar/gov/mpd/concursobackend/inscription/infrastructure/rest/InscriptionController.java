@@ -1,21 +1,21 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
 
+import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionRequest;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
-import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.mapper.InscriptionMapper;
+import ar.gov.mpd.concursobackend.inscription.application.port.in.CancelInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
-import ar.gov.mpd.concursobackend.inscription.application.port.in.CancelInscriptionUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -479,7 +479,7 @@ public class InscriptionController {
         try {
             // Verify that the inscription belongs to the current user
             InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
-            if (!inscription.getUserId().toString().equals(currentUserId)) {
+            if (!inscription.getUserId().equals(currentUserId)) {
                 log.error("User {} tried to cancel an inscription that doesn't belong to them: {}",
                         currentUserId, id);
                 return ResponseEntity.notFound().build();

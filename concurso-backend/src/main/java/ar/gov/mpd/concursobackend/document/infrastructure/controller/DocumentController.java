@@ -1,5 +1,22 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.controller;
 
+import ar.gov.mpd.concursobackend.document.application.dto.*;
+import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
+import ar.gov.mpd.concursobackend.document.application.service.DocumentTypeService;
+import ar.gov.mpd.concursobackend.document.application.service.DocumentValidationService;
+import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
+import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -7,36 +24,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentTypeDto;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
-import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentValidationResult;
-import ar.gov.mpd.concursobackend.document.application.service.DocumentService;
-import ar.gov.mpd.concursobackend.document.application.service.DocumentTypeService;
-import ar.gov.mpd.concursobackend.document.application.service.DocumentValidationService;
-import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/documentos")
@@ -90,7 +77,8 @@ public class DocumentController {
             @RequestParam(value = "tipoDocumentoId", required = false) String documentTypeId,
             @RequestParam(value = "comentarios", required = false) String comments,
             @RequestParam(value = "referenciaId", required = false) String referenciaId,
-            @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia) {
+            @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia,
+            @RequestParam(value = "replaceExisting", required = false, defaultValue = "false") boolean replaceExisting) {
 
         try {
             log.info("=== INICIO UPLOAD DOCUMENTO ===");
@@ -99,6 +87,7 @@ public class DocumentController {
             log.info("Comentarios: {}", comments);
             log.info("Referencia ID: {}", referenciaId);
             log.info("Tipo referencia: {}", tipoReferencia);
+            log.info("Replace existing: {}", replaceExisting);
             log.debug("Recibiendo solicitud para subir documento. Type: {}, Ref: {}, RefType: {}",
                     documentTypeId, referenciaId, tipoReferencia);
 
@@ -158,10 +147,11 @@ public class DocumentController {
                     .build();
 
             UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
-            DocumentResponse response = documentService.uploadDocument(
+            DocumentResponse response = documentService.uploadDocumentWithDuplicateCheck(
                     request,
                     file.getInputStream(),
-                    userId);
+                    userId,
+                    replaceExisting);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IOException e) {
@@ -295,7 +285,11 @@ public class DocumentController {
             @RequestParam(value = "comentarios", required = false) String comentarios) {
 
         try {
-            UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
+            String userIdString = securityUtils.getCurrentUserId();
+            log.info("=== DEBUG: userIdString obtenido de SecurityUtils: '{}'", userIdString);
+            UUID userId = UUID.fromString(userIdString);
+            log.info("=== DEBUG: UUID generado: '{}'", userId);
+            log.info("=== DEBUG: Llamando a documentService.uploadDocument con userId: '{}'", userId);
 
             // Crear request para actualización
             DocumentUploadRequest request = DocumentUploadRequest.builder()

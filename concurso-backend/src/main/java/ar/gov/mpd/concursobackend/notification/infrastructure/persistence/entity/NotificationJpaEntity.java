@@ -1,12 +1,13 @@
 package ar.gov.mpd.concursobackend.notification.infrastructure.persistence.entity;
 
-import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
-import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
 import ar.gov.mpd.concursobackend.notification.infrastructure.persistence.converter.JsonMapConverter;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;

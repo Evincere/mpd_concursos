@@ -1,67 +1,39 @@
 package ar.gov.mpd.concursobackend.auth.application.service;
 
+import ar.gov.mpd.concursobackend.audit.application.service.AuditService;
+import ar.gov.mpd.concursobackend.audit.domain.model.AuditEventType;
 import ar.gov.mpd.concursobackend.auth.application.dto.JwtDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserLogin;
+import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
+import ar.gov.mpd.concursobackend.auth.application.usecase.role.RoleGetByRole;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserCreate;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserExists;
 import ar.gov.mpd.concursobackend.auth.application.usecase.user.UserGetByUsername;
-import ar.gov.mpd.concursobackend.auth.application.usecase.role.RoleGetByRole;
-import ar.gov.mpd.concursobackend.auth.domain.exception.UserAlreadyExistsException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.UserDniAlreadyExistsException;
-import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtProvider;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
-import ar.gov.mpd.concursobackend.auth.domain.exception.EmailAlreadyExistsException;
+import ar.gov.mpd.concursobackend.auth.domain.exception.*;
+import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtProvider;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.model.UserStatus;
-import ar.gov.mpd.concursobackend.auth.domain.port.IUserRoleManager;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserBirthDate;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCountry;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserLegalAddress;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserMunicipality;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserPassword;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserProvince;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserResidentialAddress;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
-import ar.gov.mpd.concursobackend.auth.domain.exception.BlockedAccountException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.ExpiredAccountException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InactiveAccountException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCredentialsException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidPasswordException;
-import jakarta.transaction.Transactional;
-import ar.gov.mpd.concursobackend.audit.application.service.AuditService;
-import ar.gov.mpd.concursobackend.audit.domain.model.AuditEventType;
+import ar.gov.mpd.concursobackend.auth.domain.port.IUserRoleManager;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
 import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AccountExpiredException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional

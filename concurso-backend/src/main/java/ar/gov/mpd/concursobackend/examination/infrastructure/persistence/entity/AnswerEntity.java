@@ -1,13 +1,12 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity;
 
+import ar.gov.mpd.concursobackend.examination.domain.enums.AnswerStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.examination.domain.enums.AnswerStatus;
 
 @Entity
 @Table(name = "answers")

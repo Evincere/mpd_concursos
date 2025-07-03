@@ -1,22 +1,12 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.database.entities;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "documents")
@@ -44,13 +34,16 @@ public class DocumentEntity {
     @Column(name = "content_type")
     private String contentType;
 
-    @NotNull
     @Column(name = "file_path")
-    private String filePath;
+    private String filePath; // Nullable durante el procesamiento en cola
+
+    @Enumerated(EnumType.STRING)
+    private DocumentStatusEnum status; // Puede ser null durante el procesamiento
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private DocumentStatusEnum status;
+    @Column(name = "processing_status")
+    private ProcessingStatusEnum processingStatus;
 
     @Column(name = "comments")
     private String comments;
@@ -68,7 +61,39 @@ public class DocumentEntity {
     @Column(name = "rejection_reason")
     private String rejectionReason;
 
+    @Column(name = "error_message")
+    private String errorMessage;
+
+    // Campos para manejo de duplicidad y archivado
+    @Column(name = "is_archived", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isArchived = false;
+
+    @Column(name = "replaced_document_id")
+    private UUID replacedDocumentId;
+
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+
+    @Column(name = "archived_by")
+    private UUID archivedBy;
+
+    @Column(name = "version")
+    private int version = 1;
+
+    // Setter personalizado para manejar NULL en isArchived
+    public void setIsArchived(Boolean isArchived) {
+        this.isArchived = (isArchived != null) ? isArchived : false;
+    }
+
+    public Boolean getIsArchived() {
+        return this.isArchived != null ? this.isArchived : false;
+    }
+
     public enum DocumentStatusEnum {
-        PENDING, APPROVED, REJECTED
+        PENDING, APPROVED, REJECTED, PROCESSING, ERROR
+    }
+
+    public enum ProcessingStatusEnum {
+        UPLOADING, PROCESSING, UPLOAD_COMPLETE, UPLOAD_FAILED
     }
 }

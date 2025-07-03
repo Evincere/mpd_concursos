@@ -1,16 +1,7 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
 import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
@@ -25,10 +16,19 @@ import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
-import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -40,20 +40,40 @@ public class DocumentServiceImpl implements DocumentService {
     private final IDocumentStorageService documentStorageService;
     private final DocumentMapper documentMapper;
     private final IUserRepository userRepository;
+    private final DocumentDuplicateService duplicateService;
+    private final DocumentAuditService auditService;
 
     @Override
     @Transactional
-    public DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream fileContent, UUID userId)
-            throws IOException {
-        log.debug("Uploading document for user: {}", userId);
+    public DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream fileContent, UUID userId) {
+        return uploadDocumentWithDuplicateCheck(request, fileContent, userId, false);
+    }
 
-        // Try to find document type by ID or code
+    /**
+     * Upload document with duplicate checking and replacement option
+     */
+    @Transactional
+    public DocumentResponse uploadDocumentWithDuplicateCheck(
+            DocumentUploadRequest request,
+            InputStream fileContent,
+            UUID userId,
+            boolean replaceExisting) {
+
+        log.debug("Uploading document for user: {} with replaceExisting: {}", userId, replaceExisting);
+
         DocumentType documentType = findDocumentType(request.getDocumentTypeId());
 
-        // Generar nombre de archivo basado en el tipo de documento
+        // Verificar documento existente
+        var existingDocument = duplicateService.findExistingDocument(userId, request.getDocumentTypeId());
+
+        if (existingDocument.isPresent() && !replaceExisting) {
+            log.warn("Documento duplicado encontrado para usuario: {} y tipo: {}", userId, request.getDocumentTypeId());
+            throw new DocumentException("Ya existe un documento de este tipo. Use replaceExisting=true para reemplazarlo.");
+        }
+
         String displayFileName = documentType.getName() + ".pdf";
 
-        Document document = Document.create(
+        Document newDocument = Document.create(
                 userId,
                 documentType,
                 new DocumentName(displayFileName),
@@ -61,26 +81,72 @@ public class DocumentServiceImpl implements DocumentService {
                 null,
                 request.getComments());
 
-        // Get user DNI for storage organization
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new DocumentException("User not found"));
-        String userDni = user.getDni().value();
-        String documentTypeName = documentType.getName();
+        newDocument.setStatus(DocumentStatus.PROCESSING);
 
-        // Store the file
-        String filePath = documentStorageService.storeFile(fileContent, request.getFileName(), userId,
-                document.getId().value(), userDni, documentTypeName);
-        document.setFilePath(filePath);
+        if (existingDocument.isPresent() && replaceExisting) {
+            // Reemplazar documento existente
+            log.info("Reemplazando documento existente: {}", existingDocument.get().getId().value());
 
-        // Save document metadata
-        Document savedDocument = documentRepository.save(document);
-        log.debug("Document saved: {}", savedDocument);
+            var replacementResult = duplicateService.replaceDocument(
+                    existingDocument.get(),
+                    newDocument,
+                    userId);
 
-        return DocumentResponse.builder()
-                .id(savedDocument.getId().value().toString())
-                .mensaje("Document uploaded successfully")
-                .documento(documentMapper.toDto(savedDocument))
-                .build();
+            if (!replacementResult.isSuccess()) {
+                throw new DocumentException("Error al reemplazar documento: " + replacementResult.getErrorMessage());
+            }
+
+            Document savedDocument = replacementResult.getNewDocument();
+            storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
+
+            return DocumentResponse.builder()
+                    .id(savedDocument.getId().value().toString())
+                    .mensaje("Document replaced successfully")
+                    .documento(documentMapper.toDto(savedDocument))
+                    .build();
+        } else {
+            // Crear nuevo documento
+            Document savedDocument = documentRepository.save(newDocument);
+            auditService.recordCreation(savedDocument, userId);
+
+            storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
+
+            return DocumentResponse.builder()
+                    .id(savedDocument.getId().value().toString())
+                    .mensaje("Document upload started")
+                    .documento(documentMapper.toDto(savedDocument))
+                    .build();
+        }
+    }
+
+    @Async
+    public void storeFileAsync(InputStream fileContent, String originalFilename, UUID userId, UUID documentId, String documentTypeName) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new DocumentException("User not found"));
+            String userDni = user.getDni().value();
+
+            String filePath = documentStorageService.storeFile(fileContent, originalFilename, userId, documentId, userDni, documentTypeName);
+
+            Document document = documentRepository.findById(new DocumentId(documentId))
+                    .orElseThrow(() -> new DocumentException("Document not found"));
+
+            document.setFilePath(filePath);
+            document.setStatus(DocumentStatus.PENDING);
+            documentRepository.save(document);
+        } catch (DocumentException e) {
+            log.error("Error storing file asynchronously", e);
+            Document document = documentRepository.findById(new DocumentId(documentId))
+                    .orElseThrow(() -> new DocumentException("Document not found"));
+            document.setStatus(DocumentStatus.ERROR);
+            documentRepository.save(document);
+        } catch (Exception e) {
+            log.error("Unexpected error storing file asynchronously", e);
+            Document document = documentRepository.findById(new DocumentId(documentId))
+                    .orElseThrow(() -> new DocumentException("Document not found"));
+            document.setStatus(DocumentStatus.ERROR);
+            documentRepository.save(document);
+        }
     }
 
     @Override

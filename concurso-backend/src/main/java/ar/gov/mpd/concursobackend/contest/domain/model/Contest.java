@@ -1,11 +1,7 @@
 package ar.gov.mpd.concursobackend.contest.domain.model;
 
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -66,13 +62,7 @@ public class Contest {
         }
 
         // Lógica para estados específicos
-        if (status == ContestStatus.INSCRIPTION_OPEN) {
-            return true; // Estado específico que indica inscripciones abiertas
-        }
-
-
-
-        return false;
+        return status == ContestStatus.INSCRIPTION_OPEN; // Estado específico que indica inscripciones abiertas
     }
 
     /**

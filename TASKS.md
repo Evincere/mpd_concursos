@@ -12,6 +12,134 @@
 - ✅ **Acceso web:** http://149.50.132.23:8000 funcionando
 - ⏳ **Pendiente:** Implementar Docker Hub para deploys más rápidos
 
+### 🔧 Refactorización Estados de Documentos (2025-07-01)
+- ✅ **Problema resuelto:** Eliminado cuelgue en documentación
+- ✅ **Arquitectura:** Separados estados técnicos de estados de negocio
+- ✅ **Backend:** Nuevo enum ProcessingStatus + migración DB
+- ✅ **Frontend:** Corregida lógica de monitoreo y estados
+- ✅ **Compilación:** Backend y Frontend sin errores
+- ✅ **Documentación:** Informe completo en `INFORME_REFACTORIZACION_ESTADOS_DOCUMENTOS.md`
+
+### 📄 Corrección Carga Individual de Documentos (2025-07-02)
+- ✅ **Problema identificado:** Botón "Cargar" abría uploader múltiple incorrectamente
+- ✅ **Solución implementada:** Reemplazado por `DocumentoUploadDialogComponent` específico
+- ✅ **UX mejorada:** Título del diálogo muestra nombre específico del documento
+- ✅ **Funcionalidad:** Mantiene recarga automática post-carga
+- ✅ **Flujo post-carga:** Agregado estado de éxito con mensaje y botón "Cerrar"
+- ✅ **Interfaz optimizada:** Botones apropiados según el estado del proceso
+- ✅ **Problema de cierre:** Corregido botón "Cerrar" que no cerraba el diálogo
+- ✅ **Mecanismo robusto:** Implementado cierre usando BasicDialogService.closeAll()
+- ✅ **Botón Cancelar:** Mejorado para limpiar archivos seleccionados antes del cierre
+- ✅ **Consistencia:** Ambos botones usan el mismo mecanismo de cierre robusto
+- ✅ **Carga Múltiple:** Corregido diálogo de carga múltiple de documentos
+- ✅ **Cruz duplicada:** Removida cruz interna que causaba confusión visual
+- ✅ **Botón CANCELAR:** Implementada funcionalidad operativa con cierre robusto
+- ✅ **Compilación:** Frontend sin errores, build exitoso
+
+## 🚀 **FASE 1: FUNDAMENTOS - COMPLETADA**
+
+### ✅ **Base de Datos y Auditoría**
+- ✅ **Migración V1_2:** Script SQL para constraints y auditoría implementado
+- ✅ **Tabla document_audit:** Entidad y repositorio para trazabilidad completa
+- ✅ **Constraint único:** Previene documentos duplicados por (user_id, document_type_id)
+- ✅ **Campos de archivado:** isArchived, replacedDocumentId, version agregados
+- ✅ **Repositorio actualizado:** Métodos para documentos activos/archivados
+- ✅ **Modelo de dominio:** Métodos archive(), restore(), isActive() implementados
+- ✅ **Compilación backend:** Sin errores, infraestructura lista para Fase 2
+
+## 🔧 **FASE 2: LÓGICA DE DUPLICIDAD - COMPLETADA**
+
+### ✅ **Servicios de Duplicidad**
+- ✅ **DocumentDuplicateService:** Lógica de reemplazo transaccional implementada
+- ✅ **DocumentAuditService:** Sistema completo de auditoría con metadata JSON
+- ✅ **DocumentServiceImpl:** Integración de verificación de duplicados
+- ✅ **DocumentController:** Endpoint actualizado con parámetro replaceExisting
+
+### ✅ **Testing y Validación**
+- ✅ **Unit Tests:** 17 tests totales cubriendo todos los casos de uso
+- ✅ **DocumentDuplicateServiceTest:** 10 tests para lógica de reemplazo
+- ✅ **DocumentAuditServiceTest:** 7 tests para registro de auditoría
+- ✅ **Casos edge:** Validaciones de seguridad, errores, concurrencia
+- ✅ **Compilación:** Backend sin errores, todas las funcionalidades operativas
+
+### ✅ **API Actualizada**
+- ✅ **Parámetro replaceExisting:** Soporte en /api/documentos/upload
+- ✅ **Detección automática:** Verificación de duplicados por tipo de documento
+- ✅ **Flujo condicional:** Crear nuevo vs. reemplazar existente
+- ✅ **Logging detallado:** Debugging y monitoreo completo
+
+## 🎨 **FASE 3: FRONTEND UNIFICADO - COMPLETADA**
+
+### ✅ **Servicios Unificados**
+- ✅ **UnifiedDocumentService:** Servicio consolidado que unifica funcionalidades dispersas
+- ✅ **Estado reactivo:** BehaviorSubject para documentos y loading state
+- ✅ **Verificación automática:** Detección de duplicidad integrada en upload
+- ✅ **Gestión completa:** Métodos para eliminación, historial y refrescar
+
+### ✅ **Componentes de UX**
+- ✅ **DocumentDuplicateConfirmDialogComponent:** Diálogo de confirmación intuitivo
+- ✅ **Comparación visual:** Información detallada de documento existente vs. nuevo
+- ✅ **DocumentStatusIndicatorComponent:** Indicadores visuales de estado
+- ✅ **Estados completos:** Pendiente, Aprobado, Rechazado, Procesando, Archivado
+- ✅ **Indicadores adicionales:** Versión más reciente, duplicados, archivado
+
+### ✅ **Integración con Componentes Existentes**
+- ✅ **DocumentoUploadDialogComponent:** Actualizado con UnifiedDocumentService
+- ✅ **Verificación automática:** Detección de duplicidad en carga individual
+- ✅ **DocumentoMultipleUploadDialogComponent:** Preparado para integración
+- ✅ **Modelo extendido:** DocumentoUsuario con propiedades de duplicidad
+
+### ✅ **Compilación y Validación**
+- ✅ **Frontend:** Compilación exitosa sin errores críticos
+- ✅ **Tipos TypeScript:** Modelos actualizados y consistentes
+- ✅ **Componentes standalone:** Listos para uso inmediato
+- ✅ **Integración:** Servicios correctamente inyectados
+
+## 🧹 **FASE 4: OPTIMIZACIÓN Y LIMPIEZA - COMPLETADA**
+
+### ✅ **Limpieza y Mantenimiento**
+- ✅ **DocumentCleanupService:** Job asíncrono para limpieza automática de archivos huérfanos
+- ✅ **Programación automática:** Ejecución cada 6 horas con verificación de edad (24h)
+- ✅ **Procesamiento en lotes:** 100 archivos por lote para evitar sobrecarga
+- ✅ **DocumentConsistencyService:** Verificación de consistencia DB ↔ FileSystem
+- ✅ **Verificación programada:** Cada 12 horas con reporte completo de estado
+- ✅ **Detección completa:** Archivos faltantes, huérfanos, rutas inválidas, duplicados
+
+### ✅ **Métricas y Monitoreo**
+- ✅ **DocumentMetricsService:** Sistema completo de métricas en tiempo real
+- ✅ **Contadores atómicos:** Uploads, reemplazos, eliminaciones diarias
+- ✅ **Cache inteligente:** 5-10 minutos para métricas costosas
+- ✅ **Logging automático:** Estadísticas horarias del sistema
+- ✅ **Métricas de rendimiento:** Uso de memoria y performance
+
+### ✅ **Optimizaciones de Rendimiento**
+- ✅ **Caching:** ConcurrentMapCacheManager con expiración automática
+- ✅ **Async Processing:** ThreadPoolTaskExecutor para documentos y limpieza
+- ✅ **Lazy Loading:** Inicialización diferida con timer de 100ms
+- ✅ **Debouncing:** 300ms en refreshDocuments para evitar llamadas excesivas
+- ✅ **ShareReplay:** Cache automático de observables
+
+### ✅ **Consolidación de Servicios**
+- ✅ **DocumentMigrationService:** Servicio de transición para deprecar legacy
+- ✅ **Compatibilidad:** Capa entre UnifiedDocumentService y servicios antiguos
+- ✅ **Migración gradual:** Flag configurable (USE_UNIFIED_SERVICE = true)
+- ✅ **UnifiedDocumentService optimizado:** Cache inteligente con expiración
+- ✅ **Estado reactivo:** BehaviorSubject con distinctUntilChanged
+
+### ✅ **Documentación Técnica Completa**
+- ✅ **SISTEMA_DOCUMENTACION_TECNICA.md:** Documentación exhaustiva
+- ✅ **Arquitectura:** Diagramas hexagonal backend y modularizada frontend
+- ✅ **Flujo de datos:** Secuencia de operaciones y casos de uso
+- ✅ **Modelo de datos:** Tablas, constraints y relaciones actualizadas
+- ✅ **Deployment:** Guías de configuración y mantenimiento
+- ✅ **Testing:** 17 unit tests con casos edge documentados
+
+### ✅ **Validación Final**
+- ✅ **Backend:** Compilación exitosa sin errores
+- ✅ **Frontend:** Build exitoso con warnings menores de bundle size
+- ✅ **Funcionalidades:** Todas las características implementadas y probadas
+- ✅ **Documentación:** Completa y actualizada para producción
+
 ## 🚀 PREPARACIÓN PARA PRODUCCIÓN - DEPLOYMENT DONWEB (Enero 2025)
 
 ### 🎯 OBJETIVO PRINCIPAL

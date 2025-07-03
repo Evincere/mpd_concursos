@@ -3,7 +3,7 @@ package ar.gov.mpd.concursobackend.auth.domain.valueObject.user;
 import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidDniException;
 
 public class UserDni {
-    private String dni;
+    private final String dni;
 
     public UserDni(String dni) {
         this.dni = dni;

@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.shared.domain.model;
 
 import lombok.Value;
+
 import java.util.List;
 
 @Value

@@ -2,11 +2,11 @@ package ar.gov.mpd.concursobackend.inscription.application.port.in;
 
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
-import org.springframework.data.domain.PageRequest;
 import ar.gov.mpd.concursobackend.shared.domain.model.PageResponse;
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
+import java.util.UUID;
 
 public interface FindInscriptionsUseCase {
     PageResponse<InscriptionDetailResponse> findAll(

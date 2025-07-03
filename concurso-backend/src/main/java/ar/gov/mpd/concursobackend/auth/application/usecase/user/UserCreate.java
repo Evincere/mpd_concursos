@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserCreate {
 
-    private IUserRepository userRepository;
+    private final IUserRepository userRepository;
 
     public UserCreate(@Autowired IUserRepository userRepository) {
         this.userRepository = userRepository;

@@ -51,7 +51,7 @@ public class FileStorageService {
             ? originalFilename.substring(originalFilename.lastIndexOf("."))
             : ".pdf";
         
-        String filename = "contest_" + contestId + "_bases_" + UUID.randomUUID().toString() + fileExtension;
+        String filename = "contest_" + contestId + "_bases_" + UUID.randomUUID() + fileExtension;
         Path filePath = uploadPath.resolve(filename);
 
         // Copiar archivo
@@ -89,7 +89,7 @@ public class FileStorageService {
             ? originalFilename.substring(originalFilename.lastIndexOf("."))
             : ".pdf";
         
-        String filename = "contest_" + contestId + "_description_" + UUID.randomUUID().toString() + fileExtension;
+        String filename = "contest_" + contestId + "_description_" + UUID.randomUUID() + fileExtension;
         Path filePath = uploadPath.resolve(filename);
 
         // Copiar archivo

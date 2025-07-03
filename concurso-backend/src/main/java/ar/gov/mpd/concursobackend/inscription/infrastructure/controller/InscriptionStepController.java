@@ -4,9 +4,9 @@ import ar.gov.mpd.concursobackend.inscription.application.dto.UpdateInscriptionS
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStepUseCase;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 

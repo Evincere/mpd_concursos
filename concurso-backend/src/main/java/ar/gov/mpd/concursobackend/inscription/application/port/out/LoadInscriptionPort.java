@@ -1,12 +1,11 @@
 package ar.gov.mpd.concursobackend.inscription.application.port.out;
 
-import java.util.UUID;
-import java.util.Optional;
-
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+
+import java.util.Optional;
+import java.util.UUID;
 
 public interface LoadInscriptionPort {
     Page<Inscription> findAll(PageRequest pageRequest);

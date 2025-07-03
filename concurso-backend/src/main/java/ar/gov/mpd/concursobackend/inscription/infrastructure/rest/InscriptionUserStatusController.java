@@ -1,5 +1,7 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.rest;
 
+import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
@@ -8,13 +10,11 @@ import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscript
 import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionNotificationService;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
-import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
-import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRequest;
-import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
+import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
-import ar.gov.mpd.concursobackend.auth.application.port.IUserService;
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
+import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +62,7 @@ public class InscriptionUserStatusController {
         // Verificar que la inscripción pertenece al usuario actual
         try {
             InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
-            if (!inscription.getUserId().toString().equals(currentUserId)) {
+            if (!inscription.getUserId().equals(currentUserId)) {
                 log.error("El usuario {} intentó actualizar una inscripción que no le pertenece: {}",
                         currentUserId, id);
                 return ResponseEntity.notFound().build();

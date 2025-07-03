@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; // Import DatePipe
 import { FormsModule } from '@angular/forms';
 import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.service';
@@ -912,6 +912,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   todosDocumentosCompletos = false;
 
   private subscription: Subscription | undefined;
+  private deadlineInterval: any; // Para limpiar el setInterval
 
   // NUEVA FUNCIONALIDAD: Plazos perentorios
   hoursUntilDeadline = -1;
@@ -930,8 +931,7 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     private dialog: UnifiedDialogService,
     private notificationService: NotificationService,
     private documentosService: DocumentosService,
-    private loggingService: LoggingService,
-    private cdr: ChangeDetectorRef // Inject ChangeDetectorRef
+    private loggingService: LoggingService
   ) {}
 
   ngOnInit(): void {
@@ -942,21 +942,30 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     // Calculate deadline on init if available
     this.calculateDocumentationDeadline();
 
-    // Subscribe to document updates from the service
-    this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
-      this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Recargando datos.', undefined, 'DocumentosEmbebidos');
-      this.cargarDatos(true); // Force reload all data
-    });
+    // CRITICAL FIX: Eliminar suscripción duplicada que causa ciclo infinito
+    // Esta suscripción se elimina porque causa conflictos con documentacion-tab
+    // Los datos se actualizarán a través del cache del servicio
+    // this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
+    //   this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Recargando datos.', undefined, 'DocumentosEmbebidos');
+    //   this.cargarDatos(true); // Force reload all data
+    // });
 
     // Update deadlines every minute
-    setInterval(() => {
+    this.deadlineInterval = setInterval(() => {
       this.calculateTimeUntilDeadline();
     }, 60000); // Update every minute
   }
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
-    this.loggingService.debug('[DocumentosEmbebidos] Componente destruido. Suscripciones limpiadas.', undefined, 'DocumentosEmbebidos');
+
+    // CRITICAL FIX: Limpiar el setInterval para evitar memory leaks
+    if (this.deadlineInterval) {
+      clearInterval(this.deadlineInterval);
+      this.deadlineInterval = null;
+    }
+
+    this.loggingService.debug('[DocumentosEmbebidos] Componente destruido. Suscripciones y timers limpiados.', undefined, 'DocumentosEmbebidos');
   }
 
   /**
@@ -1000,7 +1009,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.loggingService.debug('[DocumentosEmbebidos] Carga de datos finalizada. Calculando progreso...', undefined, 'DocumentosEmbebidos');
         this.calcularProgreso(); // Calculate progress after both lists are loaded and caches updated
-        this.cdr.detectChanges(); // Ensure UI updates
+        // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+        // Angular manejará automáticamente la detección de cambios
       }),
       catchError(error => {
         console.error('[DocumentosEmbebidos] Error al cargar datos combinados:', error);
@@ -1287,22 +1297,31 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo diálogo para cargar documento: ${tipoDocumentoId}`, undefined, 'DocumentosEmbebidos');
+    // Verificar si es un reemplazo (documento ya subido)
+    const esReemplazo = this.isDocumentoSubido(tipoDocumentoId);
+    const documentoExistente = esReemplazo ? this.getDocumento(tipoDocumentoId) : null;
+
+    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo diálogo para ${esReemplazo ? 'reemplazar' : 'cargar'} documento: ${tipoDocumentoId}`, undefined, 'DocumentosEmbebidos');
 
     this.dialog.open(DocumentoUploadDialogComponent, {
-      title: `Cargar ${tipoDoc.title}`,
+      title: `${esReemplazo ? 'Reemplazar' : 'Cargar'} ${tipoDoc.title}`,
       showFooter: false, // Disable external footer buttons
       showCancelButton: false, // Disable external cancel button
       showConfirmButton: false, // Disable external confirm button
-      data: { tipoDocumentoId: tipoDoc.tipoDocumentoId }
+      data: {
+        tipoDocumentoId: tipoDoc.tipoDocumentoId,
+        tipoDocumentoNombre: tipoDoc.title,
+        modoReemplazo: esReemplazo,
+        documentoExistente: documentoExistente
+      }
     }).afterClosed().subscribe((result: any) => {
       if (result && result.success) {
-        this.notificationService.success(`${tipoDoc.title} cargado exitosamente.`);
+        this.notificationService.success(`${tipoDoc.title} ${esReemplazo ? 'reemplazado' : 'cargado'} exitosamente.`);
         this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
       } else if (result && result.cancelled) {
-        this.loggingService.debug('[DocumentosEmbebidos] Carga de documento cancelada.', undefined, 'DocumentosEmbebidos');
+        this.loggingService.debug(`[DocumentosEmbebidos] ${esReemplazo ? 'Reemplazo' : 'Carga'} de documento cancelada.`, undefined, 'DocumentosEmbebidos');
       } else if (result !== null && result !== undefined) {
-        this.notificationService.error(`Error al cargar ${tipoDoc.title}.`);
+        this.notificationService.error(`Error al ${esReemplazo ? 'reemplazar' : 'cargar'} ${tipoDoc.title}.`);
       }
     });
   }
@@ -1436,7 +1455,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       // Set warning if less than 48 hours (or any threshold)
       this.showDeadlineWarning = this.hoursUntilDeadline <= 48;
     }
-    this.cdr.detectChanges(); // Ensure UI updates
+    // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+    // Angular manejará automáticamente la detección de cambios
 
     this.loggingService.debug(`[DocumentosEmbebidos] Plazo límite: ${this.documentationDeadline.toISOString()}, Horas restantes: ${this.hoursUntilDeadline}, Expirado: ${this.isDeadlineExpired}`, undefined, 'DocumentosEmbebidos');
   }
@@ -1473,7 +1493,8 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       this.hoursUntilDeadline = remainingHours;
       this.showDeadlineWarning = this.hoursUntilDeadline <= 48; // Adjust warning threshold as needed
     }
-    this.cdr.detectChanges(); // Update UI
+    // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+    // Angular manejará automáticamente la detección de cambios
   }
 
   /**

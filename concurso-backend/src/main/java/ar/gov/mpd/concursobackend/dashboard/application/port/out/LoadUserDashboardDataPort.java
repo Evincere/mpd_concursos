@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.dashboard.application.port.out;
 
-import ar.gov.mpd.concursobackend.dashboard.domain.UserDeadline;
 import ar.gov.mpd.concursobackend.dashboard.domain.UserDashboardStats;
+import ar.gov.mpd.concursobackend.dashboard.domain.UserDeadline;
 
 import java.time.LocalDateTime;
 import java.util.List;

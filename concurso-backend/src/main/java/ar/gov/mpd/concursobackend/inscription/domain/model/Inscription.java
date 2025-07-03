@@ -4,12 +4,10 @@ import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
-import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Setter;
+import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
+import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;
+import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

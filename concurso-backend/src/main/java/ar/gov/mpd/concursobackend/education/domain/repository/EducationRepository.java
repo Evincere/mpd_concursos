@@ -1,10 +1,10 @@
 package ar.gov.mpd.concursobackend.education.domain.repository;
 
+import ar.gov.mpd.concursobackend.education.domain.model.Education;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.education.domain.model.Education;
 
 /**
  * Repository interface for education records

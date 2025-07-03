@@ -1,10 +1,10 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.database.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "contest_requirements")

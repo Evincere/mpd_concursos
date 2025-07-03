@@ -1,10 +1,13 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.mapper;
 
-import ar.gov.mpd.concursobackend.examination.application.dto.*;
+import ar.gov.mpd.concursobackend.examination.application.dto.CancellationDetailsDTO;
+import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationDTO;
+import ar.gov.mpd.concursobackend.examination.application.dto.OptionDTO;
+import ar.gov.mpd.concursobackend.examination.application.dto.QuestionDTO;
 import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationStatus;
 import ar.gov.mpd.concursobackend.examination.domain.enums.SecurityViolationType;
-import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.*;
 import ar.gov.mpd.concursobackend.examination.domain.model.*;
+import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.*;
 import org.mapstruct.Named;
 import org.springframework.stereotype.Component;
 

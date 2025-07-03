@@ -7,7 +7,6 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionSessionId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

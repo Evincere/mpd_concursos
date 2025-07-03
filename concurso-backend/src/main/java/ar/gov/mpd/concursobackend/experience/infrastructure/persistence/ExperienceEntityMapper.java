@@ -1,12 +1,11 @@
 package ar.gov.mpd.concursobackend.experience.infrastructure.persistence;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
-
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
 import ar.gov.mpd.concursobackend.experience.domain.model.Experience;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Mapper for converting between Experience domain model and JPA entity

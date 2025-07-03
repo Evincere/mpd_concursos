@@ -225,7 +225,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(state => {
       this.documentationState = state;
-      this.cdr.detectChanges();
+      // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+      // Angular manejará automáticamente la detección de cambios
     });
 
     // Suscribirse a cambios en el checkbox de inscripción provisional
@@ -235,16 +236,17 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.onProvisionalAcceptanceChange(value);
     });
 
-    // CRITICAL FIX: Suscribirse a actualizaciones de documentos para actualizar el estado inmediatamente
-    this.documentosService.documentoActualizado$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.loggingService.debug('[InscripcionProcess] Documento actualizado detectado - actualizando estado', undefined, 'InscripcionProcessPage');
-      // Actualizar el estado de documentación con un pequeño delay para asegurar que el backend se haya actualizado
-      setTimeout(() => {
-        this.actualizarEstadoDocumentos();
-      }, 500);
-    });
+    // CRITICAL FIX: Eliminar suscripción duplicada que causa condiciones de carrera
+    // La actualización de documentos se manejará a través del cache del servicio
+    // y la comunicación entre componentes, no mediante múltiples suscriptores
+    // this.documentosService.documentoActualizado$.pipe(
+    //   takeUntil(this.destroy$)
+    // ).subscribe(() => {
+    //   this.loggingService.debug('[InscripcionProcess] Documento actualizado detectado - actualizando estado', undefined, 'InscripcionProcessPage');
+    //   setTimeout(() => {
+    //     this.actualizarEstadoDocumentos();
+    //   }, 500);
+    // });
   }
 
   /**
@@ -374,8 +376,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       this.actualizarEstadoDocumentos();
     }
 
-    // Forzar detección de cambios para asegurar que el nuevo contenido se renderice
-    this.cdr.detectChanges();
+    // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+    // Angular manejará automáticamente la detección de cambios
 
     this.loggingService.debug('[InscripcionProcess] Detección de cambios forzada, currentStep:', this.currentStep, 'InscripcionProcessPage');
 
@@ -1489,8 +1491,8 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           allDocumentsComplete: this.documentationState?.completenessResult.allDocumentsComplete
         }, 'InscripcionProcessPage');
 
-        // Forzar detección de cambios
-        this.cdr.detectChanges();
+        // CRITICAL FIX: Eliminar cdr.detectChanges() para evitar bucles infinitos
+        // Angular manejará automáticamente la detección de cambios
       }
     }, 200);
   }

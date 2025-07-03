@@ -43,7 +43,7 @@ public class InscriptionInterruptController {
         // Verificar que la inscripción pertenece al usuario actual
         try {
             InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
-            if (!inscription.getUserId().toString().equals(currentUserId)) {
+            if (!inscription.getUserId().equals(currentUserId)) {
                 log.error("El usuario {} intentó marcar como interrumpida una inscripción que no le pertenece: {}",
                         currentUserId, id);
                 return ResponseEntity.notFound().build();

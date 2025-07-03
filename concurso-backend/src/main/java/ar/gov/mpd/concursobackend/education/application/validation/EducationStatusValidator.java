@@ -1,8 +1,8 @@
 package ar.gov.mpd.concursobackend.education.application.validation;
 
+import ar.gov.mpd.concursobackend.education.domain.model.EducationStatus;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import ar.gov.mpd.concursobackend.education.domain.model.EducationStatus;
 
 /**
  * Validador para estados de educación

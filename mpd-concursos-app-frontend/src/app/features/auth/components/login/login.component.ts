@@ -374,6 +374,24 @@ export class LoginComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Toggles password visibility
+   */
+  togglePasswordVisibility(): void {
+    this.hide = !this.hide;
+    this.loggingService.debug('[LoginComponent] Password visibility toggled.', { hide: this.hide }, 'Login');
+  }
+
+  /**
+   * Handles forgot password action (placeholder for future implementation)
+   */
+  onForgotPassword(): void {
+    this.loggingService.info('[LoginComponent] Forgot password clicked.', undefined, 'Login');
+    // TODO: Implement forgot password functionality
+    // For now, just show a placeholder message
+    this.loginError = 'La funcionalidad de recuperación de contraseña estará disponible próximamente.';
+  }
+
+  /**
    * Handles image loading errors for the logo.
    * Attempts to load a fallback image, then a text alternative.
    * @param event The error event from the image.

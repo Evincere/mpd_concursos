@@ -1,14 +1,13 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.persistence.repository;
 
-import java.util.UUID;
-import java.util.Optional;
-import java.util.List;
-
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
+import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.ExaminationSessionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.ExaminationSessionEntity;
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface ExaminationSessionJpaRepository extends JpaRepository<ExaminationSessionEntity, UUID> {

@@ -1,24 +1,19 @@
 package ar.gov.mpd.concursobackend.contest.application;
 
-import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
-import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
+import ar.gov.mpd.concursobackend.contest.application.validator.ContestValidator;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
-import ar.gov.mpd.concursobackend.contest.domain.service.ContestStateMachine;
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
-import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStatsResponse;
+import ar.gov.mpd.concursobackend.contest.domain.service.ContestStateMachine;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStateResponse;
-import ar.gov.mpd.concursobackend.contest.application.validator.ContestValidator;
-
-import java.util.List;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Map;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestStatsResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
 
 @Service
 public class ContestService {

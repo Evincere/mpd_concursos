@@ -1,0 +1,123 @@
+<div class="autocomplete-container" [class.disabled]="config.disabled">
+  <!-- Input principal -->
+  <div class="input-wrapper" [class.focused]="isOpen" [class.has-error]="showError">
+    <input
+      #inputElement
+      type="text"
+      class="autocomplete-input"
+      [value]="query"
+      [placeholder]="config.placeholder"
+      [disabled]="config.disabled"
+      [required]="config.required"
+      [attr.aria-expanded]="isOpen"
+      [attr.aria-haspopup]="true"
+      [attr.aria-autocomplete]="'list'"
+      [attr.aria-describedby]="fieldName + '-help'"
+      [attr.aria-label]="fieldName"
+      autocomplete="off"
+      role="combobox"
+      (input)="onInput($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      (keydown)="onKeyDown($event)"
+    />
+
+    <!-- Botón de limpiar -->
+    <button
+      type="button"
+      class="clear-button"
+      *ngIf="!isEmpty && !config.disabled"
+      (click)="clear()"
+      [attr.aria-label]="'Limpiar ' + fieldName"
+      tabindex="-1"
+    >
+      <span class="clear-icon">×</span>
+    </button>
+
+    <!-- Indicador de carga -->
+    <div class="loading-indicator" *ngIf="isLoading">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Icono de dropdown -->
+    <button
+      type="button"
+      class="dropdown-button"
+      *ngIf="!isLoading && !isEmpty"
+      (click)="onFocus()"
+      [attr.aria-label]="'Abrir opciones de ' + fieldName"
+      tabindex="-1"
+    >
+      <span class="dropdown-icon" [class.rotated]="isOpen">▼</span>
+    </button>
+  </div>
+
+  <!-- Dropdown con resultados -->
+  <div
+    #dropdownElement
+    class="dropdown"
+    *ngIf="isOpen"
+    role="listbox"
+    [attr.aria-label]="'Opciones de ' + fieldName"
+  >
+    <!-- Lista de elementos -->
+    <div
+      *ngFor="let item of items; let i = index; trackBy: trackByFunction"
+      class="dropdown-item"
+      [class.highlighted]="i === highlightedIndex"
+      [attr.aria-selected]="i === highlightedIndex"
+      role="option"
+      (click)="selectItem(item)"
+      (mouseenter)="highlightedIndex = i"
+    >
+      <span class="item-text" [innerHTML]="highlightMatch(displayFunction(item), query)"></span>
+
+      <!-- Información adicional del elemento (si existe) -->
+      <span class="item-info" *ngIf="item['code']">
+        {{ item['code'] }}
+      </span>
+
+      <span class="item-info" *ngIf="item['postalCode']">
+        CP: {{ item['postalCode'] }}
+      </span>
+    </div>
+
+    <!-- Mensaje cuando no hay resultados -->
+    <div class="no-results" *ngIf="!isLoading && !hasItems && query.length >= config.minQueryLength!">
+      <span class="no-results-icon">🔍</span>
+      <span class="no-results-text">
+        No se encontraron resultados para "{{ query }}"
+      </span>
+    </div>
+
+    <!-- Mensaje de búsqueda mínima -->
+    <div class="min-query-message" *ngIf="!isLoading && query.length > 0 && query.length < config.minQueryLength!">
+      <span class="min-query-icon">✏️</span>
+      <span class="min-query-text">
+        Escriba al menos {{ config.minQueryLength }} caracteres para buscar
+      </span>
+    </div>
+
+    <!-- Mensaje de ayuda inicial -->
+    <div class="help-message" *ngIf="!isLoading && query.length === 0 && config.showAllOnFocus">
+      <span class="help-icon">💡</span>
+      <span class="help-text">
+        Escriba para buscar o vea todas las opciones disponibles
+      </span>
+    </div>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div class="error-message" *ngIf="showError && errorMessage" [attr.id]="fieldName + '-error'">
+    <span class="error-icon">⚠️</span>
+    <span class="error-text">{{ errorMessage }}</span>
+  </div>
+
+  <!-- Texto de ayuda -->
+  <div class="help-text" [attr.id]="fieldName + '-help'" *ngIf="!showError">
+    <span class="help-icon">💡</span>
+    <span>Escriba para buscar {{ fieldName }}</span>
+  </div>
+</div>
+
+

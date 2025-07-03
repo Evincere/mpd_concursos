@@ -1,9 +1,9 @@
 package ar.gov.mpd.concursobackend.contest.domain.port;
 
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
+
 import java.util.List;
 import java.util.Optional;
-
-import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 
 public interface ContestRepository {
     List<Contest> findAll();

@@ -1,15 +1,14 @@
 package ar.gov.mpd.concursobackend.shared.application.service;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
-
 import ar.gov.mpd.concursobackend.shared.domain.exception.ResourceNotFoundException;
 import ar.gov.mpd.concursobackend.shared.domain.exception.UnauthorizedException;
 import ar.gov.mpd.concursobackend.shared.domain.model.SoftDeletableEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Base service for handling CV entity deletions with consistent behavior

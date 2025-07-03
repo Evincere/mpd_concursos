@@ -1,16 +1,15 @@
 package ar.gov.mpd.concursobackend.experience.infrastructure.persistence;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JPA Repository for accessing Work Experience entities

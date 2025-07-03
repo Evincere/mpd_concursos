@@ -2,6 +2,8 @@ package ar.gov.mpd.concursobackend.shared.infrastructure.controller;
 
 import ar.gov.mpd.concursobackend.shared.infrastructure.service.CvDocumentService;
 import ar.gov.mpd.concursobackend.shared.infrastructure.service.CvDocumentService.CvDocumentStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -10,10 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;

@@ -1,11 +1,12 @@
 package ar.gov.mpd.concursobackend.inscription.domain.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import java.util.Set;
+
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Getter
 @Builder

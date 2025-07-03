@@ -1,22 +1,20 @@
 package ar.gov.mpd.concursobackend.education.application.dto;
 
-import java.time.LocalDate;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import ar.gov.mpd.concursobackend.education.application.validation.ValidEducationType;
 import ar.gov.mpd.concursobackend.education.application.validation.ValidEducationStatus;
-import ar.gov.mpd.concursobackend.education.application.validation.ValidScientificActivityType;
+import ar.gov.mpd.concursobackend.education.application.validation.ValidEducationType;
 import ar.gov.mpd.concursobackend.education.application.validation.ValidScientificActivityRole;
+import ar.gov.mpd.concursobackend.education.application.validation.ValidScientificActivityType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 /**
  * DTO for education record requests

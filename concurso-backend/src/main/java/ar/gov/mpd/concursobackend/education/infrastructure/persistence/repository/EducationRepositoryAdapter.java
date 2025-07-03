@@ -1,24 +1,19 @@
 package ar.gov.mpd.concursobackend.education.infrastructure.persistence.repository;
 
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
+import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
+import ar.gov.mpd.concursobackend.education.domain.model.*;
+import ar.gov.mpd.concursobackend.education.domain.repository.EducationRepository;
+import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationRecordEntity;
+import ar.gov.mpd.concursobackend.shared.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
-
-import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.UserEntity;
-import ar.gov.mpd.concursobackend.auth.infrastructure.database.repository.spring.IUserSpringRepository;
-import ar.gov.mpd.concursobackend.education.domain.model.Education;
-import ar.gov.mpd.concursobackend.education.domain.model.EducationStatus;
-import ar.gov.mpd.concursobackend.education.domain.model.EducationType;
-import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityRole;
-import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityType;
-import ar.gov.mpd.concursobackend.education.domain.repository.EducationRepository;
-import ar.gov.mpd.concursobackend.education.infrastructure.persistence.entity.EducationRecordEntity;
-import ar.gov.mpd.concursobackend.shared.exception.ResourceNotFoundException;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Adapter for EducationRepository that uses JPA

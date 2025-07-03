@@ -1,26 +1,26 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.controller;
 
-import org.springframework.http.ResponseEntity;
+import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileResponse;
+import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileUpdateRequest;
+import ar.gov.mpd.concursobackend.auth.application.mapper.UserProfileMapper;
+import ar.gov.mpd.concursobackend.auth.application.service.ProfileImageService;
+import ar.gov.mpd.concursobackend.auth.application.service.UserService;
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
+import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
+import ar.gov.mpd.concursobackend.experience.application.service.ExperienceService;
+import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileResponse;
-import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileUpdateRequest;
-import ar.gov.mpd.concursobackend.auth.application.mapper.UserProfileMapper;
-import ar.gov.mpd.concursobackend.auth.application.service.UserService;
-import ar.gov.mpd.concursobackend.auth.application.service.ProfileImageService;
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
-import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
-import ar.gov.mpd.concursobackend.experience.application.service.ExperienceService;
-import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 

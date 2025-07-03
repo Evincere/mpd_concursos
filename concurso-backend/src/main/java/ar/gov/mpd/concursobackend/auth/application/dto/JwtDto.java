@@ -1,10 +1,9 @@
 package ar.gov.mpd.concursobackend.auth.application.dto;
 
-import java.util.Collection;
-
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 
-import lombok.Data;
+import java.util.Collection;
 
 @Data
 public class JwtDto {

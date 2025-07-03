@@ -1,7 +1,6 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.exception;
 
-import javax.security.auth.login.AccountLockedException;
-
+import ar.gov.mpd.concursobackend.auth.domain.exception.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,19 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import ar.gov.mpd.concursobackend.auth.domain.exception.EmailAlreadyExistsException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCredentialsException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidEmailException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidPasswordException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.UserAlreadyExistsException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.NombreObligatorioException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.ApellidoObligatorioException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.DniInvalidoException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCuitException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.UserDniAlreadyExistsException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.BlockedAccountException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.InactiveAccountException;
-import ar.gov.mpd.concursobackend.auth.domain.exception.ExpiredAccountException;
+import javax.security.auth.login.AccountLockedException;
 
 @RestControllerAdvice
 @SuppressWarnings("unused")

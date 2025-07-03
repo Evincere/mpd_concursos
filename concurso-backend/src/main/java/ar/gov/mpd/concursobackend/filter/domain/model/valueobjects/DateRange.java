@@ -2,6 +2,7 @@ package ar.gov.mpd.concursobackend.filter.domain.model.valueobjects;
 
 import ar.gov.mpd.concursobackend.filter.domain.model.exceptions.InvalidDateRangeException;
 import lombok.Value;
+
 import java.time.LocalDate;
 
 @Value

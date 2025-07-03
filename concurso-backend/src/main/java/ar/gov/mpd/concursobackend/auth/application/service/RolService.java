@@ -1,10 +1,5 @@
 package ar.gov.mpd.concursobackend.auth.application.service;
 
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import ar.gov.mpd.concursobackend.auth.application.port.IRolService;
 import ar.gov.mpd.concursobackend.auth.application.usecase.role.RoleCreate;
 import ar.gov.mpd.concursobackend.auth.application.usecase.role.RoleExists;
@@ -16,6 +11,10 @@ import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRoleManager;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 @Transactional

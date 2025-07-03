@@ -1,14 +1,14 @@
 package ar.gov.mpd.concursobackend.examination.domain.model;
 
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationStatus;
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationType;
+import lombok.Builder;
+import lombok.Value;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
-import lombok.Builder;
-import lombok.Value;
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationStatus;
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationType;
 
 @Value
 @Builder(toBuilder = true)

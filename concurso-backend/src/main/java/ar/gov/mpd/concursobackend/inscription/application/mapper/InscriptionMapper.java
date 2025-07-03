@@ -1,10 +1,10 @@
 package ar.gov.mpd.concursobackend.inscription.application.mapper;
 
+import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionDetailResponse;
 import ar.gov.mpd.concursobackend.inscription.application.dto.InscriptionResponse;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.util.InscriptionStateConverter;
-import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import org.springframework.stereotype.Component;
 
 @Component

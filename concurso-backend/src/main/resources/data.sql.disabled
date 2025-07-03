@@ -1,0 +1,13 @@
+-- ARCHIVO data.sql TEMPORALMENTE DESHABILITADO
+-- Para resolver conflictos de inicialización con la base de datos existente
+-- 
+-- Este archivo contiene datos de prueba que pueden causar conflictos
+-- cuando la base de datos ya tiene datos existentes.
+--
+-- Para habilitar nuevamente:
+-- 1. Renombrar este archivo a data.sql
+-- 2. Verificar que no hay conflictos con datos existentes
+-- 3. Configurar spring.sql.init.mode=always en application-dev.properties
+
+-- CONTENIDO ORIGINAL COMENTADO PARA REFERENCIA:
+-- Ver el archivo original para los datos de prueba de concursos y tipos de documento

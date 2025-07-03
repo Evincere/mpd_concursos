@@ -1,11 +1,8 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentValidationResult;
+import ar.gov.mpd.concursobackend.document.application.dto.ValidationError;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -17,9 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXException;
 
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentValidationResult;
-import ar.gov.mpd.concursobackend.document.application.dto.ValidationError;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Servicio para validar documentos
@@ -30,7 +29,7 @@ public class DocumentValidationService {
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     // Solo PDF para documentación oficial
-    private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList(
+    private static final List<String> ALLOWED_MIME_TYPES = List.of(
             "application/pdf");
 
     /**

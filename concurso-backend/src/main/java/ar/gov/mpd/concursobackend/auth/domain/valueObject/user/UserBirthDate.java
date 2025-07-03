@@ -1,7 +1,8 @@
 package ar.gov.mpd.concursobackend.auth.domain.valueObject.user;
 
-import java.time.LocalDate;
 import lombok.Value;
+
+import java.time.LocalDate;
 
 @Value
 public class UserBirthDate {

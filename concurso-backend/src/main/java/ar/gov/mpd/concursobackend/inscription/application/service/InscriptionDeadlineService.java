@@ -7,7 +7,6 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-// import org.springframework.scheduling.annotation.Scheduled; // TEMPORAL: Deshabilitado durante migración
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -53,13 +53,16 @@ export class UnifiedNotificationService {
       this.dismiss(notificationRef);
     });
 
-    // Añadir al DOM
-    const hostElement = notificationRef.location.nativeElement;
-    document.body.appendChild(hostElement);
-    this.appRef.attachView(notificationRef.hostView);
+    // CRITICAL FIX: Diferir operaciones DOM para evitar congelamiento durante detección de cambios
+    setTimeout(() => {
+      // Añadir al DOM
+      const hostElement = notificationRef.location.nativeElement;
+      document.body.appendChild(hostElement);
+      this.appRef.attachView(notificationRef.hostView);
 
-    // Aplicar posicionamiento apilado
-    this.applyStackPositioning(notificationRef, config.position ?? 'top-end');
+      // Aplicar posicionamiento apilado
+      this.applyStackPositioning(notificationRef, config.position ?? 'top-end');
+    }, 0);
 
     // Guardar la referencia
     this.activeNotifications.push(notificationRef);

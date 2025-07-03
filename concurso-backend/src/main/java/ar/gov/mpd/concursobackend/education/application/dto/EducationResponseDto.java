@@ -1,14 +1,13 @@
 package ar.gov.mpd.concursobackend.education.application.dto;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * DTO for education record responses

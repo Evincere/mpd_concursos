@@ -1,9 +1,9 @@
 package ar.gov.mpd.concursobackend.document.domain.model;
 
-import java.util.UUID;
-
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
 import lombok.Data;
+
+import java.util.UUID;
 
 @Data
 public class DocumentType {

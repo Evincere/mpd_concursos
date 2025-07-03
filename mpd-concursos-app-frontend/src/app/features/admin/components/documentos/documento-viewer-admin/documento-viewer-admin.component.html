@@ -83,13 +83,13 @@
     <div class="info-item">
       <span class="info-label">Estado:</span>
       <span class="info-value" [ngClass]="{
-        'estado-pendiente': documento.estado === 'pendiente',
-        'estado-aprobado': documento.estado === 'aprobado',
-        'estado-rechazado': documento.estado === 'rechazado'
+        'estado-pendiente': documento.estado === 'PENDING',
+        'estado-aprobado': documento.estado === 'APPROVED',
+        'estado-rechazado': documento.estado === 'REJECTED'
       }">{{documento.estado | titlecase}}</span>
     </div>
     
-    <div *ngIf="documento.estado === 'rechazado'" class="info-item">
+    <div *ngIf="documento.estado === 'REJECTED'" class="info-item">
       <span class="info-label">Motivo de rechazo:</span>
       <span class="info-value">{{documento.motivoRechazo}}</span>
     </div>

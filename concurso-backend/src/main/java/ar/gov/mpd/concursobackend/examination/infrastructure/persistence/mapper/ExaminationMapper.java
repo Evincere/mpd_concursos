@@ -1,17 +1,11 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.persistence.mapper;
 
-import java.util.List;
-import java.util.UUID;
-
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.ReportingPolicy;
-
 import ar.gov.mpd.concursobackend.examination.domain.model.*;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.*;
+import org.mapstruct.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ExaminationMapper {

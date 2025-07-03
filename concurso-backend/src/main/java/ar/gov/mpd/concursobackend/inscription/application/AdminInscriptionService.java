@@ -1,21 +1,25 @@
 package ar.gov.mpd.concursobackend.inscription.application;
 
-import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
 import ar.gov.mpd.concursobackend.auth.domain.port.IUserRepository;
+import ar.gov.mpd.concursobackend.contest.domain.port.ContestRepository;
+import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionNoteRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
 import ar.gov.mpd.concursobackend.inscription.domain.service.InscriptionStateMachine;
-import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
+import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionReportRequestDTO;
 import ar.gov.mpd.concursobackend.notification.application.NotificationService;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import ar.gov.mpd.concursobackend.shared.domain.exception.ResourceNotFoundException;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.beanutils.PropertyUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,18 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionReportRequestDTO;
-import org.springframework.data.domain.Sort;
-import jakarta.persistence.criteria.Predicate;
-import org.apache.commons.beanutils.PropertyUtils;
 
 @Service
 @RequiredArgsConstructor

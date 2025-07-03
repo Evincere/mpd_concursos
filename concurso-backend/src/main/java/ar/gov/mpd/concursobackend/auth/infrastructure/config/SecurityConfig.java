@@ -1,5 +1,8 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.config;
 
+import ar.gov.mpd.concursobackend.auth.application.service.UserDetailsServiceImpl;
+import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtEntryPoint;
+import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,11 +19,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtTokenFilter;
-import ar.gov.mpd.concursobackend.auth.domain.jwt.JwtEntryPoint;
-import ar.gov.mpd.concursobackend.auth.application.service.UserDetailsServiceImpl;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -80,8 +81,8 @@ public class SecurityConfig {
             "https://vps-4778464-x.dattaweb.com"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setExposedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

@@ -1,27 +1,10 @@
 package ar.gov.mpd.concursobackend.auth.domain.model;
 
-import java.util.Set;
-import java.util.List;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.UUID;
-import java.time.LocalDateTime;
-
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserBirthDate;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCountry;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCreatedAt;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserId;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserLegalAddress;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserMunicipality;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserPassword;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserProvince;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserResidentialAddress;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.ProfileImageUrl;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.*;
 import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Data
 public class User {

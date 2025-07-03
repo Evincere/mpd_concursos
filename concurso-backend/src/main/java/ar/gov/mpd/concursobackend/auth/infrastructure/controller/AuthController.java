@@ -1,15 +1,5 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import ar.gov.mpd.concursobackend.auth.application.dto.JwtDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserLogin;
@@ -19,8 +9,12 @@ import ar.gov.mpd.concursobackend.auth.domain.exception.ExpiredAccountException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.InactiveAccountException;
 import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCredentialsException;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")

@@ -9,8 +9,9 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.entity.InscriptionEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import java.util.UUID;
+
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Mapper(componentModel = "spring", imports = {
         InscriptionId.class,

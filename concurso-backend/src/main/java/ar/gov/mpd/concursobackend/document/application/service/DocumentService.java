@@ -1,13 +1,13 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
+import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentDto;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentResponse;
-import ar.gov.mpd.concursobackend.document.application.dto.DocumentUploadRequest;
 
 /**
  * Service interface for managing documents
@@ -24,7 +24,7 @@ public interface DocumentService {
 
     /**
      * Upload a document
-     * 
+     *
      * @param request     Upload request
      * @param inputStream Document input stream
      * @param userId      User's UUID
@@ -32,6 +32,18 @@ public interface DocumentService {
      * @throws IOException If an I/O error occurs
      */
     DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream inputStream, UUID userId) throws IOException;
+
+    /**
+     * Upload a document with duplicate checking and replacement option
+     *
+     * @param request        Upload request
+     * @param inputStream    Document input stream
+     * @param userId         User's UUID
+     * @param replaceExisting Whether to replace existing document of same type
+     * @return Document response
+     * @throws IOException If an I/O error occurs
+     */
+    DocumentResponse uploadDocumentWithDuplicateCheck(DocumentUploadRequest request, InputStream inputStream, UUID userId, boolean replaceExisting) throws IOException;
 
     /**
      * Get a document's metadata

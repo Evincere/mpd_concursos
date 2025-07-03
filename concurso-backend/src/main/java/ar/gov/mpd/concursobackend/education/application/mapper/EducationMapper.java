@@ -1,18 +1,13 @@
 package ar.gov.mpd.concursobackend.education.application.mapper;
 
+import ar.gov.mpd.concursobackend.education.application.dto.EducationRequestDto;
+import ar.gov.mpd.concursobackend.education.application.dto.EducationResponseDto;
+import ar.gov.mpd.concursobackend.education.domain.model.*;
+import org.springframework.stereotype.Component;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
-
-import ar.gov.mpd.concursobackend.education.application.dto.EducationRequestDto;
-import ar.gov.mpd.concursobackend.education.application.dto.EducationResponseDto;
-import ar.gov.mpd.concursobackend.education.domain.model.Education;
-import ar.gov.mpd.concursobackend.education.domain.model.EducationStatus;
-import ar.gov.mpd.concursobackend.education.domain.model.EducationType;
-import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityRole;
-import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityType;
 
 /**
  * Mapper for converting between Education domain entities and DTOs

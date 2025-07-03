@@ -1,10 +1,11 @@
 package ar.gov.mpd.concursobackend.auth.domain.valueObject.user;
 
-import java.time.LocalDateTime;
 import ar.gov.mpd.concursobackend.auth.domain.exception.ValidationException;
 
+import java.time.LocalDateTime;
+
 public class UserCreatedAt {
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
 
     public UserCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;

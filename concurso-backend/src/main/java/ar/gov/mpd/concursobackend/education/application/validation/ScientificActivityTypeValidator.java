@@ -1,8 +1,8 @@
 package ar.gov.mpd.concursobackend.education.application.validation;
 
+import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityType;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import ar.gov.mpd.concursobackend.education.domain.model.ScientificActivityType;
 
 /**
  * Validador para tipos de actividad científica

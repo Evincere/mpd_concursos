@@ -1,16 +1,37 @@
 import { Injectable } from '@angular/core';
-import { 
-  HttpInterceptor, 
-  HttpRequest, 
-  HttpHandler, 
-  HttpEvent, 
-  HttpResponse, 
-  HttpErrorResponse 
+import {
+  HttpInterceptor,
+  HttpRequest,
+  HttpHandler,
+  HttpEvent,
+  HttpResponse,
+  HttpErrorResponse
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { UserActivityService } from '@core/services/audit/user-activity.service';
-import { UserAction } from '@shared/interfaces/audit/user-activity.interface';
+import { UserAction, ActivityCategory, ActivitySeverity } from '@shared/interfaces/audit/user-activity.interface';
+
+/**
+ * Interfaz para los datos personalizados del tracking
+ */
+interface TrackingCustomData {
+  method: string;
+  url: string;
+  statusCode: number;
+  duration: number;
+  requestSize: number;
+  responseSize?: number;
+  userAgent: string | null;
+  contentType?: string | null;
+  requestBody?: unknown;
+  responseBody?: unknown;
+  errorDetails?: {
+    message: string;
+    error: unknown;
+    statusText: string;
+  };
+}
 
 /**
  * Interceptor para tracking automático de actividades HTTP
@@ -38,7 +59,7 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
 
   constructor(private activityService: UserActivityService) {}
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     // Verificar si la URL debe ser excluida
     if (this.shouldExcludeUrl(req.url)) {
       return next.handle(req);
@@ -76,7 +97,7 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   /**
    * Obtiene la acción basada en el método HTTP y la URL
    */
-  private getActionFromRequest(req: HttpRequest<any>): UserAction {
+  private getActionFromRequest(req: HttpRequest<unknown>): UserAction {
     const method = req.method.toUpperCase();
     const url = req.url.toLowerCase();
 
@@ -111,13 +132,13 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
     try {
       const urlObj = new URL(url);
       const pathSegments = urlObj.pathname.split('/').filter(segment => segment.length > 0);
-      
+
       // Buscar segmentos que representen recursos
-      const resourceSegments = pathSegments.filter(segment => 
+      const resourceSegments = pathSegments.filter(segment =>
         !segment.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) && // No UUIDs
         !segment.match(/^\d+$/) && // No números puros
-        segment !== 'api' && 
-        segment !== 'v1' && 
+        segment !== 'api' &&
+        segment !== 'v1' &&
         segment !== 'v2'
       );
 
@@ -134,14 +155,12 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
     try {
       const urlObj = new URL(url);
       const pathSegments = urlObj.pathname.split('/').filter(segment => segment.length > 0);
-      
+
       // Buscar UUIDs o IDs numéricos
-      const idSegment = pathSegments.find(segment => 
+      return pathSegments.find(segment =>
         segment.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i) || // UUID
         segment.match(/^\d+$/) // Número
       );
-
-      return idSegment;
     } catch {
       return undefined;
     }
@@ -151,36 +170,38 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
    * Registra una petición exitosa
    */
   private trackSuccessfulRequest(
-    req: HttpRequest<any>,
-    response: HttpResponse<any>,
+    req: HttpRequest<unknown>,
+    response: HttpResponse<unknown>,
     action: UserAction,
     resource: string,
     resourceId: string | undefined,
     duration: number
   ): void {
+    const customData: TrackingCustomData = {
+      method: req.method,
+      url: req.url,
+      statusCode: response.status,
+      duration,
+      requestSize: this.getRequestSize(req),
+      responseSize: this.getResponseSize(response),
+      userAgent: req.headers.get('User-Agent'),
+      contentType: response.headers.get('Content-Type')
+    };
+
     const details = {
       description: `${req.method} ${resource} completed successfully`,
       category: this.getCategoryFromAction(action),
       severity: this.getSeverityFromAction(action),
-      customData: {
-        method: req.method,
-        url: req.url,
-        statusCode: response.status,
-        duration,
-        requestSize: this.getRequestSize(req),
-        responseSize: this.getResponseSize(response),
-        userAgent: req.headers.get('User-Agent'),
-        contentType: response.headers.get('Content-Type')
-      }
+      customData
     };
 
     // Agregar datos específicos según el tipo de operación
     if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-      details.customData.requestBody = this.sanitizeRequestBody(req.body);
+      customData.requestBody = this.sanitizeRequestBody(req.body);
     }
 
     if (response.body && this.shouldIncludeResponseBody(action)) {
-      details.customData.responseBody = this.sanitizeResponseBody(response.body);
+      customData.responseBody = this.sanitizeResponseBody(response.body);
     }
 
     this.activityService.trackActivity(
@@ -196,30 +217,32 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
    * Registra una petición fallida
    */
   private trackFailedRequest(
-    req: HttpRequest<any>,
+    req: HttpRequest<unknown>,
     error: HttpErrorResponse,
     action: UserAction,
     resource: string,
     resourceId: string | undefined,
     duration: number
   ): void {
+    const customData: TrackingCustomData = {
+      method: req.method,
+      url: req.url,
+      statusCode: error.status,
+      duration,
+      requestSize: this.getRequestSize(req),
+      userAgent: req.headers.get('User-Agent'),
+      errorDetails: {
+        message: error.message,
+        error: error.error,
+        statusText: error.statusText
+      }
+    };
+
     const details = {
       description: `${req.method} ${resource} failed with error ${error.status}`,
       category: this.getCategoryFromAction(action),
       severity: 'HIGH' as const,
-      customData: {
-        method: req.method,
-        url: req.url,
-        statusCode: error.status,
-        duration,
-        requestSize: this.getRequestSize(req),
-        userAgent: req.headers.get('User-Agent'),
-        errorDetails: {
-          message: error.message,
-          error: error.error,
-          statusText: error.statusText
-        }
-      }
+      customData
     };
 
     this.activityService.trackActivity(
@@ -235,11 +258,11 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   /**
    * Obtiene la categoría basada en la acción
    */
-  private getCategoryFromAction(action: UserAction): any {
-    const categoryMap: Record<string, string> = {
+  private getCategoryFromAction(action: UserAction): ActivityCategory {
+    const categoryMap: Record<string, ActivityCategory> = {
       'LOGIN': 'AUTHENTICATION',
       'LOGOUT': 'AUTHENTICATION',
-      'READ': 'DATA_MODIFICATION',
+      'READ': 'USER_INTERACTION',
       'CREATE': 'DATA_MODIFICATION',
       'UPDATE': 'DATA_MODIFICATION',
       'DELETE': 'DATA_MODIFICATION',
@@ -250,7 +273,15 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
       'USER_UPDATE': 'ADMINISTRATION',
       'USER_DELETE': 'ADMINISTRATION',
       'ROLE_ASSIGN': 'ADMINISTRATION',
-      'ROLE_REMOVE': 'ADMINISTRATION'
+      'ROLE_REMOVE': 'ADMINISTRATION',
+      'CONCURSO_VIEW': 'USER_INTERACTION',
+      'CONCURSO_CREATE': 'DATA_MODIFICATION',
+      'CONCURSO_UPDATE': 'DATA_MODIFICATION',
+      'CONCURSO_DELETE': 'DATA_MODIFICATION',
+      'INSCRIPTION_SUBMIT': 'DATA_MODIFICATION',
+      'INSCRIPTION_UPDATE': 'DATA_MODIFICATION',
+      'DOCUMENT_UPLOAD': 'DATA_MODIFICATION',
+      'DOCUMENT_DELETE': 'DATA_MODIFICATION'
     };
 
     return categoryMap[action] || 'USER_INTERACTION';
@@ -259,8 +290,8 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   /**
    * Obtiene la severidad basada en la acción
    */
-  private getSeverityFromAction(action: UserAction): any {
-    const severityMap: Record<string, string> = {
+  private getSeverityFromAction(action: UserAction): ActivitySeverity {
+    const severityMap: Record<string, ActivitySeverity> = {
       'DELETE': 'HIGH',
       'USER_DELETE': 'HIGH',
       'CONCURSO_DELETE': 'HIGH',
@@ -269,7 +300,13 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
       'CREATE': 'MEDIUM',
       'UPDATE': 'MEDIUM',
       'ROLE_ASSIGN': 'MEDIUM',
-      'ROLE_REMOVE': 'MEDIUM'
+      'ROLE_REMOVE': 'MEDIUM',
+      'CONCURSO_CREATE': 'MEDIUM',
+      'CONCURSO_UPDATE': 'MEDIUM',
+      'INSCRIPTION_SUBMIT': 'MEDIUM',
+      'INSCRIPTION_UPDATE': 'LOW',
+      'DOCUMENT_UPLOAD': 'LOW',
+      'DOCUMENT_DELETE': 'MEDIUM'
     };
 
     return severityMap[action] || 'LOW';
@@ -278,9 +315,9 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   /**
    * Calcula el tamaño de la petición
    */
-  private getRequestSize(req: HttpRequest<any>): number {
+  private getRequestSize(req: HttpRequest<unknown>): number {
     if (!req.body) return 0;
-    
+
     try {
       return JSON.stringify(req.body).length;
     } catch {
@@ -291,7 +328,7 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   /**
    * Calcula el tamaño de la respuesta
    */
-  private getResponseSize(response: HttpResponse<any>): number {
+  private getResponseSize(response: HttpResponse<unknown>): number {
     if (!response.body) return 0;
 
     try {
@@ -308,17 +345,14 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   }
 
   /**
-   * Sanitiza el cuerpo de la petición para logging
+   * Sanitiza un objeto removiendo campos sensibles
    */
-  private sanitizeRequestBody(body: any): any {
-    if (!body) return null;
-
-    const sanitized = { ...body };
-    
-    // Remover campos sensibles
+  private sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
+    const sanitized = { ...obj };
     const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
+
     sensitiveFields.forEach(field => {
-      if (sanitized[field]) {
+      if (field in sanitized) {
         sanitized[field] = '[REDACTED]';
       }
     });
@@ -327,9 +361,23 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
   }
 
   /**
+   * Sanitiza el cuerpo de la petición para logging
+   */
+  private sanitizeRequestBody(body: unknown): unknown {
+    if (!body) return null;
+
+    // Verificar si es un objeto antes de intentar clonarlo
+    if (typeof body !== 'object') {
+      return body;
+    }
+
+    return this.sanitizeObject(body as Record<string, unknown>);
+  }
+
+  /**
    * Sanitiza el cuerpo de la respuesta para logging
    */
-  private sanitizeResponseBody(body: any): any {
+  private sanitizeResponseBody(body: unknown): unknown {
     if (!body) return null;
 
     // Manejar Blobs de manera especial
@@ -348,17 +396,12 @@ export class ActivityTrackingInterceptor implements HttpInterceptor {
         return '[RESPONSE_TOO_LARGE]';
       }
 
-      const sanitized = { ...body };
+      // Verificar si es un objeto antes de intentar clonarlo
+      if (typeof body !== 'object') {
+        return body;
+      }
 
-      // Remover campos sensibles
-      const sensitiveFields = ['password', 'token', 'secret', 'key', 'authorization'];
-      sensitiveFields.forEach(field => {
-        if (sanitized[field]) {
-          sanitized[field] = '[REDACTED]';
-        }
-      });
-
-      return sanitized;
+      return this.sanitizeObject(body as Record<string, unknown>);
     } catch {
       return '[RESPONSE_NOT_SERIALIZABLE]';
     }
