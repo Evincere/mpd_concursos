@@ -1,17 +1,16 @@
 package ar.gov.mpd.concursobackend.shared.infrastructure.exception;
 
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.DuplicateInscriptionException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionNotFoundException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionStatusException;
+import ar.gov.mpd.concursobackend.shared.infrastructure.dto.ApiError;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionNotFoundException;
-import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.DuplicateInscriptionException;
-import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionException;
-import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionStatusException;
-import ar.gov.mpd.concursobackend.shared.infrastructure.dto.ApiError;
-import lombok.extern.slf4j.Slf4j;
 
 @ControllerAdvice
 @Slf4j

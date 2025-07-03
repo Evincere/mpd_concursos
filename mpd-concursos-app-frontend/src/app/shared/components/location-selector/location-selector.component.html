@@ -1,0 +1,167 @@
+<div class="location-selector" [formGroup]="locationForm">
+
+  <!-- Campo País (fijo en Argentina) -->
+  <div class="location-field" *ngIf="config.showCountry">
+    <label class="field-label" for="country">
+      {{ config.countryLabel }}
+      <span class="required-indicator" *ngIf="config.required">*</span>
+    </label>
+
+    <div class="country-field">
+      <input
+        type="text"
+        id="country"
+        class="country-input"
+        formControlName="country"
+        readonly
+        [disabled]="true"
+        [attr.aria-label]="config.countryLabel + ' (fijo)'"
+      />
+      <div class="country-flag">🇦🇷</div>
+      <div class="country-lock">🔒</div>
+    </div>
+
+    <div class="field-help">
+      <span class="help-icon">ℹ️</span>
+      <span class="help-text">País fijo para usuarios argentinos</span>
+    </div>
+  </div>
+
+  <!-- Campo Provincia -->
+  <div class="location-field">
+    <label class="field-label" for="province">
+      {{ config.provinceLabel }}
+      <span class="required-indicator" *ngIf="config.required">*</span>
+    </label>
+
+    <app-autocomplete
+      [config]="{
+        placeholder: 'Buscar provincia...',
+        maxResults: 8,
+        minQueryLength: 2,
+        debounceTime: 300,
+        showAllOnFocus: true,
+        disabled: config.disabled,
+        required: config.required
+      }"
+      [searchFunction]="searchProvinces"
+      [fieldName]="config.provinceLabel || 'provincia'"
+      [showError]="hasError('province')"
+      [errorMessage]="getErrorMessage('province')"
+      (itemSelected)="onProvinceSelected($event)"
+      (queryChanged)="onTouched()"
+    ></app-autocomplete>
+
+    <!-- Información adicional sobre la provincia seleccionada -->
+    <div class="province-info" *ngIf="selectedProvince">
+      <div class="province-details">
+        <span class="province-code">{{ selectedProvince.code }}</span>
+        <span class="province-region">Región {{ selectedProvince.region }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Campo Municipio -->
+  <div class="location-field">
+    <label class="field-label" for="municipality">
+      {{ config.municipalityLabel }}
+      <span class="required-indicator" *ngIf="config.required">*</span>
+    </label>
+
+    <!-- Autocomplete habilitado -->
+    <app-autocomplete
+      *ngIf="municipalitiesEnabled"
+      [config]="{
+        placeholder: 'Buscar municipio...',
+        maxResults: 10,
+        minQueryLength: 2,
+        debounceTime: 300,
+        showAllOnFocus: true,
+        disabled: config.disabled,
+        required: config.required
+      }"
+      [searchFunction]="searchMunicipalities"
+      [fieldName]="config.municipalityLabel || 'municipio'"
+      [showError]="hasError('municipality')"
+      [errorMessage]="getErrorMessage('municipality')"
+      (itemSelected)="onMunicipalitySelected($event)"
+      (queryChanged)="onTouched()"
+    ></app-autocomplete>
+
+    <!-- Campo deshabilitado cuando no hay provincia -->
+    <div class="disabled-field" *ngIf="!municipalitiesEnabled">
+      <input
+        type="text"
+        class="disabled-input"
+        placeholder="Primero seleccione una provincia"
+        [disabled]="true"
+        readonly
+        [attr.aria-label]="config.municipalityLabel + ' (deshabilitado)'"
+      />
+      <div class="disabled-icon">🔒</div>
+    </div>
+
+    <!-- Ayuda contextual -->
+    <div class="field-help" *ngIf="!municipalitiesEnabled">
+      <span class="help-icon">💡</span>
+      <span class="help-text">
+        Seleccione una provincia para habilitar la búsqueda de municipios
+      </span>
+    </div>
+
+    <!-- Información del municipio seleccionado -->
+    <div class="municipality-info" *ngIf="selectedMunicipality">
+      <div class="municipality-details">
+        <span class="municipality-postal" *ngIf="selectedMunicipality.postalCode">
+          CP: {{ selectedMunicipality.postalCode }}
+        </span>
+        <span class="municipality-province">
+          {{ selectedProvince?.name }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen de ubicación seleccionada -->
+  <div class="location-summary" *ngIf="selectedProvince">
+    <div class="summary-header">
+      <span class="summary-icon">📍</span>
+      <span class="summary-title">Ubicación seleccionada</span>
+    </div>
+
+    <div class="summary-content">
+      <div class="summary-item">
+        <span class="summary-label">País:</span>
+        <span class="summary-value">Argentina 🇦🇷</span>
+      </div>
+
+      <div class="summary-item">
+        <span class="summary-label">Provincia:</span>
+        <span class="summary-value">
+          {{ selectedProvince.name }}
+          <span class="summary-code">({{ selectedProvince.code }})</span>
+        </span>
+      </div>
+
+      <div class="summary-item" *ngIf="selectedMunicipality">
+        <span class="summary-label">Municipio:</span>
+        <span class="summary-value">
+          {{ selectedMunicipality.name }}
+          <span class="summary-postal" *ngIf="selectedMunicipality.postalCode">
+            - CP {{ selectedMunicipality.postalCode }}
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicador de validación -->
+  <div class="validation-status" *ngIf="config.required">
+    <div class="status-indicator" [class.valid]="isValid" [class.invalid]="!isValid">
+      <span class="status-icon">{{ isValid ? '✅' : '⚠️' }}</span>
+      <span class="status-text">
+        {{ isValid ? 'Ubicación válida' : 'Complete la información de ubicación' }}
+      </span>
+    </div>
+  </div>
+</div>

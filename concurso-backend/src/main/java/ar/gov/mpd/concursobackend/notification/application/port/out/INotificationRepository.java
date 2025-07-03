@@ -1,9 +1,9 @@
 package ar.gov.mpd.concursobackend.notification.application.port.out;
 
+import ar.gov.mpd.concursobackend.notification.domain.model.Notification;
+
 import java.util.List;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.notification.domain.model.Notification;
 
 public interface INotificationRepository {
     Notification save(Notification notification);

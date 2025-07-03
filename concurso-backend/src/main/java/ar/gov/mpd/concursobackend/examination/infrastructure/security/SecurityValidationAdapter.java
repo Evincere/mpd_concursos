@@ -1,11 +1,12 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.security;
 
-import ar.gov.mpd.concursobackend.examination.application.port.output.SecurityValidationPort;
 import ar.gov.mpd.concursobackend.examination.application.port.input.SubmitAnswerUseCase.SubmitAnswerCommand;
+import ar.gov.mpd.concursobackend.examination.application.port.output.SecurityValidationPort;
 import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
 import org.springframework.stereotype.Component;
-import java.security.MessageDigest;
+
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
 
 @Component

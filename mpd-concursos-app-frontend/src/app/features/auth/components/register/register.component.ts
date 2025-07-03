@@ -18,6 +18,7 @@ import { InputRestrictionDirective } from '../../../../shared/directives/input-r
 import { ErrorMappingService, MappedError, ErrorType, ErrorSeverity, FieldError, ValidationStatus } from '../../../../shared/services/error-mapping';
 import { HttpErrorDisplayComponent } from '../../../../shared/components/http-error-display';
 import { ValidationService } from '../../../../shared/services/validation.service';
+import { LocationSelectorComponent, LocationValue } from '../../../../shared/components/location-selector/location-selector.component';
 import { ErrorContextPanelComponent } from '../../../../shared/components/error-context-panel/error-context-panel.component';
 
 @Component({
@@ -34,6 +35,7 @@ import { ErrorContextPanelComponent } from '../../../../shared/components/error-
     MatSnackBarModule,
     TouchFriendlyDirective,
     InputRestrictionDirective,
+    LocationSelectorComponent,
     HttpErrorDisplayComponent,
     ErrorContextPanelComponent
   ],
@@ -131,9 +133,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       ]],
 
       // Datos de ubicación
-      country: ['Argentina', Validators.required],
-      province: ['', Validators.required],
-      municipality: ['', Validators.required],
+      location: [null, Validators.required],
       legalAddress: ['', [Validators.required, Validators.maxLength(200)]],
       residentialAddress: ['', [Validators.required, Validators.maxLength(200)]],
       telefono: ['', [
@@ -350,9 +350,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
       dni: formValue.dni!,
       cuit: formValue.cuit!.replace(/-/g, ''), // Eliminar guiones del CUIT
       birthDate: formValue.birthDate!,
-      country: formValue.country!,
-      province: formValue.province!,
-      municipality: formValue.municipality!,
+      country: formValue.location?.country || 'Argentina',
+      province: formValue.location?.province?.name || '',
+      municipality: formValue.location?.municipality?.name || '',
       legalAddress: formValue.legalAddress!,
       residentialAddress: formValue.residentialAddress!,
       telefono: formValue.telefono!,
@@ -899,5 +899,38 @@ export class RegisterComponent implements OnInit, OnDestroy {
         }, 10);
       }
     }
+  }
+
+  /**
+   * Maneja cambios en la ubicación seleccionada
+   */
+  onLocationChanged(location: LocationValue): void {
+    this.registerForm.patchValue({
+      location: location
+    });
+  }
+
+  /**
+   * Obtiene errores de ubicación para mostrar en el componente
+   */
+  getLocationErrors(): { [key: string]: string } {
+    const locationControl = this.registerForm.get('location');
+    const errors: { [key: string]: string } = {};
+
+    if (locationControl?.touched && locationControl?.errors) {
+      if (locationControl.errors['required']) {
+        errors['location'] = 'Debe seleccionar una ubicación válida';
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Verifica si hay errores de ubicación
+   */
+  hasLocationErrors(): boolean {
+    const locationControl = this.registerForm.get('location');
+    return !!(locationControl?.touched && locationControl?.invalid);
   }
 }

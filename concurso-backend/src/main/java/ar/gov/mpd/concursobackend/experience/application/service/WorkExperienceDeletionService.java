@@ -1,15 +1,14 @@
 package ar.gov.mpd.concursobackend.experience.application.service;
 
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-
 import ar.gov.mpd.concursobackend.experience.infrastructure.persistence.ExperienceRepository;
 import ar.gov.mpd.concursobackend.experience.infrastructure.persistence.WorkExperienceEntity;
 import ar.gov.mpd.concursobackend.shared.application.service.BaseCvDeletionService;
 import ar.gov.mpd.concursobackend.shared.domain.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 /**
  * Service for handling work experience deletions with simplified logic

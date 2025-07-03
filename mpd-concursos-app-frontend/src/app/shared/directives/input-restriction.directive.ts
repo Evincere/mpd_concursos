@@ -5,11 +5,8 @@ import {
   Input,
   OnInit,
   OnDestroy,
-  Renderer2,
-  Optional,
-  Self
+  Renderer2
 } from '@angular/core';
-import { NgControl } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
@@ -55,8 +52,7 @@ export class InputRestrictionDirective implements OnInit, OnDestroy {
   constructor(
     private el: ElementRef<HTMLInputElement>,
     private renderer: Renderer2,
-    private restrictionService: InputRestrictionService,
-    @Optional() @Self() private ngControl: NgControl
+    private restrictionService: InputRestrictionService
   ) {}
 
   ngOnInit(): void {
@@ -115,10 +111,9 @@ export class InputRestrictionDirective implements OnInit, OnDestroy {
     if (originalValue !== filteredValue) {
       input.value = filteredValue;
 
-      // Actualizar el FormControl si existe
-      if (this.ngControl?.control) {
-        this.ngControl.control.setValue(filteredValue, { emitEvent: false });
-      }
+      // Disparar evento de input para notificar cambios
+      const inputEvent = new Event('input', { bubbles: true });
+      input.dispatchEvent(inputEvent);
 
       this.showInvalidCharacterFeedback();
     }
@@ -153,10 +148,9 @@ export class InputRestrictionDirective implements OnInit, OnDestroy {
 
     input.value = filteredValue;
 
-    // Actualizar el FormControl si existe
-    if (this.ngControl?.control) {
-      this.ngControl.control.setValue(filteredValue);
-    }
+    // Disparar evento de input para notificar cambios
+    const inputEvent = new Event('input', { bubbles: true });
+    input.dispatchEvent(inputEvent);
 
     // Posicionar el cursor
     const newCursorPosition = selectionStart + this.restrictionService.processPastedText(pastedText, this.config).length;
@@ -180,9 +174,9 @@ export class InputRestrictionDirective implements OnInit, OnDestroy {
     const input = this.el.nativeElement;
     input.value = filteredText;
 
-    if (this.ngControl?.control) {
-      this.ngControl.control.setValue(filteredText);
-    }
+    // Disparar evento de input para notificar cambios
+    const inputEvent = new Event('input', { bubbles: true });
+    input.dispatchEvent(inputEvent);
 
     if (droppedText !== filteredText) {
       this.showInvalidCharacterFeedback();
@@ -217,16 +211,8 @@ export class InputRestrictionDirective implements OnInit, OnDestroy {
    * Configura listener para cambios en el FormControl
    */
   private setupFormControlListener(): void {
-    if (this.ngControl?.control) {
-      this.ngControl.control.valueChanges
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(value => {
-          if (value && !this.restrictionService.isStringValid(value, this.config)) {
-            const filteredValue = this.restrictionService.filterString(value, this.config);
-            this.ngControl.control?.setValue(filteredValue, { emitEvent: false });
-          }
-        });
-    }
+    // Simplificado: la validación se hace en los eventos de input
+    // En una implementación futura se puede agregar integración con NgControl
   }
 
   /**

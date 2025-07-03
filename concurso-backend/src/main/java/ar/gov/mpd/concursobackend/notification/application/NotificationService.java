@@ -7,18 +7,13 @@ import ar.gov.mpd.concursobackend.notification.application.dto.NotificationAckno
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationRequest;
 import ar.gov.mpd.concursobackend.notification.application.dto.NotificationResponse;
 import ar.gov.mpd.concursobackend.notification.application.mapper.NotificationMapper;
-import ar.gov.mpd.concursobackend.notification.application.port.in.AcknowledgeNotificationUseCase;
-import ar.gov.mpd.concursobackend.notification.application.port.in.CreateNotificationUseCase;
-import ar.gov.mpd.concursobackend.notification.application.port.in.GetUserNotificationsUseCase;
-import ar.gov.mpd.concursobackend.notification.application.port.in.MarkNotificationAsReadUseCase;
-import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
+import ar.gov.mpd.concursobackend.notification.application.port.in.*;
 import ar.gov.mpd.concursobackend.notification.application.port.out.INotificationRepository;
-import ar.gov.mpd.concursobackend.notification.domain.model.Notification;
-import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
-import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
+import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
+import ar.gov.mpd.concursobackend.notification.domain.model.Notification;
 import ar.gov.mpd.concursobackend.shared.security.IAuthenticationFacade;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;

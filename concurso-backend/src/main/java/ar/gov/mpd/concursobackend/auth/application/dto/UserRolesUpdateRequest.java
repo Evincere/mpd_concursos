@@ -1,8 +1,9 @@
 package ar.gov.mpd.concursobackend.auth.application.dto;
 
-import java.util.List;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class UserRolesUpdateRequest {

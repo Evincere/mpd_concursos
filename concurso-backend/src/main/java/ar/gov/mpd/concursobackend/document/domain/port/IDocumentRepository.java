@@ -1,11 +1,12 @@
 package ar.gov.mpd.concursobackend.document.domain.port;
 
+import ar.gov.mpd.concursobackend.document.domain.model.Document;
+import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
+import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.document.domain.model.Document;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 
 public interface IDocumentRepository {
     Document save(Document document);
@@ -33,4 +34,29 @@ public interface IDocumentRepository {
      * @return The number of documents with the given processing status
      */
     long countByProcessingStatus(String processingStatus);
+
+    /**
+     * Busca documentos activos (no archivados) por usuario
+     */
+    List<Document> findActiveByUserId(UUID userId);
+
+    /**
+     * Busca documento activo por usuario y tipo de documento
+     */
+    Optional<Document> findActiveByUserAndType(UUID userId, DocumentTypeId documentTypeId);
+
+    /**
+     * Busca documentos archivados por usuario
+     */
+    List<Document> findArchivedByUserId(UUID userId);
+
+    /**
+     * Busca historial de versiones para un tipo de documento
+     */
+    List<Document> findVersionHistory(UUID userId, DocumentTypeId documentTypeId);
+
+    /**
+     * Obtiene todos los documentos del sistema
+     */
+    List<Document> findAll();
 }

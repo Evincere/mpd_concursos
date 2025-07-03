@@ -1,9 +1,10 @@
 package ar.gov.mpd.concursobackend.contest.application.dto;
 
-import java.time.LocalDate;
-import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder

@@ -1,12 +1,14 @@
 package ar.gov.mpd.concursobackend.filter.infrastructure.controller;
 
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
+import ar.gov.mpd.concursobackend.filter.application.dto.ContestFilterCommand;
+import ar.gov.mpd.concursobackend.filter.application.port.in.SearchContestUseCase;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import ar.gov.mpd.concursobackend.filter.application.dto.ContestFilterCommand;
-import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
-import ar.gov.mpd.concursobackend.filter.application.port.in.SearchContestUseCase;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;

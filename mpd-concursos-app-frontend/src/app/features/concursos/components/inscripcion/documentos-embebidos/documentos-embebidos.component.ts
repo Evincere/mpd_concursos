@@ -1297,22 +1297,31 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo diálogo para cargar documento: ${tipoDocumentoId}`, undefined, 'DocumentosEmbebidos');
+    // Verificar si es un reemplazo (documento ya subido)
+    const esReemplazo = this.isDocumentoSubido(tipoDocumentoId);
+    const documentoExistente = esReemplazo ? this.getDocumento(tipoDocumentoId) : null;
+
+    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo diálogo para ${esReemplazo ? 'reemplazar' : 'cargar'} documento: ${tipoDocumentoId}`, undefined, 'DocumentosEmbebidos');
 
     this.dialog.open(DocumentoUploadDialogComponent, {
-      title: `Cargar ${tipoDoc.title}`,
+      title: `${esReemplazo ? 'Reemplazar' : 'Cargar'} ${tipoDoc.title}`,
       showFooter: false, // Disable external footer buttons
       showCancelButton: false, // Disable external cancel button
       showConfirmButton: false, // Disable external confirm button
-      data: { tipoDocumentoId: tipoDoc.tipoDocumentoId }
+      data: {
+        tipoDocumentoId: tipoDoc.tipoDocumentoId,
+        tipoDocumentoNombre: tipoDoc.title,
+        modoReemplazo: esReemplazo,
+        documentoExistente: documentoExistente
+      }
     }).afterClosed().subscribe((result: any) => {
       if (result && result.success) {
-        this.notificationService.success(`${tipoDoc.title} cargado exitosamente.`);
+        this.notificationService.success(`${tipoDoc.title} ${esReemplazo ? 'reemplazado' : 'cargado'} exitosamente.`);
         this.cargarDatos(true); // Recargar todos los datos para actualizar el estado
       } else if (result && result.cancelled) {
-        this.loggingService.debug('[DocumentosEmbebidos] Carga de documento cancelada.', undefined, 'DocumentosEmbebidos');
+        this.loggingService.debug(`[DocumentosEmbebidos] ${esReemplazo ? 'Reemplazo' : 'Carga'} de documento cancelada.`, undefined, 'DocumentosEmbebidos');
       } else if (result !== null && result !== undefined) {
-        this.notificationService.error(`Error al cargar ${tipoDoc.title}.`);
+        this.notificationService.error(`Error al ${esReemplazo ? 'reemplazar' : 'cargar'} ${tipoDoc.title}.`);
       }
     });
   }

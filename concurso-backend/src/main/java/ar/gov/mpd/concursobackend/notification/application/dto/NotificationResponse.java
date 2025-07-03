@@ -2,13 +2,14 @@ package ar.gov.mpd.concursobackend.notification.application.dto;
 
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationStatus;
-import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
+import ar.gov.mpd.concursobackend.notification.domain.enums.SignatureType;
 import lombok.Builder;
 import lombok.Data;
+
 import java.time.LocalDateTime;
-import java.util.UUID;
 import java.util.Map;
+import java.util.UUID;
 
 @Data
 @Builder

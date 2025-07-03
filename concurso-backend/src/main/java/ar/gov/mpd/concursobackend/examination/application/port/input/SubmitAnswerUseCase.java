@@ -1,10 +1,10 @@
 package ar.gov.mpd.concursobackend.examination.application.port.input;
 
-import java.util.UUID;
-
 import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
 import lombok.Builder;
 import lombok.Value;
+
+import java.util.UUID;
 
 public interface SubmitAnswerUseCase {
     Answer submitAnswer(SubmitAnswerCommand command);

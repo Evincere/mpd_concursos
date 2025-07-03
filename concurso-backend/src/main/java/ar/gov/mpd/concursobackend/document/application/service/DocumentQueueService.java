@@ -10,7 +10,6 @@ import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentTypeRepository;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.ProcessingStatus;
 import lombok.RequiredArgsConstructor;

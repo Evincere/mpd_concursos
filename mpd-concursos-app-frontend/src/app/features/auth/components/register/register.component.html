@@ -271,28 +271,22 @@
     <div class="form-section">
       <h3>Datos de ubicación</h3>
 
-      <div class="user-box">
-        <input matInput formControlName="country" placeholder=" " required (focus)="onInputFocus($event)" appTouchFriendly id="country">
-        <label for="country">País</label>
-        <mat-error *ngIf="registerForm.get('country')?.touched && registerForm.get('country')?.errors?.['required']">
-          El país es requerido
-        </mat-error>
-      </div>
-
-      <div class="user-box">
-        <input matInput formControlName="province" placeholder=" " required (focus)="onInputFocus($event)" appTouchFriendly id="province">
-        <label for="province">Provincia</label>
-        <mat-error *ngIf="registerForm.get('province')?.touched && registerForm.get('province')?.errors?.['required']">
-          La provincia es requerida
-        </mat-error>
-      </div>
-
-      <div class="user-box">
-        <input matInput formControlName="municipality" placeholder=" " required (focus)="onInputFocus($event)" appTouchFriendly id="municipality">
-        <label for="municipality">Municipio</label>
-        <mat-error *ngIf="registerForm.get('municipality')?.touched && registerForm.get('municipality')?.errors?.['required']">
-          El municipio es requerido
-        </mat-error>
+      <!-- Selector de ubicación inteligente -->
+      <div class="location-selector-wrapper">
+        <app-location-selector
+          [config]="{
+            showCountry: true,
+            countryLabel: 'País',
+            provinceLabel: 'Provincia',
+            municipalityLabel: 'Municipio',
+            required: true,
+            disabled: false
+          }"
+          [showErrors]="hasLocationErrors()"
+          [errors]="getLocationErrors()"
+          formControlName="location"
+          (locationChanged)="onLocationChanged($event)"
+        ></app-location-selector>
       </div>
 
       <div class="user-box">

@@ -5,8 +5,8 @@ import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
 import lombok.Builder;
+import lombok.Data;
 
 import java.util.Map;
 

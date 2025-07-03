@@ -29,8 +29,13 @@
               El email debe tener al menos 3 caracteres
             </mat-error>
           </div>
-          <div class="user-box">
-            <input matInput type="password" class="login-input" formControlName="password" placeholder=" " required id="password">
+          <div class="user-box password-field">
+            <div class="password-input-container">
+              <input matInput [type]="hide ? 'password' : 'text'" class="login-input" formControlName="password" placeholder=" " required id="password">
+              <button type="button" class="password-toggle-btn" (click)="togglePasswordVisibility()" [attr.aria-label]="hide ? 'Mostrar contraseña' : 'Ocultar contraseña'">
+                <i class="material-icons">{{ hide ? 'visibility' : 'visibility_off' }}</i>
+              </button>
+            </div>
             <label for="password">Contraseña</label>
             <mat-error *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['required']">
               La contraseña es requerida
@@ -47,6 +52,13 @@
             Ingresar
           </button>
         </form>
+
+        <!-- Enlace de recuperación de contraseña -->
+        <div class="forgot-password-container">
+          <button type="button" class="forgot-password-link" (click)="onForgotPassword()">
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
 
         <!-- Sistema legacy de errores (mantenido para compatibilidad) -->
         <div class="error-message" *ngIf="loginError && !showLoginNotification" [ngClass]="{'error-blocked': isBlockedError, 'error-inactive': isInactiveError, 'error-expired': isExpiredError}">

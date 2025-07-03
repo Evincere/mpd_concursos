@@ -3,12 +3,12 @@ package ar.gov.mpd.concursobackend.auth.application.port;
 import ar.gov.mpd.concursobackend.auth.application.dto.JwtDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
 import ar.gov.mpd.concursobackend.auth.application.dto.UserLogin;
+import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.model.UserStatus;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
 
 import java.util.List;
 import java.util.Optional;

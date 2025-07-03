@@ -1,15 +1,15 @@
 package ar.gov.mpd.concursobackend.examination.application.port.output;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.Optional;
-
+import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupResponse;
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
 import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
 import ar.gov.mpd.concursobackend.examination.domain.model.Examination;
 import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSession;
 import ar.gov.mpd.concursobackend.examination.domain.model.Question;
-import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupResponse;
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface ExaminationPersistencePort {
     ExaminationSession saveSession(ExaminationSession session);

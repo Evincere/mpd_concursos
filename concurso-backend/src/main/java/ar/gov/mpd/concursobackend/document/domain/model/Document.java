@@ -1,13 +1,13 @@
 package ar.gov.mpd.concursobackend.document.domain.model;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.ProcessingStatus;
 import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 public class Document {
@@ -25,6 +25,13 @@ public class Document {
     private LocalDateTime validatedAt;
     private String rejectionReason;
     private String errorMessage; // Mensaje de error para processingStatus UPLOAD_FAILED
+
+    // Campos para manejo de duplicidad y archivado
+    private Boolean isArchived = false;
+    private DocumentId replacedDocumentId;
+    private LocalDateTime archivedAt;
+    private UUID archivedBy;
+    private int version = 1;
 
     public Document() {
         this.id = new DocumentId(UUID.randomUUID());
@@ -78,6 +85,38 @@ public class Document {
 
     public boolean isProcessingComplete() {
         return this.processingStatus == ProcessingStatus.UPLOAD_COMPLETE;
+    }
+
+    // Métodos para manejo de archivado y duplicidad
+    public void archive(DocumentId replacedBy, UUID archivedBy) {
+        this.isArchived = true;
+        this.replacedDocumentId = replacedBy;
+        this.archivedAt = LocalDateTime.now();
+        this.archivedBy = archivedBy;
+    }
+
+    public void restore(UUID restoredBy) {
+        this.isArchived = false;
+        this.replacedDocumentId = null;
+        this.archivedAt = null;
+        this.archivedBy = null;
+        // Incrementar versión al restaurar
+        this.version++;
+    }
+
+    public boolean isActive() {
+        return !Boolean.TRUE.equals(this.isArchived) && this.processingStatus == ProcessingStatus.UPLOAD_COMPLETE;
+    }
+
+    public void incrementVersion() {
+        this.version++;
+    }
+
+    /**
+     * Verifica si el documento está archivado (maneja null como false)
+     */
+    public boolean isArchived() {
+        return Boolean.TRUE.equals(this.isArchived);
     }
 
     public boolean isProcessingFailed() {

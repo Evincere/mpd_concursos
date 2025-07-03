@@ -1,13 +1,12 @@
 package ar.gov.mpd.concursobackend.inscription.infrastructure.controller.mapper;
 
+import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
-
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionNote;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.AdminInscriptionDTO;
 import ar.gov.mpd.concursobackend.inscription.infrastructure.controller.dto.InscriptionNoteDTO;
-import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

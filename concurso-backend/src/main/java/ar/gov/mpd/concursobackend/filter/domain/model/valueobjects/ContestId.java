@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.filter.domain.model.valueobjects;
 
-import lombok.Value;
 import ar.gov.mpd.concursobackend.filter.domain.model.exceptions.InvalidContestIdException;
+import lombok.Value;
 
 @Value
 public class ContestId {

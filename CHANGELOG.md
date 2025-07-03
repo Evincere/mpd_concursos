@@ -5,6 +5,162 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Corregido
+- **Documentación del Perfil**: Corregido el mecanismo de carga individual de documentos
+  - El botón "Cargar" en las cards individuales ahora abre el uploader específico para ese documento
+  - Reemplazado `DocumentoMultipleUploadDialogComponent` por `DocumentoUploadDialogComponent` para cargas individuales
+  - Mejorada la experiencia de usuario mostrando el nombre específico del documento en el título del diálogo
+  - Mantiene la funcionalidad de recarga automática después de la carga exitosa
+- **UX del Diálogo de Carga**: Mejorado el flujo post-carga de documentos individuales
+  - Agregado estado de "completado" que muestra mensaje de éxito con ícono verde
+  - Botón "Cancelar" se oculta después de la carga exitosa
+  - Botón "Subir documento" cambia a "Cerrar" con ícono de check después del éxito
+  - Interfaz más clara que indica al usuario que la carga fue exitosa antes de cerrar
+  - Corregido problema donde el botón "Cerrar" no cerraba el diálogo correctamente
+  - Implementado mecanismo de cierre que usa el mismo sistema que el botón X del header
+  - Mejorado botón "Cancelar" para limpiar archivos seleccionados y usar cierre robusto
+  - Ambos botones (Cancelar/Cerrar) ahora usan BasicDialogService.closeAll() para consistencia
+- **Diálogo de Carga Múltiple**: Corregidos problemas de interfaz y funcionalidad
+  - Removida cruz de cierre interna duplicada que causaba confusión visual
+  - Corregido botón "CANCELAR" que no tenía funcionalidad operativa
+  - Implementado mecanismo robusto de cierre usando BasicDialogService.closeAll()
+  - Interfaz más limpia con una sola cruz de cierre (externa) funcional
+
+## [2025-01-02] - Sistema de Gestión de Duplicidad de Documentos - FASE 1
+
+### 🏗️ **FUNDAMENTOS IMPLEMENTADOS**
+- **Base de Datos**: Migración V1_2 para manejo de duplicidad y auditoría
+  - Agregada tabla `document_audit` para trazabilidad completa
+  - Constraint único para evitar documentos duplicados por tipo por usuario
+  - Campos de archivado y versionado en tabla `documents`
+  - Procedimiento almacenado para archivado automático de documentos anteriores
+- **Entidades y Repositorios**: Infraestructura completa para auditoría
+  - DocumentAuditEntity con tipos de acción (CREATED, UPDATED, DELETED, REPLACED)
+  - IDocumentAuditSpringRepository con consultas especializadas
+  - Métodos de repositorio para documentos activos/archivados
+- **Modelo de Dominio**: Actualizado para soportar duplicidad
+  - Campos isArchived, replacedDocumentId, version en Document
+  - Métodos archive(), restore(), isActive() para gestión de estado
+  - Control de versiones automático
+
+## [2025-01-02] - Sistema de Gestión de Duplicidad de Documentos - FASE 2
+
+### 🔧 **LÓGICA DE DUPLICIDAD IMPLEMENTADA**
+- **DocumentDuplicateService**: Servicio especializado para manejo de duplicidad
+  - Verificación de documentos existentes por tipo y usuario
+  - Reemplazo transaccional con archivado automático del documento anterior
+  - Validaciones de seguridad (ownership, estado activo)
+  - Programación de limpieza de archivos físicos
+- **DocumentAuditService**: Sistema completo de auditoría
+  - Registro automático de todas las operaciones (CREATED, UPDATED, DELETED, REPLACED)
+  - Metadata JSON detallada para cada acción
+  - Manejo robusto de errores sin afectar flujo principal
+- **DocumentServiceImpl**: Integración de verificación de duplicados
+  - Método uploadDocumentWithDuplicateCheck() con lógica de reemplazo
+  - Detección automática de documentos duplicados
+  - Flujo condicional: crear nuevo vs. reemplazar existente
+- **DocumentController**: Endpoint actualizado con parámetro replaceExisting
+  - Soporte para replaceExisting=true/false en /api/documentos/upload
+  - Logging detallado para debugging y monitoreo
+  - Manejo de errores específicos para duplicidad
+
+### 🧪 **TESTING Y VALIDACIÓN**
+- **Unit Tests**: Cobertura completa de servicios críticos
+  - DocumentDuplicateServiceTest: 10 tests cubriendo todos los casos de uso
+  - DocumentAuditServiceTest: 7 tests validando registro de auditoría
+  - Casos edge: documentos inválidos, errores de concurrencia, validaciones de seguridad
+- **Compilación**: Backend compila sin errores con todas las nuevas funcionalidades
+- **Transaccionalidad**: Verificada mediante tests de integración
+- **Manejo de errores**: Logging detallado y recuperación graceful
+
+## [2025-01-02] - Sistema de Gestión de Duplicidad de Documentos - FASE 3
+
+### 🎨 **FRONTEND UNIFICADO IMPLEMENTADO**
+- **UnifiedDocumentService**: Servicio consolidado que unifica funcionalidades dispersas
+  - Consolidación de DocumentosService, DocumentRepositoryService y DocumentUploadService
+  - Gestión de estado reactiva con BehaviorSubject para documentos y loading
+  - Verificación automática de duplicidad con diálogos de confirmación
+  - Métodos para eliminación, historial de versiones y refrescar documentos
+- **DocumentDuplicateConfirmDialogComponent**: Diálogo de confirmación intuitivo
+  - Comparación visual detallada entre documento existente y nuevo
+  - Información de fecha, tamaño, tipo y estado de ambos documentos
+  - Advertencias claras sobre el proceso de reemplazo y archivado
+  - Diseño responsive con estilos modernos y accesibles
+- **DocumentStatusIndicatorComponent**: Indicadores visuales de estado
+  - Estados de documento (Pendiente, Aprobado, Rechazado, Procesando, Archivado)
+  - Indicadores adicionales (versión más reciente, duplicados, archivado)
+  - Información de fecha relativa (Hoy, Ayer, hace X días)
+  - Tooltips informativos y diseño responsive
+
+### 🔄 **INTEGRACIÓN CON COMPONENTES EXISTENTES**
+- **DocumentoUploadDialogComponent**: Actualizado para usar UnifiedDocumentService
+  - Integración con verificación automática de duplicidad
+  - Manejo mejorado de errores con mensajes específicos para duplicados
+  - Logging detallado para debugging y monitoreo
+- **DocumentoMultipleUploadDialogComponent**: Preparado para integración
+  - Inyección de UnifiedDocumentService en constructor
+  - Base lista para implementar verificación de duplicidad en carga múltiple
+- **Modelo DocumentoUsuario**: Extendido con propiedades de duplicidad
+  - Campos para archivado (isArchived, archivedAt, archivedBy)
+  - Versionado (version, replacedDocumentId)
+  - Propiedades calculadas para UI (hasDuplicates, isLatestVersion)
+
+### ✅ **COMPILACIÓN Y VALIDACIÓN**
+- **Frontend**: Compilación exitosa sin errores críticos
+- **Integración**: Servicios correctamente inyectados y funcionales
+- **Modelos**: Tipos TypeScript actualizados y consistentes
+- **Componentes**: Nuevos componentes standalone listos para uso
+
+## [2025-01-02] - Sistema de Gestión de Duplicidad de Documentos - FASE 4 FINAL
+
+### 🧹 **OPTIMIZACIÓN Y LIMPIEZA COMPLETADA**
+- **DocumentCleanupService**: Job asíncrono para limpieza automática de archivos huérfanos
+  - Ejecución programada cada 6 horas con verificación de edad de archivos (24h)
+  - Procesamiento en lotes de 100 archivos para evitar sobrecarga del sistema
+  - Identificación inteligente de archivos físicos sin referencia en base de datos
+  - Logging detallado y métricas de limpieza para monitoreo
+- **DocumentConsistencyService**: Verificación de consistencia DB ↔ FileSystem
+  - Verificación programada cada 12 horas con reporte completo de estado
+  - Detección de archivos faltantes, huérfanos, rutas inválidas y duplicados en BD
+  - Estadísticas detalladas de documentos activos vs archivados
+  - Alertas automáticas cuando se detectan inconsistencias
+- **DocumentMetricsService**: Sistema completo de métricas y monitoreo
+  - Métricas en tiempo real con contadores atómicos para uploads/reemplazos/eliminaciones
+  - Cache inteligente de 5-10 minutos para métricas costosas
+  - Logging horario automático de estadísticas del sistema
+  - Métricas de rendimiento incluyendo uso de memoria y performance
+
+### ⚡ **OPTIMIZACIONES DE RENDIMIENTO**
+- **Caching Inteligente**: ConcurrentMapCacheManager con expiración automática
+- **Procesamiento Asíncrono**: ThreadPoolTaskExecutor configurado para documentos y limpieza
+- **Lazy Loading**: Inicialización diferida de servicios con timer de 100ms
+- **Debouncing**: 300ms debounce en refreshDocuments para evitar llamadas excesivas
+- **ShareReplay**: Cache automático de observables para nuevos suscriptores
+
+### 🔄 **CONSOLIDACIÓN DE SERVICIOS**
+- **DocumentMigrationService**: Servicio de transición para deprecar servicios legacy
+  - Capa de compatibilidad entre UnifiedDocumentService y servicios antiguos
+  - Flag configurable para migración gradual (USE_UNIFIED_SERVICE = true)
+  - Estadísticas de uso y progreso de migración
+  - Verificación de compatibilidad entre servicios
+- **UnifiedDocumentService Optimizado**: Cache inteligente con expiración de 5 minutos
+  - Estado reactivo con BehaviorSubject y distinctUntilChanged
+  - Métodos para gestión de cache (getCacheInfo, clearCache)
+  - Refresh inteligente basado en timestamp de última actualización
+
+### 📚 **DOCUMENTACIÓN TÉCNICA COMPLETA**
+- **SISTEMA_DOCUMENTACION_TECNICA.md**: Documentación exhaustiva del sistema
+  - Arquitectura hexagonal del backend y modularizada del frontend
+  - Diagramas de flujo de datos y secuencia de operaciones
+  - Modelo de datos actualizado con todas las tablas y constraints
+  - Guías de deployment, configuración y mantenimiento
+  - Comandos de soporte y troubleshooting
+- **Métricas y Monitoreo**: Documentación completa de jobs programados y métricas
+- **Testing**: Cobertura de 17 unit tests con casos edge documentados
+- **Seguridad**: Validaciones de negocio y auditoría para compliance
+
 ## [2.1.0] - 2025-07-01
 
 ### 🔧 REFACTORIZACIÓN CRÍTICA - Estados de Documentos

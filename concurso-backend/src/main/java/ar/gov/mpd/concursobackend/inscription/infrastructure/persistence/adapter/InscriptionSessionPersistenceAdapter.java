@@ -6,17 +6,12 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.ContestI
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.InscriptionId;
 import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
 import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionSessionRepository;
-import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.mapper.InscriptionSessionEntityMapper;
-// import ar.gov.mpd.concursobackend.inscription.infrastructure.persistence.repository.InscriptionSessionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Adaptador de persistencia para sesiones de inscripción

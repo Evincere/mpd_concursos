@@ -1,9 +1,8 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.mapper;
 
-import org.springframework.stereotype.Component;
-
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.infrastructure.database.entities.RoleEntity;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RolMapper {

@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects;
 
 import lombok.Value;
+
 import java.util.UUID;
 
 @Value

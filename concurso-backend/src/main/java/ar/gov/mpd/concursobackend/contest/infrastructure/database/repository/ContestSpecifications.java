@@ -1,15 +1,14 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.database.repository;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
+import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
+import jakarta.persistence.criteria.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 
-import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
-import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
-import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ContestSpecifications {
     private static final Logger log = LoggerFactory.getLogger(ContestSpecifications.class);

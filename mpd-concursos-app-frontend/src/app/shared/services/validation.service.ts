@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { LoggingService } from '@core/services/logging/logging.service';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 
 @Injectable({

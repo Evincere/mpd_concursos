@@ -1,5 +1,0 @@
-Este es un archivo de prueba para simular un DNI frente.
-Documento Nacional de Identidad
-Número: 87654321
-Nombre: Usuario Test
-Fecha de nacimiento: 01/01/1990

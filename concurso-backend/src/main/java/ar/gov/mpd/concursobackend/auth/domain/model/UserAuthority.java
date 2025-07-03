@@ -1,17 +1,16 @@
 package ar.gov.mpd.concursobackend.auth.domain.model;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserPassword;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserPassword;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import lombok.Getter;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Getter
 public class UserAuthority implements UserDetails {
@@ -20,9 +19,9 @@ public class UserAuthority implements UserDetails {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private UserUsername username;
-    private UserPassword password;
-    private Collection<? extends GrantedAuthority> authorities;
+	private final UserUsername username;
+    private final UserPassword password;
+    private final Collection<? extends GrantedAuthority> authorities;
     
     public UserAuthority(UserUsername username, UserPassword password, Collection<? extends GrantedAuthority> authorities) {
         this.username = username;

@@ -1,19 +1,24 @@
 package ar.gov.mpd.concursobackend.examination.application.service;
 
+import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupResponse;
+import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationDTO;
+import ar.gov.mpd.concursobackend.examination.application.dto.FinalizarExamenRequest;
+import ar.gov.mpd.concursobackend.examination.application.dto.QuestionDTO;
 import ar.gov.mpd.concursobackend.examination.application.port.input.StartExaminationUseCase;
 import ar.gov.mpd.concursobackend.examination.application.port.input.SubmitAnswerUseCase;
 import ar.gov.mpd.concursobackend.examination.application.port.output.ExaminationPersistencePort;
 import ar.gov.mpd.concursobackend.examination.application.port.output.SecurityValidationPort;
-import ar.gov.mpd.concursobackend.examination.domain.exception.ExaminationException;
-import ar.gov.mpd.concursobackend.examination.domain.model.*;
 import ar.gov.mpd.concursobackend.examination.domain.enums.AnswerStatus;
 import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
-import ar.gov.mpd.concursobackend.examination.application.dto.*;
+import ar.gov.mpd.concursobackend.examination.domain.exception.ExaminationException;
+import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
+import ar.gov.mpd.concursobackend.examination.domain.model.Examination;
+import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSession;
 import ar.gov.mpd.concursobackend.examination.infrastructure.mapper.ExaminationMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;

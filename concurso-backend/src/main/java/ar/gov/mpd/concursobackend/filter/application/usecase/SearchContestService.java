@@ -1,13 +1,13 @@
 package ar.gov.mpd.concursobackend.filter.application.usecase;
 
 import ar.gov.mpd.concursobackend.contest.application.port.in.ContestQueryUseCase;
+import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
-import ar.gov.mpd.concursobackend.filter.application.dto.ContestFilterCommand;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestResponse;
 import ar.gov.mpd.concursobackend.contest.infrastructure.mapper.ContestMapper;
+import ar.gov.mpd.concursobackend.filter.application.dto.ContestFilterCommand;
 import ar.gov.mpd.concursobackend.filter.application.port.in.SearchContestUseCase;
 import ar.gov.mpd.concursobackend.filter.domain.model.ContestFilter;
-import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.DateRange;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.Department;
 import ar.gov.mpd.concursobackend.filter.domain.model.valueobjects.Position;

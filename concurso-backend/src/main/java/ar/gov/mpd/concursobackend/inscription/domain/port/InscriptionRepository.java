@@ -2,14 +2,15 @@ package ar.gov.mpd.concursobackend.inscription.domain.port;
 
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
-import java.util.UUID;
-import java.util.Optional;
-import java.util.List;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Repository interface for Inscription entities

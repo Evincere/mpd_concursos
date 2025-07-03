@@ -1,33 +1,28 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.persistence.adapter;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import org.springframework.stereotype.Component;
-
 import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupResponse;
 import ar.gov.mpd.concursobackend.examination.application.port.output.ExaminationPersistencePort;
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
 import ar.gov.mpd.concursobackend.examination.domain.exception.ExaminationException;
 import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
 import ar.gov.mpd.concursobackend.examination.domain.model.Examination;
 import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSession;
 import ar.gov.mpd.concursobackend.examination.domain.model.Question;
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
 import ar.gov.mpd.concursobackend.examination.infrastructure.mapper.ExaminationMapper;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.AnswerEntity;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.ExaminationEntity;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity.ExaminationSessionEntity;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.repository.ExaminationRepository;
 import ar.gov.mpd.concursobackend.examination.infrastructure.persistence.repository.ExaminationSessionJpaRepository;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor

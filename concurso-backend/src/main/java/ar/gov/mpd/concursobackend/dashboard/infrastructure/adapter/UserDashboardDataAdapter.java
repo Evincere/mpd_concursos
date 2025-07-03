@@ -1,22 +1,18 @@
 package ar.gov.mpd.concursobackend.dashboard.infrastructure.adapter;
 
 import ar.gov.mpd.concursobackend.dashboard.application.port.out.LoadUserDashboardDataPort;
-import ar.gov.mpd.concursobackend.dashboard.domain.UserDeadline;
 import ar.gov.mpd.concursobackend.dashboard.domain.UserDashboardStats;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.security.core.context.SecurityContextHolder;
-
+import ar.gov.mpd.concursobackend.dashboard.domain.UserDeadline;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Adaptador de infraestructura que implementa el puerto de carga de datos del dashboard

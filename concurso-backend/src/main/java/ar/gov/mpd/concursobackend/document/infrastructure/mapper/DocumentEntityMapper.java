@@ -1,16 +1,11 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.mapper;
 
-import org.springframework.stereotype.Component;
-
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.document.domain.model.DocumentType;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
-import ar.gov.mpd.concursobackend.document.domain.valueObject.ProcessingStatus;
+import ar.gov.mpd.concursobackend.document.domain.valueObject.*;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentTypeEntity;
+import org.springframework.stereotype.Component;
 
 @Component
 public class DocumentEntityMapper {

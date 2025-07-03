@@ -3,6 +3,7 @@ package ar.gov.mpd.concursobackend.examination.domain.model;
 import ar.gov.mpd.concursobackend.examination.domain.enums.AnswerStatus;
 import lombok.Builder;
 import lombok.Value;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 

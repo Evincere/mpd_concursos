@@ -1,5 +1,6 @@
 package ar.gov.mpd.concursobackend.examination.domain.model;
 
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
 import lombok.Builder;
 import lombok.Value;
 
@@ -7,8 +8,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationSessionStatus;
 
 @Value
 @Builder(toBuilder = true)

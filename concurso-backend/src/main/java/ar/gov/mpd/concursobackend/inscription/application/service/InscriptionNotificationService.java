@@ -11,14 +11,13 @@ import ar.gov.mpd.concursobackend.notification.application.dto.NotificationReque
 import ar.gov.mpd.concursobackend.notification.application.port.in.SendNotificationUseCase;
 import ar.gov.mpd.concursobackend.notification.domain.enums.AcknowledgementLevel;
 import ar.gov.mpd.concursobackend.notification.domain.enums.NotificationType;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * Service for sending notifications related to inscription status changes

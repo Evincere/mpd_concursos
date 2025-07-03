@@ -4,10 +4,9 @@ import ar.gov.mpd.concursobackend.dashboard.application.port.out.LoadUserDashboa
 import ar.gov.mpd.concursobackend.dashboard.application.service.UserDashboardService;
 import ar.gov.mpd.concursobackend.dashboard.infrastructure.adapter.UserDashboardDataAdapter;
 import ar.gov.mpd.concursobackend.dashboard.infrastructure.cache.DashboardCacheService;
+import jakarta.persistence.EntityManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import jakarta.persistence.EntityManager;
 
 /**
  * Configuración de Spring para el módulo Dashboard

@@ -38,6 +38,17 @@ export interface DocumentoUsuario {
   fechaValidacion?: Date;
   motivoRechazo?: string;
   mensajeError?: string; // Mensaje de error para estado UPLOAD_FAILED
+
+  // Propiedades para manejo de duplicidad y versionado
+  isArchived?: boolean; // Indica si el documento está archivado
+  version?: number; // Versión del documento
+  replacedDocumentId?: string; // ID del documento que reemplaza a este
+  archivedAt?: Date; // Fecha de archivado
+  archivedBy?: string; // Usuario que archivó el documento
+
+  // Propiedades calculadas para UI
+  hasDuplicates?: boolean; // Indica si tiene múltiples versiones
+  isLatestVersion?: boolean; // Indica si es la versión más reciente
 }
 
 export interface DocumentoResponse {

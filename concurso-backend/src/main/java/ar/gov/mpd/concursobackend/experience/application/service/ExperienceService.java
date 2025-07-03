@@ -1,11 +1,11 @@
 package ar.gov.mpd.concursobackend.experience.application.service;
 
+import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceRequestDto;
+import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
+
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceRequestDto;
-import ar.gov.mpd.concursobackend.experience.application.dto.ExperienceResponseDto;
 
 /**
  * Service interface for managing work experiences

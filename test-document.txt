@@ -1,9 +1,0 @@
-Este es un documento de prueba para verificar la funcionalidad de carga de documentos.
-
-Contenido del documento:
-- Nombre: Certificado de Antecedentes Penales
-- Tipo: Documento de prueba
-- Fecha: 2025-07-01
-- Usuario: user_test
-
-Este archivo se utilizará para probar la refactorización del sistema de estados de documentos.

@@ -1,10 +1,11 @@
 package ar.gov.mpd.concursobackend.inscription.application.dto;
 
 import ar.gov.mpd.concursobackend.inscription.domain.model.enums.InscriptionStep;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Set;
 
 @Data

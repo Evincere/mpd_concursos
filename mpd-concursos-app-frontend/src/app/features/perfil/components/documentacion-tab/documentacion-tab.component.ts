@@ -16,6 +16,7 @@ import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento }
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
+import { DocumentoUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-upload-dialog/documento-upload-dialog.component';
 import { debounceTime, throttleTime, finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 
@@ -40,6 +41,7 @@ interface DocumentoCardViewModel {
     CustomSpinnerComponent,
     CustomTableComponent,
     DocumentoMultipleUploadDialogComponent,
+    DocumentoUploadDialogComponent,
     DocumentoViewerComponent
   ],
   template: `
@@ -1194,24 +1196,25 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
-      title: 'Cargar Documento',
+    console.log('[DocumentacionTab] 📤 Abriendo diálogo de carga individual para:', tipoDocumento.nombre);
+
+    const dialogRef = this.dialog.open(DocumentoUploadDialogComponent, {
+      title: `Cargar ${tipoDocumento.nombre}`,
       showFooter: false,
       showCancelButton: false,
       showConfirmButton: false,
       data: {
-        tiposDocumento: [tipoDocumento],
-        documentosExistentes: this.documentosUsuario.filter(doc => doc.tipoDocumentoId === tipoDocumentoId),
-        modoSingle: true
+        tipoDocumentoId: tipoDocumento.id,
+        tipoDocumentoNombre: tipoDocumento.nombre
       }
     });
 
-    dialogRef.afterClosed().subscribe((result: unknown) => {
-      if (result) {
-        this.notification.success('Documento cargado exitosamente');
-        // CRITICAL FIX: Eliminar recarga manual redundante
-        // uploadDocumento() ya emite documentoActualizado$ que dispara la recarga automática
+    dialogRef.afterClosed().subscribe((result: any) => {
+      if (result && result.success) {
+        this.notification.success(`${tipoDocumento.nombre} cargado exitosamente`);
         console.log('[DocumentacionTab] 📄 Documento individual cargado exitosamente - recarga automática en progreso');
+      } else if (result && result.cancelled) {
+        console.log('[DocumentacionTab] ❌ Carga de documento cancelada por el usuario');
       }
     });
   }
@@ -1248,24 +1251,23 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const dialogRef = this.dialog.open(DocumentoMultipleUploadDialogComponent, {
-      title: 'Reemplazar Documento',
+    // CRITICAL FIX: Usar DocumentoUploadDialogComponent para reemplazo individual
+    const dialogRef = this.dialog.open(DocumentoUploadDialogComponent, {
+      title: `Reemplazar ${tipoDocumento.nombre}`,
       showFooter: false,
       showCancelButton: false,
       showConfirmButton: false,
       data: {
-        tiposDocumento: [tipoDocumento],
-        documentosExistentes: [documento],
-        modoSingle: true,
-        modoReemplazo: true
+        tipoDocumentoId: documento.tipoDocumentoId,
+        tipoDocumentoNombre: tipoDocumento.nombre,
+        modoReemplazo: true,
+        documentoExistente: documento
       }
     });
 
     dialogRef.afterClosed().subscribe((result: unknown) => {
       if (result) {
         this.notification.success('Documento reemplazado exitosamente.');
-        // CRITICAL FIX: Eliminar recarga manual redundante
-        // uploadDocumento() ya emite documentoActualizado$ que dispara la recarga automática
         console.log('[DocumentacionTab] 📄 Documento reemplazado exitosamente - recarga automática en progreso');
       }
     });
@@ -1322,4 +1324,4 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 }
 
-  
+

@@ -1,17 +1,16 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.persistence;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Repository;
-
 import ar.gov.mpd.concursobackend.document.domain.model.DocumentType;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentTypeRepository;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentTypeSpringRepository;
 import ar.gov.mpd.concursobackend.document.infrastructure.mapper.DocumentEntityMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor

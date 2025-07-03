@@ -1,12 +1,12 @@
 package ar.gov.mpd.concursobackend.contest.application;
 
-import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestRequirementEntity;
+import ar.gov.mpd.concursobackend.contest.application.dto.ContestRequirementDTO;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
-import ar.gov.mpd.concursobackend.contest.infrastructure.database.repository.ContestRequirementJpaRepository;
+import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestRequirementEntity;
 import ar.gov.mpd.concursobackend.contest.infrastructure.database.repository.ContestJpaRepository;
+import ar.gov.mpd.concursobackend.contest.infrastructure.database.repository.ContestRequirementJpaRepository;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestRequirementCreateRequest;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestRequirementUpdateRequest;
-import ar.gov.mpd.concursobackend.contest.application.dto.ContestRequirementDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

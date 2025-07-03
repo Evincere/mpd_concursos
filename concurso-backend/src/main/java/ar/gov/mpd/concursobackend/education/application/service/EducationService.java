@@ -1,11 +1,11 @@
 package ar.gov.mpd.concursobackend.education.application.service;
 
+import ar.gov.mpd.concursobackend.education.application.dto.EducationRequestDto;
+import ar.gov.mpd.concursobackend.education.application.dto.EducationResponseDto;
+
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.education.application.dto.EducationRequestDto;
-import ar.gov.mpd.concursobackend.education.application.dto.EducationResponseDto;
 
 /**
  * Service interface for managing education records

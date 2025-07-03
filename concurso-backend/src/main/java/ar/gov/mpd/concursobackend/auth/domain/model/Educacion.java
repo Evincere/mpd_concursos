@@ -1,6 +1,7 @@
 package ar.gov.mpd.concursobackend.auth.domain.model;
 
 import lombok.Data;
+
 import java.time.LocalDate;
 
 /**

@@ -1,10 +1,10 @@
 package ar.gov.mpd.concursobackend.document.domain.port;
 
-import java.util.List;
-import java.util.Optional;
-
 import ar.gov.mpd.concursobackend.document.domain.model.DocumentType;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface IDocumentTypeRepository {
     DocumentType save(DocumentType documentType);

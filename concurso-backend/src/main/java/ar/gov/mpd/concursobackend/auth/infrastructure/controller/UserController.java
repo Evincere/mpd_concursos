@@ -1,20 +1,6 @@
 package ar.gov.mpd.concursobackend.auth.infrastructure.controller;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import ar.gov.mpd.concursobackend.auth.application.dto.UpdateUserRequest;
-import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileResponse;
-import ar.gov.mpd.concursobackend.auth.application.dto.UserProfileUpdateRequest;
-import ar.gov.mpd.concursobackend.auth.application.dto.UserCreateDto;
-import ar.gov.mpd.concursobackend.auth.application.dto.UserStatusUpdateRequest;
-import ar.gov.mpd.concursobackend.auth.application.dto.UserRolesUpdateRequest;
+import ar.gov.mpd.concursobackend.auth.application.dto.*;
 import ar.gov.mpd.concursobackend.auth.application.service.RolService;
 import ar.gov.mpd.concursobackend.auth.application.service.UserService;
 import ar.gov.mpd.concursobackend.auth.domain.enums.RoleEnum;
@@ -22,27 +8,27 @@ import ar.gov.mpd.concursobackend.auth.domain.exception.InvalidCuitException;
 import ar.gov.mpd.concursobackend.auth.domain.model.Rol;
 import ar.gov.mpd.concursobackend.auth.domain.model.User;
 import ar.gov.mpd.concursobackend.auth.domain.model.UserStatus;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
-import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserCuit;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserDni;
 import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserEmail;
+import ar.gov.mpd.concursobackend.auth.domain.valueObject.user.UserUsername;
 import ar.gov.mpd.concursobackend.shared.security.IAuthenticationFacade;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.Map;
-
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
-import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -577,7 +563,7 @@ public class UserController {
             UUID userUuid = UUID.fromString(userId);
 
             Set<Rol> newRoles = rolesUpdateRequest.getRoles().stream()
-                .<Rol>map(roleName -> {
+                .map(roleName -> {
                     try {
                         return rolService.findByRole(RoleEnum.valueOf(roleName.toUpperCase()))
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol no encontrado: " + roleName));

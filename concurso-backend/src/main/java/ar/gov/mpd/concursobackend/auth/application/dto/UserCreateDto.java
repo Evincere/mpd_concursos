@@ -1,17 +1,10 @@
 package ar.gov.mpd.concursobackend.auth.application.dto;
 
-import java.time.LocalDate;
-
-import lombok.Data;
 import ar.gov.mpd.concursobackend.auth.application.validation.PasswordMatches;
-import ar.gov.mpd.concursobackend.auth.application.validation.ValidSpanishName;
-import ar.gov.mpd.concursobackend.auth.application.validation.ValidArgentinePhone;
+import jakarta.validation.constraints.*;
+import lombok.Data;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Pattern;
+import java.time.LocalDate;
 
 @Data
 @PasswordMatches

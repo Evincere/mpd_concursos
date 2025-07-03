@@ -1,20 +1,20 @@
 package ar.gov.mpd.concursobackend.document.infrastructure.persistence;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Repository;
-
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.document.domain.port.IDocumentRepository;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
+import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentSpringRepository;
 import ar.gov.mpd.concursobackend.document.infrastructure.mapper.DocumentEntityMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -76,5 +76,63 @@ public class DocumentRepositoryImpl implements IDocumentRepository {
     @Override
     public long countByProcessingStatus(String processingStatus) {
         return documentSpringRepository.countByProcessingStatus(processingStatus);
+    }
+
+    @Override
+    public List<Document> findActiveByUserId(UUID userId) {
+        log.debug("🔍 [DocumentRepository] Searching active documents for userId: {}", userId);
+
+        List<DocumentEntity> entities = documentSpringRepository.findActiveByUserId(userId);
+        log.debug("📊 [DocumentRepository] Found {} active document entities", entities.size());
+
+        return entities.stream()
+                .map(documentEntityMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Document> findActiveByUserAndType(UUID userId, DocumentTypeId documentTypeId) {
+        log.debug("🔍 [DocumentRepository] Searching active document for userId: {} and documentTypeId: {}",
+                userId, documentTypeId.value());
+
+        return documentSpringRepository.findActiveByUserAndType(userId, documentTypeId.value())
+                .map(documentEntityMapper::toDomain);
+    }
+
+    @Override
+    public List<Document> findArchivedByUserId(UUID userId) {
+        log.debug("🔍 [DocumentRepository] Searching archived documents for userId: {}", userId);
+
+        List<DocumentEntity> entities = documentSpringRepository.findArchivedByUserId(userId);
+        log.debug("📊 [DocumentRepository] Found {} archived document entities", entities.size());
+
+        return entities.stream()
+                .map(documentEntityMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Document> findVersionHistory(UUID userId, DocumentTypeId documentTypeId) {
+        log.debug("🔍 [DocumentRepository] Searching version history for userId: {} and documentTypeId: {}",
+                userId, documentTypeId.value());
+
+        List<DocumentEntity> entities = documentSpringRepository.findVersionHistory(userId, documentTypeId.value());
+        log.debug("📊 [DocumentRepository] Found {} versions in history", entities.size());
+
+        return entities.stream()
+                .map(documentEntityMapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Document> findAll() {
+        log.debug("🔍 [DocumentRepository] Finding all documents");
+
+        List<DocumentEntity> entities = documentSpringRepository.findAll();
+        log.debug("📊 [DocumentRepository] Found {} total document entities", entities.size());
+
+        return entities.stream()
+                .map(documentEntityMapper::toDomain)
+                .collect(Collectors.toList());
     }
 }

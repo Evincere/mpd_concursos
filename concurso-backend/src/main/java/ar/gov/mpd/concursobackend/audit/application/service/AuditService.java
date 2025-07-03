@@ -1,7 +1,7 @@
 package ar.gov.mpd.concursobackend.audit.application.service;
 
-import ar.gov.mpd.concursobackend.audit.domain.model.AuditLog;
 import ar.gov.mpd.concursobackend.audit.domain.model.AuditEventType;
+import ar.gov.mpd.concursobackend.audit.domain.model.AuditLog;
 import ar.gov.mpd.concursobackend.audit.infrastructure.persistence.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

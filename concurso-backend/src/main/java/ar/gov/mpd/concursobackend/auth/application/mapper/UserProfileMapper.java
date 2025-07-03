@@ -1,19 +1,18 @@
 package ar.gov.mpd.concursobackend.auth.application.mapper;
 
+import ar.gov.mpd.concursobackend.auth.application.dto.EducacionDto;
+import ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto;
+import ar.gov.mpd.concursobackend.auth.application.dto.HabilidadDto;
+import ar.gov.mpd.concursobackend.auth.domain.model.Educacion;
+import ar.gov.mpd.concursobackend.auth.domain.model.Experiencia;
+import ar.gov.mpd.concursobackend.auth.domain.model.Habilidad;
+import org.springframework.stereotype.Component;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
-
-import ar.gov.mpd.concursobackend.auth.application.dto.ExperienciaDto;
-import ar.gov.mpd.concursobackend.auth.application.dto.EducacionDto;
-import ar.gov.mpd.concursobackend.auth.application.dto.HabilidadDto;
-import ar.gov.mpd.concursobackend.auth.domain.model.Experiencia;
-import ar.gov.mpd.concursobackend.auth.domain.model.Educacion;
-import ar.gov.mpd.concursobackend.auth.domain.model.Habilidad;
 
 @Component
 public class UserProfileMapper {

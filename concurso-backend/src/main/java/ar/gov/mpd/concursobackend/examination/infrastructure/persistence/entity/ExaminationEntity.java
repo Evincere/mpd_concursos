@@ -1,30 +1,18 @@
 package ar.gov.mpd.concursobackend.examination.infrastructure.persistence.entity;
 
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationStatus;
+import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationType;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationType;
-import ar.gov.mpd.concursobackend.examination.domain.enums.ExaminationStatus;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.JoinColumn;
 
 @Entity
 @Table(name = "examinations")

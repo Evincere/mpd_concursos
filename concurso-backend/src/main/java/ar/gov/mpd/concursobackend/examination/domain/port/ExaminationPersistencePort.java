@@ -1,7 +1,10 @@
 package ar.gov.mpd.concursobackend.examination.domain.port;
 
 import ar.gov.mpd.concursobackend.examination.application.dto.ExaminationBackupResponse;
-import ar.gov.mpd.concursobackend.examination.domain.model.*;
+import ar.gov.mpd.concursobackend.examination.domain.model.Answer;
+import ar.gov.mpd.concursobackend.examination.domain.model.Examination;
+import ar.gov.mpd.concursobackend.examination.domain.model.ExaminationSession;
+import ar.gov.mpd.concursobackend.examination.domain.model.Question;
 
 import java.util.List;
 import java.util.UUID;
