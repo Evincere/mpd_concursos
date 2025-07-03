@@ -58,6 +58,7 @@ public class ContestDataInitializationService implements CommandLineRunner {
 
     /**
      * Crea concursos de prueba basados en el documento "CONCURSO CLASE 3 MULTIFUERO"
+     * Para 1ra, 2da, 3ra y 4ta Circunscripciones Judiciales de Mendoza
      */
     private void createTestContests() {
         log.info("📝 [ContestDataInitialization] Creando concursos de prueba...");
@@ -66,32 +67,46 @@ public class ContestDataInitializationService implements CommandLineRunner {
         LocalDate today = LocalDate.now();
         LocalDate contestEndDate = today.plusDays(60);
 
-        // Concurso 1: Defensor Penal - Clase 3 Multifuero
+        // Concurso 1: Co-Defensor Penal y Penal Juvenil - Clase 3 Multifuero
         ContestEntity contest1 = createTestContest(
-            "Concurso para Defensor Penal - Clase 3 Multifuero",
-            "JURIDICO",
-            "3",
-            "Ejercer la defensa técnica en causas penales, representar a imputados y realizar todas las actividades inherentes a la defensa penal según la normativa vigente. Asistir a audiencias, elaborar escritos de defensa, y garantizar el debido proceso legal.",
+            "Co-Defensor Penal y Penal Juvenil - Clase 03 Multifuero",
+            "FUNCIONARIOS Y PERSONAL JERARQUICO",
+            "03",
+            "Defensa legal en causas penales y penales juveniles. Garantizar derechos fundamentales y debido proceso.",
             "DEFENSORIAS PENALES",
-            "Defensor/a Penal - Clase 3",
+            "Co-Defensor/a Penal y Penal Juvenil - Clase 03",
             today,
             contestEndDate,
-            "/api/files/contest-bases/concurso_defensor_penal_clase3.pdf",
-            "/api/files/contest-descriptions/defensor_penal_clase3_descripcion.pdf"
+            "/api/files/contest-bases/concurso_codefensor_penal_clase03.pdf",
+            "/api/files/contest-descriptions/codefensor_penal_clase03_descripcion.pdf"
         );
 
-        // Concurso 2: Defensor Civil - Clase 3 Multifuero  
+        // Concurso 2: Co-Defensor Civil - Clase 3 Multifuero
         ContestEntity contest2 = createTestContest(
-            "Concurso para Defensor Civil - Clase 3 Multifuero",
-            "JURIDICO",
-            "3", 
-            "Ejercer la defensa técnica en causas civiles, representar a personas en situación de vulnerabilidad y realizar todas las actividades inherentes a la defensa civil según la normativa vigente. Patrocinar en juicios civiles, de familia y laborales.",
+            "Co-Defensor Civil - Clase 03 Multifuero",
+            "FUNCIONARIOS Y PERSONAL JERARQUICO",
+            "03",
+            "Asesoramiento y representación legal en materias Civil, Comercial, Paz, Familia, Consumidor, Tributario y Concursal.",
             "DEFENSORIAS CIVILES",
-            "Defensor/a Civil - Clase 3",
+            "Co-Defensor/a Civil - Clase 03",
             today,
             contestEndDate,
-            "/api/files/contest-bases/concurso_defensor_civil_clase3.pdf",
-            "/api/files/contest-descriptions/defensor_civil_clase3_descripcion.pdf"
+            "/api/files/contest-bases/concurso_codefensor_civil_clase03.pdf",
+            "/api/files/contest-descriptions/codefensor_civil_clase03_descripcion.pdf"
+        );
+
+        // Concurso 3: Co-Asesor de NNAyPCR - Clase 3 Multifuero
+        ContestEntity contest3 = createTestContest(
+            "Co-Asesor/a de NNAyPCR - Clase 03 Multifuero",
+            "FUNCIONARIOS Y PERSONAL JERARQUICO",
+            "03",
+            "Defensa y protección de derechos de niños, niñas, adolescentes y personas con capacidad restringida.",
+            "ASESORIAS DE NIÑOS, NIÑAS, ADOLESCENTES Y PERSONAS CON CAPACIDAD RESTRINGIDA",
+            "Co-Asesor/a de NNAyPCR - Clase 03",
+            today,
+            contestEndDate,
+            "/api/files/contest-bases/concurso_coasesor_nnapcr_clase03.pdf",
+            "/api/files/contest-descriptions/coasesor_nnapcr_clase03_descripcion.pdf"
         );
 
         // Guardar concursos
@@ -104,9 +119,14 @@ public class ContestDataInitializationService implements CommandLineRunner {
             log.info("✅ [ContestDataInitialization] Concurso creado: {} (ID: {})", 
                 savedContest2.getTitle(), savedContest2.getId());
 
+            ContestEntity savedContest3 = contestRepository.save(contest3);
+            log.info("✅ [ContestDataInitialization] Concurso creado: {} (ID: {})", 
+                savedContest3.getTitle(), savedContest3.getId());
+
             // Crear fechas importantes para cada concurso
             createContestDates(savedContest1);
             createContestDates(savedContest2);
+            createContestDates(savedContest3);
 
         } catch (Exception e) {
             log.error("❌ [ContestDataInitialization] Error creando concursos de prueba", e);
@@ -118,7 +138,7 @@ public class ContestDataInitializationService implements CommandLineRunner {
     /**
      * Crea un concurso de prueba con los datos especificados
      */
-    private ContestEntity createTestContest(String title, String category, String class_, 
+    private ContestEntity createTestContest(String title, String category, String class_,
                                           String functions, String department, String position,
                                           LocalDate startDate, LocalDate endDate,
                                           String basesUrl, String descriptionUrl) {
@@ -143,7 +163,7 @@ public class ContestDataInitializationService implements CommandLineRunner {
      */
     private void createContestDates(ContestEntity contest) {
         LocalDate today = LocalDate.now();
-        
+
         List<ContestDateEntity> dates = new ArrayList<>();
 
         // Fecha de inscripción (30 días desde hoy)
