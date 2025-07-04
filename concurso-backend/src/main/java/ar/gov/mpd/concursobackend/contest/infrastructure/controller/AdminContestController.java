@@ -11,6 +11,8 @@ import ar.gov.mpd.concursobackend.contest.domain.model.Contest;
 import ar.gov.mpd.concursobackend.contest.domain.port.ContestFilters;
 import ar.gov.mpd.concursobackend.contest.infrastructure.dto.*;
 import ar.gov.mpd.concursobackend.contest.infrastructure.mapper.ContestMapper;
+import ar.gov.mpd.concursobackend.contest.infrastructure.database.entities.ContestEntity;
+import ar.gov.mpd.concursobackend.contest.infrastructure.database.repository.ContestJpaRepository;
 import ar.gov.mpd.concursobackend.shared.infrastructure.dto.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,6 +47,7 @@ public class AdminContestController {
     private final ContestValidator contestValidator;
     private final ContestDateService contestDateService;
     private final ContestRequirementService contestRequirementService;
+    private final ContestJpaRepository contestRepository;
 
     @GetMapping
     @Operation(summary = "Obtiene todos los concursos con filtros y paginación")
@@ -100,8 +103,10 @@ public class AdminContestController {
     @GetMapping("/{id}")
     @Operation(summary = "Obtiene un concurso por su ID")
     public ResponseEntity<ContestResponse> getContestById(@PathVariable Long id) {
-        Contest contest = contestService.getContestById(id);
-        ContestResponse response = contestMapper.toResponse(contest);
+        // Obtener directamente la entidad para mapeo correcto
+        ContestEntity entity = contestRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Contest not found with id: " + id));
+        ContestResponse response = contestMapper.toResponseFromEntity(entity);
         return ResponseEntity.ok(response);
     }
 
