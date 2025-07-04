@@ -116,7 +116,8 @@ export class AutocompleteComponent implements OnInit, OnDestroy, ControlValueAcc
       .subscribe(items => {
         this.items = items;
         this.isLoading = false;
-        this.highlightedIndex = -1;
+        // Auto-resaltar la primera opción si hay resultados
+        this.highlightedIndex = items.length > 0 ? 0 : -1;
       });
   }
 
@@ -193,11 +194,27 @@ export class AutocompleteComponent implements OnInit, OnDestroy, ControlValueAcc
    * Maneja el evento de pérdida de foco
    */
   onBlur(): void {
-    // Delay para permitir clicks en el dropdown
+    // Delay más largo para permitir clicks en el dropdown
     setTimeout(() => {
-      this.closeDropdown();
-      this.focusChanged.emit(false);
-    }, 150);
+      // Solo cerrar si el foco no está en el dropdown
+      if (!this.isDropdownFocused()) {
+        this.closeDropdown();
+        this.focusChanged.emit(false);
+      }
+    }, 200);
+  }
+
+  /**
+   * Verifica si el foco está en el dropdown
+   */
+  private isDropdownFocused(): boolean {
+    if (!this.dropdownElement) return false;
+
+    const activeElement = document.activeElement;
+    const dropdownElement = this.dropdownElement.nativeElement;
+
+    return dropdownElement.contains(activeElement) ||
+           dropdownElement === activeElement;
   }
 
   /**
@@ -226,8 +243,32 @@ export class AutocompleteComponent implements OnInit, OnDestroy, ControlValueAcc
       case 'Enter':
         if (this.highlightedIndex >= 0 && this.items[this.highlightedIndex]) {
           this.selectItem(this.items[this.highlightedIndex]);
+        } else if (this.items.length === 1) {
+          // Auto-seleccionar si solo hay una opción
+          this.selectItem(this.items[0]);
+        } else if (this.items.length > 0) {
+          // Seleccionar la primera opción si no hay nada resaltado
+          this.selectItem(this.items[0]);
         }
         event.preventDefault();
+        break;
+
+      case 'Tab':
+        if (this.highlightedIndex >= 0 && this.items[this.highlightedIndex]) {
+          this.selectItem(this.items[this.highlightedIndex]);
+          event.preventDefault();
+        } else if (this.items.length === 1) {
+          // Auto-seleccionar si solo hay una opción
+          this.selectItem(this.items[0]);
+          event.preventDefault();
+        } else if (this.items.length > 0) {
+          // Seleccionar la primera opción si no hay nada resaltado
+          this.selectItem(this.items[0]);
+          event.preventDefault();
+        } else {
+          // Si no hay opciones, cerrar dropdown y permitir navegación normal
+          this.closeDropdown();
+        }
         break;
 
       case 'Escape':
@@ -235,6 +276,14 @@ export class AutocompleteComponent implements OnInit, OnDestroy, ControlValueAcc
         event.preventDefault();
         break;
     }
+  }
+
+  /**
+   * Maneja el mousedown en un item para prevenir el blur
+   */
+  onItemMouseDown(event: MouseEvent): void {
+    // Prevenir que el input pierda el foco
+    event.preventDefault();
   }
 
   /**

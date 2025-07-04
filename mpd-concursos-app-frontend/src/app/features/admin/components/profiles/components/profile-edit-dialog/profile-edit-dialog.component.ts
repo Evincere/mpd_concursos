@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { AdminProfilesService, UserProfile, UpdateProfileRequest } from '@core/services/admin/admin-profiles.service';
+import { ValidationService } from '@shared/services/validation.service';
 
 @Component({
   selector: 'app-profile-edit-dialog',
@@ -203,6 +204,12 @@ export class ProfileEditDialogComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    // Sanitizar formularios antes de validar
+    ValidationService.sanitizeFormGroup(this.personalForm);
+    ValidationService.sanitizeFormGroup(this.addressForm);
+    ValidationService.sanitizeFormGroup(this.professionalForm);
+    ValidationService.sanitizeFormGroup(this.preferencesForm);
+
     if (this.personalForm.invalid) {
       this.snackBar.open('Por favor, complete los campos obligatorios', 'Cerrar', { duration: 3000 });
       return;
@@ -210,7 +217,7 @@ export class ProfileEditDialogComponent implements OnInit, OnDestroy {
 
     this.isSaving = true;
 
-    const updateData: UpdateProfileRequest = {
+    const updateData: UpdateProfileRequest = ValidationService.sanitizeObject({
       ...this.personalForm.value,
       address: this.addressForm.get('address')?.value,
       centroDeVida: this.addressForm.get('sameCentroDeVida')?.value ?
@@ -218,7 +225,7 @@ export class ProfileEditDialogComponent implements OnInit, OnDestroy {
         this.addressForm.get('centroDeVida')?.value,
       professionalInfo: this.professionalForm.value,
       preferences: this.preferencesForm.value
-    };
+    });
 
     this.profilesService.updateProfile(this.data.profileId, updateData)
       .pipe(takeUntil(this.destroy$))

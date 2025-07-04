@@ -14,6 +14,7 @@ import { AuthService } from '@core/services/auth/auth.service';
 import { CustomDialogService } from '@shared/components/custom-form/custom-dialog/custom-dialog.service';
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { PerfilStateService } from './services/perfil-state.service';
+import { ValidationService } from '@shared/services/validation.service';
 
 // Tipos y modelos
 import { TabKey, ProfileTab } from './models/types';
@@ -400,6 +401,9 @@ export class PerfilComponent implements OnInit, OnDestroy {
   }
 
   onFormSave(): void {
+    // Sanitizar el formulario antes de validar
+    ValidationService.sanitizeFormGroup(this.perfilForm);
+
     if (this.perfilForm.valid) {
       this.guardarPerfil();
     } else {
@@ -518,7 +522,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
     if (this.perfilForm.valid && this.userProfile?.id) { // Asegurarse de tener un ID de usuario
       const formValues = this.perfilForm.value;
 
-      const perfilData = {
+      const perfilData = ValidationService.sanitizeObject({
         firstName: formValues.firstName,
         lastName: formValues.lastName,
         dni: formValues.dni,
@@ -540,7 +544,7 @@ export class PerfilComponent implements OnInit, OnDestroy {
           nombre: hab.nombre,
           nivel: hab.nivel
         }))
-      };
+      });
 
       this.isLoading = true; // Iniciar carga
       this.subscriptions.push( // Añadir a las suscripciones para limpiar en OnDestroy
