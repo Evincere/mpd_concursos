@@ -38,6 +38,7 @@ public class Contest {
     private LocalDateTime updatedAt;
     private String category;
     private String dependency;
+    private String contestClass; // Clase del concurso (ej: "03")
     
     /**
      * Check if inscriptions are currently open for this contest

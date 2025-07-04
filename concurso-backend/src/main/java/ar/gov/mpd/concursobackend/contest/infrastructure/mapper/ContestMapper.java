@@ -1,6 +1,6 @@
 package ar.gov.mpd.concursobackend.contest.infrastructure.mapper;
 
-import ar.gov.mpd.concursobackend.contest.application.dto.ContestDTO;
+import ar.gov.mpd.concursobackend.contest.infrastructure.dto.ContestDTO;
 import ar.gov.mpd.concursobackend.contest.application.dto.ContestDateDTO;
 import ar.gov.mpd.concursobackend.contest.domain.ContestDate;
 import ar.gov.mpd.concursobackend.contest.domain.enums.ContestStatus;
@@ -39,6 +39,7 @@ public class ContestMapper {
             .district(entity.getDepartment()) // Mapear department a district
             .category(entity.getCategory())
             .dependency(entity.getDepartment())
+            .contestClass(entity.getClass_()) // Mapear class_ a contestClass
             .status(entity.getStatus())
             .startDate(entity.getStartDate() != null ? entity.getStartDate().atStartOfDay() : null)
             .endDate(entity.getEndDate() != null ? entity.getEndDate().atStartOfDay() : null)
@@ -66,7 +67,7 @@ public class ContestMapper {
             .id(domain.getId())
             .title(domain.getTitle())
             .category(domain.getCategory())
-            .class_(domain.getDescription()) // Mapear description a class_
+            .class_(domain.getContestClass()) // Mapear contestClass a class_
             .functions(domain.getDescription()) // Usar description como functions
             .status(domain.getStatus())
             .department(domain.getDependency())
@@ -83,27 +84,38 @@ public class ContestMapper {
     public ContestDTO toDTO(Contest domain) {
         if (domain == null) return null;
 
-        // Extraer la primera posición de la lista de posiciones
-        String position = "No especificado";
-        if (domain.getPositions() != null && !domain.getPositions().isEmpty()) {
-            position = domain.getPositions().get(0).getTitle();
-        } else if (domain.getLocation() != null) {
-            position = domain.getLocation();
-        }
+        // Extraer solo el cargo base sin la clase
+        String position = extractBasePosition(domain.getLocation());
 
         return ContestDTO.builder()
             .id(domain.getId())
             .title(domain.getTitle())
+            .description(domain.getDescription())
+            .requirements(domain.getRequirements())
+            .location(domain.getLocation())
+            .district(domain.getDistrict())
             .category(domain.getCategory())
-            .class_(domain.getDescription()) // Mapear description a class_
+            .class_(domain.getContestClass()) // Mapear contestClass a class_
             .functions(domain.getDescription()) // Usar description como functions
             .status(domain.getStatus() != null ? domain.getStatus().name() : null)
             .position(position)
             .dependency(domain.getDependency())
+            .department(domain.getDependency()) // Usar dependency como department
             .startDate(domain.getStartDate() != null ? domain.getStartDate().toLocalDate() : null)
             .endDate(domain.getEndDate() != null ? domain.getEndDate().toLocalDate() : null)
+            .inscriptionStartDate(domain.getInscriptionStartDate() != null ? domain.getInscriptionStartDate().toLocalDate() : null)
+            .inscriptionEndDate(domain.getInscriptionEndDate() != null ? domain.getInscriptionEndDate().toLocalDate() : null)
+            .examDate(domain.getExamDate() != null ? domain.getExamDate().toLocalDate() : null)
+            .resultsDate(domain.getResultsDate() != null ? domain.getResultsDate().toLocalDate() : null)
+            .active(domain.isActive())
+            .cancelled(domain.isCancelled())
+            .finished(domain.isFinished())
+            .currentStatus(domain.getCurrentStatus() != null ? domain.getCurrentStatus().name() : null)
+            .inscriptionOpen(domain.isInscriptionOpen())
             .basesUrl(null) // TODO: Agregar al modelo principal si es necesario
             .descriptionUrl(null) // TODO: Agregar al modelo principal si es necesario
+            .documents(new ArrayList<>()) // TODO: Mapear documentos cuando se implemente
+            .positions(new ArrayList<>()) // TODO: Mapear posiciones cuando se implemente
             .dates(new ArrayList<>()) // TODO: Mapear fechas cuando se implemente
             .build();
     }
@@ -191,6 +203,40 @@ public class ContestMapper {
     }
 
     /**
+     * Convierte directamente un ContestEntity a ContestResponse
+     * MAPEO DIRECTO para evitar problemas de conversión
+     */
+    public ContestResponse toResponseFromEntity(ContestEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return ContestResponse.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .description(entity.getFunctions()) // Usar functions como description
+                .position(entity.getPosition()) // Mapeo directo del campo position
+                .category(entity.getCategory()) // Mapeo directo del campo category
+                .contestClass(entity.getClass_()) // Mapeo directo del campo class_
+                .functions(entity.getFunctions()) // Mapeo directo del campo functions
+                .department(entity.getDepartment()) // Mapeo directo del campo department
+                .dependencia(entity.getDepartment()) // Compatibilidad
+                .status(entity.getStatus() != null ? entity.getStatus().name() : null)
+                .startDate(entity.getStartDate())
+                .endDate(entity.getEndDate())
+                .termsUrl(entity.getBasesUrl())
+                .profileUrl(entity.getDescriptionUrl())
+                .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt() : LocalDateTime.now())
+                .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt() : LocalDateTime.now())
+                .createdBy("system") // TODO: Obtener del contexto de seguridad
+                .updatedBy("system")
+                .totalInscriptions(0) // TODO: Calcular desde inscripciones
+                .isActive(isActiveStatus(entity.getStatus()))
+                .allowsInscriptions(allowsInscriptions(entity.getStatus()))
+                .build();
+    }
+
+    /**
      * Convierte un ContestCreateRequest a Contest
      */
     public Contest fromCreateRequest(ContestCreateRequest request) {
@@ -258,5 +304,20 @@ public class ContestMapper {
     private boolean allowsInscriptions(ContestStatus status) {
         return status == ContestStatus.PUBLISHED ||
                status == ContestStatus.INSCRIPTION_OPEN;
+    }
+
+    /**
+     * Extrae el cargo base sin la clase del campo location/position
+     * Ejemplo: "Co-Defensor/a Civil - Clase 03" → "Co-Defensor/a Civil"
+     */
+    private String extractBasePosition(String location) {
+        if (location == null || location.trim().isEmpty()) {
+            return "No especificado";
+        }
+
+        // Buscar el patrón "- Clase XX" y removerlo
+        String basePosition = location.replaceAll("\\s*-\\s*Clase\\s+\\d+.*$", "").trim();
+
+        return basePosition.isEmpty() ? "No especificado" : basePosition;
     }
 }
