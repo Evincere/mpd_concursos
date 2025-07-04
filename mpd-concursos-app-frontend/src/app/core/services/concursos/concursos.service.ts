@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError, throwError, tap } from 'rxjs'; // Added tap for logging
+import { Observable, catchError, throwError, tap, map } from 'rxjs'; // Added tap and map for logging and mapping
 import { Concurso } from '../../../shared/interfaces/concurso/concurso.interface';
 import { environment } from '../../../../environments/environment';
 import { BusquedaConcurso, FiltrosConcurso } from '@shared/interfaces/filters/filtros.interface';
@@ -48,7 +48,8 @@ export class ConcursosService {
    */
   getConcursos(): Observable<Concurso[]> {
     this.loggingService.info(`[${this.LOG_TAG}] Fetching all contests from: ${this.apiUrl}.`, undefined, this.LOG_TAG);
-    return this.http.get<Concurso[]>(this.apiUrl).pipe(
+    return this.http.get<any[]>(this.apiUrl).pipe(
+      map(concursos => concursos.map(concurso => this.mapBackendResponseToFrontend(concurso))),
       tap(concursos => {
         this.loggingService.debug(`[${this.LOG_TAG}] Successfully fetched ${concursos.length} contests.`, undefined, this.LOG_TAG);
       }),
@@ -75,7 +76,8 @@ export class ConcursosService {
 
     this.loggingService.debug(`[${this.LOG_TAG}] HTTP Params for filtered contests:`, params.toString(), this.LOG_TAG);
 
-    return this.http.get<Concurso[]>(`${this.apiUrl}/filtrar`, { params }).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/filtrar`, { params }).pipe(
+      map(concursos => concursos.map(concurso => this.mapBackendResponseToFrontend(concurso))),
       tap(concursos => {
         this.loggingService.debug(`[${this.LOG_TAG}] Successfully fetched ${concursos.length} filtered contests.`, undefined, this.LOG_TAG);
       }),
@@ -100,7 +102,8 @@ export class ConcursosService {
 
     this.loggingService.debug(`[${this.LOG_TAG}] HTTP Params for contest search:`, params.toString(), this.LOG_TAG);
 
-    return this.http.get<Concurso[]>(`${this.apiUrl}/buscar`, { params }).pipe(
+    return this.http.get<any[]>(`${this.apiUrl}/buscar`, { params }).pipe(
+      map(concursos => concursos.map(concurso => this.mapBackendResponseToFrontend(concurso))),
       tap(concursos => {
         this.loggingService.debug(`[${this.LOG_TAG}] Successfully found ${concursos.length} contests for search query "${busqueda.termino}".`, undefined, this.LOG_TAG);
       }),
@@ -137,7 +140,8 @@ export class ConcursosService {
    */
   getConcursoById(concursoId: string): Observable<Concurso> {
     this.loggingService.info(`[${this.LOG_TAG}] Fetching contest by ID: ${concursoId}.`, undefined, this.LOG_TAG);
-    return this.http.get<Concurso>(`${this.apiUrl}/${concursoId}`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/${concursoId}`).pipe(
+      map(response => this.mapBackendResponseToFrontend(response)),
       tap(concurso => {
         this.loggingService.debug(`[${this.LOG_TAG}] Successfully fetched contest details for ID: ${concursoId}. Title: "${concurso.title}".`, undefined, this.LOG_TAG);
       }),
@@ -146,5 +150,28 @@ export class ConcursosService {
         return throwError(() => new Error(`No se pudo obtener el concurso con ID ${concursoId}.`));
       })
     );
+  }
+
+  /**
+   * Maps the backend response to the frontend expected format.
+   * @param response The raw response from the backend.
+   */
+  private mapBackendResponseToFrontend(response: any): Concurso {
+    this.loggingService.debug(`[${this.LOG_TAG}] Mapping backend response to frontend format.`, response, this.LOG_TAG);
+
+    // MAPEO DE CAMPOS: Backend -> Frontend
+    // El backend devuelve 'class_' pero el frontend espera 'class'
+    if (response.class_ !== undefined) {
+      response.class = response.class_;
+      this.loggingService.debug(`[${this.LOG_TAG}] Mapped class_ to class:`, response.class_, this.LOG_TAG);
+    }
+
+    // Asegurar que position esté mapeado correctamente
+    if (response.position !== undefined) {
+      this.loggingService.debug(`[${this.LOG_TAG}] Position field found:`, response.position, this.LOG_TAG);
+    }
+
+    this.loggingService.debug(`[${this.LOG_TAG}] Final mapped response:`, response, this.LOG_TAG);
+    return response as Concurso;
   }
 }

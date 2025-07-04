@@ -47,6 +47,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   loginError: string | null = null;
   hide = true;
   isFlipped = false;
+  passwordHasContent = false;
   isBlockedError = false;
   isInactiveError = false;
   isExpiredError = false;
@@ -79,6 +80,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.isExpiredError = false;
         // Don't automatically flip back - let user control the card flip
       }
+
+      // Update password content detection
+      const passwordValue = this.loginForm.get('password')?.value;
+      this.passwordHasContent = passwordValue && passwordValue.length > 0;
     });
   }
 

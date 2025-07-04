@@ -59,6 +59,7 @@ export class ConcursoDetalleComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loggingService.debug('[ConcursoDetalleComponent] Componente inicializado con concurso:', this.concurso, 'ConcursoDetalle');
+
     if (this.concurso) {
       this.verificarInscripcion();
       // Initialize temporary URLs for documents if they don't exist

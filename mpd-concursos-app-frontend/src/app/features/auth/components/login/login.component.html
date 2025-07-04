@@ -29,7 +29,7 @@
               El email debe tener al menos 3 caracteres
             </mat-error>
           </div>
-          <div class="user-box password-field">
+          <div class="user-box password-field" [class.password-visible]="!hide" [class.password-has-content]="passwordHasContent">
             <div class="password-input-container">
               <input matInput [type]="hide ? 'password' : 'text'" class="login-input" formControlName="password" placeholder=" " required id="password">
               <button type="button" class="password-toggle-btn" (click)="togglePasswordVisibility()" [attr.aria-label]="hide ? 'Mostrar contraseña' : 'Ocultar contraseña'">

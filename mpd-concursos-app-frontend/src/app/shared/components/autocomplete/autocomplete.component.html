@@ -67,6 +67,7 @@
       [class.highlighted]="i === highlightedIndex"
       [attr.aria-selected]="i === highlightedIndex"
       role="option"
+      (mousedown)="onItemMouseDown($event)"
       (click)="selectItem(item)"
       (mouseenter)="highlightedIndex = i"
     >

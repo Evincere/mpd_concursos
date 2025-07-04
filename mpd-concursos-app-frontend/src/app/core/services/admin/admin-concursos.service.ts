@@ -252,6 +252,19 @@ export class AdminConcursosService {
    */
   private mapBackendResponseToFrontend(response: any): Concurso {
     this.loggingService.debug('[AdminConcursosService] Mapping backend response to frontend format.', response, 'ConcursosService');
+
+    // MAPEO DE CAMPOS: Backend -> Frontend
+    // El backend devuelve 'contestClass' pero el frontend espera 'class'
+    if (response.contestClass !== undefined) {
+      response.class = response.contestClass;
+      this.loggingService.debug('[AdminConcursosService] Mapped contestClass to class:', response.contestClass, 'ConcursosService');
+    }
+
+    // Asegurar que position esté mapeado correctamente
+    if (response.position !== undefined) {
+      this.loggingService.debug('[AdminConcursosService] Position field found:', response.position, 'ConcursosService');
+    }
+
     // Example: Convert date strings to Date objects if they come as strings
     if (response.startDate && typeof response.startDate === 'string') {
       response.startDate = new Date(response.startDate);
@@ -279,6 +292,8 @@ export class AdminConcursosService {
         return dateItem;
       });
     }
+
+    this.loggingService.debug('[AdminConcursosService] Final mapped response:', response, 'ConcursosService');
     return response as Concurso;
   }
 

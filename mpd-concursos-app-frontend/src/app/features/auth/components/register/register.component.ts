@@ -321,6 +321,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    // Sanitizar el formulario antes de validar
+    ValidationService.sanitizeFormGroup(this.registerForm);
+
     // Asegurarnos de que los términos sean marcados como tocados si no están aceptados
     this.ensureTermsFieldTouched();
 
@@ -339,8 +342,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
     const formValue = this.registerForm.value;
 
-    // Crear objeto con la nueva interfaz estandarizada
-    const userRegisterData: UserRegisterDTO = {
+    // Crear objeto con la nueva interfaz estandarizada y sanitizar
+    const userRegisterData: UserRegisterDTO = ValidationService.sanitizeObject({
       username: formValue.username!,
       email: formValue.email!,
       password: formValue.password!,
@@ -357,7 +360,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       residentialAddress: formValue.residentialAddress!,
       telefono: formValue.telefono!,
       termsAccepted: formValue.termsAccepted!
-    };
+    });
 
     // Mantener compatibilidad con la interfaz anterior
     const userData: NewUser = {

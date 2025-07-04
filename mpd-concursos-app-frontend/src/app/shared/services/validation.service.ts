@@ -6,6 +6,59 @@ import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angu
 })
 export class ValidationService {
 
+  /**
+   * Sanitiza un objeto eliminando espacios en blanco al inicio y final de todos los campos de texto
+   * @param obj Objeto a sanitizar
+   * @returns Objeto sanitizado
+   */
+  static sanitizeObject(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+
+    if (typeof obj === 'string') {
+      return obj.trim();
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => ValidationService.sanitizeObject(item));
+    }
+
+    if (typeof obj === 'object') {
+      const sanitized: any = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          sanitized[key] = ValidationService.sanitizeObject(obj[key]);
+        }
+      }
+      return sanitized;
+    }
+
+    return obj;
+  }
+
+  /**
+   * Sanitiza los valores de un FormGroup eliminando espacios en blanco
+   * @param formGroup FormGroup a sanitizar
+   */
+  static sanitizeFormGroup(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      if (control) {
+        if (control instanceof FormGroup) {
+          // Recursivo para FormGroups anidados
+          ValidationService.sanitizeFormGroup(control);
+        } else if (typeof control.value === 'string') {
+          // Sanitizar solo campos de texto
+          const trimmedValue = control.value.trim();
+          if (trimmedValue !== control.value) {
+            control.setValue(trimmedValue, { emitEvent: false });
+          }
+        }
+      }
+    });
+  }
+
 
 
   /**

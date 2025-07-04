@@ -372,7 +372,9 @@
 
 .login-box .user-box .login-input:focus ~ label,
 .login-box .user-box .login-input:valid ~ label,
-.login-box .user-box .login-input:not(:placeholder-shown) ~ label {
+.login-box .user-box .login-input:not(:placeholder-shown) ~ label,
+.login-box .user-box.password-visible label,
+.login-box .user-box.password-has-content label {
   top: 0;
   left: 12px;
   transform: translateY(-50%);
