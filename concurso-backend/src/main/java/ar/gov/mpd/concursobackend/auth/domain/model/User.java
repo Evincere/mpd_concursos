@@ -43,7 +43,7 @@ public class User {
 
     public User(UserUsername username, UserPassword password, UserEmail email, UserDni dni, UserCuit cuit,
             String firstName, String lastName) {
-        this.id = new UserId(UUID.randomUUID());
+        // NO asignar ID aquí - dejar que JPA lo genere automáticamente para evitar conflictos de merge/persist
         this.username = username;
         this.password = password;
         this.email = email;

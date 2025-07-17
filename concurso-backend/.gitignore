@@ -53,3 +53,20 @@ document-storage/
 src/main/resources/static/concursosH2bd/concursosbd.mv.db
 concursosH2bd/concursosbd.mv.db
 concurso-backend/src/main/resources/static/concursosH2bd/concursosbd.trace.db
+
+# =============================================================================
+# ARCHIVOS SENSIBLES ADICIONALES DE SEGURIDAD
+# =============================================================================
+# Claves privadas y certificados adicionales
+*.keystore
+*.truststore
+
+# Archivos de configuración con credenciales
+**/application-secrets.properties
+**/database.properties
+**/credentials.properties
+
+# Archivos de backup que pueden contener datos sensibles
+*.sql
+*.dump
+*.backup

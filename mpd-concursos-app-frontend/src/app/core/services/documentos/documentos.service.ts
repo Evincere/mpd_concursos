@@ -91,6 +91,9 @@ export class DocumentosService {
         }
         this.documentosCache = documentos;
         this.ultimaActualizacion = Date.now();
+
+        // CRITICAL FIX: Notificar actualización para que los componentes se refresquen
+        this.documentoActualizadoSource.next(Date.now());
       }),
       finalize(() => {
         // CRITICAL FIX: Liberar mutex al finalizar (éxito o error)
@@ -535,17 +538,19 @@ export class DocumentosService {
    * Elimina un documento
    * @param documentoId ID del documento a eliminar
    */
-  deleteDocumento(documentoId: string): Observable<Record<string, unknown>> {
+  deleteDocumento(documentoId: string): Observable<boolean> {
     if (!documentoId) {
-      return throwError(() => new Error('ID de documento no proporcionado para eliminar.'));
+      console.error('[DocumentosService] ❌ ID de documento no proporcionado para eliminar.');
+      return of(false);
     }
-    return this.http.delete<Record<string, unknown>>(`${this.apiUrl}/${documentoId}`).pipe(
+    return this.http.delete<void>(`${this.apiUrl}/${documentoId}`).pipe(
       tap(() => {
-        this.notificarDocumentoActualizado(); // Notify listeners on successful deletion
+        this.notificarDocumentoActualizado();
       }),
+      map(() => true),
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al eliminar documento:', error);
-        return throwError(() => new Error('Error al eliminar el documento'));
+        return of(false);
       })
     );
   }
@@ -853,5 +858,15 @@ export class DocumentosService {
 
     const byteArray = new Uint8Array(byteNumbers);
     return new Blob([byteArray], { type: mimeType });
+  }
+
+  /**
+   * Invalida el cache y fuerza una recarga desde el backend
+   */
+  public invalidarCache(): void {
+    console.log('[DocumentosService] 🗑️ Invalidando cache de documentos');
+    this.documentosCache = [];
+    this.ultimaActualizacion = 0;
+    this.notificarDocumentoActualizado();
   }
 }

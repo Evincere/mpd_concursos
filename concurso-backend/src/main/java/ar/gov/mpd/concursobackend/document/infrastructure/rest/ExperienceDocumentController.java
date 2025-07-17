@@ -25,7 +25,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/documentos/experiencias")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${spring.mvc.cors.allowed-origins}")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 @Slf4j
 public class ExperienceDocumentController {
 

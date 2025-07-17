@@ -8,7 +8,8 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "document_types")
+@Table(name = "document_types",
+       uniqueConstraints = @UniqueConstraint(columnNames = "code"))
 @Getter
 @Setter
 public class DocumentTypeEntity {

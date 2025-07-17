@@ -18,6 +18,7 @@ import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,16 +88,10 @@ public class DocumentServiceImpl implements DocumentService {
             // Reemplazar documento existente
             log.info("Reemplazando documento existente: {}", existingDocument.get().getId().value());
 
-            var replacementResult = duplicateService.replaceDocument(
+            Document savedDocument = duplicateService.replaceDocument(
                     existingDocument.get(),
                     newDocument,
                     userId);
-
-            if (!replacementResult.isSuccess()) {
-                throw new DocumentException("Error al reemplazar documento: " + replacementResult.getErrorMessage());
-            }
-
-            Document savedDocument = replacementResult.getNewDocument();
             storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
 
             return DocumentResponse.builder()
@@ -106,16 +101,22 @@ public class DocumentServiceImpl implements DocumentService {
                     .build();
         } else {
             // Crear nuevo documento
-            Document savedDocument = documentRepository.save(newDocument);
-            auditService.recordCreation(savedDocument, userId);
+            try {
+                Document savedDocument = documentRepository.save(newDocument);
+                auditService.recordCreation(savedDocument, userId);
 
-            storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
+                storeFileAsync(fileContent, request.getFileName(), userId, savedDocument.getId().value(), documentType.getName());
 
-            return DocumentResponse.builder()
-                    .id(savedDocument.getId().value().toString())
-                    .mensaje("Document upload started")
-                    .documento(documentMapper.toDto(savedDocument))
-                    .build();
+                return DocumentResponse.builder()
+                        .id(savedDocument.getId().value().toString())
+                        .mensaje("Document upload started")
+                        .documento(documentMapper.toDto(savedDocument))
+                        .build();
+
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.warn("Document creation failed due to optimistic locking conflict: {}", e.getMessage());
+                throw new DocumentException("El documento está siendo procesado por otra operación. Por favor, inténtelo nuevamente.");
+            }
         }
     }
 
@@ -133,19 +134,49 @@ public class DocumentServiceImpl implements DocumentService {
 
             document.setFilePath(filePath);
             document.setStatus(DocumentStatus.PENDING);
-            documentRepository.save(document);
+
+            try {
+                documentRepository.save(document);
+            } catch (ObjectOptimisticLockingFailureException e) {
+                log.warn("Document update failed due to optimistic locking conflict during file storage: {}", e.getMessage());
+                // Recargar el documento y reintentar
+                Document reloadedDocument = documentRepository.findById(new DocumentId(documentId))
+                        .orElseThrow(() -> new DocumentException("Document not found"));
+                reloadedDocument.setFilePath(filePath);
+                reloadedDocument.setStatus(DocumentStatus.PENDING);
+                documentRepository.save(reloadedDocument);
+            }
         } catch (DocumentException e) {
             log.error("Error storing file asynchronously", e);
-            Document document = documentRepository.findById(new DocumentId(documentId))
-                    .orElseThrow(() -> new DocumentException("Document not found"));
-            document.setStatus(DocumentStatus.ERROR);
-            documentRepository.save(document);
+            updateDocumentStatusSafely(documentId, DocumentStatus.ERROR);
         } catch (Exception e) {
             log.error("Unexpected error storing file asynchronously", e);
+            updateDocumentStatusSafely(documentId, DocumentStatus.ERROR);
+        }
+    }
+
+    /**
+     * Actualiza el estado de un documento de manera segura, manejando errores de concurrencia
+     */
+    private void updateDocumentStatusSafely(UUID documentId, DocumentStatus status) {
+        try {
             Document document = documentRepository.findById(new DocumentId(documentId))
                     .orElseThrow(() -> new DocumentException("Document not found"));
-            document.setStatus(DocumentStatus.ERROR);
+            document.setStatus(status);
             documentRepository.save(document);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            log.warn("Failed to update document status due to optimistic locking conflict: {}", e.getMessage());
+            // Reintentar una vez más
+            try {
+                Document reloadedDocument = documentRepository.findById(new DocumentId(documentId))
+                        .orElseThrow(() -> new DocumentException("Document not found"));
+                reloadedDocument.setStatus(status);
+                documentRepository.save(reloadedDocument);
+            } catch (Exception retryException) {
+                log.error("Failed to update document status after retry: {}", retryException.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error updating document status: {}", e.getMessage());
         }
     }
 

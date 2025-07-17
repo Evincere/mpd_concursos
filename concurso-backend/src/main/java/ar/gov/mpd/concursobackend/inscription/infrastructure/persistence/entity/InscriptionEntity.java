@@ -16,7 +16,6 @@ import java.util.UUID;
 @Setter
 public class InscriptionEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 

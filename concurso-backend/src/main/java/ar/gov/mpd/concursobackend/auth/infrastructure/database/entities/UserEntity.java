@@ -28,7 +28,7 @@ import java.util.UUID;
 @Table(name = "user_entity")
 @Getter
 @Setter
-@EntityListeners(UserRoleListener.class)
+// @EntityListeners(UserRoleListener.class) // TEMPORALMENTE DESHABILITADO: Causa conflictos de concurrencia optimista
 public class UserEntity {
 
     /**

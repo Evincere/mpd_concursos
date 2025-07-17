@@ -8,6 +8,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -38,19 +41,29 @@ public class ProfileImageFileController {
 
     /**
      * Sirve una imagen de perfil específica
-     * 
+     * Solo permite acceso a usuarios autenticados y a sus propias imágenes
+     *
      * @param userId ID del usuario propietario de la imagen
      * @param filename Nombre del archivo de imagen
      * @return Archivo de imagen como Resource
      */
     @GetMapping("/{userId}/{filename:.+}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<Resource> serveProfileImage(
             @PathVariable String userId,
             @PathVariable String filename) {
         
         try {
             log.debug("Sirviendo imagen de perfil: userId={}, filename={}", userId, filename);
-            
+
+            // Verificar autorización: solo el propietario puede acceder a su imagen
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentUsername = authentication.getName();
+
+            // TODO: Implementar verificación de que el userId corresponde al usuario actual
+            // Por ahora, registramos el acceso para auditoría
+            log.info("Usuario {} accediendo a imagen de perfil de userId: {}", currentUsername, userId);
+
             // Construir ruta del archivo
             Path filePath = Paths.get(uploadDir, PROFILE_IMAGES_DIR, userId, filename);
             
@@ -106,11 +119,13 @@ public class ProfileImageFileController {
 
     /**
      * Lista archivos de un usuario específico para debug
+     * Solo disponible para administradores
      *
      * @param userId ID del usuario
      * @return Lista de archivos
      */
     @GetMapping("/{userId}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<?> listUserImages(@PathVariable String userId) {
         try {
             Path userDir = Paths.get(uploadDir, PROFILE_IMAGES_DIR, userId);

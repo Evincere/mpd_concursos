@@ -1336,7 +1336,7 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
 
         try {
           // Usar UnifiedDocumentService que maneja duplicidad automáticamente
-          const resultado = await this.unifiedDocumentService.uploadDocumentWithDuplicateCheck(
+          const resultado = await this.unifiedDocumentService.uploadDocument(
             doc.file,
             doc.tipoDocumentoId,
             doc.comentarios || ''
@@ -1359,6 +1359,11 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
           if (error?.message?.includes('cancelado por el usuario')) {
             doc.estado = 'error';
             doc.mensajeError = 'Subida cancelada por el usuario';
+          } else if (error?.status === 409) {
+            doc.estado = 'error';
+            doc.mensajeError = 'Conflicto de concurrencia: el documento fue modificado o eliminado por otra operación. Se recargará la lista de documentos.';
+            // Recargar la lista de documentos del usuario
+            this.unifiedDocumentService.refreshDocuments(true);
           } else {
             doc.estado = 'error';
             doc.mensajeError = 'Error al subir el documento: ' + (error?.error?.message || error?.message || 'Error desconocido');

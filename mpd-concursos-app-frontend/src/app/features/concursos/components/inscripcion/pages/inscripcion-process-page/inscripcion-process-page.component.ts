@@ -82,6 +82,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
   contest: Contest | null = null;
   showValidationErrors = false;
 
+  // CONCURRENCY FIX: Flag para prevenir múltiples creaciones de inscripción simultáneas
+  private isCreatingInscription = false;
+
   // CRITICAL FIX: Bandera para evitar reinicialización en navegaciones internas
   private isInternalNavigation: boolean = false;
 
@@ -254,6 +257,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    * @param isResume Indica si es una recuperación de proceso interrumpido
    */
   private initializeInscriptionProcess(isResume: boolean = false): void {
+    this.loggingService.debug('[InscripcionProcess] initializeInscriptionProcess llamado:', {
+      isResume,
+      inscriptionId: this.inscriptionId,
+      requestedStepFromUrl: this.requestedStepFromUrl,
+      currentStep: this.currentStep
+    }, 'InscripcionProcessPage');
+
     // Cargar datos del concurso
     this.cargarDatosConcurso();
 
@@ -456,6 +466,12 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
    * @param requestedStep Paso solicitado desde la URL
    */
   private validateAndSetStep(requestedStep: number): void {
+    this.loggingService.debug('[InscripcionProcess] validateAndSetStep llamado:', {
+      requestedStep,
+      inscriptionId: this.inscriptionId,
+      currentStep: this.currentStep
+    }, 'InscripcionProcessPage');
+
     // Si hay una inscripción existente, verificar el estado para determinar el paso máximo permitido
     if (this.inscriptionId) {
       // Permitir navegación directa cuando hay inscriptionId (el backend determinará el estado correcto)
@@ -980,18 +996,44 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         // Determinar el paso inicial basado en el estado
         switch (inscription.estado) {
           case 'COMPLETED_PENDING_DOCS':
-            // Para documentación pendiente, ir directamente al paso 3
-            this.loggingService.debug('[InscripcionProcess] Estado COMPLETED_PENDING_DOCS detectado - navegando al paso 3', {
-              inscriptionId: this.inscriptionId,
-              estado: inscription.estado
-            }, 'InscripcionProcessPage');
+            // CRITICAL FIX: Respetar navegación directa si existe
+            if (this.requestedStepFromUrl && this.requestedStepFromUrl >= 1 && this.requestedStepFromUrl <= 4) {
+              this.loggingService.debug('[InscripcionProcess] Navegación directa detectada para COMPLETED_PENDING_DOCS - respetando paso de URL:', {
+                requestedStep: this.requestedStepFromUrl,
+                inscriptionState: inscription.estado
+              }, 'InscripcionProcessPage');
 
-            this.currentStep = 3;
-            this.updateProgressPercentage();
+              // Mantener el paso ya establecido desde la URL
+              this.updateProgressPercentage();
+              this.cargarDatosFormularioSinPaso();
+            } else {
+              // Para documentación pendiente, ir directamente al paso 3 (comportamiento por defecto)
+              this.loggingService.debug('[InscripcionProcess] Estado COMPLETED_PENDING_DOCS detectado - navegando al paso 3', {
+                inscriptionId: this.inscriptionId,
+                estado: inscription.estado
+              }, 'InscripcionProcessPage');
 
-            // CRITICAL FIX: Cargar datos del formulario ANTES de establecer el paso
-            // para evitar que cargarEstadoGuardado sobrescriba el paso
-            this.cargarDatosFormularioSinPaso();
+              this.currentStep = 3;
+              this.updateProgressPercentage();
+
+              // CRITICAL FIX: Cargar datos del formulario ANTES de establecer el paso
+              // para evitar que cargarEstadoGuardado sobrescriba el paso
+              this.cargarDatosFormularioSinPaso();
+
+              // Forzar actualización del progreso después de establecer el paso
+              setTimeout(() => {
+                this.currentStep = 3;
+                this.updateProgressPercentage();
+                this.cdr.detectChanges();
+
+                // Scroll al paso 3 después de establecerlo
+                this.performImmediateScroll();
+                this.scrollToTopAfterAnimation();
+              }, 100);
+
+              this.notificationService.info('Continuando con la carga de documentación pendiente.');
+              this.loggingService.debug('[InscripcionProcess] Directed to step 3 for pending documentation', undefined, 'InscripcionProcessPage');
+            }
 
             // Asegurar que los términos estén marcados como aceptados y datos necesarios
             this.inscriptionForm.patchValue({
@@ -999,19 +1041,6 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
               confirmedPersonalData: false // Reset confirmation for re-completion
             });
 
-            // Forzar actualización del progreso después de establecer el paso
-            setTimeout(() => {
-              this.currentStep = 3;
-              this.updateProgressPercentage();
-              this.cdr.detectChanges();
-
-              // Scroll al paso 3 después de establecerlo
-              this.performImmediateScroll();
-              this.scrollToTopAfterAnimation();
-            }, 100);
-
-            this.notificationService.info('Continuando con la carga de documentación pendiente.');
-            this.loggingService.debug('[InscripcionProcess] Directed to step 3 for pending documentation', undefined, 'InscripcionProcessPage');
             break;
 
           case 'ACTIVE':
@@ -1898,6 +1927,13 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // CONCURRENCY FIX: Prevenir múltiples llamadas simultáneas
+    if (this.isCreatingInscription) {
+      this.loggingService.debug('[InscripcionProcess] Inscription creation already in progress, ignoring duplicate request', undefined, 'InscripcionProcessPage');
+      return;
+    }
+
+    this.isCreatingInscription = true;
     this.loggingService.debug('[InscripcionProcess] Creating inscription when advancing to step 2 for contest:', this.contestId, 'InscripcionProcessPage');
 
     this.inscriptionService.createInscription(this.contestId).pipe(
@@ -1906,10 +1942,17 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
         console.error('[InscripcionProcess] Error creating inscription when advancing to step 2:', error);
 
         // Mostrar errores específicos basados en el tipo de error
-        if (error.status === 409) {
+        if (error.status === 403) {
+          // Período de inscripción cerrado
+          const errorMessage = error.error?.message || 'El período de inscripción para este concurso ha finalizado o aún no ha comenzado.';
+          this.notificationService.error(errorMessage);
+        } else if (error.status === 409) {
           this.notificationService.error('La operación no pudo completarse debido a un conflicto con el estado actual del recurso.');
         } else if (error.status === 500) {
           this.notificationService.error('Error al crear la inscripción. Por favor, intente nuevamente.');
+        } else if (error.message && error.message.includes('período de inscripción')) {
+          // Error específico de período cerrado desde el servicio
+          this.notificationService.error(error.message);
         } else {
           this.notificationService.error('Error: No se recibió un ID de inscripción válido');
         }
@@ -1920,6 +1963,9 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (response: any) => {
+        // CONCURRENCY FIX: Resetear bandera al completar exitosamente
+        this.isCreatingInscription = false;
+
         if (response && response.id) {
           this.inscriptionId = response.id;
           this.loggingService.debug('[InscripcionProcess] Using inscription with ID:', this.inscriptionId, 'InscripcionProcessPage');
@@ -1942,6 +1988,10 @@ export class InscripcionProcessPageComponent implements OnInit, OnDestroy {
           this.notificationService.error('Error: No se recibió un ID de inscripción válido');
           this.router.navigate(['/dashboard/concursos']);
         }
+      },
+      error: () => {
+        // CONCURRENCY FIX: Resetear bandera también en caso de error
+        this.isCreatingInscription = false;
       }
     });
   }

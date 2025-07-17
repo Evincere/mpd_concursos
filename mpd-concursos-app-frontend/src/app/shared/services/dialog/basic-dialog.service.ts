@@ -175,7 +175,7 @@ export class BasicDialogService {
             closeButton.style.background = 'rgba(255, 255, 255, 0.1)';
             closeButton.style.transform = 'scale(1)';
           };
-          closeButton.onclick = () => this.closeDialog(backdrop, dialogRef);
+          closeButton.onclick = () => this.closeDialog(dialogRef);
           
           header.appendChild(title);
           header.appendChild(closeButton);
@@ -227,7 +227,7 @@ export class BasicDialogService {
       // Close on backdrop click
       backdrop.onclick = (e) => {
         if (e.target === backdrop) {
-          this.closeDialog(backdrop, dialogRef);
+          this.closeDialog(dialogRef);
         }
       };
 
@@ -247,50 +247,39 @@ export class BasicDialogService {
     return dialogRef;
   }
 
-  private closeDialog(backdrop: HTMLElement, dialogRef: BasicDialogRef) {
-    try {
-      console.log('[BasicDialogService] 🔄 Iniciando cierre de diálogo...');
+  private closeDialog(dialogRef: BasicDialogRef, result?: any) {
+    const dialog = this.activeDialogs.find(d => d.dialogRef === dialogRef);
 
-      // Find and remove from active dialogs
-      const index = this.activeDialogs.findIndex(d => d.element === backdrop);
-      console.log('[BasicDialogService] 📍 Índice del diálogo encontrado:', index);
+    if (!dialog) {
+      this.loggingService.warn('[BasicDialogService] Attempted to close a dialog that is not active.', { dialogRef });
+      return;
+    }
 
-      if (index >= 0) {
-        const dialog = this.activeDialogs[index];
+    this.loggingService.info('[BasicDialogService] Closing dialog', { component: dialog.componentRef.componentType.name });
 
-        // Detach component
-        console.log('[BasicDialogService] 🗑️ Desvinculando y destruyendo componente...');
-        this.appRef.detachView(dialog.componentRef.hostView);
-        dialog.componentRef.destroy();
+    // Remove from DOM
+    document.body.removeChild(dialog.element);
 
-        // Remove from array
-        this.activeDialogs.splice(index, 1);
-        console.log('[BasicDialogService] 📝 Diálogo removido de la lista activa');
-      }
+    // Detach and destroy component
+    this.appRef.detachView(dialog.componentRef.hostView);
+    dialog.componentRef.destroy();
 
-      // Remove from DOM
-      if (backdrop.parentNode) {
-        console.log('[BasicDialogService] 🗑️ Removiendo backdrop del DOM...');
-        backdrop.parentNode.removeChild(backdrop);
-        console.log('[BasicDialogService] ✅ Backdrop removido del DOM');
-      }
+    // Remove from active dialogs
+    this.activeDialogs = this.activeDialogs.filter(d => d.dialogRef !== dialogRef);
 
-      // Close dialog ref
-      console.log('[BasicDialogService] 🔄 Cerrando referencia del diálogo...');
-      dialogRef.close();
+    // Complete the observable
+    dialog.dialogRef.close(result);
 
-      this.loggingService.info('[BasicDialogService] Dialog closed successfully');
-      console.log('[BasicDialogService] ✅ Diálogo cerrado completamente');
+    this.loggingService.info('[BasicDialogService] Dialog closed successfully', { remainingDialogs: this.activeDialogs.length });
 
-    } catch (error) {
-      console.error('[BasicDialogService] ❌ Error cerrando diálogo:', error);
-      this.loggingService.error('[BasicDialogService] Error closing dialog:', error);
+    if (this.activeDialogs.length === 0) {
+      this.loggingService.info('[BasicDialogService] All dialogs are closed.');
     }
   }
 
   closeAll() {
     this.activeDialogs.forEach(dialog => {
-      this.closeDialog(dialog.element, dialog.dialogRef);
+      this.closeDialog(dialog.dialogRef);
     });
   }
 }

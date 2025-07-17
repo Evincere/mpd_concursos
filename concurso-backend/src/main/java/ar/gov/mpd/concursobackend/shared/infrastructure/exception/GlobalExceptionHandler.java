@@ -4,6 +4,7 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.DuplicateI
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionNotFoundException;
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionException;
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionStatusException;
+import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionPeriodClosedException;
 import ar.gov.mpd.concursobackend.shared.infrastructure.dto.ApiError;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import jakarta.persistence.OptimisticLockException;
 
 @ControllerAdvice
 @Slf4j
@@ -71,6 +74,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(InscriptionPeriodClosedException.class)
+    public ResponseEntity<ApiError> handleInscriptionPeriodClosedException(InscriptionPeriodClosedException ex) {
+        log.warn("Intento de inscripción fuera de período: Concurso ID {} - {}", ex.getContestId(), ex.getMessage());
+        ApiError apiError = new ApiError(
+                HttpStatus.FORBIDDEN.value(),
+                "Período de inscripción cerrado",
+                ex.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiError> handleIllegalStateException(IllegalStateException ex) {
         log.debug("Manejando IllegalStateException: {}", ex.getMessage());
@@ -90,6 +103,17 @@ public class GlobalExceptionHandler {
                 "Error en la solicitud",
                 ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    // ========== MANEJADOR PARA ERRORES DE CONCURRENCIA EN DOCUMENTOS ========== 
+    @ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
+    public ResponseEntity<ApiError> handleOptimisticLocking(Exception ex) {
+        log.warn("Conflicto de concurrencia detectado: {}", ex.getMessage());
+        ApiError apiError = new ApiError(
+                HttpStatus.CONFLICT.value(),
+                "Conflicto de concurrencia",
+                "El documento fue modificado o eliminado por otra operación. Por favor, recarga la página y vuelve a intentarlo.");
+        return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
     }
 
     // ========== MANEJADORES MEJORADOS PARA EXCEPCIONES COMUNES ==========

@@ -1725,6 +1725,18 @@ Las siguientes tareas se han identificado como mejoras potenciales para implemen
 - **Problema**: Implementación de carga múltiple de documentos requiere procesamiento en cola en el backend.
 - **Solución**: Implementar procesamiento secuencial en el frontend mientras se desarrolla la solución de cola en el backend.
 
+### Sprint 3 - Corrección de Problemas de Concurrencia y Documentos
+- **Problema**: Error `ObjectOptimisticLockingFailureException` al crear inscripciones debido a conflicto en generación de IDs.
+- **Solución**: Removido `@GeneratedValue` de `InscriptionEntity`, agregado constraint único en BD, protección contra doble clic en frontend.
+- **Problema**: Error `ObjectOptimisticLockingFailureException` en notificaciones durante actualización de estado de inscripción.
+- **Solución**: Mejorado manejo de excepciones para que errores de notificación no afecten la operación principal.
+- **Problema**: URL de reanudación de inscripción no incluía parámetro `step` para navegar al paso correcto.
+- **Solución**: Implementado método `determinarPasoSegunEstado()` para mapear estados a pasos específicos en la URL.
+- **Problema**: Error `NoSuchFieldError` en Apache Tika por incompatibilidad de versiones (tika-core 3.2.1 vs tika-parsers 2.9.1).
+- **Solución**: Sincronizadas ambas dependencias a versión 2.9.2, implementado manejo robusto de errores con fallback básico.
+- **Problema**: Error `ObjectOptimisticLockingFailureException` en DocumentEntity durante carga de documentos por conflicto de generación de IDs.
+- **Solución**: Removido `@GeneratedValue` de DocumentEntity, agregado `@Version` para control de concurrencia real, implementado manejo robusto con retry automático.
+
 ### Mejoras en la Sección de Usuarios del Panel Administrativo
 - **Mejora**: Implementación de arquitectura hexagonal para la sección de usuarios.
   - Creación de capas de dominio, aplicación, infraestructura y presentación.

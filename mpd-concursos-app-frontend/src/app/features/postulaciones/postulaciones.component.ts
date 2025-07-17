@@ -47,16 +47,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   // Data
   postulaciones: Postulacion[] = [];
   postulacionesFiltradas: Postulacion[] = [];
-  
+
   // UI State
   loading = false;
   error: 'connection' | 'server' | 'no-results' | 'empty' | null = null;
-  
+
   // Pagination
   pageSize = 10;
   pageIndex = 0;
   totalItems = 0;
-  
+
   // Filters
   terminoBusqueda = '';
   filtrosActivos = false;
@@ -68,19 +68,19 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     fechaDesde: null,
     fechaHasta: null
   };
-  
+
   // UI Controls
   mostrarFiltros = false;
   postulacionSeleccionada: Postulacion | null = null;
   mostrarDialogoCancelacion = false;
   postulacionACancelar: Postulacion | null = null;
   cancelandoPostulacion = false;
-  
+
   // Flags
   primeraConsulta = true;
   filtrosModificados = false;
   todasCanceladas = false;
-  
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -274,16 +274,50 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Determina el paso correcto del proceso de inscripción basado en el estado
+   */
+  private determinarPasoSegunEstado(estado: string): number {
+    switch (estado) {
+      case 'COMPLETED_PENDING_DOCS':
+        // Si la inscripción está completa pero faltan documentos, ir al paso 3 (documentación)
+        return 3;
+      case 'ACTIVE':
+        // Para inscripciones activas, ir al paso 2 (circunscripción) por defecto
+        // El componente de inscripción determinará el paso exacto basado en el estado guardado
+        return 2;
+      case 'PENDING':
+      case 'COMPLETED_WITH_DOCS':
+        // Para estados completos, ir al paso 4 (confirmación/resumen)
+        return 4;
+      default:
+        // Por defecto, ir al paso 1
+        return 1;
+    }
+  }
+
 
 
   retomarInscripcion(postulacion: Postulacion): void {
     if (postulacion.contestId) {
-      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
+      // CRITICAL FIX: Determinar el paso correcto basado en el estado de la inscripción
+      const step = this.determinarPasoSegunEstado(postulacion.estado);
+
+      // DEBUG: Logging para diagnosticar el problema de navegación
+      console.log('[PostulacionesComponent] Retomando inscripción:', {
+        estado: postulacion.estado,
+        stepCalculado: step,
+        contestId: postulacion.contestId,
+        inscriptionId: postulacion.id
+      });
+
+      // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard y el paso apropiado
       this.router.navigate(['/dashboard/inscripcion'], {
         queryParams: {
           contestId: postulacion.contestId,
           inscriptionId: postulacion.id,
-          resume: 'true'
+          resume: 'true',
+          step: step
         }
       });
     }
@@ -291,12 +325,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   completarDocumentacion(postulacion: Postulacion): void {
     if (postulacion.contestId) {
+      // CRITICAL FIX: Para completar documentación, siempre ir al paso 3 (documentación)
+      const step = 3;
+
       // CRITICAL FIX: Navegar al proceso de inscripción con la ruta correcta del dashboard
       this.router.navigate(['/dashboard/inscripcion'], {
         queryParams: {
           contestId: postulacion.contestId,
           inscriptionId: postulacion.id,
-          resume: 'true'
+          resume: 'true',
+          step: step
         }
       });
     }

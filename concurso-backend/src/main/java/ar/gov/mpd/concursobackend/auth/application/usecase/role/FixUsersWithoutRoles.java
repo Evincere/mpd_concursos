@@ -73,6 +73,9 @@ public class FixUsersWithoutRoles {
                         userRepository.create(user);
                         logger.info("Rol ROLE_USER asignado al usuario {}", user.getUsername().value());
                         fixedCount++;
+                    } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+                        logger.warn("Error de concurrencia al actualizar usuario {}: {}. Probablemente ya fue actualizado por otro proceso.",
+                                user.getUsername().value(), e.getMessage());
                     } catch (Exception e) {
                         logger.error("Error al guardar usuario {} con nuevo rol: {}",
                                 user.getUsername().value(), e.getMessage());

@@ -7,6 +7,79 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ## [Unreleased]
 
+### Seguridad
+- **Aplicación del Principio de "Denegación por Defecto"**: Mejorada configuración de Spring Security
+  - Reemplazada regla amplia `.requestMatchers("/api/concursos/**").permitAll()` con rutas específicas:
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos").permitAll()`
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos/{id}").permitAll()`
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos/buscar").permitAll()`
+    - `.requestMatchers(HttpMethod.GET, "/api/concursos/filtrar").permitAll()`
+  - Solo operaciones de lectura son públicas, escritura requiere autenticación
+  - Reducido riesgo de exposición accidental de nuevos endpoints
+
+- **Control de Acceso para Imágenes de Perfil**: Implementada protección contra enumeración
+  - Cambiada regla de `.requestMatchers("/api/files/profile-images/**").permitAll()` a `.authenticated()`
+  - Agregada anotación `@PreAuthorize("hasRole('ROLE_USER')")` en controlador de imágenes
+  - Endpoint de debug `/api/files/profile-images/{userId}` restringido a administradores
+  - Previene enumeración de usuarios a través de adivinación de UUIDs
+  - Agregado logging de auditoría para accesos a imágenes
+
+- **Configuración CORS Específica y Segura**: Implementada configuración CORS por entorno
+  - Reemplazados comodines `*` con headers específicos necesarios por la aplicación
+  - Headers permitidos específicos: Authorization, Content-Type, Accept, X-Requested-With, etc.
+  - Headers expuestos específicos: Content-Disposition, X-Total-Count, Location, etc.
+  - Configuración por entorno:
+    - **Desarrollo**: Permite localhost:4200, localhost:8000 y 127.0.0.1
+    - **Producción**: Solo dominios específicos de producción (más restrictivo)
+    - **Testing**: Configuración permisiva para tests de integración
+  - Aplicado principio de menor privilegio en configuración CORS
+  - Eliminada configuración legacy `spring.mvc.cors.*` en favor de configuración programática
+
+- **Validación y Documentación de Configuración CSRF**: Confirmada deshabilitación segura de CSRF
+  - Documentada justificación técnica para deshabilitación de CSRF en SecurityConfig
+  - Confirmada arquitectura 100% stateless con SessionCreationPolicy.STATELESS
+  - Verificada autenticación únicamente via JWT en headers Authorization (sin cookies)
+  - Creado SecurityValidationService para validación automática de configuración
+  - Implementado SecurityDiagnosticController para diagnóstico (solo desarrollo)
+  - Agregadas validaciones de peticiones HTTP para detectar cookies de autenticación
+  - Configuración segura: CSRF innecesario en APIs REST stateless con JWT
+  - Advertencias documentadas para desarrolladores futuros sobre rehabilitación de CSRF
+
+- **Configuración Segura de Gestión de Esquema de Base de Datos**: Implementada configuración por entorno
+  - **Por defecto**: `ddl-auto=validate`, `generate-ddl=false` (configuración segura)
+  - **Desarrollo**: `ddl-auto=update`, `generate-ddl=true` (permitido solo en desarrollo)
+  - **Producción**: `ddl-auto=validate`, `generate-ddl=false` (seguro, solo validación)
+  - **Testing**: `ddl-auto=create-drop`, `generate-ddl=true` (BD fresca para cada test)
+  - Creado DatabaseConfigurationValidationService para validación automática
+  - Implementado endpoint de diagnóstico de configuración de BD (solo desarrollo)
+  - Documentación completa en DATABASE_MIGRATIONS.md
+  - Eliminado riesgo de modificaciones automáticas no controladas en producción
+  - Advertencias y validaciones para detectar configuraciones peligrosas
+
+- **Plan de Gestión de Dependencias**: Implementado sistema de monitoreo y actualización
+  - Agregado plugin versions-maven-plugin (2.17.1) para verificación de actualizaciones
+  - Creado DEPENDENCY_UPDATES.md con plan detallado de actualización por fases
+  - Implementado script check-dependencies.ps1 para verificación automática
+  - Documentadas dependencias críticas que requieren actualización:
+    - Spring Boot 3.2.4 → 3.3.5+ (parches de seguridad)
+    - MySQL Connector 8.2.0 → 8.4.0+ (vulnerabilidades conocidas)
+    - JJWT 0.12.5 → 0.12.6+ (mejoras de seguridad JWT)
+    - Apache Tika 2.9.1 → 2.9.2+ (parches de seguridad)
+  - Establecido proceso de actualización segura con testing y rollback
+  - Configurado monitoreo continuo de dependencias desactualizadas
+  - **Problema SSL identificado**: Error PKIX path building failed con Maven Central
+  - Creada documentación completa de solución SSL (MAVEN_SSL_SETUP.md)
+  - Implementado script de instalación automática de certificados (install-maven-cert.ps1)
+  - Solución basada en experiencia previa del equipo con certificados SSL
+
+- **Eliminación de H2 Console**: Removido acceso a H2 Console por motivos de seguridad
+  - Eliminada regla `.requestMatchers("/h2-console/**").permitAll()` de SecurityConfig
+  - Removida configuración `.frameOptions(frameOptions -> frameOptions.disable())`
+  - Eliminada configuración CORS específica para `/h2-console/**`
+  - Limpiadas referencias en SecurityConstants.java y JwtTokenFilter.java
+  - H2 Console no debe estar disponible en entornos de producción por razones de seguridad
+  - Mantiene H2 para tests unitarios (configuración apropiada en application-test.properties)
+
 ### Corregido
 - **Documentación del Perfil**: Corregido el mecanismo de carga individual de documentos
   - El botón "Cargar" en las cards individuales ahora abre el uploader específico para ese documento

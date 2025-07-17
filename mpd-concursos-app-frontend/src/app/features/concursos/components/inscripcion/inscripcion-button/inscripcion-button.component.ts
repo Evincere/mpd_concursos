@@ -33,6 +33,12 @@ import { Postulacion } from '@shared/interfaces/postulacion/postulacion.interfac
         <i class="fas fa-ban text-gray-400"></i>
         <span class="text-sm text-gray-500 ml-2">{{ getBlockedMessage() }}</span>
       </div>
+
+      <!-- Mensaje cuando el período de inscripción está cerrado -->
+      <div *ngIf="!shouldShowButton && !userPostulation && !isContestOpenForInscription()" class="inscription-period-closed-message">
+        <i class="fas fa-clock text-amber-500"></i>
+        <span class="text-sm text-amber-600 ml-2">{{ getInscriptionPeriodMessage() }}</span>
+      </div>
     </div>
   `,
   styleUrls: ['./inscripcion-button.component.scss']
@@ -279,24 +285,62 @@ export class InscripcionButtonComponent {
 
   /**
    * Verifica si el concurso está abierto para inscripciones
+   * SECURITY: Validación del lado del cliente para mejorar UX, pero el backend siempre tiene la autoridad final
    */
-  private isContestOpenForInscription(): boolean {
+  isContestOpenForInscription(): boolean {
+    if (!this.currentContest) return false;
+
     const status = this.currentContest?.status?.toUpperCase();
+    const now = new Date();
 
     // Estados que explícitamente permiten inscripciones
     if (status === 'INSCRIPTION_OPEN') {
       return true;
     }
 
-    // Para PUBLISHED, verificar fechas
+    // Para PUBLISHED, verificar fechas de inscripción específicas si están disponibles
     if (status === 'PUBLISHED') {
-      const now = new Date();
-      const startDate = new Date(this.currentContest.startDate);
-      const endDate = new Date(this.currentContest.endDate);
+      // Buscar fechas específicas de inscripción en el array dates
+      const inscriptionDate = this.currentContest.dates?.find(date => date.type === 'inscription');
+      if (inscriptionDate && inscriptionDate.startDate && inscriptionDate.endDate) {
+        const inscriptionStartDate = new Date(inscriptionDate.startDate);
+        const inscriptionEndDate = new Date(inscriptionDate.endDate);
+        const isWithinInscriptionPeriod = now >= inscriptionStartDate && now <= inscriptionEndDate;
 
-      return now >= startDate && now <= endDate;
+        console.log(`[InscripcionButton] Contest ${this.currentContest.id} specific inscription period check:`, {
+          now: now.toISOString(),
+          inscriptionStart: inscriptionStartDate.toISOString(),
+          inscriptionEnd: inscriptionEndDate.toISOString(),
+          isWithinPeriod: isWithinInscriptionPeriod
+        });
+
+        return isWithinInscriptionPeriod;
+      }
+
+      // Fallback: usar fechas generales del concurso
+      if (this.currentContest.startDate && this.currentContest.endDate) {
+        const startDate = new Date(this.currentContest.startDate);
+        const endDate = new Date(this.currentContest.endDate);
+        const isWithinGeneralPeriod = now >= startDate && now <= endDate;
+
+        console.log(`[InscripcionButton] Contest ${this.currentContest.id} general period check:`, {
+          now: now.toISOString(),
+          generalStart: startDate.toISOString(),
+          generalEnd: endDate.toISOString(),
+          isWithinPeriod: isWithinGeneralPeriod
+        });
+
+        return isWithinGeneralPeriod;
+      }
     }
 
+    // Estados que explícitamente NO permiten inscripciones
+    const closedStates = ['INSCRIPTION_CLOSED', 'CLOSED', 'CANCELLED', 'FINISHED'];
+    if (closedStates.includes(status || '')) {
+      return false;
+    }
+
+    // Para otros estados, asumir que no está abierto
     return false;
   }
 
@@ -379,6 +423,55 @@ export class InscripcionButtonComponent {
         return 'Ya tiene una inscripción aprobada para este concurso';
       default:
         return 'No puede inscribirse a este concurso';
+    }
+  }
+
+  /**
+   * Obtiene el mensaje apropiado cuando el período de inscripción está cerrado
+   */
+  getInscriptionPeriodMessage(): string {
+    if (!this.currentContest) return 'Período de inscripción no disponible';
+
+    const now = new Date();
+    const status = this.currentContest?.status?.toUpperCase();
+
+    // Verificar fechas específicas de inscripción
+    const inscriptionDate = this.currentContest.dates?.find(date => date.type === 'inscription');
+    if (inscriptionDate && inscriptionDate.startDate && inscriptionDate.endDate) {
+      const startDate = new Date(inscriptionDate.startDate);
+      const endDate = new Date(inscriptionDate.endDate);
+
+      if (now < startDate) {
+        return `Las inscripciones abren el ${startDate.toLocaleDateString('es-AR')}`;
+      } else if (now > endDate) {
+        return `Las inscripciones cerraron el ${endDate.toLocaleDateString('es-AR')}`;
+      }
+    }
+
+    // Verificar fechas generales del concurso
+    if (this.currentContest.startDate && this.currentContest.endDate) {
+      const startDate = new Date(this.currentContest.startDate);
+      const endDate = new Date(this.currentContest.endDate);
+
+      if (now < startDate) {
+        return `El concurso inicia el ${startDate.toLocaleDateString('es-AR')}`;
+      } else if (now > endDate) {
+        return `El concurso finalizó el ${endDate.toLocaleDateString('es-AR')}`;
+      }
+    }
+
+    // Mensajes basados en estado
+    switch (status) {
+      case 'INSCRIPTION_CLOSED':
+        return 'Período de inscripción cerrado';
+      case 'CLOSED':
+        return 'Concurso cerrado';
+      case 'CANCELLED':
+        return 'Concurso cancelado';
+      case 'FINISHED':
+        return 'Concurso finalizado';
+      default:
+        return 'Inscripciones no disponibles en este momento';
     }
   }
 

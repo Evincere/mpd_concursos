@@ -44,7 +44,7 @@ export class DocumentMigrationService {
   uploadDocumento(file: File, tipoDocumentoId: string, comentarios?: string): Observable<DocumentoResponse> {
     if (this.USE_UNIFIED_SERVICE) {
       this.loggingService.debug('[DocumentMigration] Usando UnifiedDocumentService para upload');
-      return this.unifiedDocumentService.uploadDocumentWithDuplicateCheck(file, tipoDocumentoId, comentarios);
+      return this.unifiedDocumentService.uploadDocument(file, tipoDocumentoId, comentarios);
     } else {
       this.loggingService.debug('[DocumentMigration] Usando servicio legacy para upload');
       const formData = new FormData();

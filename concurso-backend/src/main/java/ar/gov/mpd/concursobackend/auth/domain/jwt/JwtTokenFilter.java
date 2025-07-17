@@ -123,7 +123,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         logger.debug("Checking if should filter path: {}", path);
 
         boolean shouldNotFilter = path.startsWith("/api/auth/") ||
-                path.startsWith("/h2-console") ||
                 path.equals("/favicon.ico") ||
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/swagger-ui") ||

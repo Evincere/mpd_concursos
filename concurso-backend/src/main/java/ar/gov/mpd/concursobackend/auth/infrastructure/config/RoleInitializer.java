@@ -20,7 +20,7 @@ public class RoleInitializer {
 
     private static final Logger logger = LoggerFactory.getLogger(RoleInitializer.class);
 
-    @Bean
+    // @Bean // DESHABILITADO: Funcionalidad duplicada con DataInitializationService
     @Order(10) // Prioridad más baja para asegurar que Hibernate termine primero
     public CommandLineRunner initRoles(IRoleSpringRepository roleRepository) {
         return args -> {

@@ -17,13 +17,13 @@ public class DocumentType {
     private boolean isActive;
 
     public DocumentType() {
-        this.id = new DocumentTypeId(UUID.randomUUID());
+        // NO asignar ID aquí - dejar que JPA lo genere automáticamente para evitar conflictos de merge/persist
         this.isActive = true;
     }
 
     public DocumentType(String code, String name, String description, boolean required, Integer order,
             DocumentType parent, boolean isActive) {
-        this();
+        // NO llamar this() para evitar asignación automática de ID
         this.code = code;
         this.name = name;
         this.description = description;

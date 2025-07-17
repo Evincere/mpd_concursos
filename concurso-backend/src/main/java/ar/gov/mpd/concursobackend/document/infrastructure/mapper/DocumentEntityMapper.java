@@ -82,7 +82,10 @@ public class DocumentEntityMapper {
         }
 
         DocumentTypeEntity entity = new DocumentTypeEntity();
-        entity.setId(domain.getId().value());
+        // Solo asignar ID si no es null - dejar que JPA genere automáticamente para entidades nuevas
+        if (domain.getId() != null) {
+            entity.setId(domain.getId().value());
+        }
         entity.setCode(domain.getCode());
         entity.setName(domain.getName());
         entity.setDescription(domain.getDescription());

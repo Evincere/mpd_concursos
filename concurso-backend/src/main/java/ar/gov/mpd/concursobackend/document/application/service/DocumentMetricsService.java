@@ -30,7 +30,6 @@ public class DocumentMetricsService {
 
     // Contadores en memoria para métricas en tiempo real
     private final AtomicLong uploadsToday = new AtomicLong(0);
-    private final AtomicLong replacementsToday = new AtomicLong(0);
     private final AtomicLong deletionsToday = new AtomicLong(0);
 
     /**
@@ -40,7 +39,6 @@ public class DocumentMetricsService {
     public void resetDailyCounters() {
         log.info("📊 [DocumentMetrics] Reseteando contadores diarios");
         uploadsToday.set(0);
-        replacementsToday.set(0);
         deletionsToday.set(0);
     }
 
@@ -50,14 +48,6 @@ public class DocumentMetricsService {
     public void recordUpload() {
         uploadsToday.incrementAndGet();
         log.debug("📈 [DocumentMetrics] Upload registrado. Total hoy: {}", uploadsToday.get());
-    }
-
-    /**
-     * Registra un reemplazo de documento
-     */
-    public void recordReplacement() {
-        replacementsToday.incrementAndGet();
-        log.debug("📈 [DocumentMetrics] Reemplazo registrado. Total hoy: {}", replacementsToday.get());
     }
 
     /**
@@ -111,46 +101,7 @@ public class DocumentMetricsService {
                 .statusMetrics(statusMetrics)
                 .auditMetrics(auditMetrics)
                 .uploadsToday(uploadsToday.get())
-                .replacementsToday(replacementsToday.get())
                 .deletionsToday(deletionsToday.get())
-                .lastUpdated(LocalDateTime.now())
-                .build();
-    }
-
-    /**
-     * Obtiene métricas de duplicidad (con cache de 10 minutos)
-     */
-    @Cacheable(value = "documentMetrics", key = "'duplicity'")
-    public DuplicityMetrics getDuplicityMetrics() {
-        log.debug("📊 [DocumentMetrics] Calculando métricas de duplicidad");
-
-        List<Document> allDocuments = documentRepository.findAll();
-        
-        // Contar documentos con múltiples versiones
-        Map<String, List<Document>> documentsByUserAndType = allDocuments.stream()
-                .collect(java.util.stream.Collectors.groupingBy(doc -> 
-                    doc.getUserId() + ":" + doc.getDocumentType().getId().value()));
-
-        long usersWithDuplicates = documentsByUserAndType.values().stream()
-                .filter(docs -> docs.size() > 1)
-                .count();
-
-        long totalDuplicateGroups = documentsByUserAndType.values().stream()
-                .filter(docs -> docs.size() > 1)
-                .mapToLong(List::size)
-                .sum();
-
-        // Contar reemplazos en las últimas 24 horas
-        LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
-        long recentReplacements = auditRepository.findByActionTypeOrderByActionDateDesc(
-                DocumentAuditEntity.ActionType.REPLACED).stream()
-                .filter(audit -> audit.getActionDate().isAfter(yesterday))
-                .count();
-
-        return DuplicityMetrics.builder()
-                .usersWithDuplicates(usersWithDuplicates)
-                .totalDuplicateGroups(totalDuplicateGroups)
-                .recentReplacements(recentReplacements)
                 .lastUpdated(LocalDateTime.now())
                 .build();
     }
@@ -173,7 +124,6 @@ public class DocumentMetricsService {
                 .freeMemoryMB(freeMemory / (1024 * 1024))
                 .memoryUsagePercent((double) usedMemory / totalMemory * 100)
                 .uploadsToday(uploadsToday.get())
-                .replacementsToday(replacementsToday.get())
                 .deletionsToday(deletionsToday.get())
                 .lastUpdated(LocalDateTime.now())
                 .build();
@@ -193,7 +143,6 @@ public class DocumentMetricsService {
             log.info("✅ Documentos activos: {}", metrics.getActiveDocuments());
             log.info("📦 Documentos archivados: {}", metrics.getArchivedDocuments());
             log.info("📈 Uploads hoy: {}", metrics.getUploadsToday());
-            log.info("🔄 Reemplazos hoy: {}", metrics.getReplacementsToday());
             log.info("🗑️ Eliminaciones hoy: {}", metrics.getDeletionsToday());
             log.info("💾 Memoria usada: {}MB ({}%)", 
                     performance.getUsedMemoryMB(), 
@@ -214,7 +163,6 @@ public class DocumentMetricsService {
         private final Map<String, Long> statusMetrics;
         private final Map<String, Long> auditMetrics;
         private final long uploadsToday;
-        private final long replacementsToday;
         private final long deletionsToday;
         private final LocalDateTime lastUpdated;
 
@@ -225,7 +173,6 @@ public class DocumentMetricsService {
             this.statusMetrics = builder.statusMetrics;
             this.auditMetrics = builder.auditMetrics;
             this.uploadsToday = builder.uploadsToday;
-            this.replacementsToday = builder.replacementsToday;
             this.deletionsToday = builder.deletionsToday;
             this.lastUpdated = builder.lastUpdated;
         }
@@ -239,7 +186,6 @@ public class DocumentMetricsService {
         public Map<String, Long> getStatusMetrics() { return statusMetrics; }
         public Map<String, Long> getAuditMetrics() { return auditMetrics; }
         public long getUploadsToday() { return uploadsToday; }
-        public long getReplacementsToday() { return replacementsToday; }
         public long getDeletionsToday() { return deletionsToday; }
         public LocalDateTime getLastUpdated() { return lastUpdated; }
 
@@ -250,7 +196,6 @@ public class DocumentMetricsService {
             private Map<String, Long> statusMetrics = new HashMap<>();
             private Map<String, Long> auditMetrics = new HashMap<>();
             private long uploadsToday;
-            private long replacementsToday;
             private long deletionsToday;
             private LocalDateTime lastUpdated;
 
@@ -284,11 +229,6 @@ public class DocumentMetricsService {
                 return this;
             }
 
-            public Builder replacementsToday(long replacementsToday) {
-                this.replacementsToday = replacementsToday;
-                return this;
-            }
-
             public Builder deletionsToday(long deletionsToday) {
                 this.deletionsToday = deletionsToday;
                 return this;
@@ -306,62 +246,6 @@ public class DocumentMetricsService {
     }
 
     /**
-     * Métricas de duplicidad
-     */
-    public static class DuplicityMetrics {
-        private final long usersWithDuplicates;
-        private final long totalDuplicateGroups;
-        private final long recentReplacements;
-        private final LocalDateTime lastUpdated;
-
-        private DuplicityMetrics(Builder builder) {
-            this.usersWithDuplicates = builder.usersWithDuplicates;
-            this.totalDuplicateGroups = builder.totalDuplicateGroups;
-            this.recentReplacements = builder.recentReplacements;
-            this.lastUpdated = builder.lastUpdated;
-        }
-
-        public static Builder builder() { return new Builder(); }
-
-        // Getters
-        public long getUsersWithDuplicates() { return usersWithDuplicates; }
-        public long getTotalDuplicateGroups() { return totalDuplicateGroups; }
-        public long getRecentReplacements() { return recentReplacements; }
-        public LocalDateTime getLastUpdated() { return lastUpdated; }
-
-        public static class Builder {
-            private long usersWithDuplicates;
-            private long totalDuplicateGroups;
-            private long recentReplacements;
-            private LocalDateTime lastUpdated;
-
-            public Builder usersWithDuplicates(long usersWithDuplicates) {
-                this.usersWithDuplicates = usersWithDuplicates;
-                return this;
-            }
-
-            public Builder totalDuplicateGroups(long totalDuplicateGroups) {
-                this.totalDuplicateGroups = totalDuplicateGroups;
-                return this;
-            }
-
-            public Builder recentReplacements(long recentReplacements) {
-                this.recentReplacements = recentReplacements;
-                return this;
-            }
-
-            public Builder lastUpdated(LocalDateTime lastUpdated) {
-                this.lastUpdated = lastUpdated;
-                return this;
-            }
-
-            public DuplicityMetrics build() {
-                return new DuplicityMetrics(this);
-            }
-        }
-    }
-
-    /**
      * Métricas de rendimiento
      */
     public static class PerformanceMetrics {
@@ -370,7 +254,6 @@ public class DocumentMetricsService {
         private final long freeMemoryMB;
         private final double memoryUsagePercent;
         private final long uploadsToday;
-        private final long replacementsToday;
         private final long deletionsToday;
         private final LocalDateTime lastUpdated;
 
@@ -380,7 +263,6 @@ public class DocumentMetricsService {
             this.freeMemoryMB = builder.freeMemoryMB;
             this.memoryUsagePercent = builder.memoryUsagePercent;
             this.uploadsToday = builder.uploadsToday;
-            this.replacementsToday = builder.replacementsToday;
             this.deletionsToday = builder.deletionsToday;
             this.lastUpdated = builder.lastUpdated;
         }
@@ -393,7 +275,6 @@ public class DocumentMetricsService {
         public long getFreeMemoryMB() { return freeMemoryMB; }
         public double getMemoryUsagePercent() { return memoryUsagePercent; }
         public long getUploadsToday() { return uploadsToday; }
-        public long getReplacementsToday() { return replacementsToday; }
         public long getDeletionsToday() { return deletionsToday; }
         public LocalDateTime getLastUpdated() { return lastUpdated; }
 
@@ -403,7 +284,6 @@ public class DocumentMetricsService {
             private long freeMemoryMB;
             private double memoryUsagePercent;
             private long uploadsToday;
-            private long replacementsToday;
             private long deletionsToday;
             private LocalDateTime lastUpdated;
 
@@ -429,11 +309,6 @@ public class DocumentMetricsService {
 
             public Builder uploadsToday(long uploadsToday) {
                 this.uploadsToday = uploadsToday;
-                return this;
-            }
-
-            public Builder replacementsToday(long replacementsToday) {
-                this.replacementsToday = replacementsToday;
                 return this;
             }
 

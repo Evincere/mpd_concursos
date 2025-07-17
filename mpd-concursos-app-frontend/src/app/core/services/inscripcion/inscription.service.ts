@@ -246,11 +246,18 @@ export class InscriptionService {
         this.loggingService.debug('[InscriptionService] Error creating inscription:', {
           status: error.status,
           statusText: error.statusText,
-          message: error.message
+          message: error.message,
+          errorBody: error.error
         }, 'Inscription');
 
-        // If error is 409 (Conflict) or 500 (Internal Server Error), it might be due to an existing inscription
-        if (error.status === 409 || error.status === 500) {
+        // Handle specific HTTP status codes
+        if (error.status === 403) {
+          // Forbidden - Period closed or not started
+          const errorMessage = error.error?.message || 'El período de inscripción para este concurso ha finalizado o aún no ha comenzado.';
+          this.loggingService.warn('[InscriptionService] Inscription period closed or not started:', errorMessage, 'Inscription');
+          return throwError(() => new Error(errorMessage));
+        } else if (error.status === 409 || error.status === 500) {
+          // Conflict or Server Error - might be due to existing inscription
           this.loggingService.warn('[InscriptionService] Conflict or Server Error detected during inscription creation, potentially due to existing entry.', undefined, 'Inscription');
           return throwError(() => new Error('Ya existe una inscripción para este concurso o hubo un problema al crearla. Por favor, intente nuevamente en unos momentos.'));
         }

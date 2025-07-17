@@ -34,18 +34,6 @@ public interface DocumentService {
     DocumentResponse uploadDocument(DocumentUploadRequest request, InputStream inputStream, UUID userId) throws IOException;
 
     /**
-     * Upload a document with duplicate checking and replacement option
-     *
-     * @param request        Upload request
-     * @param inputStream    Document input stream
-     * @param userId         User's UUID
-     * @param replaceExisting Whether to replace existing document of same type
-     * @return Document response
-     * @throws IOException If an I/O error occurs
-     */
-    DocumentResponse uploadDocumentWithDuplicateCheck(DocumentUploadRequest request, InputStream inputStream, UUID userId, boolean replaceExisting) throws IOException;
-
-    /**
      * Get a document's metadata
      * 
      * @param documentId Document's UUID as string

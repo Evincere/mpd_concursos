@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +29,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/documentos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${spring.mvc.cors.allowed-origins}")
+@CrossOrigin(origins = "${app.cors.allowed-origins}")
 @Slf4j
 public class DocumentController {
 
@@ -77,8 +78,7 @@ public class DocumentController {
             @RequestParam(value = "tipoDocumentoId", required = false) String documentTypeId,
             @RequestParam(value = "comentarios", required = false) String comments,
             @RequestParam(value = "referenciaId", required = false) String referenciaId,
-            @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia,
-            @RequestParam(value = "replaceExisting", required = false, defaultValue = "false") boolean replaceExisting) {
+            @RequestParam(value = "tipoReferencia", required = false) String tipoReferencia) {
 
         try {
             log.info("=== INICIO UPLOAD DOCUMENTO ===");
@@ -87,7 +87,6 @@ public class DocumentController {
             log.info("Comentarios: {}", comments);
             log.info("Referencia ID: {}", referenciaId);
             log.info("Tipo referencia: {}", tipoReferencia);
-            log.info("Replace existing: {}", replaceExisting);
             log.debug("Recibiendo solicitud para subir documento. Type: {}, Ref: {}, RefType: {}",
                     documentTypeId, referenciaId, tipoReferencia);
 
@@ -147,11 +146,18 @@ public class DocumentController {
                     .build();
 
             UUID userId = UUID.fromString(securityUtils.getCurrentUserId());
-            DocumentResponse response = documentService.uploadDocumentWithDuplicateCheck(
+            // Validar que no exista documento previo del mismo tipo para el usuario
+            if (documentService.userHasDocumentOfType(userId, documentTypeId)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(DocumentResponse.builder()
+                                .id("")
+                                .mensaje("Ya existe un documento de este tipo para el usuario. Elimine el documento anterior antes de cargar uno nuevo.")
+                                .build());
+            }
+            DocumentResponse response = documentService.uploadDocument(
                     request,
                     file.getInputStream(),
-                    userId,
-                    replaceExisting);
+                    userId);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IOException e) {
@@ -167,6 +173,13 @@ public class DocumentController {
                     .body(DocumentResponse.builder()
                             .id("")
                             .mensaje("Error en el documento: " + e.getMessage())
+                            .build());
+        } catch (ObjectOptimisticLockingFailureException e) {
+            log.warn("Document upload failed due to optimistic locking conflict: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(DocumentResponse.builder()
+                            .id("")
+                            .mensaje("El documento está siendo procesado por otra operación. Por favor, inténtelo nuevamente.")
                             .build());
         } catch (Exception e) {
             log.error("Error inesperado al subir documento", e);

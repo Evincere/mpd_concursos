@@ -64,7 +64,6 @@ public class DocumentAuditEntity {
         CREATED,    // Documento creado
         UPDATED,    // Documento actualizado
         DELETED,    // Documento eliminado
-        REPLACED,   // Documento reemplazado por nueva versión
         ARCHIVED,   // Documento archivado
         RESTORED    // Documento restaurado desde archivo
     }

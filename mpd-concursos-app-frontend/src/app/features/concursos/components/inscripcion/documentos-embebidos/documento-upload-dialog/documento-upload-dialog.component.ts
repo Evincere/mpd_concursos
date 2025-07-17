@@ -151,15 +151,15 @@ export interface DocumentoUploadDialogResult {
           <app-custom-button
             variant="stroked"
             label="Cancelar"
-            [disabled]="uploading"
+            [disabled]="uploading || operationInProgress"
             (buttonClick)="cancelar()">
           </app-custom-button>
           <app-custom-button
             variant="primary"
             icon="cloud-upload-alt"
             label="Subir documento"
-            [disabled]="!selectedFile || uploading || uploadForm.invalid || validationErrors.length > 0"
-            [loading]="uploading"
+            [disabled]="!selectedFile || uploading || operationInProgress || uploadForm.invalid || validationErrors.length > 0"
+            [loading]="uploading || operationInProgress"
             (buttonClick)="uploadDocument()">
           </app-custom-button>
         </ng-container>
@@ -575,6 +575,10 @@ export class DocumentoUploadDialogComponent implements OnInit {
   validationErrors: DocumentoValidationError[] = [];
   validationWarnings: DocumentoValidationError[] = [];
 
+  // CRITICAL FIX: Prevención de doble clic
+  operationInProgress = false;
+  private operationStartTime: number | null = null;
+
   constructor(
     private fb: FormBuilder,
     private documentosService: DocumentosService,
@@ -764,8 +768,19 @@ export class DocumentoUploadDialogComponent implements OnInit {
 
   /**
    * Uploads the selected document to the server.
+   * CRITICAL FIX: Prevención de doble clic y operaciones concurrentes
    */
   uploadDocument(): void {
+    // CRITICAL FIX: Prevenir múltiples operaciones simultáneas
+    if (this.operationInProgress) {
+      this.loggingService.warn('[DocumentoUploadDialog] 🚫 Operación ya en progreso - ignorando clic adicional', undefined, 'DocumentoUploadDialog');
+      this.notificationService.warning(
+        'Operación en progreso',
+        'Ya hay una operación de subida en curso. Por favor, espere a que termine.'
+      );
+      return;
+    }
+
     if (!this.selectedFile) {
       this.notificationService.error('No hay archivo seleccionado para subir.', 'Error de Subida');
       this.loggingService.warn('[DocumentoUploadDialog] Attempted upload without selected file.', undefined, 'DocumentoUploadDialog');
@@ -778,40 +793,39 @@ export class DocumentoUploadDialogComponent implements OnInit {
       return;
     }
 
+    // CRITICAL FIX: Marcar operación como iniciada
+    this.operationInProgress = true;
+    this.operationStartTime = Date.now();
     this.uploading = true;
-    this.loggingService.info(`[DocumentoUploadDialog] Starting upload with duplicate check for file: ${this.selectedFile.name}`, undefined, 'DocumentoUploadDialog');
+
+    this.loggingService.info(`[DocumentoUploadDialog] 🚀 Starting upload with duplicate check for file: ${this.selectedFile.name}`, undefined, 'DocumentoUploadDialog');
 
     const comentarios = this.uploadForm.get('comentarios')?.value || '';
 
-    this.unifiedDocumentService.uploadDocumentWithDuplicateCheck(
+    this.unifiedDocumentService.uploadDocument(
       this.selectedFile,
       this.data.tipoDocumentoId,
       comentarios
     )
       .pipe(
         finalize(() => {
+          // CRITICAL FIX: Liberar lock de operación
+          this.operationInProgress = false;
+          const operationDuration = this.operationStartTime ? Date.now() - this.operationStartTime : 0;
+          this.operationStartTime = null;
+
           this.uploading = false;
-          this.loggingService.debug('[DocumentoUploadDialog] Upload process finalized.', undefined, 'DocumentoUploadDialog');
+          this.loggingService.debug(`[DocumentoUploadDialog] 🔓 Upload process finalized after ${operationDuration}ms`, undefined, 'DocumentoUploadDialog');
         }),
         catchError(error => {
-          console.error('[DocumentoUploadDialog] Error during document upload:', error);
-
-          // Verificar si es un error de duplicidad
-          if (error.message && error.message.includes('Ya existe un documento de este tipo')) {
-            this.notificationService.warning(
-              'Documento duplicado detectado',
-              'Ya tienes un documento de este tipo. El sistema manejará automáticamente el reemplazo.'
-            );
-          } else {
-            this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
-          }
-
+          this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
+          this.loggingService.error('[DocumentoUploadDialog] Upload failed after error handling.', error, 'DocumentoUploadDialog');
           return throwError(() => error);
         })
       )
       .subscribe({
         next: (response) => {
-          this.loggingService.info('[DocumentoUploadDialog] Document uploaded successfully with duplicate handling.', { response }, 'DocumentoUploadDialog');
+          this.loggingService.info('[DocumentoUploadDialog] Document uploaded successfully.', { response }, 'DocumentoUploadDialog');
 
           // Marcar como completado para cambiar la UI
           this.uploadCompleted = true;

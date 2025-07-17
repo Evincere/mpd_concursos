@@ -15,7 +15,7 @@ import java.util.UUID;
 public class DocumentEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", columnDefinition = "BINARY(16)")
     private UUID id;
 
     @NotNull
@@ -68,15 +68,13 @@ public class DocumentEntity {
     @Column(name = "is_archived", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isArchived = false;
 
-    @Column(name = "replaced_document_id")
-    private UUID replacedDocumentId;
-
     @Column(name = "archived_at")
     private LocalDateTime archivedAt;
 
     @Column(name = "archived_by")
     private UUID archivedBy;
 
+    @Version
     @Column(name = "version")
     private int version = 1;
 
