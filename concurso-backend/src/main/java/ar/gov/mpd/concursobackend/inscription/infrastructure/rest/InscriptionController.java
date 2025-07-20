@@ -468,33 +468,19 @@ public class InscriptionController {
     }
 
     /**
-     * Internal method to handle inscription cancellation
+     * ✅ MÉTODO SIMPLIFICADO: Manejo de cancelación sin validaciones duplicadas
+     * Las validaciones de seguridad y reglas de negocio se manejan en el servicio
      */
     private ResponseEntity<Void> cancelInscriptionInternal(UUID id) {
-        String currentUserId = securityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new IllegalStateException("No authenticated user found");
-        }
-
         try {
-            // Verify that the inscription belongs to the current user
-            InscriptionDetailResponse inscription = findInscriptionsUseCase.findById(id);
-            if (!inscription.getUserId().equals(currentUserId)) {
-                log.error("User {} tried to cancel an inscription that doesn't belong to them: {}",
-                        currentUserId, id);
-                return ResponseEntity.notFound().build();
-            }
-
-            // The method name in the interface is cancel, not cancelInscription
+            // ✅ DELEGACIÓN COMPLETA: El servicio maneja todas las validaciones
             cancelInscriptionUseCase.cancel(id);
-            log.info("User {} cancelled inscription {}", currentUserId, id);
+            log.info("Inscription {} cancelled successfully", id);
             return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            log.error("Validation error when cancelling inscription: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            log.error("Unexpected error when cancelling inscription: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            // ✅ MANEJO SIMPLIFICADO: GlobalExceptionHandler maneja excepciones específicas
+            log.error("Error cancelling inscription {}: {}", id, e.getMessage());
+            throw e; // Propagar para que GlobalExceptionHandler lo maneje
         }
     }
 

@@ -1,7 +1,8 @@
 package ar.gov.mpd.concursobackend.shared.infrastructure.exception;
 
+import ar.gov.mpd.concursobackend.inscription.domain.exception.InscriptionCannotBeCancelledException;
+import ar.gov.mpd.concursobackend.inscription.domain.exception.InscriptionNotFoundException;
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.DuplicateInscriptionException;
-import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionNotFoundException;
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionException;
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InvalidInscriptionStatusException;
 import ar.gov.mpd.concursobackend.inscription.domain.model.exceptions.InscriptionPeriodClosedException;
@@ -73,6 +74,28 @@ public class GlobalExceptionHandler {
                 "Estado de inscripción inválido",
                 ex.getMessage() != null ? ex.getMessage() : "El estado de inscripción proporcionado no es válido o no se puede aplicar en este contexto");
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InscriptionCannotBeCancelledException.class)
+    public ResponseEntity<ApiError> handleInscriptionCannotBeCancelledException(InscriptionCannotBeCancelledException ex) {
+        log.warn("Intento de cancelación inválida: Estado {} - {}", ex.getCurrentState(), ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "No se puede cancelar la inscripción",
+                ex.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InscriptionNotFoundException.class)
+    public ResponseEntity<ApiError> handleInscriptionNotFoundExceptionNew(InscriptionNotFoundException ex) {
+        log.warn("Inscripción no encontrada o sin permisos: {}", ex.getMessage());
+
+        ApiError apiError = new ApiError(
+                HttpStatus.NOT_FOUND.value(),
+                "Inscripción no encontrada",
+                ex.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InscriptionPeriodClosedException.class)
