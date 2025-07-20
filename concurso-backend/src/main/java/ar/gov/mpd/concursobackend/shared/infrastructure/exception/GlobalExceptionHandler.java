@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import jakarta.persistence.OptimisticLockException;
+import ar.gov.mpd.concursobackend.document.domain.exception.DocumentException;
 
 @ControllerAdvice
 @Slf4j
@@ -84,9 +85,75 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.FORBIDDEN);
     }
 
+
+
+    // ========== MANEJADOR PARA EXCEPCIONES DE DOCUMENTOS ========== 
+    @ExceptionHandler(DocumentException.class)
+    public ResponseEntity<ApiError> handleDocumentException(DocumentException ex) {
+        log.warn("Error de documento: {}", ex.getMessage());
+        int status = HttpStatus.BAD_REQUEST.value();
+        String message = ex.getMessage();
+        String detail = ex.getCause() != null ? ex.getCause().toString() : "";
+        // Si el mensaje indica conflicto, usar 409
+        if (message != null && (message.toLowerCase().contains("conflicto") || message.toLowerCase().contains("conflict") || message.toLowerCase().contains("ya existe") )) {
+            status = HttpStatus.CONFLICT.value();
+        }
+        ApiError apiError = new ApiError(status, message, detail);
+        return new ResponseEntity<>(apiError, HttpStatus.valueOf(status));
+    }
+
+    // ========== MANEJADOR MEJORADO PARA CONFLICTOS DE CONCURRENCIA (OPTIMISTIC LOCKING) ==========
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
+        log.warn("🔒 [GlobalExceptionHandler] Conflicto de concurrencia detectado: {}", ex.getMessage());
+
+        int status = HttpStatus.CONFLICT.value();
+        String message;
+        String detail;
+
+        // Determinar el tipo de conflicto basado en el mensaje de la excepción
+        if (ex.getMessage().contains("DocumentEntity")) {
+            message = "El documento está siendo modificado por otra operación. La página se recargará automáticamente.";
+            detail = "DOCUMENT_CONCURRENCY_CONFLICT";
+            log.info("📄 [GlobalExceptionHandler] Conflicto de concurrencia en documento - se enviará señal de recarga al frontend");
+        } else if (ex.getMessage().contains("InscriptionEntity")) {
+            message = "La inscripción está siendo modificada por otra operación. Por favor, recargue la página.";
+            detail = "INSCRIPTION_CONCURRENCY_CONFLICT";
+        } else if (ex.getMessage().contains("NotificationJpaEntity")) {
+            message = "La notificación está siendo procesada por otra operación. La acción se completará automáticamente.";
+            detail = "NOTIFICATION_CONCURRENCY_CONFLICT";
+        } else {
+            message = "El recurso fue modificado por otra operación. Por favor, recargue la página e intente nuevamente.";
+            detail = "GENERIC_CONCURRENCY_CONFLICT";
+        }
+
+        ApiError apiError = new ApiError(status, message, detail);
+
+        // Agregar headers específicos para que el frontend pueda manejar el conflicto apropiadamente
+        return ResponseEntity.status(status)
+                .header("X-Concurrency-Conflict", "true")
+                .header("X-Conflict-Type", detail)
+                .header("X-Retry-After", "2") // Sugerir retry después de 2 segundos
+                .body(apiError);
+    }
+
+    // ========== MANEJADOR PARA OPERACIONES BLOQUEADAS POR LOCKS ==========
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ApiError> handleIllegalStateException(IllegalStateException ex) {
-        log.debug("Manejando IllegalStateException: {}", ex.getMessage());
+    public ResponseEntity<ApiError> handleOperationLockException(IllegalStateException ex) {
+        log.debug("🔐 [GlobalExceptionHandler] Manejando IllegalStateException: {}", ex.getMessage());
+
+        // Verificar si es un error de lock de operación
+        if (ex.getMessage() != null && ex.getMessage().contains("operación de reemplazo en progreso")) {
+            log.info("🔒 [GlobalExceptionHandler] Operación bloqueada por lock activo");
+            ApiError apiError = new ApiError(
+                    HttpStatus.TOO_MANY_REQUESTS.value(),
+                    "Operación en progreso. Por favor, espere un momento e intente nuevamente.",
+                    "OPERATION_LOCK_ACTIVE");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("X-Operation-Locked", "true")
+                    .header("Retry-After", "3")
+                    .body(apiError);
+        }
 
         // Verificar si es un error de inscripción duplicada
         if (ex.getMessage() != null && ex.getMessage().contains("Ya existe una inscripción activa")) {
@@ -97,23 +164,13 @@ public class GlobalExceptionHandler {
             return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
         }
 
-        // Para otros errores de estado ilegal, devolver 400 Bad Request
+        // Para otros IllegalStateException, usar manejo genérico
+        log.warn("⚠️ [GlobalExceptionHandler] IllegalStateException no específica: {}", ex.getMessage());
         ApiError apiError = new ApiError(
                 HttpStatus.BAD_REQUEST.value(),
-                "Error en la solicitud",
+                "Estado inválido para la operación solicitada",
                 ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
-
-    // ========== MANEJADOR PARA ERRORES DE CONCURRENCIA EN DOCUMENTOS ========== 
-    @ExceptionHandler({ObjectOptimisticLockingFailureException.class, OptimisticLockException.class})
-    public ResponseEntity<ApiError> handleOptimisticLocking(Exception ex) {
-        log.warn("Conflicto de concurrencia detectado: {}", ex.getMessage());
-        ApiError apiError = new ApiError(
-                HttpStatus.CONFLICT.value(),
-                "Conflicto de concurrencia",
-                "El documento fue modificado o eliminado por otra operación. Por favor, recarga la página y vuelve a intentarlo.");
-        return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
     }
 
     // ========== MANEJADORES MEJORADOS PARA EXCEPCIONES COMUNES ==========
@@ -208,19 +265,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // Manejador genérico para excepciones no controladas
+    // ========== MANEJADOR GENÉRICO DE EXCEPCIONES ========== 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGenericException(Exception ex) {
-        log.error("Error no controlado: {} - Tipo: {} - Causa raíz: {}",
-                ex.getMessage(),
-                ex.getClass().getSimpleName(),
-                ex.getCause() != null ? ex.getCause().getMessage() : "N/A",
-                ex);
-
-        ApiError apiError = new ApiError(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Error interno del servidor",
-                "Ha ocurrido un error inesperado. Por favor, inténtelo de nuevo más tarde.");
-        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+        log.error("Error inesperado: {}", ex.getMessage(), ex);
+        int status = HttpStatus.BAD_REQUEST.value();
+        String message = "Error inesperado al reemplazar el documento";
+        String detail = ex.getMessage();
+        return ResponseEntity.status(status).body(new ApiError(status, message, detail));
     }
 }

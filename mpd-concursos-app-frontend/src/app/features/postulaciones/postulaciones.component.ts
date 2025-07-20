@@ -490,6 +490,26 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Determina si se puede retomar una inscripción (está incompleta)
+   * @param postulacion La postulación a evaluar
+   * @returns true si se puede retomar la inscripción
+   */
+  puedeRetomarInscripcion(postulacion: Postulacion): boolean {
+    return postulacion.estado === PostulationStatus.ACTIVE ||
+           postulacion.estado === PostulationStatus.COMPLETED_PENDING_DOCS;
+  }
+
+  /**
+   * Determina si una inscripción está completada y pendiente de validación
+   * @param postulacion La postulación a evaluar
+   * @returns true si la inscripción está completada
+   */
+  inscripcionCompletada(postulacion: Postulacion): boolean {
+    return postulacion.estado === PostulationStatus.COMPLETED_WITH_DOCS ||
+           postulacion.estado === PostulationStatus.PENDING;
+  }
+
+  /**
    * Obtiene la clase CSS para el indicador de urgencia
    * @param postulacion La postulación a evaluar
    * @returns Clase CSS apropiada

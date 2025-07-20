@@ -85,6 +85,47 @@ export class UnifiedDocumentService {
   }
 
   /**
+   * Sube un documento con progreso en tiempo real
+   */
+  uploadDocumentWithProgress(
+    file: File,
+    tipoDocumentoId: string,
+    comentarios?: string
+  ): Observable<{type: 'progress' | 'response', progress?: number, response?: DocumentoResponse}> {
+
+    this.loggingService.debug('[UnifiedDocumentService] Iniciando upload con progreso', {
+      fileName: file.name,
+      tipoDocumentoId
+    });
+
+    this._isLoading.next(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('tipoDocumentoId', tipoDocumentoId);
+    formData.append('comentarios', comentarios || '');
+
+    return this.documentosService.uploadDocumentoConProgreso(formData).pipe(
+      map(event => {
+        if (event['type'] === 'progreso') {
+          return { type: 'progress' as const, progress: event['progreso'] as number };
+        } else if (event['type'] === 'completado') {
+          this.notificationService.success(
+            'Documento subido exitosamente',
+            `El documento ha sido cargado correctamente.`
+          );
+          return { type: 'response' as const, response: event['response'] as DocumentoResponse };
+        }
+        // Para otros tipos de eventos, no emitir nada
+        return { type: 'progress' as const, progress: 0 };
+      }),
+      finalize(() => {
+        this._isLoading.next(false);
+      })
+    );
+  }
+
+  /**
    * Obtiene documentos del usuario con información de duplicidad
    */
   getDocumentos(): Observable<DocumentoUsuario[]> {

@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpEventType, HttpEvent, HttpResponse } from '@angular/common/http';
-import { Observable, throwError, Subject, forkJoin, of } from 'rxjs'; // Import 'of' for returning observables
+import { Observable, throwError, Subject, forkJoin, of, BehaviorSubject } from 'rxjs'; // Import 'of' for returning observables
 import { environment } from '../../../../environments/environment';
-import { DocumentoUsuario, TipoDocumento, DocumentoResponse, EstadoDocumento, EstadoColaDocumento, EstadoProcesamiento } from '../../models/documento.model';
+import { DocumentoUsuario, TipoDocumento, DocumentoResponse, EstadoDocumento, EstadoColaDocumento, EstadoProcesamiento, DocumentoReplaceResponse, DocumentoSummary } from '../../models/documento.model';
 import { map, catchError, tap, debounceTime, distinctUntilChanged, finalize } from 'rxjs/operators';
 import { TempDocumentCacheService } from '../cv/temp-document-cache.service';
 
@@ -36,9 +36,29 @@ export class DocumentosService {
   private loadingMutex = false;
   private pendingRequest: Observable<DocumentoUsuario[]> | null = null;
 
+  // CRITICAL FIX: State management para operaciones de documentos
+  private operationInProgress = new BehaviorSubject<boolean>(false);
+  public operationInProgress$ = this.operationInProgress.asObservable();
+
   constructor() {
     this.ultimaActualizacion = 0; // Initialize to 0 so it fetches on first load
     // No need to call this.documentoActualizadoSource.next() here, as it's meant for updates.
+  }
+
+  /**
+   * Establece el estado de una operación de documento en curso.
+   * @param state `true` si una operación está en progreso, `false` en caso contrario.
+   */
+  setOperationInProgress(state: boolean): void {
+    this.operationInProgress.next(state);
+  }
+
+  /**
+   * Verifica si hay una operación de documento en progreso.
+   * @returns `true` si una operación está en progreso.
+   */
+  isOperationInProgress(): boolean {
+    return this.operationInProgress.getValue();
   }
 
   /**
@@ -119,6 +139,36 @@ export class DocumentosService {
   }
 
   /**
+   * Obtiene un resumen de documentos agrupados por tipo, mostrando solo el más reciente
+   * con información sobre versiones anteriores
+   * @param forzarRecarga Si es true, ignora la caché y fuerza una recarga desde el servidor
+   */
+  getDocumentosSummary(forzarRecarga = false): Observable<DocumentoSummary[]> {
+    console.log('[DocumentosService] 🔍 Solicitando resumen de documentos del usuario');
+
+    return this.http.get<DocumentoSummary[]>(`${this.apiUrl}/usuario/summary`).pipe(
+      tap(summaries => {
+        console.log('[DocumentosService] ✅ Resumen de documentos recibido:', summaries);
+        console.log('[DocumentosService] 📊 Cantidad de tipos de documento:', summaries.length);
+        if (summaries.length > 0) {
+          console.log('[DocumentosService] 📄 Primer resumen:', summaries[0]);
+        }
+      }),
+      catchError(error => {
+        console.error('[DocumentosService] ❌ Error al obtener resumen de documentos:', error);
+
+        // Si es un error de autenticación (401), no lanzar error adicional
+        if (error.status === 401) {
+          return of([]);
+        }
+
+        // Retornar array vacío en caso de error para no romper la UI
+        return of([]);
+      })
+    );
+  }
+
+  /**
    * Obtiene los tipos de documento disponibles
    * @param forzarRecarga Si es true, ignora la caché y fuerza una recarga desde el servidor
    */
@@ -158,10 +208,16 @@ export class DocumentosService {
       return throwError(() => new Error('No se ha proporcionado un archivo para subir'));
     }
 
+    console.log('🔄 [DocumentosService] Iniciando carga de documento');
+
+    // CRITICAL FIX: Establecer operación en progreso para prevenir condiciones de carrera
+    this.setOperationInProgress(true);
+
     // No configuramos el Content-Type porque el navegador lo establecerá automáticamente
     // con el boundary correcto para multipart/form-data
     return this.http.post<DocumentoResponse>(`${this.apiUrl}/upload`, formData).pipe(
       tap(response => {
+        console.log('✅ [DocumentosService] Carga de documento exitosa');
         this.notificarDocumentoActualizado(); // Notify listeners on success
       }),
       catchError(error => {
@@ -194,6 +250,11 @@ export class DocumentosService {
         }
 
         return throwError(() => new Error(errorMessage));
+      }),
+      finalize(() => {
+        // CRITICAL FIX: Siempre liberar el estado de operación en progreso
+        console.log('🔓 [DocumentosService] Liberando estado de operación de carga');
+        this.setOperationInProgress(false);
       })
     );
   }
@@ -543,14 +604,26 @@ export class DocumentosService {
       console.error('[DocumentosService] ❌ ID de documento no proporcionado para eliminar.');
       return of(false);
     }
+
+    console.log(`🗑️ [DocumentosService] Iniciando eliminación de documento: ${documentoId}`);
+
+    // CRITICAL FIX: Establecer operación en progreso para prevenir condiciones de carrera
+    this.setOperationInProgress(true);
+
     return this.http.delete<void>(`${this.apiUrl}/${documentoId}`).pipe(
       tap(() => {
+        console.log(`✅ [DocumentosService] Eliminación exitosa de documento: ${documentoId}`);
         this.notificarDocumentoActualizado();
       }),
       map(() => true),
       catchError(error => {
-        console.error('[DocumentosService] ❌ Error al eliminar documento:', error);
+        console.error(`❌ [DocumentosService] Error al eliminar documento ${documentoId}:`, error);
         return of(false);
+      }),
+      finalize(() => {
+        // CRITICAL FIX: Siempre liberar el estado de operación en progreso
+        console.log(`🔓 [DocumentosService] Liberando estado de operación de eliminación para documento: ${documentoId}`);
+        this.setOperationInProgress(false);
       })
     );
   }
@@ -573,6 +646,99 @@ export class DocumentosService {
       catchError(error => {
         console.error('[DocumentosService] ❌ Error al actualizar documento:', error);
         return throwError(() => new Error('Error al actualizar el documento'));
+      })
+    );
+  }
+
+  /**
+   * Reemplaza un documento existente por uno nuevo, mostrando advertencias y detalle de impacto si corresponde
+   */
+  replaceDocumento(documentoId: string, file: File, comentarios?: string, forceReplace = false): Observable<DocumentoReplaceResponse> {
+    console.log(`🔄 [DocumentosService] Iniciando reemplazo de documento: ${documentoId}`);
+
+    // CRITICAL FIX: Establecer operación en progreso para prevenir condiciones de carrera
+    this.setOperationInProgress(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    if (comentarios) formData.append('comentarios', comentarios);
+    formData.append('forceReplace', String(forceReplace));
+
+    return this.http.post<DocumentoReplaceResponse>(`${this.apiUrl}/${documentoId}/replace`, formData).pipe(
+      tap((response) => {
+        console.log(`✅ [DocumentosService] Reemplazo exitoso para documento: ${documentoId}`);
+        // Notificar actualización solo si la operación fue exitosa
+        this.notificarDocumentoActualizado();
+      }),
+      catchError(error => {
+        console.error(`❌ [DocumentosService] Error al reemplazar documento ${documentoId}:`, error);
+        let errorMessage = 'Error al reemplazar el documento';
+        if (error.status === 400) {
+          if (error.error && error.error.mensaje) {
+            errorMessage = error.error.mensaje;
+          } else {
+            errorMessage = 'El documento no cumple con los requisitos de validación';
+          }
+        } else if (error.status === 401) {
+          errorMessage = 'Su sesión ha expirado. Por favor, inicie sesión nuevamente';
+        } else if (error.status === 413) {
+          errorMessage = 'El archivo es demasiado grande. El tamaño máximo permitido es 10MB';
+        } else if (error.status === 415) {
+          errorMessage = 'Tipo de archivo no permitido. Solo se permiten archivos PDF';
+        } else if (error.status === 409) {
+          errorMessage = error.error?.mensaje || 'Conflicto de concurrencia: el documento está siendo modificado por otra operación. Por favor, intente nuevamente.';
+        } else if (error.status === 500) {
+          if (error.error && error.error.mensaje) {
+            errorMessage = error.error.mensaje;
+          } else {
+            errorMessage = 'Error interno del servidor. Por favor, intente nuevamente más tarde';
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        return throwError(() => new Error(errorMessage));
+      }),
+      finalize(() => {
+        // CRITICAL FIX: Siempre liberar el estado de operación en progreso
+        console.log(`🔓 [DocumentosService] Liberando estado de operación para documento: ${documentoId}`);
+        this.setOperationInProgress(false);
+      })
+    );
+  }
+
+  checkReplaceDocumento(documentoId: string, file: File, comentarios?: string): Observable<DocumentoReplaceResponse> {
+    console.log(`🔍 [DocumentosService] Verificando reemplazo de documento: ${documentoId}`);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    if (comentarios) formData.append('comentarios', comentarios);
+
+    return this.http.post<DocumentoReplaceResponse>(`${this.apiUrl}/${documentoId}/replace/check`, formData).pipe(
+      catchError(error => {
+        console.error(`❌ [DocumentosService] Error al verificar reemplazo de documento ${documentoId}:`, error);
+        let errorMessage = 'Error al verificar el reemplazo del documento';
+        if (error.status === 400) {
+          if (error.error && error.error.mensaje) {
+            errorMessage = error.error.mensaje;
+          } else {
+            errorMessage = 'El documento no cumple con los requisitos de validación';
+          }
+        } else if (error.status === 401) {
+          errorMessage = 'Su sesión ha expirado. Por favor, inicie sesión nuevamente';
+        } else if (error.status === 413) {
+          errorMessage = 'El archivo es demasiado grande. El tamaño máximo permitido es 10MB';
+        } else if (error.status === 415) {
+          errorMessage = 'Tipo de archivo no permitido. Solo se permiten archivos PDF';
+        } else if (error.status === 500) {
+          if (error.error && error.error.mensaje) {
+            errorMessage = error.error.mensaje;
+          } else {
+            errorMessage = 'Error interno del servidor. Por favor, intente nuevamente más tarde';
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        return throwError(() => new Error(errorMessage));
       })
     );
   }

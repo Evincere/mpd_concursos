@@ -2,6 +2,8 @@ package ar.gov.mpd.concursobackend.document.application.service;
 
 import ar.gov.mpd.concursobackend.document.domain.model.Document;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentAuditEntity;
+import ar.gov.mpd.concursobackend.document.application.mapper.DocumentMapper;
+import ar.gov.mpd.concursobackend.document.infrastructure.database.entities.DocumentEntity;
 import ar.gov.mpd.concursobackend.document.infrastructure.database.repository.spring.IDocumentAuditSpringRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class DocumentAuditService {
 
     private final IDocumentAuditSpringRepository auditRepository;
     private final ObjectMapper objectMapper;
+    private final DocumentMapper documentMapper;
 
     /**
      * Registra la creación de un nuevo documento
@@ -39,7 +42,7 @@ public class DocumentAuditService {
                     .newFilePath(document.getFilePath())
                     .actionBy(actionBy)
                     .reason("Documento creado")
-                    .metadata(createMetadata(document))
+                    .metadata(createMetadata(documentMapper.toEntity(document)))
                     .build();
 
             auditRepository.save(audit);
@@ -95,7 +98,7 @@ public class DocumentAuditService {
     /**
      * Crea metadata JSON para auditoría
      */
-    private String createMetadata(Document document) {
+    private String createMetadata(DocumentEntity document) {
         try {
             var metadata = new java.util.HashMap<String, Object>();
             metadata.put("fileName", document.getFileName() != null ? document.getFileName().toString() : null);
@@ -104,12 +107,12 @@ public class DocumentAuditService {
             metadata.put("status", document.getStatus() != null ? document.getStatus().toString() : null);
             metadata.put("processingStatus", document.getProcessingStatus() != null ? document.getProcessingStatus().toString() : null);
             metadata.put("version", document.getVersion());
-            metadata.put("isArchived", document.isArchived());
+            metadata.put("isArchived", document.getIsArchived());
             metadata.put("timestamp", LocalDateTime.now().toString());
 
             return objectMapper.writeValueAsString(metadata);
         } catch (Exception e) {
-            log.warn("Error creando metadata para documento: {}", document.getId().value(), e);
+            log.warn("Error creando metadata para documento: {}", document.getId(), e);
             return "{}";
         }
     }

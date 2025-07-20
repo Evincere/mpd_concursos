@@ -176,6 +176,7 @@ CREATE TABLE `documents` (
   `validatedBy` binary(16) DEFAULT NULL,
   `validatedAt` datetime DEFAULT NULL,
   `rejectionReason` text,
+  `version` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `userId` (`userId`),
   KEY `documentTypeId` (`documentTypeId`),

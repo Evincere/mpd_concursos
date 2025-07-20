@@ -25,6 +25,28 @@ import { InscriptionStateMachineService } from './inscription-state-machine.serv
   providedIn: 'root'
 })
 export class InscriptionService {
+
+  /**
+   * CRITICAL FIX: Helper function para validar fechas antes de usar toISOString()
+   * Evita el error "RangeError: Invalid time value"
+   */
+  private getValidDateString(date: any): string {
+    if (!date) return new Date().toISOString();
+
+    // Si es string, intentar convertir a Date
+    if (typeof date === 'string') {
+      const parsedDate = new Date(date);
+      return isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString();
+    }
+
+    // Si es Date, verificar que sea válida
+    if (date instanceof Date) {
+      return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+    }
+
+    // Si no es ni string ni Date, usar fecha actual
+    return new Date().toISOString();
+  }
   private readonly baseUrl = environment.apiUrl;
   private readonly inscriptionsEndpoint = '/inscriptions';
   // Keep old endpoint for backward compatibility during transition
@@ -713,8 +735,8 @@ export class InscriptionService {
         contestId: localInscription?.contestId || 0,
         userId: localInscription?.userId || '',
         status: request.state, // Return the requested state as 'successfully' applied locally
-        inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-        createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+        inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+        createdAt: this.getValidDateString(localInscription?.createdAt),
         updatedAt: new Date().toISOString()
       } as IInscriptionResponse);
     }
@@ -795,8 +817,8 @@ export class InscriptionService {
                       contestId: localInscription?.contestId || 0,
                       userId: localInscription?.userId || '',
                       status: request.state,
-                      inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-                      createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+                      inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+                      createdAt: this.getValidDateString(localInscription?.createdAt),
                       updatedAt: new Date().toISOString()
                     } as IInscriptionResponse);
                   })
@@ -806,13 +828,14 @@ export class InscriptionService {
               delete this.updateStatusRetryCount[inscriptionId]; // Clear retry counter to avoid infinite loops
               // We already updated the local state, so we can return a successful observable
               const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
+
               return of({
                 id: inscriptionId,
                 contestId: localInscription?.contestId || 0,
                 userId: localInscription?.userId || '',
                 status: request.state,
-                inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-                createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+                inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+                createdAt: this.getValidDateString(localInscription?.createdAt),
                 updatedAt: new Date().toISOString()
               } as IInscriptionResponse);
             })
@@ -824,13 +847,14 @@ export class InscriptionService {
           this.loggingService.warn(`[InscriptionService] Update status failed with ${error.status}. Returning local state as fallback.`, undefined, 'Inscription');
           // We already updated the local state, so we can return a successful observable
           const localInscription = this.inscriptions$.getValue().find(ins => ins.id === inscriptionId);
+
           return of({
             id: inscriptionId,
             contestId: localInscription?.contestId || 0,
             userId: localInscription?.userId || '',
             status: request.state,
-            inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-            createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+            inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+            createdAt: this.getValidDateString(localInscription?.createdAt),
             updatedAt: new Date().toISOString()
           } as IInscriptionResponse);
         }
@@ -903,8 +927,8 @@ export class InscriptionService {
         contestId: localInscription?.contestId || 0,
         userId: localInscription?.userId || '',
         status: localInscription?.state, // Return current local status
-        inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-        createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+        inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+        createdAt: this.getValidDateString(localInscription?.createdAt),
         updatedAt: new Date().toISOString()
       } as IInscriptionResponse);
     }
@@ -944,8 +968,8 @@ export class InscriptionService {
             contestId: localInscription?.contestId || 0,
             userId: localInscription?.userId || '',
             status: localInscription?.state, // Return current local status
-            inscriptionDate: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
-            createdAt: localInscription?.createdAt?.toISOString() || new Date().toISOString(),
+            inscriptionDate: this.getValidDateString(localInscription?.createdAt),
+            createdAt: this.getValidDateString(localInscription?.createdAt),
             updatedAt: new Date().toISOString()
           } as IInscriptionResponse);
         }

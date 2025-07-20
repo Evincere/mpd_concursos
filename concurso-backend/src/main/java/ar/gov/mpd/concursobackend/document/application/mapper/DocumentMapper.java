@@ -90,6 +90,8 @@ public class DocumentMapper {
         entity.setValidatedBy(domain.getValidatedBy());
         entity.setValidatedAt(domain.getValidatedAt());
         entity.setRejectionReason(domain.getRejectionReason());
+        // CRITICAL FIX: NO mapear version manualmente - JPA lo maneja automáticamente con @Version
+        // entity.setVersion(domain.getVersion()); // Removido para evitar conflictos de versioning
         return entity;
     }
 

@@ -4,6 +4,8 @@ import ar.gov.mpd.concursobackend.shared.domain.exception.ResourceNotFoundExcept
 import ar.gov.mpd.concursobackend.shared.domain.exception.UnauthorizedException;
 import ar.gov.mpd.concursobackend.shared.domain.model.SoftDeletableEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,9 @@ import java.util.UUID;
 @Slf4j
 @Transactional
 public abstract class BaseCvDeletionService<T extends SoftDeletableEntity> {
+
+    // Logger manual como fallback si @Slf4j no funciona
+    private static final Logger log = LoggerFactory.getLogger(BaseCvDeletionService.class);
 
     /**
      * Validates business rules specific to the entity type before deletion

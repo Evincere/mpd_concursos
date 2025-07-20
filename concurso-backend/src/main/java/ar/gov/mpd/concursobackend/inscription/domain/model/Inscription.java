@@ -10,8 +10,8 @@ import ar.gov.mpd.concursobackend.inscription.domain.model.valueobjects.UserId;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -101,9 +101,32 @@ public class Inscription {
      * @return true si todos los documentos están presentes, false en caso contrario
      */
     public boolean hasAllRequiredDocuments() {
-        // TODO: Implementar lógica para verificar documentos requeridos
-        // Por ahora retornamos true si hay al menos un documento
-        return this.documents != null && !this.documents.isEmpty();
+        // Si no hay documentos, definitivamente no tiene todos los requeridos
+        if (this.documents == null || this.documents.isEmpty()) {
+            return false;
+        }
+
+        // Obtener todos los tipos de documentos requeridos
+        // Los documentos requeridos son: DNI_FRONTAL, DNI_DORSO, CONSTANCIA_CUIL,
+        // ANTECEDENTES_PENALES, CERTIFICADO_PROFESIONAL_ANTIGUEDAD, CERTIFICADO_SIN_SANCIONES
+        Set<String> requiredDocumentCodes = Set.of(
+            "DNI_FRONTAL",
+            "DNI_DORSO",
+            "CONSTANCIA_CUIL",
+            "ANTECEDENTES_PENALES",
+            "CERTIFICADO_PROFESIONAL_ANTIGUEDAD",
+            "CERTIFICADO_SIN_SANCIONES"
+        );
+
+        // Obtener los códigos de los tipos de documentos que el usuario tiene
+        Set<String> userDocumentCodes = this.documents.stream()
+            .filter(doc -> doc.getDocumentType() != null)
+            .map(doc -> doc.getDocumentType().getCode())
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        // Verificar si todos los documentos requeridos están presentes
+        return userDocumentCodes.containsAll(requiredDocumentCodes);
     }
 
     /**

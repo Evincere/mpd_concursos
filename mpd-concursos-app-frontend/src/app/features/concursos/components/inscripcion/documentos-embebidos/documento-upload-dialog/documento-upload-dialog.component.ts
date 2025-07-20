@@ -793,7 +793,8 @@ export class DocumentoUploadDialogComponent implements OnInit {
       return;
     }
 
-    // CRITICAL FIX: Marcar operación como iniciada
+    // CRITICAL FIX: Marcar operación como iniciada y bloquear UI
+    this.documentosService.setOperationInProgress(true);
     this.operationInProgress = true;
     this.operationStartTime = Date.now();
     this.uploading = true;
@@ -807,36 +808,33 @@ export class DocumentoUploadDialogComponent implements OnInit {
       this.data.tipoDocumentoId,
       comentarios
     )
-      .pipe(
-        finalize(() => {
-          // CRITICAL FIX: Liberar lock de operación
-          this.operationInProgress = false;
-          const operationDuration = this.operationStartTime ? Date.now() - this.operationStartTime : 0;
-          this.operationStartTime = null;
+    .subscribe({
+      next: (response) => {
+        this.loggingService.info('[DocumentoUploadDialog] Document uploaded successfully.', { response }, 'DocumentoUploadDialog');
+        this.uploadCompleted = true;
+        this.uploadResponse = response;
 
-          this.uploading = false;
-          this.loggingService.debug(`[DocumentoUploadDialog] 🔓 Upload process finalized after ${operationDuration}ms`, undefined, 'DocumentoUploadDialog');
-        }),
-        catchError(error => {
-          this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
-          this.loggingService.error('[DocumentoUploadDialog] Upload failed after error handling.', error, 'DocumentoUploadDialog');
-          return throwError(() => error);
-        })
-      )
-      .subscribe({
-        next: (response) => {
-          this.loggingService.info('[DocumentoUploadDialog] Document uploaded successfully.', { response }, 'DocumentoUploadDialog');
+        // CRITICAL FIX: Liberar lock de operación en caso de éxito
+        this.documentosService.setOperationInProgress(false);
+        this.operationInProgress = false;
+        this.uploading = false;
+        const operationDuration = this.operationStartTime ? Date.now() - this.operationStartTime : 0;
+        this.loggingService.debug(`[DocumentoUploadDialog] 🔓 Upload process finalized after ${operationDuration}ms`, undefined, 'DocumentoUploadDialog');
+        this.operationStartTime = null;
+      },
+      error: (err) => {
+        this.loggingService.error('[DocumentoUploadDialog] Upload failed after error handling.', err, 'DocumentoUploadDialog');
+        this.notificationService.error('Error al subir el documento. Por favor, intenta nuevamente.', 'Error de Subida');
 
-          // Marcar como completado para cambiar la UI
-          this.uploadCompleted = true;
-
-          // Guardar la respuesta para cuando se cierre el diálogo
-          this.uploadResponse = response;
-        },
-        error: (err) => {
-          this.loggingService.error('[DocumentoUploadDialog] Upload failed after error handling.', err, 'DocumentoUploadDialog');
-        }
-      });
+        // CRITICAL FIX: Liberar lock de operación en caso de error
+        this.documentosService.setOperationInProgress(false);
+        this.operationInProgress = false;
+        this.uploading = false;
+        const operationDuration = this.operationStartTime ? Date.now() - this.operationStartTime : 0;
+        this.loggingService.debug(`[DocumentoUploadDialog] 🔓 Upload process finalized after error after ${operationDuration}ms`, undefined, 'DocumentoUploadDialog');
+        this.operationStartTime = null;
+      }
+    });
   }
 
   /**

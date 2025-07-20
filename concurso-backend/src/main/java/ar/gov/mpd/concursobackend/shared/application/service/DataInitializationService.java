@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -134,6 +135,8 @@ public class DataInitializationService {
         } else {
             logger.info("📋 [DataInitializationService] Se encontraron {} tipos de documento existentes", existingTypes.size());
             verifyEssentialDocumentTypes(existingTypes);
+            // NUEVA FUNCIONALIDAD: Verificar y corregir campos 'required'
+            verifyAndFixRequiredFields(existingTypes);
         }
     }
 
@@ -215,5 +218,43 @@ public class DataInitializationService {
         entity.setOrder(order);
         entity.setParent(null);
         return entity;
+    }
+
+    /**
+     * Verifica y corrige los campos 'required' de los tipos de documento existentes
+     */
+    private void verifyAndFixRequiredFields(List<DocumentTypeEntity> existingTypes) {
+        logger.info("🔧 [DataInitializationService] Verificando campos 'required' de tipos de documento...");
+
+        // Definir qué tipos deben ser obligatorios
+        Map<String, Boolean> expectedRequiredStatus = Map.of(
+            "DNI_FRONTAL", true,
+            "DNI_DORSO", true,
+            "CONSTANCIA_CUIL", true,
+            "ANTECEDENTES_PENALES", true,
+            "CERTIFICADO_PROFESIONAL_ANTIGUEDAD", true,
+            "CERTIFICADO_SIN_SANCIONES", true,
+            "CERTIFICADO_LEY_MICAELA", false,
+            "DOCUMENTO_ADICIONAL", false
+        );
+
+        boolean hasChanges = false;
+
+        for (DocumentTypeEntity type : existingTypes) {
+            Boolean expectedRequired = expectedRequiredStatus.get(type.getCode());
+            if (expectedRequired != null && type.isRequired() != expectedRequired) {
+                logger.warn("🔧 [DataInitializationService] Corrigiendo campo 'required' para {}: {} → {}",
+                    type.getCode(), type.isRequired(), expectedRequired);
+                type.setRequired(expectedRequired);
+                documentTypeRepository.save(type);
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges) {
+            logger.info("✅ [DataInitializationService] Campos 'required' corregidos exitosamente");
+        } else {
+            logger.info("✅ [DataInitializationService] Todos los campos 'required' están correctos");
+        }
     }
 }

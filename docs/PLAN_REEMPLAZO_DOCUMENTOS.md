@@ -101,4 +101,10 @@ flowchart TD
 
 ---
 
+### Avance
+- Endpoint y contratos definidos en backend
+- Lógica de negocio pendiente de implementación
+
+---
+
 **Este documento servirá como base para la implementación incremental y profesional del nuevo flujo de reemplazo de documentos.** 

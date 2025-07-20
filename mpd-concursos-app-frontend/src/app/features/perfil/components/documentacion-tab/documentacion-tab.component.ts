@@ -12,13 +12,13 @@ import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.ser
 import { CustomNotificationService } from '@shared/components/custom-notification/custom-notification.service';
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
-import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento } from '../../../../core/models/documento.model';
+import { DocumentoUsuario, TipoDocumento, EstadoDocumento, EstadoProcesamiento, DocumentoReplaceResponse, DocumentoSummary } from '../../../../core/models/documento.model';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
 import { DocumentosService } from '../../../../core/services/documentos/documentos.service';
 import { DocumentoMultipleUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoUploadDialogComponent } from '../../../concursos/components/inscripcion/documentos-embebidos/documento-upload-dialog/documento-upload-dialog.component';
 import { debounceTime, throttleTime, finalize } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 
 interface DocumentoCardViewModel {
   tipo: TipoDocumento;
@@ -104,7 +104,7 @@ interface DocumentoCardViewModel {
       <div class="documentos-requeridos" *ngIf="documentosObligatorios.length > 0">
         <h4>Documentos obligatorios</h4>
         <div class="documentos-grid">
-          <div *ngFor="let vm of documentosViewModel | slice:0:documentosObligatorios.length" class="documento-card"
+          <div *ngFor="let vm of getObligatoriosViewModel()" class="documento-card"
                [class.completo]="vm.subido"
                [class.obligatorio]="vm.tipo.requerido">
             <!-- Badge de tipo en esquina superior derecha -->
@@ -147,6 +147,8 @@ interface DocumentoCardViewModel {
                       color="success"
                       icon="sync-alt"
                       [tooltip]="'Reemplazar documento'"
+                      [loading]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
+                      [disabled]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
                       (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
@@ -181,7 +183,7 @@ interface DocumentoCardViewModel {
           Estos documentos pueden mejorar tu perfil profesional, pero no son obligatorios para completar tu inscripción.
         </p>
         <div class="documentos-grid">
-          <div *ngFor="let vm of documentosViewModel | slice:documentosObligatorios.length" class="documento-card"
+          <div *ngFor="let vm of getOpcionalesViewModel()" class="documento-card"
                [class.completo]="vm.subido"
                [class.opcional]="!vm.tipo.requerido">
             <!-- Badge de tipo en esquina superior derecha -->
@@ -224,6 +226,8 @@ interface DocumentoCardViewModel {
                       color="success"
                       icon="sync-alt"
                       [tooltip]="'Reemplazar documento'"
+                      [loading]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
+                      [disabled]="!!(vm.documento && vm.documento.id && isReplacing[vm.documento.id])"
                       (buttonClick)="reemplazarDocumento(vm.documento)">
                     </app-custom-button>
                     <app-custom-button
@@ -250,20 +254,21 @@ interface DocumentoCardViewModel {
         </div>
       </div>
 
-        <!-- Tabla de documentos cargados -->
-        <div class="documentos-tabla" *ngIf="documentosUsuario.length > 0">
-          <h4>Todos los documentos</h4>
+        <!-- Tabla de resumen de documentos -->
+        <div class="documentos-tabla" *ngIf="documentosSummary.length > 0">
+          <h4>Documentos cargados</h4>
+          <p class="table-description">Mostrando solo la versión más reciente de cada tipo de documento</p>
           <app-custom-table
-            [data]="documentosUsuario"
-            [columns]="tableColumns"
+            [data]="documentosSummary"
+            [columns]="summaryTableColumns"
             [loading]="isLoading"
             [showActions]="true"
-            (actionClick)="onTableAction($event)">
+            (actionClick)="onSummaryTableAction($event)">
           </app-custom-table>
         </div>
 
         <!-- Estado vacío -->
-        <div class="empty-state" *ngIf="documentosUsuario.length === 0 && !isLoading">
+        <div class="empty-state" *ngIf="documentosSummary.length === 0 && !isLoading">
           <i class="fas fa-folder-open" aria-hidden="true"></i>
           <h4>No has cargado ningún documento aún</h4>
           <p>Comienza cargando los documentos requeridos para completar tu perfil</p>
@@ -748,11 +753,71 @@ interface DocumentoCardViewModel {
         color: #f9fafb;
       }
     }
+
+    /* Estilos para la nueva tabla de resumen */
+    .table-description {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    .versiones-info {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+
+      i {
+        margin-right: 0.4rem;
+        font-size: 0.75rem;
+      }
+    }
+
+    .estado-badge-tabla {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 500;
+
+      i {
+        margin-right: 0.3rem;
+        font-size: 0.7rem;
+      }
+
+      &.aprobado {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #4caf50;
+        border: 1px solid rgba(76, 175, 80, 0.3);
+      }
+
+      &.pendiente {
+        background-color: rgba(255, 152, 0, 0.2);
+        color: #ff9800;
+        border: 1px solid rgba(255, 152, 0, 0.3);
+      }
+
+      &.rechazado {
+        background-color: rgba(244, 67, 54, 0.2);
+        color: #f44336;
+        border: 1px solid rgba(244, 67, 54, 0.3);
+      }
+
+      &.archivado {
+        background-color: rgba(158, 158, 158, 0.2);
+        color: #9e9e9e;
+        border: 1px solid rgba(158, 158, 158, 0.3);
+      }
+    }
   `]
 })
 export class DocumentacionTabComponent implements OnInit, OnDestroy {
   isLoading = true;
+  isReplacing: { [key: string]: boolean } = {};
   documentosUsuario: DocumentoUsuario[] = [];
+  documentosSummary: DocumentoSummary[] = []; // Resumen de documentos agrupados por tipo
   tiposDocumento: TipoDocumento[] = []; // This will hold all document types from the backend
   documentosRequeridos: TipoDocumento[] = [
     {
@@ -871,6 +936,52 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
   ];
 
+  // Nueva configuración de columnas para la tabla de resumen
+  summaryTableColumns: TableColumn[] = [
+    { key: 'tipoDocumento.nombre', label: 'Tipo de documento', sortable: true },
+    {
+      key: 'nombreArchivo',
+      label: 'Archivo actual',
+      sortable: true,
+      type: 'custom',
+      render: (summary: DocumentoSummary) => {
+        const nombreTipoDocumento = summary.tipoDocumento?.nombre || 'Documento';
+        return `${nombreTipoDocumento}.pdf`;
+      }
+    },
+    { key: 'fechaCarga', label: 'Fecha de carga', sortable: true, type: 'date' },
+    {
+      key: 'estadoDetallado',
+      label: 'Estado',
+      sortable: false,
+      type: 'custom',
+      render: (summary: DocumentoSummary) => {
+        const estadoClass = this.getEstadoClass(summary.estadoDetallado);
+        const estadoIcon = this.getEstadoIcon(summary.estadoDetallado);
+        return `<span class="estado-badge-tabla ${estadoClass}">
+                  <i class="fas ${estadoIcon}"></i> ${summary.estadoDetallado}
+                </span>`;
+      }
+    },
+    {
+      key: 'versiones',
+      label: 'Versiones',
+      sortable: false,
+      type: 'custom',
+      render: (summary: DocumentoSummary) => {
+        if (summary.tieneVersionesAnteriores) {
+          return `<span class="versiones-info">
+                    <i class="fas fa-history"></i> v${summary.versionActual} (${summary.totalVersiones - 1} anteriores)
+                  </span>`;
+        }
+        return `<span class="versiones-info">
+                  <i class="fas fa-file"></i> v${summary.versionActual}
+                </span>`;
+      }
+    },
+    { key: 'acciones', label: 'Acciones', sortable: false, type: 'actions' }
+  ];
+
   private subscription: Subscription | undefined;
 
   constructor(
@@ -892,16 +1003,30 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     // CRITICAL FIX: Suscripción más robusta con debounce y throttle para evitar race conditions
     this.subscription = this.documentosService.documentoActualizado$
       .pipe(
-        debounceTime(1000), // Aumentado a 1000ms para dar tiempo a que el backend procese
-        throttleTime(3000, undefined, { leading: true, trailing: true }) // Permitir emisión inmediata y luego esperar
+        debounceTime(500), // Reducido a 500ms para respuesta más rápida
+        throttleTime(2000, undefined, { leading: true, trailing: true }) // Reducido para mejor UX
       )
       .subscribe((timestamp) => {
-        console.log('[DocumentacionTab] 🔄 Recargando documentos por actualización...', timestamp);
+        console.log('[DocumentacionTab] 🔄 Recibida señal de actualización...', timestamp);
+
+        // CRITICAL FIX: Respetar el bloqueo de operación centralizado
+        if (this.documentosService.isOperationInProgress()) {
+          console.log('[DocumentacionTab] 🚫 Recarga automática OMITIDA. Una operación crítica está en progreso.');
+          return;
+        }
 
         if (!this.isLoading) {
-          this.cargarDocumentosUsuario(true);
+          console.log('[DocumentacionTab] ✅ Iniciando recarga automática completa de documentos...');
+          this.cargarDocumentosSummary(true); // Esto llamará secuencialmente a cargarDocumentosUsuarioSecuencial
         } else {
-          console.log('[DocumentacionTab] ⏳ Recarga ignorada - ya hay una carga en progreso');
+          console.log('[DocumentacionTab] ⏳ Recarga automática ignorada - ya hay una carga en progreso local');
+          // Programar recarga para después
+          setTimeout(() => {
+            if (!this.isLoading && !this.documentosService.isOperationInProgress()) {
+              console.log('[DocumentacionTab] 🔄 Ejecutando recarga programada completa después de operación');
+              this.cargarDocumentosSummary(true); // Esto llamará secuencialmente a cargarDocumentosUsuarioSecuencial
+            }
+          }, 1000);
         }
       });
   }
@@ -923,8 +1048,8 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
           this.tiposDocumento = tipos; // Store all available document types
           // Update required documents from backend data
           this.actualizarDocumentosRequeridos(tipos);
-          // CRITICAL FIX: Llamar cargarDocumentosUsuario sin verificar isLoading
-          this.cargarDocumentosUsuarioInternal(forzarRecarga); // Then load user documents
+          // CRITICAL FIX: Cargar datos secuencialmente para evitar bloqueo concurrente
+          this.cargarDocumentosSummary(forzarRecarga); // Para la tabla (se ejecuta primero)
         },
         error: (error: unknown) => {
           console.error('[DocumentacionTab] Error al cargar tipos de documento:', error);
@@ -982,6 +1107,26 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       console.log(`- Obligatorios: ${this.documentosObligatorios.length}`);
       console.log(`- Opcionales: ${this.documentosOpcionales.length}`);
       console.log('- Documentos con IDs:', documentosDisponibles.map(d => `${d.nombre} (${d.id})`));
+
+      // DEBUGGING CRÍTICO: Verificar específicamente CUIL y DNI_DORSO
+      const cuil = documentosDisponibles.find(d => d.code === 'CONSTANCIA_CUIL');
+      const dniDorso = documentosDisponibles.find(d => d.code === 'DNI_DORSO');
+
+      console.log('🔍 [DocumentacionTab] DEBUGGING ESPECÍFICO:');
+      if (cuil) {
+        console.log(`📄 CONSTANCIA_CUIL: requerido=${cuil.requerido}, nombre="${cuil.nombre}"`);
+      } else {
+        console.log('❌ CONSTANCIA_CUIL no encontrado');
+      }
+
+      if (dniDorso) {
+        console.log(`📄 DNI_DORSO: requerido=${dniDorso.requerido}, nombre="${dniDorso.nombre}"`);
+      } else {
+        console.log('❌ DNI_DORSO no encontrado');
+      }
+
+      console.log('📋 [DocumentacionTab] OBLIGATORIOS:', this.documentosObligatorios.map(d => `${d.nombre} (${d.code})`));
+      console.log('📋 [DocumentacionTab] OPCIONALES:', this.documentosOpcionales.map(d => `${d.nombre} (${d.code})`));
     } else {
       // Fallback to hardcoded list if backend doesn't have documents
       console.log('[DocumentacionTab] No se encontraron documentos en backend, usando lista hardcodeada');
@@ -992,10 +1137,47 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Carga los documentos del usuario de forma secuencial (sin verificar isLoading)
+   * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
+   */
+  private cargarDocumentosUsuarioSecuencial(forzarRecarga = false): void {
+    console.log('[DocumentacionTab] 📥 EJECUTANDO cargarDocumentosUsuarioSecuencial - forzarRecarga:', forzarRecarga);
+
+    this.documentosService.getDocumentosUsuario(forzarRecarga)
+      .pipe(finalize(() => {
+        console.log('[DocumentacionTab] ✅ Carga secuencial de documentos del usuario finalizada');
+        this.buildViewModel();
+        this.calcularProgreso();
+
+        // Logging adicional para debugging
+        const documentosSubidos = this.documentosViewModel.filter(vm => vm.subido).length;
+        console.log('[DocumentacionTab] 📊 Estado después de carga secuencial:', {
+          totalDocumentos: this.documentosViewModel.length,
+          documentosSubidos,
+          progresoCalculado: this.progresoDocumentacion
+        });
+
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: (documentos: DocumentoUsuario[]) => {
+          console.log('[DocumentacionTab] 📄 Documentos del usuario recibidos (secuencial):', documentos.length);
+          this.documentosUsuario = documentos;
+        },
+        error: (error: unknown) => {
+          console.error('[DocumentacionTab] Error al cargar documentos del usuario (secuencial):', error);
+          this.notification.error('Error al cargar los documentos del usuario');
+        }
+      });
+  }
+
+  /**
    * Carga los documentos del usuario.
    * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
    */
   cargarDocumentosUsuario(forzarRecarga = false): void {
+    console.log('[DocumentacionTab] 🔄 LLAMADA A cargarDocumentosUsuario - forzarRecarga:', forzarRecarga, 'isLoading:', this.isLoading);
+
     // CRITICAL FIX: Evitar llamadas concurrentes
     if (this.isLoading) {
       console.log('[DocumentacionTab] ⏳ Carga ya en progreso, ignorando nueva solicitud');
@@ -1010,6 +1192,7 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
    * @param forzarRecarga Si es `true`, fuerza la recarga de datos desde el servicio.
    */
   private cargarDocumentosUsuarioInternal(forzarRecarga = false): void {
+    console.log('[DocumentacionTab] 📥 EJECUTANDO cargarDocumentosUsuarioInternal - forzarRecarga:', forzarRecarga);
     console.log('[DocumentacionTab] 📥 Iniciando carga de documentos del usuario...', { forzarRecarga });
 
     this.documentosService.getDocumentosUsuario(forzarRecarga)
@@ -1212,7 +1395,15 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe((result: any) => {
       if (result && result.success) {
         this.notification.success(`${tipoDocumento.nombre} cargado exitosamente`);
-        console.log('[DocumentacionTab] 📄 Documento individual cargado exitosamente - recarga automática en progreso');
+        console.log('[DocumentacionTab] 📄 Documento individual cargado exitosamente - forzando recarga inmediata');
+
+        // CRITICAL FIX: Forzar recarga inmediata para asegurar actualización de UI
+        // Recargar datos secuencialmente para evitar bloqueos
+        setTimeout(() => {
+          console.log('[DocumentacionTab] 🔄 Ejecutando recarga manual completa como respaldo');
+          this.cargarDocumentosSummary(true); // Esto llamará secuencialmente a cargarDocumentosUsuarioSecuencial
+        }, 500); // Pequeño delay para que el backend procese
+
       } else if (result && result.cancelled) {
         console.log('[DocumentacionTab] ❌ Carga de documento cancelada por el usuario');
       }
@@ -1238,39 +1429,98 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
     });
   }
 
-  reemplazarDocumento(documento: DocumentoUsuario | null): void {
+  /**
+   * Abre un diálogo de selección de archivo y devuelve el archivo seleccionado como una Promesa.
+   * @returns Una promesa que se resuelve con el archivo seleccionado o se rechaza si se cancela.
+   */
+  private selectFile(): Promise<File> {
+    return new Promise((resolve, reject) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/pdf';
+
+      // Se resuelve la promesa cuando el usuario selecciona un archivo
+      input.onchange = () => {
+        const file = input.files && input.files[0];
+        if (file) {
+          resolve(file);
+        } else {
+          reject(new Error('No se seleccionó ningún archivo.'));
+        }
+      };
+
+      // Si el usuario cierra el selector de archivos sin elegir nada, el foco vuelve
+      // a la ventana. Podemos usar esto para detectar una "cancelación".
+      window.addEventListener('focus', () => {
+        // Rechazamos la promesa solo si no se ha seleccionado un archivo todavía
+        // Se usa un pequeño timeout para asegurar que el evento onchange se dispare primero si hubo una selección.
+        setTimeout(() => {
+            reject(new Error('Selección de archivo cancelada.'));
+        }, 300);
+      }, { once: true });
+
+      input.click();
+    });
+  }
+
+  async reemplazarDocumento(documento: DocumentoUsuario | null): Promise<void> {
     if (!documento || !documento.id || !documento.tipoDocumentoId) {
       this.notification.error('No se pudo encontrar el documento para reemplazar');
       return;
     }
 
-    // Buscar el tipo de documento para obtener su información
-    const tipoDocumento = this.tiposDocumento.find(tipo => tipo.id === documento.tipoDocumentoId);
-    if (!tipoDocumento) {
-      this.notification.error('Tipo de documento no encontrado');
+    this.isReplacing[documento.id] = true;
+
+    // CRITICAL FIX: Prevenir operaciones concurrentes
+    if (this.documentosService.isOperationInProgress()) {
+      this.notification.warning('Ya hay una operación de documento en progreso. Por favor, espere.');
       return;
     }
 
-    // CRITICAL FIX: Usar DocumentoUploadDialogComponent para reemplazo individual
-    const dialogRef = this.dialog.open(DocumentoUploadDialogComponent, {
-      title: `Reemplazar ${tipoDocumento.nombre}`,
-      showFooter: false,
-      showCancelButton: false,
-      showConfirmButton: false,
-      data: {
-        tipoDocumentoId: documento.tipoDocumentoId,
-        tipoDocumentoNombre: tipoDocumento.nombre,
-        modoReemplazo: true,
-        documentoExistente: documento
-      }
-    });
+    this.documentosService.setOperationInProgress(true);
 
-    dialogRef.afterClosed().subscribe((result: unknown) => {
-      if (result) {
-        this.notification.success('Documento reemplazado exitosamente.');
-        console.log('[DocumentacionTab] 📄 Documento reemplazado exitosamente - recarga automática en progreso');
+    try {
+      const tipoDocumento = this.tiposDocumento.find(tipo => tipo.id === documento.tipoDocumentoId);
+      if (!tipoDocumento) {
+        this.notification.error('Tipo de documento no encontrado');
+        return;
       }
-    });
+
+      const file = await this.selectFile();
+
+      const checkResp = await firstValueFrom(this.documentosService.checkReplaceDocumento(documento.id!, file, 'Reemplazo de documento'));
+
+      if (checkResp.warning && checkResp.impactedEntities && checkResp.impactedEntities.length > 0) {
+        const detalle = checkResp.impactedEntities.map(e => `<li>${e}</li>`).join('');
+        const confirmado = await firstValueFrom(this.dialog.openConfirm({
+          title: 'Advertencia de reemplazo',
+          icon: 'warning',
+          message: `${checkResp.warning}<ul>${detalle}</ul><p>¿Deseas continuar y reemplazar el documento?</p>`,
+          confirmButtonText: 'Reemplazar',
+          cancelButtonText: 'Cancelar',
+          size: 'medium',
+        }).afterClosed());
+
+        if (confirmado) {
+          const resp2 = await firstValueFrom(this.documentosService.replaceDocumento(documento.id!, file, 'Reemplazo de documento', true));
+          this.notification.success(resp2.message || 'Documento reemplazado exitosamente.');
+        }
+      } else {
+        const resp = await firstValueFrom(this.documentosService.replaceDocumento(documento.id!, file, 'Reemplazo de documento'));
+        this.notification.success(resp.message || 'Documento reemplazado exitosamente.');
+      }
+    } catch (error: any) {
+      // No mostrar notificación de error aquí, ya que el interceptor global y ApiErrorService se encargan de ello.
+      // Solo registrar en consola para debugging.
+      console.error('[DocumentacionTab] Error durante el proceso de reemplazo:', error.message);
+      if(error.message.includes('cancelada')){
+        this.notification.info('La operación de reemplazo fue cancelada.');
+      }
+    } finally {
+      // CRITICAL FIX: Asegurarse de que el bloqueo siempre se libere
+      this.documentosService.setOperationInProgress(false);
+      this.isReplacing[documento.id] = false;
+    }
   }
 
   eliminarDocumento(documento: DocumentoUsuario | null): void {
@@ -1321,6 +1571,138 @@ export class DocumentacionTabComponent implements OnInit, OnDestroy {
       default:
         console.warn(`Acción desconocida: ${event.action}`);
     }
+  }
+
+  /**
+   * Maneja las acciones de la tabla de resumen de documentos
+   */
+  onSummaryTableAction(event: { action: string; data?: DocumentoSummary; row?: any }): void {
+    const summary = event.data || (event.row as DocumentoSummary);
+
+    // Crear un DocumentoUsuario temporal para compatibilidad con métodos existentes
+    const documento: DocumentoUsuario = {
+      id: summary.id,
+      tipoDocumentoId: summary.tipoDocumentoId,
+      tipoDocumento: summary.tipoDocumento,
+      nombreArchivo: summary.nombreArchivo,
+      estado: summary.estado as any,
+      comentarios: summary.comentarios,
+      fechaCarga: summary.fechaCarga,
+      validadoPor: summary.validadoPor,
+      fechaValidacion: summary.fechaValidacion,
+      motivoRechazo: summary.motivoRechazo
+    };
+
+    switch (event.action) {
+      case 'view':
+        this.verDocumento(documento);
+        break;
+      case 'replace':
+        this.reemplazarDocumento(documento);
+        break;
+      case 'delete':
+        this.eliminarDocumento(documento);
+        break;
+      case 'history':
+        this.verHistorialDocumento(summary);
+        break;
+      default:
+        console.warn(`Acción desconocida: ${event.action}`);
+    }
+  }
+
+  /**
+   * Muestra el historial de versiones de un documento
+   */
+  verHistorialDocumento(summary: DocumentoSummary): void {
+    console.log('[DocumentacionTab] 📋 Mostrando historial de documento:', summary.tipoDocumento.nombre);
+    // TODO: Implementar diálogo de historial de versiones
+    this.notification.info(`Historial de ${summary.tipoDocumento.nombre}: ${summary.totalVersiones} versiones`);
+  }
+
+  /**
+   * Obtiene la clase CSS para el estado del documento
+   */
+  private getEstadoClass(estadoDetallado: string): string {
+    switch (estadoDetallado.toLowerCase()) {
+      case 'en revisión':
+      case 'pendiente':
+        return 'pendiente';
+      case 'aprobado':
+        return 'aprobado';
+      case 'rechazado':
+        return 'rechazado';
+      case 'archivado':
+        return 'archivado';
+      default:
+        return 'pendiente';
+    }
+  }
+
+  /**
+   * Obtiene el icono para el estado del documento
+   */
+  private getEstadoIcon(estadoDetallado: string): string {
+    switch (estadoDetallado.toLowerCase()) {
+      case 'en revisión':
+      case 'pendiente':
+        return 'fa-clock';
+      case 'aprobado':
+        return 'fa-check-circle';
+      case 'rechazado':
+        return 'fa-times-circle';
+      case 'archivado':
+        return 'fa-archive';
+      default:
+        return 'fa-clock';
+    }
+  }
+
+  /**
+   * Obtiene los elementos del ViewModel que corresponden a documentos obligatorios
+   */
+  getObligatoriosViewModel(): any[] {
+    return this.documentosViewModel.filter(vm => vm.tipo.requerido);
+  }
+
+  /**
+   * Obtiene los elementos del ViewModel que corresponden a documentos opcionales
+   */
+  getOpcionalesViewModel(): any[] {
+    return this.documentosViewModel.filter(vm => !vm.tipo.requerido);
+  }
+
+  /**
+   * Carga el resumen de documentos agrupados por tipo
+   */
+  cargarDocumentosSummary(forzarRecarga = false): void {
+    console.log('[DocumentacionTab] 📥 Iniciando carga de resumen de documentos...', { forzarRecarga });
+
+    // Solo mostrar loading si no es una recarga automática
+    if (forzarRecarga) {
+      this.isLoading = true;
+    }
+
+    this.documentosService.getDocumentosSummary(forzarRecarga)
+      .pipe(finalize(() => {
+        this.isLoading = false;
+        console.log('[DocumentacionTab] ✅ Carga de resumen finalizada - actualizando UI');
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: (summaries: DocumentoSummary[]) => {
+          console.log('[DocumentacionTab] 📄 Resumen de documentos recibido:', summaries.length);
+          this.documentosSummary = summaries;
+
+          // CRITICAL FIX: Cargar documentos del usuario DESPUÉS de que termine el summary
+          console.log('[DocumentacionTab] 🔄 Iniciando carga secuencial de documentos del usuario...');
+          this.cargarDocumentosUsuarioSecuencial(forzarRecarga);
+        },
+        error: (error: unknown) => {
+          console.error('[DocumentacionTab] Error al cargar resumen de documentos:', error);
+          this.notification.error('Error al cargar el resumen de documentos');
+        }
+      });
   }
 }
 

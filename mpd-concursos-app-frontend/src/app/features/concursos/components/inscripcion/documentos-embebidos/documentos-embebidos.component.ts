@@ -6,7 +6,7 @@ import { UnifiedDialogService } from '@shared/services/dialog/unified-dialog.ser
 import { CustomButtonComponent } from '@shared/components/custom-button/custom-button.component';
 import { NotificationService } from '@shared/services/notification.service';
 
-import { DocumentoUsuario, TipoDocumento, EstadoDocumento } from '@core/models/documento.model'; // Import EstadoDocumento
+import { DocumentoUsuario, TipoDocumento, EstadoDocumento, DocumentoReplaceResponse } from '@core/models/documento.model'; // Import EstadoDocumento
 import { DocumentoUploadDialogComponent } from './documento-upload-dialog/documento-upload-dialog.component';
 import { DocumentoMultipleUploadDialogComponent } from './documento-multiple-upload-dialog/documento-multiple-upload-dialog.component';
 import { DocumentoViewerComponent } from '@shared/components/documento-viewer/documento-viewer.component';
@@ -1347,39 +1347,81 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
     const esReemplazo = this.isDocumentoSubido(tipoDocumentoId);
     const documentoExistente = esReemplazo ? this.getDocumento(tipoDocumentoId) : null;
 
-    this.loggingService.debug(`[DocumentosEmbebidos] Abriendo diálogo para ${esReemplazo ? 'reemplazar' : 'cargar'} documento: ${tipoDocumentoId}`, undefined, 'DocumentosEmbebidos');
+    if (!esReemplazo) {
+      // Flujo original para carga nueva
+      this.dialog.open(DocumentoUploadDialogComponent, {
+        title: `Cargar ${tipoDoc.title}`,
+        showFooter: false,
+        showCancelButton: false,
+        showConfirmButton: false,
+        data: {
+          tipoDocumentoId: tipoDoc.tipoDocumentoId,
+          tipoDocumentoNombre: tipoDoc.title,
+          modoReemplazo: false,
+          documentoExistente: null
+        }
+      }).afterClosed().subscribe((result: any) => {
+        if (result && result.success) {
+          this.notificationService.success(`${tipoDoc.title} cargado exitosamente.`);
+          this.documentosService.invalidarCache();
+          this.cargarDatos(true);
+          setTimeout(() => this.cdr.detectChanges(), 200);
+        } else if (result && result.cancelled) {
+          this.loggingService.debug(`[DocumentosEmbebidos] Carga de documento cancelada.`, undefined, 'DocumentosEmbebidos');
+        } else if (result !== null && result !== undefined) {
+          this.notificationService.error(`Error al cargar ${tipoDoc.title}.`);
+        }
+      });
+      return;
+    }
 
-    this.dialog.open(DocumentoUploadDialogComponent, {
-      title: `${esReemplazo ? 'Reemplazar' : 'Cargar'} ${tipoDoc.title}`,
-      showFooter: false, // Disable external footer buttons
-      showCancelButton: false, // Disable external cancel button
-      showConfirmButton: false, // Disable external confirm button
-      data: {
-        tipoDocumentoId: tipoDoc.tipoDocumentoId,
-        tipoDocumentoNombre: tipoDoc.title,
-        modoReemplazo: esReemplazo,
-        documentoExistente: documentoExistente
-      }
-    }).afterClosed().subscribe((result: any) => {
-      if (result && result.success) {
-        this.notificationService.success(`${tipoDoc.title} ${esReemplazo ? 'reemplazado' : 'cargado'} exitosamente.`);
-
-        // CRITICAL FIX: Invalidar cache y recargar datos para forzar actualización de UI
-        this.documentosService.invalidarCache();
-        this.cargarDatos(true);
-
-        // CRITICAL FIX: Forzar actualización inmediata de la UI
-        setTimeout(() => {
-          this.cdr.detectChanges();
-          this.loggingService.debug('[DocumentosEmbebidos] UI actualizada después de upload exitoso', undefined, 'DocumentosEmbebidos');
-        }, 200);
-
-      } else if (result && result.cancelled) {
-        this.loggingService.debug(`[DocumentosEmbebidos] ${esReemplazo ? 'Reemplazo' : 'Carga'} de documento cancelada.`, undefined, 'DocumentosEmbebidos');
-      } else if (result !== null && result !== undefined) {
-        this.notificationService.error(`Error al ${esReemplazo ? 'reemplazar' : 'cargar'} ${tipoDoc.title}.`);
-      }
-    });
+    // --- NUEVO FLUJO DE REEMPLAZO ROBUSTO ---
+    // Abrir selector de archivo para reemplazo
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/pdf';
+    input.onchange = () => {
+      const file = input.files && input.files[0];
+      if (!file) return;
+      this.documentosService.replaceDocumento(documentoExistente!.id!, file).subscribe({
+        next: (resp: DocumentoReplaceResponse) => {
+          if (resp.warning && resp.impactedEntities && resp.impactedEntities.length > 0) {
+            const detalle = resp.impactedEntities.map(e => `<li>${e}</li>`).join('');
+            this.dialog.openConfirm({
+              title: 'Advertencia de reemplazo',
+              icon: 'warning',
+              message: `${resp.warning}<ul>${detalle}</ul><p>¿Deseas continuar y reemplazar el documento?</p>`,
+              confirmButtonText: 'Reemplazar',
+              cancelButtonText: 'Cancelar',
+              size: 'medium',
+            }).afterClosed().subscribe((confirmado: boolean | undefined) => {
+              if (confirmado) {
+                this.documentosService.replaceDocumento(documentoExistente!.id!, file, undefined, true).subscribe({
+                  next: (resp2: DocumentoReplaceResponse) => {
+                    this.notificationService.success(resp2.message || `${tipoDoc.title} reemplazado exitosamente.`);
+                    this.documentosService.invalidarCache();
+                    this.cargarDatos(true);
+                    setTimeout(() => this.cdr.detectChanges(), 200);
+                  },
+                  error: (err) => {
+                    this.notificationService.error(err?.message || `Error al reemplazar ${tipoDoc.title}.`);
+                  }
+                });
+              }
+            });
+          } else {
+            this.notificationService.success(resp.message || `${tipoDoc.title} reemplazado exitosamente.`);
+            this.documentosService.invalidarCache();
+            this.cargarDatos(true);
+            setTimeout(() => this.cdr.detectChanges(), 200);
+          }
+        },
+        error: (err) => {
+          this.notificationService.error(err?.message || `Error al reemplazar ${tipoDoc.title}.`);
+        }
+      });
+    };
+    input.click();
   }
 
   /**

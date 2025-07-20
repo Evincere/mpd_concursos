@@ -31,12 +31,15 @@ public class Document {
     private DocumentId replacedDocumentId;
     private LocalDateTime archivedAt;
     private UUID archivedBy;
-    private int version = 1;
+    
+
+    
 
     public Document() {
         this.id = new DocumentId(UUID.randomUUID());
         this.processingStatus = ProcessingStatus.UPLOADING; // Estado técnico inicial
         this.uploadDate = LocalDateTime.now();
+        // JPA maneja automáticamente el campo version para optimistic locking
         // El status de negocio se asigna cuando el procesamiento se completa exitosamente
     }
 
@@ -100,17 +103,14 @@ public class Document {
         this.replacedDocumentId = null;
         this.archivedAt = null;
         this.archivedBy = null;
-        // Incrementar versión al restaurar
-        this.version++;
+        
     }
 
     public boolean isActive() {
         return !Boolean.TRUE.equals(this.isArchived) && this.processingStatus == ProcessingStatus.UPLOAD_COMPLETE;
     }
 
-    public void incrementVersion() {
-        this.version++;
-    }
+    
 
     /**
      * Verifica si el documento está archivado (maneja null como false)

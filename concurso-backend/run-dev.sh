@@ -16,7 +16,7 @@ export DB_PORT="3306"
 export DB_NAME="mpd_concursos"
 
 # Variables de Spring
-export SPRING_PROFILES_ACTIVE="dev"
+export SPRING_PROFILES_ACTIVE="dev,debug"
 
 # Variables de JWT (generar una clave temporal para desarrollo)
 export JWT_SECRET="desarrollo_jwt_secret_muy_largo_y_seguro_para_testing_local_solamente_no_usar_en_produccion_256_bits_minimo"
@@ -33,8 +33,13 @@ export CORS_ALLOWED_ORIGINS="http://localhost:4200,http://localhost:8000"
 export SECURITY_DIAGNOSTIC_ENABLED="true"
 
 # Variables de logging
-export LOG_LEVEL="INFO"
+export LOG_LEVEL="DEBUG"
 export LOG_DIR="./logs"
+
+# Variables de debugging JPA/Hibernate
+export HIBERNATE_SHOW_SQL="true"
+export HIBERNATE_FORMAT_SQL="true"
+export HIBERNATE_SQL_COMMENTS="true"
 
 echo "✅ Variables de entorno configuradas:"
 echo "   DB_USERNAME: $DB_USERNAME"

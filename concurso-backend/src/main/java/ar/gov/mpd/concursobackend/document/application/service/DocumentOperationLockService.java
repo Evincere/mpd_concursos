@@ -1,5 +1,6 @@
 package ar.gov.mpd.concursobackend.document.application.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +15,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * sobre el mismo documento
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class DocumentOperationLockService {
-    
+
+    private final DocumentConcurrencyMetricsService metricsService;
     private final ConcurrentHashMap<String, OperationLock> activeOperations = new ConcurrentHashMap<>();
     
     private static final int OPERATION_TIMEOUT_MINUTES = 5;
@@ -40,10 +43,12 @@ public class DocumentOperationLockService {
         
         if (existingLock == null) {
             log.info("🔒 Lock adquirido exitosamente: {} para usuario: {}", lockKey, userId);
+            metricsService.recordLockAcquisition(userId.toString(), documentId.toString(), operationType);
             return true;
         } else {
-            log.warn("⚠️ Operación ya en progreso detectada: {} para usuario: {} (iniciada: {})", 
+            log.warn("⚠️ Operación ya en progreso detectada: {} para usuario: {} (iniciada: {})",
                     lockKey, userId, existingLock.getStartTime());
+            metricsService.recordLockTimeout(userId.toString(), documentId.toString(), operationType);
             return false;
         }
     }
@@ -94,6 +99,17 @@ public class DocumentOperationLockService {
         cleanExpiredOperations();
         return activeOperations.size();
     }
+
+    /**
+     * Obtiene estadísticas de locks activos
+     */
+    public LockStats getStats() {
+        cleanExpiredOperations();
+        return new LockStats(
+            activeOperations.size(),
+            activeOperations.keySet().toArray(new String[0])
+        );
+    }
     
     /**
      * Genera una clave única para el lock
@@ -138,4 +154,9 @@ public class DocumentOperationLockService {
             return startTime;
         }
     }
+
+    /**
+     * Record para estadísticas de locks
+     */
+    public record LockStats(int activeLocksCount, String[] lockedButtons) {}
 }

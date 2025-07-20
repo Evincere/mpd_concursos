@@ -57,6 +57,43 @@ export interface DocumentoResponse {
   documento: DocumentoUsuario;
 }
 
+export interface DocumentoVersion {
+  id: string;
+  nombreArchivo: string;
+  estado: string;
+  fechaCarga: Date;
+  comentarios?: string;
+  numeroVersion: number;
+  esArchivado: boolean;
+  fechaArchivado?: Date;
+  archivedBy?: string;
+}
+
+export interface DocumentoSummary {
+  // Información del documento más reciente (activo)
+  id: string;
+  tipoDocumentoId: string;
+  tipoDocumento: TipoDocumento;
+  nombreArchivo: string;
+  contentType: string;
+  estado: string;
+  comentarios?: string;
+  fechaCarga: Date;
+  validadoPor?: string;
+  fechaValidacion?: Date;
+  motivoRechazo?: string;
+
+  // Información del historial de versiones
+  totalVersiones: number;
+  versionActual: number;
+  tieneVersionesAnteriores: boolean;
+  versionesAnteriores: DocumentoVersion[];
+
+  // Información adicional para UI
+  esDocumentoActivo: boolean;
+  estadoDetallado: string; // "Activo", "Reemplazado", "Archivado"
+}
+
 export interface EstadoColaDocumento {
   queueId: string;
   documentId?: string;
@@ -68,4 +105,12 @@ export interface EstadoColaDocumento {
   progress: number;
   errorMessage?: string;
   lastUpdated?: number;
+}
+
+export interface DocumentoReplaceResponse {
+  newDocument: DocumentoUsuario | null;
+  previousDocument: DocumentoUsuario | null;
+  warning?: string;
+  message: string;
+  impactedEntities: string[];
 }

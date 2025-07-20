@@ -16,10 +16,17 @@ import java.util.UUID;
 @Table(name = "notifications")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class NotificationJpaEntity {
+
+    /**
+     * Constructor por defecto - JPA maneja automáticamente el campo @Version
+     */
+    public NotificationJpaEntity() {
+        // JPA/Hibernate maneja automáticamente el campo @Version
+        // No necesitamos inicializarlo manualmente
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

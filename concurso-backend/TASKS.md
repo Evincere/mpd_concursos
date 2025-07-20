@@ -1,0 +1,6 @@
+- [ ] Implementar la lógica interna de `replaceDocument` en el servicio, considerando:
+    - Validación de estado del documento (validado/no validado)
+    - Advertencia y manejo de impacto en concursos
+    - Archivado de versiones previas
+    - Actualización de referencias en concursos activos
+    - Tests unitarios y de integración 

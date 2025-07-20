@@ -1335,21 +1335,44 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
         console.log(`[DocumentoMultipleUpload] 📄 Subiendo documento ${i + 1}/${totalDocumentos}: ${doc.nombreEstandarizado}`);
 
         try {
-          // Usar UnifiedDocumentService que maneja duplicidad automáticamente
-          const resultado = await this.unifiedDocumentService.uploadDocument(
-            doc.file,
-            doc.tipoDocumentoId,
-            doc.comentarios || ''
-          ).toPromise();
-
-          console.log(`[DocumentoMultipleUpload] ✅ Documento subido exitosamente:`, resultado);
-
-          // Marcar como completado
-          doc.estado = 'completado';
-          doc.progreso = 100;
+          // CRITICAL FIX: Usar uploadDocumentWithProgress para progreso real
+          doc.estado = 'subiendo';
+          doc.progreso = 0;
           this.documentosParaSubir = [...this.documentosParaSubir];
           this.cdr.markForCheck();
-          console.log(`[DocumentoMultipleUpload] ✅ Documento completado: ${doc.nombreEstandarizado}`);
+
+          // Suscribirse al progreso de subida
+          await new Promise<void>((resolve, reject) => {
+            this.unifiedDocumentService.uploadDocumentWithProgress(
+              doc.file,
+              doc.tipoDocumentoId,
+              doc.comentarios || ''
+            ).subscribe({
+              next: (event) => {
+                if (event.type === 'progress') {
+                  // Actualizar progreso en tiempo real
+                  doc.progreso = event.progress || 0;
+                  this.documentosParaSubir = [...this.documentosParaSubir];
+                  this.actualizarProgresoGlobal();
+                  this.cdr.markForCheck();
+                  console.log(`[DocumentoMultipleUpload] 📊 Progreso ${doc.nombreEstandarizado}: ${event.progress || 0}%`);
+                } else if (event.type === 'response') {
+                  // Upload completado
+                  console.log(`[DocumentoMultipleUpload] ✅ Documento subido exitosamente:`, event.response);
+                  doc.estado = 'completado';
+                  doc.progreso = 100;
+                  this.documentosParaSubir = [...this.documentosParaSubir];
+                  this.cdr.markForCheck();
+                  console.log(`[DocumentoMultipleUpload] ✅ Documento completado: ${doc.nombreEstandarizado}`);
+                  resolve();
+                }
+              },
+              error: (error) => {
+                console.error(`[DocumentoMultipleUpload] ❌ Error al subir documento ${doc.nombreEstandarizado}:`, error);
+                reject(error);
+              }
+            });
+          });
 
         } catch (error: any) {
           console.error(`[DocumentoMultipleUpload] ❌ Error al subir documento ${doc.nombreEstandarizado}:`, error);

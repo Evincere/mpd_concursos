@@ -254,6 +254,32 @@
     border-color: rgba(255, 255, 255, 0.25);
     transform: translateY(-1px);
   }
+}
+
+/* === MENSAJE DE INSCRIPCIÓN COMPLETADA === */
+.inscripcion-completada {
+  @include glassmorphism-card;
+  @extend .glass-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: 12px;
+  background: rgba(40, 167, 69, 0.15);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  margin-top: var(--spacing-sm);
+
+  i {
+    font-size: 1.2rem;
+    color: #28a745;
+  }
+
+  .mensaje {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    flex: 1;
+  }
 
   i {
     color: var(--color-primary);
