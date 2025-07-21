@@ -18,9 +18,9 @@ public class InscriptionCannotBeCancelledException extends RuntimeException {
         if (currentState == InscriptionState.CANCELLED) {
             return "Esta inscripción ya está cancelada. No se puede cancelar nuevamente.";
         }
+        // ✅ REFACTORING: Eliminada lista hardcodeada de estados - delegación a StateMachine
         return String.format("No se puede cancelar una inscripción en estado %s. " +
-                "Solo se pueden cancelar inscripciones en estados: ACTIVE, COMPLETED_WITH_DOCS, " +
-                "COMPLETED_PENDING_DOCS o PENDING.", currentState);
+                "Consulte las reglas de transición de estados para más detalles.", currentState);
     }
     
     public InscriptionCannotBeCancelledException(InscriptionState currentState, String customMessage) {

@@ -597,53 +597,19 @@ export class InscriptionService {
         }, 1000); // Increase delay for more backend processing time
       }),
       catchError((error: HttpErrorResponse) => {
-        console.error('[InscriptionService] Error cancelling inscription with PATCH:', error);
+        this.loggingService.error(`[InscriptionService] Error cancelling inscription ${inscriptionId}:`, error.status, 'Inscription');
 
-        // If it's a 404 or 405 error, try with the DELETE method (for backward compatibility)
-        if (error.status === 404 || error.status === 405) {
-          this.loggingService.warn(`[InscriptionService] PATCH cancellation failed (${error.status}). Trying DELETE as fallback for inscription ${inscriptionId}.`, undefined, 'Inscription');
-          return this.http.delete<void>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`).pipe(
-            tap(() => {
-              this.loggingService.debug(`[InscriptionService] Inscription ${inscriptionId} cancelled successfully via DELETE.`, undefined, 'Inscription');
-              this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local state
+        // ✅ REFACTORING: Eliminado código de fallback obsoleto PATCH/DELETE
+        // Manejo simplificado de errores - solo PATCH es necesario
+        this.clearFormState(inscriptionId);
+        this.handleLocalCancellation(inscriptionId, isProcessCancellation);
 
-              // Add delay to ensure backend processes cancellation
-              setTimeout(() => {
-                this.loggingService.debug('[InscriptionService] Clearing cache after successful cancellation (DELETE).', undefined, 'Inscription');
-                this.clearCacheAndRefresh().subscribe({
-                  next: () => {
-                    this.loggingService.debug('[InscriptionService] Cache cleared and refreshed after cancellation (DELETE).', undefined, 'Inscription');
-                  },
-                  error: (error) => {
-                    console.error('[InscriptionService] Error clearing cache after cancellation (DELETE):', error);
-                  }
-                });
-              }, 1000);
-            }),
-            catchError((deleteError: HttpErrorResponse) => {
-              this.loggingService.debug('[InscriptionService] Error cancelling inscription with DELETE:', deleteError.status, 'Inscription');
-
-              this.clearFormState(inscriptionId); // Clear local form state
-              this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local inscription state
-
-              // Force an update of inscriptions from the backend
-              setTimeout(() => {
-                this.refreshInscriptions();
-              }, 500);
-
-              return this.handleSimpleError(deleteError); // Propagate error
-            })
-          );
-        }
-
-        this.clearFormState(inscriptionId); // Clear local form state
-        this.handleLocalCancellation(inscriptionId, isProcessCancellation); // Update local inscription state
-
+        // Forzar actualización desde backend
         setTimeout(() => {
           this.refreshInscriptions();
         }, 500);
 
-        return this.handleSimpleError(error); // Propagate error
+        return this.handleSimpleError(error);
       })
     );
   }

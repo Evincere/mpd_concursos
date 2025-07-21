@@ -30,7 +30,8 @@ export class InscriptionStateMachineService {
     ])],
     [InscripcionState.PENDING, new Set([
       InscripcionState.APPROVED,
-      InscripcionState.REJECTED
+      InscripcionState.REJECTED,
+      InscripcionState.CANCELLED  // ✅ SINCRONIZADO CON BACKEND
     ])],
     [InscripcionState.FROZEN, new Set([
       InscripcionState.REJECTED
@@ -91,21 +92,21 @@ export class InscriptionStateMachineService {
   getNextAutomaticState(currentState: InscripcionState, hasAllDocuments: boolean): InscripcionState | null {
     switch (currentState) {
       case InscripcionState.ACTIVE:
-        return hasAllDocuments ? 
-          InscripcionState.COMPLETED_WITH_DOCS : 
+        return hasAllDocuments ?
+          InscripcionState.COMPLETED_WITH_DOCS :
           InscripcionState.COMPLETED_PENDING_DOCS;
-          
+
       case InscripcionState.COMPLETED_WITH_DOCS:
         // Auto-transición a PENDING para revisión del admin
         return InscripcionState.PENDING;
-        
+
       case InscripcionState.COMPLETED_PENDING_DOCS:
         return hasAllDocuments ? InscripcionState.COMPLETED_WITH_DOCS : null;
-        
+
       case InscripcionState.FROZEN:
         // Auto-rechazo después del deadline
         return InscripcionState.REJECTED;
-        
+
       default:
         return null;
     }

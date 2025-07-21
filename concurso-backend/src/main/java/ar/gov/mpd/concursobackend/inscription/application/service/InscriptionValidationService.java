@@ -63,7 +63,8 @@ public class InscriptionValidationService {
                 return CancellationValidationResult.alreadyCancelled();
             }
             
-            // Verificar si la transición es válida
+            // ✅ REFACTORING: Delegación completa a InscriptionStateMachine
+            // Eliminada duplicación de lógica de validación de transiciones
             if (!stateMachine.canTransition(inscription.getState(), InscriptionState.CANCELLED)) {
                 return CancellationValidationResult.invalidState(inscription.getState());
             }
