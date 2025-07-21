@@ -266,14 +266,21 @@ export class DashboardWidgetsService {
               const diasRestantes = Math.ceil((fechaLimiteDoc.getTime() - hoy.getTime()) / (1000 * 3600 * 24));
 
               if (diasRestantes >= 0) { // Solo mostrar si aún está activo o venció hoy
-                // ✅ MEJORA: Información más clara y específica
+                // ✅ CORRECCIÓN: Información más clara con fecha de cierre correcta
                 const tituloMejorado = diasRestantes === 0
                   ? `¡ÚLTIMO DÍA! Documentos: ${concurso['title']}`
                   : `Documentos: ${concurso['title']}`;
 
+                // ✅ CORRECCIÓN: Mostrar fecha de cierre de inscripción, no fecha límite de documentos
+                const fechaCierreFormateada = fechaCierre.toLocaleDateString('es-AR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                });
+
                 const descripcionMejorada = diasRestantes === 0
-                  ? 'Plazo perentorio vence HOY a las 23:59'
-                  : `Plazo perentorio: ${diasRestantes} días hábiles restantes`;
+                  ? `Plazo perentorio vence HOY a las 23:59 (inscripción cerró ${fechaCierreFormateada})`
+                  : `Plazo perentorio: ${diasRestantes} días hábiles restantes (inscripción cerró ${fechaCierreFormateada})`;
 
                 vencimientos.push({
                   id: `docs-${inscripcion['id']}`,
