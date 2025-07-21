@@ -116,6 +116,12 @@ export class InscriptionService {
    * @returns The corresponding InscripcionState enum value.
    */
   private mapStatusToState(status: string): InscripcionState {
+    // CRITICAL FIX: Validar que el status no sea null o undefined
+    if (!status) {
+      this.loggingService.error(`[InscriptionService] Status is null or undefined`, undefined, 'Inscription');
+      return InscripcionState.ACTIVE;
+    }
+
     switch (status.toLowerCase()) {
       case 'no_inscription':
         return InscripcionState.NO_INSCRIPTION;
@@ -1033,6 +1039,32 @@ export class InscriptionService {
     this.loggingService.info('[InscriptionService] Forcing refresh of user inscriptions from backend.', undefined, 'Inscription');
     // Calling getUserInscriptions with forceReload will bypass cache and fetch fresh data
     return this.getUserInscriptions();
+  }
+
+  /**
+   * Verifica el estado real de una inscripción específica desde el backend
+   * @param inscriptionId ID de la inscripción
+   * @returns Observable con el estado actual de la inscripción
+   */
+  verifyInscriptionState(inscriptionId: string): Observable<InscripcionState> {
+    this.loggingService.info(`[InscriptionService] Verifying real state for inscription ${inscriptionId}`, undefined, 'Inscription');
+
+    // CRITICAL FIX: El endpoint /api/inscriptions/{id} devuelve InscriptionDetailResponse con campo 'estado'
+    return this.http.get<any>(`${this.baseUrl}${this.inscriptionsEndpoint}/${inscriptionId}`).pipe(
+      map(response => {
+        // El endpoint devuelve 'estado' en lugar de 'status'
+        const estado = response.estado || response.status;
+        if (!estado) {
+          this.loggingService.error(`[InscriptionService] No state field found in response for inscription ${inscriptionId}`, response, 'Inscription');
+          throw new Error('Estado de inscripción no encontrado en la respuesta');
+        }
+        return this.mapStatusToState(estado);
+      }),
+      catchError(error => {
+        this.loggingService.error(`[InscriptionService] Error verifying inscription state for ${inscriptionId}:`, error, 'Inscription');
+        return throwError(() => error);
+      })
+    );
   }
 
   /**

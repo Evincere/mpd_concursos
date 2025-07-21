@@ -12,7 +12,7 @@ public class InscriptionMapper {
 
     public InscriptionDetailResponse toDetailResponse(Inscription inscription, Contest contest) {
         // Log para ver el status de la inscripción
-        System.out.println("Mapping Inscription State: " + inscription.getState());
+        System.out.println("🔍 [InscriptionMapper] Mapping Inscription State: " + inscription.getState() + " for ID: " + inscription.getId());
 
         return InscriptionDetailResponse.builder()
             .id(inscription.getId() != null ? inscription.getId().getValue() : null)
@@ -41,6 +41,10 @@ public class InscriptionMapper {
     }
 
     public InscriptionResponse toResponse(Inscription inscription) {
+        System.out.println("🔍 [InscriptionMapper] Mapping to Response - State: " + inscription.getState() +
+                          " -> Status: " + InscriptionStateConverter.toStatus(inscription.getState()) +
+                          " for ID: " + inscription.getId());
+
         return InscriptionResponse.builder()
             .id(inscription.getId().getValue())
             .userId(inscription.getUserId().getValue())

@@ -87,16 +87,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(InscriptionNotFoundException.class)
-    public ResponseEntity<ApiError> handleInscriptionNotFoundExceptionNew(InscriptionNotFoundException ex) {
-        log.warn("Inscripción no encontrada o sin permisos: {}", ex.getMessage());
 
-        ApiError apiError = new ApiError(
-                HttpStatus.NOT_FOUND.value(),
-                "Inscripción no encontrada",
-                ex.getMessage());
-        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
-    }
 
     @ExceptionHandler(InscriptionPeriodClosedException.class)
     public ResponseEntity<ApiError> handleInscriptionPeriodClosedException(InscriptionPeriodClosedException ex) {

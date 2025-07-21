@@ -19,6 +19,10 @@ import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentId;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentName;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentStatus;
 import ar.gov.mpd.concursobackend.document.domain.valueObject.DocumentTypeId;
+import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionDeadlineService;
+import ar.gov.mpd.concursobackend.inscription.domain.port.InscriptionRepository;
+import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
+import ar.gov.mpd.concursobackend.inscription.domain.model.InscriptionState;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -40,6 +44,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -66,6 +71,8 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentMapper documentMapper;
     private final IUserRepository userRepository;
     private final DocumentAuditService auditService;
+    private final InscriptionDeadlineService inscriptionDeadlineService;
+    private final InscriptionRepository inscriptionRepo;
     private final InscriptionRepository inscriptionRepository;
     private final DocumentOperationLockService operationLockService;
     private final DocumentConcurrencyService concurrencyService;
@@ -120,6 +127,9 @@ public class DocumentServiceImpl implements DocumentService {
 
         Document savedDocument = documentRepository.save(newDocument);
         auditService.recordCreation(savedDocument, userId);
+
+        // CRITICAL FIX: Actualizar estado de inscripciones después de cargar documento
+        updateInscriptionStatusAfterDocumentUpload(userId);
 
         return DocumentResponse.builder()
                 .id(savedDocument.getId().value().toString())
@@ -814,5 +824,53 @@ public class DocumentServiceImpl implements DocumentService {
                 .message("El documento puede ser reemplazado sin advertencias.")
                 .impactedEntities(Collections.emptyList())
                 .build();
+    }
+
+    /**
+     * CRITICAL FIX: Actualiza el estado de las inscripciones del usuario después de cargar un documento
+     * Verifica si ahora tiene todos los documentos requeridos y actualiza el estado correspondiente
+     */
+    private void updateInscriptionStatusAfterDocumentUpload(UUID userId) {
+        try {
+            log.info("🔄 [DocumentService] Actualizando estado de inscripciones para usuario: {}", userId);
+
+            // Buscar inscripciones activas del usuario que puedan necesitar actualización
+            List<Inscription> userInscriptions = inscriptionRepo.findByUserId(userId);
+            log.info("🔍 [DocumentService] Encontradas {} inscripciones para usuario {}", userInscriptions.size(), userId);
+
+            for (Inscription inscription : userInscriptions) {
+                log.info("📋 [DocumentService] Procesando inscripción {} con estado: {}", inscription.getId(), inscription.getState());
+
+                // Solo actualizar inscripciones que estén en estado COMPLETED_PENDING_DOCS
+                if (inscription.getState() == InscriptionState.COMPLETED_PENDING_DOCS) {
+
+                    // Obtener tipos de documentos requeridos dinámicamente
+                    Set<String> requiredDocumentTypes = documentTypeRepository.findAllActive()
+                            .stream()
+                            .filter(ar.gov.mpd.concursobackend.document.domain.model.DocumentType::isRequired)
+                            .map(ar.gov.mpd.concursobackend.document.domain.model.DocumentType::getCode)
+                            .collect(java.util.stream.Collectors.toSet());
+
+                    log.info("📄 [DocumentService] Tipos de documentos requeridos: {}", requiredDocumentTypes);
+
+                    // Verificar si ahora tiene todos los documentos requeridos
+                    boolean hasAllRequiredDocuments = inscription.hasAllRequiredDocuments(requiredDocumentTypes);
+
+                    log.info("✅ [DocumentService] Inscripción {} - Documentos completos: {}",
+                            inscription.getId(), hasAllRequiredDocuments);
+
+                    // Actualizar estado usando el servicio especializado
+                    inscriptionDeadlineService.updateInscriptionDocumentationStatus(inscription, hasAllRequiredDocuments);
+
+                    log.info("🔄 [DocumentService] Estado de inscripción {} actualizado. Documentos completos: {}",
+                            inscription.getId(), hasAllRequiredDocuments);
+                }
+            }
+
+        } catch (Exception e) {
+            // No fallar la operación principal si la actualización de estado falla
+            log.warn("Error al actualizar estado de inscripciones después de cargar documento para usuario {}: {}",
+                    userId, e.getMessage());
+        }
     }
 }

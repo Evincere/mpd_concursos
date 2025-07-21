@@ -74,16 +74,16 @@ public class Inscription {
         this.preferences = preferences;
         this.lastUpdated = LocalDateTime.now();
 
-        // CORRECCIÓN CRÍTICA: Solo cambiar el estado si la inscripción no está ya completada
-        // Si ya está completada (COMPLETED step), mantener el estado asignado por completeInscription()
+        // CRITICAL FIX: NO sobrescribir el estado si ya está en paso COMPLETED
+        // El estado debe ser asignado únicamente por completeInscription() que considera la documentación
         if (preferences.isComplete() &&
             this.currentStep == InscriptionStep.DATA_CONFIRMATION) {
-            // Solo cambiar el estado si no está ya en paso COMPLETED
-            // Esto evita sobrescribir el estado asignado por completeInscription()
+            // Solo cambiar el paso, NO el estado
+            // El estado será asignado correctamente por completeInscription()
             this.currentStep = InscriptionStep.COMPLETED;
-            this.state = InscriptionState.PENDING;
+            // REMOVED: this.state = InscriptionState.PENDING; - Esto causaba el bug
         }
-        // Si ya está en paso COMPLETED, NO cambiar el estado (mantener el asignado por completeInscription)
+        // Si ya está en paso COMPLETED, NO cambiar NADA (mantener estado asignado por completeInscription)
     }
 
     /**
@@ -97,26 +97,34 @@ public class Inscription {
 
     /**
      * Verifica si todos los documentos requeridos están presentes
+     * CRITICAL FIX: Ahora requiere inyección de dependencia para consultar tipos de documentos dinámicamente
      *
+     * @param requiredDocumentTypes Lista de tipos de documentos requeridos desde la base de datos
      * @return true si todos los documentos están presentes, false en caso contrario
      */
-    public boolean hasAllRequiredDocuments() {
+    public boolean hasAllRequiredDocuments(Set<String> requiredDocumentTypes) {
+        System.out.println("🔍 [Inscription] Verificando documentos para inscripción: " + this.id);
+        System.out.println("📄 [Inscription] Documentos requeridos: " + requiredDocumentTypes);
+        System.out.println("📁 [Inscription] Documentos del usuario (total): " + (this.documents != null ? this.documents.size() : 0));
+
+        if (this.documents != null && !this.documents.isEmpty()) {
+            System.out.println("📋 [Inscription] Tipos de documentos del usuario:");
+            for (var doc : this.documents) {
+                System.out.println("  - " + doc.getDocumentType().getCode() + " (ID: " + doc.getId() + ")");
+            }
+        }
+
         // Si no hay documentos, definitivamente no tiene todos los requeridos
         if (this.documents == null || this.documents.isEmpty()) {
+            System.out.println("❌ [Inscription] No hay documentos cargados");
             return false;
         }
 
-        // Obtener todos los tipos de documentos requeridos
-        // Los documentos requeridos son: DNI_FRONTAL, DNI_DORSO, CONSTANCIA_CUIL,
-        // ANTECEDENTES_PENALES, CERTIFICADO_PROFESIONAL_ANTIGUEDAD, CERTIFICADO_SIN_SANCIONES
-        Set<String> requiredDocumentCodes = Set.of(
-            "DNI_FRONTAL",
-            "DNI_DORSO",
-            "CONSTANCIA_CUIL",
-            "ANTECEDENTES_PENALES",
-            "CERTIFICADO_PROFESIONAL_ANTIGUEDAD",
-            "CERTIFICADO_SIN_SANCIONES"
-        );
+        // Si no hay tipos requeridos definidos, considerar como completo
+        if (requiredDocumentTypes == null || requiredDocumentTypes.isEmpty()) {
+            System.out.println("✅ [Inscription] No hay documentos requeridos definidos");
+            return true;
+        }
 
         // Obtener los códigos de los tipos de documentos que el usuario tiene
         Set<String> userDocumentCodes = this.documents.stream()
@@ -125,14 +133,68 @@ public class Inscription {
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
 
+        System.out.println("🔍 [Inscription] Códigos de documentos del usuario: " + userDocumentCodes);
+
+        // Verificar qué documentos faltan
+        Set<String> missingDocuments = new HashSet<>(requiredDocumentTypes);
+        missingDocuments.removeAll(userDocumentCodes);
+
+        boolean hasAllDocuments = userDocumentCodes.containsAll(requiredDocumentTypes);
+
+        if (hasAllDocuments) {
+            System.out.println("✅ [Inscription] TODOS los documentos requeridos están presentes");
+        } else {
+            System.out.println("❌ [Inscription] FALTAN documentos: " + missingDocuments);
+        }
+
         // Verificar si todos los documentos requeridos están presentes
-        return userDocumentCodes.containsAll(requiredDocumentCodes);
+        return hasAllDocuments;
+    }
+
+    /**
+     * @deprecated Usar hasAllRequiredDocuments(Set<String> requiredDocumentTypes) en su lugar
+     * Método mantenido temporalmente para compatibilidad
+     */
+    @Deprecated
+    public boolean hasAllRequiredDocuments() {
+        // Usar la lista hardcodeada como fallback para compatibilidad
+        Set<String> requiredDocumentCodes = Set.of(
+            "DNI_FRONTAL",
+            "DNI_DORSO",
+            "CONSTANCIA_CUIL",
+            "ANTECEDENTES_PENALES",
+            "CERTIFICADO_PROFESIONAL_ANTIGUEDAD",
+            "CERTIFICADO_SIN_SANCIONES"
+        );
+        return hasAllRequiredDocuments(requiredDocumentCodes);
     }
 
     /**
      * Completa la inscripción con el estado apropiado según la documentación
+     * CRITICAL FIX: Ahora requiere los tipos de documentos requeridos como parámetro
+     *
+     * @param requiredDocumentTypes Conjunto de códigos de tipos de documentos requeridos
      */
+    public void completeInscription(Set<String> requiredDocumentTypes) {
+        this.currentStep = InscriptionStep.COMPLETED;
+        this.lastUpdated = LocalDateTime.now();
+
+        if (hasAllRequiredDocuments(requiredDocumentTypes)) {
+            this.state = InscriptionState.COMPLETED_WITH_DOCS;
+        } else {
+            this.state = InscriptionState.COMPLETED_PENDING_DOCS;
+            // Establecer plazo perentorio de 3 días hábiles
+            this.documentationDeadline = calculateDocumentationDeadline();
+        }
+    }
+
+    /**
+     * @deprecated Usar completeInscription(Set<String> requiredDocumentTypes) en su lugar
+     * Método mantenido temporalmente para compatibilidad
+     */
+    @Deprecated
     public void completeInscription() {
+        // Usar método deprecated como fallback
         this.currentStep = InscriptionStep.COMPLETED;
         this.lastUpdated = LocalDateTime.now();
 

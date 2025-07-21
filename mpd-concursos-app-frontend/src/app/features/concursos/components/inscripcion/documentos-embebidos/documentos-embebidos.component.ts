@@ -13,7 +13,7 @@ import { DocumentoViewerComponent } from '@shared/components/documento-viewer/do
 import { DocumentosService } from '@core/services/documentos/documentos.service';
 import { LoggingService } from '@core/services/logging/logging.service';
 
-import { finalize, catchError, map } from 'rxjs/operators'; // Import map
+import { finalize, catchError, map, debounceTime, distinctUntilChanged } from 'rxjs/operators'; // Import map
 import { Subscription, of, forkJoin } from 'rxjs'; // Import forkJoin
 import { ConfirmationService } from '@shared/services/confirmation.service';
 
@@ -960,6 +960,9 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
   showDeadlineWarning = false;
   private lastNotificationHour = -1; // Para evitar notificaciones duplicadas
 
+  // CRITICAL FIX: Flag para controlar notificación de documentación completada
+  private documentacionCompletadaNotificada: boolean = false;
+
   // Cache para evitar múltiples verificaciones
   private documentoSubidoCache: Record<string, boolean> = {};
   private documentoCache: Record<string, DocumentoUsuario> = {};
@@ -978,19 +981,34 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loggingService.debug('[DocumentosEmbebidos] Componente inicializado.', undefined, 'DocumentosEmbebidos');
+
+    // CRITICAL FIX: Reset flag de notificación al inicializar
+    this.documentacionCompletadaNotificada = false;
+
     // Force data reload on init
     this.cargarDatos(true);
 
     // Calculate deadline on init if available
     this.calculateDocumentationDeadline();
 
-    // CRITICAL FIX: Eliminar suscripción duplicada que causa ciclo infinito
-    // Esta suscripción se elimina porque causa conflictos con documentacion-tab
-    // Los datos se actualizarán a través del cache del servicio
-    // this.subscription = this.documentosService.documentoActualizado$.subscribe(() => {
-    //   this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Recargando datos.', undefined, 'DocumentosEmbebidos');
-    //   this.cargarDatos(true); // Force reload all data
-    // });
+    // CRITICAL FIX: Restaurar suscripción con protección contra ciclos infinitos
+    // Suscribirse a actualizaciones de documentos pero con debounce y validación de estado
+    this.subscription = this.documentosService.documentoActualizado$
+      .pipe(
+        debounceTime(1000), // Esperar 1 segundo para evitar múltiples actualizaciones
+        distinctUntilChanged() // Solo procesar si realmente cambió
+      )
+      .subscribe((timestamp) => {
+        this.loggingService.debug('[DocumentosEmbebidos] Evento documentoActualizado$ recibido. Verificando si debe recargar...', { timestamp }, 'DocumentosEmbebidos');
+
+        // Solo recargar si no hay una operación en progreso
+        if (!this.documentosService.isOperationInProgress() && !this.isLoading) {
+          this.loggingService.debug('[DocumentosEmbebidos] Recargando datos después de actualización de documento', undefined, 'DocumentosEmbebidos');
+          this.cargarDatos(true); // Force reload all data
+        } else {
+          this.loggingService.debug('[DocumentosEmbebidos] Recarga omitida - operación en progreso o ya cargando', undefined, 'DocumentosEmbebidos');
+        }
+      });
 
     // Update deadlines every minute
     this.deadlineInterval = setInterval(() => {
@@ -1266,9 +1284,15 @@ export class DocumentosEmbebidosComponent implements OnInit, OnDestroy {
       todosDocumentosCompletos: this.todosDocumentosCompletos
     }, 'DocumentosEmbebidos');
 
-    // ✅ SOLO NOTIFICAR SI REALMENTE TODOS LOS DOCUMENTOS OBLIGATORIOS ESTÁN COMPLETOS
-    if (this.todosDocumentosCompletos) {
+    // ✅ CRITICAL FIX: SOLO NOTIFICAR UNA VEZ cuando se complete la documentación
+    if (this.todosDocumentosCompletos && !this.documentacionCompletadaNotificada) {
       this.notificationService.success('¡Has completado toda la documentación obligatoria!');
+      this.documentacionCompletadaNotificada = true;
+      this.loggingService.debug('[DocumentosEmbebidos] Notificación de documentación completada enviada (primera vez)', undefined, 'DocumentosEmbebidos');
+    } else if (!this.todosDocumentosCompletos && this.documentacionCompletadaNotificada) {
+      // RESET: Si ya no están todos completos, permitir notificar nuevamente cuando se completen
+      this.documentacionCompletadaNotificada = false;
+      this.loggingService.debug('[DocumentosEmbebidos] Flag de notificación reseteado - documentación ya no está completa', undefined, 'DocumentosEmbebidos');
     }
 
     this.emitirEstadoDocumentos();

@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil, finalize } from 'rxjs/operators';
+import { takeUntil, finalize, switchMap } from 'rxjs/operators';
 
 // Interfaces
 import { Postulacion, PostulationStatus } from '@shared/interfaces/postulacion/postulacion.interface';
 import { FiltrosPostulacion } from '@shared/interfaces/filters/filtros-postulaciones.interface';
+import { InscripcionState } from '@core/models/inscripcion/inscripcion-state.enum';
 
 // Services
 import { PostulacionesService } from '@core/services/postulaciones/postulaciones.service';
@@ -138,12 +139,14 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.error = null;
     this.todasCanceladas = false;
 
-    this.postulacionesService.getPostulaciones(
-      this.pageIndex,
-      this.pageSize,
-      'inscriptionDate',
-      'DESC'
-    ).pipe(
+    // CRITICAL FIX: Forzar limpieza de cache antes de cargar postulaciones
+    this.inscriptionService.clearCacheAndRefresh().pipe(
+      switchMap(() => this.postulacionesService.getPostulaciones(
+        this.pageIndex,
+        this.pageSize,
+        'inscriptionDate',
+        'DESC'
+      )),
       takeUntil(this.destroy$),
       finalize(() => {
         this.loading = false;
@@ -401,6 +404,11 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   }
 
   puedesCancelarPostulacion(postulacion: Postulacion): boolean {
+    // CRITICAL FIX: Verificar que la postulación NO esté ya cancelada
+    if (postulacion.estado === PostulationStatus.CANCELLED) {
+      return false;
+    }
+
     // Permitir cancelar postulaciones en proceso (interrumpidas) y completadas
     return postulacion.estado === PostulationStatus.PENDING ||
            postulacion.estado === PostulationStatus.APPROVED ||
@@ -410,8 +418,43 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
   }
 
   cancelarPostulacion(postulacion: Postulacion): void {
-    this.postulacionACancelar = postulacion;
-    this.mostrarDialogoCancelacion = true;
+    // CRITICAL FIX: Verificar estado real desde el backend antes de permitir cancelación
+    if (postulacion.id) {
+      this.inscriptionService.verifyInscriptionState(postulacion.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (realState) => {
+          // Mapear InscripcionState a PostulationStatus
+          const mappedState = this.mapInscripcionStateToPostulationStatus(realState);
+
+          if (mappedState === PostulationStatus.CANCELLED) {
+            this.notificationService.warning('Esta postulación ya está cancelada');
+            // Forzar recarga de datos para sincronizar estado
+            this.cargarPostulaciones();
+            return;
+          }
+
+          // Actualizar estado local si es diferente
+          if (postulacion.estado !== mappedState) {
+            postulacion.estado = mappedState;
+          }
+
+          if (!this.puedesCancelarPostulacion(postulacion)) {
+            this.notificationService.warning('No se puede cancelar esta postulación en su estado actual');
+            return;
+          }
+
+          this.postulacionACancelar = postulacion;
+          this.mostrarDialogoCancelacion = true;
+        },
+        error: (error) => {
+          console.error('Error verificando estado de postulación:', error);
+          this.notificationService.error('Error al verificar el estado de la postulación');
+        }
+      });
+    } else {
+      this.notificationService.error('ID de postulación no válido');
+    }
   }
 
   onConfirmarCancelacion(): void {
@@ -453,9 +496,17 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe();
         },
-        error: (error: Error) => {
-          // Mostrar notificación de error
-          this.notificationService.error('Error al cancelar la postulación. Por favor, inténtelo nuevamente.');
+        error: (error: any) => {
+          console.error('Error al cancelar postulación:', error);
+
+          // CRITICAL FIX: Manejar errores específicos de estado
+          if (error.status === 400 && error.error?.message?.includes('CANCELLED')) {
+            this.notificationService.warning('Esta postulación ya está cancelada');
+            // Forzar recarga para sincronizar estado
+            this.cargarPostulaciones();
+          } else {
+            this.notificationService.error('Error al cancelar la postulación. Por favor, inténtelo nuevamente.');
+          }
 
           // Cerrar diálogo y resetear estado
           this.mostrarDialogoCancelacion = false;
@@ -519,5 +570,31 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       return 'urgent-action';
     }
     return '';
+  }
+
+  /**
+   * Mapea InscripcionState a PostulationStatus
+   */
+  private mapInscripcionStateToPostulationStatus(inscripcionState: InscripcionState): PostulationStatus {
+    switch (inscripcionState) {
+      case InscripcionState.ACTIVE:
+        return PostulationStatus.ACTIVE;
+      case InscripcionState.PENDING:
+        return PostulationStatus.PENDING;
+      case InscripcionState.COMPLETED_WITH_DOCS:
+        return PostulationStatus.COMPLETED_WITH_DOCS;
+      case InscripcionState.COMPLETED_PENDING_DOCS:
+        return PostulationStatus.COMPLETED_PENDING_DOCS;
+      case InscripcionState.FROZEN:
+        return PostulationStatus.FROZEN;
+      case InscripcionState.APPROVED:
+        return PostulationStatus.APPROVED;
+      case InscripcionState.REJECTED:
+        return PostulationStatus.REJECTED;
+      case InscripcionState.CANCELLED:
+        return PostulationStatus.CANCELLED;
+      default:
+        return PostulationStatus.ACTIVE;
+    }
   }
 }

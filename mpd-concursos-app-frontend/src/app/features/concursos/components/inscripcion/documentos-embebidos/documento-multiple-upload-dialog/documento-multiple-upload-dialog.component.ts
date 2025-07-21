@@ -1795,6 +1795,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
 
         // Solo mostrar éxito si realmente hubo documentos subidos exitosamente
         if (hayExitos) {
+          // CRITICAL FIX: Notificar actualización de documentos para que las cards se actualicen
+          this.documentosService.notificarDocumentoActualizado();
+
           setTimeout(() => {
             this.notificationService.success('Documentación subida exitosamente', 'Éxito');
             this.cdr.markForCheck();
@@ -1804,6 +1807,9 @@ export class DocumentoMultipleUploadDialogComponent implements OnInit, OnDestroy
       error: () => {
         // Solo mostrar éxito si realmente hubo documentos subidos exitosamente
         if (hayExitos) {
+          // CRITICAL FIX: Notificar actualización de documentos incluso si hay error al recargar
+          this.documentosService.notificarDocumentoActualizado();
+
           setTimeout(() => {
             this.notificationService.success('Documentación subida exitosamente', 'Éxito');
             this.cdr.markForCheck();

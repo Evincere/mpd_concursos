@@ -10,10 +10,17 @@ public class InscriptionCannotBeCancelledException extends RuntimeException {
     private final InscriptionState currentState;
     
     public InscriptionCannotBeCancelledException(InscriptionState currentState) {
-        super(String.format("No se puede cancelar una inscripción en estado %s. " +
-                "Solo se pueden cancelar inscripciones en estados: ACTIVE, COMPLETED_WITH_DOCS, " +
-                "COMPLETED_PENDING_DOCS o PENDING.", currentState));
+        super(createMessage(currentState));
         this.currentState = currentState;
+    }
+
+    private static String createMessage(InscriptionState currentState) {
+        if (currentState == InscriptionState.CANCELLED) {
+            return "Esta inscripción ya está cancelada. No se puede cancelar nuevamente.";
+        }
+        return String.format("No se puede cancelar una inscripción en estado %s. " +
+                "Solo se pueden cancelar inscripciones en estados: ACTIVE, COMPLETED_WITH_DOCS, " +
+                "COMPLETED_PENDING_DOCS o PENDING.", currentState);
     }
     
     public InscriptionCannotBeCancelledException(InscriptionState currentState, String customMessage) {

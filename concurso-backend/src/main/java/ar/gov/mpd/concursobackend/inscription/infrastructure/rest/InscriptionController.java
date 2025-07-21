@@ -9,6 +9,7 @@ import ar.gov.mpd.concursobackend.inscription.application.port.in.CreateInscript
 import ar.gov.mpd.concursobackend.inscription.application.port.in.FindInscriptionsUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.in.UpdateInscriptionStatusUseCase;
 import ar.gov.mpd.concursobackend.inscription.application.port.out.LoadInscriptionPort;
+import ar.gov.mpd.concursobackend.inscription.application.service.InscriptionValidationService;
 import ar.gov.mpd.concursobackend.inscription.domain.model.Inscription;
 import ar.gov.mpd.concursobackend.shared.infrastructure.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class InscriptionController {
     private final SecurityUtils securityUtils;
     private final LoadInscriptionPort loadInscriptionPort;
     private final InscriptionMapper inscriptionMapper;
+    private final InscriptionValidationService validationService;
 
     /**
      * Creates a new inscription for the current user
@@ -468,6 +470,33 @@ public class InscriptionController {
     }
 
     /**
+     * ✅ ENDPOINT DE VALIDACIÓN: Verifica si una inscripción puede ser cancelada
+     * Útil para el frontend para mostrar/ocultar botones y mostrar mensajes específicos
+     */
+    @GetMapping("/{id}/can-cancel")
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<CancellationValidationResponse> canCancelInscription(@PathVariable UUID id) {
+        try {
+            InscriptionValidationService.CancellationValidationResult result =
+                validationService.validateCancellation(id);
+
+            CancellationValidationResponse response = new CancellationValidationResponse(
+                result.isValid(),
+                result.getErrorCode(),
+                result.getUserMessage()
+            );
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error validating cancellation for inscription {}: {}", id, e.getMessage());
+            CancellationValidationResponse response = new CancellationValidationResponse(
+                false, "SYSTEM_ERROR", "Error interno del sistema"
+            );
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
      * ✅ MÉTODO SIMPLIFICADO: Manejo de cancelación sin validaciones duplicadas
      * Las validaciones de seguridad y reglas de negocio se manejan en el servicio
      */
@@ -482,6 +511,25 @@ public class InscriptionController {
             log.error("Error cancelling inscription {}: {}", id, e.getMessage());
             throw e; // Propagar para que GlobalExceptionHandler lo maneje
         }
+    }
+
+    /**
+     * ✅ DTO DE RESPUESTA: Información de validación para el frontend
+     */
+    public static class CancellationValidationResponse {
+        private final boolean canCancel;
+        private final String errorCode;
+        private final String message;
+
+        public CancellationValidationResponse(boolean canCancel, String errorCode, String message) {
+            this.canCancel = canCancel;
+            this.errorCode = errorCode;
+            this.message = message;
+        }
+
+        public boolean isCanCancel() { return canCancel; }
+        public String getErrorCode() { return errorCode; }
+        public String getMessage() { return message; }
     }
 
     /**
