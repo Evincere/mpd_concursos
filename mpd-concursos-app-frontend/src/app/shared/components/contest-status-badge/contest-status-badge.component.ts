@@ -204,7 +204,7 @@ export class ContestStatusBadgeComponent {
       color: '#fef3c7',
       backgroundColor: 'rgba(245, 158, 11, 0.15)',
       borderColor: 'rgba(245, 158, 11, 0.3)',
-      icon: 'fas fa-file-upload'
+      icon: 'fas fa-clock'
     },
     'FROZEN': {
       value: 'FROZEN',

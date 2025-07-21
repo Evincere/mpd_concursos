@@ -366,6 +366,51 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard/concursos']);
   }
 
+  /**
+   * ✅ NUEVO MÉTODO: Obtiene mensaje específico sobre plazo de documentación
+   */
+  getDocumentationDeadlineMessage(postulacion: Postulacion): string {
+    if (!postulacion.concurso?.endDate) {
+      return 'Fecha límite no disponible';
+    }
+
+    const contestEndDate = new Date(postulacion.concurso.endDate);
+    const documentationDeadline = this.addBusinessDays(contestEndDate, 3);
+    documentationDeadline.setHours(23, 59, 59, 999);
+
+    const now = new Date();
+    const diffTime = documentationDeadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return '⚠️ Plazo vencido - Inscripción será congelada';
+    } else if (diffDays === 0) {
+      return '🚨 ¡ÚLTIMO DÍA! Vence hoy a las 23:59';
+    } else if (diffDays === 1) {
+      return `⏰ Vence mañana (${documentationDeadline.toLocaleDateString('es-AR')})`;
+    } else {
+      return `📅 ${diffDays} días restantes (vence ${documentationDeadline.toLocaleDateString('es-AR')})`;
+    }
+  }
+
+  /**
+   * ✅ MÉTODO AUXILIAR: Agregar días hábiles a una fecha
+   */
+  private addBusinessDays(date: Date, businessDays: number): Date {
+    const result = new Date(date);
+    let daysAdded = 0;
+
+    while (daysAdded < businessDays) {
+      result.setDate(result.getDate() + 1);
+      // Si no es fin de semana (sábado = 6, domingo = 0)
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        daysAdded++;
+      }
+    }
+
+    return result;
+  }
+
   hayFiltrosAplicados(): boolean {
     if (this.primeraConsulta) return false;
     return !!(
