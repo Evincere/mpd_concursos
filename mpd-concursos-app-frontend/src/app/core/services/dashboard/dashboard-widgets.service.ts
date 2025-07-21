@@ -258,8 +258,11 @@ export class DashboardWidgetsService {
                 fechaCierre = new Date(endDateStr + 'T12:00:00');
               }
 
-              // ✅ CORRECCIÓN: Calcular 3 días HÁBILES después del cierre
-              const fechaLimiteDoc = this.addBusinessDays(fechaCierre, 3);
+              // ✅ CORRECCIÓN CRÍTICA: Calcular 3 días HÁBILES DESPUÉS del día de cierre
+              // El plazo perentorio empieza DESPUÉS del día de cierre, no desde el día de cierre
+              const fechaInicioPlazo = new Date(fechaCierre);
+              fechaInicioPlazo.setDate(fechaCierre.getDate() + 1); // Día siguiente al cierre
+              const fechaLimiteDoc = this.addBusinessDays(fechaInicioPlazo, 3);
               // Establecer hora límite a las 23:59:59
               fechaLimiteDoc.setHours(23, 59, 59, 999);
 

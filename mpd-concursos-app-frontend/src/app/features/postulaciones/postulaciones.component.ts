@@ -408,7 +408,11 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       contestEndDate = new Date(endDateStr + 'T12:00:00');
     }
 
-    const documentationDeadline = this.addBusinessDays(contestEndDate, 3);
+    // ✅ CORRECCIÓN CRÍTICA: Calcular 3 días HÁBILES DESPUÉS del día de cierre
+    // El plazo perentorio empieza DESPUÉS del día de cierre, no desde el día de cierre
+    const fechaInicioPlazo = new Date(contestEndDate);
+    fechaInicioPlazo.setDate(contestEndDate.getDate() + 1); // Día siguiente al cierre
+    const documentationDeadline = this.addBusinessDays(fechaInicioPlazo, 3);
     documentationDeadline.setHours(23, 59, 59, 999);
 
     const now = new Date();
