@@ -248,7 +248,16 @@ export class DashboardWidgetsService {
           .forEach(inscripcion => {
             const concurso = concursosArray.find(c => c['id'] === inscripcion['concursoId']);
             if (concurso) {
-              const fechaCierre = new Date(concurso['endDate'] as string);
+              // ✅ CORRECCIÓN: Crear fecha consistente sin problemas de zona horaria
+              let fechaCierre: Date;
+              const endDateStr = (concurso['endDate'] as string);
+              if (endDateStr.includes('T')) {
+                fechaCierre = new Date(endDateStr);
+              } else {
+                // Para fechas en formato YYYY-MM-DD, agregar hora del mediodía
+                fechaCierre = new Date(endDateStr + 'T12:00:00');
+              }
+
               // ✅ CORRECCIÓN: Calcular 3 días HÁBILES después del cierre
               const fechaLimiteDoc = this.addBusinessDays(fechaCierre, 3);
               // Establecer hora límite a las 23:59:59

@@ -261,12 +261,36 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
 
   /**
    * Formatea una fecha para mostrar en formato dd/MM/yyyy
+   * ✅ CORRECCIÓN: Manejo robusto de fechas sin problemas de zona horaria
    */
   formatDate(date: string | Date | null | undefined): string {
     if (!date) return 'No especificada';
 
     try {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      let dateObj: Date;
+
+      if (typeof date === 'string') {
+        // ✅ CORRECCIÓN: Si es string, asumimos formato ISO (YYYY-MM-DD) del backend
+        // Agregamos 'T12:00:00' para evitar problemas de zona horaria
+        if (date.includes('T')) {
+          dateObj = new Date(date);
+        } else {
+          // Para fechas en formato YYYY-MM-DD, agregar hora del mediodía
+          dateObj = new Date(date + 'T12:00:00');
+        }
+      } else {
+        dateObj = date;
+      }
+
+      // 🔍 DIAGNÓSTICO TEMPORAL: Log para investigar problema de fechas
+      console.log('🔍 [DIAGNÓSTICO] formatDate input:', date);
+      console.log('🔍 [DIAGNÓSTICO] formatDate dateObj:', dateObj);
+      console.log('🔍 [DIAGNÓSTICO] formatDate formatted:', dateObj.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }));
+
       return dateObj.toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
@@ -374,7 +398,16 @@ export class PostulacionesComponent implements OnInit, OnDestroy {
       return 'Fecha límite no disponible';
     }
 
-    const contestEndDate = new Date(postulacion.concurso.endDate);
+    // ✅ CORRECCIÓN: Crear fecha consistente sin problemas de zona horaria
+    let contestEndDate: Date;
+    const endDateStr = postulacion.concurso.endDate.toString();
+    if (endDateStr.includes('T')) {
+      contestEndDate = new Date(endDateStr);
+    } else {
+      // Para fechas en formato YYYY-MM-DD, agregar hora del mediodía
+      contestEndDate = new Date(endDateStr + 'T12:00:00');
+    }
+
     const documentationDeadline = this.addBusinessDays(contestEndDate, 3);
     documentationDeadline.setHours(23, 59, 59, 999);
 
